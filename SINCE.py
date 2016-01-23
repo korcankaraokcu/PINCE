@@ -2,12 +2,20 @@
 from PyQt5.QtWidgets import QDesktopWidget,QApplication,QMainWindow
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
+class GuiUtils(object):
+
+#centering a window
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
 #the mainwindow
 class mainForm(QMainWindow, mainwindow):
     def __init__(self, parent=None):
         super().__init__()
-        self.center()
+        GuiUtils.center(self)
         self.setupUi(self)
         self.processbutton.clicked.connect(self.onclick)
 
@@ -20,13 +28,6 @@ class mainForm(QMainWindow, mainwindow):
     def closeEvent(self, event):
         app = QApplication.instance()
         app.closeAllWindows()
-
-#centering a window
-    def center(self):
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
 
 #process select window
 class processForm(QMainWindow, processwindow):
