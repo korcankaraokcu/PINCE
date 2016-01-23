@@ -2,14 +2,16 @@
 from PyQt5.QtWidgets import QDesktopWidget,QApplication,QMainWindow
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
+
 class GuiUtils(object):
 
 #centering a window
     def center(self):
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
+        self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center())
+
+#centering a child window
+    def parentcenter(self):
+        self.move(self.parent().frameGeometry().center().x() - self.frameGeometry().width()/2, self.parent().frameGeometry().center().y() - self.frameGeometry().height()/2)
 
 #the mainwindow
 class mainForm(QMainWindow, mainwindow):
@@ -32,7 +34,8 @@ class mainForm(QMainWindow, mainwindow):
 #process select window
 class processForm(QMainWindow, processwindow):
     def __init__(self, parent=None):
-        super().__init__()
+        super().__init__(parent=parent)
+        GuiUtils.parentcenter(self)
         self.setupUi(self)
 
 if __name__ == "__main__":
