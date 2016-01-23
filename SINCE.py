@@ -1,6 +1,5 @@
 #!/usr/bin/python3
-from PyQt5.QtWidgets import QApplication,QMainWindow
-from PyQt5 import QtCore
+from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem
 from GuiUtils import *
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
@@ -29,9 +28,11 @@ class processForm(QMainWindow, processwindow):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         GuiUtils.parentcenter(self)
-        self.setWindowModality(QtCore.Qt.ApplicationModal)
         self.setupUi(self)
-
+        tablewidget = self.processtable
+        currentRowCount = tablewidget.rowCount()
+        tablewidget.insertRow(currentRowCount)
+        tablewidget.setItem(currentRowCount, 0, QTableWidgetItem("Some text"))
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
