@@ -21,4 +21,4 @@ FORMS    += mainwindow.ui \
     selectprocess.ui
 
 DISTFILES += \
-    main.py
+    SINCE.py
