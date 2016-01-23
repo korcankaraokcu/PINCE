@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 from PyQt5.QtWidgets import QDesktopWidget,QApplication,QMainWindow
+from PyQt5 import QtCore
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
 
@@ -9,7 +10,7 @@ class GuiUtils(object):
     def center(self):
         self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center())
 
-#centering a child window
+#centering a child window, doesn't work as intended yet
     def parentcenter(self):
         self.move(self.parent().frameGeometry().center().x() - self.frameGeometry().width()/2, self.parent().frameGeometry().center().y() - self.frameGeometry().height()/2)
 
@@ -36,6 +37,7 @@ class processForm(QMainWindow, processwindow):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         GuiUtils.parentcenter(self)
+        self.setWindowModality(QtCore.Qt.ApplicationModal)
         self.setupUi(self)
 
 if __name__ == "__main__":
