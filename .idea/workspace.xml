@@ -2,12 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="26a0030d-f8a3-4790-bcea-d5cfde026b84" name="Default" comment="">
-      <change type="MOVED" beforePath="$PROJECT_DIR$/main.py" afterPath="$PROJECT_DIR$/SINCE.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mainwindow.ui" afterPath="$PROJECT_DIR$/mainwindow.ui" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mainwindow.py" afterPath="$PROJECT_DIR$/mainwindow.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/selectprocess.py" afterPath="$PROJECT_DIR$/selectprocess.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/untitled.pro" afterPath="$PROJECT_DIR$/untitled.pro" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SINCE.py" afterPath="$PROJECT_DIR$/SINCE.py" />
     </list>
     <ignored path="untitled.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -31,10 +26,10 @@
       <file leaf-file-name="SINCE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SINCE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.4178273">
-              <caret line="10" column="19" selection-start-line="10" selection-start-column="19" selection-end-line="10" selection-end-column="19" />
+            <state vertical-scroll-proportion="-0.5849582">
+              <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
               <folding>
-                <element signature="e#19#59#0" expanded="true" />
+                <element signature="e#19#86#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -58,6 +53,7 @@
         <option value="$PROJECT_DIR$/selectprocess.py" />
         <option value="$PROJECT_DIR$/mainwindow.py" />
         <option value="$PROJECT_DIR$/main.py" />
+        <option value="$PROJECT_DIR$/GuiUtils.py" />
         <option value="$PROJECT_DIR$/SINCE.py" />
       </list>
     </option>
@@ -385,10 +381,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SINCE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.4178273">
-          <caret line="10" column="19" selection-start-line="10" selection-start-column="19" selection-end-line="10" selection-end-column="19" />
+        <state vertical-scroll-proportion="-0.5849582">
+          <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
           <folding>
-            <element signature="e#19#59#0" expanded="true" />
+            <element signature="e#19#86#0" expanded="true" />
           </folding>
         </state>
       </provider>

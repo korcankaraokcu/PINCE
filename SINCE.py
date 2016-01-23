@@ -1,12 +1,13 @@
 #!/usr/bin/python3
-from PyQt5 import QtCore,QtGui,QtWidgets
+from PyQt5.QtWidgets import QDesktopWidget,QApplication,QMainWindow
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
 
 #the mainwindow
-class mainForm(QtWidgets.QMainWindow, mainwindow):
+class mainForm(QMainWindow, mainwindow):
     def __init__(self, parent=None):
         super().__init__()
+        self.center()
         self.setupUi(self)
         self.processbutton.clicked.connect(self.onclick)
 
@@ -17,18 +18,25 @@ class mainForm(QtWidgets.QMainWindow, mainwindow):
 
 #closes all windows on exit
     def closeEvent(self, event):
-        app = QtWidgets.QApplication.instance()
+        app = QApplication.instance()
         app.closeAllWindows()
 
+#centering a window
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
 #process select window
-class processForm(QtWidgets.QMainWindow, processwindow):
+class processForm(QMainWindow, processwindow):
     def __init__(self, parent=None):
         super().__init__()
         self.setupUi(self)
 
 if __name__ == "__main__":
     import sys
-    app = QtWidgets.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     window = mainForm()
     window.show()
     sys.exit(app.exec_())
