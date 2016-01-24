@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Sat Jan 23 11:32:10 2016
-#      by: PyQt5 UI code generator 5.2.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -21,7 +20,7 @@ class Ui_MainWindow(object):
         self.processbutton.setObjectName("processbutton")
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 741, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 741, 25))
         self.menuBar.setObjectName("menuBar")
         self.menuFile = QtWidgets.QMenu(self.menuBar)
         self.menuFile.setObjectName("menuFile")
@@ -39,7 +38,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "SINCE"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "PINCE"))
         self.processbutton.setText(_translate("MainWindow", "Select Process"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
 
