@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem
 from GuiUtils import *
+from SysUtils import *
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
 
@@ -30,9 +31,12 @@ class processForm(QMainWindow, processwindow):
         self.setupUi(self)
         GuiUtils.parentcenter(self)
         tablewidget = self.processtable
-        currentRowCount = tablewidget.rowCount()
-        tablewidget.insertRow(currentRowCount)
-        tablewidget.setItem(currentRowCount, 0, QTableWidgetItem("Some text"))
+        processlist=SysUtils.getprocesslist(self)
+        tablewidget.setRowCount(len(processlist))
+        for i, row in enumerate(processlist):
+            tablewidget.setItem(i, 0, QTableWidgetItem(str(row.get('pid'))))
+            tablewidget.setItem(i, 1, QTableWidgetItem(row.get('username')))
+            tablewidget.setItem(i, 2, QTableWidgetItem(row.get('name')))
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
