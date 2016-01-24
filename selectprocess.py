@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'selectprocess.ui'
 #
-# Created: Sun Jan 24 01:37:25 2016
+# Created: Sun Jan 24 16:35:09 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -47,7 +47,9 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         item.setTextAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignVCenter)
         self.processtable.setHorizontalHeaderItem(2, item)
+        self.processtable.horizontalHeader().setDefaultSectionSize(70)
         self.processtable.horizontalHeader().setStretchLastSection(True)
+        self.processtable.verticalHeader().setVisible(False)
         self.processtable.verticalHeader().setStretchLastSection(False)
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.processtable)
         MainWindow.setCentralWidget(self.centralwidget)
