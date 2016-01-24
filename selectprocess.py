@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'selectprocess.ui'
 #
-# Created: Sun Jan 24 16:35:09 2016
+# Created: Sun Jan 24 16:54:05 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.setWindowModality(QtCore.Qt.ApplicationModal)
+        MainWindow.setWindowModality(QtCore.Qt.WindowModal)
         MainWindow.resize(597, 340)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
