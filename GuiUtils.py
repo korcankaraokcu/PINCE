@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 from PyQt5.QtWidgets import QDesktopWidget
+
 class GuiUtils(object):
 
 #centering a window
