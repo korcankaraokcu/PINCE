@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem
+from PyQt5.QtCore import QTimer
 from GuiUtils import *
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
@@ -27,8 +28,8 @@ class mainForm(QMainWindow, mainwindow):
 class processForm(QMainWindow, processwindow):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-        GuiUtils.parentcenter(self)
         self.setupUi(self)
+        GuiUtils.parentcenter(self)
         tablewidget = self.processtable
         currentRowCount = tablewidget.rowCount()
         tablewidget.insertRow(currentRowCount)
