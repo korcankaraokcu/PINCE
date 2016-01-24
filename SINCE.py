@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem
-from PyQt5.QtCore import QTimer
 from GuiUtils import *
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
