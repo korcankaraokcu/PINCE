@@ -10,8 +10,8 @@ from selectprocess import Ui_MainWindow as processwindow
 class mainForm(QMainWindow, mainwindow):
     def __init__(self, parent=None):
         super().__init__()
-        GuiUtils.center(self)
         self.setupUi(self)
+        GuiUtils.center(self)
         self.processbutton.clicked.connect(self.onclick)
 
 #shows the process select window

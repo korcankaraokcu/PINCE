@@ -8,4 +8,4 @@ class GuiUtils(object):
 
 #centering a child window
     def parentcenter(self):
-        self.move(self.parent().frameGeometry().center().x() - self.frameGeometry().width()/2, self.parent().frameGeometry().center().y() - self.frameGeometry().height()/2)
+        self.move(self.parent().frameGeometry().center() - self.frameGeometry().center())
