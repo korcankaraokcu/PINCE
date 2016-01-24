@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="26a0030d-f8a3-4790-bcea-d5cfde026b84" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/selectprocess.ui" afterPath="$PROJECT_DIR$/selectprocess.ui" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SINCE.py" afterPath="$PROJECT_DIR$/SINCE.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/selectprocess.py" afterPath="$PROJECT_DIR$/selectprocess.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SysUtils.py" afterPath="$PROJECT_DIR$/SysUtils.py" />
     </list>
     <ignored path="untitled.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -29,8 +27,8 @@
       <file leaf-file-name="SINCE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SINCE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.4477612">
-              <caret line="30" column="25" selection-start-line="30" selection-start-column="25" selection-end-line="30" selection-end-column="25" />
+            <state vertical-scroll-proportion="0.73880595">
+              <caret line="33" column="34" selection-start-line="33" selection-start-column="34" selection-end-line="33" selection-end-column="34" />
               <folding>
                 <element signature="e#19#88#0" expanded="true" />
               </folding>
@@ -42,7 +40,7 @@
         <entry file="file://$PROJECT_DIR$/SysUtils.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="0" column="18" selection-start-line="0" selection-start-column="18" selection-end-line="0" selection-end-column="18" />
+              <caret line="10" column="22" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
               <folding />
             </state>
           </provider>
@@ -53,16 +51,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="11" column="0" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="selectprocess.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/selectprocess.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="22" column="19" selection-start-line="22" selection-start-column="19" selection-end-line="22" selection-end-column="19" />
               <folding />
             </state>
           </provider>
@@ -85,9 +73,9 @@
       <list>
         <option value="$PROJECT_DIR$/mainwindow.py" />
         <option value="$PROJECT_DIR$/main.py" />
-        <option value="$PROJECT_DIR$/SysUtils.py" />
         <option value="$PROJECT_DIR$/selectprocess.py" />
         <option value="$PROJECT_DIR$/GuiUtils.py" />
+        <option value="$PROJECT_DIR$/SysUtils.py" />
         <option value="$PROJECT_DIR$/SINCE.py" />
       </list>
     </option>
@@ -198,6 +186,23 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="untitled" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/SINCE.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="SysUtils" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="untitled" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/SysUtils.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
@@ -324,16 +329,18 @@
       <option name="USE_KEYWORD" value="false" />
       <method />
     </configuration>
-    <list size="3">
+    <list size="4">
       <item index="0" class="java.lang.String" itemvalue="Python.mainwindow" />
       <item index="1" class="java.lang.String" itemvalue="Python.selectprocess" />
       <item index="2" class="java.lang.String" itemvalue="Python.SINCE" />
+      <item index="3" class="java.lang.String" itemvalue="Python.SysUtils" />
     </list>
     <recent_temporary>
-      <list size="3">
+      <list size="4">
         <item index="0" class="java.lang.String" itemvalue="Python.SINCE" />
-        <item index="1" class="java.lang.String" itemvalue="Python.selectprocess" />
-        <item index="2" class="java.lang.String" itemvalue="Python.mainwindow" />
+        <item index="1" class="java.lang.String" itemvalue="Python.SysUtils" />
+        <item index="2" class="java.lang.String" itemvalue="Python.selectprocess" />
+        <item index="3" class="java.lang.String" itemvalue="Python.mainwindow" />
       </list>
     </recent_temporary>
   </component>
@@ -436,17 +443,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SysUtils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="18" selection-start-line="0" selection-start-column="18" selection-end-line="0" selection-end-column="18" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/selectprocess.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
+        <state vertical-scroll-proportion="-0.29850745">
           <caret line="22" column="19" selection-start-line="22" selection-start-column="19" selection-end-line="22" selection-end-column="19" />
           <folding />
         </state>
@@ -460,10 +459,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/SysUtils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="10" column="22" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/SINCE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.4477612">
-          <caret line="30" column="25" selection-start-line="30" selection-start-column="25" selection-end-line="30" selection-end-column="25" />
+        <state vertical-scroll-proportion="0.73880595">
+          <caret line="33" column="34" selection-start-line="33" selection-start-column="34" selection-end-line="33" selection-end-column="34" />
           <folding>
             <element signature="e#19#88#0" expanded="true" />
           </folding>
