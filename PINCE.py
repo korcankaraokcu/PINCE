@@ -52,8 +52,8 @@ class processForm(QMainWindow, processwindow):
         tablewidget.setRowCount(len(processlist))
         for i, row in enumerate(processlist):
             tablewidget.setItem(i, 0, QTableWidgetItem(str(row.pid)))
-            tablewidget.setItem(i, 1, QTableWidgetItem(row.username))
-            tablewidget.setItem(i, 2, QTableWidgetItem(row.name))
+            tablewidget.setItem(i, 1, QTableWidgetItem(row.username()))
+            tablewidget.setItem(i, 2, QTableWidgetItem(row.name()))
 
 #self-explanatory
     def pushButton_Close_onclick(self):
