@@ -54,7 +54,7 @@ class processForm(QMainWindow, processwindow):
         if curItem==None:
             QMessageBox.information(self, "Error","Please select a process first")
         else:
-            currentpid=curItem.text()
+            currentpid=int(curItem.text())
             print(currentpid)
             self.close()
 

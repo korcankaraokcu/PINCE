@@ -9,3 +9,8 @@ class SysUtils(object):
         for p in psutil.process_iter():
             processlist.append(p.as_dict(attrs=['pid','username','name']))
         return processlist
+
+#returns the information about the given process, int=pid
+    def getprocessinformation(int):
+        p = psutil.Process(int)
+        return p
