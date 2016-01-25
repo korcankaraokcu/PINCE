@@ -1,0 +1,3 @@
+#!/bin/bash
+
+exec gksu --description "GameConqueror" "python3 PINCE.py"

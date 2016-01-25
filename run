@@ -1,0 +1,3 @@
+#!/bin/bash
+
+exec gksu --description "PINCE" "python3 PINCE.py"
