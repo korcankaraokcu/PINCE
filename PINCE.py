@@ -41,7 +41,9 @@ class processForm(QMainWindow, processwindow):
 
     def generatenewlist(self):
         if self.lineEdit_searchprocess.isModified():
-            print("yes")
+            text=self.lineEdit_searchprocess.text()
+            processlist=SysUtils.searchinprocessesByName(self,text)
+            self.refreshprocesstable(self.tablewidget,processlist)
         else:
             return
 #lists currently working processes to table
