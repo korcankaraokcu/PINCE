@@ -1,5 +1,0 @@
-#!/bin/bash
-
-DATADIR=/usr/share/gameconqueror
-
-exec gksu --description "GameConqueror" "python -OO $DATADIR/GameConqueror.py" 
