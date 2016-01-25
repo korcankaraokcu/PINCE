@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem,QMessageBox
 from GuiUtils import *
 from SysUtils import *
@@ -15,7 +16,7 @@ class mainForm(QMainWindow, mainwindow):
         self.setupUi(self)
         GuiUtils.center(self)
         self.processbutton.clicked.connect(self.processbutton_onclick)
-self.processbutton.setIcon(QIcon.fromTheme('computer'))
+        self.processbutton.setIcon(QIcon.fromTheme('computer'))
         self.pushButton_Open.setIcon(QIcon.fromTheme('document-open'))
         self.pushButton_Save.setIcon(QIcon.fromTheme('document-save'))
         self.pushButton_Settings.setIcon(QIcon.fromTheme('preferences-system'))
