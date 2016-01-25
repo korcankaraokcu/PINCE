@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem,QMessageBox
+from PyQt5.QtCore import Qt
 from GuiUtils import *
 from SysUtils import *
 from mainwindow import Ui_MainWindow as mainwindow
@@ -39,22 +40,28 @@ class processForm(QMainWindow, processwindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.parentcenter(self)
-        self.tablewidget = self.processtable
         processlist=SysUtils.getprocesslist(self)
-        self.refreshprocesstable(self.tablewidget, processlist)
+        self.refreshprocesstable(self.processtable, processlist)
         self.pushButton_Close.clicked.connect(self.pushButton_Close_onclick)
         self.pushButton_Open.clicked.connect(self.pushButton_Open_onclick)
         self.lineEdit_searchprocess.textChanged.connect(self.generatenewlist)
+        self.processtable.itemDoubleClicked.connect(self.pushButton_Open_onclick)
 
     def generatenewlist(self):
         if self.lineEdit_searchprocess.isModified():
             text=self.lineEdit_searchprocess.text()
             processlist=SysUtils.searchinprocessesByName(self,text)
-            self.refreshprocesstable(self.tablewidget,processlist)
+            self.refreshprocesstable(self.processtable,processlist)
         else:
             return
+
+#closes the window whenever ESC key is pressed
+    def keyPressEvent(self, e):
+        if e.key()==Qt.Key_Escape:
+            self.close()
+
 #lists currently working processes to table
-    def refreshprocesstable(self,tablewidget, processlist):
+    def refreshprocesstable(self, tablewidget, processlist):
         tablewidget.setRowCount(0)
         tablewidget.setRowCount(len(processlist))
         for i, row in enumerate(processlist):
@@ -69,14 +76,15 @@ class processForm(QMainWindow, processwindow):
 #gets the pid out of the selection to set currentpid
     def pushButton_Open_onclick(self):
         global currentpid
-        curItem = self.tablewidget.item(self.tablewidget.currentIndex().row(),0)
+        curItem = self.processtable.item(self.processtable.currentIndex().row(),0)
         if curItem==None:
             QMessageBox.information(self, "Error","Please select a process first")
         else:
             currentpid=int(curItem.text())
-            print(currentpid)
+            p=SysUtils.getprocessinformation(currentpid)
+            self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
+            self.parent().QWidget_Toolbox.setEnabled(True)
             self.close()
-
 
 if __name__ == "__main__":
     import sys

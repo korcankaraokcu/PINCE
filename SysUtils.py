@@ -20,7 +20,7 @@ class SysUtils(object):
     def searchinprocessesByName(self,str):
         processlist=[]
         for p in psutil.process_iter():
-            searchObj= search(str,p.name,IGNORECASE)
+            searchObj= search(str,p.name(),IGNORECASE)
             if searchObj:
                 processlist.append(p)
         return processlist
