@@ -15,6 +15,12 @@ class mainForm(QMainWindow, mainwindow):
         self.setupUi(self)
         GuiUtils.center(self)
         self.processbutton.clicked.connect(self.processbutton_onclick)
+self.processbutton.setIcon(QIcon.fromTheme('computer'))
+        self.pushButton_Open.setIcon(QIcon.fromTheme('document-open'))
+        self.pushButton_Save.setIcon(QIcon.fromTheme('document-save'))
+        self.pushButton_Settings.setIcon(QIcon.fromTheme('preferences-system'))
+        self.pushButton_CopyToAddressList.setIcon(QIcon.fromTheme('emblem-downloads'))
+        self.pushButton_CleanAddressList.setIcon(QIcon.fromTheme('user-trash'))
 
 #shows the process select window
     def processbutton_onclick(self):
