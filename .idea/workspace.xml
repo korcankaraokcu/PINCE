@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="26a0030d-f8a3-4790-bcea-d5cfde026b84" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-    </list>
+    <list default="true" id="26a0030d-f8a3-4790-bcea-d5cfde026b84" name="Default" comment="" />
     <ignored path="untitled.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -26,8 +24,8 @@
       <file leaf-file-name="PINCE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PINCE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.3283582">
-              <caret line="66" column="27" selection-start-line="66" selection-start-column="27" selection-end-line="66" selection-end-column="27" />
+            <state vertical-scroll-proportion="0.6641791">
+              <caret line="66" column="31" selection-start-line="66" selection-start-column="31" selection-end-line="66" selection-end-column="31" />
               <folding>
                 <element signature="e#19#100#0" expanded="true" />
               </folding>
@@ -550,10 +548,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/run">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/PINCE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.3283582">
-          <caret line="66" column="27" selection-start-line="66" selection-start-column="27" selection-end-line="66" selection-end-column="27" />
+        <state vertical-scroll-proportion="0.6641791">
+          <caret line="66" column="31" selection-start-line="66" selection-start-column="31" selection-end-line="66" selection-end-column="31" />
           <folding>
             <element signature="e#19#100#0" expanded="true" />
           </folding>
