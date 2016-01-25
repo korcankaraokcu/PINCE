@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'selectprocess.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created: Mon Jan 25 02:58:42 2016
+#      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -22,9 +23,9 @@ class Ui_MainWindow(object):
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setObjectName("label")
         self.horizontalLayout.addWidget(self.label)
-        self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit.setObjectName("lineEdit")
-        self.horizontalLayout.addWidget(self.lineEdit)
+        self.lineEdit_searchprocess = QtWidgets.QLineEdit(self.centralwidget)
+        self.lineEdit_searchprocess.setObjectName("lineEdit_searchprocess")
+        self.horizontalLayout.addWidget(self.lineEdit_searchprocess)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.processtable = QtWidgets.QTableWidget(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
