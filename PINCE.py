@@ -37,16 +37,23 @@ class processForm(QMainWindow, processwindow):
         self.refreshprocesstable(self.tablewidget, processlist)
         self.pushButton_Close.clicked.connect(self.pushButton_Close_onclick)
         self.pushButton_Open.clicked.connect(self.pushButton_Open_onclick)
+        self.lineEdit_searchprocess.textChanged.connect(self.generatenewlist)
 
+    def generatenewlist(self):
+        if self.lineEdit_searchprocess.isModified():
+            print("yes")
+        else:
+            return
 #lists currently working processes to table
     def refreshprocesstable(self,tablewidget, processlist):
         tablewidget.setRowCount(0)
         tablewidget.setRowCount(len(processlist))
         for i, row in enumerate(processlist):
-            tablewidget.setItem(i, 0, QTableWidgetItem(str(row.get('pid'))))
-            tablewidget.setItem(i, 1, QTableWidgetItem(row.get('username')))
-            tablewidget.setItem(i, 2, QTableWidgetItem(row.get('name')))
+            tablewidget.setItem(i, 0, QTableWidgetItem(str(row.pid)))
+            tablewidget.setItem(i, 1, QTableWidgetItem(row.username))
+            tablewidget.setItem(i, 2, QTableWidgetItem(row.name))
 
+#self-explanatory
     def pushButton_Close_onclick(self):
         self.close()
 
