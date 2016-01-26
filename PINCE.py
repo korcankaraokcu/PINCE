@@ -84,6 +84,10 @@ class processForm(QMainWindow, processwindow):
             p=SysUtils.getprocessinformation(currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
+            readable_only,writeable,executable,readable=SysUtils.getmemoryregionsByPerms(currentpid)
+            x=SysUtils.excludeSharedMemoryRegions(readable)
+            for m in x:
+                print(m.perms)
             self.close()
 
 if __name__ == "__main__":

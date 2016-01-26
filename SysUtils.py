@@ -20,7 +20,36 @@ class SysUtils(object):
     def searchinprocessesByName(self,str):
         processlist=[]
         for p in psutil.process_iter():
-            searchObj= search(str,p.name(),IGNORECASE)
-            if searchObj:
+            if search(str,p.name(),IGNORECASE):
                 processlist.append(p)
         return processlist
+
+#returns a list that contains information about each memory region
+    def getmemoryregions(int):
+        maplist=[]
+        p=psutil.Process(int)
+        for m in p.memory_maps(grouped=False):
+            maplist.append(m)
+        return(maplist)
+
+#returns a tuple based on the permissions given to the regions
+    def getmemoryregionsByPerms(int):
+        readable_only,writeable,executable,readable=[],[],[],[]
+        p=psutil.Process(int)
+        for m in p.memory_maps(grouped=False):
+            if search("r--",m.perms):
+                readable_only.append(m)
+            if search("w",m.perms):
+                writeable.append(m)
+            if search("x",m.perms):
+                executable.append(m)
+            if search("r",m.perms):
+                readable.append(m)
+        return readable_only,writeable,executable,readable
+
+#excludes the shared memory regions from the list, the list must be generated from the function getmemoryregionsByPerms or getmemoryregions
+    def excludeSharedMemoryRegions(list):
+        for m in list[:]:
+            if search("s",m.perms):
+                list.remove(m)
+        return list
