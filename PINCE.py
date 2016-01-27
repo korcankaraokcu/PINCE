@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem,QMessageBo
 from PyQt5.QtCore import Qt
 from GuiUtils import *
 from SysUtils import *
+from GDB_Engine import *
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
 
@@ -85,9 +86,7 @@ class processForm(QMainWindow, processwindow):
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
             readable_only,writeable,executable,readable=SysUtils.getmemoryregionsByPerms(currentpid)
-            x=SysUtils.excludeSharedMemoryRegions(readable)
-            for m in x:
-                print(m.perms)
+            GDB_Engine.startgdb(str(currentpid))
             self.close()
 
 if __name__ == "__main__":
