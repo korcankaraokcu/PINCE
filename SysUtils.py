@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import psutil
-from re import search,IGNORECASE
+from re import match,search,IGNORECASE
 
 class SysUtils(object):
 #returns a list of currently working processes
@@ -53,3 +53,18 @@ class SysUtils(object):
             if search("s",m.perms):
                 list.remove(m)
         return list
+
+#excludes the system-related memory regions from the list, the list must be generated from the function getmemoryregionsByPerms or getmemoryregions
+    def excludeSystemMemoryRegions(list):
+        for m in list[:]:
+            if match("7",m.addr):
+                list.remove(m)
+        return list
+
+    def isTraced(pid):
+        for line in open("/proc/%d/status" % pid).readlines():
+            if line.startswith("TracerPid:"):
+                if line.split(":",1)[1].strip()=="0":
+                    return False
+                else:
+                    return True
