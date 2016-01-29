@@ -30,8 +30,8 @@ class GDB_Engine(object):
         p.expect_exact("(gdb) ")
         p.sendline("attach " + str)
         p.expect_exact("(gdb) ")
-        #self.p.sendline("c")
-        #self.p.expect_exact("Continuing")
+        p.sendline("c")
+        p.expect_exact("Continuing")
 
 #Farewell...
     def deattachgdb():
