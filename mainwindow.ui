@@ -134,7 +134,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_9">
       <item>
-       <widget class="QTableWidget" name="tableWidget">
+       <widget class="QTableWidget" name="tableWidget_valuesearchtable">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -173,7 +173,7 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_6">
            <item>
-            <widget class="QPushButton" name="pushButton_FirstScan">
+            <widget class="QPushButton" name="pushButton_NewFirstScan">
              <property name="text">
               <string>First Scan</string>
              </property>
@@ -566,7 +566,7 @@
      <x>0</x>
      <y>0</y>
      <width>751</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

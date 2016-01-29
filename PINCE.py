@@ -13,17 +13,34 @@ currentpid=0
 
 #the mainwindow
 class mainForm(QMainWindow, mainwindow):
-    def __init__(self, parent=None):
+    def __init__(self):
         super().__init__()
         self.setupUi(self)
         GuiUtils.center(self)
         self.processbutton.clicked.connect(self.processbutton_onclick)
+        self.pushButton_NewFirstScan.clicked.connect(self.NewFirstScan_onclick)
+        self.pushButton_NextScan.clicked.connect(self.NextScan_onclick)
         self.processbutton.setIcon(QIcon.fromTheme('computer'))
         self.pushButton_Open.setIcon(QIcon.fromTheme('document-open'))
         self.pushButton_Save.setIcon(QIcon.fromTheme('document-save'))
         self.pushButton_Settings.setIcon(QIcon.fromTheme('preferences-system'))
         self.pushButton_CopyToAddressList.setIcon(QIcon.fromTheme('emblem-downloads'))
         self.pushButton_CleanAddressList.setIcon(QIcon.fromTheme('user-trash'))
+
+    def NewFirstScan_onclick(self):
+        if self.pushButton_NewFirstScan.text()=="First Scan":
+            self.pushButton_NextScan.setEnabled(True)
+            self.pushButton_UndoScan.setEnabled(True)
+            self.pushButton_NewFirstScan.setText("New Scan")
+            return
+        if self.pushButton_NewFirstScan.text()=="New Scan":
+            self.pushButton_NextScan.setEnabled(False)
+            self.pushButton_UndoScan.setEnabled(False)
+            self.pushButton_NewFirstScan.setText("First Scan")
+
+    def NextScan_onclick(self):
+        if self.tableWidget_valuesearchtable.rowCount()<=0:
+            return
 
 #shows the process select window
     def processbutton_onclick(self):
@@ -32,7 +49,8 @@ class mainForm(QMainWindow, mainwindow):
 
 #closes all windows on exit
     def closeEvent(self, event):
-        GDB_Engine.deattachgdb()
+        if not currentpid==0:
+            GDB_Engine.deattachgdb()
         app = QApplication.instance()
         app.closeAllWindows()
 
@@ -99,6 +117,8 @@ class processForm(QMainWindow, processwindow):
             p=SysUtils.getprocessinformation(currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
+            self.parent().pushButton_NextScan.setEnabled(False)
+            self.parent().pushButton_UndoScan.setEnabled(False)
             readable_only,writeable,executable,readable=SysUtils.getmemoryregionsByPerms(currentpid)
             self.close()
 
