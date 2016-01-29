@@ -92,9 +92,9 @@ class processForm(QMainWindow, processwindow):
                 QMessageBox.information(self, "Error","Permission denied, could not attach to the process")
                 return
             if not currentpid==0:
-                GDB_Engine.deattachgdb(self)
+                GDB_Engine.deattachgdb()
             currentpid=pid
-            GDB_Engine.attachgdb(self,str(currentpid))
+            GDB_Engine.attachgdb(str(currentpid))
             p=SysUtils.getprocessinformation(currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)

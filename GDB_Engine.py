@@ -2,6 +2,7 @@
 from re import search
 import pexpect
 
+p=object
 class GDB_Engine(object):
 
     def canattach(str):
@@ -20,20 +21,22 @@ class GDB_Engine(object):
         return True
 
 #self-explanatory, str is currentpid
-    def attachgdb(self,str):
-        self.p=pexpect.spawnu('sudo gdb')
+    def attachgdb(str):
+        global p
+        p=pexpect.spawnu('sudo gdb')
 
 #a creative and meaningful number for such a marvelous and magnificent program PINCE is
-        self.p.timeout=1879048192
-        self.p.expect_exact("(gdb) ")
-        self.p.sendline("attach " + str)
-        self.p.expect_exact("(gdb) ")
+        p.timeout=1879048192
+        p.expect_exact("(gdb) ")
+        p.sendline("attach " + str)
+        p.expect_exact("(gdb) ")
         #self.p.sendline("c")
         #self.p.expect_exact("Continuing")
 
 #Farewell...
-    def deattachgdb(self):
-        self.p.sendcontrol("c")
-        self.p.sendline("q")
-        self.p.sendline("y")
-        self.p.close()
+    def deattachgdb():
+        global p
+        p.sendcontrol("c")
+        p.sendline("q")
+        p.sendline("y")
+        p.close()
