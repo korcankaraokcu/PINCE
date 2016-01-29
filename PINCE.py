@@ -32,6 +32,7 @@ class mainForm(QMainWindow, mainwindow):
 
 #closes all windows on exit
     def closeEvent(self, event):
+        GDB_Engine.deattachgdb()
         app = QApplication.instance()
         app.closeAllWindows()
 
