@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import psutil
 from re import match,search,IGNORECASE
+from os import path
 
 class SysUtils(object):
 #returns a list of currently working processes
@@ -61,10 +62,15 @@ class SysUtils(object):
                 list.remove(m)
         return list
 
+#returns name of the tracer if specified process is being traced
     def isTraced(pid):
         for line in open("/proc/%d/status" % pid).readlines():
             if line.startswith("TracerPid:"):
-                if line.split(":",1)[1].strip()=="0":
+                tracerpid=line.split(":",1)[1].strip()
+                if tracerpid=="0":
                     return False
                 else:
-                    return True
+                    return psutil.Process(int(tracerpid)).name()
+
+    def isprocessvalid(pid):
+        return path.exists("/proc/%d" % pid)
