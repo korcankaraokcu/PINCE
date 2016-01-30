@@ -100,12 +100,16 @@ class processForm(QMainWindow, processwindow):
         if curItem==None:
             QMessageBox.information(self, "Error","Please select a process first")
         else:
-            if int(curItem.text())==currentpid:
+            pid=int(curItem.text())
+            if not SysUtils.isprocessvalid(pid):
+                QMessageBox.information(self, "Error","Selected process is not valid")
+                return
+            if pid==currentpid:
                 QMessageBox.information(self, "Error","You're debugging this process already")
                 return
-            pid=int(curItem.text())
-            if SysUtils.isTraced(pid):
-                QMessageBox.information(self, "Error","That process is already being traced, could not attach to the process")
+            tracedby=SysUtils.isTraced(pid)
+            if tracedby:
+                QMessageBox.information(self, "Error","That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
             if not GDB_Engine.canattach(str(pid)):
                 QMessageBox.information(self, "Error","Permission denied, could not attach to the process")
