@@ -50,7 +50,7 @@ class mainForm(QMainWindow, mainwindow):
 #closes all windows on exit
     def closeEvent(self, event):
         if not currentpid==0:
-            GDB_Engine.deattachgdb()
+            gdbprocess.jobqueue.put(["deattach"])
         app = QApplication.instance()
         app.closeAllWindows()
 
@@ -111,23 +111,30 @@ class processForm(QMainWindow, processwindow):
             if tracedby:
                 QMessageBox.information(self, "Error","That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
-            if not GDB_Engine.canattach(str(pid)):
+            print("processing")
+            gdbprocess.jobqueue.put(["canattach",str(pid)])
+            result=gdbprocess.resultqueue.get()
+            if not result:
+                print("done")
                 QMessageBox.information(self, "Error","Permission denied, could not attach to the process")
                 return
             if not currentpid==0:
-                GDB_Engine.deattachgdb()
+                gdbprocess.jobqueue.put(["deattach"])
             currentpid=pid
-            GDB_Engine.attachgdb(str(currentpid))
+            gdbprocess.jobqueue.put(["attach",str(currentpid)])
             p=SysUtils.getprocessinformation(currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
             self.parent().pushButton_NextScan.setEnabled(False)
             self.parent().pushButton_UndoScan.setEnabled(False)
             readable_only,writeable,executable,readable=SysUtils.getmemoryregionsByPerms(currentpid)
+            print("done")
             self.close()
 
 if __name__ == "__main__":
     import sys
+    gdbprocess=GDB_Engine()
+    gdbprocess.start()
     app = QApplication(sys.argv)
     window = mainForm()
     window.show()
