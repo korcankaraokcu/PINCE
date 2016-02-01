@@ -1,9 +1,28 @@
 #!/usr/bin/python3
 from re import search
 import pexpect
+from multiprocessing import Process,Queue
 
-p=object
-class GDB_Engine(object):
+p=object                             #this object will be used with pexpect operations
+class GDB_Engine(Process):
+    jobqueue=Queue()                 #format=([function1,params1],[function2,params2],...)
+    resultqueue=Queue()              #same with jobqueue, but it holds only results instead
+    def __init__(self):
+        super(GDB_Engine, self).__init__()
+        self.jobqueue=GDB_Engine.jobqueue
+        self.resultqueue=GDB_Engine.resultqueue
+        self.daemon=True
+
+    def run(self):
+        while True:
+            func=self.jobqueue.get()
+            if len(func)==1:
+                result=getattr(GDB_Engine,func[0])()
+            else:
+                result=getattr(GDB_Engine,func[0])(func[1])
+            if not result==None:
+                self.resultqueue.put(result)
+
 
     def canattach(str):
         a=pexpect.spawnu('sudo gdb')
@@ -21,7 +40,7 @@ class GDB_Engine(object):
         return True
 
 #self-explanatory, str is currentpid
-    def attachgdb(str):
+    def attach(str):
         global p
         p=pexpect.spawnu('sudo gdb')
 
@@ -34,7 +53,7 @@ class GDB_Engine(object):
         p.expect_exact("Continuing")
 
 #Farewell...
-    def deattachgdb():
+    def deattach():
         global p
         p.sendcontrol("c")
         p.sendline("q")
