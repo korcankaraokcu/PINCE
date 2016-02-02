@@ -97,7 +97,7 @@ class processForm(QMainWindow, processwindow):
     def pushButton_Open_onclick(self):
         global currentpid
         curItem = self.processtable.item(self.processtable.currentIndex().row(),0)
-        if curItem==None:
+        if curItem is None:
             QMessageBox.information(self, "Error","Please select a process first")
         else:
             pid=int(curItem.text())
