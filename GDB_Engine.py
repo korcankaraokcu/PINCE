@@ -20,7 +20,7 @@ class GDB_Engine(Process):
                 result=getattr(GDB_Engine,func[0])()
             else:
                 result=getattr(GDB_Engine,func[0])(func[1])
-            if not result==None:
+            if result is not None:
                 self.resultqueue.put(result)
 
 
