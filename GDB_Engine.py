@@ -1,9 +1,24 @@
 #!/usr/bin/python3
 from re import search
+from PyQt5.QtCore import pyqtSignal,QThread
 import pexpect
 from multiprocessing import Process,Queue
 
-p=object                             #this object will be used with pexpect operations
+p=object                                                #this object will be used with pexpect operations
+
+class MainBackgroundThread(QThread):
+    def run(self):
+        
+
+class Command():
+    def __init__(self,command=None, params=None, signal=False):
+        self.command=command
+        self.params=params
+        if signal is True:
+            self.signal=pyqtSignal()
+        else:
+            self.signal=signal
+
 class GDB_Engine(Process):
     jobqueue=Queue()                 #format=([function1,params1],[function2,params2],...)
     resultqueue=Queue()              #same with jobqueue, but it holds only results instead
