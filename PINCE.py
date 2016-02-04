@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem,QMessageBox
+from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem,QMessageBox,QProgressBar
 from PyQt5.QtCore import Qt
 from GuiUtils import *
 from SysUtils import *
-from GDB_Engine import *
+from GDB_Engine import GDB_Engine,Command
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
 
@@ -111,11 +111,11 @@ class processForm(QMainWindow, processwindow):
             if tracedby:
                 QMessageBox.information(self, "Error","That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
-            print("processing")
+            print("processing")                                                      #progressbar koy buraya
             gdbprocess.jobqueue.put(["canattach",str(pid)])
             result=gdbprocess.resultqueue.get()
             if not result:
-                print("done")
+                print("done")                                                        #progressbar finish
                 QMessageBox.information(self, "Error","Permission denied, could not attach to the process")
                 return
             if not currentpid==0:
@@ -127,12 +127,13 @@ class processForm(QMainWindow, processwindow):
             self.parent().QWidget_Toolbox.setEnabled(True)
             self.parent().pushButton_NextScan.setEnabled(False)
             self.parent().pushButton_UndoScan.setEnabled(False)
-            readable_only,writeable,executable,readable=SysUtils.getmemoryregionsByPerms(currentpid)
-            print("done")
+            readable_only,writeable,executable,readable=SysUtils.getmemoryregionsByPerms(currentpid)              #test
+            print("done")                                                                 #progressbar finish
             self.close()
 
 if __name__ == "__main__":
     import sys
+    command=Command("kek")
     gdbprocess=GDB_Engine()
     gdbprocess.start()
     app = QApplication(sys.argv)
