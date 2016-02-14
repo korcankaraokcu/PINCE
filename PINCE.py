@@ -1,15 +1,26 @@
 #!/usr/bin/python3
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem,QMessageBox,QProgressBar
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem,QMessageBox
+from PyQt5.QtCore import Qt,QThread
 from GuiUtils import *
 from SysUtils import *
-from GDB_Engine import GDB_Engine,Command
+from GDB_Engine import GDB_Engine
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
+from multiprocessing import Process
+from threading import Thread
 
 #the PID of the process we'll attach to
 currentpid=0
+
+#test
+class WorkerThread(QThread):
+    def run(self):
+        GDB_Engine.test()
+
+class WorkerThread2(QThread):
+    def run(self):
+        GDB_Engine.test2()
 
 #the mainwindow
 class mainForm(QMainWindow, mainwindow):
@@ -39,6 +50,21 @@ class mainForm(QMainWindow, mainwindow):
             self.pushButton_NewFirstScan.setText("First Scan")
 
     def NextScan_onclick(self):
+        #p=Process(target=GDB_Engine.test())                   #process test
+        #p.start()
+        #p2=Process(target=GDB_Engine.test2())
+        #p2.start()
+        #print("kek")
+        #thread1=WorkerThread()                                #thread test
+        #thread1.run()
+        #thread2=WorkerThread2()
+        #thread2.run()
+        #GDB_Engine.test()
+        t=Thread(target=GDB_Engine.test)
+        t2=Thread(target=GDB_Engine.test2)
+        t.start()
+        t2.start()
+        print("kek")
         if self.tableWidget_valuesearchtable.rowCount()<=0:
             return
 
@@ -50,7 +76,7 @@ class mainForm(QMainWindow, mainwindow):
 #closes all windows on exit
     def closeEvent(self, event):
         if not currentpid==0:
-            gdbprocess.jobqueue.put(["deattach"])
+            GDB_Engine.deattach()
         app = QApplication.instance()
         app.closeAllWindows()
 
@@ -112,16 +138,15 @@ class processForm(QMainWindow, processwindow):
                 QMessageBox.information(self, "Error","That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
             print("processing")                                                      #progressbar koy buraya
-            gdbprocess.jobqueue.put(["canattach",str(pid)])
-            result=gdbprocess.resultqueue.get()
+            result=GDB_Engine.canattach(str(pid))
             if not result:
                 print("done")                                                        #progressbar finish
                 QMessageBox.information(self, "Error","Permission denied, could not attach to the process")
                 return
             if not currentpid==0:
-                gdbprocess.jobqueue.put(["deattach"])
+                GDB_Engine.deattach()
             currentpid=pid
-            gdbprocess.jobqueue.put(["attach",str(currentpid)])
+            GDB_Engine.attach(str(currentpid))
             p=SysUtils.getprocessinformation(currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
@@ -133,9 +158,6 @@ class processForm(QMainWindow, processwindow):
 
 if __name__ == "__main__":
     import sys
-    command=Command("kek")
-    gdbprocess=GDB_Engine()
-    gdbprocess.start()
     app = QApplication(sys.argv)
     window = mainForm()
     window.show()
