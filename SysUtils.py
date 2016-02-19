@@ -58,7 +58,7 @@ class SysUtils(object):
 #excludes the system-related memory regions from the list, the list must be generated from the function getmemoryregionsByPerms or getmemoryregions
     def excludeSystemMemoryRegions(list):
         for m in list[:]:
-            if match("7",m.addr):
+            if match("[7-f]",m.addr):
                 list.remove(m)
         return list
 

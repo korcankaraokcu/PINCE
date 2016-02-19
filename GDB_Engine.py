@@ -16,6 +16,10 @@ class GDB_Engine():
             p.sendline(str)
             p.expect_exact("(gdb)")
 
+    def send_asynccommand(str):
+        global p
+
+
 #only this function doesn't use the function send_command, because variable a is temporary
     def canattach(str):
         a=pexpect.spawnu('sudo gdb --interpreter=mi')
@@ -36,6 +40,7 @@ class GDB_Engine():
     def attach(str):
         global p
         p=pexpect.spawnu('sudo gdb --interpreter=mi')
+        p.setecho(False)
 
 #a creative and meaningful number for such a marvelous and magnificent program PINCE is
         p.timeout=1879048192
@@ -60,8 +65,12 @@ class GDB_Engine():
             print(p.before)
 
     def test2():
-        for x in range(0,10):
+        for x in range(0,100):
             global p
             #time.sleep(0.1)
             GDB_Engine.send_command("disas 0x00400000,+10")
             print(p.before)
+        print("kek")
+
+    def test3():
+        print("2")
