@@ -7,7 +7,6 @@ from SysUtils import *
 from GDB_Engine import GDB_Engine
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
-from multiprocessing import Process
 from threading import Thread
 
 #the PID of the process we'll attach to
@@ -50,21 +49,14 @@ class mainForm(QMainWindow, mainwindow):
             self.pushButton_NewFirstScan.setText("First Scan")
 
     def NextScan_onclick(self):
-        #p=Process(target=GDB_Engine.test())                   #process test
-        #p.start()
-        #p2=Process(target=GDB_Engine.test2())
-        #p2.start()
-        #print("kek")
         #thread1=WorkerThread()                                #thread test
         #thread1.run()
         #thread2=WorkerThread2()
         #thread2.run()
-        #GDB_Engine.test()
-        t=Thread(target=GDB_Engine.test)
-        t2=Thread(target=GDB_Engine.test2)
-        t.start()
-        t2.start()
-        print("kek")
+        #t=Thread(target=GDB_Engine.test)
+        #t2=Thread(target=GDB_Engine.test2)
+        #t.start()
+        #t2.start()
         if self.tableWidget_valuesearchtable.rowCount()<=0:
             return
 
@@ -153,6 +145,8 @@ class processForm(QMainWindow, processwindow):
             self.parent().pushButton_NextScan.setEnabled(False)
             self.parent().pushButton_UndoScan.setEnabled(False)
             readable_only,writeable,executable,readable=SysUtils.getmemoryregionsByPerms(currentpid)              #test
+            SysUtils.excludeSystemMemoryRegions(readable)
+            print(len(readable))
             print("done")                                                                 #progressbar finish
             self.close()
 
