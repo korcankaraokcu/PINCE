@@ -15,6 +15,7 @@ class GDB_Engine():
         with GDB_Engine.lock:
             p.sendline(str)
             p.expect_exact("(gdb)")
+            return p.before
 
     def send_asynccommand(str):
         global p
@@ -59,18 +60,16 @@ class GDB_Engine():
 
     def test():
         for x in range(0,10):
-            global p
             #time.sleep(0.1)
-            GDB_Engine.send_command("find 0x00400000,+500,1")
-            print(p.before)
+            print(GDB_Engine.send_command("find 0x00400000,+500,1"))
 
     def test2():
         for x in range(0,100):
-            global p
             #time.sleep(0.1)
-            GDB_Engine.send_command("disas 0x00400000,+10")
-            print(p.before)
+            print(GDB_Engine.send_command("disas 0x00400000,+10"))
         print("kek")
 
     def test3():
-        print("2")
+        print(GDB_Engine.send_command("watch *0x98e130"))
+        #print(GDB_Engine.send_command("set {int}0x00400000=0"))
+        #98e130

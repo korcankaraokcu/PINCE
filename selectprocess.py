@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'selectprocess.ui'
 #
-# Created: Mon Jan 25 02:58:42 2016
+# Created: Sat Feb 20 17:59:12 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -83,7 +83,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Please select a Process"))
         self.label.setText(_translate("MainWindow", "Name of the Process:"))
         self.processtable.setSortingEnabled(True)
         item = self.processtable.horizontalHeaderItem(0)

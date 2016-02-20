@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem,QMessageBox
+from PyQt5.QtWidgets import QApplication,QMainWindow,QTableWidgetItem,QMessageBox,QDialog
 from PyQt5.QtCore import Qt,QThread
 from GuiUtils import *
 from SysUtils import *
 from GDB_Engine import GDB_Engine
 from mainwindow import Ui_MainWindow as mainwindow
 from selectprocess import Ui_MainWindow as processwindow
+from addaddressmanuallydialog import Ui_Dialog as manualaddressdialog
 from threading import Thread
 
 #the PID of the process we'll attach to
@@ -30,12 +31,17 @@ class mainForm(QMainWindow, mainwindow):
         self.processbutton.clicked.connect(self.processbutton_onclick)
         self.pushButton_NewFirstScan.clicked.connect(self.NewFirstScan_onclick)
         self.pushButton_NextScan.clicked.connect(self.NextScan_onclick)
+        self.pushButton_AddAddressManually.clicked.connect(self.AddAddressManually_onclick)
         self.processbutton.setIcon(QIcon.fromTheme('computer'))
         self.pushButton_Open.setIcon(QIcon.fromTheme('document-open'))
         self.pushButton_Save.setIcon(QIcon.fromTheme('document-save'))
         self.pushButton_Settings.setIcon(QIcon.fromTheme('preferences-system'))
         self.pushButton_CopyToAddressList.setIcon(QIcon.fromTheme('emblem-downloads'))
         self.pushButton_CleanAddressList.setIcon(QIcon.fromTheme('user-trash'))
+
+    def AddAddressManually_onclick(self):
+        self.manualaddressdialog=manualAddressDialog()
+        self.manualaddressdialog.show()
 
     def NewFirstScan_onclick(self):
         if self.pushButton_NewFirstScan.text()=="First Scan":
@@ -57,13 +63,14 @@ class mainForm(QMainWindow, mainwindow):
         #t2=Thread(target=GDB_Engine.test2)
         #t.start()
         #t2.start()
+        GDB_Engine.test3()
         if self.tableWidget_valuesearchtable.rowCount()<=0:
             return
 
 #shows the process select window
     def processbutton_onclick(self):
-        self.window = processForm(self)
-        self.window.show()
+        self.processwindow = processForm(self)
+        self.processwindow.show()
 
 #closes all windows on exit
     def closeEvent(self, event):
@@ -149,6 +156,12 @@ class processForm(QMainWindow, processwindow):
             print(len(readable))
             print("done")                                                                 #progressbar finish
             self.close()
+
+class manualAddressDialog(QDialog,manualaddressdialog):
+    def __init__(self,parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        #GuiUtils.parentcenter(self)
 
 if __name__ == "__main__":
     import sys
