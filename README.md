@@ -22,4 +22,4 @@ sudo apt-get install pyqt5-dev-tools
 Then ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```
   
 #History
--Moved to Github from Bitbucket on 19/02/2016
+- Moved to Github from Bitbucket on 19/02/2016
