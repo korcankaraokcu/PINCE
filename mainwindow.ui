@@ -295,11 +295,6 @@
                  <widget class="QComboBox" name="comboBox_ValueType">
                   <item>
                    <property name="text">
-                    <string>Binary</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
                     <string>Byte</string>
                    </property>
                   </item>
@@ -336,11 +331,6 @@
                   <item>
                    <property name="text">
                     <string>Array of byte</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>All</string>
                    </property>
                   </item>
                  </widget>
@@ -525,7 +515,36 @@
      </layout>
     </item>
     <item>
-     <widget class="QTableWidget" name="tableWidget_2"/>
+     <widget class="QTableWidget" name="tableWidget_2">
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <column>
+       <property name="text">
+        <string>Frozen</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Description</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Address</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Type</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Value</string>
+       </property>
+      </column>
+     </widget>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_10">
@@ -566,7 +585,7 @@
      <x>0</x>
      <y>0</y>
      <width>751</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>
