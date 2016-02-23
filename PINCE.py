@@ -40,8 +40,8 @@ class mainForm(QMainWindow, mainwindow):
         self.pushButton_CleanAddressList.setIcon(QIcon.fromTheme('user-trash'))
 
     def AddAddressManually_onclick(self):
-        self.manualaddressdialog=manualAddressDialog()
-        self.manualaddressdialog.show()
+        self.manualaddressdialog=ManualAddressDialog()
+        self.manualaddressdialog.exec_()
 
     def NewFirstScan_onclick(self):
         if self.pushButton_NewFirstScan.text()=="First Scan":
@@ -157,7 +157,8 @@ class processForm(QMainWindow, processwindow):
             print("done")                                                                 #progressbar finish
             self.close()
 
-class manualAddressDialog(QDialog,manualaddressdialog):
+#Add Address Manually Dialog
+class ManualAddressDialog(QDialog,manualaddressdialog):
     def __init__(self,parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)

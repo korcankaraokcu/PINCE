@@ -46,6 +46,7 @@ class GDB_Engine():
 #a creative and meaningful number for such a marvelous and magnificent program PINCE is
         p.timeout=1879048192
         p.expect_exact("(gdb)")
+        GDB_Engine.send_command("set disassembly-flavor intel")
         GDB_Engine.send_command("set target-async 1")
         GDB_Engine.send_command("set pagination off")
         GDB_Engine.send_command("set non-stop on")
@@ -64,12 +65,11 @@ class GDB_Engine():
             print(GDB_Engine.send_command("find 0x00400000,+500,1"))
 
     def test2():
-        for x in range(0,100):
+        for x in range(0,10):
             #time.sleep(0.1)
-            print(GDB_Engine.send_command("disas 0x00400000,+10"))
+            print(GDB_Engine.send_command("disas /r 0x00400000,+10"))
         print("kek")
 
     def test3():
-        print(GDB_Engine.send_command("watch *0x98e130"))
+        print(GDB_Engine.send_command("call open('AdditionalThreadInjection.o', 2)"))
         #print(GDB_Engine.send_command("set {int}0x00400000=0"))
-        #98e130
