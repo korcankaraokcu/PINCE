@@ -5,9 +5,9 @@ from PyQt5.QtCore import Qt,QThread
 from GuiUtils import *
 from SysUtils import *
 from GDB_Engine import GDB_Engine
-from mainwindow import Ui_MainWindow as mainwindow
-from selectprocess import Ui_MainWindow as processwindow
-from addaddressmanuallydialog import Ui_Dialog as manualaddressdialog
+from GUI.mainwindow import Ui_MainWindow as mainwindow
+from GUI.selectprocess import Ui_MainWindow as processwindow
+from GUI.addaddressmanuallydialog import Ui_Dialog as manualaddressdialog
 from threading import Thread
 
 #the PID of the process we'll attach to
@@ -162,7 +162,6 @@ class ManualAddressDialog(QDialog,manualaddressdialog):
     def __init__(self,parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        #GuiUtils.parentcenter(self)
 
 if __name__ == "__main__":
     import sys
