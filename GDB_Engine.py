@@ -44,7 +44,7 @@ class GDB_Engine():
         p.timeout=1879048192
         p.expect_exact("(gdb)")
         GDB_Engine.send_command("set disassembly-flavor intel")
-        GDB_Engine.send_command("set target-async 1")
+        GDB_Engine.send_command("set mi-async 1")
         GDB_Engine.send_command("set pagination off")
         GDB_Engine.send_command("set non-stop on")
         GDB_Engine.send_command("attach " + str + "&")
