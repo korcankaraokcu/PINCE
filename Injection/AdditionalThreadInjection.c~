@@ -8,8 +8,8 @@ void *infinite(void *a);
 void injection()
 {
 	int *a=1;
-	pthread_t* threadinf=(pthread_t*) malloc(sizeof(pthread_t));
-	pthread_create(threadinf, NULL, infinite, (void*) a);
+	pthread_t threadinf;
+	pthread_create(&threadinf, NULL, infinite, (void*) a);
 }
 
 void *infinite(void *a)
