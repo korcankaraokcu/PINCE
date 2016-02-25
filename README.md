@@ -1,5 +1,5 @@
 #PINCE  
-PINCE is a reverse engineering tool written in python3 and pyqt5. It can do  
+PINCE is a gdb front-end/reverse engineering tool written in python3 and pyqt5. It can do  
   
 - Memory searching(planned)
 - Variable Inspection(working on it)
@@ -27,3 +27,4 @@ Then ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```
 - 17/01/2016-22/01/2016 : Basic design, grasping of Python3 and Pyqt5, proof-testing
 - 22/01/2016 : First commit
 - 19/02/2016 : Moved to Github from Bitbucket
+- 25/02/2016 : First successful implementation of thread injection(A new age dawns!)
