@@ -63,7 +63,6 @@ class mainForm(QMainWindow, mainwindow):
         #t2=Thread(target=GDB_Engine.test2)
         #t.start()
         #t2.start()
-        GDB_Engine.test3()
         if self.tableWidget_valuesearchtable.rowCount()<=0:
             return
 
@@ -85,7 +84,7 @@ class processForm(QMainWindow, processwindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.parentcenter(self)
-        processlist=SysUtils.getprocesslist(self)
+        processlist=SysUtils.getprocesslist()
         self.refreshprocesstable(self.processtable, processlist)
         self.pushButton_Close.clicked.connect(self.pushButton_Close_onclick)
         self.pushButton_Open.clicked.connect(self.pushButton_Open_onclick)
@@ -95,7 +94,7 @@ class processForm(QMainWindow, processwindow):
     def generatenewlist(self):
         if self.lineEdit_searchprocess.isModified():
             text=self.lineEdit_searchprocess.text()
-            processlist=SysUtils.searchinprocessesByName(self,text)
+            processlist=SysUtils.searchinprocessesByName(text)
             self.refreshprocesstable(self.processtable,processlist)
         else:
             return
@@ -145,7 +144,7 @@ class processForm(QMainWindow, processwindow):
             if not currentpid==0:
                 GDB_Engine.deattach()
             currentpid=pid
-            GDB_Engine.attach(str(currentpid))
+            IsThreadInjectionSuccessful=GDB_Engine.attach(str(currentpid))
             p=SysUtils.getprocessinformation(currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
@@ -155,6 +154,8 @@ class processForm(QMainWindow, processwindow):
             SysUtils.excludeSystemMemoryRegions(readable)
             print(len(readable))
             print("done")                                                                 #progressbar finish
+            if not IsThreadInjectionSuccessful:
+                QMessageBox.information(self, "Warning","Unable to inject thread, PINCE may(will) not work properly")
             self.close()
 
 #Add Address Manually Dialog

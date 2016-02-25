@@ -6,7 +6,7 @@ from os import path
 class SysUtils(object):
 #returns a list of currently working processes
 
-    def getprocesslist(self):
+    def getprocesslist():
         processlist=[]
         for p in psutil.process_iter():
             processlist.append(p)
@@ -18,7 +18,7 @@ class SysUtils(object):
         return p
 
 #self-explanatory, returns a list
-    def searchinprocessesByName(self,str):
+    def searchinprocessesByName(str):
         processlist=[]
         for p in psutil.process_iter():
             if search(str,p.name(),IGNORECASE):
@@ -72,5 +72,10 @@ class SysUtils(object):
                 else:
                     return psutil.Process(int(tracerpid)).name()
 
+#return True if the process is still running, False if not
     def isprocessvalid(pid):
         return path.exists("/proc/%d" % pid)
+
+#returns a string pointing to the home directory
+    def gethomedirectory():
+        return path.expanduser("~")

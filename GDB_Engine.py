@@ -1,10 +1,11 @@
 #!/usr/bin/python3
-from re import search
+from re import search,split
 import pexpect
-import time
 from threading import Lock
+from SysUtils import *
 
 p=object                                                #this object will be used with pexpect operations
+InfiniteThreadLocation=str
 
 class GDB_Engine():
     lock=Lock()
@@ -16,10 +17,6 @@ class GDB_Engine():
             p.sendline(str)
             p.expect_exact("(gdb)")
             return p.before
-
-    def send_asynccommand(str):
-        global p
-
 
 #only this function doesn't use the function send_command, because variable a is temporary
     def canattach(str):
@@ -52,6 +49,8 @@ class GDB_Engine():
         GDB_Engine.send_command("set non-stop on")
         GDB_Engine.send_command("attach " + str + "&")
         GDB_Engine.send_command("1")                            #to swallow up the surplus output
+        print("Injecting Thread")                               #progress bar text change
+        return GDB_Engine.InjectAdditionalThread()
 
 #Farewell...
     def deattach():
@@ -61,15 +60,26 @@ class GDB_Engine():
 
     def test():
         for x in range(0,10):
-            #time.sleep(0.1)
             print(GDB_Engine.send_command("find 0x00400000,+500,1"))
 
     def test2():
         for x in range(0,10):
-            #time.sleep(0.1)
             print(GDB_Engine.send_command("disas /r 0x00400000,+10"))
         print("kek")
 
-    def test3():
-        print(GDB_Engine.send_command("call open('AdditionalThreadInjection.o', 2)"))
-        #print(GDB_Engine.send_command("set {int}0x00400000=0"))
+#Injects a thread that runs forever at the background, it'll be used to execute GDB commands on. Also saves the injected thread's location as string
+    def InjectAdditionalThread():
+        global InfiniteThreadLocation
+        GDB_Engine.send_command("interrupt")
+        homedirectory=SysUtils.gethomedirectory()
+        PATH='"' + homedirectory + '/PINCE/Injection/AdditionalThreadInjection.so"'
+        GDB_Engine.send_command("call dlopen("+ PATH +", 2)")
+        result=split("call injection",GDB_Engine.send_command("call injection()"))
+        GDB_Engine.send_command("c &")
+        threadaddress=search("0x\w*",result[1])
+
+#Return True is injection is successful, False if not
+        if not threadaddress:
+            return False
+        InfiniteThreadLocation=threadaddress.group(0)
+        return True
