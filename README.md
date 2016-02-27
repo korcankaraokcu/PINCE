@@ -20,7 +20,7 @@ sudo apt-get install python3-pyqt5
 sudo apt-get install pyqt5-dev-tools  
 ```  
   
-Then ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```
+Then move PINCE to home directory and run ```sudo python3 PINCE.py``` from there
   
 #History
 - A few weeks till 17/01/2016 : Learned GDB, process of analysis
