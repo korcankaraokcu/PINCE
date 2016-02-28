@@ -1,10 +1,11 @@
 #!/usr/bin/python3
-from re import search,split
+from re import search,split,match
 import pexpect
-from threading import Lock
+from threading import Lock,Thread
 from SysUtils import *
+from time import sleep
 
-p=object                                                #this object will be used with pexpect operations
+child=object                                                #this object will be used with pexpect operations
 InfiniteThreadLocation=str
 
 class GDB_Engine():
@@ -12,11 +13,11 @@ class GDB_Engine():
 
 #issues the command sent, str is command string
     def send_command(str):
-        global p
+        global child
         with GDB_Engine.lock:
-            p.sendline(str)
-            p.expect_exact("(gdb)")
-            return p.before
+            child.sendline(str)
+            child.expect_exact("(gdb)")
+            return child.before
 
 #only this function doesn't use the function send_command, because variable a is temporary
     def canattach(str):
@@ -36,27 +37,27 @@ class GDB_Engine():
 
 #self-explanatory, str is currentpid
     def attach(str):
-        global p
-        p=pexpect.spawnu('sudo gdb --interpreter=mi')
-        p.setecho(False)
+        global child
+        child=pexpect.spawnu('sudo gdb --interpreter=mi')
+        child.setecho(False)
 
 #a creative and meaningful number for such a marvelous and magnificent program PINCE is
-        p.timeout=1879048192
-        p.expect_exact("(gdb)")
+        child.timeout=900000
+        child.expect_exact("(gdb)")
         GDB_Engine.send_command("set disassembly-flavor intel")
-        GDB_Engine.send_command("set mi-async 1")
+        GDB_Engine.send_command("set target-async 1")
         GDB_Engine.send_command("set pagination off")
         GDB_Engine.send_command("set non-stop on")
         GDB_Engine.send_command("attach " + str + "&")
         GDB_Engine.send_command("1")                            #to swallow up the surplus output
         print("Injecting Thread")                               #progress bar text change
-        return GDB_Engine.InjectAdditionalThread()
+        return GDB_Engine.InjectAdditionalThreads()
 
 #Farewell...
     def deattach():
-        global p
-        p.sendline("q")
-        p.close()
+        global child
+        child.sendline("q")
+        child.close()
 
     def test():
         for x in range(0,10):
@@ -65,14 +66,13 @@ class GDB_Engine():
     def test2():
         for x in range(0,10):
             print(GDB_Engine.send_command("disas /r 0x00400000,+10"))
-        print("kek")
 
 #Injects a thread that runs forever at the background, it'll be used to execute GDB commands on. Also saves the injected thread's location as string
-    def InjectAdditionalThread():
+    def InjectAdditionalThreads():
         global InfiniteThreadLocation
         GDB_Engine.send_command("interrupt")
-        homedirectory=SysUtils.gethomedirectory()
-        PATH='"' + homedirectory + '/PINCE/Injection/AdditionalThreadInjection.so"'
+        scriptdirectory=SysUtils.getcurrentscriptdirectory()
+        PATH='"' + scriptdirectory + '/Injection/AdditionalThreadInjection.so"'
         GDB_Engine.send_command("call dlopen("+ PATH +", 2)")
         result=split("call injection",GDB_Engine.send_command("call injection()"))
         GDB_Engine.send_command("c &")
@@ -83,3 +83,17 @@ class GDB_Engine():
             return False
         InfiniteThreadLocation=threadaddress.group(0)
         return True
+
+    def AwaitInferiorExit():
+        global child
+        while True:
+            sleep(0.0001)
+            if match("exited-normally",child.after):
+                print("kek")
+                break
+
+    def test3():
+        global child
+        while True:
+            sleep(1)
+            print(child.stdout)

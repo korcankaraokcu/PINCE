@@ -2,6 +2,7 @@
 import psutil
 from re import match,search,IGNORECASE
 from os import path
+from sys import path as syspath
 
 class SysUtils(object):
 #returns a list of currently working processes
@@ -79,3 +80,6 @@ class SysUtils(object):
 #returns a string pointing to the home directory
     def gethomedirectory():
         return path.expanduser("~")
+
+    def getcurrentscriptdirectory():
+        return syspath[0]
