@@ -1,99 +1,106 @@
 #!/usr/bin/python3
-from re import search,split,match
+from re import search, split, match
 import pexpect
-from threading import Lock,Thread
+from threading import Lock, Thread
 from SysUtils import *
 from time import sleep
 
-child=object                                                #this object will be used with pexpect operations
-InfiniteThreadLocation=str
+child = object  # this object will be used with pexpect operations
+infinite_thread_location = str  # location of the injected thread that runs forever at background
+lock = Lock()
 
-class GDB_Engine():
-    lock=Lock()
 
-#issues the command sent, str is command string
-    def send_command(str):
-        global child
-        with GDB_Engine.lock:
-            child.sendline(str)
-            child.expect_exact("(gdb)")
-            return child.before
+# issues the command sent, str is command string
+def send_command(command=str):
+    global child
+    with lock:
+        child.sendline(command)
+        child.expect_exact("(gdb)")
+        return child.before
 
-#only this function doesn't use the function send_command, because variable a is temporary
-    def canattach(str):
-        a=pexpect.spawnu('sudo gdb --interpreter=mi')
-        a.expect_exact("(gdb) ")
-        a.sendline("attach " + str)
-        a.expect_exact("(gdb) ")
 
-#return true if attaching is successful, false if not, then quit
-        if search("Operation not permitted",a.before):
-            a.sendline("q")
-            a.close()
-            return False
+# only this function doesn't use the function send_command, because variable a is temporary
+def can_attach(pid=str):
+    a = pexpect.spawnu('sudo gdb --interpreter=mi')
+    a.expect_exact("(gdb) ")
+    a.sendline("attach " + pid)
+    a.expect_exact("(gdb) ")
+
+    # return true if attaching is successful, false if not, then quit
+    if search("Operation not permitted", a.before):
         a.sendline("q")
         a.close()
-        return True
+        return False
+    a.sendline("q")
+    a.close()
+    return True
 
-#self-explanatory, str is currentpid
-    def attach(str):
-        global child
-        child=pexpect.spawnu('sudo gdb --interpreter=mi')
-        child.setecho(False)
 
-#a creative and meaningful number for such a marvelous and magnificent program PINCE is
-        child.timeout=900000
-        child.expect_exact("(gdb)")
-        GDB_Engine.send_command("set disassembly-flavor intel")
-        GDB_Engine.send_command("set target-async 1")
-        GDB_Engine.send_command("set pagination off")
-        GDB_Engine.send_command("set non-stop on")
-        GDB_Engine.send_command("attach " + str + "&")
-        GDB_Engine.send_command("1")                            #to swallow up the surplus output
-        print("Injecting Thread")                               #progress bar text change
-        return GDB_Engine.InjectAdditionalThreads()
+# self-explanatory, str is currentpid
+def attach(pid=str):
+    global child
+    child = pexpect.spawnu('sudo gdb --interpreter=mi')
+    child.setecho(False)
 
-#Farewell...
-    def deattach():
-        global child
-        child.sendline("q")
-        child.close()
+    # a creative and meaningful number for such a marvelous and magnificent program PINCE is
+    child.timeout = 900000
+    child.expect_exact("(gdb)")
+    send_command("set disassembly-flavor intel")
+    send_command("set target-async 1")
+    send_command("set pagination off")
+    send_command("set non-stop on")
+    send_command("attach " + pid + "&")
+    send_command("1")  # to swallow up the surplus output
+    print("Injecting Thread")  # progress bar text change
+    return inject_additional_threads()
 
-    def test():
-        for x in range(0,10):
-            print(GDB_Engine.send_command("find 0x00400000,+500,1"))
 
-    def test2():
-        for x in range(0,10):
-            print(GDB_Engine.send_command("disas /r 0x00400000,+10"))
+# Farewell...
+def detach():
+    global child
+    child.sendline("q")
+    child.close()
 
-#Injects a thread that runs forever at the background, it'll be used to execute GDB commands on. Also saves the injected thread's location as string
-    def InjectAdditionalThreads():
-        global InfiniteThreadLocation
-        GDB_Engine.send_command("interrupt")
-        scriptdirectory=SysUtils.getcurrentscriptdirectory()
-        PATH='"' + scriptdirectory + '/Injection/AdditionalThreadInjection.so"'
-        GDB_Engine.send_command("call dlopen("+ PATH +", 2)")
-        result=split("call injection",GDB_Engine.send_command("call injection()"))
-        GDB_Engine.send_command("c &")
-        threadaddress=search("0x\w*",result[1])
 
-#Return True is injection is successful, False if not
-        if not threadaddress:
-            return False
-        InfiniteThreadLocation=threadaddress.group(0)
-        return True
+def test():
+    for x in range(0, 10):
+        print(send_command("find 0x00400000,+500,1"))
 
-    def AwaitInferiorExit():
-        global child
-        while True:
-            sleep(0.0001)
-            if match("exited-normally",child.after):
-                print("kek")
-                break
 
-    def test3():
-        global child
-        while True:
-            sleep(1)
-            print(child.stdout)
+def test2():
+    for x in range(0, 10):
+        print(send_command("disas /r 0x00400000,+10"))
+
+
+# Injects a thread that runs forever at the background, it'll be used to execute GDB commands on. Also saves the injected thread's location as string
+def inject_additional_threads():
+    global infinite_thread_location
+    send_command("interrupt")
+    scriptdirectory = get_current_script_directory()
+    injectionpath = '"' + scriptdirectory + '/Injection/AdditionalThreadInjection.so"'
+    send_command("call dlopen(" + injectionpath + ", 2)")
+    result = split("call injection", send_command("call injection()"))
+    send_command("c &")
+    threadaddress = search("0x\w*", result[1])
+
+    # Return True is injection is successful, False if not
+    if not threadaddress:
+        return False
+    infinite_thread_location = threadaddress.group(0)
+    return True
+
+
+def await_inferior_exit():
+    global child
+    while True:
+        sleep(0.0001)
+        if match("exited-normally", child.after):
+            print("kek")
+            break
+
+
+def test3():
+    global child
+    while True:
+        sleep(1)
+        print(child.stdout)
