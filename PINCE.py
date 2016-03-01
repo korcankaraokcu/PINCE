@@ -2,9 +2,11 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog
 from PyQt5.QtCore import Qt, QThread
-from GuiUtils import *
-from SysUtils import *
-from GDB_Engine import *
+
+import GuiUtils
+import SysUtils
+import GDB_Engine
+
 from GUI.mainwindow import Ui_MainWindow as MainWindow
 from GUI.selectprocess import Ui_MainWindow as ProcessWindow
 from GUI.addaddressmanuallydialog import Ui_Dialog as ManualAddressDialog
@@ -17,12 +19,12 @@ currentpid = 0
 # test
 class WorkerThread(QThread):
     def run(self):
-        test()
+        GDB_Engine.test()
 
 
 class WorkerThread2(QThread):
     def run(self):
-        test2()
+        GDB_Engine.test2()
 
 
 # the mainwindow
@@ -30,7 +32,7 @@ class MainForm(QMainWindow, MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        center(self)
+        GuiUtils.center(self)
         self.processbutton.clicked.connect(self.processbutton_onclick)
         self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
@@ -77,7 +79,7 @@ class MainForm(QMainWindow, MainWindow):
     # closes all windows on exit
     def closeEvent(self, event):
         if not currentpid == 0:
-            detach()
+            GDB_Engine.detach()
         application = QApplication.instance()
         application.closeAllWindows()
 
@@ -87,8 +89,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        parentcenter(self)
-        processlist = get_process_list()
+        GuiUtils.center_parent(self)
+        processlist = SysUtils.get_process_list()
         self.refresh_process_table(self.processtable, processlist)
         self.pushButton_Close.clicked.connect(self.pushbutton_close_onclick)
         self.pushButton_Open.clicked.connect(self.pushbutton_open_onclick)
@@ -98,7 +100,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
     def generate_new_list(self):
         if self.lineEdit_searchprocess.isModified():
             text = self.lineEdit_searchprocess.text()
-            processlist = search_in_processes_by_name(text)
+            processlist = SysUtils.search_in_processes_by_name(text)
             self.refresh_process_table(self.processtable, processlist)
         else:
             return
@@ -129,34 +131,34 @@ class ProcessForm(QMainWindow, ProcessWindow):
             QMessageBox.information(self, "Error", "Please select a process first")
         else:
             pid = int(currentitem.text())
-            if not is_process_valid(pid):
+            if not SysUtils.is_process_valid(pid):
                 QMessageBox.information(self, "Error", "Selected process is not valid")
                 return
             if pid == currentpid:
                 QMessageBox.information(self, "Error", "You're debugging this process already")
                 return
-            tracedby = is_traced(pid)
+            tracedby = SysUtils.is_traced(pid)
             if tracedby:
                 QMessageBox.information(self, "Error",
                                         "That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
             print("processing")  # progressbar koy buraya
-            result = can_attach(str(pid))
+            result = GDB_Engine.can_attach(str(pid))
             if not result:
                 print("done")  # progressbar finish
                 QMessageBox.information(self, "Error", "Permission denied, could not attach to the process")
                 return
             if not currentpid == 0:
-                detach()
+                GDB_Engine.detach()
             currentpid = pid
-            is_thread_injection_successful = attach(str(currentpid))
-            p = get_process_information(currentpid)
+            is_thread_injection_successful = GDB_Engine.attach(str(currentpid))
+            p = SysUtils.get_process_information(currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
             self.parent().pushButton_NextScan.setEnabled(False)
             self.parent().pushButton_UndoScan.setEnabled(False)
-            readable_only, writeable, executable, readable = get_memory_regions_by_perms(currentpid)  # test
-            exclude_system_memory_regions(readable)
+            readable_only, writeable, executable, readable = SysUtils.get_memory_regions_by_perms(currentpid)  # test
+            SysUtils.exclude_system_memory_regions(readable)
             print(len(readable))
             print("done")  # progressbar finish
             if not is_thread_injection_successful:

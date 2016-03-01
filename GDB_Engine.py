@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 from re import search, split, match
-import pexpect
 from threading import Lock, Thread
-from SysUtils import *
 from time import sleep
+import pexpect
+
+import SysUtils
 
 child = object  # this object will be used with pexpect operations
 infinite_thread_location = str  # location of the injected thread that runs forever at background
@@ -76,7 +77,7 @@ def test2():
 def inject_additional_threads():
     global infinite_thread_location
     send_command("interrupt")
-    scriptdirectory = get_current_script_directory()
+    scriptdirectory = SysUtils.get_current_script_directory()
     injectionpath = '"' + scriptdirectory + '/Injection/AdditionalThreadInjection.so"'
     send_command("call dlopen(" + injectionpath + ", 2)")
     result = split("call injection", send_command("call injection()"))
