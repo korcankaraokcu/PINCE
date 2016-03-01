@@ -8,5 +8,5 @@ def center(window):
 
 
 # centering a child window
-def parentcenter(window):
+def center_parent(window):
     window.move(window.parent().frameGeometry().center() - window.frameGeometry().center())
