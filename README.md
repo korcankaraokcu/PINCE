@@ -15,6 +15,7 @@ To run PINCE, simply run this command chain:
 ```
 sudo pip3 install psutil  
 sudo pip3 install pexpect  
+sudo apt-get install pip3  
 sudo apt-get install gdb  
 sudo apt-get install python3-pyqt5  
 sudo apt-get install pyqt5-dev-tools  
