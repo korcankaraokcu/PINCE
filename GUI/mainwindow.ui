@@ -293,6 +293,9 @@
                 </item>
                 <item>
                  <widget class="QComboBox" name="comboBox_ValueType">
+                  <property name="currentIndex">
+                   <number>2</number>
+                  </property>
                   <item>
                    <property name="text">
                     <string>Byte</string>
@@ -585,7 +588,7 @@
      <x>0</x>
      <y>0</y>
      <width>751</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>
