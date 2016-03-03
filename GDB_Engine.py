@@ -8,6 +8,7 @@ import SysUtils
 
 child = object  # this object will be used with pexpect operations
 infinite_thread_location = str  # location of the injected thread that runs forever at background
+infinite_thread_id=str  # id of the injected thread that runs forever at background
 lock = Lock()
 
 
@@ -73,21 +74,27 @@ def test2():
         print(send_command("disas /r 0x00400000,+10"))
 
 
-# Injects a thread that runs forever at the background, it'll be used to execute GDB commands on. Also saves the injected thread's location as string
+# Injects a thread that runs forever at the background, it'll be used to execute GDB commands on
+# Also saves the injected thread's location and ID as strings, then switches to that thread and stops it
 def inject_additional_threads():
     global infinite_thread_location
+    global infinite_thread_id
     send_command("interrupt")
     scriptdirectory = SysUtils.get_current_script_directory()
     injectionpath = '"' + scriptdirectory + '/Injection/AdditionalThreadInjection.so"'
     send_command("call dlopen(" + injectionpath + ", 2)")
     result = split("call injection", send_command("call injection()"))
     send_command("c &")
-    threadaddress = search("0x\w*", result[1])
+    threadaddress = search("0x\w*", result[1]).group(0)
 
     # Return True is injection is successful, False if not
     if not threadaddress:
         return False
-    infinite_thread_location = threadaddress.group(0)
+    match_from_info_threads=search("\d+.*" + threadaddress, send_command("info threads")).group(0)
+    infinite_thread_id=split(" ",match_from_info_threads)[0]
+    infinite_thread_location = threadaddress
+    send_command("thread "+infinite_thread_id)
+    send_command("interrupt")
     return True
 
 
