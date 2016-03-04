@@ -162,7 +162,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             print(len(readable))
             print("done")  # progressbar finish
             if not is_thread_injection_successful:
-                QMessageBox.information(self, "Warning", "Unable to inject thread, PINCE may(will) not work properly")
+                QMessageBox.information(self, "Warning", "Unable to inject threads, PINCE may(will) not work properly")
             self.close()
 
 
@@ -171,6 +171,11 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.lineEdit_addaddressmanually.textChanged.connect(self.update_value_of_address)
+
+    def update_value_of_address(self):
+        address=self.lineEdit_addaddressmanually.text()
+        self.label_valueofaddress.setText(GDB_Engine.read_single_address(address))
 
 
 if __name__ == "__main__":
