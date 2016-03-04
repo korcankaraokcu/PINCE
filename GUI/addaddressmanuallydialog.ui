@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string/>
+   <string> </string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_4">
    <item>
@@ -40,9 +40,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_3">
+        <widget class="QLabel" name="label_valueofaddress">
          <property name="text">
-          <string>Text</string>
+          <string>??</string>
          </property>
         </widget>
        </item>
@@ -73,7 +73,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit"/>
+      <widget class="QLineEdit" name="lineEdit_description">
+       <property name="text">
+        <string>No Description</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

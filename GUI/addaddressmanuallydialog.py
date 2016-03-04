@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'addaddressmanuallydialog.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created: Fri Mar  4 19:55:41 2016
+#      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +13,6 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(316, 222)
-        Dialog.setWindowTitle("")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
@@ -28,9 +28,9 @@ class Ui_Dialog(object):
         self.label_2 = QtWidgets.QLabel(Dialog)
         self.label_2.setObjectName("label_2")
         self.horizontalLayout.addWidget(self.label_2)
-        self.label_3 = QtWidgets.QLabel(Dialog)
-        self.label_3.setObjectName("label_3")
-        self.horizontalLayout.addWidget(self.label_3)
+        self.label_valueofaddress = QtWidgets.QLabel(Dialog)
+        self.label_valueofaddress.setObjectName("label_valueofaddress")
+        self.horizontalLayout.addWidget(self.label_valueofaddress)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
@@ -40,9 +40,9 @@ class Ui_Dialog(object):
         self.label_4 = QtWidgets.QLabel(Dialog)
         self.label_4.setObjectName("label_4")
         self.verticalLayout.addWidget(self.label_4)
-        self.lineEdit = QtWidgets.QLineEdit(Dialog)
-        self.lineEdit.setObjectName("lineEdit")
-        self.verticalLayout.addWidget(self.lineEdit)
+        self.lineEdit_description = QtWidgets.QLineEdit(Dialog)
+        self.lineEdit_description.setObjectName("lineEdit_description")
+        self.verticalLayout.addWidget(self.lineEdit_description)
         self.verticalLayout_4.addLayout(self.verticalLayout)
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setObjectName("verticalLayout_3")
@@ -80,11 +80,13 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
+        Dialog.setWindowTitle(_translate("Dialog", " "))
         self.label.setText(_translate("Dialog", "Address:"))
         self.lineEdit_addaddressmanually.setText(_translate("Dialog", "0x"))
         self.label_2.setText(_translate("Dialog", "="))
-        self.label_3.setText(_translate("Dialog", "Text"))
+        self.label_valueofaddress.setText(_translate("Dialog", "??"))
         self.label_4.setText(_translate("Dialog", "Description:"))
+        self.lineEdit_description.setText(_translate("Dialog", "No Description"))
         self.label_5.setText(_translate("Dialog", "Type:"))
         self.comboBox_ValueType.setItemText(0, _translate("Dialog", "Byte"))
         self.comboBox_ValueType.setItemText(1, _translate("Dialog", "2 Bytes"))
