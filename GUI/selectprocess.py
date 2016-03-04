@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'selectprocess.ui'
 #
-# Created: Sat Feb 20 17:59:12 2016
+# Created: Fri Mar  4 19:54:00 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
