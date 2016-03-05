@@ -333,7 +333,7 @@
                   </item>
                   <item>
                    <property name="text">
-                    <string>Array of byte</string>
+                    <string>Array of bytes</string>
                    </property>
                   </item>
                  </widget>
@@ -588,7 +588,7 @@
      <x>0</x>
      <y>0</y>
      <width>751</width>
-     <height>25</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>

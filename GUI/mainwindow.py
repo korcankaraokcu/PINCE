@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created: Sat Mar  5 13:59:36 2016
+#      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -98,6 +99,7 @@ class Ui_MainWindow(object):
         self.QWidget_Toolbox.setEnabled(False)
         self.QWidget_Toolbox.setObjectName("QWidget_Toolbox")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.QWidget_Toolbox)
+        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
@@ -123,8 +125,8 @@ class Ui_MainWindow(object):
         self.widget.setSizePolicy(sizePolicy)
         self.widget.setObjectName("widget")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.widget)
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setSpacing(0)
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.radioButton_Bits = QtWidgets.QRadioButton(self.widget)
         self.radioButton_Bits.setObjectName("radioButton_Bits")
@@ -145,6 +147,7 @@ class Ui_MainWindow(object):
         self.widget1 = QtWidgets.QWidget(self.QWidget_Toolbox)
         self.widget1.setObjectName("widget1")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.widget1)
+        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
@@ -181,8 +184,8 @@ class Ui_MainWindow(object):
         self.widget_2 = QtWidgets.QWidget(self.QWidget_Toolbox)
         self.widget_2.setObjectName("widget_2")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.widget_2)
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setSpacing(0)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.radioButton_RoundedDefault = QtWidgets.QRadioButton(self.widget_2)
         self.radioButton_RoundedDefault.setObjectName("radioButton_RoundedDefault")
@@ -265,7 +268,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.addLayout(self.horizontalLayout_10)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 751, 25))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 751, 20))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
 
@@ -298,7 +301,7 @@ class Ui_MainWindow(object):
         self.comboBox_ValueType.setItemText(4, _translate("MainWindow", "Float"))
         self.comboBox_ValueType.setItemText(5, _translate("MainWindow", "Double"))
         self.comboBox_ValueType.setItemText(6, _translate("MainWindow", "String"))
-        self.comboBox_ValueType.setItemText(7, _translate("MainWindow", "Array of byte"))
+        self.comboBox_ValueType.setItemText(7, _translate("MainWindow", "Array of bytes"))
         self.pushButton_ShowMemoryRegions.setText(_translate("MainWindow", "Show Memory Regions"))
         self.radioButton_RoundedDefault.setText(_translate("MainWindow", "Rounded (Default)"))
         self.radioButton_RoundedExtreme.setText(_translate("MainWindow", "Rounded (Extreme)"))

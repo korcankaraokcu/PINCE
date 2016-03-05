@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string> </string>
+   <string/>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_4">
    <item>
@@ -134,7 +134,7 @@
          </item>
          <item>
           <property name="text">
-           <string>Array of byte</string>
+           <string>Array of bytes</string>
           </property>
          </item>
         </widget>

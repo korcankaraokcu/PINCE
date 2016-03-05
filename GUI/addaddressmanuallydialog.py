@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'addaddressmanuallydialog.ui'
 #
-# Created: Fri Mar  4 19:55:41 2016
+# Created: Sat Mar  5 13:59:25 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -13,6 +13,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(316, 222)
+        Dialog.setWindowTitle("")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
@@ -80,7 +81,6 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", " "))
         self.label.setText(_translate("Dialog", "Address:"))
         self.lineEdit_addaddressmanually.setText(_translate("Dialog", "0x"))
         self.label_2.setText(_translate("Dialog", "="))
@@ -95,5 +95,5 @@ class Ui_Dialog(object):
         self.comboBox_ValueType.setItemText(4, _translate("Dialog", "Float"))
         self.comboBox_ValueType.setItemText(5, _translate("Dialog", "Double"))
         self.comboBox_ValueType.setItemText(6, _translate("Dialog", "String"))
-        self.comboBox_ValueType.setItemText(7, _translate("Dialog", "Array of byte"))
+        self.comboBox_ValueType.setItemText(7, _translate("Dialog", "Array of bytes"))
 
