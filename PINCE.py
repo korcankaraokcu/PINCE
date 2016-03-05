@@ -2,6 +2,8 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog
 from PyQt5.QtCore import Qt, QThread
+from time import sleep
+from threading import Thread
 
 import GuiUtils
 import SysUtils
@@ -10,7 +12,6 @@ import GDB_Engine
 from GUI.mainwindow import Ui_MainWindow as MainWindow
 from GUI.selectprocess import Ui_MainWindow as ProcessWindow
 from GUI.addaddressmanuallydialog import Ui_Dialog as ManualAddressDialog
-from threading import Thread
 
 # the PID of the process we'll attach to
 currentpid = 0
@@ -19,12 +20,7 @@ currentpid = 0
 # test
 class WorkerThread(QThread):
     def run(self):
-        GDB_Engine.test()
-
-
-class WorkerThread2(QThread):
-    def run(self):
-        GDB_Engine.test2()
+        sleep(0.5)
 
 
 # the mainwindow
@@ -60,13 +56,9 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText("First Scan")
 
     def nextscan_onclick(self):
-        # thread1=WorkerThread()                                #thread test
-        # thread1.run()
-        # thread2=WorkerThread2()
-        # thread2.run()
-        # t=Thread(target=test)
+        t = Thread(target=GDB_Engine.test())  # test
         # t2=Thread(target=test2)
-        # t.start()
+        t.start()
         # t2.start()
         if self.tableWidget_valuesearchtable.rowCount() <= 0:
             return
@@ -171,11 +163,26 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.lineEdit_addaddressmanually.textChanged.connect(self.update_value_of_address)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        self.update_thread = Thread(target=self.update_value_of_address)
+        self.update_thread.daemon = True
+        self.update_thread.start()
 
     def update_value_of_address(self):
-        address=self.lineEdit_addaddressmanually.text()
-        self.label_valueofaddress.setText(GDB_Engine.read_single_address(address))
+        while not self.update_thread._is_stopped:
+            sleep(0.15)
+            if self.lineEdit_addaddressmanually.isModified():
+                address = self.lineEdit_addaddressmanually.text()
+                self.label_valueofaddress.setText(GDB_Engine.read_single_address(address))
+
+    def reject(self):
+        self.update_thread._is_stopped = True
+        super(ManualAddressDialogForm, self).reject()
+
+    def accept(self):
+        self.update_thread._is_stopped = True
+        super(ManualAddressDialogForm, self).accept()
 
 
 if __name__ == "__main__":
