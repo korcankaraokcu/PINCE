@@ -1,5 +1,5 @@
 #PINCE  
-PINCE is a gdb front-end/reverse engineering tool written in python3 and pyqt5. It can do  
+PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt5. It can do  
   
 - Memory searching(planned)
 - Variable Inspection(working on it)
