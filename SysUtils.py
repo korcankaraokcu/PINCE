@@ -53,7 +53,8 @@ def get_memory_regions_by_perms(pid=int):
     return readable_only, writeable, executable, readable
 
 
-# excludes the shared memory regions from the list, the list must be generated from the function getmemoryregionsByPerms or getmemoryregions
+# excludes the shared memory regions from the list
+# the list must be generated from the function getmemoryregionsByPerms or getmemoryregions
 def exclude_shared_memory_regions(generatedlist):
     for m in generatedlist[:]:
         if search("s", m.perms):
@@ -61,7 +62,8 @@ def exclude_shared_memory_regions(generatedlist):
     return generatedlist
 
 
-# excludes the system-related memory regions from the list, the list must be generated from the function getmemoryregionsByPerms or getmemoryregions
+# excludes the system-related memory regions from the list
+# the list must be generated from the function getmemoryregionsByPerms or getmemoryregions
 def exclude_system_memory_regions(generatedlist):
     for m in generatedlist[:]:
         if match("[7-f]", m.addr):
