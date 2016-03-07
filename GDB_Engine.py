@@ -11,7 +11,8 @@ infinite_thread_location = str  # location of the injected thread that runs fore
 infinite_thread_id = str  # id of the injected thread that runs forever at background
 lock = Lock()
 
-#The comments next to the regular expressions shows the expected gdb output, an elucidating light for the future developers
+
+# The comments next to the regular expressions shows the expected gdb output, an elucidating light for the future developers
 
 
 # issues the command sent, str is command string
@@ -31,7 +32,7 @@ def can_attach(pid=str):
     a.expect_exact("(gdb) ")
 
     # return true if attaching is successful, false if not, then quit
-    if search(r"Operation not permitted", a.before):  #literal string
+    if search(r"Operation not permitted", a.before):  # literal string
         a.sendline("q")
         a.close()
         return False
@@ -77,12 +78,14 @@ def inject_additional_threads():
     send_command("call dlopen(" + injectionpath + ", 2)")
     result = split("call injection", send_command("call injection()"))
     send_command("c &")
-    threadaddress = search(r"0x\w*", result[1]) #$ = 0xDEADBEEF
+    filtered_result = search(r"New Thread\s*0x\w+", result[1])  # New Thread 0x7fab41ffb700 (LWP 7944)
 
     # Return True is injection is successful, False if not
-    if not threadaddress:
+    if not filtered_result:
         return False
-    match_from_info_threads = search(r"\d+.*" + threadaddress.group(0), send_command("info threads")).group(0)  #1 Thread 0xDEADBEEF
+    threadaddress = split(" ", filtered_result.group(0))[-1]
+    match_from_info_threads = search(r"\d+\s*Thread\s*" + threadaddress,
+                                     send_command("info threads")).group(0)  # 1 Thread 0x7fab41ffb700
     infinite_thread_id = split(" ", match_from_info_threads)[0]
     infinite_thread_location = threadaddress
     send_command("thread " + infinite_thread_id)
@@ -100,18 +103,18 @@ def await_inferior_exit():
 
 
 # return the value of the address if the address is valid, return the string "??" if not
-def read_single_address(address=str,typeofaddress=str):
-    valuetype=typeofaddress
-    result = send_command("print *" + address)
-    filteredresult = search(r"\$\d+\s*=\s*\d+", result)  #$ = 16123512
+def read_single_address(address=str, typeofaddress=str):
+    valuetype = typeofaddress  # test
+    result = send_command("x/w " + address)
+    filteredresult = search(r"0x\w+:\\t\w+", result)  # 0x400000:\t1179403647
     if filteredresult:
-        return split(" ", filteredresult.group(0))[-1]
+        return split("t", filteredresult.group(0))[-1]
     return "??"
 
 
 def test():
     for x in range(0, 10):
-        print(send_command("x/b 0x00400000"))
+        print(send_command("x/g 0x00400000"))
 
 
 def test2():
