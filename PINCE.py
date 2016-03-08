@@ -163,6 +163,9 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.label_length.hide()
+        self.lineEdit_length.hide()
+        self.checkBox_Unicode.hide()
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.update_thread = Thread(target=self.update_value_of_address)
