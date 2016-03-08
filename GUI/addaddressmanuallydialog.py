@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'addaddressmanuallydialog.ui'
 #
-# Created: Sat Mar  5 13:59:25 2016
+# Created: Tue Mar  8 20:35:34 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -63,6 +63,20 @@ class Ui_Dialog(object):
         self.comboBox_ValueType.addItem("")
         self.comboBox_ValueType.addItem("")
         self.horizontalLayout_2.addWidget(self.comboBox_ValueType)
+        self.label_length = QtWidgets.QLabel(Dialog)
+        self.label_length.setObjectName("label_length")
+        self.horizontalLayout_2.addWidget(self.label_length)
+        self.lineEdit_length = QtWidgets.QLineEdit(Dialog)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lineEdit_length.sizePolicy().hasHeightForWidth())
+        self.lineEdit_length.setSizePolicy(sizePolicy)
+        self.lineEdit_length.setObjectName("lineEdit_length")
+        self.horizontalLayout_2.addWidget(self.lineEdit_length)
+        self.checkBox_Unicode = QtWidgets.QCheckBox(Dialog)
+        self.checkBox_Unicode.setObjectName("checkBox_Unicode")
+        self.horizontalLayout_2.addWidget(self.checkBox_Unicode)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem1)
         self.verticalLayout_3.addLayout(self.horizontalLayout_2)
@@ -96,4 +110,6 @@ class Ui_Dialog(object):
         self.comboBox_ValueType.setItemText(5, _translate("Dialog", "Double"))
         self.comboBox_ValueType.setItemText(6, _translate("Dialog", "String"))
         self.comboBox_ValueType.setItemText(7, _translate("Dialog", "Array of bytes"))
+        self.label_length.setText(_translate("Dialog", "Length"))
+        self.checkBox_Unicode.setText(_translate("Dialog", "Unicode"))
 
