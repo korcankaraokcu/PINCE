@@ -89,7 +89,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         self.lineEdit_searchprocess.textChanged.connect(self.generate_new_list)
         self.processtable.itemDoubleClicked.connect(self.pushbutton_open_onclick)
 
-    # refreshes the process list
+    # refreshes process list
     def generate_new_list(self):
         text = self.lineEdit_searchprocess.text()
         processlist = SysUtils.search_in_processes_by_name(text)
@@ -167,17 +167,24 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.comboBox_ValueType.currentIndexChanged.connect(self.valuetype_on_current_index_change)
+        self.update_needed = False
+        self.lineEdit_addaddressmanually.textChanged.connect(self.addaddressmanually_on_change)
         self.update_thread = Thread(target=self.update_value_of_address)
         self.update_thread.daemon = True
         self.update_thread.start()
 
+    # constantly updates the value of the address
     def update_value_of_address(self):
         while not self.update_thread._is_stopped:
-            sleep(0.15)
-            if self.lineEdit_addaddressmanually.isModified():
+            sleep(0.001)
+            if self.update_needed:
+                self.update_needed = False
                 address = self.lineEdit_addaddressmanually.text()
                 address_type = GuiUtils.valuecombobox_to_valuetype(self.comboBox_ValueType.currentIndex())
                 self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type))
+
+    def addaddressmanually_on_change(self):
+        self.update_needed = True
 
     def valuetype_on_current_index_change(self):
         if self.comboBox_ValueType.currentIndex() == 6:  # if index points to string
@@ -192,6 +199,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.label_length.hide()
             self.lineEdit_length.hide()
             self.checkBox_Unicode.hide()
+        self.update_needed = True
 
     def reject(self):
         self.update_thread._is_stopped = True
