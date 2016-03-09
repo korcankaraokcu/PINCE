@@ -134,7 +134,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 QMessageBox.information(self, "Error",
                                         "That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
-            print("processing")  # progressbar koy buraya
+            print("processing")  # progressbar start
             result = GDB_Engine.can_attach(str(pid))
             if not result:
                 print("done")  # progressbar finish
@@ -168,6 +168,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.checkBox_Unicode.hide()
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
+        self.comboBox_ValueType.currentIndexChanged.connect(self.valuetype_on_current_index_change)
         self.update_thread = Thread(target=self.update_value_of_address)
         self.update_thread.daemon = True
         self.update_thread.start()
@@ -177,7 +178,22 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             sleep(0.15)
             if self.lineEdit_addaddressmanually.isModified():
                 address = self.lineEdit_addaddressmanually.text()
-                self.label_valueofaddress.setText(GDB_Engine.read_single_address(address))
+                address_type = GuiUtils.valuecombobox_to_valuetype(self.comboBox_ValueType.currentIndex())
+                self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type))
+
+    def valuetype_on_current_index_change(self):
+        if self.comboBox_ValueType.currentIndex() == 6:  # if index points to string
+            self.label_length.show()
+            self.lineEdit_length.show()
+            self.checkBox_Unicode.show()
+        elif self.comboBox_ValueType.currentIndex() == 7:  # if index points to array of bytes
+            self.label_length.show()
+            self.lineEdit_length.show()
+            self.checkBox_Unicode.hide()
+        else:
+            self.label_length.hide()
+            self.lineEdit_length.hide()
+            self.checkBox_Unicode.hide()
 
     def reject(self):
         self.update_thread._is_stopped = True
