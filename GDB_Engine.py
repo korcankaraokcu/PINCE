@@ -93,6 +93,7 @@ def inject_additional_threads():
     return True
 
 
+# test
 def await_inferior_exit():
     global child
     while True:
