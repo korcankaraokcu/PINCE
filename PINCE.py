@@ -89,13 +89,11 @@ class ProcessForm(QMainWindow, ProcessWindow):
         self.lineEdit_searchprocess.textChanged.connect(self.generate_new_list)
         self.processtable.itemDoubleClicked.connect(self.pushbutton_open_onclick)
 
+    # refreshes the process list
     def generate_new_list(self):
-        if self.lineEdit_searchprocess.isModified():
-            text = self.lineEdit_searchprocess.text()
-            processlist = SysUtils.search_in_processes_by_name(text)
-            self.refresh_process_table(self.processtable, processlist)
-        else:
-            return
+        text = self.lineEdit_searchprocess.text()
+        processlist = SysUtils.search_in_processes_by_name(text)
+        self.refresh_process_table(self.processtable, processlist)
 
     # closes the window whenever ESC key is pressed
     def keyPressEvent(self, e):
