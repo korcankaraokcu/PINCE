@@ -105,9 +105,10 @@ def await_inferior_exit():
 
 # return the value of the address if the address is valid, return the string "??" if not
 # typeofaddress is derived from combobox_value_dict in GuiUtils
+# typeofaddress can be byte, 2bytes, 4bytes, 8bytes, float and double
 def read_single_address(address=str, typeofaddress=str):
     result = send_command("x/" + typeofaddress + " " + address)
-    filteredresult = search(r"0x\w+:\\t\w+", result)  # 0x400000:\t1179403647
+    filteredresult = search(r"0x[0-9a-fA-F]+:\\t[0-9a-fA-F-,]+", result)  # 0x400000:\t1,3961517377359369e-309
     if filteredresult:
         return split("t", filteredresult.group(0))[-1]
     return "??"
@@ -115,7 +116,7 @@ def read_single_address(address=str, typeofaddress=str):
 
 def test():
     for x in range(0, 10):
-        print(send_command("x/2xb 0x00400000"))
+        print(send_command("x/fg 0x00400000"))
 
 
 def test2():
