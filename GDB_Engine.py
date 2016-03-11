@@ -11,6 +11,18 @@ infinite_thread_location = str  # location of the injected thread that runs fore
 infinite_thread_id = str  # id of the injected thread that runs forever at background
 lock = Lock()
 
+# A dictionary used to convert value_combobox index to gdb/mi command
+valuetype_to_gdbcommand_dict = {
+    0: "db",  # byte
+    1: "dh",  # 2bytes
+    2: "dw",  # 4bytes
+    3: "dg",  # 8bytes
+    4: "fw",  # float
+    5: "fg",  # double
+    6: "xb",  # string
+    7: "xb"  # array of bytes
+}
+
 
 # The comments next to the regular expressions shows the expected gdb output, an elucidating light for the future developers
 
@@ -103,20 +115,43 @@ def await_inferior_exit():
             break
 
 
+# return a string corresponding to the selected index
+# returns "out of bounds" string if the index doesn't match the dictionary
+def valuetype_to_gdbcommand(index=int):
+    return valuetype_to_gdbcommand_dict.get(index, "out of bounds")
+
+
 # return the value of the address if the address is valid, return the string "??" if not
-# typeofaddress is derived from combobox_value_dict in GuiUtils
-# typeofaddress can be byte, 2bytes, 4bytes, 8bytes, float and double
-def read_single_address(address=str, typeofaddress=str):
-    result = send_command("x/" + typeofaddress + " " + address)
-    filteredresult = search(r"0x[0-9a-fA-F]+:\\t[0-9a-fA-F-,]+", result)  # 0x400000:\t1,3961517377359369e-309
-    if filteredresult:
-        return split("t", filteredresult.group(0))[-1]
-    return "??"
+# typeofaddress is derived from valuetype_to_gdbcommand
+# length parameter only gets passed when reading strings or array of bytes
+# unicode parameter is only for strings
+def read_single_address(address, typeofaddress, length="4", unicode=False):
+    if typeofaddress is 7:  # array of bytes
+        typeofaddress = valuetype_to_gdbcommand(typeofaddress)
+        result = send_command("x/" + length + typeofaddress + " " + address)
+        filteredresult = search(r"(\\t0x[0-9a-fA-F]+)+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
+        if filteredresult:
+            return filteredresult.group(0).replace(r"\t0x", " ")
+        return "??"
+    elif typeofaddress is 6:  # string
+        typeofaddress = valuetype_to_gdbcommand(typeofaddress)
+        result = send_command("x/" + length + typeofaddress + " " + address)
+        filteredresult = search(r"(\\t0x[0-9a-fA-F]+)+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
+        if filteredresult:
+            return bytes(int(split(r"\\t", filteredresult.group(0))))
+        return "??"
+    else:  # byte, 2bytes, 4bytes, 8bytes, float, double
+        typeofaddress = valuetype_to_gdbcommand(typeofaddress)
+        result = send_command("x/" + typeofaddress + " " + address)
+        filteredresult = search(r":\\t[0-9a-fA-F-,]+", result)  # 0x400000:\t1,3961517377359369e-309
+        if filteredresult:
+            return split("t", filteredresult.group(0))[-1]
+        return "??"
 
 
 def test():
     for x in range(0, 10):
-        print(send_command("x/fg 0x00400000"))
+        print(send_command("x/100xb _start"))
 
 
 def test2():

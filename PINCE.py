@@ -167,6 +167,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.comboBox_ValueType.currentIndexChanged.connect(self.valuetype_on_current_index_change)
+        self.lineEdit_length.textChanged.connect(self.length_text_on_change)
         self.update_needed = False
         self.lineEdit_addaddressmanually.textChanged.connect(self.addaddressmanually_on_change)
         self.update_thread = Thread(target=self.update_value_of_address)
@@ -180,10 +181,20 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             if self.update_needed:
                 self.update_needed = False
                 address = self.lineEdit_addaddressmanually.text()
-                address_type = GuiUtils.valuecombobox_to_valuetype(self.comboBox_ValueType.currentIndex())
-                self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type))
+                address_type = self.comboBox_ValueType.currentIndex()
+                if address_type is 7:
+                    length = self.lineEdit_length.text()
+                    self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type, length))
+                elif address_type is 6:
+                    length = self.lineEdit_length.text()
+                    self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type, length))
+                else:
+                    self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type))
 
     def addaddressmanually_on_change(self):
+        self.update_needed = True
+
+    def length_text_on_change(self):
         self.update_needed = True
 
     def valuetype_on_current_index_change(self):
