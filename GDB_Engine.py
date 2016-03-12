@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from re import search, split, match
+from re import search, split, match, findall
 from threading import Lock
 from time import sleep
 import pexpect
@@ -27,7 +27,7 @@ valuetype_to_gdbcommand_dict = {
 # The comments next to the regular expressions shows the expected gdb output, an elucidating light for the future developers
 
 
-# issues the command sent, str is command string
+# issues the command sent
 def send_command(command=str):
     global child
     with lock:
@@ -53,7 +53,7 @@ def can_attach(pid=str):
     return True
 
 
-# self-explanatory, str is currentpid
+# self-explanatory
 def attach(pid=str):
     global child
     child = pexpect.spawnu('sudo gdb --interpreter=mi')
@@ -88,9 +88,9 @@ def inject_additional_threads():
     scriptdirectory = SysUtils.get_current_script_directory()
     injectionpath = '"' + scriptdirectory + '/Injection/AdditionalThreadInjection.so"'
     send_command("call dlopen(" + injectionpath + ", 2)")
-    result = split("call injection", send_command("call injection()"))
+    result = send_command("call injection()")
     send_command("c &")
-    filtered_result = search(r"New Thread\s*0x\w+", result[1])  # New Thread 0x7fab41ffb700 (LWP 7944)
+    filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
 
     # Return True is injection is successful, False if not
     if not filtered_result:
@@ -129,9 +129,10 @@ def read_single_address(address, typeofaddress, length="4", unicode=False):
     if typeofaddress is 7:  # array of bytes
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
         result = send_command("x/" + length + typeofaddress + " " + address)
-        filteredresult = search(r"(\\t0x[0-9a-fA-F]+)+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
+        filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
         if filteredresult:
-            return filteredresult.group(0).replace(r"\t0x", " ")
+            returned_string=''.join(filteredresult)
+            return returned_string.replace(r"\t0x", " ")
         return "??"
     elif typeofaddress is 6:  # string
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
