@@ -122,24 +122,29 @@ def valuetype_to_gdbcommand(index=int):
 
 
 # return the value of the address if the address is valid, return the string "??" if not
+# this function also can read symbols such as "_start" as addresses
 # typeofaddress is derived from valuetype_to_gdbcommand
 # length parameter only gets passed when reading strings or array of bytes
 # unicode parameter is only for strings
 def read_single_address(address, typeofaddress, length="4", unicode=False):
+    if address is "":
+        return "??"
     if typeofaddress is 7:  # array of bytes
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
         result = send_command("x/" + length + typeofaddress + " " + address)
         filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
         if filteredresult:
-            returned_string=''.join(filteredresult)
+            returned_string = ''.join(filteredresult)
             return returned_string.replace(r"\t0x", " ")
         return "??"
     elif typeofaddress is 6:  # string
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
         result = send_command("x/" + length + typeofaddress + " " + address)
-        filteredresult = search(r"(\\t0x[0-9a-fA-F]+)+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
+        filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
         if filteredresult:
-            return bytes(int(split(r"\\t", filteredresult.group(0))))
+            filteredresult = ''.join(filteredresult)
+            returned_string = filteredresult.replace(r"\t0x", "")
+            return bytes.fromhex(returned_string).decode("ascii", "replace")
         return "??"
     else:  # byte, 2bytes, 4bytes, 8bytes, float, double
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
@@ -152,7 +157,7 @@ def read_single_address(address, typeofaddress, length="4", unicode=False):
 
 def test():
     for x in range(0, 10):
-        print(send_command("x/100xb _start"))
+        print(send_command('x "game"'))
 
 
 def test2():
