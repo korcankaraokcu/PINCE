@@ -129,6 +129,8 @@ def valuetype_to_gdbcommand(index=int):
 def read_single_address(address, typeofaddress, length="4", unicode=False):
     if address is "":
         return "??"
+    if length is "":
+        return "??"
     if typeofaddress is 7:  # array of bytes
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
         result = send_command("x/" + length + typeofaddress + " " + address)
@@ -139,12 +141,26 @@ def read_single_address(address, typeofaddress, length="4", unicode=False):
         return "??"
     elif typeofaddress is 6:  # string
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
-        result = send_command("x/" + length + typeofaddress + " " + address)
+        if not unicode:
+            try:
+                length = str(int(length))
+            except:
+                return "??"
+            result = send_command("x/" + length + typeofaddress + " " + address)
+        else:
+            try:
+                length = str(int(length) * 2)
+            except:
+                return "??"
+            result = send_command("x/" + length + typeofaddress + " " + address)
         filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
         if filteredresult:
             filteredresult = ''.join(filteredresult)
             returned_string = filteredresult.replace(r"\t0x", "")
-            return bytes.fromhex(returned_string).decode("ascii", "replace")
+            if not unicode:
+                return bytes.fromhex(returned_string).decode("ascii", "replace")
+            else:
+                return bytes.fromhex(returned_string).decode("utf-8", "replace")
         return "??"
     else:  # byte, 2bytes, 4bytes, 8bytes, float, double
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
@@ -157,7 +173,7 @@ def read_single_address(address, typeofaddress, length="4", unicode=False):
 
 def test():
     for x in range(0, 10):
-        print(send_command('x "game"'))
+        print(send_command('x/0xb 0x00400000'))
 
 
 def test2():
