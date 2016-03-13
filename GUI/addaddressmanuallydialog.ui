@@ -154,6 +154,12 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="inputMask">
+          <string/>
+         </property>
+         <property name="text">
+          <string>4</string>
+         </property>
         </widget>
        </item>
        <item>

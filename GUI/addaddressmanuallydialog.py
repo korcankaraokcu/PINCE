@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'addaddressmanuallydialog.ui'
 #
-# Created: Tue Mar  8 20:35:34 2016
+# Created: Sun Mar 13 01:57:14 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -72,6 +72,7 @@ class Ui_Dialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.lineEdit_length.sizePolicy().hasHeightForWidth())
         self.lineEdit_length.setSizePolicy(sizePolicy)
+        self.lineEdit_length.setInputMask("")
         self.lineEdit_length.setObjectName("lineEdit_length")
         self.horizontalLayout_2.addWidget(self.lineEdit_length)
         self.checkBox_Unicode = QtWidgets.QCheckBox(Dialog)
@@ -111,5 +112,6 @@ class Ui_Dialog(object):
         self.comboBox_ValueType.setItemText(6, _translate("Dialog", "String"))
         self.comboBox_ValueType.setItemText(7, _translate("Dialog", "Array of bytes"))
         self.label_length.setText(_translate("Dialog", "Length"))
+        self.lineEdit_length.setText(_translate("Dialog", "4"))
         self.checkBox_Unicode.setText(_translate("Dialog", "Unicode"))
 

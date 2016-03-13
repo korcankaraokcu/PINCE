@@ -56,7 +56,7 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText("First Scan")
 
     def nextscan_onclick(self):
-        t = Thread(target=GDB_Engine.test())  # test
+        t = Thread(target=GDB_Engine.test)  # test
         # t2=Thread(target=test2)
         t.start()
         # t2.start()
@@ -168,6 +168,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.buttonBox.rejected.connect(self.reject)
         self.comboBox_ValueType.currentIndexChanged.connect(self.valuetype_on_current_index_change)
         self.lineEdit_length.textChanged.connect(self.length_text_on_change)
+        self.checkBox_Unicode.stateChanged.connect(self.unicode_box_on_check)
         self.update_needed = False
         self.lineEdit_addaddressmanually.textChanged.connect(self.addaddressmanually_on_change)
         self.update_thread = Thread(target=self.update_value_of_address)
@@ -187,7 +188,9 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                     self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type, length))
                 elif address_type is 6:
                     length = self.lineEdit_length.text()
-                    self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type, length))
+                    isunicode = self.checkBox_Unicode.isChecked()
+                    self.label_valueofaddress.setText(
+                        GDB_Engine.read_single_address(address, address_type, length, isunicode))
                 else:
                     self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type))
 
@@ -195,6 +198,9 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.update_needed = True
 
     def length_text_on_change(self):
+        self.update_needed = True
+
+    def unicode_box_on_check(self):
         self.update_needed = True
 
     def valuetype_on_current_index_change(self):
