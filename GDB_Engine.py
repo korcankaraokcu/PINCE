@@ -127,6 +127,8 @@ def valuetype_to_gdbcommand(index=int):
 # length parameter only gets passed when reading strings or array of bytes
 # unicode parameter is only for strings
 def read_single_address(address, typeofaddress, length="4", unicode=False):
+    if search(r'\$|\s|"',address):
+        return "??"
     if address is "":
         return "??"
     if length is "":
@@ -173,7 +175,7 @@ def read_single_address(address, typeofaddress, length="4", unicode=False):
 
 def test():
     for x in range(0, 10):
-        print(send_command('x/0xb 0x00400000'))
+        print(send_command("info variables a"))
 
 
 def test2():
