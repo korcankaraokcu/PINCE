@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'addaddressmanuallydialog.ui'
 #
-# Created: Sun Mar 13 01:57:14 2016
+# Created: Mon Mar 14 21:49:19 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -112,6 +112,6 @@ class Ui_Dialog(object):
         self.comboBox_ValueType.setItemText(6, _translate("Dialog", "String"))
         self.comboBox_ValueType.setItemText(7, _translate("Dialog", "Array of bytes"))
         self.label_length.setText(_translate("Dialog", "Length"))
-        self.lineEdit_length.setText(_translate("Dialog", "4"))
+        self.lineEdit_length.setText(_translate("Dialog", "10"))
         self.checkBox_Unicode.setText(_translate("Dialog", "Unicode"))
 
