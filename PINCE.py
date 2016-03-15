@@ -178,7 +178,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     # constantly updates the value of the address
     def update_value_of_address(self):
         while not self.update_thread._is_stopped:
-            sleep(0.001)
+            sleep(0.01)
             if self.update_needed:
                 self.update_needed = False
                 address = self.lineEdit_addaddressmanually.text()
