@@ -29,6 +29,9 @@ class MainForm(QMainWindow, MainWindow):
         super().__init__()
         self.setupUi(self)
         GuiUtils.center(self)
+        await_exit_thread = Thread(target=self.await_inferior_exit)
+        await_exit_thread.daemon = True
+        await_exit_thread.start()
         self.processbutton.clicked.connect(self.processbutton_onclick)
         self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
@@ -74,6 +77,17 @@ class MainForm(QMainWindow, MainWindow):
             GDB_Engine.detach()
         application = QApplication.instance()
         application.closeAllWindows()
+
+    # Checks if the debuggee exited
+    def await_inferior_exit(self):
+        while True:
+            global currentpid
+            while SysUtils.is_process_valid(currentpid) or currentpid is 0:
+                sleep(0.1)
+            GDB_Engine.detach()
+            currentpid = 0
+            self.label_SelectedProcess.setText("No Process Selected")
+            QMessageBox.information(self, "Warning", "Process has been terminated")
 
 
 # process select window
