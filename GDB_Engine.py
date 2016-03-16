@@ -105,16 +105,6 @@ def inject_additional_threads():
     return True
 
 
-# test
-def await_inferior_exit():
-    global child
-    while True:
-        sleep(0.0001)
-        if match("exited-normally", child.after):
-            print("kek")
-            break
-
-
 # return a string corresponding to the selected index
 # returns "out of bounds" string if the index doesn't match the dictionary
 def valuetype_to_gdbcommand(index=int):
@@ -122,12 +112,12 @@ def valuetype_to_gdbcommand(index=int):
 
 
 # return the value of the address if the address is valid, return the string "??" if not
-# this function also can read symbols such as "_start" as addresses
+# this function also can read symbols such as "_start", "malloc", "printf" and "scanf" as addresses
 # typeofaddress is derived from valuetype_to_gdbcommand
 # length parameter only gets passed when reading strings or array of bytes
 # unicode and zero_terminate parameters are only for strings
 def read_single_address(address, typeofaddress, length=None, unicode=False, zero_terminate=True):
-    if search(r'\$|\s|"', address):
+    if search(r'\$|\s|"', address):  # These characters make gdb show it's value history, so they should be avoided
         return "??"
     if address is "":
         return "??"
