@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from re import search, split, match, findall
+from re import search, split, findall
 from threading import Lock
 from time import sleep
 import pexpect
@@ -159,9 +159,9 @@ def read_single_address(address, typeofaddress, length=None, unicode=False, zero
                 returned_string = bytes.fromhex(returned_string).decode("utf-8", "replace")
             if zero_terminate:
                 if returned_string.startswith('\x00'):
-                    returned_string='\x00'
+                    returned_string = '\x00'
                 else:
-                    returned_string=returned_string.split('\x00')[0]
+                    returned_string = returned_string.split('\x00')[0]
             return returned_string[0:int(length)]
         return "??"
     else:  # byte, 2bytes, 4bytes, 8bytes, float, double

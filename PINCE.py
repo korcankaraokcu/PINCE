@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog
-from PyQt5.QtCore import Qt, QThread
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from time import sleep
 from threading import Thread
 
@@ -17,10 +17,16 @@ from GUI.addaddressmanuallydialog import Ui_Dialog as ManualAddressDialog
 currentpid = 0
 
 
-# test
-class WorkerThread(QThread):
+# Checks if the inferior has terminated
+class AwaitProcessExit(QThread):
+    process_exited = pyqtSignal()
+
     def run(self):
-        sleep(0.5)
+        while True:
+            while SysUtils.is_process_valid(currentpid) or currentpid is 0:
+                sleep(0.1)
+            self.process_exited.emit()
+            sleep(2)  # wait on_inferior_exit() to finish
 
 
 # the mainwindow
@@ -29,9 +35,9 @@ class MainForm(QMainWindow, MainWindow):
         super().__init__()
         self.setupUi(self)
         GuiUtils.center(self)
-        await_exit_thread = Thread(target=self.await_inferior_exit)
-        await_exit_thread.daemon = True
-        await_exit_thread.start()
+        self.await_exit_thread = AwaitProcessExit()
+        self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
+        self.await_exit_thread.start()
         self.processbutton.clicked.connect(self.processbutton_onclick)
         self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
@@ -71,23 +77,19 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow = ProcessForm(self)
         self.processwindow.show()
 
+    def on_inferior_exit(self):
+        global currentpid
+        GDB_Engine.detach()
+        currentpid = 0
+        self.label_SelectedProcess.setText("No Process Selected")
+        QMessageBox.information(self, "Warning", "Process has been terminated")
+
     # closes all windows on exit
     def closeEvent(self, event):
         if not currentpid == 0:
             GDB_Engine.detach()
         application = QApplication.instance()
         application.closeAllWindows()
-
-    # Checks if the debuggee exited
-    def await_inferior_exit(self):
-        while True:
-            global currentpid
-            while SysUtils.is_process_valid(currentpid) or currentpid is 0:
-                sleep(0.1)
-            GDB_Engine.detach()
-            currentpid = 0
-            self.label_SelectedProcess.setText("No Process Selected")
-            QMessageBox.information(self, "Warning", "Process has been terminated")
 
 
 # process select window
