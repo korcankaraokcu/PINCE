@@ -17,16 +17,14 @@ from GUI.addaddressmanuallydialog import Ui_Dialog as ManualAddressDialog
 currentpid = 0
 
 
-# Checks if the inferior has terminated
+# Checks if the inferior has been terminated
 class AwaitProcessExit(QThread):
     process_exited = pyqtSignal()
 
     def run(self):
-        while True:
-            while SysUtils.is_process_valid(currentpid) or currentpid is 0:
-                sleep(0.1)
-            self.process_exited.emit()
-            sleep(2)  # wait on_inferior_exit() to finish
+        while SysUtils.is_process_valid(currentpid) or currentpid is 0:
+            sleep(0.1)
+        self.process_exited.emit()
 
 
 # the mainwindow
@@ -83,6 +81,7 @@ class MainForm(QMainWindow, MainWindow):
         currentpid = 0
         self.label_SelectedProcess.setText("No Process Selected")
         QMessageBox.information(self, "Warning", "Process has been terminated")
+        self.await_exit_thread.start()
 
     # closes all windows on exit
     def closeEvent(self, event):
