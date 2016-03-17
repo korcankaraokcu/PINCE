@@ -126,10 +126,10 @@ def read_single_address(address, typeofaddress, length=None, unicode=False, zero
     if typeofaddress is 7:  # array of bytes
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
         try:
-            length = str(int(length))  # length must be a legit number, so had to do this trick
+            expectedlength = str(int(length))  # length must be a legit number, so had to do this trick
         except:
             return "??"
-        result = send_command("x/" + length + typeofaddress + " " + address)
+        result = send_command("x/" + expectedlength + typeofaddress + " " + address)
         filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
         if filteredresult:
             returned_string = ''.join(filteredresult)  # combined all the matched results
@@ -139,16 +139,16 @@ def read_single_address(address, typeofaddress, length=None, unicode=False, zero
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
         if not unicode:
             try:
-                length = str(int(length))
+                expectedlength = str(int(length))
             except:
                 return "??"
-            result = send_command("x/" + length + typeofaddress + " " + address)
+            result = send_command("x/" + expectedlength + typeofaddress + " " + address)
         else:
             try:
-                length = str(int(length) * 2)
+                expectedlength = str(int(length) * 2)
             except:
                 return "??"
-            result = send_command("x/" + length + typeofaddress + " " + address)
+            result = send_command("x/" + expectedlength + typeofaddress + " " + address)
         filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
         if filteredresult:
             filteredresult = ''.join(filteredresult)
@@ -159,9 +159,10 @@ def read_single_address(address, typeofaddress, length=None, unicode=False, zero
                 returned_string = bytes.fromhex(returned_string).decode("utf-8", "replace")
             if zero_terminate:
                 if returned_string.startswith('\x00'):
-                    return '\x00'
-                return returned_string.split('\x00')[0]
-            return returned_string
+                    returned_string='\x00'
+                else:
+                    returned_string=returned_string.split('\x00')[0]
+            return returned_string[0:int(length)]
         return "??"
     else:  # byte, 2bytes, 4bytes, 8bytes, float, double
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
