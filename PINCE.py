@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from time import sleep
 from threading import Thread
@@ -63,9 +63,10 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText("First Scan")
 
     def nextscan_onclick(self):
-        t = Thread(target=GDB_Engine.test)  # test
+        self.add_element_to_addresstable("asdf", "0x00400000", 4)
+        # t = Thread(target=GDB_Engine.test)  # test
         # t2=Thread(target=test2)
-        t.start()
+        # t.start()
         # t2.start()
         if self.tableWidget_valuesearchtable.rowCount() <= 0:
             return
@@ -89,6 +90,19 @@ class MainForm(QMainWindow, MainWindow):
             GDB_Engine.detach()
         application = QApplication.instance()
         application.closeAllWindows()
+
+    def add_element_to_addresstable(self, description, address, type):
+        frozen_checkbox = QCheckBox()
+        value = GDB_Engine.read_single_address(address, type)
+        type = GuiUtils.valuetype_to_text(type)
+        address = GDB_Engine.convert_address_to_symbol(address)
+        self.tableWidget_addresstable.setRowCount(self.tableWidget_addresstable.rowCount() + 1)
+        currentrow = self.tableWidget_addresstable.rowCount() - 1
+        self.tableWidget_addresstable.setCellWidget(currentrow, 0, frozen_checkbox)
+        self.tableWidget_addresstable.setItem(currentrow, 1, QTableWidgetItem(description))
+        self.tableWidget_addresstable.setItem(currentrow, 2, QTableWidgetItem(address))
+        self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(type))
+        self.tableWidget_addresstable.setItem(currentrow, 4, QTableWidgetItem(value))
 
 
 # process select window
@@ -179,8 +193,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.label_length.hide()
         self.lineEdit_length.hide()
         self.checkBox_Unicode.hide()
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
         self.comboBox_ValueType.currentIndexChanged.connect(self.valuetype_on_current_index_change)
         self.lineEdit_length.textChanged.connect(self.length_text_on_change)
         self.checkBox_Unicode.stateChanged.connect(self.unicode_box_on_check)
@@ -239,6 +251,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def accept(self):
         self.update_thread._is_stopped = True
+        MainForm.add_element_to_addresstable(MainForm(), self.lineEdit_description.text(),
+                                             self.lineEdit_addaddressmanually.text(), 4)
         super(ManualAddressDialogForm, self).accept()
 
 

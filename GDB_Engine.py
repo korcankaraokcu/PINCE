@@ -111,7 +111,7 @@ def valuetype_to_gdbcommand(index=int):
     return valuetype_to_gdbcommand_dict.get(index, "out of bounds")
 
 
-# return the value of the address if the address is valid, return the string "??" if not
+# returns the value of the address if the address is valid, return the string "??" if not
 # this function also can read symbols such as "_start", "malloc", "printf" and "scanf" as addresses
 # typeofaddress is derived from valuetype_to_gdbcommand
 # length parameter only gets passed when reading strings or array of bytes
@@ -173,9 +173,19 @@ def read_single_address(address, typeofaddress, length=None, unicode=False, zero
         return "??"
 
 
+# Converts the given address to symbol if any symbol exists for it
+def convert_address_to_symbol(string):
+    if search(r"0x[0-9a-fA-F]+", string):  # if string is a valid address
+        result = send_command("x/x " + string)
+        filteredresult = search(r"<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
+        if filteredresult:
+            return split(">:", filteredresult.group(0))[0].split("<")[1]
+    return string
+
+
 def test():
     for x in range(0, 10):
-        print(send_command('x/s "ç"'))
+        print(send_command('x/x 0x0'))
 
 
 def test2():
