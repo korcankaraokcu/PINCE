@@ -33,6 +33,10 @@ class MainForm(QMainWindow, MainWindow):
         super().__init__()
         self.setupUi(self)
         GuiUtils.center(self)
+        self.tableWidget_addresstable.setColumnWidth(0, 50)  # Frozen
+        self.tableWidget_addresstable.setColumnWidth(1, 150)  # Description
+        self.tableWidget_addresstable.setColumnWidth(2, 200)  # Address
+        self.tableWidget_addresstable.setColumnWidth(3, 100)  # Type
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
@@ -47,9 +51,12 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_CopyToAddressList.setIcon(QIcon.fromTheme('emblem-downloads'))
         self.pushButton_CleanAddressList.setIcon(QIcon.fromTheme('user-trash'))
 
+    # gets the information from the dialog then adds it to addresstable
     def addaddressmanually_onclick(self):
         self.manual_address_dialog = ManualAddressDialogForm()
-        self.manual_address_dialog.exec_()
+        if self.manual_address_dialog.exec_():
+            description, address, typeofaddress = self.manual_address_dialog.getvalues()
+            self.add_element_to_addresstable(description, address, typeofaddress)
 
     def newfirstscan_onclick(self):
         if self.pushButton_NewFirstScan.text() == "First Scan":
@@ -63,7 +70,7 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText("First Scan")
 
     def nextscan_onclick(self):
-        for x in range(100):
+        for x in range(3):
             self.add_element_to_addresstable("asdf", "_start+8", 4)
         t = Thread(target=GDB_Engine.test)  # test
         # t2=Thread(target=test2)
@@ -92,9 +99,9 @@ class MainForm(QMainWindow, MainWindow):
         application = QApplication.instance()
         application.closeAllWindows()
 
-    def add_element_to_addresstable(self, description, address, type):
+    def add_element_to_addresstable(self, description, address, typeofaddress):
         frozen_checkbox = QCheckBox()
-        type = GuiUtils.valuetype_to_text(type)
+        typeofaddress = GuiUtils.valuetype_to_text(typeofaddress)
 
         # this line lets us take symbols as parameters, pretty rad isn't?
         # warning: if you pass an actual symbol to the function below in a long for loop, it slows the process down significantly
@@ -104,7 +111,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setCellWidget(currentrow, 0, frozen_checkbox)
         self.tableWidget_addresstable.setItem(currentrow, 1, QTableWidgetItem(description))
         self.tableWidget_addresstable.setItem(currentrow, 2, QTableWidgetItem(address))
-        self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(type))
+        self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(typeofaddress))
 
 
 # process select window
@@ -199,7 +206,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.lineEdit_length.textChanged.connect(self.length_text_on_change)
         self.checkBox_Unicode.stateChanged.connect(self.unicode_box_on_check)
         self.update_needed = False
-        self.lineEdit_addaddressmanually.textChanged.connect(self.addaddressmanually_on_change)
+        self.lineEdit_address.textChanged.connect(self.address_on_change)
         self.update_thread = Thread(target=self.update_value_of_address)
         self.update_thread.daemon = True
         self.update_thread.start()
@@ -210,7 +217,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             sleep(0.01)
             if self.update_needed:
                 self.update_needed = False
-                address = self.lineEdit_addaddressmanually.text()
+                address = self.lineEdit_address.text()
                 address_type = self.comboBox_ValueType.currentIndex()
                 if address_type is 7:
                     length = self.lineEdit_length.text()
@@ -223,7 +230,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                 else:
                     self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type))
 
-    def addaddressmanually_on_change(self):
+    def address_on_change(self):
         self.update_needed = True
 
     def length_text_on_change(self):
@@ -254,6 +261,12 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def accept(self):
         self.update_thread._is_stopped = True
         super(ManualAddressDialogForm, self).accept()
+
+    def getvalues(self):
+        description = self.lineEdit_description.text()
+        address = self.lineEdit_address.text()
+        typeofaddress = self.comboBox_ValueType.currentIndex()
+        return description, address, typeofaddress
 
 
 if __name__ == "__main__":
