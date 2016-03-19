@@ -63,10 +63,11 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText("First Scan")
 
     def nextscan_onclick(self):
-        self.add_element_to_addresstable("asdf", "0x00400000", 4)
-        # t = Thread(target=GDB_Engine.test)  # test
+        for x in range(100):
+            self.add_element_to_addresstable("asdf", "_start+8", 4)
+        t = Thread(target=GDB_Engine.test)  # test
         # t2=Thread(target=test2)
-        # t.start()
+        t.start()
         # t2.start()
         if self.tableWidget_valuesearchtable.rowCount() <= 0:
             return
@@ -93,16 +94,17 @@ class MainForm(QMainWindow, MainWindow):
 
     def add_element_to_addresstable(self, description, address, type):
         frozen_checkbox = QCheckBox()
-        value = GDB_Engine.read_single_address(address, type)
         type = GuiUtils.valuetype_to_text(type)
-        address = GDB_Engine.convert_address_to_symbol(address)
+
+        # this line lets us take symbols as parameters, pretty rad isn't?
+        # warning: if you pass an actual symbol to the function below in a long for loop, it slows the process down significantly
+        address = GDB_Engine.convert_symbol_to_address(address)
         self.tableWidget_addresstable.setRowCount(self.tableWidget_addresstable.rowCount() + 1)
         currentrow = self.tableWidget_addresstable.rowCount() - 1
         self.tableWidget_addresstable.setCellWidget(currentrow, 0, frozen_checkbox)
         self.tableWidget_addresstable.setItem(currentrow, 1, QTableWidgetItem(description))
         self.tableWidget_addresstable.setItem(currentrow, 2, QTableWidgetItem(address))
         self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(type))
-        self.tableWidget_addresstable.setItem(currentrow, 4, QTableWidgetItem(value))
 
 
 # process select window
@@ -251,8 +253,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def accept(self):
         self.update_thread._is_stopped = True
-        MainForm.add_element_to_addresstable(MainForm(), self.lineEdit_description.text(),
-                                             self.lineEdit_addaddressmanually.text(), 4)
         super(ManualAddressDialogForm, self).accept()
 
 
