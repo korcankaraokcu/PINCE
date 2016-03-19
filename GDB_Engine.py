@@ -183,9 +183,19 @@ def convert_address_to_symbol(string):
     return string
 
 
+# Converts the given symbol to address if symbol is valid
+def convert_symbol_to_address(string):
+    if not search(r"0x[0-9a-fA-F]+", string):  # if string is not an address
+        result = send_command("x/x " + string)
+        filteredresult = search(r"0x[0-9a-fA-F]+\s+<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
+        if filteredresult:
+            return split(" ", filteredresult.group(0))[0]
+    return string
+
+
 def test():
     for x in range(0, 10):
-        print(send_command('x/x 0x0'))
+        print(send_command('x/x _start'))
 
 
 def test2():
