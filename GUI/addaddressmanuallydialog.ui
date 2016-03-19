@@ -26,7 +26,7 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QLineEdit" name="lineEdit_addaddressmanually">
+        <widget class="QLineEdit" name="lineEdit_address">
          <property name="text">
           <string>0x</string>
          </property>

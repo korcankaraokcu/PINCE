@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'addaddressmanuallydialog.ui'
 #
-# Created: Mon Mar 14 21:49:19 2016
+# Created: Sat Mar 19 15:31:41 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -23,9 +23,9 @@ class Ui_Dialog(object):
         self.verticalLayout_2.addWidget(self.label)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.lineEdit_addaddressmanually = QtWidgets.QLineEdit(Dialog)
-        self.lineEdit_addaddressmanually.setObjectName("lineEdit_addaddressmanually")
-        self.horizontalLayout.addWidget(self.lineEdit_addaddressmanually)
+        self.lineEdit_address = QtWidgets.QLineEdit(Dialog)
+        self.lineEdit_address.setObjectName("lineEdit_address")
+        self.horizontalLayout.addWidget(self.lineEdit_address)
         self.label_2 = QtWidgets.QLabel(Dialog)
         self.label_2.setObjectName("label_2")
         self.horizontalLayout.addWidget(self.label_2)
@@ -97,7 +97,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         self.label.setText(_translate("Dialog", "Address:"))
-        self.lineEdit_addaddressmanually.setText(_translate("Dialog", "0x"))
+        self.lineEdit_address.setText(_translate("Dialog", "0x"))
         self.label_2.setText(_translate("Dialog", "="))
         self.label_valueofaddress.setText(_translate("Dialog", "??"))
         self.label_4.setText(_translate("Dialog", "Description:"))
