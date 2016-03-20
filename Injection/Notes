@@ -1,0 +1,5 @@
+Compile C files with -g option for gdb to read their symbols.
+
+For example:
+
+"gcc -shared -g -o InitialCodeInjections.so -fPIC InitialCodeInjections.c"
