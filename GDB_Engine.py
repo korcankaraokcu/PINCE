@@ -86,9 +86,9 @@ def inject_additional_threads():
     global infinite_thread_id
     send_command("interrupt")
     scriptdirectory = SysUtils.get_current_script_directory()
-    injectionpath = '"' + scriptdirectory + '/Injection/AdditionalThreadInjection.so"'
+    injectionpath = '"' + scriptdirectory + '/Injection/InitialCodeInjections.so"'
     send_command("call dlopen(" + injectionpath + ", 2)")
-    result = send_command("call injection()")
+    result = send_command("call inject_infinite_thread()")
     send_command("c &")
     filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
 
