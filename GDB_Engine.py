@@ -116,8 +116,8 @@ def valuetype_to_gdbcommand(index=int):
 # typeofaddress is derived from valuetype_to_gdbcommand
 # length parameter only gets passed when reading strings or array of bytes
 # unicode and zero_terminate parameters are only for strings
-def read_single_address(address, typeofaddress, length=None, unicode=False, zero_terminate=True):
-    if search(r'\$|\s|"', address):  # These characters make gdb show it's value history, so they should be avoided
+def read_single_address(address, typeofaddress, length=None, is_unicode=False, zero_terminate=True):
+    if search(r'\$|\s', address):  # These characters make gdb show it's value history, so they should be avoided
         return "??"
     if address is "":
         return "??"
@@ -137,7 +137,7 @@ def read_single_address(address, typeofaddress, length=None, unicode=False, zero
         return "??"
     elif typeofaddress is 6:  # string
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
-        if not unicode:
+        if not is_unicode:
             try:
                 expectedlength = str(int(length))
             except:
@@ -153,7 +153,7 @@ def read_single_address(address, typeofaddress, length=None, unicode=False, zero
         if filteredresult:
             filteredresult = ''.join(filteredresult)
             returned_string = filteredresult.replace(r"\t0x", "")
-            if not unicode:
+            if not is_unicode:
                 returned_string = bytes.fromhex(returned_string).decode("ascii", "replace")
             else:
                 returned_string = bytes.fromhex(returned_string).decode("utf-8", "replace")
