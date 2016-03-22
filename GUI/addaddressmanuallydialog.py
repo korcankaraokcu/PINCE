@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'addaddressmanuallydialog.ui'
 #
-# Created: Tue Mar 22 19:04:11 2016
+# Created: Tue Mar 22 19:45:53 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(316, 222)
+        Dialog.resize(357, 222)
         Dialog.setWindowTitle("")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
@@ -55,6 +55,7 @@ class Ui_Dialog(object):
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.comboBox_ValueType = QtWidgets.QComboBox(Dialog)
+        self.comboBox_ValueType.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
         self.comboBox_ValueType.setObjectName("comboBox_ValueType")
         self.comboBox_ValueType.addItem("")
         self.comboBox_ValueType.addItem("")
@@ -65,6 +66,8 @@ class Ui_Dialog(object):
         self.comboBox_ValueType.addItem("")
         self.comboBox_ValueType.addItem("")
         self.horizontalLayout_2.addWidget(self.comboBox_ValueType)
+        spacerItem1 = QtWidgets.QSpacerItem(13, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem1)
         self.label_length = QtWidgets.QLabel(Dialog)
         self.label_length.setObjectName("label_length")
         self.horizontalLayout_2.addWidget(self.label_length)
