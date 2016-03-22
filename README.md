@@ -21,7 +21,8 @@ sudo pip3 install psutil
 sudo pip3 install pexpect
 ```  
   
-Then ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```
+Then create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
+Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```
   
 #History
 - A few weeks till 17/01/2016 : Learned GDB, process of analysis
