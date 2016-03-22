@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string/>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_4">
+  <layout class="QVBoxLayout" name="verticalLayout_5">
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
@@ -82,83 +82,101 @@
     </layout>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_3">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Type:</string>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Type:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QComboBox" name="comboBox_ValueType">
+           <property name="currentIndex">
+            <number>2</number>
+           </property>
+           <item>
+            <property name="text">
+             <string>Byte</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2 Bytes</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>4 Bytes</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>8 Bytes</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Float</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Double</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>String</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Array of bytes</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_length">
+           <property name="text">
+            <string>Length</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_length">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="text">
+            <string>10</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <widget class="QComboBox" name="comboBox_ValueType">
-         <property name="currentIndex">
-          <number>2</number>
-         </property>
-         <item>
-          <property name="text">
-           <string>Byte</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>2 Bytes</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>4 Bytes</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>8 Bytes</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Float</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Double</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>String</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Array of bytes</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_length">
+        <widget class="QCheckBox" name="checkBox_zeroterminate">
          <property name="text">
-          <string>Length</string>
+          <string>Zero-Terminated</string>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit_length">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="inputMask">
-          <string/>
-         </property>
-         <property name="text">
-          <string>10</string>
+         <property name="checked">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -168,19 +186,6 @@
           <string>Unicode</string>
          </property>
         </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </item>
