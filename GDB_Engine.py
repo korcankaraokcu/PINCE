@@ -62,14 +62,10 @@ def attach(pid=str):
     # a creative and meaningful number for such a marvelous and magnificent program PINCE is
     child.timeout = 900000
     child.expect_exact("(gdb)")
-    send_command("set disassembly-flavor intel")
-    send_command("set target-async 1")
-    send_command("set pagination off")
-    send_command("set non-stop on")
     send_command("attach " + pid + "&")
     send_command("1")  # to swallow up the surplus output
     print("Injecting Thread")  # progress bar text change
-    return inject_additional_threads()
+    return inject_initial_codes()
 
 
 # Farewell...
@@ -81,7 +77,7 @@ def detach():
 
 # Injects a thread that runs forever at the background, it'll be used to execute GDB commands on
 # Also saves the injected thread's location and ID as strings, then switches to that thread and stops it
-def inject_additional_threads():
+def inject_initial_codes():
     global infinite_thread_location
     global infinite_thread_id
     send_command("interrupt")
