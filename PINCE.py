@@ -2,7 +2,7 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from time import sleep
+from time import sleep, time
 from threading import Thread
 
 import GuiUtils
@@ -70,8 +70,10 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText("First Scan")
 
     def nextscan_onclick(self):
-        for x in range(3):
-            self.add_element_to_addresstable("asdf", "_start+8", 4)
+        t0 = time()
+        GDB_Engine.send_command("keks")
+        t1 = time()
+        print(t1 - t0)
         t = Thread(target=GDB_Engine.test)  # test
         # t2=Thread(target=test2)
         t.start()
@@ -224,9 +226,9 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                     self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type, length))
                 elif address_type is 6:
                     length = self.lineEdit_length.text()
-                    isunicode = self.checkBox_Unicode.isChecked()
+                    is_unicode = self.checkBox_Unicode.isChecked()
                     self.label_valueofaddress.setText(
-                        GDB_Engine.read_single_address(address, address_type, length, isunicode))
+                        GDB_Engine.read_single_address(address, address_type, length, is_unicode))
                 else:
                     self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type))
 
