@@ -8,7 +8,6 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GUI/addaddressmanuallydialog.ui" afterPath="$PROJECT_DIR$/GUI/addaddressmanuallydialog.ui" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GUI/addaddressmanuallydialog.py" afterPath="$PROJECT_DIR$/GUI/addaddressmanuallydialog.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PINCE.py" afterPath="$PROJECT_DIR$/PINCE.py" />
     </list>
     <ignored path="untitled.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -32,8 +31,8 @@
       <file leaf-file-name="PINCE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PINCE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.6723301">
-              <caret line="208" column="37" selection-start-line="208" selection-start-column="37" selection-end-line="208" selection-end-column="37" />
+            <state vertical-scroll-proportion="-1.4029126">
+              <caret line="208" column="38" selection-start-line="208" selection-start-column="38" selection-end-line="208" selection-end-column="38" />
               <folding>
                 <element signature="e#19#48#0" expanded="true" />
               </folding>
@@ -922,8 +921,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PINCE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6723301">
-          <caret line="208" column="37" selection-start-line="208" selection-start-column="37" selection-end-line="208" selection-end-column="37" />
+        <state vertical-scroll-proportion="-1.4029126">
+          <caret line="208" column="38" selection-start-line="208" selection-start-column="38" selection-end-line="208" selection-end-column="38" />
           <folding>
             <element signature="e#19#48#0" expanded="true" />
           </folding>
