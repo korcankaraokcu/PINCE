@@ -204,9 +204,11 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.label_length.hide()
         self.lineEdit_length.hide()
         self.checkBox_Unicode.hide()
+        self.checkBox_zeroterminate.hide()
         self.comboBox_ValueType.currentIndexChanged.connect(self.valuetype_on_current_index_change)
         self.lineEdit_length.textChanged.connect(self.length_text_on_change)
         self.checkBox_Unicode.stateChanged.connect(self.unicode_box_on_check)
+        self.checkBox_zeroterminate.stateChanged.connect(self.zeroterminate_box_on_check)
         self.update_needed = False
         self.lineEdit_address.textChanged.connect(self.address_on_change)
         self.update_thread = Thread(target=self.update_value_of_address)
@@ -227,8 +229,9 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                 elif address_type is 6:
                     length = self.lineEdit_length.text()
                     is_unicode = self.checkBox_Unicode.isChecked()
+                    is_zeroterminate = self.checkBox_zeroterminate.isChecked()
                     self.label_valueofaddress.setText(
-                        GDB_Engine.read_single_address(address, address_type, length, is_unicode))
+                        GDB_Engine.read_single_address(address, address_type, length, is_unicode, is_zeroterminate))
                 else:
                     self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type))
 
@@ -241,19 +244,25 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def unicode_box_on_check(self):
         self.update_needed = True
 
+    def zeroterminate_box_on_check(self):
+        self.update_needed = True
+
     def valuetype_on_current_index_change(self):
         if self.comboBox_ValueType.currentIndex() == 6:  # if index points to string
             self.label_length.show()
             self.lineEdit_length.show()
             self.checkBox_Unicode.show()
+            self.checkBox_zeroterminate.show()
         elif self.comboBox_ValueType.currentIndex() == 7:  # if index points to array of bytes
             self.label_length.show()
             self.lineEdit_length.show()
             self.checkBox_Unicode.hide()
+            self.checkBox_zeroterminate.hide()
         else:
             self.label_length.hide()
             self.lineEdit_length.hide()
             self.checkBox_Unicode.hide()
+            self.checkBox_zeroterminate.hide()
         self.update_needed = True
 
     def reject(self):
