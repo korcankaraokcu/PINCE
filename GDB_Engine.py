@@ -57,6 +57,7 @@ def can_attach(pid=str):
 def attach(pid=str):
     global child
     child = pexpect.spawnu('sudo gdb --interpreter=mi')
+    child.cwd = SysUtils.get_current_script_directory()
     child.setecho(False)
 
     # a creative and meaningful number for such a marvelous and magnificent program PINCE is

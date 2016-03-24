@@ -71,12 +71,12 @@ class MainForm(QMainWindow, MainWindow):
 
     def nextscan_onclick(self):
         t0 = time()
-        GDB_Engine.send_command("keks")
+        print(GDB_Engine.send_command("source IPC/deneme.py"))
         t1 = time()
         print(t1 - t0)
-        t = Thread(target=GDB_Engine.test)  # test
+        # t = Thread(target=GDB_Engine.test)  # test
         # t2=Thread(target=test2)
-        t.start()
+        # t.start()
         # t2.start()
         if self.tableWidget_valuesearchtable.rowCount() <= 0:
             return
