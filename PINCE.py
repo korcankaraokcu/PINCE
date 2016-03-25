@@ -71,7 +71,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def nextscan_onclick(self):
         t0 = time()
-        print(GDB_Engine.send_command("source IPC/deneme.py"))
+        print(GDB_Engine.send_command("source IPC/ScriptUtils.py"))
         t1 = time()
         print(t1 - t0)
         # t = Thread(target=GDB_Engine.test)  # test
@@ -114,6 +114,9 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setItem(currentrow, 1, QTableWidgetItem(description))
         self.tableWidget_addresstable.setItem(currentrow, 2, QTableWidgetItem(address))
         self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(typeofaddress))
+
+    def update_addresstable(self):
+        print("asdf")
 
 
 # process select window
