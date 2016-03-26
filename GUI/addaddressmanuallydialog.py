@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'addaddressmanuallydialog.ui'
 #
-# Created: Tue Mar 22 19:45:53 2016
+# Created: Sat Mar 26 20:26:19 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -66,8 +66,6 @@ class Ui_Dialog(object):
         self.comboBox_ValueType.addItem("")
         self.comboBox_ValueType.addItem("")
         self.horizontalLayout_2.addWidget(self.comboBox_ValueType)
-        spacerItem1 = QtWidgets.QSpacerItem(13, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_2.addItem(spacerItem1)
         self.label_length = QtWidgets.QLabel(Dialog)
         self.label_length.setObjectName("label_length")
         self.horizontalLayout_2.addWidget(self.label_length)
@@ -80,6 +78,8 @@ class Ui_Dialog(object):
         self.lineEdit_length.setInputMask("")
         self.lineEdit_length.setObjectName("lineEdit_length")
         self.horizontalLayout_2.addWidget(self.lineEdit_length)
+        spacerItem1 = QtWidgets.QSpacerItem(13, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem1)
         self.verticalLayout_4.addLayout(self.horizontalLayout_2)
         self.horizontalLayout_3.addLayout(self.verticalLayout_4)
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
