@@ -4,11 +4,7 @@
     <bookmark url="file://$PROJECT_DIR$/GDB_Engine.py" line="85" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="26a0030d-f8a3-4790-bcea-d5cfde026b84" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GUI/addaddressmanuallydialog.ui" afterPath="$PROJECT_DIR$/GUI/addaddressmanuallydialog.ui" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GUI/addaddressmanuallydialog.py" afterPath="$PROJECT_DIR$/GUI/addaddressmanuallydialog.py" />
-    </list>
+    <list default="true" id="26a0030d-f8a3-4790-bcea-d5cfde026b84" name="Default" comment="" />
     <ignored path="untitled.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -31,7 +27,7 @@
       <file leaf-file-name="PINCE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PINCE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.03649635">
+            <state vertical-scroll-proportion="0.3649635">
               <caret line="66" column="35" selection-start-line="66" selection-start-column="35" selection-end-line="66" selection-end-column="35" />
               <folding>
                 <element signature="e#19#48#0" expanded="true" />
@@ -931,7 +927,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PINCE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.03649635">
+        <state vertical-scroll-proportion="0.3649635">
           <caret line="66" column="35" selection-start-line="66" selection-start-column="35" selection-end-line="66" selection-end-column="35" />
           <folding>
             <element signature="e#19#48#0" expanded="true" />
