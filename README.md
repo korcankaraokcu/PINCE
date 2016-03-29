@@ -1,13 +1,19 @@
 #PINCE  
-PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt5. It can do  
-  
-- Memory searching(planned)
-- Variable Inspection(working on it)
-- Disassemble(planned)
-- Debugging(planned)
-- Code Injection(planned)
-  
-PINCE is a abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine.  
+PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt5. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine.  
+#Features   
+- **NO BRAKES ON THIS TRAIN:** PINCE can run **ANY** gdb command without having to pause the inferior **[Done]**
+- **Memory searching** **[Planned]**
+- **Variable Inspection** **[Working on it]**
+  * **CheatEngine-like value type support:** Byte to 8 Bytes, Float, Double, Strings(including utf-8 and zero-terminate strings), Array of Bytes **[Done]**
+  * **Symbol Recognition:**Try typing any widely used library function(such as malloc, open, printf, scanf etc) to AddAddressManually dialog **[Done]**
+  * **Automatic String Conversion:**If you type a string in quotes to AddAddressManually dialog, PINCE can convert it to any other type and after pressing OK button PINCE will allocate memory for you to use that string right away! **[Done]**
+  * **Dynamic Address Table:** **[Done]**
+  * **Continuous Address Table Update:** **[Working on it]**
+  * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables **[Working on it]**
+- **Disassemble** **[Planned]**
+- **Debugging** **[Planned]**
+- **Code Injection** **[Working on it]**
+  * PINCE can inject any code to a running process without pausing it
 
 #Building  
 To run PINCE, simply run this command chain:  
