@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import psutil
 from re import match, search, IGNORECASE
-from os import path
+from os import path, makedirs
 from sys import path as syspath
 
 
@@ -84,7 +84,7 @@ def is_traced(pid=int):
 
 # return True if the process is still running, False if not
 def is_process_valid(pid=int):
-    return path.exists("/proc/%d" % pid)
+    return is_path_valid("/proc/%d" % pid)
 
 
 # returns a string pointing to the home directory
@@ -95,3 +95,10 @@ def get_home_directory():
 # returns a string pointing to the py file currently working
 def get_current_script_directory():
     return syspath[0]
+
+def is_path_valid(dest_path, create_path=False):
+    if not path.exists(dest_path):
+        if create_path:
+            makedirs(dest_path)
+        return False
+    return True
