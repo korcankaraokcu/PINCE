@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 from re import search, split, findall
-from threading import Lock
+from threading import Lock, Thread
 from time import sleep
 import pexpect
 
 import SysUtils
 
+currentpid = 0
 child = object  # this object will be used with pexpect operations
 infinite_thread_location = str  # location of the injected thread that runs forever at background
 infinite_thread_id = str  # id of the injected thread that runs forever at background
@@ -55,6 +56,8 @@ def can_attach(pid=str):
 
 # self-explanatory
 def attach(pid=str):
+    address_table_update_thread = Thread(target=SysUtils.update_address_table, args=(pid,))
+    address_table_update_thread.start()
     global child
     child = pexpect.spawnu('sudo gdb --interpreter=mi')
     child.cwd = SysUtils.get_current_script_directory()
@@ -66,13 +69,18 @@ def attach(pid=str):
     send_command("attach " + pid + "&")
     send_command("1")  # to swallow up the surplus output
     print("Injecting Thread")  # progress bar text change
+    global currentpid
+    currentpid = int(pid)
     return inject_initial_codes()
 
 
 # Farewell...
 def detach():
     global child
+    global currentpid
     child.sendline("q")
+    SysUtils.do_cleanups(currentpid)
+    currentpid = 0
     child.close()
 
 
@@ -86,6 +94,7 @@ def inject_initial_codes():
     injectionpath = '"' + scriptdirectory + '/Injection/InitialCodeInjections.so"'
     send_command("call dlopen(" + injectionpath + ", 2)")
     result = send_command("call inject_infinite_thread()")
+    send_command("call inject_table_update_thread()")
     send_command("c &")
     filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
 

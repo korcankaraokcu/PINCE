@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 import psutil
+import os
+import shutil
+import sys
 from re import match, search, IGNORECASE
-from os import path, makedirs
-from sys import path as syspath
 
 
 # returns a list of currently working processes
@@ -89,16 +90,39 @@ def is_process_valid(pid=int):
 
 # returns a string pointing to the home directory
 def get_home_directory():
-    return path.expanduser("~")
+    return os.path.expanduser("~")
 
 
 # returns a string pointing to the py file currently working
 def get_current_script_directory():
-    return syspath[0]
+    return sys.path[0]
 
-def is_path_valid(dest_path, create_path=False):
-    if not path.exists(dest_path):
-        if create_path:
-            makedirs(dest_path)
+
+def is_path_valid(dest_path, issue_path=""):
+    if not os.path.exists(dest_path):
+        if issue_path:
+            if issue_path is "create":
+                os.makedirs(dest_path)
+            elif issue_path is "delete":
+                shutil.rmtree(dest_path)
         return False
     return True
+
+
+# communicates with the inferior via a named pipe and reads the values from it
+def update_address_table(pid):
+    fifo_path = "/tmp/PINCE/" + pid
+    is_path_valid(fifo_path, "create")
+    os.mkfifo(fifo_path + "/Inferior-to-PINCE")
+    fifo_send = open(fifo_path + "/PINCE-to-Inferior", "w")
+    fifo_recv = open(fifo_path + "/Inferior-to-PINCE", "r")
+    fifo_send.write("0")
+    fifo_recv.close()
+    fifo_send.close()
+    do_cleanups(pid)
+
+
+# removes the corresponding pid file
+def do_cleanups(pid):
+    # if you don't remove the path PINCE won't be able to use the fifo on same pid again
+    is_path_valid("/tmp/PINCE/" + str(pid), "delete")
