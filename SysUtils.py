@@ -99,14 +99,14 @@ def get_current_script_directory():
 
 
 def is_path_valid(dest_path, issue_path=""):
-    if not os.path.exists(dest_path):
-        if issue_path:
-            if issue_path is "create":
-                os.makedirs(dest_path)
-            elif issue_path is "delete":
-                shutil.rmtree(dest_path)
+    if os.path.exists(dest_path):
+        if issue_path is "delete":
+            shutil.rmtree(dest_path)
+        return True
+    else:
+        if issue_path is "create":
+            os.makedirs(dest_path)
         return False
-    return True
 
 
 # communicates with the inferior via a named pipe and reads the values from it
