@@ -196,6 +196,10 @@ def convert_symbol_to_address(string):
         filteredresult = search(r"0x[0-9a-fA-F]+\s+<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
         if filteredresult:
             return split(" ", filteredresult.group(0))[0]
+        else:
+            filteredresult = search(r"0x[0-9a-fA-F]+:\\t", result)  # 0x1f58010:\t0x00647361\n
+            if filteredresult:
+                return split(":", filteredresult.group(0))[0]
     return string
 
 
