@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from time import sleep, time
 from threading import Thread
+from os import getpid
 
 import GuiUtils
 import SysUtils
@@ -15,6 +16,7 @@ from GUI.addaddressmanuallydialog import Ui_Dialog as ManualAddressDialog
 
 # the PID of the process we'll attach to
 currentpid = 0
+selfpid = getpid()
 
 
 # Checks if the inferior has been terminated
@@ -166,6 +168,9 @@ class ProcessForm(QMainWindow, ProcessWindow):
             pid = int(currentitem.text())
             if not SysUtils.is_process_valid(pid):
                 QMessageBox.information(self, "Error", "Selected process is not valid")
+                return
+            if pid == selfpid:
+                QMessageBox.information(self, "Error", "What the fuck are you trying to do?")  # planned easter egg
                 return
             if pid == currentpid:
                 QMessageBox.information(self, "Error", "You're debugging this process already")
