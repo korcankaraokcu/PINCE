@@ -56,8 +56,8 @@ def can_attach(pid=str):
 
 # self-explanatory
 def attach(pid=str):
-    address_table_update_thread = Thread(target=SysUtils.update_address_table, args=(pid,))
-    address_table_update_thread.start()
+    # address_table_update_thread = Thread(target=SysUtils.update_address_table, args=(pid,))
+    # address_table_update_thread.start()  disabled temporarily
     global child
     child = pexpect.spawnu('sudo gdb --interpreter=mi')
     child.cwd = SysUtils.get_current_script_directory()
@@ -94,7 +94,7 @@ def inject_initial_codes():
     injectionpath = '"' + scriptdirectory + '/Injection/InitialCodeInjections.so"'
     send_command("call dlopen(" + injectionpath + ", 2)")
     result = send_command("call inject_infinite_thread()")
-    send_command("call inject_table_update_thread()")
+    # send_command("call inject_table_update_thread()")  disabled temporarily
     send_command("c &")
     filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
 
