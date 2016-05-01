@@ -35,6 +35,7 @@ class UpdateAddressTable(QThread):
         super().__init__()
         self.pid = pid
 
+# communicates with the inferior via files and reads the values from them
     def run(self):
         directory_path = "/tmp/PINCE/" + self.pid
         SysUtils.is_path_valid(directory_path, "create")
@@ -42,13 +43,15 @@ class UpdateAddressTable(QThread):
         recv_file = directory_path + "/Inferior-to-PINCE.txt"
         status_file = directory_path + "/status.txt"
         abort_file = directory_path + "/abort.txt"
-        abort_verify_file = directory_path + "/abort-verify.txt"
         FILE = open(send_file, "w")
         FILE.close()
         FILE = open(recv_file, "w")
         FILE.close()
         FILE = open(status_file, "w")
         FILE.close()
+        os.chmod(send_file, 0o777)
+        os.chmod(recv_file, 0o777)
+        os.chmod(status_file, 0o777)
         while True:
             status_word = "waiting"
             while status_word not in "sync-request-recieve":
@@ -58,9 +61,6 @@ class UpdateAddressTable(QThread):
                 try:
                     abort = open(abort_file, "r")
                     abort.close()
-                    os.remove(abort_file)
-                    abort_verify = open(abort_verify_file, "w")
-                    abort_verify.close()
                     return
                 except:
                     pass
@@ -99,8 +99,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_CopyToAddressList.setIcon(QIcon.fromTheme('emblem-downloads'))
         self.pushButton_CleanAddressList.setIcon(QIcon.fromTheme('user-trash'))
 
-    # communicates with the inferior via a file and reads the values from it
-    def update_address_table(pid):
+    def send_address_table_contents(pid):
         directory_path = "/tmp/PINCE/" + pid
         SysUtils.is_path_valid(directory_path, "create")
         file_send = open(directory_path + "/PINCE-to-Inferior", "w")

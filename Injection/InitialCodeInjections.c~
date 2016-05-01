@@ -18,13 +18,12 @@ void inject_infinite_thread()
 void *infinite_thread(void *a)
 {
 	int selfpid=getpid();
-	char abort_file[100];
-	sprintf(abort_file, "/tmp/PINCE/%d/abort.txt", selfpid);
-	FILE *exit;
+	char abort_verify_file[100];
 	while(1)
 	{
 		sleep(1);
-		exit = fopen(abort_file, "r");
+		FILE *exit;
+		exit = fopen(abort_verify_file, "r");
 		if(exit!=NULL){
 			fclose(exit);
 			return 0;
