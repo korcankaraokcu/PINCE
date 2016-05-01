@@ -109,20 +109,6 @@ def is_path_valid(dest_path, issue_path=""):
         return False
 
 
-# communicates with the inferior via a named pipe and reads the values from it
-def update_address_table(pid):
-    fifo_path = "/tmp/PINCE/" + pid
-    is_path_valid(fifo_path, "create")
-    os.mkfifo(fifo_path + "/Inferior-to-PINCE")
-    fifo_send = open(fifo_path + "/PINCE-to-Inferior", "w")
-    fifo_recv = open(fifo_path + "/Inferior-to-PINCE", "r")
-    fifo_send.write("0")
-    fifo_recv.close()
-    fifo_send.close()
-    do_cleanups(pid)
-
-
 # removes the corresponding pid file
 def do_cleanups(pid):
-    # if you don't remove the path PINCE won't be able to use the fifo on same pid again
     is_path_valid("/tmp/PINCE/" + str(pid), "delete")

@@ -34,19 +34,45 @@ void inject_table_update_thread()
 void *table_update_thread(void *a)
 {
 	int selfpid=getpid();
-	int fd_recv;
-	int fd_send;
-	char status_word[]="1";
-	char recv_fifo[100];
-	char send_fifo[100];
-	sprintf(recv_fifo, "/tmp/PINCE/%d/PINCE-to-Inferior", selfpid);
-	sprintf(send_fifo, "/tmp/PINCE/%d/Inferior-to-PINCE", selfpid);
-	mkfifo(recv_fifo, 0666);
-   	fd_recv = open(recv_fifo, O_RDONLY);
-	fd_send = open(send_fifo, O_WRONLY);
-	while (strcmp(status_word,"0")!=0){
-		read(fd_recv, status_word, 1);
+	char status_file[100];
+	char recv_file[100];
+	char send_file[100];
+	char abort_verify_file[100];
+	sprintf(recv_file, "/tmp/PINCE/%d/PINCE-to-Inferior.txt", selfpid);
+	sprintf(send_file, "/tmp/PINCE/%d/Inferior-to-PINCE.txt", selfpid);
+	sprintf(status_file, "/tmp/PINCE/%d/status.txt", selfpid);
+	sprintf(abort_verify_file, "/tmp/PINCE/%d/abort-verify.txt", selfpid);
+	FILE *fp;
+	FILE *status;
+	FILE *exit;
+	FILE *initialize;
+	char buff[255]="";
+	char status_word[255]="";
+	initialize = fopen(status_file, "r");
+	while(initialize==NULL){
+		initialize = fopen(status_file, "r");
 	}
-   	close(fd_recv);
-	close(fd_send);
+	fclose(initialize);
+	while(1){
+		sleep(1);
+		status = fopen(status_file, "w");
+		fputs("sync-request-recieve", status);
+		fclose(status);
+		exit = fopen(abort_verify_file, "r");
+		if(exit!=NULL){
+			fclose(exit);
+			//remove(abort_verify_file);
+			//remove(status_file);
+			//remove(recv_file);
+			//remove(send_file);
+			//pthread_exit(0);
+		}
+		fp = fopen(recv_file, "r");
+		fscanf(fp, "%s", buff);
+		//printf("%s\n", buff );
+		fclose(fp);
+		fp = fopen(send_file, "w");
+		fputs("a", fp);
+		fclose(fp);
+	}
 }
