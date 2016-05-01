@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from time import sleep, time
 from threading import Thread
-from os import getpid
+import os
 
 import GuiUtils
 import SysUtils
@@ -16,7 +16,7 @@ from GUI.addaddressmanuallydialog import Ui_Dialog as ManualAddressDialog
 
 # the PID of the process we'll attach to
 currentpid = 0
-selfpid = getpid()
+selfpid = os.getpid()
 
 
 # Checks if the inferior has been terminated
@@ -27,6 +27,52 @@ class AwaitProcessExit(QThread):
         while SysUtils.is_process_valid(currentpid) or currentpid is 0:
             sleep(0.1)
         self.process_exited.emit()
+
+
+# A thread that updates the address table constantly
+class UpdateAddressTable(QThread):
+    def __init__(self, pid):
+        super().__init__()
+        self.pid = pid
+
+    def run(self):
+        directory_path = "/tmp/PINCE/" + self.pid
+        SysUtils.is_path_valid(directory_path, "create")
+        send_file = directory_path + "/PINCE-to-Inferior.txt"
+        recv_file = directory_path + "/Inferior-to-PINCE.txt"
+        status_file = directory_path + "/status.txt"
+        abort_file = directory_path + "/abort.txt"
+        abort_verify_file = directory_path + "/abort-verify.txt"
+        FILE = open(send_file, "w")
+        FILE.close()
+        FILE = open(recv_file, "w")
+        FILE.close()
+        FILE = open(status_file, "w")
+        FILE.close()
+        while True:
+            status_word = "waiting"
+            while status_word not in "sync-request-recieve":
+                status = open(status_file, "r")
+                status_word = status.read()
+                status.close()
+                try:
+                    abort = open(abort_file, "r")
+                    abort.close()
+                    os.remove(abort_file)
+                    abort_verify = open(abort_verify_file, "w")
+                    abort_verify.close()
+                    return
+                except:
+                    pass
+            status = open(status_file, "w")
+            status.write("sync-request-send")
+            status.close()
+            FILE = open(send_file, "w")
+            FILE.close()
+            FILE = open(recv_file, "r")
+            readed = FILE.read()
+            print(readed)
+            FILE.close()
 
 
 # the mainwindow
@@ -52,6 +98,18 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Settings.setIcon(QIcon.fromTheme('preferences-system'))
         self.pushButton_CopyToAddressList.setIcon(QIcon.fromTheme('emblem-downloads'))
         self.pushButton_CleanAddressList.setIcon(QIcon.fromTheme('user-trash'))
+
+    # communicates with the inferior via a file and reads the values from it
+    def update_address_table(pid):
+        directory_path = "/tmp/PINCE/" + pid
+        SysUtils.is_path_valid(directory_path, "create")
+        file_send = open(directory_path + "/PINCE-to-Inferior", "w")
+        sleep(0.5)
+        file_recv = open(directory_path + "/Inferior-to-PINCE", "r")
+        file_send.write("0")
+        file_recv.close()
+        file_send.close()
+        SysUtils.do_cleanups(pid)
 
     # gets the information from the dialog then adds it to addresstable
     def addaddressmanually_onclick(self):
@@ -116,9 +174,6 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setItem(currentrow, 1, QTableWidgetItem(description))
         self.tableWidget_addresstable.setItem(currentrow, 2, QTableWidgetItem(address))
         self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(typeofaddress))
-
-    def update_addresstable(self):
-        print("asdf")
 
 
 # process select window

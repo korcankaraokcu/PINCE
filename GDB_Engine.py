@@ -5,6 +5,7 @@ from time import sleep
 import pexpect
 
 import SysUtils
+import PINCE
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
@@ -56,11 +57,12 @@ def can_attach(pid=str):
 
 # self-explanatory
 def attach(pid=str):
-    # address_table_update_thread = Thread(target=SysUtils.update_address_table, args=(pid,))
-    # address_table_update_thread.start()  disabled temporarily
+    global currentpid
     global child
-    child = pexpect.spawnu('sudo gdb --interpreter=mi')
-    child.cwd = SysUtils.get_current_script_directory()
+    SysUtils.do_cleanups(pid)
+    address_table_update_thread = PINCE.UpdateAddressTable(pid)
+    address_table_update_thread.start()
+    child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=SysUtils.get_current_script_directory())
     child.setecho(False)
 
     # a creative and meaningful number for such a marvelous and magnificent program PINCE is
@@ -69,7 +71,6 @@ def attach(pid=str):
     send_command("attach " + pid + "&")
     send_command("1")  # to swallow up the surplus output
     print("Injecting Thread")  # progress bar text change
-    global currentpid
     currentpid = int(pid)
     return inject_initial_codes()
 
@@ -78,8 +79,8 @@ def attach(pid=str):
 def detach():
     global child
     global currentpid
+    open("/tmp/PINCE/" + str(currentpid) + "/abort.txt", "w")
     child.sendline("q")
-    SysUtils.do_cleanups(currentpid)
     currentpid = 0
     child.close()
 
@@ -94,7 +95,7 @@ def inject_initial_codes():
     injectionpath = '"' + scriptdirectory + '/Injection/InitialCodeInjections.so"'
     send_command("call dlopen(" + injectionpath + ", 2)")
     result = send_command("call inject_infinite_thread()")
-    # send_command("call inject_table_update_thread()")  disabled temporarily
+    send_command("call inject_table_update_thread()")
     send_command("c &")
     filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
 
