@@ -4,6 +4,7 @@ from threading import Lock, Thread
 from time import sleep
 import pexpect
 import os
+import ctypes
 
 import SysUtils
 import PINCE
@@ -14,6 +15,8 @@ child = object  # this object will be used with pexpect operations
 infinite_thread_location = str  # location of the injected thread that runs forever at background
 infinite_thread_id = str  # id of the injected thread that runs forever at background
 lock = Lock()
+
+libc = ctypes.CDLL('libc.so.6')
 
 # A dictionary used to convert value_combobox index to gdb/mi command
 valuetype_to_gdbcommand_dict = {
@@ -41,20 +44,13 @@ def send_command(command=str):
         return child.before
 
 
-# only this function doesn't use the function send_command, because variable a is temporary
+# check if we can attach to the target
 def can_attach(pid=str):
-    a = pexpect.spawnu('sudo gdb --interpreter=mi')
-    a.expect_exact("(gdb) ")
-    a.sendline("attach " + pid)
-    a.expect_exact("(gdb) ")
-
-    # return true if attaching is successful, false if not, then quit
-    if search(r"Operation not permitted", a.before):  # literal string
-        a.sendline("q")
-        a.close()
+    result = libc.ptrace(16, int(pid), 0, 0)  # 16 is PTRACE_ATTACH, check ptrace.h for details
+    if result is -1:
         return False
-    a.sendline("q")
-    a.close()
+    os.waitpid(int(pid), 0)
+    libc.ptrace(17, int(pid), 0, 17)  # 17 is PTRACE_DETACH, check ptrace.h for details
     return True
 
 
