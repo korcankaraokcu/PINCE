@@ -3,12 +3,14 @@ from re import search, split, findall
 from threading import Lock, Thread
 from time import sleep
 import pexpect
+import os
 
 import SysUtils
 import PINCE
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
+
 infinite_thread_location = str  # location of the injected thread that runs forever at background
 infinite_thread_id = str  # id of the injected thread that runs forever at background
 lock = Lock()
@@ -35,6 +37,7 @@ def send_command(command=str):
     with lock:
         child.sendline(command)
         child.expect_exact("(gdb)")
+        # print(child.before)  # debug mode on!
         return child.before
 
 
@@ -79,7 +82,9 @@ def attach(pid=str):
 def detach():
     global child
     global currentpid
-    open("/tmp/PINCE/" + str(currentpid) + "/abort.txt", "w")
+    abort_file = "/tmp/PINCE/" + str(currentpid) + "/abort.txt"
+    open(abort_file, "w")
+    os.chmod(abort_file, 0o777)
     child.sendline("q")
     currentpid = 0
     child.close()
@@ -95,9 +100,9 @@ def inject_initial_codes():
     injectionpath = '"' + scriptdirectory + '/Injection/InitialCodeInjections.so"'
     send_command("call dlopen(" + injectionpath + ", 2)")
     result = send_command("call inject_infinite_thread()")
+    filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
     send_command("call inject_table_update_thread()")
     send_command("c &")
-    filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
 
     # Return True is injection is successful, False if not
     if not filtered_result:
