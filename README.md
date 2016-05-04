@@ -36,3 +36,6 @@ Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```
 - 22/01/2016 : First commit
 - 19/02/2016 : Moved to Github from Bitbucket
 - 25/02/2016 : First successful implementation of thread injection(A new age dawns!)
+
+#License
+GPLv3
