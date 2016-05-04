@@ -35,9 +35,10 @@ class UpdateAddressTable(QThread):
         super().__init__()
         self.pid = pid
 
-# communicates with the inferior via files and reads the values from them
+    # communicates with the inferior via files and reads the values from them
     def run(self):
-        directory_path = "/tmp/PINCE/" + self.pid
+        SysUtils.do_cleanups(self.pid)
+        directory_path = "/tmp/PINCE-connection/" + self.pid
         SysUtils.is_path_valid(directory_path, "create")
         send_file = directory_path + "/PINCE-to-Inferior.txt"
         recv_file = directory_path + "/Inferior-to-PINCE.txt"
@@ -48,6 +49,9 @@ class UpdateAddressTable(QThread):
         FILE = open(recv_file, "w")
         FILE.close()
         FILE = open(status_file, "w")
+
+        # the inferior will try to check PINCE's presence with this information
+        FILE.write(str(selfpid))
         FILE.close()
         os.chmod(send_file, 0o777)
         os.chmod(recv_file, 0o777)
@@ -100,15 +104,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_CleanAddressList.setIcon(QIcon.fromTheme('user-trash'))
 
     def send_address_table_contents(pid):
-        directory_path = "/tmp/PINCE/" + pid
-        SysUtils.is_path_valid(directory_path, "create")
-        file_send = open(directory_path + "/PINCE-to-Inferior", "w")
-        sleep(0.5)
-        file_recv = open(directory_path + "/Inferior-to-PINCE", "r")
-        file_send.write("0")
-        file_recv.close()
-        file_send.close()
-        SysUtils.do_cleanups(pid)
+        print("will be added")
 
     # gets the information from the dialog then adds it to addresstable
     def addaddressmanually_onclick(self):
