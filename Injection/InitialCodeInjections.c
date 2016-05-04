@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <dirent.h>
 
 void *infinite_thread(void *a);
 void *table_update_thread(void *a);
@@ -17,13 +15,17 @@ void inject_infinite_thread()
 
 void *infinite_thread(void *a)
 {
+	int milliseconds=500;
+	struct timespec ts;
+	ts.tv_sec = milliseconds / 1000;
+	ts.tv_nsec = (milliseconds % 1000) * 1000000;
 	int selfpid=getpid();
 	char abort_file[100];
-	sprintf(abort_file, "/tmp/PINCE/%d/abort.txt", selfpid);
+	sprintf(abort_file, "/tmp/PINCE-connection/%d/abort.txt", selfpid);
 	FILE *exit;
 	while(1)
 	{
-		sleep(1);
+		nanosleep(&ts, NULL);
 		exit = fopen(abort_file, "r");
 		if(exit!=NULL){
 			fclose(exit);
@@ -42,42 +44,67 @@ void inject_table_update_thread()
 
 void *table_update_thread(void *a)
 {
+	int milliseconds=400;
+	struct timespec ts;
+	ts.tv_sec = milliseconds / 1000;
+	ts.tv_nsec = (milliseconds % 1000) * 1000000;
 	int selfpid=getpid();
+	char directory_path[100];
 	char status_file[100];
 	char recv_file[100];
 	char send_file[100];
 	char abort_file[100];
-	sprintf(recv_file, "/tmp/PINCE/%d/PINCE-to-Inferior.txt", selfpid);
-	sprintf(send_file, "/tmp/PINCE/%d/Inferior-to-PINCE.txt", selfpid);
-	sprintf(status_file, "/tmp/PINCE/%d/status.txt", selfpid);
-	sprintf(abort_file, "/tmp/PINCE/%d/abort.txt", selfpid);
+	sprintf(directory_path, "/tmp/PINCE-connection/%d", selfpid);
+	sprintf(recv_file, "%s/PINCE-to-Inferior.txt", directory_path);
+	sprintf(send_file, "%s/Inferior-to-PINCE.txt", directory_path);
+	sprintf(status_file, "%s/status.txt", directory_path);
+	sprintf(abort_file, "%s/abort.txt", directory_path);
+	DIR* PINCE_dir;	
 	FILE *fp;
 	FILE *status;
 	FILE *exit;
 	FILE *initialize;
-	char buff[255]="";
-	char status_word[255]="";
-	initialize = fopen(status_file, "r");
-	while(initialize==NULL){
+	//char buff[255]="";
+	char status_word[100]="";
+	char PINCE_pid[10]="";
+	char PINCE_proc_directory[100];
+	while(!strcmp(PINCE_pid, "")){
 		initialize = fopen(status_file, "r");
+		if (initialize!=NULL){
+			fscanf(initialize, "%s", PINCE_pid);
+			fclose(initialize);
+		}
 	}
-	fclose(initialize);
+	sprintf(PINCE_proc_directory, "/proc/%s/", PINCE_pid);
 	while(1){
-		sleep(1);
+		nanosleep(&ts, NULL);
 		status = fopen(status_file, "w");
 		fputs("sync-request-recieve", status);
 		fclose(status);
+
+		//abort.txt is created by PINCE to tell the inferior to quit
 		exit = fopen(abort_file, "r");
 		if(exit!=NULL){
 			fclose(exit);
 			return 0;
 		}
+
+		//check if PINCE is still alive
+		PINCE_dir = opendir(PINCE_proc_directory);
+		if(PINCE_dir){
+			closedir(PINCE_dir);
+		}
+		else{
+			exit = fopen(abort_file, "w");
+			fclose(exit);
+			return 0;
+		}
 		fp = fopen(recv_file, "r");
-		fscanf(fp, "%s", buff);
+		//fscanf(fp, "%s", buff);
 		//printf("%s\n", buff );
 		fclose(fp);
 		fp = fopen(send_file, "w");
-		fputs("a", fp);
+		fputs(PINCE_pid, fp);
 		fclose(fp);
 	}
 }

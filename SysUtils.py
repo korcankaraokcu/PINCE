@@ -106,9 +106,10 @@ def is_path_valid(dest_path, issue_path=""):
     else:
         if issue_path is "create":
             os.makedirs(dest_path)
+            os.chmod(dest_path, 0o777)
         return False
 
 
 # removes the corresponding pid file
 def do_cleanups(pid):
-    is_path_valid("/tmp/PINCE/" + str(pid), "delete")
+    is_path_valid("/tmp/PINCE-connection/" + str(pid), "delete")

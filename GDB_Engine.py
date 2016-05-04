@@ -40,7 +40,7 @@ def send_command(command=str):
     with lock:
         child.sendline(command)
         child.expect_exact("(gdb)")
-        # print(child.before)  # debug mode on!
+        print(child.before)  # debug mode on!
         return child.before
 
 
@@ -58,7 +58,6 @@ def can_attach(pid=str):
 def attach(pid=str):
     global currentpid
     global child
-    SysUtils.do_cleanups(pid)
     address_table_update_thread = PINCE.UpdateAddressTable(pid)
     address_table_update_thread.start()
     child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=SysUtils.get_current_script_directory())
@@ -78,7 +77,7 @@ def attach(pid=str):
 def detach():
     global child
     global currentpid
-    abort_file = "/tmp/PINCE/" + str(currentpid) + "/abort.txt"
+    abort_file = "/tmp/PINCE-connection/" + str(currentpid) + "/abort.txt"
     open(abort_file, "w")
     os.chmod(abort_file, 0o777)
     child.sendline("q")
