@@ -46,7 +46,7 @@ class UpdateAddressTable(QThread):
         abort_file = directory_path + "/abort.txt"
         open(send_file, "w").close()
         open(recv_file, "w").close()
-        FILE = open(status_file, "w").close()
+        FILE = open(status_file, "w")
 
         # the inferior will try to check PINCE's presence with this information
         FILE.write(str(selfpid))
