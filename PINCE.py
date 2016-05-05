@@ -44,18 +44,16 @@ class UpdateAddressTable(QThread):
         recv_file = directory_path + "/Inferior-to-PINCE.txt"
         status_file = directory_path + "/status.txt"
         abort_file = directory_path + "/abort.txt"
-        FILE = open(send_file, "w")
-        FILE.close()
-        FILE = open(recv_file, "w")
-        FILE.close()
-        FILE = open(status_file, "w")
+        open(send_file, "w").close()
+        open(recv_file, "w").close()
+        FILE = open(status_file, "w").close()
 
         # the inferior will try to check PINCE's presence with this information
         FILE.write(str(selfpid))
         FILE.close()
-        os.chmod(send_file, 0o777)
-        os.chmod(recv_file, 0o777)
-        os.chmod(status_file, 0o777)
+        SysUtils.fix_path_permissions(send_file)
+        SysUtils.fix_path_permissions(recv_file)
+        SysUtils.fix_path_permissions(status_file)
         while True:
             status_word = "waiting"
             while status_word not in "sync-request-recieve":

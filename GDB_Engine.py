@@ -78,8 +78,8 @@ def detach():
     global child
     global currentpid
     abort_file = "/tmp/PINCE-connection/" + str(currentpid) + "/abort.txt"
-    open(abort_file, "w")
-    os.chmod(abort_file, 0o777)
+    open(abort_file, "w").close()
+    SysUtils.fix_path_permissions(abort_file)
     child.sendline("q")
     currentpid = 0
     child.close()
