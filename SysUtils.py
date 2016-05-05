@@ -106,8 +106,16 @@ def is_path_valid(dest_path, issue_path=""):
     else:
         if issue_path is "create":
             os.makedirs(dest_path)
-            os.chmod(dest_path, 0o777)
+            fix_path_permissions(dest_path)
         return False
+
+
+# this function is necessary because PINCE gets opened with the root permissions
+# the inferior PINCE communicating with won't be able to access to the communication files at /tmp otherwise
+def fix_path_permissions(dest_path):
+    uid = int(os.environ.get('SUDO_UID'))
+    gid = int(os.environ.get('SUDO_GID'))
+    os.chown(dest_path, uid, gid)
 
 
 # removes the corresponding pid file
