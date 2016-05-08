@@ -23,10 +23,10 @@ def table_update_thread():
             sleep(0.001)
     PINCE_dir = "/proc/" + PINCE_pid
     while True:
-        sleep(0.4)
         status = open(status_file, "w")
         status.write("sync-request-recieve")
         status.close()
+        sleep(0.4)
 
         # abort.txt is created by PINCE to tell the GDB to quit
         try:
