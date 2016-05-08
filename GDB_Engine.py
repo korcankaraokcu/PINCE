@@ -63,8 +63,6 @@ def attach(pid=str):
     global infinite_thread_location
     global infinite_thread_id
     codes_injected = inject_initial_codes(pid)
-    # address_table_update_thread = PINCE.UpdateAddressTable(pid)
-    # address_table_update_thread.start()
     child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=SysUtils.get_current_script_directory())
     child.setecho(False)
 
@@ -76,6 +74,8 @@ def attach(pid=str):
     currentpid = int(pid)
     print("Injecting Thread")  # progress bar text change
     if codes_injected:
+        address_table_update_thread = PINCE.UpdateAddressTable(pid)
+        address_table_update_thread.start()
         send_command("interrupt")
         result = send_command("call inject_infinite_thread()")
         filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
@@ -91,6 +91,7 @@ def attach(pid=str):
         infinite_thread_location = threadaddress
         send_command("thread " + infinite_thread_id)
         send_command("interrupt")
+        send_command("source gdb-python-scripts/table_update_thread.py")
         return True
     else:
         return False
@@ -101,8 +102,10 @@ def detach():
     global child
     global currentpid
     abort_file = "/tmp/PINCE-connection/" + str(currentpid) + "/abort.txt"
-    # open(abort_file, "w").close()
-    # SysUtils.fix_path_permissions(abort_file)
+    try:
+        open(abort_file, "w").close()
+    except:
+        pass
     child.sendline("q")
     currentpid = 0
     child.close()
@@ -113,7 +116,7 @@ def inject_initial_codes(pid=str):
     scriptdirectory = SysUtils.get_current_script_directory()
     injectionpath = scriptdirectory + "/Injection/InitialCodeInjections.so"
     result = pexpect.run("sudo ./inject -p " + pid + " " + injectionpath, cwd=scriptdirectory + "/linux-inject")
-    success = search(b"successfully injected", result)
+    success = search(b"successfully injected", result)  # literal string
     if success:
         return True
     return False

@@ -35,25 +35,22 @@ class UpdateAddressTable(QThread):
         super().__init__()
         self.pid = pid
 
-    # communicates with the inferior via files and reads the values from them
+    # communicates with the GDB via files and reads the values from them
     def run(self):
         SysUtils.do_cleanups(self.pid)
         directory_path = "/tmp/PINCE-connection/" + self.pid
         SysUtils.is_path_valid(directory_path, "create")
-        send_file = directory_path + "/PINCE-to-Inferior.txt"
-        recv_file = directory_path + "/Inferior-to-PINCE.txt"
+        send_file = directory_path + "/PINCE-to-GDB.txt"
+        recv_file = directory_path + "/GDB-to-PINCE.txt"
         status_file = directory_path + "/status.txt"
         abort_file = directory_path + "/abort.txt"
         open(send_file, "w").close()
         open(recv_file, "w").close()
         FILE = open(status_file, "w")
 
-        # the inferior will try to check PINCE's presence with this information
+        # GDB will try to check PINCE's presence with this information
         FILE.write(str(selfpid))
         FILE.close()
-        SysUtils.fix_path_permissions(send_file)
-        SysUtils.fix_path_permissions(recv_file)
-        SysUtils.fix_path_permissions(status_file)
         while True:
             status_word = "waiting"
             while status_word not in "sync-request-recieve":
@@ -124,7 +121,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def nextscan_onclick(self):
         t0 = time()
-        GDB_Engine.send_command("source tests/gdb_script_test.py")
+        GDB_Engine.send_command("source gdb-python-scripts/table_update_thread.py")
         t1 = time()
         print(t1 - t0)
         # t = Thread(target=GDB_Engine.test)  # test
