@@ -13,6 +13,7 @@ import GDB_Engine
 from GUI.mainwindow import Ui_MainWindow as MainWindow
 from GUI.selectprocess import Ui_MainWindow as ProcessWindow
 from GUI.addaddressmanuallydialog import Ui_Dialog as ManualAddressDialog
+from GUI.loadingwindow import Ui_Dialog as LoadingWindow
 
 # the PID of the process we'll attach to
 currentpid = 0
@@ -27,6 +28,13 @@ class AwaitProcessExit(QThread):
         while SysUtils.is_process_valid(currentpid) or currentpid is 0:
             sleep(0.1)
         self.process_exited.emit()
+
+
+class LoadingWindowThread(QThread):
+    loading_finished = pyqtSignal()
+
+    def run(self):
+        print("asd")
 
 
 # A thread that updates the address table constantly
@@ -120,13 +128,13 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText("First Scan")
 
     def nextscan_onclick(self):
-        #t0 = time()
-        #GDB_Engine.send_command("source gdb-python-scripts/table_update_thread.py")  # test
-        #t1 = time()
-        #print(t1 - t0)
-        t = Thread(target=GDB_Engine.test)  # test
+        t0 = time()
+        GDB_Engine.send_command("info functions inject_infinite_thread")  # test
+        t1 = time()
+        print(t1 - t0)
+        # t = Thread(target=GDB_Engine.test)  # test
         # t2=Thread(target=test2)
-        t.start()
+        # t.start()
         # t2.start()
         if self.tableWidget_valuesearchtable.rowCount() <= 0:
             return
@@ -172,6 +180,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center_parent(self)
+        self.loadingwindow = LoadingForm(self)
         processlist = SysUtils.get_process_list()
         self.refresh_process_table(self.processtable, processlist)
         self.pushButton_Close.clicked.connect(self.pushbutton_close_onclick)
@@ -206,6 +215,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
     # gets the pid out of the selection to set currentpid
     def pushbutton_open_onclick(self):
         global currentpid
+        self.loadingwindow.show()
+        sleep(5)
         currentitem = self.processtable.item(self.processtable.currentIndex().row(), 0)
         if currentitem is None:
             QMessageBox.information(self, "Error", "Please select a process first")
@@ -225,6 +236,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 QMessageBox.information(self, "Error",
                                         "That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
+            # self.loadingwindow.show()
             print("processing")  # progressbar start
             result = GDB_Engine.can_attach(str(pid))
             if not result:
@@ -246,6 +258,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             print("done")  # progressbar finish
             if not is_thread_injection_successful:
                 QMessageBox.information(self, "Warning", "Unable to inject threads, PINCE may(will) not work properly")
+            self.loadingwindow.hide()
             self.close()
 
 
@@ -331,6 +344,13 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         address = self.lineEdit_address.text()
         typeofaddress = self.comboBox_ValueType.currentIndex()
         return description, address, typeofaddress
+
+
+class LoadingForm(QDialog, LoadingWindow):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint)
 
 
 if __name__ == "__main__":

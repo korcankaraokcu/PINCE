@@ -40,7 +40,7 @@ def send_command(command=str):
     with lock:
         child.sendline(command)
         child.expect_exact("(gdb)")
-        print(child.before)  # debug mode on!
+        # print(child.before)  # debug mode on!
         return child.before
 
 
