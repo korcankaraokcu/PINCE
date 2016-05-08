@@ -25,9 +25,12 @@ sudo apt-get install python3-pyqt5
 sudo apt-get install pyqt5-dev-tools
 sudo pip3 install psutil  
 sudo pip3 install pexpect
+sudo apt-get install clang
+sudo apt-get install g++-multilib
 ```  
   
 Then create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
+Then ```cd``` to PINCE/linux-inject directory and simply run ```make```(Optional-Only needed if you like to compile your own ```linux-inject```)  
 Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```
   
 #History
@@ -35,7 +38,7 @@ Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```
 - 17/01/2016-22/01/2016 : Basic design, grasping of Python3 and Pyqt5, proof-testing
 - 22/01/2016 : First commit
 - 19/02/2016 : Moved to Github from Bitbucket
-- 25/02/2016 : First successful implementation of thread injection(A new age dawns!)
+- 25/02/2016 : First successful implementation of thread injection(A new age dawns!)[Update:08/05/2016 : PINCE now uses ```linux-inject``` instead of manual injection method of mine, my method's success ratio was around %70, ```linux-inject```'s ratio is very close to %100. Well... at least working on code injection by myself for 2 months taught me very valuable lessons about linux internals, gdb, some standard libraries and the most importantly, ptrace
 
 #License
 GPLv3
