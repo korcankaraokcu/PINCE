@@ -120,13 +120,13 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText("First Scan")
 
     def nextscan_onclick(self):
-        t0 = time()
-        GDB_Engine.send_command("source gdb-python-scripts/table_update_thread.py")
-        t1 = time()
-        print(t1 - t0)
-        # t = Thread(target=GDB_Engine.test)  # test
+        #t0 = time()
+        #GDB_Engine.send_command("source gdb-python-scripts/table_update_thread.py")  # test
+        #t1 = time()
+        #print(t1 - t0)
+        t = Thread(target=GDB_Engine.test)  # test
         # t2=Thread(target=test2)
-        # t.start()
+        t.start()
         # t2.start()
         if self.tableWidget_valuesearchtable.rowCount() <= 0:
             return
