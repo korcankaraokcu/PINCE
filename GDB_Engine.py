@@ -54,23 +54,46 @@ def can_attach(pid=str):
     return True
 
 
-# self-explanatory
+# Attaches gdb to the target pid
+# Returns False if the thread injection doesn't work, returns True otherwise
+# Also saves the injected thread's location and ID as strings, then switches to that thread and stops it
 def attach(pid=str):
     global currentpid
     global child
-    address_table_update_thread = PINCE.UpdateAddressTable(pid)
-    address_table_update_thread.start()
+    global infinite_thread_location
+    global infinite_thread_id
+    codes_injected = inject_initial_codes(pid)
+    # address_table_update_thread = PINCE.UpdateAddressTable(pid)
+    # address_table_update_thread.start()
     child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=SysUtils.get_current_script_directory())
     child.setecho(False)
 
     # a creative and meaningful number for such a marvelous and magnificent program PINCE is
     child.timeout = 900000
     child.expect_exact("(gdb)")
-    send_command("attach " + pid + "&")
+    send_command("attach " + pid + " &")
     send_command("1")  # to swallow up the surplus output
-    print("Injecting Thread")  # progress bar text change
     currentpid = int(pid)
-    return inject_initial_codes()
+    print("Injecting Thread")  # progress bar text change
+    if codes_injected:
+        send_command("interrupt")
+        result = send_command("call inject_infinite_thread()")
+        filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
+        send_command("c &")
+
+        # Return True if the injection is successful, False if not
+        if not filtered_result:
+            return False
+        threadaddress = split(" ", filtered_result.group(0))[-1]
+        match_from_info_threads = search(r"\d+\s*Thread\s*" + threadaddress,
+                                         send_command("info threads")).group(0)  # 1 Thread 0x7fab41ffb700
+        infinite_thread_id = split(" ", match_from_info_threads)[0]
+        infinite_thread_location = threadaddress
+        send_command("thread " + infinite_thread_id)
+        send_command("interrupt")
+        return True
+    else:
+        return False
 
 
 # Farewell...
@@ -78,38 +101,22 @@ def detach():
     global child
     global currentpid
     abort_file = "/tmp/PINCE-connection/" + str(currentpid) + "/abort.txt"
-    open(abort_file, "w").close()
-    SysUtils.fix_path_permissions(abort_file)
+    # open(abort_file, "w").close()
+    # SysUtils.fix_path_permissions(abort_file)
     child.sendline("q")
     currentpid = 0
     child.close()
 
 
 # Injects a thread that runs forever at the background, it'll be used to execute GDB commands on
-# Also saves the injected thread's location and ID as strings, then switches to that thread and stops it
-def inject_initial_codes():
-    global infinite_thread_location
-    global infinite_thread_id
-    send_command("interrupt")
+def inject_initial_codes(pid=str):
     scriptdirectory = SysUtils.get_current_script_directory()
-    injectionpath = '"' + scriptdirectory + '/Injection/InitialCodeInjections.so"'
-    send_command("call dlopen(" + injectionpath + ", 2)")
-    result = send_command("call inject_infinite_thread()")
-    filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
-    send_command("call inject_table_update_thread()")
-    send_command("c &")
-
-    # Return True is injection is successful, False if not
-    if not filtered_result:
-        return False
-    threadaddress = split(" ", filtered_result.group(0))[-1]
-    match_from_info_threads = search(r"\d+\s*Thread\s*" + threadaddress,
-                                     send_command("info threads")).group(0)  # 1 Thread 0x7fab41ffb700
-    infinite_thread_id = split(" ", match_from_info_threads)[0]
-    infinite_thread_location = threadaddress
-    send_command("thread " + infinite_thread_id)
-    send_command("interrupt")
-    return True
+    injectionpath = scriptdirectory + "/Injection/InitialCodeInjections.so"
+    result = pexpect.run("sudo ./inject -p " + pid + " " + injectionpath, cwd=scriptdirectory + "/linux-inject")
+    success = search(b"successfully injected", result)
+    if success:
+        return True
+    return False
 
 
 # return a string corresponding to the selected index
