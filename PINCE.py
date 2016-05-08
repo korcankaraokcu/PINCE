@@ -124,7 +124,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def nextscan_onclick(self):
         t0 = time()
-        print(GDB_Engine.send_command("source IPC/ScriptUtils.py"))
+        GDB_Engine.send_command("source tests/gdb_script_test.py")
         t1 = time()
         print(t1 - t0)
         # t = Thread(target=GDB_Engine.test)  # test

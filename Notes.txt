@@ -1,0 +1,7 @@
+Code Relocations:
+	PINCE.py is used to interract with GUI and other utility libraries
+	GuiUtils.py is used to contain GUI related utility functions
+	SysUtils.py is used to contain all useful but non-GDB related libraries such as psutils and functions such as reading/writing to/from a file
+	GDB_Engine.py is used to contain all GDB related functions and code injections
+	All injection code goes to the folder "Injection"
+**Don't touch anything in GUI folder, it contains auto-generated codes created by pyuic
