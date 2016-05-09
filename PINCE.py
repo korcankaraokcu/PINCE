@@ -215,7 +215,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
     # gets the pid out of the selection to set currentpid
     def pushbutton_open_onclick(self):
         global currentpid
-        self.loadingwindow.show()
+        # self.loadingwindow.show()
         sleep(5)
         currentitem = self.processtable.item(self.processtable.currentIndex().row(), 0)
         if currentitem is None:
@@ -258,7 +258,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             print("done")  # progressbar finish
             if not is_thread_injection_successful:
                 QMessageBox.information(self, "Warning", "Unable to inject threads, PINCE may(will) not work properly")
-            self.loadingwindow.hide()
+            # self.loadingwindow.hide()
             self.close()
 
 
