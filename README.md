@@ -24,14 +24,14 @@ sudo apt-get install python3-pip
 sudo apt-get install gdb  
 sudo apt-get install python3-pyqt5  
 sudo pip3 install psutil  
-sudo pip3 install pexpect
+sudo pip3 install pexpect  
+sudo apt-get install clang  
+sudo apt-get install g++-multilib  
 ```  
 For developers:  
 ```
 sudo apt-get install qttools5-dev-tools (qt5 form designer)
 sudo apt-get install pyqt5-dev-tools (pyuic5)
-sudo apt-get install clang (linux-inject)
-sudo apt-get install g++-multilib (linux-inject)
 ```
 
 Then create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
