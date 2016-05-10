@@ -35,7 +35,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 ```
 
 Then create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
-Then ```cd``` to PINCE/linux-inject directory and simply run ```make```(Optional-Only needed if you like to compile your own ```linux-inject```)  
+Then ```cd``` to PINCE/linux-inject directory and simply run ```make```
 Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```
   
 #History
