@@ -19,6 +19,7 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
 To run PINCE, simply run this command chain:  
   
 ```
+sudo apt-get install python3-setuptools  
 sudo apt-get install python3-pip  
 sudo apt-get install gdb  
 sudo apt-get install python3-pyqt5  
