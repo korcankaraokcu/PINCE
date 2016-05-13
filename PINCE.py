@@ -30,16 +30,6 @@ class AwaitProcessExit(QThread):
         self.process_exited.emit()
 
 
-class LoadingWindowThread(QThread):
-    not_finished = True
-    update_needed = pyqtSignal()
-
-    def run(self):
-        while self.not_finished:
-            sleep(0.001)
-            self.update_needed.emit()
-
-
 # A thread that updates the address table constantly
 class UpdateAddressTable(QThread):
     def __init__(self, pid):
@@ -219,9 +209,6 @@ class ProcessForm(QMainWindow, ProcessWindow):
     # gets the pid out of the selection to set currentpid
     def pushbutton_open_onclick(self):
         global currentpid
-
-        self.setCentralWidget(self.loadingwidget)
-        self.loadingwidget.show()
         currentitem = self.processtable.item(self.processtable.currentIndex().row(), 0)
         if currentitem is None:
             QMessageBox.information(self, "Error", "Please select a process first")
@@ -241,11 +228,12 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 QMessageBox.information(self, "Error",
                                         "That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
-            # self.loadingwindow.show()
-            print("processing")  # progresswidget start
+            self.setCentralWidget(self.loadingwidget)
+            self.loadingwidget.show()
+            print("processing")  # loading_widget start
             result = GDB_Engine.can_attach(str(pid))
             if not result:
-                print("done")  # progresswidget finish
+                print("done")  # loading_widget finish
                 QMessageBox.information(self, "Error", "Permission denied, could not attach to the process")
                 return
             if not currentpid == 0:
@@ -260,7 +248,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             readable_only, writeable, executable, readable = SysUtils.get_memory_regions_by_perms(currentpid)  # test
             SysUtils.exclude_system_memory_regions(readable)
             print(len(readable))
-            print("done")  # progresswidget finish
+            print("done")  # loading_widget finish
             if not is_thread_injection_successful:
                 QMessageBox.information(self, "Warning", "Unable to inject threads, PINCE may(will) not work properly")
             self.loadingwidget.hide()
@@ -352,6 +340,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
 
 # FIXME: the gif in qlabel won't update itself, also the design of this class is generally shitty
+# FIXME: this class is temporary and buggy, so all implementations of this shit should be fixed as soon as this class gets fixed
+# I designed(sorry) this as a widget, but you can transform it to anything if it's going to fix the gif problem
 class LoadingWidgetForm(QWidget, LoadingWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -366,15 +356,15 @@ class LoadingWidgetForm(QWidget, LoadingWidget):
         self.movie.setSpeed(100)
         self.movie.start()
         self.not_finished = True
-        self.update_thread = Thread(target=self.update_widget)
-        self.update_thread.daemon = True
+        # self.update_thread = Thread(target=self.update_widget)
+        # self.update_thread.daemon = True
         # self.movie.frameChanged.connect(self.update_shit)
         # self.loading_thread = LoadingWindowThread()
         # self.loading_thread.update_needed.connect(QApplication.processEvents)
 
-    def showEvent(self, QShowEvent):
+    def showEvent(self, QShowEvent):  # from here
         QApplication.processEvents()
-        self.update_thread.start()
+        # self.update_thread.start()
 
     def hideEvent(self, QHideEvent):
         self.not_finished = False
@@ -386,6 +376,16 @@ class LoadingWidgetForm(QWidget, LoadingWidget):
     def change_text(self, text):
         self.label_StatusText.setText(text)
         QApplication.processEvents()
+
+
+class LoadingWindowThread(QThread):
+    not_finished = True
+    update_needed = pyqtSignal()
+
+    def run(self):
+        while self.not_finished:
+            sleep(0.001)
+            self.update_needed.emit()  # to here should be reworked
 
 
 if __name__ == "__main__":
