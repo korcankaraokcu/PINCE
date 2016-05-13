@@ -1,7 +1,7 @@
 #!/usr/bin/python3
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtGui import QIcon, QMovie, QPixmap
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray
 from time import sleep, time
 from threading import Thread
 import os
@@ -13,7 +13,7 @@ import GDB_Engine
 from GUI.mainwindow import Ui_MainWindow as MainWindow
 from GUI.selectprocess import Ui_MainWindow as ProcessWindow
 from GUI.addaddressmanuallydialog import Ui_Dialog as ManualAddressDialog
-from GUI.loadingwindow import Ui_Dialog as LoadingWindow
+from GUI.loadingwidget import Ui_Form as LoadingWidget
 
 # the PID of the process we'll attach to
 currentpid = 0
@@ -31,10 +31,13 @@ class AwaitProcessExit(QThread):
 
 
 class LoadingWindowThread(QThread):
-    loading_finished = pyqtSignal()
+    not_finished = True
+    update_needed = pyqtSignal()
 
     def run(self):
-        print("asd")
+        while self.not_finished:
+            sleep(0.001)
+            self.update_needed.emit()
 
 
 # A thread that updates the address table constantly
@@ -99,12 +102,13 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
         self.pushButton_AddAddressManually.clicked.connect(self.addaddressmanually_onclick)
-        self.processbutton.setIcon(QIcon.fromTheme('computer'))
-        self.pushButton_Open.setIcon(QIcon.fromTheme('document-open'))
-        self.pushButton_Save.setIcon(QIcon.fromTheme('document-save'))
-        self.pushButton_Settings.setIcon(QIcon.fromTheme('preferences-system'))
-        self.pushButton_CopyToAddressList.setIcon(QIcon.fromTheme('emblem-downloads'))
-        self.pushButton_CleanAddressList.setIcon(QIcon.fromTheme('user-trash'))
+        icons_directory = SysUtils.get_current_script_directory() + "/media/icons"
+        self.processbutton.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
+        self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
+        self.pushButton_Save.setIcon(QIcon(QPixmap(icons_directory + "/disk.png")))
+        self.pushButton_Settings.setIcon(QIcon(QPixmap(icons_directory + "/wrench.png")))
+        self.pushButton_CopyToAddressList.setIcon(QIcon(QPixmap(icons_directory + "/arrow_down.png")))
+        self.pushButton_CleanAddressList.setIcon(QIcon(QPixmap(icons_directory + "/bin_closed.png")))
 
     def send_address_table_contents(pid):
         print("will be added")
@@ -180,7 +184,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center_parent(self)
-        self.loadingwindow = LoadingForm(self)
+        self.loadingwidget = LoadingWidgetForm()
         processlist = SysUtils.get_process_list()
         self.refresh_process_table(self.processtable, processlist)
         self.pushButton_Close.clicked.connect(self.pushbutton_close_onclick)
@@ -215,8 +219,9 @@ class ProcessForm(QMainWindow, ProcessWindow):
     # gets the pid out of the selection to set currentpid
     def pushbutton_open_onclick(self):
         global currentpid
-        # self.loadingwindow.show()
-        sleep(5)
+
+        self.setCentralWidget(self.loadingwidget)
+        self.loadingwidget.show()
         currentitem = self.processtable.item(self.processtable.currentIndex().row(), 0)
         if currentitem is None:
             QMessageBox.information(self, "Error", "Please select a process first")
@@ -237,10 +242,10 @@ class ProcessForm(QMainWindow, ProcessWindow):
                                         "That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
             # self.loadingwindow.show()
-            print("processing")  # progressbar start
+            print("processing")  # progresswidget start
             result = GDB_Engine.can_attach(str(pid))
             if not result:
-                print("done")  # progressbar finish
+                print("done")  # progresswidget finish
                 QMessageBox.information(self, "Error", "Permission denied, could not attach to the process")
                 return
             if not currentpid == 0:
@@ -255,10 +260,10 @@ class ProcessForm(QMainWindow, ProcessWindow):
             readable_only, writeable, executable, readable = SysUtils.get_memory_regions_by_perms(currentpid)  # test
             SysUtils.exclude_system_memory_regions(readable)
             print(len(readable))
-            print("done")  # progressbar finish
+            print("done")  # progresswidget finish
             if not is_thread_injection_successful:
                 QMessageBox.information(self, "Warning", "Unable to inject threads, PINCE may(will) not work properly")
-            # self.loadingwindow.hide()
+            self.loadingwidget.hide()
             self.close()
 
 
@@ -346,11 +351,41 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         return description, address, typeofaddress
 
 
-class LoadingForm(QDialog, LoadingWindow):
+# FIXME: the gif in qlabel won't update itself, also the design of this class is generally shitty
+class LoadingWidgetForm(QWidget, LoadingWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint)
+        self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        pince_directory = SysUtils.get_current_script_directory()
+        self.movie = QMovie(pince_directory + "/media/loading_widget_gondola.gif", QByteArray())
+        self.label_Animated.setMovie(self.movie)
+        self.movie.setScaledSize(QSize(50, 50))
+        self.movie.setCacheMode(QMovie.CacheAll)
+        self.movie.setSpeed(100)
+        self.movie.start()
+        self.not_finished = True
+        self.update_thread = Thread(target=self.update_widget)
+        self.update_thread.daemon = True
+        # self.movie.frameChanged.connect(self.update_shit)
+        # self.loading_thread = LoadingWindowThread()
+        # self.loading_thread.update_needed.connect(QApplication.processEvents)
+
+    def showEvent(self, QShowEvent):
+        QApplication.processEvents()
+        self.update_thread.start()
+
+    def hideEvent(self, QHideEvent):
+        self.not_finished = False
+
+    def update_widget(self):
+        while self.not_finished:
+            QApplication.processEvents()
+
+    def change_text(self, text):
+        self.label_StatusText.setText(text)
+        QApplication.processEvents()
 
 
 if __name__ == "__main__":
