@@ -18,6 +18,7 @@ from GUI.loadingwidget import Ui_Form as LoadingWidget
 # the PID of the process we'll attach to
 currentpid = 0
 selfpid = os.getpid()
+address_table_contents = []
 
 
 # Checks if the inferior has been terminated
@@ -53,8 +54,10 @@ class UpdateAddressTable(QThread):
         FILE.write(str(selfpid))
         FILE.close()
         while True:
+            sleep(0.01)
             status_word = "waiting"
             while status_word not in "sync-request-recieve":
+                sleep(0.01)
                 status = open(status_file, "r")
                 status_word = status.read()
                 status.close()
@@ -107,8 +110,9 @@ class MainForm(QMainWindow, MainWindow):
     def addaddressmanually_onclick(self):
         self.manual_address_dialog = ManualAddressDialogForm()
         if self.manual_address_dialog.exec_():
-            description, address, typeofaddress = self.manual_address_dialog.getvalues()
-            self.add_element_to_addresstable(description, address, typeofaddress)
+            description, address, typeofaddress, unicode, zero_terminate = self.manual_address_dialog.getvalues()
+            self.add_element_to_addresstable(description, address, typeofaddress, unicode=unicode,
+                                             zero_terminate=zero_terminate)
 
     def newfirstscan_onclick(self):
         if self.pushButton_NewFirstScan.text() == "First Scan":
@@ -153,12 +157,15 @@ class MainForm(QMainWindow, MainWindow):
         application = QApplication.instance()
         application.closeAllWindows()
 
-    def add_element_to_addresstable(self, description, address, typeofaddress):
+    def add_element_to_addresstable(self, description, address, typeofaddress, unicode=False, zero_terminate=True):
+        global address_table_contents
+        address_table_contents.append(address)
+        print(address_table_contents)
         frozen_checkbox = QCheckBox()
         typeofaddress = GuiUtils.valuetype_to_text(typeofaddress)
 
-        # this line lets us take symbols as parameters, pretty rad isn't?
-        # warning: if you pass an actual symbol to the function below in a long for loop, it slows the process down significantly
+        # this line lets us take symbols as parameters, pretty rad isn't it?
+        # FIXME: if you pass an actual symbol to the function below in a long for loop, it slows the process down significantly
         address = GDB_Engine.convert_symbol_to_address(address)
         self.tableWidget_addresstable.setRowCount(self.tableWidget_addresstable.rowCount() + 1)
         currentrow = self.tableWidget_addresstable.rowCount() - 1
@@ -335,8 +342,14 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def getvalues(self):
         description = self.lineEdit_description.text()
         address = self.lineEdit_address.text()
+        unicode = False
+        zero_terminate = False
+        if self.checkBox_Unicode.isChecked():
+            unicode = True
+        if self.checkBox_zeroterminate.isChecked():
+            zero_terminate = True
         typeofaddress = self.comboBox_ValueType.currentIndex()
-        return description, address, typeofaddress
+        return description, address, typeofaddress, unicode, zero_terminate
 
 
 # FIXME: the gif in qlabel won't update itself, also the design of this class is generally shitty
