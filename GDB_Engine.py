@@ -39,8 +39,8 @@ def send_command(command=str):
     global child
     with lock:
         child.sendline(command)
-        child.expect_exact("(gdb)")
-        # print(child.before)  # debug mode on!
+        child.expect_exact("(gdb) ")
+        print(child.before)  # debug mode on!
         return child.before
 
 
@@ -62,9 +62,12 @@ def attach(pid=str):
     global child
     global infinite_thread_location
     global infinite_thread_id
+    address_table_update_thread = PINCE.UpdateAddressTable(pid)
+    address_table_update_thread.start()
     codes_injected = inject_initial_codes(pid)
     child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=SysUtils.get_current_script_directory())
     child.setecho(False)
+    # child.logfile=open("asdf.txt","w")
 
     # a creative and meaningful number for such a marvelous and magnificent program PINCE is
     child.timeout = 900000
@@ -73,9 +76,8 @@ def attach(pid=str):
     send_command("1")  # to swallow up the surplus output
     currentpid = int(pid)
     print("Injecting Thread")  # loading_widget text change
+    # send_command("source gdb-python-scripts/table_update_thread.py")
     if codes_injected:
-        address_table_update_thread = PINCE.UpdateAddressTable(pid)
-        address_table_update_thread.start()
         send_command("interrupt")
         result = send_command("call inject_infinite_thread()")
         filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
