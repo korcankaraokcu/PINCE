@@ -36,7 +36,7 @@ class UpdateAddressTable(QThread):
         super().__init__()
         self.pid = pid
 
-    # communicates with the GDB via files and reads the values from them
+    # communicates with the inferior via files and reads the values from them
     def run(self):
         SysUtils.do_cleanups(self.pid)
         directory_path = "/tmp/PINCE-connection/" + self.pid
@@ -49,7 +49,7 @@ class UpdateAddressTable(QThread):
         open(recv_file, "w").close()
         FILE = open(status_file, "w")
 
-        # GDB will try to check PINCE's presence with this information
+        # Inferior will try to check PINCE's presence with this information
         FILE.write(str(selfpid))
         FILE.close()
         SysUtils.fix_path_permissions(send_file)
@@ -285,6 +285,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         while not self.update_thread._is_stopped:
             sleep(0.01)
             if self.update_needed:
+                if not GDB_Engine.codes_injected:
+                    GDB_Engine.send_command("interrupt")
                 self.update_needed = False
                 address = self.lineEdit_address.text()
                 address_type = self.comboBox_ValueType.currentIndex()
@@ -299,6 +301,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                         GDB_Engine.read_single_address(address, address_type, length, is_unicode, is_zeroterminate))
                 else:
                     self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type))
+                if not GDB_Engine.codes_injected:
+                    GDB_Engine.send_command("c &")
 
     def address_on_change(self):
         self.update_needed = True
