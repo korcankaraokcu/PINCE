@@ -76,7 +76,6 @@ def attach(pid=str):
     send_command("1")  # to swallow up the surplus output
     currentpid = int(pid)
     print("Injecting Thread")  # loading_widget text change
-    # send_command("source gdb-python-scripts/table_update_thread.py")
     if codes_injected:
         send_command("interrupt")
         result = send_command("call inject_infinite_thread()")
@@ -93,7 +92,7 @@ def attach(pid=str):
         infinite_thread_location = threadaddress
         send_command("thread " + infinite_thread_id)
         send_command("interrupt")
-        send_command("source gdb-python-scripts/table_update_thread.py")
+        send_command("call inject_table_update_thread()")
         return True
     else:
         return False
@@ -106,6 +105,7 @@ def detach():
     abort_file = "/tmp/PINCE-connection/" + str(currentpid) + "/abort.txt"
     try:
         open(abort_file, "w").close()
+        SysUtils.fix_path_permissions(abort_file)
     except:
         pass
     child.sendline("q")
