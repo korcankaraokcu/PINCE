@@ -18,7 +18,6 @@ from GUI.loadingwidget import Ui_Form as LoadingWidget
 # the PID of the process we'll attach to
 currentpid = 0
 selfpid = os.getpid()
-address_table_contents = []
 
 
 # Checks if the inferior has been terminated
@@ -42,8 +41,8 @@ class UpdateAddressTable(QThread):
         SysUtils.do_cleanups(self.pid)
         directory_path = "/tmp/PINCE-connection/" + self.pid
         SysUtils.is_path_valid(directory_path, "create")
-        send_file = directory_path + "/PINCE-to-GDB.txt"
-        recv_file = directory_path + "/GDB-to-PINCE.txt"
+        send_file = directory_path + "/PINCE-to-Inferior.txt"
+        recv_file = directory_path + "/Inferior-to-PINCE.txt"
         status_file = directory_path + "/status.txt"
         abort_file = directory_path + "/abort.txt"
         open(send_file, "w").close()
@@ -53,6 +52,9 @@ class UpdateAddressTable(QThread):
         # GDB will try to check PINCE's presence with this information
         FILE.write(str(selfpid))
         FILE.close()
+        SysUtils.fix_path_permissions(send_file)
+        SysUtils.fix_path_permissions(recv_file)
+        SysUtils.fix_path_permissions(status_file)
         while True:
             sleep(0.01)
             status_word = "waiting"
@@ -127,7 +129,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def nextscan_onclick(self):
         t0 = time()
-        GDB_Engine.send_command("info functions inject_infinite_thread")  # test
+        GDB_Engine.send_command("info threads")  # test
         t1 = time()
         print(t1 - t0)
         # t = Thread(target=GDB_Engine.test)  # test
@@ -158,14 +160,11 @@ class MainForm(QMainWindow, MainWindow):
         application.closeAllWindows()
 
     def add_element_to_addresstable(self, description, address, typeofaddress, unicode=False, zero_terminate=True):
-        global address_table_contents
-        address_table_contents.append(address)
-        print(address_table_contents)
         frozen_checkbox = QCheckBox()
         typeofaddress = GuiUtils.valuetype_to_text(typeofaddress)
 
         # this line lets us take symbols as parameters, pretty rad isn't it?
-        # FIXME: if you pass an actual symbol to the function below in a long for loop, it slows the process down significantly
+        # FIXME: passing an actual symbol to the function below in a long for loop slows the process down significantly
         address = GDB_Engine.convert_symbol_to_address(address)
         self.tableWidget_addresstable.setRowCount(self.tableWidget_addresstable.rowCount() + 1)
         currentrow = self.tableWidget_addresstable.rowCount() - 1
