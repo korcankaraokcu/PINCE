@@ -11,6 +11,7 @@ import PINCE
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
+codes_injected = False
 
 infinite_thread_location = str  # location of the injected thread that runs forever at background
 infinite_thread_id = str  # id of the injected thread that runs forever at background
@@ -62,8 +63,7 @@ def attach(pid=str):
     global child
     global infinite_thread_location
     global infinite_thread_id
-    address_table_update_thread = PINCE.UpdateAddressTable(pid)
-    address_table_update_thread.start()
+    global codes_injected
     codes_injected = inject_initial_codes(pid)
     child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=SysUtils.get_current_script_directory())
     child.setecho(False)
@@ -77,6 +77,8 @@ def attach(pid=str):
     currentpid = int(pid)
     print("Injecting Thread")  # loading_widget text change
     if codes_injected:
+        address_table_update_thread = PINCE.UpdateAddressTable(pid)
+        address_table_update_thread.start()
         send_command("interrupt")
         result = send_command("call inject_infinite_thread()")
         filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
@@ -102,6 +104,7 @@ def attach(pid=str):
 def detach():
     global child
     global currentpid
+    global codes_injected
     abort_file = "/tmp/PINCE-connection/" + str(currentpid) + "/abort.txt"
     try:
         open(abort_file, "w").close()
@@ -110,6 +113,7 @@ def detach():
         pass
     child.sendline("q")
     currentpid = 0
+    codes_injected = False
     child.close()
 
 
@@ -118,6 +122,7 @@ def inject_initial_codes(pid=str):
     scriptdirectory = SysUtils.get_current_script_directory()
     injectionpath = scriptdirectory + "/Injection/InitialCodeInjections.so"
     result = pexpect.run("sudo ./inject -p " + pid + " " + injectionpath, cwd=scriptdirectory + "/linux-inject")
+    print(result)  # for debug
     success = search(b"successfully injected", result)  # literal string
     if success:
         return True
