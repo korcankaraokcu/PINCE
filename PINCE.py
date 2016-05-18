@@ -1,10 +1,11 @@
 #!/usr/bin/python3
-from PyQt5.QtGui import QIcon, QMovie, QPixmap
+from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray
 from time import sleep, time
 from threading import Thread
 import os
+import pickle
 
 import GuiUtils
 import SysUtils
@@ -97,24 +98,40 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
         self.pushButton_AddAddressManually.clicked.connect(self.addaddressmanually_onclick)
+        self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         icons_directory = SysUtils.get_current_script_directory() + "/media/icons"
         self.processbutton.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
         self.pushButton_Save.setIcon(QIcon(QPixmap(icons_directory + "/disk.png")))
         self.pushButton_Settings.setIcon(QIcon(QPixmap(icons_directory + "/wrench.png")))
-        self.pushButton_CopyToAddressList.setIcon(QIcon(QPixmap(icons_directory + "/arrow_down.png")))
-        self.pushButton_CleanAddressList.setIcon(QIcon(QPixmap(icons_directory + "/bin_closed.png")))
+        self.pushButton_CopyToAddressTable.setIcon(QIcon(QPixmap(icons_directory + "/arrow_down.png")))
+        self.pushButton_CleanAddressTable.setIcon(QIcon(QPixmap(icons_directory + "/bin_closed.png")))
+        self.pushButton_RefreshAdressTable.setIcon(QIcon(QPixmap(icons_directory + "/table_refresh.png")))
 
-    def send_address_table_contents(pid):
-        print("will be added")
+    def update_address_table_manually(self):
+        table_contents_send = []
+        row_count = self.tableWidget_addresstable.rowCount()
+        for row in range(row_count):
+            address = self.tableWidget_addresstable.item(row, 2).text()  # address cell
+            value_type = self.tableWidget_addresstable.item(row, 3).text()  # type cell
+            table_contents_send.append([address, value_type])
+        directory_path = "/tmp/PINCE-connection/" + str(currentpid)
+        send_file = directory_path + "/address-table-from-PINCE.txt"
+        recv_file = directory_path + "/address-table-to-PINCE.txt"
+        open(recv_file, "w").close()
+        pickle.dump(table_contents_send, open(send_file, "wb"))
+        GDB_Engine.send_command("pince-update-address-table")
+        table_contents_recv = pickle.load(open(recv_file, "rb"))
+        for row, item in enumerate(table_contents_recv):
+            self.tableWidget_addresstable.setItem(row, 4, QTableWidgetItem(str(table_contents_recv)))  # value cell
 
     # gets the information from the dialog then adds it to addresstable
     def addaddressmanually_onclick(self):
         self.manual_address_dialog = ManualAddressDialogForm()
         if self.manual_address_dialog.exec_():
-            description, address, typeofaddress, unicode, zero_terminate = self.manual_address_dialog.getvalues()
-            self.add_element_to_addresstable(description, address, typeofaddress, unicode=unicode,
-                                             zero_terminate=zero_terminate)
+            description, address, typeofaddress, length, unicode, zero_terminate = self.manual_address_dialog.getvalues()
+            self.add_element_to_addresstable(description, address, typeofaddress, length, unicode,
+                                             zero_terminate)
 
     def newfirstscan_onclick(self):
         if self.pushButton_NewFirstScan.text() == "First Scan":
@@ -159,9 +176,10 @@ class MainForm(QMainWindow, MainWindow):
         application = QApplication.instance()
         application.closeAllWindows()
 
-    def add_element_to_addresstable(self, description, address, typeofaddress, unicode=False, zero_terminate=True):
+    def add_element_to_addresstable(self, description, address, typeofaddress, length=0, unicode=False,
+                                    zero_terminate=True):
         frozen_checkbox = QCheckBox()
-        typeofaddress = GuiUtils.valuetype_to_text(typeofaddress)
+        typeofaddress = GuiUtils.valuetype_to_text(typeofaddress, length, unicode, zero_terminate)
 
         # this line lets us take symbols as parameters, pretty rad isn't it?
         # FIXME: passing an actual symbol to the function below in a long for loop slows the process down significantly
@@ -172,6 +190,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setItem(currentrow, 1, QTableWidgetItem(description))
         self.tableWidget_addresstable.setItem(currentrow, 2, QTableWidgetItem(address))
         self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(typeofaddress))
+        # self.update_address_table_manually()
 
 
 # process select window
@@ -234,6 +253,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 QMessageBox.information(self, "Error",
                                         "That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
+            self.setCursor(QCursor(Qt.WaitCursor))
             self.setCentralWidget(self.loadingwidget)
             self.loadingwidget.show()
             print("processing")  # loading_widget start
@@ -245,7 +265,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             if not currentpid == 0:
                 GDB_Engine.detach()
             currentpid = pid
-            is_thread_injection_successful = GDB_Engine.attach(str(currentpid))
+            thread_injection_successful = GDB_Engine.attach(str(currentpid))
             p = SysUtils.get_process_information(currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
@@ -255,7 +275,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             SysUtils.exclude_system_memory_regions(readable)
             print(len(readable))
             print("done")  # loading_widget finish
-            if not is_thread_injection_successful:
+            if not thread_injection_successful:
                 QMessageBox.information(self, "Warning", "Unable to inject threads, PINCE may(will) not work properly")
             self.loadingwidget.hide()
             self.close()
@@ -345,6 +365,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def getvalues(self):
         description = self.lineEdit_description.text()
         address = self.lineEdit_address.text()
+        length = self.lineEdit_length.text()
         unicode = False
         zero_terminate = False
         if self.checkBox_Unicode.isChecked():
@@ -352,7 +373,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         if self.checkBox_zeroterminate.isChecked():
             zero_terminate = True
         typeofaddress = self.comboBox_ValueType.currentIndex()
-        return description, address, typeofaddress, unicode, zero_terminate
+        return description, address, typeofaddress, length, unicode, zero_terminate
 
 
 # FIXME: the gif in qlabel won't update itself, also the design of this class is generally shitty
