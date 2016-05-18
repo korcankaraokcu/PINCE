@@ -26,5 +26,13 @@ def center_parent(window):
 
 # return a string corresponding to the selected index
 # returns "out of bounds" string if the index doesn't match the dictionary
-def valuetype_to_text(index=int):
-    return valuetype_to_text_dict.get(index, "out of bounds")
+def valuetype_to_text(index=int, length=0, unicode=False, zero_terminate=True):
+    returned_string = valuetype_to_text_dict.get(index, "out of bounds")
+    if index is 6:
+        if unicode:
+            returned_string = returned_string + ",U"
+        if not zero_terminate:
+            returned_string = returned_string + ",NZT"
+    elif index is 7:
+        returned_string = returned_string + "[" + str(length) + "]"
+    return returned_string

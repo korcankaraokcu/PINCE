@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Sat Mar 19 16:56:45 2016
+# Created: Wed May 18 15:39:33 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -225,16 +225,22 @@ class Ui_MainWindow(object):
         self.horizontalLayout_8.addWidget(self.pushButton_MemoryView)
         spacerItem5 = QtWidgets.QSpacerItem(120, 20, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_8.addItem(spacerItem5)
-        self.pushButton_CopyToAddressList = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_CopyToAddressList.setText("")
-        self.pushButton_CopyToAddressList.setObjectName("pushButton_CopyToAddressList")
-        self.horizontalLayout_8.addWidget(self.pushButton_CopyToAddressList)
-        self.pushButton_CleanAddressList = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_CleanAddressList.setText("")
-        self.pushButton_CleanAddressList.setObjectName("pushButton_CleanAddressList")
-        self.horizontalLayout_8.addWidget(self.pushButton_CleanAddressList)
+        self.pushButton_CopyToAddressTable = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_CopyToAddressTable.setText("")
+        self.pushButton_CopyToAddressTable.setObjectName("pushButton_CopyToAddressTable")
+        self.horizontalLayout_8.addWidget(self.pushButton_CopyToAddressTable)
+        self.pushButton_CleanAddressTable = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_CleanAddressTable.setText("")
+        self.pushButton_CleanAddressTable.setObjectName("pushButton_CleanAddressTable")
+        self.horizontalLayout_8.addWidget(self.pushButton_CleanAddressTable)
         spacerItem6 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_8.addItem(spacerItem6)
+        self.pushButton_RefreshAdressTable = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_RefreshAdressTable.setText("")
+        self.pushButton_RefreshAdressTable.setObjectName("pushButton_RefreshAdressTable")
+        self.horizontalLayout_8.addWidget(self.pushButton_RefreshAdressTable)
+        spacerItem7 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_8.addItem(spacerItem7)
         self.pushButton_AddAddressManually = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_AddAddressManually.setObjectName("pushButton_AddAddressManually")
         self.horizontalLayout_8.addWidget(self.pushButton_AddAddressManually)
@@ -261,15 +267,15 @@ class Ui_MainWindow(object):
         self.pushButton_AdvancedOptions = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_AdvancedOptions.setObjectName("pushButton_AdvancedOptions")
         self.horizontalLayout_10.addWidget(self.pushButton_AdvancedOptions)
-        spacerItem7 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_10.addItem(spacerItem7)
+        spacerItem8 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_10.addItem(spacerItem8)
         self.pushButton_TableExtras = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_TableExtras.setObjectName("pushButton_TableExtras")
         self.horizontalLayout_10.addWidget(self.pushButton_TableExtras)
         self.verticalLayout_6.addLayout(self.horizontalLayout_10)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 751, 20))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 751, 22))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
 

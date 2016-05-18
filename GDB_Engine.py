@@ -11,7 +11,7 @@ import PINCE
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
-codes_injected = False
+codes_injected = False  # to inform other functions if the code injection is failed or not
 
 infinite_thread_location = str  # location of the injected thread that runs forever at background
 infinite_thread_id = str  # id of the injected thread that runs forever at background
@@ -118,6 +118,7 @@ def detach():
 
 
 # Injects a thread that runs forever at the background, it'll be used to execute GDB commands on
+# FIXME: linux-inject is insufficient for big games, it makes big titles such as Torchlight to segfault
 def inject_initial_codes(pid=str):
     scriptdirectory = SysUtils.get_current_script_directory()
     injectionpath = scriptdirectory + "/Injection/InitialCodeInjections.so"
