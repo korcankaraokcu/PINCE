@@ -36,6 +36,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 
 Then create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
 Then ```cd``` to PINCE/linux-inject directory and simply run ```make```  
+Then copy the file ```PINCE/gdb-python-scripts/ScriptUtils.py``` to your home directory (blame gdb for this unnecessary step, not me)  
 Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```
   
 #History
@@ -43,11 +44,11 @@ Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```
 - 17/01/2016-22/01/2016 : Basic design, grasping of Python3 and Pyqt5, proof-testing
 - 22/01/2016 : First commit
 - 19/02/2016 : Moved to Github from Bitbucket
-- 25/02/2016 : First successful implementation of thread injection(A new age dawns!)[Update:08/05/2016 : PINCE now uses ```linux-inject``` instead of injection method of mine]*  
+- 25/02/2016 : First successful implementation of thread injection(A new age dawns!)[Update-08/05/2016 : PINCE now uses ```linux-inject``` instead of injection method of mine]*  
   
 
 
-*my method's success ratio was around %70, ```linux-inject```'s ratio is very close to %100. Well... at least working on code injection by myself for 2 months taught me very valuable lessons about linux internals, gdb, some standard libraries and the most importantly, ptrace
+*my method's success ratio was around %70, ```linux-inject```'s ratio is very close to %100. Well... at least working on code injection by myself for 2 months taught me very valuable lessons about linux internals, gdb, some standard libraries and the most importantly, ptrace. [Update-18/05/2016 : ```linux-inject```'s ratio is close to %100 only when attaching to small processes, it dramatically decrases(around %30-40) when attaching to the bigger processes]
 
 #License
 GPLv3
