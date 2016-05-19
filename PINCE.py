@@ -182,7 +182,7 @@ class MainForm(QMainWindow, MainWindow):
         frozen_checkbox = QCheckBox()
         # TODO: Implement a loop-version of read_single_address
         value = GDB_Engine.read_single_address(address, typeofaddress, length, unicode, zero_terminate)
-        typeofaddress = GuiUtils.valuetype_to_text(typeofaddress, length, unicode, zero_terminate)
+        typeofaddress_text = GuiUtils.valuetype_to_text(typeofaddress, length, unicode, zero_terminate)
 
         # this line lets us take symbols as parameters, pretty rad isn't it?
         # TODO: Implement a loop-version of convert_symbol_to_address
@@ -192,7 +192,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setCellWidget(currentrow, 0, frozen_checkbox)
         self.tableWidget_addresstable.setItem(currentrow, 1, QTableWidgetItem(description))
         self.tableWidget_addresstable.setItem(currentrow, 2, QTableWidgetItem(address))
-        self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(typeofaddress))
+        self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(typeofaddress_text))
         self.tableWidget_addresstable.setItem(currentrow, 4, QTableWidgetItem(value))
 
 
@@ -362,13 +362,19 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         super(ManualAddressDialogForm, self).reject()
 
     def accept(self):
+        length = self.lineEdit_length.text()
+        try:
+            length = int(length)
+        except:
+            QMessageBox.information(self, "Error", "Length is not valid")
+            return
+        self.length = length
         self.update_thread._is_stopped = True
         super(ManualAddressDialogForm, self).accept()
 
     def getvalues(self):
         description = self.lineEdit_description.text()
         address = self.lineEdit_address.text()
-        length = self.lineEdit_length.text()
         unicode = False
         zero_terminate = False
         if self.checkBox_Unicode.isChecked():
@@ -376,7 +382,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         if self.checkBox_zeroterminate.isChecked():
             zero_terminate = True
         typeofaddress = self.comboBox_ValueType.currentIndex()
-        return description, address, typeofaddress, length, unicode, zero_terminate
+        return description, address, typeofaddress, self.length, unicode, zero_terminate
 
 
 # FIXME: the gif in qlabel won't update itself, also the design of this class is generally shitty

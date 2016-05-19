@@ -2,6 +2,8 @@
 from PyQt5.QtWidgets import QDesktopWidget
 
 # A dictionary used to convert value_combobox index to text
+# dictionaries in GuiUtils, GDB_Engine and ScriptUtils are connected to each other
+# any modification in one dictionary may require a rework in others
 valuetype_to_text_dict = {
     0: "Byte",
     1: "2 Bytes",
@@ -10,7 +12,7 @@ valuetype_to_text_dict = {
     4: "Float",
     5: "Double",
     6: "String",
-    7: "Array of Bytes"
+    7: "AoB"
 }
 
 
@@ -29,6 +31,7 @@ def center_parent(window):
 def valuetype_to_text(index=int, length=0, unicode=False, zero_terminate=True):
     returned_string = valuetype_to_text_dict.get(index, "out of bounds")
     if index is 6:
+        returned_string = returned_string + "[" + str(length) + "]"
         if unicode:
             returned_string = returned_string + ",U"
         if not zero_terminate:

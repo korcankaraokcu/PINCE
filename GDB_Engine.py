@@ -20,6 +20,8 @@ lock = Lock()
 libc = ctypes.CDLL('libc.so.6')
 
 # A dictionary used to convert value_combobox index to gdb/mi command
+# dictionaries in GuiUtils, GDB_Engine and ScriptUtils are connected to each other
+# any modification in one dictionary may require a rework in others
 valuetype_to_gdbcommand_dict = {
     0: "db",  # byte
     1: "dh",  # 2bytes
