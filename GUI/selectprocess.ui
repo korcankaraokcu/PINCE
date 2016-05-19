@@ -85,7 +85,7 @@
         <string>Process Name</string>
        </property>
        <property name="textAlignment">
-        <set>AlignLeading|AlignVCenter</set>
+        <set>AlignLeft|AlignVCenter</set>
        </property>
       </column>
      </widget>
@@ -107,6 +107,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="pushButton_Open">
+        <property name="toolTip">
+         <string>Attach to the selected process</string>
+        </property>
         <property name="text">
          <string>Open</string>
         </property>
@@ -151,6 +154,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="pushButton_CreateProcess">
+        <property name="toolTip">
+         <string>Open an executable</string>
+        </property>
         <property name="text">
          <string>Create Process</string>
         </property>

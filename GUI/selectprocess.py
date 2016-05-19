@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'selectprocess.ui'
 #
-# Created: Fri Mar  4 19:54:00 2016
+# Created: Thu May 19 03:10:46 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -46,7 +46,7 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.processtable.setHorizontalHeaderItem(1, item)
         item = QtWidgets.QTableWidgetItem()
-        item.setTextAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignVCenter)
+        item.setTextAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.processtable.setHorizontalHeaderItem(2, item)
         self.processtable.horizontalHeader().setDefaultSectionSize(70)
         self.processtable.horizontalHeader().setStretchLastSection(True)
@@ -92,7 +92,9 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Username"))
         item = self.processtable.horizontalHeaderItem(2)
         item.setText(_translate("MainWindow", "Process Name"))
+        self.pushButton_Open.setToolTip(_translate("MainWindow", "Attach to the selected process"))
         self.pushButton_Open.setText(_translate("MainWindow", "Open"))
         self.pushButton_Close.setText(_translate("MainWindow", "Cancel"))
+        self.pushButton_CreateProcess.setToolTip(_translate("MainWindow", "Open an executable"))
         self.pushButton_CreateProcess.setText(_translate("MainWindow", "Create Process"))
 
