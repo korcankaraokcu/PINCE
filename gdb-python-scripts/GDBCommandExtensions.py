@@ -22,11 +22,18 @@ class PrintAddressTableContents(gdb.Command):
         mem_file = "/proc/" + str(pid) + "/mem"
         table_contents_recv = pickle.load(open(recv_file, "rb"))
         for item in table_contents_recv:
-            address = int(item[0], 16)
+            try:
+                address = int(item[0], 16)
+            except:
+                table_contents_send.append("")
+                continue
             FILE = open(mem_file, "rb")
             FILE.seek(address)
-            item = FILE.read(10)
-            table_contents_send.append(item)
+            try:
+                readed = FILE.read(10)
+            except:
+                readed = ""
+            table_contents_send.append(readed)
             FILE.close()
         pickle.dump(table_contents_send, open(send_file, "wb"))
 

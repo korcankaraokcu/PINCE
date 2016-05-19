@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Wed May 18 15:39:33 2016
+# Created: Thu May 19 03:08:00 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -286,7 +286,11 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "PINCE"))
+        self.processbutton.setToolTip(_translate("MainWindow", "Create or attach to a process"))
+        self.pushButton_Open.setToolTip(_translate("MainWindow", "Open a file, script or a cheat table"))
+        self.pushButton_Save.setToolTip(_translate("MainWindow", "Save current tables to a file"))
         self.label_SelectedProcess.setText(_translate("MainWindow", "No Process Selected"))
+        self.pushButton_Settings.setToolTip(_translate("MainWindow", "Configure options"))
         item = self.tableWidget_valuesearchtable.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Address"))
         item = self.tableWidget_valuesearchtable.horizontalHeaderItem(1)
@@ -317,6 +321,9 @@ class Ui_MainWindow(object):
         self.checkBox_CaseSensitive.setText(_translate("MainWindow", "Case Sensitive"))
         self.checkBox_Unrandomizer.setText(_translate("MainWindow", "Unrandomizer"))
         self.pushButton_MemoryView.setText(_translate("MainWindow", "Memory View"))
+        self.pushButton_CopyToAddressTable.setToolTip(_translate("MainWindow", "Copy selected items to the address table"))
+        self.pushButton_CleanAddressTable.setToolTip(_translate("MainWindow", "Erase all the table contents"))
+        self.pushButton_RefreshAdressTable.setToolTip(_translate("MainWindow", "Refresh the address table"))
         self.pushButton_AddAddressManually.setText(_translate("MainWindow", "Add Address Manually"))
         item = self.tableWidget_addresstable.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Frozen"))

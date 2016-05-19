@@ -123,7 +123,7 @@ class MainForm(QMainWindow, MainWindow):
         GDB_Engine.send_command("pince-update-address-table")
         table_contents_recv = pickle.load(open(recv_file, "rb"))
         for row, item in enumerate(table_contents_recv):
-            self.tableWidget_addresstable.setItem(row, 4, QTableWidgetItem(str(table_contents_recv)))  # value cell
+            self.tableWidget_addresstable.setItem(row, 4, QTableWidgetItem(str(item)))  # value cell
 
     # gets the information from the dialog then adds it to addresstable
     def addaddressmanually_onclick(self):
@@ -176,13 +176,16 @@ class MainForm(QMainWindow, MainWindow):
         application = QApplication.instance()
         application.closeAllWindows()
 
+    # FIXME: calling this function in a long for loop slows the process down significantly
     def add_element_to_addresstable(self, description, address, typeofaddress, length=0, unicode=False,
                                     zero_terminate=True):
         frozen_checkbox = QCheckBox()
+        # TODO: Implement a loop-version of read_single_address
+        value = GDB_Engine.read_single_address(address, typeofaddress, length, unicode, zero_terminate)
         typeofaddress = GuiUtils.valuetype_to_text(typeofaddress, length, unicode, zero_terminate)
 
         # this line lets us take symbols as parameters, pretty rad isn't it?
-        # FIXME: passing an actual symbol to the function below in a long for loop slows the process down significantly
+        # TODO: Implement a loop-version of convert_symbol_to_address
         address = GDB_Engine.convert_symbol_to_address(address)
         self.tableWidget_addresstable.setRowCount(self.tableWidget_addresstable.rowCount() + 1)
         currentrow = self.tableWidget_addresstable.rowCount() - 1
@@ -190,7 +193,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setItem(currentrow, 1, QTableWidgetItem(description))
         self.tableWidget_addresstable.setItem(currentrow, 2, QTableWidgetItem(address))
         self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(typeofaddress))
-        # self.update_address_table_manually()
+        self.tableWidget_addresstable.setItem(currentrow, 4, QTableWidgetItem(value))
 
 
 # process select window
