@@ -146,7 +146,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def nextscan_onclick(self):
         t0 = time()
-        GDB_Engine.send_command("info threads")  # test
+        GDB_Engine.send_command('info address "123"')  # test
         t1 = time()
         print(t1 - t0)
         # t = Thread(target=GDB_Engine.test)  # test
@@ -194,6 +194,10 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setItem(currentrow, 2, QTableWidgetItem(address))
         self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(typeofaddress_text))
         self.tableWidget_addresstable.setItem(currentrow, 4, QTableWidgetItem(value))
+        t0 = time()
+        GDB_Engine.read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate)  # test
+        t1 = time()
+        print(t1 - t0)
 
 
 # process select window

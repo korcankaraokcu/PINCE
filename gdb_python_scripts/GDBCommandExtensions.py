@@ -2,16 +2,20 @@ import gdb
 import pickle
 import sys
 import os
+from re import split
 
-# This is some retarded hack, fix your shit gdb
-sys.path.append(os.path.expanduser("~"))  # Adds the home directory to PYTHONPATH to import ScriptUtils
-import ScriptUtils
+# This is some retarded hack
+gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
+PINCE_PATH = gdbvalue.string()
+sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import ScriptUtils and GuiUtils
+import gdb_python_scripts.ScriptUtils as ScriptUtils
 import GuiUtils
 
 
-class PrintAddressTableContents(gdb.Command):
+# returns values from memory according to address table contents sent from PINCE
+class ReadAddressTableContents(gdb.Command):
     def __init__(self):
-        super(PrintAddressTableContents, self).__init__("pince-update-address-table", gdb.COMMAND_USER)
+        super(ReadAddressTableContents, self).__init__("pince-update-address-table", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
         table_contents_send = []
@@ -27,9 +31,28 @@ class PrintAddressTableContents(gdb.Command):
             address = item[0]
             string = item[1]
             index, length, unicode, zero_terminate = GuiUtils.text_to_valuetype(string)
-            readed = ScriptUtils.read_single_address(address, index, length, unicode, zero_terminate, return_mode=True)
+            readed = ScriptUtils.read_single_address(address, index, length, unicode, zero_terminate)
             table_contents_send.append(readed)
         pickle.dump(table_contents_send, open(send_file, "wb"))
 
 
-PrintAddressTableContents()
+class ReadSingleAddress(gdb.Command):
+    def __init__(self):
+        super(ReadSingleAddress, self).__init__("pince-read-single-address", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        try:
+            parameters = eval(
+                arg)  # more like EVIL mwahahahaha... HAHAHAHAHA... **muffled evil laughter from distance**
+
+            # 5 is the number of parameters coming from PINCE
+            address, value_type, length, unicode, zero_terminate = parameters + (None,) * (5 - len(parameters))
+            address = hex(address)
+        except:
+            print("")
+            return
+        print(ScriptUtils.read_single_address(address, value_type, length, unicode, zero_terminate))
+
+
+ReadAddressTableContents()
+ReadSingleAddress()

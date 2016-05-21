@@ -24,26 +24,18 @@ def issue_command(command):
         gdb.execute('echo ??\n')
 
 
-def read_single_address(address, value_type, length=0, unicode=False, zero_terminate=True, return_mode=False):
+def read_single_address(address, value_type, length=0, unicode=False, zero_terminate=True):
     try:
         value_type = int(value_type)
         address = int(address, 16)
     except:
-        if return_mode:
-            return ""
-        else:
-            print("")
-            return
+        return ""
     packed_data = text_to_valuetype_dict.get(value_type, -1)
     if value_type is 6 or value_type is 7:
         try:
             length = int(length)
         except:
-            if return_mode:
-                return ""
-            else:
-                print("")
-                return
+            return ""
         if unicode:
             length = length * 2
     else:
@@ -58,11 +50,7 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
         readed = FILE.read(length)
     except:
         FILE.close()
-        if return_mode:
-            return ""
-        else:
-            print("")
-            return
+        return ""
     FILE.close()
     if value_type is 6:
         if unicode:
@@ -74,31 +62,8 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
                 returned_string = '\x00'
             else:
                 returned_string = returned_string.split('\x00')[0]
-        if return_mode:
-            return returned_string[0:length]
-        else:
-            print(returned_string[0:length])
-            return
+        return returned_string[0:length]
     elif value_type is 7:
-        if return_mode:
-            return " ".join(format(n, '02x') for n in readed)
-        else:
-            print(" ".join(format(n, '02x') for n in readed))
-            return
+        return " ".join(format(n, '02x') for n in readed)
     else:
-        if return_mode:
-            return struct.unpack_from(data_type, readed)[0]
-        else:
-            print(struct.unpack_from(data_type, readed)[0])
-            return
-
-
-# an elegant inline function that would return from the calling function without using any goto, inline assembly or exception would be good
-'''
-def issue_return(thing,return_mode):
-        if return_mode:
-            return thing
-        else:
-            print(thing)
-            return
-'''
+        return struct.unpack_from(data_type, readed)[0]

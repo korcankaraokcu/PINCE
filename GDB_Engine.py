@@ -74,6 +74,10 @@ def attach(pid=str):
     # a creative and meaningful number for such a marvelous and magnificent program PINCE is
     child.timeout = 900000
     child.expect_exact("(gdb)")
+
+    # gdb scripts needs to know PINCE directory, unfortunately they don't start from the place where script exists
+    send_command('set $PINCE_PATH=' + '"' + SysUtils.get_current_script_directory() + '"')
+    send_command("source gdb_python_scripts/GDBCommandExtensions.py")
     send_command("attach " + pid + " &")
     send_command("1")  # to swallow up the surplus output
     currentpid = int(pid)
@@ -198,6 +202,14 @@ def read_single_address(address, typeofaddress, length=None, is_unicode=False, z
         if filteredresult:
             return split("t", filteredresult.group(0))[-1]
         return "??"
+
+
+# This function is the same with the read_single_address but it reads values from proc/pid/maps instead
+# This function is useable even when thread injection fails but it's more primivite than read_single_address
+def read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate):
+    readed = send_command(
+        "pince-read-single-address " + str(address) + "," + str(typeofaddress) + "," + str(length) + "," + str(
+            unicode) + "," + str(zero_terminate))
 
 
 # Converts the given address to symbol if any symbol exists for it
