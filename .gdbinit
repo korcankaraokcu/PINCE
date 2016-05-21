@@ -2,7 +2,6 @@ set disassembly-flavor intel
 set target-async 1
 set pagination off
 set non-stop on
-source gdb_python_scripts/GDBCommandExtensions.py
 define keks
 	set $lel=0
 	while($lel<10)
