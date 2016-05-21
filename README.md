@@ -8,6 +8,7 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
   * **Symbol Recognition:**Try typing any widely used library function(such as malloc, open, printf, scanf etc) to AddAddressManually dialog **[Done]**
   * **Automatic String Conversion:**If you type a string in quotes to AddAddressManually dialog, PINCE can convert it to any other type and after pressing OK button PINCE will allocate memory for you to use that string right away! **[Done]**
   * **Dynamic Address Table:** **[Done]**
+  * **Manual Address Table Update:** **[Done]**
   * **Continuous Address Table Update:** **[Working on it]**
   * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables **[Working on it]**
 - **Disassemble** **[Planned]**
