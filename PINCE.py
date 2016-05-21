@@ -201,7 +201,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        GuiUtils.center_parent(self)
+        GuiUtils.center_to_parent(self)
         self.loadingwidget = LoadingWidgetForm()
         processlist = SysUtils.get_process_list()
         self.refresh_process_table(self.processtable, processlist)
