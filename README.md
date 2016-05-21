@@ -31,7 +31,6 @@ sudo apt-get install g++-multilib
 ```  
 Then create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
 Then ```cd``` to PINCE/linux-inject directory and simply run ```make```  
-Then copy the file ```PINCE/gdb-python-scripts/ScriptUtils.py``` to your home directory (blame gdb for this unnecessary step, not me)  
 Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```  
 
 For developers:  
