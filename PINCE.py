@@ -77,7 +77,7 @@ class UpdateAddressTable(QThread):
             FILE.close()
             FILE = open(recv_file, "r")
             readed = FILE.read()
-            print(readed)
+            # print(readed)
             FILE.close()
 
 
@@ -181,7 +181,6 @@ class MainForm(QMainWindow, MainWindow):
                                     zero_terminate=True):
         frozen_checkbox = QCheckBox()
         # TODO: Implement a loop-version of read_single_address
-        value = GDB_Engine.read_single_address(address, typeofaddress, length, unicode, zero_terminate)
         typeofaddress_text = GuiUtils.valuetype_to_text(typeofaddress, length, unicode, zero_terminate)
 
         # this line lets us take symbols as parameters, pretty rad isn't it?
@@ -193,11 +192,8 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setItem(currentrow, 1, QTableWidgetItem(description))
         self.tableWidget_addresstable.setItem(currentrow, 2, QTableWidgetItem(address))
         self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(typeofaddress_text))
+        value = GDB_Engine.read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate)
         self.tableWidget_addresstable.setItem(currentrow, 4, QTableWidgetItem(value))
-        t0 = time()
-        GDB_Engine.read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate)  # test
-        t1 = time()
-        print(t1 - t0)
 
 
 # process select window

@@ -31,13 +31,18 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
     except:
         return ""
     packed_data = text_to_valuetype_dict.get(value_type, -1)
-    if value_type is 6 or value_type is 7:
+    if value_type is 6:
         try:
             length = int(length)
         except:
             return ""
         if unicode:
             length = length * 2
+    elif value_type is 7:
+        try:
+            length = int(length)
+        except:
+            return ""
     else:
         length = packed_data[0]
         data_type = packed_data[1]

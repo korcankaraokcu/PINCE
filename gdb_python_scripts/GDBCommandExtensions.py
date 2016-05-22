@@ -51,6 +51,11 @@ class ReadSingleAddress(gdb.Command):
         except:
             print("")
             return
+
+        # python can't print a string that has null bytes in it, so we'll have to print the raw bytes instead and let PINCE do the parsing
+        # Weird enough, even when python can't print those strings, pyqt can(in it's gui elements like labels)
+        if value_type is 6:
+            value_type = 7
         print(ScriptUtils.read_single_address(address, value_type, length, unicode, zero_terminate))
 
 
