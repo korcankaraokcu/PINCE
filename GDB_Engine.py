@@ -43,8 +43,10 @@ def send_command(command=str):
     with lock:
         child.sendline(command)
         child.expect_exact("(gdb) ")
-        print(child.before)  # debug mode on!
-        return child.before
+        output = split(r"&\".*\\n\"", child.before, 1)[1]  # &"command\n"
+        # print(child.before)  # debug mode on!
+        print(output)
+        return output
 
 
 # check if we can attach to the target
@@ -83,7 +85,7 @@ def attach(pid=str):
     currentpid = int(pid)
     print("Injecting Thread")  # loading_widget text change
     if codes_injected:
-        address_table_update_thread = PINCE.UpdateAddressTable(pid)
+        address_table_update_thread = PINCE.UpdateAddressTable(pid)  # planned for future
         address_table_update_thread.start()
         send_command("interrupt")
         result = send_command("call inject_infinite_thread()")
@@ -142,11 +144,13 @@ def valuetype_to_gdbcommand(index=int):
     return valuetype_to_gdbcommand_dict.get(index, "out of bounds")
 
 
-# returns the value of the address if the address is valid, return the string "??" if not
+# returns the value of the expression if it is valid, return the string "??" if not
+# this function is mainly used for display in AddAddressManually dialog
 # this function also can read symbols such as "_start", "malloc", "printf" and "scanf" as addresses
 # typeofaddress is derived from valuetype_to_gdbcommand
 # length parameter only gets passed when reading strings or array of bytes
 # unicode and zero_terminate parameters are only for strings
+# if you just want to get the value of an address, use the function read_value_from_single_address() instead
 def read_single_address(address, typeofaddress, length=None, is_unicode=False, zero_terminate=True):
     if search(r'\$|\s', address):  # These characters make gdb show it's value history, so they should be avoided
         return "??"
@@ -163,7 +167,7 @@ def read_single_address(address, typeofaddress, length=None, is_unicode=False, z
         result = send_command("x/" + expectedlength + typeofaddress + " " + address)
         filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
         if filteredresult:
-            returned_string = ''.join(filteredresult)  # combined all the matched results
+            returned_string = ''.join(filteredresult)  # combine all the matched results
             return returned_string.replace(r"\t0x", " ")
         return "??"
     elif typeofaddress is 6:  # string
@@ -206,10 +210,30 @@ def read_single_address(address, typeofaddress, length=None, is_unicode=False, z
 
 # This function is the same with the read_single_address but it reads values from proc/pid/maps instead
 # This function is useable even when thread injection fails but it's more primivite than read_single_address
+# Use this if you only want to read some values from an address
+# If you want PINCE to parse expressions, use read_single_address instead
 def read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate):
     readed = send_command(
         "pince-read-single-address " + str(address) + "," + str(typeofaddress) + "," + str(length) + "," + str(
             unicode) + "," + str(zero_terminate))
+    result = search(r"~\".*\\n\"", readed).group(0)  # ~"result\n"
+    result = split(r'\"', result)[1]  # result\n"
+    result = split(r"\\", result)[0]  # result
+
+    # check ReadSingleAddress class in GDBCommandExtensions.py to understand why do we separate this parsing from others
+    if typeofaddress is 6:
+        returned_string = result.replace(" ", "")
+        if not unicode:
+            returned_string = bytes.fromhex(returned_string).decode("ascii", "replace")
+        else:
+            returned_string = bytes.fromhex(returned_string).decode("utf-8", "replace")
+        if zero_terminate:
+            if returned_string.startswith('\x00'):
+                returned_string = '\x00'
+            else:
+                returned_string = returned_string.split('\x00')[0]
+        return returned_string[0:int(length)]
+    return result
 
 
 # Converts the given address to symbol if any symbol exists for it
