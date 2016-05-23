@@ -151,6 +151,7 @@ def valuetype_to_gdbcommand(index=int):
 # length parameter only gets passed when reading strings or array of bytes
 # unicode and zero_terminate parameters are only for strings
 # if you just want to get the value of an address, use the function read_value_from_single_address() instead
+# FIXME: inputting whitespaces in string allocation mode(inputs between quotes) makes function return "??"
 def read_single_address(address, typeofaddress, length=None, is_unicode=False, zero_terminate=True):
     if search(r'\$|\s', address):  # These characters make gdb show it's value history, so they should be avoided
         return "??"
@@ -237,6 +238,7 @@ def read_value_from_single_address(address, typeofaddress, length, unicode, zero
 
 
 # Converts the given address to symbol if any symbol exists for it
+# TODO: Implement a loop-version
 def convert_address_to_symbol(string):
     if search(r"0x[0-9a-fA-F]+", string):  # if string is a valid address
         result = send_command("x/x " + string)
@@ -247,6 +249,7 @@ def convert_address_to_symbol(string):
 
 
 # Converts the given symbol to address if symbol is valid
+# TODO: Implement a loop-version
 def convert_symbol_to_address(string):
     if not search(r"0x[0-9a-fA-F]+", string):  # if string is not an address
         result = send_command("x/x " + string)

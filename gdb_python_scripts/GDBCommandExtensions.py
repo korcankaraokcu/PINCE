@@ -1,8 +1,6 @@
 import gdb
 import pickle
 import sys
-import os
-from re import split
 
 # This is some retarded hack
 gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
