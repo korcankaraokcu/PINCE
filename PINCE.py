@@ -146,7 +146,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def nextscan_onclick(self):
         t0 = time()
-        GDB_Engine.send_command('info address "123"')  # test
+        GDB_Engine.send_command('x _start')  # test
         t1 = time()
         print(t1 - t0)
         # t = Thread(target=GDB_Engine.test)  # test
@@ -180,7 +180,6 @@ class MainForm(QMainWindow, MainWindow):
     def add_element_to_addresstable(self, description, address, typeofaddress, length=0, unicode=False,
                                     zero_terminate=True):
         frozen_checkbox = QCheckBox()
-        # TODO: Implement a loop-version of read_single_address
         typeofaddress_text = GuiUtils.valuetype_to_text(typeofaddress, length, unicode, zero_terminate)
 
         # this line lets us take symbols as parameters, pretty rad isn't it?
@@ -192,6 +191,8 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setItem(currentrow, 1, QTableWidgetItem(description))
         self.tableWidget_addresstable.setItem(currentrow, 2, QTableWidgetItem(address))
         self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(typeofaddress_text))
+
+        # TODO: Implement a loop-version of read_value_from_single_address
         value = GDB_Engine.read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate)
         self.tableWidget_addresstable.setItem(currentrow, 4, QTableWidgetItem(value))
 
@@ -308,8 +309,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         while not self.update_thread._is_stopped:
             sleep(0.01)
             if self.update_needed:
-                if not GDB_Engine.codes_injected:
-                    GDB_Engine.send_command("interrupt")
                 self.update_needed = False
                 address = self.lineEdit_address.text()
                 address_type = self.comboBox_ValueType.currentIndex()
@@ -324,8 +323,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                         GDB_Engine.read_single_address(address, address_type, length, is_unicode, is_zeroterminate))
                 else:
                     self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type))
-                if not GDB_Engine.codes_injected:
-                    GDB_Engine.send_command("c &")
 
     def address_on_change(self):
         self.update_needed = True
