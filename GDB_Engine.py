@@ -85,6 +85,7 @@ def attach(pid=str):
     currentpid = int(pid)
     print("Injecting Thread")  # loading_widget text change
     if codes_injected:
+        send_command("set $pince_injection_failed = 0")
         address_table_update_thread = PINCE.UpdateAddressTable(pid)  # planned for future
         address_table_update_thread.start()
         send_command("interrupt")
