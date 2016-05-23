@@ -83,8 +83,8 @@ def attach(pid=str):
     currentpid = int(pid)
     print("Injecting Thread")  # loading_widget text change
     if codes_injected:
-        # address_table_update_thread = PINCE.UpdateAddressTable(pid)  # planned for future
-        # address_table_update_thread.start()
+        address_table_update_thread = PINCE.UpdateAddressTable(pid)  # planned for future
+        address_table_update_thread.start()
         send_command("interrupt")
         result = send_command("call inject_infinite_thread()")
         filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
@@ -100,7 +100,7 @@ def attach(pid=str):
         infinite_thread_location = threadaddress
         send_command("thread " + infinite_thread_id)
         send_command("interrupt")
-        # send_command("call inject_table_update_thread()")  # planned for future
+        send_command("call inject_table_update_thread()")  # planned for future
         return True
     else:
         send_command("source gdb_python_scripts/on_code_injection_failure")
