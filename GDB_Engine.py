@@ -11,7 +11,6 @@ import PINCE
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
-codes_injected = False  # to inform other functions if the code injection is failed or not
 
 infinite_thread_location = str  # location of the injected thread that runs forever at background
 infinite_thread_id = str  # id of the injected thread that runs forever at background
@@ -56,6 +55,7 @@ def can_attach(pid=str):
         return False
     os.waitpid(int(pid), 0)
     libc.ptrace(17, int(pid), 0, 17)  # 17 is PTRACE_DETACH, check ptrace.h for details
+    sleep(0.01)
     return True
 
 
@@ -67,11 +67,10 @@ def attach(pid=str):
     global child
     global infinite_thread_location
     global infinite_thread_id
-    global codes_injected
-    codes_injected = inject_initial_codes(pid)
+    codes_injected = inject_initial_codes(pid)  # comment out this line to disable code injection
     child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=SysUtils.get_current_script_directory())
     child.setecho(False)
-    # child.logfile=open("asdf.txt","w")
+    # child.logfile=open("pince-log.txt","w")
 
     # a creative and meaningful number for such a marvelous and magnificent program PINCE is
     child.timeout = 900000
@@ -81,13 +80,11 @@ def attach(pid=str):
     send_command('set $PINCE_PATH=' + '"' + SysUtils.get_current_script_directory() + '"')
     send_command("source gdb_python_scripts/GDBCommandExtensions.py")
     send_command("attach " + pid + " &")
-    send_command("1")  # to swallow up the surplus output
     currentpid = int(pid)
     print("Injecting Thread")  # loading_widget text change
     if codes_injected:
-        send_command("set $pince_injection_failed = 0")
-        address_table_update_thread = PINCE.UpdateAddressTable(pid)  # planned for future
-        address_table_update_thread.start()
+        # address_table_update_thread = PINCE.UpdateAddressTable(pid)  # planned for future
+        # address_table_update_thread.start()
         send_command("interrupt")
         result = send_command("call inject_infinite_thread()")
         filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
@@ -103,9 +100,10 @@ def attach(pid=str):
         infinite_thread_location = threadaddress
         send_command("thread " + infinite_thread_id)
         send_command("interrupt")
-        send_command("call inject_table_update_thread()")
+        # send_command("call inject_table_update_thread()")  # planned for future
         return True
     else:
+        send_command("source gdb_python_scripts/on_code_injection_failure")
         return False
 
 
@@ -113,7 +111,6 @@ def attach(pid=str):
 def detach():
     global child
     global currentpid
-    global codes_injected
     abort_file = "/tmp/PINCE-connection/" + str(currentpid) + "/abort.txt"
     try:
         open(abort_file, "w").close()
@@ -122,7 +119,6 @@ def detach():
         pass
     child.sendline("q")
     currentpid = 0
-    codes_injected = False
     child.close()
 
 
@@ -152,9 +148,10 @@ def valuetype_to_gdbcommand(index=int):
 # length parameter only gets passed when reading strings or array of bytes
 # unicode and zero_terminate parameters are only for strings
 # if you just want to get the value of an address, use the function read_value_from_single_address() instead
-# FIXME: inputting whitespaces in string allocation mode(inputs between quotes) makes function return "??"
 def read_single_address(address, typeofaddress, length=None, is_unicode=False, zero_terminate=True):
-    if search(r'\$|\s', address):  # These characters make gdb show it's value history, so they should be avoided
+    if search(r"\".*\"", address):  # this line lets the user allocate strings by inputting it between the quotes
+        pass
+    elif search(r'\$|\s', address):  # These characters make gdb show it's value history, so they should be avoided
         return "??"
     if address is "":
         return "??"
