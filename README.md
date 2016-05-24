@@ -61,7 +61,7 @@ GPLv3
 - **Platforms tested so far:**
   * Kubuntu 14.04 & 16.04
   * Archlinux
-- **Games&Application tested so far:**
+- **Games&Applications tested so far:**
   * KMines
   * Torchlight 2(linux-inject fucks this up time to time, researching alternatives)
   * Steam
