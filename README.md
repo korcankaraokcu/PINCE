@@ -2,12 +2,12 @@
 PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt5. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine.  
 #Features   
 - **NO BRAKES ON THIS TRAIN:** PINCE can run **ANY** gdb command without having to pause the inferior **[Done]**
-- **Memory searching** **[Planned]**
+- **Memory searching** **[Planned]**  (The plan is to use libscanmem by wrapping it with a gdb python script)
 - **Variable Inspection** **[Working on it]**
   * **CheatEngine-like value type support:** Byte to 8 Bytes, Float, Double, Strings(including utf-8 and zero-terminate strings), Array of Bytes **[Done]**
   * **Symbol Recognition:**Try typing any widely used library function(such as malloc, open, printf, scanf etc) to AddAddressManually dialog **[Done]**
   * **Automatic String Conversion:**If you type a string in quotes to AddAddressManually dialog, PINCE can convert it to any other type and after pressing OK button PINCE will allocate memory for you to use that string right away! **[Done]**
-  * **Dynamic Address Table:** **[Done]**
+  * **Dynamic Address Table:** **[Working on it]**
   * **Manual Address Table Update:** **[Done]**
   * **Continuous Address Table Update:** **[Working on it]**
   * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables **[Working on it]**
@@ -15,6 +15,8 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
 - **Debugging** **[Planned]**
 - **Code Injection** **[Working on it]**
   * PINCE can inject any code to a running process without pausing it
+- **Simplified/Optimized gdb command alternatives** **[Working on it]**
+  * Custom scripts instead of using gdb's x command for reading memory[Done]
 
 #Building  
 To run PINCE, simply run this command chain:  
@@ -54,3 +56,13 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 
 #License
 GPLv3
+
+#Supported platforms
+- **Platforms tested so far:**
+  * Kubuntu 14.04 & 16.04
+  * Archlinux
+- **Games&Application tested so far:**
+  * KMines
+  * Torchlight 2(linux-inject fucks this up time to time, researching alternatives)
+  * Steam
+  * Firefox(PINCE crashes it after detach time to time, blame gdb for it, not me)
