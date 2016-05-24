@@ -16,7 +16,7 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
 - **Code Injection** **[Working on it]**
   * PINCE can inject any code to a running process without pausing it
 - **Simplified/Optimized gdb command alternatives** **[Working on it]**
-  * Custom scripts instead of using gdb's x command for reading memory[Done]
+  * Custom scripts instead of using gdb's x command for reading memory **[Done]**
 
 #Building  
 To run PINCE, simply run this command chain:  
