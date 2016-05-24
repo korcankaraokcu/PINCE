@@ -5,6 +5,10 @@ from time import sleep
 import pexpect
 import os
 import ctypes
+import struct
+
+libc = ctypes.CDLL('libc.so.6')
+is_32bit = struct.calcsize("P") * 8 == 32
 
 import SysUtils
 import PINCE
@@ -15,8 +19,6 @@ child = object  # this object will be used with pexpect operations
 infinite_thread_location = str  # location of the injected thread that runs forever at background
 infinite_thread_id = str  # id of the injected thread that runs forever at background
 lock = Lock()
-
-libc = ctypes.CDLL('libc.so.6')
 
 # A dictionary used to convert value_combobox index to gdb/mi command
 # dictionaries in GuiUtils, GDB_Engine and ScriptUtils are connected to each other
@@ -60,7 +62,7 @@ def can_attach(pid=str):
 
 
 # Attaches gdb to the target pid
-# Returns False if the thread injection doesn't work, returns True otherwise
+# Returns False if the thread injection fails, True otherwise
 # Also saves the injected thread's location and ID as strings, then switches to that thread and stops it
 def attach(pid=str):
     global currentpid
@@ -68,6 +70,7 @@ def attach(pid=str):
     global infinite_thread_location
     global infinite_thread_id
     codes_injected = inject_initial_codes(pid)  # comment out this line to disable code injection
+    # codes_injected=False  # and enable this line in addition to that
     child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=SysUtils.get_current_script_directory())
     child.setecho(False)
     # child.logfile=open("pince-log.txt","w")
@@ -101,10 +104,9 @@ def attach(pid=str):
         send_command("thread " + infinite_thread_id)
         send_command("interrupt")
         send_command("call inject_table_update_thread()")  # planned for future
-        return True
     else:
         send_command("source gdb_python_scripts/on_code_injection_failure")
-        return False
+    return codes_injected
 
 
 # Farewell...
@@ -127,10 +129,12 @@ def detach():
 def inject_initial_codes(pid=str):
     scriptdirectory = SysUtils.get_current_script_directory()
     injectionpath = scriptdirectory + "/Injection/InitialCodeInjections.so"
-    result = pexpect.run("sudo ./inject -p " + pid + " " + injectionpath, cwd=scriptdirectory + "/linux-inject")
+    if is_32bit:
+        result = pexpect.run("sudo ./inject32 -p " + pid + " " + injectionpath, cwd=scriptdirectory + "/linux-inject")
+    else:
+        result = pexpect.run("sudo ./inject -p " + pid + " " + injectionpath, cwd=scriptdirectory + "/linux-inject")
     print(result)  # for debug
-    success = search(b"successfully injected", result)  # literal string
-    if success:
+    if search(b"successfully injected", result):  # literal string
         return True
     return False
 
