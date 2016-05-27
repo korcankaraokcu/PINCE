@@ -568,7 +568,10 @@
       </attribute>
       <column>
        <property name="text">
-        <string>Frozen</string>
+        <string>F</string>
+       </property>
+       <property name="toolTip">
+        <string>Freeze the value</string>
        </property>
       </column>
       <column>
