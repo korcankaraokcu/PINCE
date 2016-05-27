@@ -40,7 +40,7 @@ class UpdateAddressTable(QThread):
     # communicates with the inferior via files and reads the values from them
     def run(self):
         SysUtils.do_cleanups(self.pid)
-        directory_path = "/tmp/PINCE-connection/" + self.pid
+        directory_path = SysUtils.get_PINCE_IPC_directory(self.pid)
         SysUtils.is_path_valid(directory_path, "create")
         send_file = directory_path + "/PINCE-to-Inferior.txt"
         recv_file = directory_path + "/Inferior-to-PINCE.txt"
@@ -115,7 +115,7 @@ class MainForm(QMainWindow, MainWindow):
             address = self.tableWidget_addresstable.item(row, 2).text()  # address cell
             value_type = self.tableWidget_addresstable.item(row, 3).text()  # type cell
             table_contents_send.append([address, value_type])
-        directory_path = "/tmp/PINCE-connection/" + str(currentpid)
+        directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
         send_file = directory_path + "/address-table-from-PINCE.txt"
         recv_file = directory_path + "/address-table-to-PINCE.txt"
         open(recv_file, "w").close()
