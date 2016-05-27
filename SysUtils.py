@@ -3,7 +3,10 @@ import psutil
 import os
 import shutil
 import sys
+import PINCE
 from re import match, search, IGNORECASE
+
+PINCE_IPC_PATH = "/tmp/PINCE-connection/"
 
 
 # returns a list of currently working processes
@@ -120,4 +123,13 @@ def fix_path_permissions(dest_path):
 
 # removes the corresponding pid file
 def do_cleanups(pid):
-    is_path_valid("/tmp/PINCE-connection/" + str(pid), "delete")
+    is_path_valid(PINCE_IPC_PATH + str(pid), "delete")
+
+
+def create_PINCE_IPC_PATH(pid):
+    directory_path = PINCE_IPC_PATH + str(pid)
+    is_path_valid(directory_path, "create")
+
+
+def get_PINCE_IPC_directory(pid):
+    return PINCE_IPC_PATH + str(pid)

@@ -69,6 +69,7 @@ def attach(pid=str):
     global child
     global infinite_thread_location
     global infinite_thread_id
+    SysUtils.create_PINCE_IPC_PATH(pid)
     codes_injected = inject_initial_codes(pid)  # comment out this line to disable code injection
     # codes_injected=False  # and enable this line in addition to that
     child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=SysUtils.get_current_script_directory())
@@ -113,7 +114,7 @@ def attach(pid=str):
 def detach():
     global child
     global currentpid
-    abort_file = "/tmp/PINCE-connection/" + str(currentpid) + "/abort.txt"
+    abort_file = SysUtils.PINCE_IPC_PATH + str(currentpid) + "/abort.txt"
     try:
         open(abort_file, "w").close()
         SysUtils.fix_path_permissions(abort_file)

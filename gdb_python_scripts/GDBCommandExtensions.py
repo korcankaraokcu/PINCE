@@ -5,9 +5,10 @@ import sys
 # This is some retarded hack
 gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
 PINCE_PATH = gdbvalue.string()
-sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import ScriptUtils and GuiUtils
+sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 import gdb_python_scripts.ScriptUtils as ScriptUtils
 import GuiUtils
+import SysUtils
 
 
 # returns values from memory according to address table contents sent from PINCE
@@ -19,7 +20,7 @@ class ReadAddressTableContents(gdb.Command):
         table_contents_send = []
         inferior = gdb.selected_inferior()
         pid = inferior.pid
-        directory_path = "/tmp/PINCE-connection/" + str(pid)
+        directory_path = SysUtils.get_PINCE_IPC_directory(pid)
         recv_file = directory_path + "/address-table-from-PINCE.txt"
         send_file = directory_path + "/address-table-to-PINCE.txt"
         table_contents_recv = pickle.load(open(recv_file, "rb"))
