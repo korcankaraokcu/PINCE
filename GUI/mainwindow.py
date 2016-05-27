@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Thu May 19 03:08:00 2016
+# Created: Fri May 27 17:22:23 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -326,7 +326,8 @@ class Ui_MainWindow(object):
         self.pushButton_RefreshAdressTable.setToolTip(_translate("MainWindow", "Refresh the address table"))
         self.pushButton_AddAddressManually.setText(_translate("MainWindow", "Add Address Manually"))
         item = self.tableWidget_addresstable.horizontalHeaderItem(0)
-        item.setText(_translate("MainWindow", "Frozen"))
+        item.setText(_translate("MainWindow", "F"))
+        item.setToolTip(_translate("MainWindow", "Freeze the value"))
         item = self.tableWidget_addresstable.horizontalHeaderItem(1)
         item.setText(_translate("MainWindow", "Description"))
         item = self.tableWidget_addresstable.horizontalHeaderItem(2)

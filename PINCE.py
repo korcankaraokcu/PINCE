@@ -15,6 +15,7 @@ from GUI.mainwindow import Ui_MainWindow as MainWindow
 from GUI.selectprocess import Ui_MainWindow as ProcessWindow
 from GUI.addaddressmanuallydialog import Ui_Dialog as ManualAddressDialog
 from GUI.loadingwidget import Ui_Form as LoadingWidget
+from GUI.dialogwithbuttons import Ui_Dialog as DialogWithButtons
 
 # the PID of the process we'll attach to
 currentpid = 0
@@ -87,9 +88,9 @@ class MainForm(QMainWindow, MainWindow):
         super().__init__()
         self.setupUi(self)
         GuiUtils.center(self)
-        self.tableWidget_addresstable.setColumnWidth(0, 50)  # Frozen
+        self.tableWidget_addresstable.setColumnWidth(0, 25)  # Frozen
         self.tableWidget_addresstable.setColumnWidth(1, 150)  # Description
-        self.tableWidget_addresstable.setColumnWidth(2, 200)  # Address
+        self.tableWidget_addresstable.setColumnWidth(2, 150)  # Address
         self.tableWidget_addresstable.setColumnWidth(3, 100)  # Type
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
@@ -99,6 +100,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
         self.pushButton_AddAddressManually.clicked.connect(self.addaddressmanually_onclick)
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
+        self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
         icons_directory = SysUtils.get_current_script_directory() + "/media/icons"
         self.processbutton.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
@@ -160,6 +162,11 @@ class MainForm(QMainWindow, MainWindow):
     def processbutton_onclick(self):
         self.processwindow = ProcessForm(self)
         self.processwindow.show()
+
+    def delete_address_table_contents(self):
+        confirm_dialog = DialogWithButtonsForm(label_text="This will clear the contents of address table\n\tProceed?")
+        if confirm_dialog.exec_():
+            self.tableWidget_addresstable.setRowCount(0)
 
     def on_inferior_exit(self):
         global currentpid
@@ -280,7 +287,11 @@ class ProcessForm(QMainWindow, ProcessWindow):
             print(len(readable))
             print("done")  # loading_widget finish
             if not thread_injection_successful:
-                QMessageBox.information(self, "Warning", "Unable to inject threads, PINCE may(will) not work properly")
+                QMessageBox.information(self, "Warning",
+                                        "Unable to inject threads, following features has been disabled:" +
+                                        "\nPINCE non-stop mode" +
+                                        "\nContinuous Address Table Update" +
+                                        "\nVariable Locking")
             self.loadingwidget.hide()
             self.close()
 
@@ -429,6 +440,14 @@ class LoadingWindowThread(QThread):
         while self.not_finished:
             sleep(0.001)
             self.update_needed.emit()  # to here should be reworked
+
+
+class DialogWithButtonsForm(QDialog, DialogWithButtons):
+    def __init__(self, parent=None, label_text=""):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        label_text = str(label_text)
+        self.label.setText(label_text)
 
 
 if __name__ == "__main__":
