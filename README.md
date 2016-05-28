@@ -19,23 +19,36 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
   * Custom scripts instead of using gdb's x command for reading memory **[Done]**
 
 #Building  
-To run PINCE, simply run this command chain:  
+To run PINCE, run this command chain then compile gdb if necessary:  
   
 ```
 sudo apt-get install python3-setuptools  
 sudo apt-get install python3-pip  
-sudo apt-get install gdb  
 sudo apt-get install python3-pyqt5  
 sudo pip3 install psutil  
 sudo pip3 install pexpect  
 sudo apt-get install clang  
 sudo apt-get install g++-multilib  
 ```  
-Then create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
+###**Compiling the most recent gdb version with python support**  
+#####*You can skip this part if you already have gdb 7.1.1 with python support and gcc-6*  
+Download the latest source from [here](ftp://sourceware.org/pub/gdb/releases/gdb-7.11.tar.gz), then install packages required for gdb
+```
+sudo apt-get install libreadline-dev  
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test  
+sudo apt-get update  
+sudo apt-get install gcc-6  
+```
+Then ```cd``` to the source file you downloaded and run:  
+```CC=gcc-6 ./configure --prefix=/usr --with-system-readline --with-python=python3 && make && sudo make -C gdb install```  
+Then move the contents of gdb/data-directory to /usr/share/gdb by doing:  
+```sudo cp -R gdb/data-directory/* /usr/share/gdb/```  
+#####Relocating PINCE files  
+Create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
 Then ```cd``` to PINCE/linux-inject directory and simply run ```make```  
 Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```  
 
-For developers:  
+###For developers:  
 ```
 sudo apt-get install qttools5-dev-tools (qt5 form designer)
 sudo apt-get install pyqt5-dev-tools (pyuic5)
