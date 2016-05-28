@@ -32,7 +32,7 @@ sudo apt-get install g++-multilib
 ```  
 ###**Compiling the most recent gdb version with python support**  
 #####*You can skip this part if you already have gdb 7.1.1 with python support and gcc-6*  
-Download the latest source from [here](ftp://sourceware.org/pub/gdb/releases/gdb-7.11.tar.gz), then install packages required for gdb
+Download the latest source from [here](http://ftp.gnu.org/gnu/gdb/gdb-7.11.tar.gz), then install packages required for gdb
 ```
 sudo apt-get install libreadline-dev  
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test  
