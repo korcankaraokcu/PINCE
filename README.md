@@ -46,7 +46,7 @@ Then move the contents of gdb/data-directory to /usr/share/gdb by doing:
 Finally relocate libcc1.so by doing:
 ```
 cd /usr/lib/x86_64-linux-gnu/
-cp libcc1.so.0.0.0 libcc1.so
+sudo cp libcc1.so.0.0.0 libcc1.so
 ```
 #####Relocating PINCE files  
 Create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
