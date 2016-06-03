@@ -64,15 +64,14 @@ def can_attach(pid=str):
 # Attaches gdb to the target pid
 # Returns False if the thread injection fails, True otherwise
 # Also saves the injected thread's location and ID as strings, then switches to that thread and stops it
-def attach(pid=str):
+def attach(pid=str,injection_method=0):
     global currentpid
     global child
     global infinite_thread_location
     global infinite_thread_id
     SysUtils.create_PINCE_IPC_PATH(pid)
-    codes_injected = inject_initial_codes(pid)  # comment out this line to disable code injection
-    # codes_injected=False  # and enable this line in addition to that
-    child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=SysUtils.get_current_script_directory())
+    currentdir=SysUtils.get_current_script_directory()
+    child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=currentdir)
     child.setecho(False)
     # child.logfile=open("pince-log.txt","w")
 
@@ -81,15 +80,30 @@ def attach(pid=str):
     child.expect_exact("(gdb)")
 
     # gdb scripts needs to know PINCE directory, unfortunately they don't start from the place where script exists
-    send_command('set $PINCE_PATH=' + '"' + SysUtils.get_current_script_directory() + '"')
+    send_command('set $PINCE_PATH=' + '"' + currentdir + '"')
     send_command("source gdb_python_scripts/GDBCommandExtensions.py")
+    if injection_method is 1:  #linux-inject
+        codes_injected = inject_initial_codes(pid)
     send_command("attach " + pid + " &")
+    send_command("interrupt")
     currentpid = int(pid)
-    print("Injecting Thread")  # loading_widget text change
+    if injection_method is 0:  #simple dlopen call
+        injectionpath = '"' + currentdir + '/Injection/InitialCodeInjections.so"'
+        result=send_command("call dlopen(" + injectionpath + ", 2)")
+        filtered_result=search(r"\$\d+\s*=\s*\d+",result)  # $1 = 0
+        if filtered_result:
+            dlopen_return_value=split(" ", filtered_result.group(0))[-1]
+            if dlopen_return_value is "0":
+                codes_injected=False
+            else:
+                codes_injected=True
+        else:
+            codes_injected=False
+    if injection_method is -1:
+        codes_injected=False
     if codes_injected:
-        address_table_update_thread = PINCE.UpdateAddressTable(pid)  # planned for future
-        address_table_update_thread.start()
-        send_command("interrupt")
+        #address_table_update_thread = PINCE.UpdateAddressTable(pid)  # planned for future
+        #address_table_update_thread.start()
         result = send_command("call inject_infinite_thread()")
         filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
         send_command("c &")
@@ -104,7 +118,7 @@ def attach(pid=str):
         infinite_thread_location = threadaddress
         send_command("thread " + infinite_thread_id)
         send_command("interrupt")
-        send_command("call inject_table_update_thread()")  # planned for future
+        #send_command("call inject_table_update_thread()")  # planned for future
     else:
         send_command("source gdb_python_scripts/on_code_injection_failure")
     return codes_injected
