@@ -31,7 +31,7 @@ sudo apt-get install clang
 sudo apt-get install g++-multilib  
 ```  
 ###**Compiling the most recent gdb version with python support**  
-#####*You can skip this part if you already have gdb 7.1.1 with python support and gcc-6*  
+#####*You can skip this part if you already have gdb 7.1.1 with python3 support and libcc1.so from gcc-6 is correctly located*  
 Download the latest source from [here](http://ftp.gnu.org/gnu/gdb/gdb-7.11.tar.gz), then install packages required for gdb
 ```
 sudo apt-get install libreadline-dev  
@@ -43,6 +43,11 @@ Then ```cd``` to the source file you downloaded and run:
 ```CC=gcc-6 ./configure --prefix=/usr --with-system-readline --with-python=python3 && make && sudo make -C gdb install```  
 Then move the contents of gdb/data-directory to /usr/share/gdb by doing:  
 ```sudo cp -R gdb/data-directory/* /usr/share/gdb/```  
+Finally relocate libcc1.so by doing:
+```
+cd /usr/lib/x86_64-linux-gnu/
+sudo cp libcc1.so.0.0.0 libcc1.so
+```
 #####Relocating PINCE files  
 Create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
 Then ```cd``` to PINCE/linux-inject directory and simply run ```make```  
