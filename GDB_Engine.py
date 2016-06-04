@@ -83,31 +83,13 @@ def attach(pid=str, injection_method=0):
     send_command('set $PINCE_PATH=' + '"' + currentdir + '"')
     send_command("source gdb_python_scripts/GDBCommandExtensions.py")
     if injection_method is 1:  # linux-inject
-        codes_injected = inject_initial_codes(pid)
+        codes_injected = inject_with_linux_inject(pid)
     send_command("attach " + pid + " &")
     send_command("interrupt")
     currentpid = int(pid)
     if injection_method is 0:  # simple dlopen call
-        injectionpath = '"' + currentdir + '/Injection/InitialCodeInjections.so"'
-        result = send_command("call dlopen(" + injectionpath + ", 2)")
-        filtered_result = search(r"\$\d+\s*=\s*\d+", result)  # $1 = 0
-        if filtered_result:
-            dlopen_return_value = split(" ", filtered_result.group(0))[-1]
-            if dlopen_return_value is "0":
-                result = send_command("call __libc_dlopen_mode(" + injectionpath + ", 2)")
-                filtered_result = search(r"\$\d+\s*=\s*\d+", result)  # $1 = 0
-                if filtered_result:
-                    dlopen_return_value = split(" ", filtered_result.group(0))[-1]
-                    if dlopen_return_value is "0":
-                        codes_injected = False
-                    else:
-                        codes_injected = True
-                else:
-                    codes_injected = False
-            else:
-                codes_injected = True
-        else:
-            codes_injected = False
+        injectionpath = currentdir + "/Injection/InitialCodeInjections.so"
+        codes_injected = inject_with_dlopen_call(injectionpath)
     if injection_method is -1:
         codes_injected = False
     if codes_injected:
@@ -150,7 +132,7 @@ def detach():
 
 # Injects a thread that runs forever at the background, it'll be used to execute GDB commands on
 # FIXME: linux-inject is insufficient for big games, it makes big titles such as Torchlight to segfault
-def inject_initial_codes(pid=str):
+def inject_with_linux_inject(pid=str):
     scriptdirectory = SysUtils.get_current_script_directory()
     injectionpath = scriptdirectory + "/Injection/InitialCodeInjections.so"
     if is_32bit:
@@ -159,6 +141,33 @@ def inject_initial_codes(pid=str):
         result = pexpect.run("sudo ./inject -p " + pid + " " + injectionpath, cwd=scriptdirectory + "/linux-inject")
     print(result)  # for debug
     if search(b"successfully injected", result):  # literal string
+        return True
+    return False
+
+
+# variant of inject_with_linux_inject
+def inject_with_dlopen_call(library_path):
+    injectionpath = '"' + library_path + '"'
+    result = send_command("call dlopen(" + injectionpath + ", 1)")
+    filtered_result = search(r"\$\d+\s*=\s*\d+", result)  # $1 = 0
+    if filtered_result:
+        dlopen_return_value = split(" ", filtered_result.group(0))[-1]
+        if dlopen_return_value is "0":
+            result = send_command("call __libc_dlopen_mode(" + injectionpath + ", 1)")
+            filtered_result = search(r"\$\d+\s*=\s*\d+", result)  # $1 = 0
+            if filtered_result:
+                dlopen_return_value = split(" ", filtered_result.group(0))[-1]
+                if dlopen_return_value is "0":
+                    return False
+                return True
+            return False
+        return True
+    result = send_command("call __libc_dlopen_mode(" + injectionpath + ", 1)")
+    filtered_result = search(r"\$\d+\s*=\s*\d+", result)  # $1 = 0
+    if filtered_result:
+        dlopen_return_value = split(" ", filtered_result.group(0))[-1]
+        if dlopen_return_value is "0":
+            return False
         return True
     return False
 
