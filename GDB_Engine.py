@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from re import search, split, findall
+from re import search, split, findall, match, sub
 from threading import Lock, Thread
 from time import sleep
 import pexpect
@@ -15,6 +15,7 @@ import PINCE
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
+codes_injected = False
 
 infinite_thread_location = str  # location of the injected thread that runs forever at background
 infinite_thread_id = str  # id of the injected thread that runs forever at background
@@ -45,8 +46,8 @@ def send_command(command=str):
         child.sendline(command)
         child.expect_exact("(gdb) ")
         output = split(r"&\".*\\n\"", child.before, 1)[1]  # &"command\n"
-        # print(child.before)  # debug mode on!
-        print(output)
+        print(child.before)  # debug mode on!
+        # print(output)
         return output
 
 
@@ -69,6 +70,7 @@ def attach(pid=str, injection_method=0):
     global child
     global infinite_thread_location
     global infinite_thread_id
+    global codes_injected
     SysUtils.create_PINCE_IPC_PATH(pid)
     currentdir = SysUtils.get_current_script_directory()
     child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=currentdir)
@@ -90,8 +92,6 @@ def attach(pid=str, injection_method=0):
     if injection_method is 0:  # simple dlopen call
         injectionpath = currentdir + "/Injection/InitialCodeInjections.so"
         codes_injected = inject_with_dlopen_call(injectionpath)
-    if injection_method is -1:
-        codes_injected = False
     if codes_injected:
         # address_table_update_thread = PINCE.UpdateAddressTable(pid)  # planned for future
         # address_table_update_thread.start()
@@ -112,6 +112,7 @@ def attach(pid=str, injection_method=0):
         # send_command("call inject_table_update_thread()")  # planned for future
     else:
         send_command("source gdb_python_scripts/on_code_injection_failure")
+        send_command("c &")
     return codes_injected
 
 
@@ -119,6 +120,7 @@ def attach(pid=str, injection_method=0):
 def detach():
     global child
     global currentpid
+    global codes_injected
     abort_file = SysUtils.PINCE_IPC_PATH + str(currentpid) + "/abort.txt"
     try:
         open(abort_file, "w").close()
@@ -128,6 +130,7 @@ def detach():
     child.sendline("q")
     currentpid = 0
     child.close()
+    codes_injected = False
 
 
 # Injects a thread that runs forever at the background, it'll be used to execute GDB commands on
