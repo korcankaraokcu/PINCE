@@ -2,11 +2,10 @@
 define hook-x
   if $pince_debugging_mode == 0
     interrupt
-    shell sleep 0.01
   end
 end
     
-define hookpost-x
+define hook-stop
   if $pince_debugging_mode == 0
     c &
   end
