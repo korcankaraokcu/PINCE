@@ -11,7 +11,16 @@ libc = ctypes.CDLL('libc.so.6')
 is_32bit = struct.calcsize("P") * 8 == 32
 
 import SysUtils
-import PINCE
+import type_defs
+
+COMBOBOX_BYTE = type_defs.COMBOBOX_BYTE
+COMBOBOX_2BYTES = type_defs.COMBOBOX_2BYTES
+COMBOBOX_4BYTES = type_defs.COMBOBOX_4BYTES
+COMBOBOX_8BYTES = type_defs.COMBOBOX_8BYTES
+COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
+COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
+COMBOBOX_STRING = type_defs.COMBOBOX_STRING
+COMBOBOX_AOB = type_defs.COMBOBOX_AOB  # Array of Bytes
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
@@ -25,14 +34,14 @@ lock = Lock()
 # dictionaries in GuiUtils, GDB_Engine and ScriptUtils are connected to each other
 # any modification in one dictionary may require a rework in others
 valuetype_to_gdbcommand_dict = {
-    0: "db",  # byte
-    1: "dh",  # 2bytes
-    2: "dw",  # 4bytes
-    3: "dg",  # 8bytes
-    4: "fw",  # float
-    5: "fg",  # double
-    6: "xb",  # string
-    7: "xb"  # array of bytes
+    COMBOBOX_BYTE: "db",
+    COMBOBOX_2BYTES: "dh",
+    COMBOBOX_4BYTES: "dw",
+    COMBOBOX_8BYTES: "dg",
+    COMBOBOX_FLOAT: "fw",
+    COMBOBOX_DOUBLE: "fg",
+    COMBOBOX_STRING: "xb",
+    COMBOBOX_AOB: "xb"
 }
 
 
@@ -197,7 +206,7 @@ def read_single_address(address, typeofaddress, length=None, is_unicode=False, z
         return "??"
     if length is "":
         return "??"
-    if typeofaddress is 7:  # array of bytes
+    if typeofaddress is COMBOBOX_AOB:
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
         try:
             expectedlength = str(int(length))  # length must be a legit number, so had to do this trick
@@ -209,7 +218,7 @@ def read_single_address(address, typeofaddress, length=None, is_unicode=False, z
             returned_string = ''.join(filteredresult)  # combine all the matched results
             return returned_string.replace(r"\t0x", " ")
         return "??"
-    elif typeofaddress is 6:  # string
+    elif typeofaddress is COMBOBOX_STRING:
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
         if not is_unicode:
             try:
@@ -238,7 +247,7 @@ def read_single_address(address, typeofaddress, length=None, is_unicode=False, z
                     returned_string = returned_string.split('\x00')[0]
             return returned_string[0:int(length)]
         return "??"
-    else:  # byte, 2bytes, 4bytes, 8bytes, float, double
+    else:
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
         result = send_command("x/" + typeofaddress + " " + address)
         filteredresult = search(r":\\t[0-9a-fA-F-,]+", result)  # 0x400000:\t1,3961517377359369e-309
@@ -260,7 +269,7 @@ def read_value_from_single_address(address, typeofaddress, length, unicode, zero
     result = split(r"\\", result)[0]  # result
 
     # check ReadSingleAddress class in GDBCommandExtensions.py to understand why do we separate this parsing from others
-    if typeofaddress is 6:
+    if typeofaddress is COMBOBOX_STRING:
         returned_string = result.replace(" ", "")
         if not unicode:
             returned_string = bytes.fromhex(returned_string).decode("ascii", "replace")

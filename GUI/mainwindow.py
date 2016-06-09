@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Fri May 27 17:22:23 2016
+# Created: Thu Jun  9 14:50:01 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -247,6 +247,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.addLayout(self.horizontalLayout_8)
         self.tableWidget_addresstable = QtWidgets.QTableWidget(self.centralwidget)
         self.tableWidget_addresstable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tableWidget_addresstable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidget_addresstable.setObjectName("tableWidget_addresstable")
         self.tableWidget_addresstable.setColumnCount(5)
         self.tableWidget_addresstable.setRowCount(0)
