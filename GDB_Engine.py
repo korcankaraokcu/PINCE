@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from re import search, split, findall, match, sub
+from re import search, split, findall
 from threading import Lock, Thread
 from time import sleep
 import pexpect
@@ -20,7 +20,7 @@ COMBOBOX_8BYTES = type_defs.COMBOBOX_8BYTES
 COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
 COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
 COMBOBOX_STRING = type_defs.COMBOBOX_STRING
-COMBOBOX_AOB = type_defs.COMBOBOX_AOB  # Array of Bytes
+COMBOBOX_AOB = type_defs.COMBOBOX_AOB
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
@@ -30,19 +30,7 @@ infinite_thread_location = str  # location of the injected thread that runs fore
 infinite_thread_id = str  # id of the injected thread that runs forever at background
 lock = Lock()
 
-# A dictionary used to convert value_combobox index to gdb/mi command
-# dictionaries in GuiUtils, GDB_Engine and ScriptUtils are connected to each other
-# any modification in one dictionary may require a rework in others
-valuetype_to_gdbcommand_dict = {
-    COMBOBOX_BYTE: "db",
-    COMBOBOX_2BYTES: "dh",
-    COMBOBOX_4BYTES: "dw",
-    COMBOBOX_8BYTES: "dg",
-    COMBOBOX_FLOAT: "fw",
-    COMBOBOX_DOUBLE: "fg",
-    COMBOBOX_STRING: "xb",
-    COMBOBOX_AOB: "xb"
-}
+index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
 
 # The comments next to the regular expressions shows the expected gdb output, an elucidating light for the future developers
@@ -130,7 +118,7 @@ def detach():
     global child
     global currentpid
     global codes_injected
-    abort_file = SysUtils.PINCE_IPC_PATH + str(currentpid) + "/abort.txt"
+    abort_file = type_defs.PINCE_IPC_PATH + str(currentpid) + "/abort.txt"
     try:
         open(abort_file, "w").close()
         SysUtils.fix_path_permissions(abort_file)
@@ -187,7 +175,7 @@ def inject_with_dlopen_call(library_path):
 # return a string corresponding to the selected index
 # returns "out of bounds" string if the index doesn't match the dictionary
 def valuetype_to_gdbcommand(index=int):
-    return valuetype_to_gdbcommand_dict.get(index, "out of bounds")
+    return index_to_gdbcommand_dict.get(index, "out of bounds")
 
 
 # returns the value of the expression if it is valid, return the string "??" if not
