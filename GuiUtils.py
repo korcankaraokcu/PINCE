@@ -10,36 +10,10 @@ COMBOBOX_8BYTES = type_defs.COMBOBOX_8BYTES
 COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
 COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
 COMBOBOX_STRING = type_defs.COMBOBOX_STRING
-COMBOBOX_AOB = type_defs.COMBOBOX_AOB  # Array of Bytes
+COMBOBOX_AOB = type_defs.COMBOBOX_AOB
 
-# Represents the texts at indexes in combobox
-
-
-# A dictionary used to convert value_combobox index to text
-# dictionaries in GuiUtils, GDB_Engine and ScriptUtils are connected to each other
-# any modification in one dictionary may require a rework in others
-valuetype_to_text_dict = {
-    COMBOBOX_BYTE: "Byte",
-    COMBOBOX_2BYTES: "2 Bytes",
-    COMBOBOX_4BYTES: "4 Bytes",
-    COMBOBOX_8BYTES: "8 Bytes",
-    COMBOBOX_FLOAT: "Float",
-    COMBOBOX_DOUBLE: "Double",
-    COMBOBOX_STRING: "String",
-    COMBOBOX_AOB: "AoB"
-}
-
-# dictionaries in GuiUtils, GDB_Engine and ScriptUtils are connected to each other
-# any modification in one dictionary may require a rework in others
-text_to_valuetype_dict = {
-    "Byte": COMBOBOX_BYTE,
-    "2 Bytes": COMBOBOX_2BYTES,
-    "4 Bytes": COMBOBOX_4BYTES,
-    "8 Bytes": COMBOBOX_8BYTES,
-    "Float": COMBOBOX_FLOAT,
-    "Double": COMBOBOX_DOUBLE
-}
-
+index_to_text_dict=type_defs.index_to_text_dict
+text_to_index_dict=type_defs.text_to_index_dict
 
 # centering a window
 def center(window):
@@ -54,7 +28,7 @@ def center_to_parent(window):
 # return a string corresponding to the selected index
 # returns "out of bounds" string if the index doesn't match the dictionary
 def valuetype_to_text(index=int, length=0, unicode=False, zero_terminate=True):
-    returned_string = valuetype_to_text_dict.get(index, "out of bounds")
+    returned_string = index_to_text_dict.get(index, "out of bounds")
     if index is COMBOBOX_STRING:
         returned_string = returned_string + "[" + str(length) + "]"
         if unicode:
@@ -68,7 +42,7 @@ def valuetype_to_text(index=int, length=0, unicode=False, zero_terminate=True):
 
 def text_to_valuetype(string):
     length = unicode = zero_terminate = None
-    index = text_to_valuetype_dict.get(string, -1)
+    index = text_to_index_dict.get(string, -1)
     if index is -1:
         if search(r"String\[\d*\]", string):  # String[10],U,NZT
             index = COMBOBOX_STRING

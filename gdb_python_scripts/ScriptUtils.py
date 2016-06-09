@@ -16,21 +16,12 @@ COMBOBOX_8BYTES = type_defs.COMBOBOX_8BYTES
 COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
 COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
 COMBOBOX_STRING = type_defs.COMBOBOX_STRING
-COMBOBOX_AOB = type_defs.COMBOBOX_AOB  # Array of Bytes
+COMBOBOX_AOB = type_defs.COMBOBOX_AOB
 
 # first value is the length and the second one is the type
 # dictionaries in GuiUtils, GDB_Engine and ScriptUtils are connected to each other
 # any modification in one dictionary may require a rework in others
-text_to_valuetype_dict = {
-    COMBOBOX_BYTE: [1, "b"],
-    COMBOBOX_2BYTES: [2, "h"],
-    COMBOBOX_4BYTES: [4, "i"],
-    COMBOBOX_8BYTES: [8, "l"],
-    COMBOBOX_FLOAT: [4, "f"],
-    COMBOBOX_DOUBLE: [8, "d"],
-    COMBOBOX_STRING: [None, None],
-    COMBOBOX_AOB: [None, None]
-}
+index_to_valuetype_dict = type_defs.index_to_valuetype_dict
 
 
 # This function is used to avoid errors in gdb scripts, because gdb scripts stop working when encountered an error
@@ -47,7 +38,7 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
         address = int(address, 16)
     except:
         return ""
-    packed_data = text_to_valuetype_dict.get(value_type, -1)
+    packed_data = index_to_valuetype_dict.get(value_type, -1)
     if value_type is COMBOBOX_STRING:
         try:
             length = int(length)
@@ -74,7 +65,7 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
         FILE.close()
         return ""
     FILE.close()
-    if value_type is 6:
+    if value_type is COMBOBOX_STRING:
         if unicode:
             returned_string = readed.decode("utf-8", "replace")
         else:
@@ -85,7 +76,7 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
             else:
                 returned_string = returned_string.split('\x00')[0]
         return returned_string[0:length]
-    elif value_type is 7:
+    elif value_type is COMBOBOX_AOB:
         return " ".join(format(n, '02x') for n in readed)
     else:
         return struct.unpack_from(data_type, readed)[0]

@@ -9,6 +9,16 @@ sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import 
 import gdb_python_scripts.ScriptUtils as ScriptUtils
 import GuiUtils
 import SysUtils
+import type_defs
+
+COMBOBOX_BYTE = type_defs.COMBOBOX_BYTE
+COMBOBOX_2BYTES = type_defs.COMBOBOX_2BYTES
+COMBOBOX_4BYTES = type_defs.COMBOBOX_4BYTES
+COMBOBOX_8BYTES = type_defs.COMBOBOX_8BYTES
+COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
+COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
+COMBOBOX_STRING = type_defs.COMBOBOX_STRING
+COMBOBOX_AOB = type_defs.COMBOBOX_AOB
 
 
 # returns values from memory according to address table contents sent from PINCE
@@ -53,8 +63,8 @@ class ReadSingleAddress(gdb.Command):
 
         # python can't print a string that has null bytes in it, so we'll have to print the raw bytes instead and let PINCE do the parsing
         # Weird enough, even when python can't print those strings, pyqt can(in it's gui elements like labels)
-        if value_type is 6:
-            value_type = 7
+        if value_type is COMBOBOX_STRING:
+            value_type = COMBOBOX_AOB
         print(ScriptUtils.read_single_address(address, value_type, length, unicode, zero_terminate))
 
 

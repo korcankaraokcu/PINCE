@@ -2,13 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="26a0030d-f8a3-4790-bcea-d5cfde026b84" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GUI/mainwindow.ui" afterPath="$PROJECT_DIR$/GUI/mainwindow.ui" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GDB_Engine.py" afterPath="$PROJECT_DIR$/GDB_Engine.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GUI/mainwindow.py" afterPath="$PROJECT_DIR$/GUI/mainwindow.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GuiUtils.py" afterPath="$PROJECT_DIR$/GuiUtils.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PINCE.py" afterPath="$PROJECT_DIR$/PINCE.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SysUtils.py" afterPath="$PROJECT_DIR$/SysUtils.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gdb_python_scripts/GDBCommandExtensions.py" afterPath="$PROJECT_DIR$/gdb_python_scripts/GDBCommandExtensions.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gdb_python_scripts/ScriptUtils.py" afterPath="$PROJECT_DIR$/gdb_python_scripts/ScriptUtils.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/type_defs.py" afterPath="$PROJECT_DIR$/type_defs.py" />
     </list>
     <ignored path="untitled.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -29,11 +29,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="PINCE.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="PINCE.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/PINCE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.35494328">
-              <caret line="227" column="39" selection-start-line="227" selection-start-column="39" selection-end-line="227" selection-end-column="39" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="138" column="50" selection-start-line="138" selection-start-column="50" selection-end-line="138" selection-end-column="50" />
               <folding>
                 <element signature="e#19#74#0" expanded="true" />
               </folding>
@@ -45,7 +45,7 @@
         <entry file="file://$PROJECT_DIR$/GuiUtils.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="9" column="34" selection-start-line="9" selection-start-column="34" selection-end-line="9" selection-end-column="34" />
+              <caret line="60" column="31" selection-start-line="60" selection-start-column="30" selection-end-line="60" selection-end-column="31" />
               <folding>
                 <element signature="e#19#61#0" expanded="true" />
               </folding>
@@ -57,7 +57,7 @@
         <entry file="file://$PROJECT_DIR$/SysUtils.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="51" column="22" selection-start-line="51" selection-start-column="22" selection-end-line="51" selection-end-column="22" />
+              <caret line="8" column="19" selection-start-line="8" selection-start-column="19" selection-end-line="8" selection-end-column="19" />
               <folding>
                 <element signature="e#19#32#0" expanded="true" />
               </folding>
@@ -69,10 +69,20 @@
         <entry file="file://$PROJECT_DIR$/GDB_Engine.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="17" column="23" selection-start-line="17" selection-start-column="23" selection-end-line="17" selection-end-column="23" />
+              <caret line="32" column="34" selection-start-line="32" selection-start-column="34" selection-end-line="32" selection-end-column="34" />
               <folding>
-                <element signature="e#19#68#0" expanded="true" />
+                <element signature="e#19#56#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="type_defs.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/type_defs.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="1.4100486">
+              <caret line="58" column="30" selection-start-line="58" selection-start-column="30" selection-end-line="58" selection-end-column="30" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -81,7 +91,7 @@
         <entry file="file://$PROJECT_DIR$/gdb_python_scripts/GDBCommandExtensions.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="5" column="22" selection-start-line="5" selection-start-column="22" selection-end-line="5" selection-end-column="22" />
+              <caret line="16" column="20" selection-start-line="16" selection-start-column="20" selection-end-line="16" selection-end-column="20" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -93,7 +103,7 @@
         <entry file="file://$PROJECT_DIR$/gdb_python_scripts/ScriptUtils.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="9" column="16" selection-start-line="9" selection-start-column="16" selection-end-line="9" selection-end-column="16" />
+              <caret line="78" column="35" selection-start-line="78" selection-start-column="35" selection-end-line="78" selection-end-column="35" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -134,13 +144,14 @@
         <option value="$PROJECT_DIR$/gdb-python-scripts/read_single_address.py" />
         <option value="$PROJECT_DIR$/gdb-python-scripts/GDBCommandExtensions.py" />
         <option value="$PROJECT_DIR$/gdb-python-scripts/ScriptUtils.py" />
-        <option value="$PROJECT_DIR$/gdb_python_scripts/GDBCommandExtensions.py" />
-        <option value="$PROJECT_DIR$/SysUtils.py" />
         <option value="$PROJECT_DIR$/gdb_python_scripts/on_injection_failure.py" />
-        <option value="$PROJECT_DIR$/gdb_python_scripts/ScriptUtils.py" />
-        <option value="$PROJECT_DIR$/GDB_Engine.py" />
         <option value="$PROJECT_DIR$/GuiUtils.py" />
+        <option value="$PROJECT_DIR$/SysUtils.py" />
+        <option value="$PROJECT_DIR$/gdb_python_scripts/ScriptUtils.py" />
+        <option value="$PROJECT_DIR$/gdb_python_scripts/GDBCommandExtensions.py" />
+        <option value="$PROJECT_DIR$/type_defs.py" />
         <option value="$PROJECT_DIR$/PINCE.py" />
+        <option value="$PROJECT_DIR$/GDB_Engine.py" />
       </list>
     </option>
   </component>
@@ -502,16 +513,6 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/gdb_python_scripts/ScriptUtils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="68" column="66" selection-start-line="68" selection-start-column="66" selection-end-line="68" selection-end-column="66" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/SysUtils.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -527,7 +528,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="42" column="10" selection-start-line="42" selection-start-column="10" selection-end-line="42" selection-end-column="10" />
           <folding>
-            <element signature="e#19#68#0" expanded="true" />
+            <element signature="e#19#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -537,7 +538,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="67" column="26" selection-start-line="67" selection-start-column="26" selection-end-line="67" selection-end-column="26" />
           <folding>
-            <element signature="e#19#68#0" expanded="true" />
+            <element signature="e#19#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -547,7 +548,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="128" column="35" selection-start-line="128" selection-start-column="35" selection-end-line="128" selection-end-column="35" />
           <folding>
-            <element signature="e#19#68#0" expanded="true" />
+            <element signature="e#19#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -567,7 +568,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#19#68#0" expanded="true" />
+            <element signature="e#19#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -607,7 +608,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#19#68#0" expanded="true" />
+            <element signature="e#19#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -647,7 +648,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="18" selection-start-line="0" selection-start-column="18" selection-end-line="0" selection-end-column="18" />
           <folding>
-            <element signature="e#19#68#0" expanded="true" />
+            <element signature="e#19#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -687,7 +688,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="18" selection-start-line="0" selection-start-column="18" selection-end-line="0" selection-end-column="18" />
           <folding>
-            <element signature="e#19#68#0" expanded="true" />
+            <element signature="e#19#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -727,7 +728,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="18" selection-start-line="0" selection-start-column="18" selection-end-line="0" selection-end-column="18" />
           <folding>
-            <element signature="e#19#68#0" expanded="true" />
+            <element signature="e#19#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -767,7 +768,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="18" selection-start-line="0" selection-start-column="18" selection-end-line="0" selection-end-column="18" />
           <folding>
-            <element signature="e#19#68#0" expanded="true" />
+            <element signature="e#19#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -925,22 +926,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SysUtils.py">
+    <entry file="file://$PROJECT_DIR$/GuiUtils.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="51" column="22" selection-start-line="51" selection-start-column="22" selection-end-line="51" selection-end-column="22" />
+          <caret line="60" column="31" selection-start-line="60" selection-start-column="30" selection-end-line="60" selection-end-column="31" />
           <folding>
-            <element signature="e#19#32#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/gdb_python_scripts/GDBCommandExtensions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="5" column="22" selection-start-line="5" selection-start-column="22" selection-end-line="5" selection-end-column="22" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#19#61#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -948,7 +939,37 @@
     <entry file="file://$PROJECT_DIR$/gdb_python_scripts/ScriptUtils.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="9" column="16" selection-start-line="9" selection-start-column="16" selection-end-line="9" selection-end-column="16" />
+          <caret line="78" column="35" selection-start-line="78" selection-start-column="35" selection-end-line="78" selection-end-column="35" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SysUtils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="8" column="19" selection-start-line="8" selection-start-column="19" selection-end-line="8" selection-end-column="19" />
+          <folding>
+            <element signature="e#19#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PINCE.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="138" column="50" selection-start-line="138" selection-start-column="50" selection-end-line="138" selection-end-column="50" />
+          <folding>
+            <element signature="e#19#74#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gdb_python_scripts/GDBCommandExtensions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="16" column="20" selection-start-line="16" selection-start-column="20" selection-end-line="16" selection-end-column="20" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
@@ -958,30 +979,18 @@
     <entry file="file://$PROJECT_DIR$/GDB_Engine.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="17" column="23" selection-start-line="17" selection-start-column="23" selection-end-line="17" selection-end-column="23" />
+          <caret line="32" column="34" selection-start-line="32" selection-start-column="34" selection-end-line="32" selection-end-column="34" />
           <folding>
-            <element signature="e#19#68#0" expanded="true" />
+            <element signature="e#19#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/GuiUtils.py">
+    <entry file="file://$PROJECT_DIR$/type_defs.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="9" column="34" selection-start-line="9" selection-start-column="34" selection-end-line="9" selection-end-column="34" />
-          <folding>
-            <element signature="e#19#61#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PINCE.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.35494328">
-          <caret line="227" column="39" selection-start-line="227" selection-start-column="39" selection-end-line="227" selection-end-column="39" />
-          <folding>
-            <element signature="e#19#74#0" expanded="true" />
-          </folding>
+        <state vertical-scroll-proportion="1.4100486">
+          <caret line="58" column="30" selection-start-line="58" selection-start-column="30" selection-end-line="58" selection-end-column="30" />
+          <folding />
         </state>
       </provider>
     </entry>

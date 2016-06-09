@@ -3,10 +3,10 @@ import psutil
 import os
 import shutil
 import sys
-import PINCE
+import type_defs
 from re import match, search, IGNORECASE
 
-PINCE_IPC_PATH = "/tmp/PINCE-connection/"
+PINCE_IPC_PATH = type_defs.PINCE_IPC_PATH
 
 
 # returns a list of currently working processes

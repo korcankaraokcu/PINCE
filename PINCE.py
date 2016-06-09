@@ -22,15 +22,12 @@ from GUI.dialogwithbuttons import Ui_Dialog as DialogWithButtons
 currentpid = 0
 selfpid = os.getpid()
 
-# represents the index of columns in address table
 FROZEN_COL = type_defs.FROZEN_COL
 DESC_COL = type_defs.DESC_COL
 ADDR_COL = type_defs.ADDR_COL
 TYPE_COL = type_defs.TYPE_COL
 VALUE_COL = type_defs.VALUE_COL
 
-# represents the index of valuetype combobox
-# any change at indexes may require rework on the dictionaries located at GuiUtils, GDB_Engine and ScriptUtils
 COMBOBOX_BYTE = type_defs.COMBOBOX_BYTE
 COMBOBOX_2BYTES = type_defs.COMBOBOX_2BYTES
 COMBOBOX_4BYTES = type_defs.COMBOBOX_4BYTES
@@ -38,7 +35,7 @@ COMBOBOX_8BYTES = type_defs.COMBOBOX_8BYTES
 COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
 COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
 COMBOBOX_STRING = type_defs.COMBOBOX_STRING
-COMBOBOX_AOB = type_defs.COMBOBOX_AOB  # Array of Bytes
+COMBOBOX_AOB = type_defs.COMBOBOX_AOB
 
 
 # Checks if the inferior has been terminated
