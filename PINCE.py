@@ -10,6 +10,7 @@ import pickle
 import GuiUtils
 import SysUtils
 import GDB_Engine
+import type_defs
 
 from GUI.mainwindow import Ui_MainWindow as MainWindow
 from GUI.selectprocess import Ui_MainWindow as ProcessWindow
@@ -20,6 +21,24 @@ from GUI.dialogwithbuttons import Ui_Dialog as DialogWithButtons
 # the PID of the process we'll attach to
 currentpid = 0
 selfpid = os.getpid()
+
+# represents the index of columns in address table
+FROZEN_COL = type_defs.FROZEN_COL
+DESC_COL = type_defs.DESC_COL
+ADDR_COL = type_defs.ADDR_COL
+TYPE_COL = type_defs.TYPE_COL
+VALUE_COL = type_defs.VALUE_COL
+
+# represents the index of valuetype combobox
+# any change at indexes may require rework on the dictionaries located at GuiUtils, GDB_Engine and ScriptUtils
+COMBOBOX_BYTE = type_defs.COMBOBOX_BYTE
+COMBOBOX_2BYTES = type_defs.COMBOBOX_2BYTES
+COMBOBOX_4BYTES = type_defs.COMBOBOX_4BYTES
+COMBOBOX_8BYTES = type_defs.COMBOBOX_8BYTES
+COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
+COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
+COMBOBOX_STRING = type_defs.COMBOBOX_STRING
+COMBOBOX_AOB = type_defs.COMBOBOX_AOB  # Array of Bytes
 
 
 # Checks if the inferior has been terminated
@@ -88,10 +107,10 @@ class MainForm(QMainWindow, MainWindow):
         super().__init__()
         self.setupUi(self)
         GuiUtils.center(self)
-        self.tableWidget_addresstable.setColumnWidth(0, 25)  # Frozen
-        self.tableWidget_addresstable.setColumnWidth(1, 150)  # Description
-        self.tableWidget_addresstable.setColumnWidth(2, 150)  # Address
-        self.tableWidget_addresstable.setColumnWidth(3, 100)  # Type
+        self.tableWidget_addresstable.setColumnWidth(FROZEN_COL, 25)
+        self.tableWidget_addresstable.setColumnWidth(DESC_COL, 150)
+        self.tableWidget_addresstable.setColumnWidth(ADDR_COL, 150)
+        self.tableWidget_addresstable.setColumnWidth(TYPE_COL, 100)
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
@@ -101,6 +120,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_AddAddressManually.clicked.connect(self.addaddressmanually_onclick)
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
+        self.tableWidget_addresstable.itemDoubleClicked.connect(self.on_address_table_double_click)
         icons_directory = SysUtils.get_current_script_directory() + "/media/icons"
         self.processbutton.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
@@ -114,8 +134,8 @@ class MainForm(QMainWindow, MainWindow):
         table_contents_send = []
         row_count = self.tableWidget_addresstable.rowCount()
         for row in range(row_count):
-            address = self.tableWidget_addresstable.item(row, 2).text()  # address cell
-            value_type = self.tableWidget_addresstable.item(row, 3).text()  # type cell
+            address = self.tableWidget_addresstable.item(row, ADDR_COL).text()
+            value_type = self.tableWidget_addresstable.item(row, TYPE_COL).text()
             table_contents_send.append([address, value_type])
         directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
         send_file = directory_path + "/address-table-from-PINCE.txt"
@@ -125,13 +145,13 @@ class MainForm(QMainWindow, MainWindow):
         GDB_Engine.send_command("pince-update-address-table")
         table_contents_recv = pickle.load(open(recv_file, "rb"))
         for row, item in enumerate(table_contents_recv):
-            self.tableWidget_addresstable.setItem(row, 4, QTableWidgetItem(str(item)))  # value cell
+            self.tableWidget_addresstable.setItem(row, VALUE_COL, QTableWidgetItem(str(item)))
 
     # gets the information from the dialog then adds it to addresstable
     def addaddressmanually_onclick(self):
-        self.manual_address_dialog = ManualAddressDialogForm()
-        if self.manual_address_dialog.exec_():
-            description, address, typeofaddress, length, unicode, zero_terminate = self.manual_address_dialog.getvalues()
+        manual_address_dialog = ManualAddressDialogForm()
+        if manual_address_dialog.exec_():
+            description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.getvalues()
             self.add_element_to_addresstable(description, address, typeofaddress, length, unicode,
                                              zero_terminate)
 
@@ -194,14 +214,22 @@ class MainForm(QMainWindow, MainWindow):
         address = GDB_Engine.convert_symbol_to_address(address)
         self.tableWidget_addresstable.setRowCount(self.tableWidget_addresstable.rowCount() + 1)
         currentrow = self.tableWidget_addresstable.rowCount() - 1
-        self.tableWidget_addresstable.setCellWidget(currentrow, 0, frozen_checkbox)
-        self.tableWidget_addresstable.setItem(currentrow, 1, QTableWidgetItem(description))
-        self.tableWidget_addresstable.setItem(currentrow, 2, QTableWidgetItem(address))
-        self.tableWidget_addresstable.setItem(currentrow, 3, QTableWidgetItem(typeofaddress_text))
+        self.tableWidget_addresstable.setCellWidget(currentrow, FROZEN_COL, frozen_checkbox)
+        self.tableWidget_addresstable.setItem(currentrow, DESC_COL, QTableWidgetItem(description))
+        self.tableWidget_addresstable.setItem(currentrow, ADDR_COL, QTableWidgetItem(address))
+        self.tableWidget_addresstable.setItem(currentrow, TYPE_COL, QTableWidgetItem(typeofaddress_text))
 
         # TODO: Implement a loop-version of read_value_from_single_address
         value = GDB_Engine.read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate)
-        self.tableWidget_addresstable.setItem(currentrow, 4, QTableWidgetItem(value))
+        self.tableWidget_addresstable.setItem(currentrow, VALUE_COL, QTableWidgetItem(value))
+
+    def on_address_table_double_click(self, index):
+        manual_address_dialog = ManualAddressDialogForm()
+        if index.column() is VALUE_COL:
+            print("ehuehue")
+        else:
+            if manual_address_dialog.exec_():
+                print("asdf")
 
 
 # process select window
@@ -323,10 +351,10 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                 self.update_needed = False
                 address = self.lineEdit_address.text()
                 address_type = self.comboBox_ValueType.currentIndex()
-                if address_type is 7:
+                if address_type is COMBOBOX_AOB:
                     length = self.lineEdit_length.text()
                     self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type, length))
-                elif address_type is 6:
+                elif address_type is COMBOBOX_STRING:
                     length = self.lineEdit_length.text()
                     is_unicode = self.checkBox_Unicode.isChecked()
                     is_zeroterminate = self.checkBox_zeroterminate.isChecked()
@@ -348,12 +376,12 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.update_needed = True
 
     def valuetype_on_current_index_change(self):
-        if self.comboBox_ValueType.currentIndex() == 6:  # if index points to string
+        if self.comboBox_ValueType.currentIndex() == COMBOBOX_STRING:
             self.label_length.show()
             self.lineEdit_length.show()
             self.checkBox_Unicode.show()
             self.checkBox_zeroterminate.show()
-        elif self.comboBox_ValueType.currentIndex() == 7:  # if index points to array of bytes
+        elif self.comboBox_ValueType.currentIndex() == COMBOBOX_AOB:
             self.label_length.show()
             self.lineEdit_length.show()
             self.checkBox_Unicode.hide()
