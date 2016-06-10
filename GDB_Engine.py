@@ -149,12 +149,12 @@ def inject_with_linux_inject(pid=str):
 def inject_with_dlopen_call(library_path):
     injectionpath = '"' + library_path + '"'
     result = send_command("call dlopen(" + injectionpath + ", 1)")
-    filtered_result = search(r"\$\d+\s*=\s*\d+", result)  # $1 = 0
+    filtered_result = search(r"\$\d+\s*=\s*\-*\d+", result)  # $1 = -1633996800
     if filtered_result:
         dlopen_return_value = split(" ", filtered_result.group(0))[-1]
         if dlopen_return_value is "0":
             result = send_command("call __libc_dlopen_mode(" + injectionpath + ", 1)")
-            filtered_result = search(r"\$\d+\s*=\s*\d+", result)  # $1 = 0
+            filtered_result = search(r"\$\d+\s*=\s*\-*\d+", result)  # $1 = -1633996800
             if filtered_result:
                 dlopen_return_value = split(" ", filtered_result.group(0))[-1]
                 if dlopen_return_value is "0":
@@ -163,7 +163,7 @@ def inject_with_dlopen_call(library_path):
             return False
         return True
     result = send_command("call __libc_dlopen_mode(" + injectionpath + ", 1)")
-    filtered_result = search(r"\$\d+\s*=\s*\d+", result)  # $1 = 0
+    filtered_result = search(r"\$\d+\s*=\s*\-*\d+", result)  # $1 = -1633996800
     if filtered_result:
         dlopen_return_value = split(" ", filtered_result.group(0))[-1]
         if dlopen_return_value is "0":

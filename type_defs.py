@@ -40,6 +40,7 @@ text_to_index_dict = {
 }
 
 # A dictionary used to convert value_combobox index to gdb/mi command
+# Check GDB_Engine for an exemplary usage
 index_to_gdbcommand_dict = {
     COMBOBOX_BYTE: "db",
     COMBOBOX_2BYTES: "dh",
@@ -52,6 +53,7 @@ index_to_gdbcommand_dict = {
 }
 
 # first value is the length and the second one is the type
+# Check ScriptUtils for an exemplary usage
 index_to_valuetype_dict = {
     COMBOBOX_BYTE: [1, "b"],
     COMBOBOX_2BYTES: [2, "h"],

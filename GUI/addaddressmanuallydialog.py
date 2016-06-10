@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'addaddressmanuallydialog.ui'
 #
-# Created: Sat May 14 01:13:46 2016
+# Created: Fri Jun 10 16:09:42 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -25,6 +25,13 @@ class Ui_Dialog(object):
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.lineEdit_address = QtWidgets.QLineEdit(Dialog)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lineEdit_address.sizePolicy().hasHeightForWidth())
+        self.lineEdit_address.setSizePolicy(sizePolicy)
+        self.lineEdit_address.setMinimumSize(QtCore.QSize(100, 0))
+        self.lineEdit_address.setText("")
         self.lineEdit_address.setObjectName("lineEdit_address")
         self.horizontalLayout.addWidget(self.lineEdit_address)
         self.label_2 = QtWidgets.QLabel(Dialog)
@@ -43,6 +50,7 @@ class Ui_Dialog(object):
         self.label_4.setObjectName("label_4")
         self.verticalLayout.addWidget(self.label_4)
         self.lineEdit_description = QtWidgets.QLineEdit(Dialog)
+        self.lineEdit_description.setText("")
         self.lineEdit_description.setObjectName("lineEdit_description")
         self.verticalLayout.addWidget(self.lineEdit_description)
         self.verticalLayout_5.addLayout(self.verticalLayout)
@@ -109,11 +117,9 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         self.label.setText(_translate("Dialog", "Address:"))
-        self.lineEdit_address.setText(_translate("Dialog", "0x"))
         self.label_2.setText(_translate("Dialog", "="))
         self.label_valueofaddress.setText(_translate("Dialog", "??"))
         self.label_4.setText(_translate("Dialog", "Description:"))
-        self.lineEdit_description.setText(_translate("Dialog", "No Description"))
         self.label_5.setText(_translate("Dialog", "Type:"))
         self.comboBox_ValueType.setItemText(0, _translate("Dialog", "Byte"))
         self.comboBox_ValueType.setItemText(1, _translate("Dialog", "2 Bytes"))
