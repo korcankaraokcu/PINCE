@@ -212,14 +212,12 @@ class MainForm(QMainWindow, MainWindow):
         address = GDB_Engine.convert_symbol_to_address(address)
         self.tableWidget_addresstable.setRowCount(self.tableWidget_addresstable.rowCount() + 1)
         currentrow = self.tableWidget_addresstable.rowCount() - 1
-        self.tableWidget_addresstable.setCellWidget(currentrow, FROZEN_COL, frozen_checkbox)
-        self.tableWidget_addresstable.setItem(currentrow, DESC_COL, QTableWidgetItem(description))
-        self.tableWidget_addresstable.setItem(currentrow, ADDR_COL, QTableWidgetItem(address))
-        self.tableWidget_addresstable.setItem(currentrow, TYPE_COL, QTableWidgetItem(typeofaddress_text))
 
         # TODO: Implement a loop-version of read_value_from_single_address
         value = GDB_Engine.read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate)
-        self.tableWidget_addresstable.setItem(currentrow, VALUE_COL, QTableWidgetItem(value))
+        self.tableWidget_addresstable.setCellWidget(currentrow, FROZEN_COL, frozen_checkbox)
+        self.change_address_table_elements(row=currentrow, description=description, address=address,
+                                           typeofaddress=typeofaddress_text, value=value)
 
     def on_address_table_double_click(self, index):
         current_row = index.row()
@@ -227,16 +225,35 @@ class MainForm(QMainWindow, MainWindow):
         if current_column is VALUE_COL:
             print("ehuehue")
         else:
-            description = self.tableWidget_addresstable.item(current_row, DESC_COL).text()
-            address = self.tableWidget_addresstable.item(current_row, ADDR_COL).text()
-            value_type = self.tableWidget_addresstable.item(current_row, TYPE_COL).text()
+            description, address, value_type = self.read_address_table_elements(row=current_row)
             index, length, unicode, zero_terminate = GuiUtils.text_to_valuetype(value_type)
-            print(description, address, index, length, unicode, zero_terminate)
             manual_address_dialog = ManualAddressDialogForm(description=description, address=address, index=index,
                                                             length=length, unicode=unicode,
                                                             zero_terminate=zero_terminate)
             if manual_address_dialog.exec_():
-                print("asdf")
+                description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.getvalues()
+                typeofaddress_text = GuiUtils.valuetype_to_text(index=typeofaddress, length=length, unicode=unicode,
+                                                                zero_terminate=zero_terminate)
+                address = GDB_Engine.convert_symbol_to_address(address)
+                value = GDB_Engine.read_value_from_single_address(address=address, typeofaddress=typeofaddress,
+                                                                  length=length, unicode=unicode,
+                                                                  zero_terminate=zero_terminate)
+                self.change_address_table_elements(row=current_row, description=description, address=address,
+                                                   typeofaddress=typeofaddress_text, value=value)
+
+    # Changes the column values of the given row
+    def change_address_table_elements(self, row, description="", address="", typeofaddress="", value=""):
+        self.tableWidget_addresstable.setItem(row, DESC_COL, QTableWidgetItem(description))
+        self.tableWidget_addresstable.setItem(row, ADDR_COL, QTableWidgetItem(address))
+        self.tableWidget_addresstable.setItem(row, TYPE_COL, QTableWidgetItem(typeofaddress))
+        self.tableWidget_addresstable.setItem(row, VALUE_COL, QTableWidgetItem(value))
+
+    # Returns the column values of the given row
+    def read_address_table_elements(self, row):
+        description = self.tableWidget_addresstable.item(row, DESC_COL).text()
+        address = self.tableWidget_addresstable.item(row, ADDR_COL).text()
+        value_type = self.tableWidget_addresstable.item(row, TYPE_COL).text()
+        return description, address, value_type
 
 
 # process select window
@@ -436,9 +453,12 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         if self.label_length.isVisible():
             length = self.lineEdit_length.text()
             try:
-                int(length)
+                length = int(length)
             except:
                 QMessageBox.information(self, "Error", "Length is not valid")
+                return
+            if length < 0:
+                QMessageBox.information(self, "Error", "Length cannot be smaller than 0")
                 return
         self.update_thread._is_stopped = True
         super(ManualAddressDialogForm, self).accept()

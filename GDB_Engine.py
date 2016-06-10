@@ -245,7 +245,7 @@ def read_single_address(address, typeofaddress, length=None, is_unicode=False, z
 
 
 # This function is the same with the read_single_address but it reads values from proc/pid/maps instead
-# This function is useable even when thread injection fails but it's more primivite than read_single_address
+# This function is usable even when thread injection fails but it's more primitive than read_single_address
 # Use this if you only want to read some values from an address
 # If you want PINCE to parse expressions, use read_single_address instead
 def read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate):
@@ -275,6 +275,10 @@ def read_value_from_single_address(address, typeofaddress, length, unicode, zero
 # Converts the given address to symbol if any symbol exists for it
 # TODO: Implement a loop-version
 def convert_address_to_symbol(string):
+    if search(r'\$|\s', string):  # These characters make gdb show it's value history, so they should be avoided
+        return string
+    if string is "":
+        return string
     if search(r"0x[0-9a-fA-F]+", string):  # if string is a valid address
         result = send_command("x/x " + string)
         filteredresult = search(r"<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
@@ -286,6 +290,10 @@ def convert_address_to_symbol(string):
 # Converts the given symbol to address if symbol is valid
 # TODO: Implement a loop-version
 def convert_symbol_to_address(string):
+    if search(r'\$|\s', string):  # These characters make gdb show it's value history, so they should be avoided
+        return string
+    if string is "":
+        return string
     if not search(r"0x[0-9a-fA-F]+", string):  # if string is not an address
         result = send_command("x/x " + string)
         filteredresult = search(r"0x[0-9a-fA-F]+\s+<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
