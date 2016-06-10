@@ -5,12 +5,13 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
 - **Memory searching** **[Planned]**  (The plan is to use libscanmem by wrapping it with a gdb python script)
 - **Variable Inspection** **[Working on it]**
   * **CheatEngine-like value type support:** Byte to 8 Bytes, Float, Double, Strings(including utf-8 and zero-terminate strings), Array of Bytes **[Done]**
-  * **Symbol Recognition:**Try typing any widely used library function(such as malloc, open, printf, scanf etc) to AddAddressManually dialog **[Done]**
-  * **Automatic String Conversion:**If you type a string in quotes to AddAddressManually dialog, PINCE can convert it to any other type and after pressing OK button PINCE will allocate memory for you to use that string right away! **[Done]**
-  * **Dynamic Address Table:** **[Working on it]**
+  * **Symbol Recognition:** Try typing any widely used library function(such as malloc, open, printf, scanf etc) to AddAddressManually dialog **[Done]**
+  * **Automatic String Conversion:** If you type a string in quotes to AddAddressManually dialog, PINCE can convert it to any other type and after pressing OK button PINCE will allocate memory for you to use that string right away! **[Done]**
+  * **Dynamic Address Table:** Drag&drop rows, ctrl+c&ctrl+v between independent PINCE processes, clipboard text analysis(PINCE will try to analyze the contents of the current clipboard and try to pick data from it to convert for address table) **[Planned]**
   * **Manual Address Table Update:** **[Done]**
-  * **Continuous Address Table Update:** **[Working on it]**
-  * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables **[Working on it]**
+  * **Continuous Address Table Update:** **[Postponed\Quarterway Done]**
+  * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables **[Postponed\Quarterway Done]**
+  * *Postpone reason:* Those two features requires thread injection to the target and PINCE's injection methods are not perfect yet, I've already spent more(read:WAY MORE) time than I should on this, these features are not vital for now, also you have got the options to manually update the table and set the value manually already
 - **Disassemble** **[Planned]**
 - **Debugging** **[Planned]**
 - **Code Injection** **[Working on it]**
@@ -81,6 +82,6 @@ GPLv3
   * Archlinux
 - **Games&Applications tested so far:**
   * KMines
-  * Torchlight 2(linux-inject fucks this up time to time, researching alternatives)
+  * Torchlight 2
   * Steam
-  * Firefox(PINCE crashes it after detach time to time, blame gdb for it, not me)
+  * Firefox
