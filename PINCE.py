@@ -149,8 +149,9 @@ class MainForm(QMainWindow, MainWindow):
         manual_address_dialog = ManualAddressDialogForm()
         if manual_address_dialog.exec_():
             description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.getvalues()
-            self.add_element_to_addresstable(description, address, typeofaddress, length, unicode,
-                                             zero_terminate)
+            self.add_element_to_addresstable(description=description, address=address, typeofaddress=typeofaddress,
+                                             length=length, unicode=unicode,
+                                             zero_terminate=zero_terminate)
 
     def newfirstscan_onclick(self):
         if self.pushButton_NewFirstScan.text() == "First Scan":
@@ -221,10 +222,19 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setItem(currentrow, VALUE_COL, QTableWidgetItem(value))
 
     def on_address_table_double_click(self, index):
-        manual_address_dialog = ManualAddressDialogForm()
-        if index.column() is VALUE_COL:
+        current_row = index.row()
+        current_column = index.column()
+        if current_column is VALUE_COL:
             print("ehuehue")
         else:
+            description = self.tableWidget_addresstable.item(current_row, DESC_COL).text()
+            address = self.tableWidget_addresstable.item(current_row, ADDR_COL).text()
+            value_type = self.tableWidget_addresstable.item(current_row, TYPE_COL).text()
+            index, length, unicode, zero_terminate = GuiUtils.text_to_valuetype(value_type)
+            print(description, address, index, length, unicode, zero_terminate)
+            manual_address_dialog = ManualAddressDialogForm(description=description, address=address, index=index,
+                                                            length=length, unicode=unicode,
+                                                            zero_terminate=zero_terminate)
             if manual_address_dialog.exec_():
                 print("asdf")
 
@@ -323,18 +333,46 @@ class ProcessForm(QMainWindow, ProcessWindow):
 
 # Add Address Manually Dialog
 class ManualAddressDialogForm(QDialog, ManualAddressDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, description="No Description", address="0x", index=COMBOBOX_4BYTES, length=10,
+                 unicode=False,
+                 zero_terminate=True):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.label_length.hide()
-        self.lineEdit_length.hide()
-        self.checkBox_Unicode.hide()
-        self.checkBox_zeroterminate.hide()
+        self.lineEdit_description.setText(description)
+        self.lineEdit_address.setText(address)
+        self.comboBox_ValueType.setCurrentIndex(index)
+        if self.comboBox_ValueType.currentIndex() is COMBOBOX_STRING:
+            self.label_length.show()
+            self.lineEdit_length.show()
+            try:
+                length = str(length)
+            except:
+                length = "10"
+            self.lineEdit_length.setText(length)
+            self.checkBox_Unicode.show()
+            self.checkBox_Unicode.setChecked(unicode)
+            self.checkBox_zeroterminate.show()
+            self.checkBox_zeroterminate.setChecked(zero_terminate)
+        elif self.comboBox_ValueType.currentIndex() is COMBOBOX_AOB:
+            self.label_length.show()
+            self.lineEdit_length.show()
+            try:
+                length = str(length)
+            except:
+                length = "10"
+            self.lineEdit_length.setText(length)
+            self.checkBox_Unicode.hide()
+            self.checkBox_zeroterminate.hide()
+        else:
+            self.label_length.hide()
+            self.lineEdit_length.hide()
+            self.checkBox_Unicode.hide()
+            self.checkBox_zeroterminate.hide()
         self.comboBox_ValueType.currentIndexChanged.connect(self.valuetype_on_current_index_change)
         self.lineEdit_length.textChanged.connect(self.length_text_on_change)
         self.checkBox_Unicode.stateChanged.connect(self.unicode_box_on_check)
         self.checkBox_zeroterminate.stateChanged.connect(self.zeroterminate_box_on_check)
-        self.update_needed = False
+        self.update_needed = True
         self.lineEdit_address.textChanged.connect(self.address_on_change)
         self.update_thread = Thread(target=self.update_value_of_address)
         self.update_thread.daemon = True
@@ -373,12 +411,12 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.update_needed = True
 
     def valuetype_on_current_index_change(self):
-        if self.comboBox_ValueType.currentIndex() == COMBOBOX_STRING:
+        if self.comboBox_ValueType.currentIndex() is COMBOBOX_STRING:
             self.label_length.show()
             self.lineEdit_length.show()
             self.checkBox_Unicode.show()
             self.checkBox_zeroterminate.show()
-        elif self.comboBox_ValueType.currentIndex() == COMBOBOX_AOB:
+        elif self.comboBox_ValueType.currentIndex() is COMBOBOX_AOB:
             self.label_length.show()
             self.lineEdit_length.show()
             self.checkBox_Unicode.hide()
@@ -395,19 +433,24 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         super(ManualAddressDialogForm, self).reject()
 
     def accept(self):
-        length = self.lineEdit_length.text()
-        try:
-            length = int(length)
-        except:
-            QMessageBox.information(self, "Error", "Length is not valid")
-            return
-        self.length = length
+        if self.label_length.isVisible():
+            length = self.lineEdit_length.text()
+            try:
+                int(length)
+            except:
+                QMessageBox.information(self, "Error", "Length is not valid")
+                return
         self.update_thread._is_stopped = True
         super(ManualAddressDialogForm, self).accept()
 
     def getvalues(self):
         description = self.lineEdit_description.text()
         address = self.lineEdit_address.text()
+        length = self.lineEdit_length.text()
+        try:
+            length = int(length)
+        except:
+            length = 0
         unicode = False
         zero_terminate = False
         if self.checkBox_Unicode.isChecked():
@@ -415,7 +458,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         if self.checkBox_zeroterminate.isChecked():
             zero_terminate = True
         typeofaddress = self.comboBox_ValueType.currentIndex()
-        return description, address, typeofaddress, self.length, unicode, zero_terminate
+        return description, address, typeofaddress, length, unicode, zero_terminate
 
 
 # FIXME: the gif in qlabel won't update itself, also the design of this class is generally shitty
