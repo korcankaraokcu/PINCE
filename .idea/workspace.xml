@@ -2,12 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="26a0030d-f8a3-4790-bcea-d5cfde026b84" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GUI/addaddressmanuallydialog.ui" afterPath="$PROJECT_DIR$/GUI/addaddressmanuallydialog.ui" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GDB_Engine.py" afterPath="$PROJECT_DIR$/GDB_Engine.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GUI/addaddressmanuallydialog.py" afterPath="$PROJECT_DIR$/GUI/addaddressmanuallydialog.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PINCE.py" afterPath="$PROJECT_DIR$/PINCE.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/type_defs.py" afterPath="$PROJECT_DIR$/type_defs.py" />
     </list>
     <ignored path="untitled.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -31,8 +27,8 @@
       <file leaf-file-name="PINCE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PINCE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.56239873">
-              <caret line="232" column="52" selection-start-line="232" selection-start-column="52" selection-end-line="232" selection-end-column="52" />
+            <state vertical-scroll-proportion="0.55105346">
+              <caret line="237" column="42" selection-start-line="237" selection-start-column="42" selection-end-line="237" selection-end-column="42" />
               <folding>
                 <element signature="e#19#74#0" expanded="true" />
               </folding>
@@ -68,7 +64,7 @@
         <entry file="file://$PROJECT_DIR$/GDB_Engine.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="151" column="32" selection-start-line="151" selection-start-column="32" selection-end-line="151" selection-end-column="32" />
+              <caret line="295" column="21" selection-start-line="295" selection-start-column="21" selection-end-line="295" selection-end-column="21" />
               <folding>
                 <element signature="e#19#56#0" expanded="true" />
               </folding>
@@ -148,9 +144,9 @@
         <option value="$PROJECT_DIR$/gdb_python_scripts/ScriptUtils.py" />
         <option value="$PROJECT_DIR$/gdb_python_scripts/GDBCommandExtensions.py" />
         <option value="$PROJECT_DIR$/GuiUtils.py" />
-        <option value="$PROJECT_DIR$/PINCE.py" />
-        <option value="$PROJECT_DIR$/GDB_Engine.py" />
         <option value="$PROJECT_DIR$/type_defs.py" />
+        <option value="$PROJECT_DIR$/GDB_Engine.py" />
+        <option value="$PROJECT_DIR$/PINCE.py" />
       </list>
     </option>
   </component>
@@ -965,16 +961,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/GDB_Engine.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="151" column="32" selection-start-line="151" selection-start-column="32" selection-end-line="151" selection-end-column="32" />
-          <folding>
-            <element signature="e#19#56#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/type_defs.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -983,10 +969,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/GDB_Engine.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="295" column="21" selection-start-line="295" selection-start-column="21" selection-end-line="295" selection-end-column="21" />
+          <folding>
+            <element signature="e#19#56#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/PINCE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.56239873">
-          <caret line="232" column="52" selection-start-line="232" selection-start-column="52" selection-end-line="232" selection-end-column="52" />
+        <state vertical-scroll-proportion="0.55105346">
+          <caret line="237" column="42" selection-start-line="237" selection-start-column="42" selection-end-line="237" selection-end-column="42" />
           <folding>
             <element signature="e#19#74#0" expanded="true" />
           </folding>
