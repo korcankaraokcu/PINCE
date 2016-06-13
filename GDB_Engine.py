@@ -37,7 +37,7 @@ index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
 
 # issues the command sent
-def send_command(command=str):
+def send_command(command):
     global child
     with lock:
         child.sendline(command)
@@ -70,7 +70,7 @@ def attach(pid=str, injection_method=0):
     global codes_injected
     SysUtils.create_PINCE_IPC_PATH(pid)
     currentdir = SysUtils.get_current_script_directory()
-    child = pexpect.spawnu('sudo gdb --interpreter=mi', cwd=currentdir)
+    child = pexpect.spawnu('sudo LC_NUMERIC=C gdb --interpreter=mi', cwd=currentdir)
     child.setecho(False)
     # child.logfile=open("pince-log.txt","w")
 
@@ -178,6 +178,16 @@ def valuetype_to_gdbcommand(index=int):
     return index_to_gdbcommand_dict.get(index, "out of bounds")
 
 
+def check_for_restricted_gdb_symbols(string):
+    if string is "":
+        return True
+    if search(r"\".*\"", string) or search(r"\{.*\}", string):  # For string and array expressions
+        return False
+    if search(r'\$|\s', string):  # These characters make gdb show it's value history, so they should be avoided
+        return True
+    return False
+
+
 # returns the value of the expression if it is valid, return the string "??" if not
 # this function is mainly used for display in AddAddressManually dialog
 # this function also can read symbols such as "_start", "malloc", "printf" and "scanf" as addresses
@@ -186,11 +196,7 @@ def valuetype_to_gdbcommand(index=int):
 # unicode and zero_terminate parameters are only for strings
 # if you just want to get the value of an address, use the function read_value_from_single_address() instead
 def read_single_address(address, typeofaddress, length=None, is_unicode=False, zero_terminate=True):
-    if search(r"\".*\"", address):  # this line lets the user allocate strings by inputting it between the quotes
-        pass
-    elif search(r'\$|\s', address):  # These characters make gdb show it's value history, so they should be avoided
-        return "??"
-    if address is "":
+    if check_for_restricted_gdb_symbols(address):
         return "??"
     if length is "":
         return "??"
@@ -275,34 +281,28 @@ def read_value_from_single_address(address, typeofaddress, length, unicode, zero
 # Converts the given address to symbol if any symbol exists for it
 # TODO: Implement a loop-version
 def convert_address_to_symbol(string):
-    if search(r'\$|\s', string):  # These characters make gdb show it's value history, so they should be avoided
+    if check_for_restricted_gdb_symbols(string):
         return string
-    if string is "":
-        return string
-    if search(r"0x[0-9a-fA-F]+", string):  # if string is a valid address
-        result = send_command("x/x " + string)
-        filteredresult = search(r"<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
-        if filteredresult:
-            return split(">:", filteredresult.group(0))[0].split("<")[1]
+    result = send_command("x/x " + string)
+    filteredresult = search(r"<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
+    if filteredresult:
+        return split(">:", filteredresult.group(0))[0].split("<")[1]
     return string
 
 
 # Converts the given symbol to address if symbol is valid
 # TODO: Implement a loop-version
 def convert_symbol_to_address(string):
-    if search(r'\$|\s', string):  # These characters make gdb show it's value history, so they should be avoided
+    if check_for_restricted_gdb_symbols(string):
         return string
-    if string is "":
-        return string
-    if not search(r"0x[0-9a-fA-F]+", string):  # if string is not an address
-        result = send_command("x/x " + string)
-        filteredresult = search(r"0x[0-9a-fA-F]+\s+<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
+    result = send_command("x/x " + string)
+    filteredresult = search(r"0x[0-9a-fA-F]+\s+<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
+    if filteredresult:
+        return split(" ", filteredresult.group(0))[0]
+    else:
+        filteredresult = search(r"0x[0-9a-fA-F]+:\\t", result)  # 0x1f58010:\t0x00647361\n
         if filteredresult:
-            return split(" ", filteredresult.group(0))[0]
-        else:
-            filteredresult = search(r"0x[0-9a-fA-F]+:\\t", result)  # 0x1f58010:\t0x00647361\n
-            if filteredresult:
-                return split(":", filteredresult.group(0))[0]
+            return split(":", filteredresult.group(0))[0]
     return string
 
 

@@ -107,7 +107,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setColumnWidth(FROZEN_COL, 25)
         self.tableWidget_addresstable.setColumnWidth(DESC_COL, 150)
         self.tableWidget_addresstable.setColumnWidth(ADDR_COL, 150)
-        self.tableWidget_addresstable.setColumnWidth(TYPE_COL, 100)
+        self.tableWidget_addresstable.setColumnWidth(TYPE_COL, 120)
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
@@ -148,7 +148,7 @@ class MainForm(QMainWindow, MainWindow):
     def addaddressmanually_onclick(self):
         manual_address_dialog = ManualAddressDialogForm()
         if manual_address_dialog.exec_():
-            description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.getvalues()
+            description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
             self.add_element_to_addresstable(description=description, address=address, typeofaddress=typeofaddress,
                                              length=length, unicode=unicode,
                                              zero_terminate=zero_terminate)
@@ -166,7 +166,8 @@ class MainForm(QMainWindow, MainWindow):
 
     def nextscan_onclick(self):
         t0 = time()
-        GDB_Engine.send_command('x _start')  # test
+        # GDB_Engine.send_command('interrupt\nx _start\nc &')  # test
+        GDB_Engine.child.writelines(["interrupt", "x _start", "c &"])
         t1 = time()
         print(t1 - t0)
         # t = Thread(target=GDB_Engine.test)  # test
@@ -224,14 +225,23 @@ class MainForm(QMainWindow, MainWindow):
         current_column = index.column()
         if current_column is VALUE_COL:
             print("ehuehue")
-        else:
+        elif current_column is DESC_COL:
+            selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
+            description = self.tableWidget_addresstable.item(current_row, DESC_COL).text()
+            dialog = DialogWithButtonsForm(label_text="Enter the new description", hide_line_edit=False,
+                                           line_edit_text=description)
+            if dialog.exec_():
+                description_text = dialog.get_values()
+                for item in selected_rows:
+                    self.tableWidget_addresstable.setItem(item.row(), DESC_COL, QTableWidgetItem(description_text))
+        elif current_column is ADDR_COL or current_column is TYPE_COL:
             description, address, value_type = self.read_address_table_elements(row=current_row)
             index, length, unicode, zero_terminate = GuiUtils.text_to_valuetype(value_type)
             manual_address_dialog = ManualAddressDialogForm(description=description, address=address, index=index,
                                                             length=length, unicode=unicode,
                                                             zero_terminate=zero_terminate)
             if manual_address_dialog.exec_():
-                description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.getvalues()
+                description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
                 typeofaddress_text = GuiUtils.valuetype_to_text(index=typeofaddress, length=length, unicode=unicode,
                                                                 zero_terminate=zero_terminate)
                 address = GDB_Engine.convert_symbol_to_address(address)
@@ -463,7 +473,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.update_thread._is_stopped = True
         super(ManualAddressDialogForm, self).accept()
 
-    def getvalues(self):
+    def get_values(self):
         description = self.lineEdit_description.text()
         address = self.lineEdit_address.text()
         length = self.lineEdit_length.text()
@@ -531,11 +541,20 @@ class LoadingWindowThread(QThread):
 
 
 class DialogWithButtonsForm(QDialog, DialogWithButtons):
-    def __init__(self, parent=None, label_text=""):
+    def __init__(self, parent=None, label_text="", hide_line_edit=True, line_edit_text=""):
         super().__init__(parent=parent)
         self.setupUi(self)
         label_text = str(label_text)
         self.label.setText(label_text)
+        if hide_line_edit:
+            self.lineEdit.hide()
+        else:
+            line_edit_text = str(line_edit_text)
+            self.lineEdit.setText(line_edit_text)
+
+    def get_values(self):
+        line_edit_text = self.lineEdit.text()
+        return line_edit_text
 
 
 if __name__ == "__main__":

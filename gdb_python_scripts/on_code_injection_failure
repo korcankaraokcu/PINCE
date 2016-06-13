@@ -4,7 +4,13 @@ define hook-x
     interrupt
   end
 end
-    
+
+define hook-set
+  if $pince_debugging_mode == 0
+    interrupt
+  end
+end
+
 define hook-stop
   if $pince_debugging_mode == 0
     c &
