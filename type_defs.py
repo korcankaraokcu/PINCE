@@ -39,7 +39,7 @@ text_to_index_dict = {
     "Double": COMBOBOX_DOUBLE
 }
 
-# A dictionary used to convert value_combobox index to gdb/mi command
+# A dictionary used to convert value_combobox index to gdb/mi x command
 # Check GDB_Engine for an exemplary usage
 index_to_gdbcommand_dict = {
     COMBOBOX_BYTE: "db",
@@ -63,4 +63,15 @@ index_to_valuetype_dict = {
     COMBOBOX_DOUBLE: [8, "d"],
     COMBOBOX_STRING: [None, None],
     COMBOBOX_AOB: [None, None]
+}
+
+# A dictionary used to convert value_combobox index to gdb/mi set command
+# Check GDB_Engine for an exemplary usage
+index_to_setcommand_dict = {
+    COMBOBOX_BYTE: "char",
+    COMBOBOX_2BYTES: "short",
+    COMBOBOX_4BYTES: "int",
+    COMBOBOX_8BYTES: "long",
+    COMBOBOX_FLOAT: "float",
+    COMBOBOX_DOUBLE: "double"
 }
