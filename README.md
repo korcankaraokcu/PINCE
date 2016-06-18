@@ -1,7 +1,8 @@
 #PINCE  
 PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt5. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine.  
 #Features   
-- **NO BRAKES ON THIS TRAIN:** PINCE can run **ANY** gdb command without having to pause the inferior **[Done]**
+- **NO BRAKES ON THIS TRAIN:** PINCE can run **ANY** gdb command without having to pause the inferior **[Postponed\Done]**
+  * *Postpone reason:* Check wiki
 - **Memory searching** **[Planned]**  (The plan is to use libscanmem by wrapping it with a gdb python script)
 - **Variable Inspection** **[Working on it]**
   * **CheatEngine-like value type support:** Byte to 8 Bytes, Float, Double, Strings(including utf-8 and zero-terminate strings), Array of Bytes **[Done]**
@@ -13,9 +14,10 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
   * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables **[Postponed\Quarterway Done]**
   * *Postpone reason:* Those two features requires thread injection to the target and PINCE's injection methods are not perfect yet, I've already spent more(read:WAY MORE) time than I should on this, these features are not vital for now, also you have got the options to manually update the table and set the value manually already
 - **Disassemble** **[Planned]**
-- **Debugging** **[Planned]**
+- **Debugging** **[Working on it]**
+  * Can interrupt and continue the inferior, Check wiki for instructions
 - **Code Injection** **[Working on it]**
-  * PINCE can inject any code to a running process without pausing it
+  * To inject your code into the process before attaching, compile your code into a .so file and rename it as "InitialCodeInjections.so" then move it to "Injection" folder in PINCE. An example and compile notes can be found in "Injection" folder, check wiki for technical details.
 - **Simplified/Optimized gdb command alternatives** **[Working on it]**
   * Custom scripts instead of using gdb's x command for reading memory **[Done]**
 
@@ -32,8 +34,8 @@ sudo apt-get install clang
 sudo apt-get install g++-multilib  
 ```  
 ###**Compiling the most recent gdb version with python support**  
-#####*You can skip this part if you already have gdb 7.1.1 with python3 support and libcc1.so from gcc-6 is correctly located*  
-Download the latest source from [here](http://ftp.gnu.org/gnu/gdb/gdb-7.11.tar.gz), then install packages required for gdb
+#####*You can skip this part if you already have gdb 7.11.1 with python3 support and libcc1.so from gcc-6 is correctly located*  
+Download the latest source from [here](http://ftp.gnu.org/gnu/gdb/gdb-7.11.1.tar.gz), then install packages required for gdb
 ```
 sudo apt-get install libreadline-dev  
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test  
@@ -66,6 +68,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - 22/01/2016 : First commit
 - 19/02/2016 : Moved to Github from Bitbucket
 - 25/02/2016 : First successful implementation of thread injection(A new age dawns!)[Update-08/05/2016 : PINCE now uses ```linux-inject``` instead of injection method of mine]*  
+- 18/06/2016 : PINCE now supports all-stop mode instead of non-stop mode
   
 
 
@@ -83,5 +86,6 @@ GPLv3
 - **Games&Applications tested so far:**
   * KMines
   * Torchlight 2
+  * Skullgirls
   * Steam
   * Firefox
