@@ -16,8 +16,8 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
 - **Disassemble** **[Planned]**
 - **Debugging** **[Working on it]**
   * Can interrupt and continue the inferior, Check wiki for instructions
-- **Code Injection** **[Working on it]**
-  * To inject your code into the process before attaching, compile your code into a .so file and rename it as "InitialCodeInjections.so" then move it to "Injection" folder in PINCE. An example and compile notes can be found in "Injection" folder, check wiki for technical details.
+- **Code Injection** **[Done?]**
+  * Check wiki
 - **Simplified/Optimized gdb command alternatives** **[Working on it]**
   * Custom scripts instead of using gdb's x command for reading memory **[Done]**
 
@@ -89,3 +89,7 @@ GPLv3
   * Skullgirls
   * Steam
   * Firefox
+  * WINE Games
+    * FTL
+    * Undertale
+    * Hearthstone(It interrupts itself with SIGUSR1 whenever continued, implementing signal passing on PINCE might be very useful in future)
