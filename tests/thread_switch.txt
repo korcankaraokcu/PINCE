@@ -1,5 +1,0 @@
-define pince-x
-  thread 2
-  x $arg0
-  thread 1
-end

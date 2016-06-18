@@ -6,7 +6,6 @@ Code Relocations:
 	type_defs.py is used to contain all static&shared variable definitions
 	All codes that'll be injected to the inferior go to the folder "Injection"
 	/linux-inject/ injects the codes found in the Injection directory to the target process, if your contribution about linux-inject is not only PINCE specific, please also contribute to the original project itself here->https://github.com/gaffe23/linux-inject
-	/tests/ contains all the test codes, you can do anything you want at there
 	/gdb_python_script/ contains all the python scripts that'll invoked from the gdb
 	/media/ contains all the images, icons n' stuff
 **Don't touch anything in GUI folder, it contains auto-generated codes created by pyuic

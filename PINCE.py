@@ -1,8 +1,9 @@
 #!/usr/bin/python3
-from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget
+from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
+    QShortcut
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray
-from time import sleep, time
+from time import sleep
 from threading import Thread
 import os
 import pickle
@@ -36,6 +37,8 @@ COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
 COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
 COMBOBOX_STRING = type_defs.COMBOBOX_STRING
 COMBOBOX_AOB = type_defs.COMBOBOX_AOB
+INFERIOR_STOPPED = type_defs.INFERIOR_STOPPED
+INFERIOR_RUNNING = type_defs.INFERIOR_RUNNING
 
 
 # Checks if the inferior has been terminated
@@ -44,17 +47,35 @@ class AwaitProcessExit(QThread):
 
     def run(self):
         while SysUtils.is_process_valid(currentpid) or currentpid is 0:
-            sleep(0.1)
+            sleep(0.01)
         self.process_exited.emit()
 
 
+class CheckInferiorStatus(QThread):
+    status_stopped = pyqtSignal()
+    status_running = pyqtSignal()
+    current_status = INFERIOR_RUNNING
+
+    def run(self):
+        while True:
+            if self.current_status is not GDB_Engine.inferior_status:
+                if GDB_Engine.inferior_status is INFERIOR_STOPPED:
+                    self.status_stopped.emit()
+                else:
+                    self.status_running.emit()
+                self.current_status = GDB_Engine.inferior_status
+            sleep(0.01)
+
+
 # A thread that updates the address table constantly
+# planned for future
 class UpdateAddressTable(QThread):
     def __init__(self, pid):
         super().__init__()
         self.pid = pid
 
     # communicates with the inferior via files and reads the values from them
+    # planned for future
     def run(self):
         SysUtils.do_cleanups(self.pid)
         directory_path = SysUtils.get_PINCE_IPC_directory(self.pid)
@@ -111,6 +132,14 @@ class MainForm(QMainWindow, MainWindow):
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
+        self.check_status_thread = CheckInferiorStatus()
+        self.check_status_thread.status_stopped.connect(self.on_status_stopped)
+        self.check_status_thread.status_running.connect(self.on_status_running)
+        self.check_status_thread.start()
+        self.shortcut_F2 = QShortcut(QKeySequence("F2"), self)
+        self.shortcut_F2.activated.connect(self.F2_pressed)
+        self.shortcut_F3 = QShortcut(QKeySequence("F3"), self)
+        self.shortcut_F3.activated.connect(self.F3_pressed)
         self.processbutton.clicked.connect(self.processbutton_onclick)
         self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
@@ -126,6 +155,12 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_CopyToAddressTable.setIcon(QIcon(QPixmap(icons_directory + "/arrow_down.png")))
         self.pushButton_CleanAddressTable.setIcon(QIcon(QPixmap(icons_directory + "/bin_closed.png")))
         self.pushButton_RefreshAdressTable.setIcon(QIcon(QPixmap(icons_directory + "/table_refresh.png")))
+
+    def F2_pressed(self):
+        GDB_Engine.interrupt_inferior()
+
+    def F3_pressed(self):
+        GDB_Engine.continue_inferior()
 
     def update_address_table_manually(self):
         table_contents_send = []
@@ -165,11 +200,8 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText("First Scan")
 
     def nextscan_onclick(self):
-        t0 = time()
         # GDB_Engine.send_command('interrupt\nx _start\nc &')  # test
-        GDB_Engine.child.writelines(["interrupt", "x _start", "c &"])
-        t1 = time()
-        print(t1 - t0)
+        GDB_Engine.send_command("echo 2")
         # t = Thread(target=GDB_Engine.test)  # test
         # t2=Thread(target=test2)
         # t.start()
@@ -194,6 +226,16 @@ class MainForm(QMainWindow, MainWindow):
         self.label_SelectedProcess.setText("No Process Selected")
         QMessageBox.information(self, "Warning", "Process has been terminated")
         self.await_exit_thread.start()
+
+    def on_status_stopped(self):
+        self.label_SelectedProcess.setStyleSheet("color: red")
+        self.label_InferiorStatus.setText("[stopped]")
+        self.label_InferiorStatus.setVisible(True)
+        self.label_InferiorStatus.setStyleSheet("color: red")
+
+    def on_status_running(self):
+        self.label_SelectedProcess.setStyleSheet("")
+        self.label_InferiorStatus.setVisible(False)
 
     # closes all windows on exit
     def closeEvent(self, event):
@@ -272,7 +314,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center_to_parent(self)
-        self.loadingwidget = LoadingWidgetForm()
+        # self.loadingwidget = LoadingWidgetForm()
         processlist = SysUtils.get_process_list()
         self.refresh_process_table(self.processtable, processlist)
         self.pushButton_Close.clicked.connect(self.pushbutton_close_onclick)
@@ -327,8 +369,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
                                         "That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
             self.setCursor(QCursor(Qt.WaitCursor))
-            self.setCentralWidget(self.loadingwidget)
-            self.loadingwidget.show()
+            # self.setCentralWidget(self.loadingwidget)
+            # self.loadingwidget.show()
             print("processing")  # loading_widget start
             result = GDB_Engine.can_attach(str(pid))
             if not result:
@@ -338,7 +380,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             if not currentpid == 0:
                 GDB_Engine.detach()
             currentpid = pid
-            thread_injection_successful = GDB_Engine.attach(str(currentpid))
+            code_injection_successful = GDB_Engine.attach(str(currentpid))
             p = SysUtils.get_process_information(currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
@@ -348,13 +390,15 @@ class ProcessForm(QMainWindow, ProcessWindow):
             SysUtils.exclude_system_memory_regions(readable)
             print(len(readable))
             print("done")  # loading_widget finish
-            if not thread_injection_successful:
-                QMessageBox.information(self, "Warning",
-                                        "Unable to inject threads, following features has been disabled:" +
-                                        "\nPINCE non-stop mode" +
-                                        "\nContinuous Address Table Update" +
-                                        "\nVariable Locking")
-            self.loadingwidget.hide()
+            # if not thread_injection_successful:
+            #    QMessageBox.information(self, "Warning",
+            #                            "Unable to inject threads, following features has been disabled:" +
+            #                            "\nPINCE non-stop mode" +
+            #                            "\nContinuous Address Table Update" +
+            #                            "\nVariable Locking")
+            if not code_injection_successful:
+                QMessageBox.information(self, "Warning", "Couldn't inject the .so file")
+            # self.loadingwidget.hide()
             self.close()
 
 

@@ -1,4 +1,8 @@
 PINCE_IPC_PATH = "/tmp/PINCE-connection/"
+INITIAL_INJECTION_PATH = "/Injection/InitialCodeInjections.so"
+
+INFERIOR_RUNNING = 0
+INFERIOR_STOPPED = 1
 
 # represents the index of columns in address table
 FROZEN_COL = 0  # Frozen

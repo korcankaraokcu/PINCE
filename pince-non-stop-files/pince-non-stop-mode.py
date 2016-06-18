@@ -1,9 +1,11 @@
+# Old codes that'll be used again when pince-non-stop-mode gets reworked&implemented
+
+
 #!/usr/bin/python3
 from re import search, split, findall
 from threading import Lock, Thread
-from time import sleep, time
+from time import sleep
 import pexpect
-import pexpect.fdpexpect
 import os
 import ctypes
 import struct
@@ -22,15 +24,14 @@ COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
 COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
 COMBOBOX_STRING = type_defs.COMBOBOX_STRING
 COMBOBOX_AOB = type_defs.COMBOBOX_AOB
-INITIAL_INJECTION_PATH = type_defs.INITIAL_INJECTION_PATH
-INFERIOR_RUNNING = type_defs.INFERIOR_RUNNING
-INFERIOR_STOPPED = type_defs.INFERIOR_STOPPED
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
+codes_injected = False
+
+infinite_thread_location = str  # location of the injected thread that runs forever at background
+infinite_thread_id = str  # id of the injected thread that runs forever at background
 lock = Lock()
-inferior_status = -1
-gdb_output = ""
 
 index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
@@ -39,26 +40,14 @@ index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
 
 # issues the command sent
-def send_command(command, control=False):
+def send_command(command):
     global child
-    global gdb_output
     with lock:
-        if inferior_status is INFERIOR_RUNNING and not control:
-            print("inferior is running")
-            return
-        command = str(command)
-        time0 = time()
-        if control:
-            child.sendcontrol(command)
-        else:
-            child.sendline(command)
-        if not control:
-            while gdb_output is "":
-                sleep(0.00001)
-        time1 = time()
-        print(time1 - time0)
-        output = gdb_output
-        gdb_output = ""
+        child.sendline(command)
+        child.expect_exact("(gdb) ")
+        output = split(r"&\".*\\n\"", child.before, 1)[1]  # &"command\n"
+        print(child.before)  # debug mode on!
+        # print(output)
         return output
 
 
@@ -72,68 +61,59 @@ def can_attach(pid=str):
     sleep(0.01)
     return True
 
-
 def state_observe_thread():
-    global inferior_status
-    global child
-    global gdb_output
-    while True:
-        child.expect_exact("(gdb)")
-        print("asdf")
-        # print(child.before)  # debug mode on!
-        matches = findall(r"\*stopped|\*running", child.before)  # *stopped  # *running
-        if len(matches) > 0:
-            if search(r"\*stopped", matches[-1]):
-                inferior_status = INFERIOR_STOPPED
-            else:
-                inferior_status = INFERIOR_RUNNING
-        try:
-            gdb_output = split(r"&\".*\\n\"", child.before, 1)[1]  # &"command\n"
-        except:
-            gdb_output = ""
-
-
-def interrupt_inferior():
-    send_command("c", control=True)
-
-
-def continue_inferior():
-    send_command("c")
-
 
 # Attaches gdb to the target pid
 # Returns False if the thread injection fails, True otherwise
-def attach(pid=str, injection_method=1):
+# Also saves the injected thread's location and ID as strings, then switches to that thread and stops it
+def attach(pid=str, injection_method=0):
     global currentpid
     global child
-    currentpid = int(pid)
+    global infinite_thread_location
+    global infinite_thread_id
+    global codes_injected
     SysUtils.create_PINCE_IPC_PATH(pid)
     currentdir = SysUtils.get_current_script_directory()
     child = pexpect.spawnu('sudo LC_NUMERIC=C gdb --interpreter=mi', cwd=currentdir)
     child.setecho(False)
-    child.delaybeforesend = 0.00001
-    child.timeout = None
+    child.logfile=open(SysUtils.get_gdb_async_file(pid),"w")
+
+    # a creative and meaningful number for such a marvelous and magnificent program PINCE is
+    child.timeout = 900000
     child.expect_exact("(gdb)")
-    status_thread = Thread(target=state_observe_thread)
-    status_thread.daemon = True
-    status_thread.start()
-    send_command("set logging file " + SysUtils.get_gdb_async_file(pid))
-    send_command("set logging on")
 
     # gdb scripts needs to know PINCE directory, unfortunately they don't start from the place where script exists
     send_command('set $PINCE_PATH=' + '"' + currentdir + '"')
     send_command("source gdb_python_scripts/GDBCommandExtensions.py")
-    injection_path = currentdir + INITIAL_INJECTION_PATH
-    if not SysUtils.is_path_valid(injection_path):
-        injection_method = -1  # no .so file found
-    if injection_method is -1:
-        codes_injected = True
-    if injection_method is 2:  # linux-inject
+    if injection_method is 1:  # linux-inject
         codes_injected = inject_with_linux_inject(pid)
-    send_command("attach " + pid)
-    if injection_method is 1:  # simple dlopen call
-        codes_injected = inject_with_dlopen_call(injection_path)
-    continue_inferior()
+    send_command("attach " + pid + " &")
+    send_command("interrupt")
+    currentpid = int(pid)
+    if injection_method is 0:  # simple dlopen call
+        injectionpath = currentdir + "/Injection/InitialCodeInjections.so"
+        codes_injected = inject_with_dlopen_call(injectionpath)
+    if codes_injected:
+        # address_table_update_thread = PINCE.UpdateAddressTable(pid)  # planned for future
+        # address_table_update_thread.start()
+        result = send_command("call inject_infinite_thread()")
+        filtered_result = search(r"New Thread\s*0x\w+", result)  # New Thread 0x7fab41ffb700 (LWP 7944)
+        send_command("c &")
+
+        # Return True if the injection is successful, False if not
+        if not filtered_result:
+            return False
+        threadaddress = split(" ", filtered_result.group(0))[-1]
+        match_from_info_threads = search(r"\d+\s*Thread\s*" + threadaddress,
+                                         send_command("info threads")).group(0)  # 1 Thread 0x7fab41ffb700
+        infinite_thread_id = split(" ", match_from_info_threads)[0]
+        infinite_thread_location = threadaddress
+        send_command("thread " + infinite_thread_id)
+        send_command("interrupt")
+        # send_command("call inject_table_update_thread()")  # planned for future
+    else:
+        send_command("source gdb_python_scripts/on_code_injection_failure")
+        send_command("c &")
     return codes_injected
 
 
@@ -141,18 +121,24 @@ def attach(pid=str, injection_method=1):
 def detach():
     global child
     global currentpid
-    global inferior_status
-    child.sendcontrol("d")
-    child.close()
+    global codes_injected
+    #abort_file = type_defs.PINCE_IPC_PATH + str(currentpid) + "/abort.txt"
+    #try:
+    #    open(abort_file, "w").close()
+    #    SysUtils.fix_path_permissions(abort_file)                 # planned for future
+    #except:
+    #    pass
+    child.sendline("q")
     currentpid = 0
-    inferior_status = -1
+    child.close()
+    codes_injected = False
 
 
 # Injects a thread that runs forever at the background, it'll be used to execute GDB commands on
-# FIXME: linux-inject is insufficient for multi-threaded programs, it makes big titles such as Torchlight to segfault
+# FIXME: linux-inject is insufficient for big games, it makes big titles such as Torchlight to segfault
 def inject_with_linux_inject(pid=str):
     scriptdirectory = SysUtils.get_current_script_directory()
-    injectionpath = scriptdirectory + INITIAL_INJECTION_PATH
+    injectionpath = scriptdirectory + "/Injection/InitialCodeInjections.so"
     if is_32bit:
         result = pexpect.run("sudo ./inject32 -p " + pid + " " + injectionpath, cwd=scriptdirectory + "/linux-inject")
     else:

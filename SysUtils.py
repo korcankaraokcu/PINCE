@@ -123,13 +123,17 @@ def fix_path_permissions(dest_path):
 
 # removes the corresponding pid file
 def do_cleanups(pid):
-    is_path_valid(PINCE_IPC_PATH + str(pid), "delete")
+    is_path_valid(get_PINCE_IPC_directory(pid), "delete")
 
 
 def create_PINCE_IPC_PATH(pid):
-    directory_path = PINCE_IPC_PATH + str(pid)
-    is_path_valid(directory_path, "create")
+    do_cleanups(pid)
+    is_path_valid(get_PINCE_IPC_directory(pid), "create")
 
 
 def get_PINCE_IPC_directory(pid):
     return PINCE_IPC_PATH + str(pid)
+
+
+def get_gdb_async_file(pid):
+    return get_PINCE_IPC_directory(pid) + "/gdb_async_output.txt"

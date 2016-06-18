@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Thu Jun  9 14:50:01 2016
+# Created: Sat Jun 18 20:56:29 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -64,6 +64,10 @@ class Ui_MainWindow(object):
         self.label_SelectedProcess = QtWidgets.QLabel(self.centralwidget)
         self.label_SelectedProcess.setObjectName("label_SelectedProcess")
         self.horizontalLayout_5.addWidget(self.label_SelectedProcess)
+        self.label_InferiorStatus = QtWidgets.QLabel(self.centralwidget)
+        self.label_InferiorStatus.setText("")
+        self.label_InferiorStatus.setObjectName("label_InferiorStatus")
+        self.horizontalLayout_5.addWidget(self.label_InferiorStatus)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem1)
         self.pushButton_Settings = QtWidgets.QPushButton(self.centralwidget)

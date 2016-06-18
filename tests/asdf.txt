@@ -1,8 +1,0 @@
-define pince-x
-  interrupt
-  x $arg0
-end
-
-define hook-stop
-  c &
-end

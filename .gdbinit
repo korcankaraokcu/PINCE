@@ -1,5 +1,7 @@
 set disassembly-flavor intel
-set target-async 1
-set pagination off
-set non-stop on
-set $pince_debugging_mode = 0
+define hookpost-stop
+  echo asdf
+end
+define hook-continue
+  echo fdsa
+end
