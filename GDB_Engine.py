@@ -79,9 +79,8 @@ def state_observe_thread():
     global gdb_output
     while True:
         child.expect_exact("(gdb)")
-        print("asdf")
-        # print(child.before)  # debug mode on!
-        matches = findall(r"\*stopped|\*running", child.before)  # *stopped  # *running
+        print(child.before)  # debug mode on!
+        matches = findall(r"\*stopped|\*running,thread\-id=\"all\"", child.before)  # *stopped  # *running
         if len(matches) > 0:
             if search(r"\*stopped", matches[-1]):
                 inferior_status = INFERIOR_STOPPED
