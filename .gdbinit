@@ -1,7 +1,7 @@
 set disassembly-flavor intel
-define hookpost-stop
-  echo asdf
+define hook-stop
+  echo <--STOPPED-->
 end
 define hook-continue
-  echo fdsa
+  echo <--RUNNING-->
 end
