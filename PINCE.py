@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
     QShortcut
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray
 from time import sleep
-from threading import Thread
+from threading import Thread, Lock
 import os
 import pickle
 
@@ -22,6 +22,7 @@ from GUI.dialogwithbuttons import Ui_Dialog as DialogWithButtons
 # the PID of the process we'll attach to
 currentpid = 0
 selfpid = os.getpid()
+lock = Lock()
 
 FROZEN_COL = type_defs.FROZEN_COL
 DESC_COL = type_defs.DESC_COL
@@ -140,6 +141,7 @@ class MainForm(QMainWindow, MainWindow):
         self.shortcut_F2.activated.connect(self.F2_pressed)
         self.shortcut_F3 = QShortcut(QKeySequence("F3"), self)
         self.shortcut_F3.activated.connect(self.F3_pressed)
+        self.tableWidget_addresstable.keyPressEvent = self.tableWidget_addresstable_keyPressEvent
         self.processbutton.clicked.connect(self.processbutton_onclick)
         self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
@@ -162,6 +164,13 @@ class MainForm(QMainWindow, MainWindow):
     def F3_pressed(self):
         GDB_Engine.continue_inferior()
 
+    # I don't know if this is some kind of retarded hack
+    def tableWidget_addresstable_keyPressEvent(self, e):
+        if e.key() == Qt.Key_Delete:
+            selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
+            for item in selected_rows:
+                self.tableWidget_addresstable.removeRow(item.row())
+
     def update_address_table_manually(self):
         table_contents_send = []
         row_count = self.tableWidget_addresstable.rowCount()
@@ -172,10 +181,15 @@ class MainForm(QMainWindow, MainWindow):
         directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
         send_file = directory_path + "/address-table-from-PINCE.txt"
         recv_file = directory_path + "/address-table-to-PINCE.txt"
-        open(recv_file, "w").close()
-        pickle.dump(table_contents_send, open(send_file, "wb"))
-        GDB_Engine.send_command("pince-update-address-table")
-        table_contents_recv = pickle.load(open(recv_file, "rb"))
+        with lock:
+            open(recv_file, "w").close()
+            pickle.dump(table_contents_send, open(send_file, "wb"))
+            GDB_Engine.send_command("pince-update-address-table")
+            try:
+                table_contents_recv = pickle.load(open(recv_file, "rb"))
+            except EOFError:
+                print("couldn't update the address table")
+                table_contents_recv = []
         for row, item in enumerate(table_contents_recv):
             self.tableWidget_addresstable.setItem(row, VALUE_COL, QTableWidgetItem(str(item)))
 
@@ -201,7 +215,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def nextscan_onclick(self):
         # GDB_Engine.send_command('interrupt\nx _start\nc &')  # test
-        GDB_Engine.send_command("echo 2")
+        GDB_Engine.send_command("x/100x _start")
         # t = Thread(target=GDB_Engine.test)  # test
         # t2=Thread(target=test2)
         # t.start()
@@ -232,6 +246,7 @@ class MainForm(QMainWindow, MainWindow):
         self.label_InferiorStatus.setText("[stopped]")
         self.label_InferiorStatus.setVisible(True)
         self.label_InferiorStatus.setStyleSheet("color: red")
+        self.update_address_table_manually()
 
     def on_status_running(self):
         self.label_SelectedProcess.setStyleSheet("")
@@ -244,19 +259,15 @@ class MainForm(QMainWindow, MainWindow):
         application = QApplication.instance()
         application.closeAllWindows()
 
-    # FIXME: calling this function in a long for loop slows the process down significantly
     def add_element_to_addresstable(self, description, address, typeofaddress, length=0, unicode=False,
                                     zero_terminate=True):
         frozen_checkbox = QCheckBox()
         typeofaddress_text = GuiUtils.valuetype_to_text(typeofaddress, length, unicode, zero_terminate)
 
         # this line lets us take symbols as parameters, pretty rad isn't it?
-        # TODO: Implement a loop-version of convert_symbol_to_address
         address = GDB_Engine.convert_symbol_to_address(address)
         self.tableWidget_addresstable.setRowCount(self.tableWidget_addresstable.rowCount() + 1)
         currentrow = self.tableWidget_addresstable.rowCount() - 1
-
-        # TODO: Implement a loop-version of read_value_from_single_address
         value = GDB_Engine.read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate)
         self.tableWidget_addresstable.setCellWidget(currentrow, FROZEN_COL, frozen_checkbox)
         self.change_address_table_elements(row=currentrow, description=description, address=address,
@@ -266,14 +277,39 @@ class MainForm(QMainWindow, MainWindow):
         current_row = index.row()
         current_column = index.column()
         if current_column is VALUE_COL:
-            print("ehuehue")
+            value = self.tableWidget_addresstable.item(current_row, VALUE_COL).text()
+            value_index = GuiUtils.text_to_index(self.tableWidget_addresstable.item(current_row, TYPE_COL).text())
+            dialog = DialogWithButtonsForm(label_text="Enter the new value", hide_line_edit=False,
+                                           line_edit_text=value, parse_string=True, value_type=value_index)
+            if dialog.exec_():
+                table_contents_send = []
+                value_text = dialog.get_values()
+                selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
+                for item in selected_rows:
+                    row = item.row()
+                    address = self.tableWidget_addresstable.item(row, ADDR_COL).text()
+                    value_type = self.tableWidget_addresstable.item(row, TYPE_COL).text()
+                    table_contents_send.append([address, value_type])
+                    if GuiUtils.text_to_length(value_type) is not -1:
+                        value_index = GuiUtils.text_to_index(value_type)
+                        unknown_type = GuiUtils.parse_string(value_text, value_index)[1]
+                        length = len(unknown_type)
+                        self.tableWidget_addresstable.setItem(row, TYPE_COL, QTableWidgetItem(
+                            GuiUtils.change_text_length(value_type, length)))
+                table_contents_send.append(value_text)
+                directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
+                send_file = directory_path + "/value-list-from-PINCE.txt"
+                pickle.dump(table_contents_send, open(send_file, "wb"))
+                GDB_Engine.send_command("pince-set-memory-cells")
+                self.update_address_table_manually()
+
         elif current_column is DESC_COL:
-            selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
             description = self.tableWidget_addresstable.item(current_row, DESC_COL).text()
             dialog = DialogWithButtonsForm(label_text="Enter the new description", hide_line_edit=False,
                                            line_edit_text=description)
             if dialog.exec_():
                 description_text = dialog.get_values()
+                selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
                 for item in selected_rows:
                     self.tableWidget_addresstable.setItem(item.row(), DESC_COL, QTableWidgetItem(description_text))
         elif current_column is ADDR_COL or current_column is TYPE_COL:
@@ -585,9 +621,12 @@ class LoadingWindowThread(QThread):
 
 
 class DialogWithButtonsForm(QDialog, DialogWithButtons):
-    def __init__(self, parent=None, label_text="", hide_line_edit=True, line_edit_text=""):
+    def __init__(self, parent=None, label_text="", hide_line_edit=True, line_edit_text="", parse_string=False,
+                 value_type=COMBOBOX_4BYTES):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.parse_string = parse_string
+        self.value_type = value_type
         label_text = str(label_text)
         self.label.setText(label_text)
         if hide_line_edit:
@@ -599,6 +638,14 @@ class DialogWithButtonsForm(QDialog, DialogWithButtons):
     def get_values(self):
         line_edit_text = self.lineEdit.text()
         return line_edit_text
+
+    def accept(self):
+        if self.parse_string:
+            string = self.lineEdit.text()
+            if not GuiUtils.parse_string(string, self.value_type)[0]:
+                QMessageBox.information(self, "Error", "Can't parse the input")
+                return
+        super(DialogWithButtonsForm, self).accept()
 
 
 if __name__ == "__main__":

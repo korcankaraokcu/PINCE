@@ -45,6 +45,27 @@ class ReadAddressTableContents(gdb.Command):
         pickle.dump(table_contents_send, open(send_file, "wb"))
 
 
+class SetAddressTableContents(gdb.Command):
+    def __init__(self):
+        super(SetAddressTableContents, self).__init__("pince-set-memory-cells", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        inferior = gdb.selected_inferior()
+        pid = inferior.pid
+        directory_path = SysUtils.get_PINCE_IPC_directory(pid)
+        recv_file = directory_path + "/value-list-from-PINCE.txt"
+        table_contents_recv = pickle.load(open(recv_file, "rb"))
+        value = table_contents_recv[-1]
+        table_contents_recv.pop()
+
+        # table_contents_recv format: [[address1,string1],[address2,string2],..]
+        for item in table_contents_recv:
+            address = item[0]
+            string = item[1]
+            index = GuiUtils.text_to_index(string)
+            ScriptUtils.set_single_address(address, index, value)
+
+
 class ReadSingleAddress(gdb.Command):
     def __init__(self):
         super(ReadSingleAddress, self).__init__("pince-read-single-address", gdb.COMMAND_USER)
@@ -65,6 +86,12 @@ class ReadSingleAddress(gdb.Command):
         # Weird enough, even when python can't print those strings, pyqt can(in it's gui elements like labels)
         if value_type is COMBOBOX_STRING:
             value_type = COMBOBOX_AOB
+            if unicode:
+                try:
+                    length = int(length)
+                    length = length * 2
+                except:
+                    print("")
         print(ScriptUtils.read_single_address(address, value_type, length, unicode, zero_terminate))
 
 
@@ -81,4 +108,5 @@ class IgnoreErrors(gdb.Command):
 
 IgnoreErrors()
 ReadAddressTableContents()
+SetAddressTableContents()
 ReadSingleAddress()
