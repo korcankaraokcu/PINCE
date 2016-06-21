@@ -7,7 +7,7 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
 - **Variable Inspection&Modifcation** **[Done]**
   * **CheatEngine-like value type support:** Byte to 8 Bytes, Float, Double, Strings(including utf-8 and zero-terminate strings), Array of Bytes **[Done]**
   * **Symbol Recognition:** Try typing any widely used library function(such as malloc, open, printf, scanf etc) to AddAddressManually dialog **[Done]**
-  * **Automatic String Conversion:** If you type a string in quotes to AddAddressManually dialog, PINCE can convert it to any other type and after pressing OK button PINCE will allocate memory for you to use that string right away! **[Done]**
+  * **Automatic Variable Allocation:** In AddAddressManually dialog, if your input is in quotes it's treated as a string, if your input is in curly brackets, it's treated as an array of variables(for instance: "asdf"=string, {0x00ffba42}=integer(4byte), {0x00000023,0x00513245,..}=array of 2 integers. After pressing OK button PINCE will allocate memory for you to use that variable right away! **[Done]**
   * **Dynamic Address Table:** Drag&drop rows, ctrl+c&ctrl+v between independent PINCE processes, clipboard text analysis(PINCE will try to analyze the contents of the current clipboard and try to pick data from it to convert for address table) **[Planned]**
   * **Manual Address Table Update:** **[Done]**
   * **Smart casting:** PINCE lets you modify multiple different-type values together as long as the input is parsable. All parsing/memory errors are directed to the console **[Done]**
