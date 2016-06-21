@@ -47,7 +47,7 @@ class AwaitProcessExit(QThread):
     process_exited = pyqtSignal()
 
     def run(self):
-        while SysUtils.is_process_valid(currentpid) or currentpid is 0:
+        while currentpid is 0 or SysUtils.is_process_valid(currentpid):
             sleep(0.01)
         self.process_exited.emit()
 
@@ -68,9 +68,19 @@ class CheckInferiorStatus(QThread):
             sleep(0.01)
 
 
+class UpdateAddressTableThread(QThread):
+    update_table = pyqtSignal()
+
+    def run(self):
+        while True:
+            if GDB_Engine.inferior_status is INFERIOR_STOPPED:
+                self.update_table.emit()
+            sleep(0.5)
+
+
 # A thread that updates the address table constantly
 # planned for future
-class UpdateAddressTable(QThread):
+class UpdateAddressTable_planned(QThread):
     def __init__(self, pid):
         super().__init__()
         self.pid = pid
@@ -137,6 +147,9 @@ class MainForm(QMainWindow, MainWindow):
         self.check_status_thread.status_stopped.connect(self.on_status_stopped)
         self.check_status_thread.status_running.connect(self.on_status_running)
         self.check_status_thread.start()
+        self.update_address_table_thread = UpdateAddressTableThread()
+        self.update_address_table_thread.update_table.connect(self.update_address_table_manually)
+        self.update_address_table_thread.start()
         self.shortcut_F2 = QShortcut(QKeySequence("F2"), self)
         self.shortcut_F2.activated.connect(self.F2_pressed)
         self.shortcut_F3 = QShortcut(QKeySequence("F3"), self)
