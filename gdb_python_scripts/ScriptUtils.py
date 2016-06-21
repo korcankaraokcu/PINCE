@@ -100,7 +100,6 @@ def set_single_address(address, value_index, value):
     elif value_index is COMBOBOX_AOB:
         write_data = bytearray(write_data)
     else:
-        print(write_data)
         data_type = index_to_struct_pack_dict.get(value_index, -1)
         write_data = struct.pack(data_type, write_data)
     inferior = gdb.selected_inferior()
