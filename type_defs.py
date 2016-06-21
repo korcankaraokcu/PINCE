@@ -62,20 +62,19 @@ index_to_valuetype_dict = {
     COMBOBOX_BYTE: [1, "b"],
     COMBOBOX_2BYTES: [2, "h"],
     COMBOBOX_4BYTES: [4, "i"],
-    COMBOBOX_8BYTES: [8, "l"],
+    COMBOBOX_8BYTES: [8, "q"],
     COMBOBOX_FLOAT: [4, "f"],
     COMBOBOX_DOUBLE: [8, "d"],
     COMBOBOX_STRING: [None, None],
     COMBOBOX_AOB: [None, None]
 }
 
-# A dictionary used to convert value_combobox index to gdb/mi set command
-# Check GDB_Engine for an exemplary usage
-index_to_setcommand_dict = {
-    COMBOBOX_BYTE: "char",
-    COMBOBOX_2BYTES: "short",
-    COMBOBOX_4BYTES: "int",
-    COMBOBOX_8BYTES: "long",
-    COMBOBOX_FLOAT: "float",
-    COMBOBOX_DOUBLE: "double"
+# Check ScriptUtils for an exemplary usage
+index_to_struct_pack_dict = {
+    COMBOBOX_BYTE: "B",
+    COMBOBOX_2BYTES: "H",
+    COMBOBOX_4BYTES: "I",
+    COMBOBOX_8BYTES: "Q",
+    COMBOBOX_FLOAT: "f",
+    COMBOBOX_DOUBLE: "d"
 }
