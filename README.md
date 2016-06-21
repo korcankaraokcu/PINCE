@@ -4,15 +4,16 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
 - **NO BRAKES ON THIS TRAIN:** PINCE can run **ANY** gdb command without having to pause the inferior **[Postponed\Done]**
   * *Postpone reason:* Check wiki
 - **Memory searching** **[Planned]**  (The plan is to use libscanmem by wrapping it with a gdb python script)
-- **Variable Inspection** **[Working on it]**
+- **Variable Inspection&Modifcation** **[Done]**
   * **CheatEngine-like value type support:** Byte to 8 Bytes, Float, Double, Strings(including utf-8 and zero-terminate strings), Array of Bytes **[Done]**
   * **Symbol Recognition:** Try typing any widely used library function(such as malloc, open, printf, scanf etc) to AddAddressManually dialog **[Done]**
   * **Automatic String Conversion:** If you type a string in quotes to AddAddressManually dialog, PINCE can convert it to any other type and after pressing OK button PINCE will allocate memory for you to use that string right away! **[Done]**
   * **Dynamic Address Table:** Drag&drop rows, ctrl+c&ctrl+v between independent PINCE processes, clipboard text analysis(PINCE will try to analyze the contents of the current clipboard and try to pick data from it to convert for address table) **[Planned]**
   * **Manual Address Table Update:** **[Done]**
   * **Continuous Address Table Update:** **[Postponed\Quarterway Done]**
+  * **Smart casting:** PINCE lets you modify multiple different-type values together as long as the input is parsable. All parsing/memory errors are directed to the console
   * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables **[Postponed\Quarterway Done]**
-  * *Postpone reason:* Those two features requires thread injection to the target and PINCE's injection methods are not perfect yet, I've already spent more(read:WAY MORE) time than I should on this, these features are not vital for now, also you have got the options to manually update the table and set the value manually already
+  * *Postpone reason:* Those two features requires thread injection to the target or gdb and PINCE's injection methods are not perfect yet, I've already spent more(read:WAY MORE) time than I should on this, these features are not vital for now, also you have got the options to manually update the table and set the value manually already
 - **Disassemble** **[Planned]**
 - **Debugging** **[Working on it]**
   * Can interrupt and continue the inferior, Check wiki for instructions
@@ -20,6 +21,7 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
   * Check wiki
 - **Simplified/Optimized gdb command alternatives** **[Working on it]**
   * Custom scripts instead of using gdb's x command for reading memory **[Done]**
+  * Custom scripts instead of using gdb's set command for modifying memory **[Done]**
 
 #Building  
 To run PINCE, run this command chain then compile gdb if necessary:  
@@ -69,6 +71,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - 19/02/2016 : Moved to Github from Bitbucket
 - 25/02/2016 : First successful implementation of thread injection(A new age dawns!)[Update-08/05/2016 : PINCE now uses ```linux-inject``` instead of injection method of mine]*  
 - 18/06/2016 : PINCE now supports all-stop mode instead of non-stop mode
+- 21/06/2016 : Variable Inspection&Modification is finished
   
 
 
