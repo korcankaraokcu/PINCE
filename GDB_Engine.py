@@ -198,6 +198,8 @@ def valuetype_to_gdbcommand(index=int):
 
 
 def check_for_restricted_gdb_symbols(string):
+    string = str(string)
+    string = string.strip()
     if string is "":
         return True
     if search(r"\".*\"", string) or search(r"\{.*\}", string):  # For string and array expressions
