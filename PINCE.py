@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
-    QShortcut
+    QShortcut, QKeySequenceEdit
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray
 from time import sleep
 from threading import Thread, Lock
@@ -18,6 +18,7 @@ from GUI.selectprocess import Ui_MainWindow as ProcessWindow
 from GUI.addaddressmanuallydialog import Ui_Dialog as ManualAddressDialog
 from GUI.loadingwidget import Ui_Form as LoadingWidget
 from GUI.dialogwithbuttons import Ui_Dialog as DialogWithButtons
+from GUI.settingsdialog import Ui_Dialog as SettingsDialog
 
 # the PID of the process we'll attach to
 currentpid = 0
@@ -140,6 +141,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setColumnWidth(DESC_COL, 150)
         self.tableWidget_addresstable.setColumnWidth(ADDR_COL, 150)
         self.tableWidget_addresstable.setColumnWidth(TYPE_COL, 120)
+        # self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
@@ -158,6 +160,7 @@ class MainForm(QMainWindow, MainWindow):
         self.processbutton.clicked.connect(self.processbutton_onclick)
         self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
+        self.pushButton_Settings.clicked.connect(self.settingsdialog_onclick)
         self.pushButton_AddAddressManually.clicked.connect(self.addaddressmanually_onclick)
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
@@ -214,6 +217,11 @@ class MainForm(QMainWindow, MainWindow):
             self.add_element_to_addresstable(description=description, address=address, typeofaddress=typeofaddress,
                                              length=length, unicode=unicode,
                                              zero_terminate=zero_terminate)
+
+    def settingsdialog_onclick(self):
+        settings_dialog = SettingsDialogForm()
+        if settings_dialog.exec_():
+            print("asdf")
 
     def newfirstscan_onclick(self):
         if self.pushButton_NewFirstScan.text() == "First Scan":
@@ -659,6 +667,20 @@ class DialogWithButtonsForm(QDialog, DialogWithButtons):
                 QMessageBox.information(self, "Error", "Can't parse the input")
                 return
         super(DialogWithButtonsForm, self).accept()
+
+
+class SettingsDialogForm(QDialog, SettingsDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+
+        # Yet another retarded hack, thanks to pyuic5 not supporting QKeySequenceEdit
+        self.keySequenceEdit = QKeySequenceEdit()
+        self.verticalLayout_Hotkey.addWidget(self.keySequenceEdit)
+        self.listWidget_Options.currentRowChanged.connect(self.change_display)
+
+    def change_display(self, index):
+        self.stackedWidget.setCurrentIndex(index)
 
 
 if __name__ == "__main__":

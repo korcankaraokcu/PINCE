@@ -1,0 +1,1 @@
+IMPORTANT: Don't try to add a QKeySequenceEdit to the 2nd widget of stacked widget, pyuic5 gives error when QKeySequenceEdit is used. I had to implement it in PINCE.py because of this unfortunately. Check SettingsDialogForm class for the usage.
