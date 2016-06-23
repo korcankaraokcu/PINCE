@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Sat Jun 18 20:56:29 2016
+# Created: Thu Jun 23 20:51:17 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -70,6 +70,10 @@ class Ui_MainWindow(object):
         self.horizontalLayout_5.addWidget(self.label_InferiorStatus)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem1)
+        self.pushButton_Console = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_Console.setText("")
+        self.pushButton_Console.setObjectName("pushButton_Console")
+        self.horizontalLayout_5.addWidget(self.pushButton_Console)
         self.pushButton_Settings = QtWidgets.QPushButton(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
@@ -295,6 +299,7 @@ class Ui_MainWindow(object):
         self.pushButton_Open.setToolTip(_translate("MainWindow", "Open a file, script or a cheat table"))
         self.pushButton_Save.setToolTip(_translate("MainWindow", "Save current tables to a file"))
         self.label_SelectedProcess.setText(_translate("MainWindow", "No Process Selected"))
+        self.pushButton_Console.setToolTip(_translate("MainWindow", "Open a gdb console"))
         self.pushButton_Settings.setToolTip(_translate("MainWindow", "Configure options"))
         item = self.tableWidget_valuesearchtable.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Address"))

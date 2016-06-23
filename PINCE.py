@@ -19,6 +19,7 @@ from GUI.addaddressmanuallydialog import Ui_Dialog as ManualAddressDialog
 from GUI.loadingwidget import Ui_Form as LoadingWidget
 from GUI.dialogwithbuttons import Ui_Dialog as DialogWithButtons
 from GUI.settingsdialog import Ui_Dialog as SettingsDialog
+from GUI.consolewidget import Ui_Form as ConsoleWidget
 
 # the PID of the process we'll attach to
 currentpid = 0
@@ -160,7 +161,8 @@ class MainForm(QMainWindow, MainWindow):
         self.processbutton.clicked.connect(self.processbutton_onclick)
         self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
-        self.pushButton_Settings.clicked.connect(self.settingsdialog_onclick)
+        self.pushButton_Settings.clicked.connect(self.settingsbutton_onclick)
+        self.pushButton_Console.clicked.connect(self.consolebutton_onclick)
         self.pushButton_AddAddressManually.clicked.connect(self.addaddressmanually_onclick)
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
@@ -173,6 +175,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_CopyToAddressTable.setIcon(QIcon(QPixmap(icons_directory + "/arrow_down.png")))
         self.pushButton_CleanAddressTable.setIcon(QIcon(QPixmap(icons_directory + "/bin_closed.png")))
         self.pushButton_RefreshAdressTable.setIcon(QIcon(QPixmap(icons_directory + "/table_refresh.png")))
+        self.pushButton_Console.setIcon(QIcon(QPixmap(icons_directory + "/application_xp_terminal.png")))
 
     def F2_pressed(self):
         GDB_Engine.interrupt_inferior()
@@ -218,10 +221,14 @@ class MainForm(QMainWindow, MainWindow):
                                              length=length, unicode=unicode,
                                              zero_terminate=zero_terminate)
 
-    def settingsdialog_onclick(self):
+    def settingsbutton_onclick(self):
         settings_dialog = SettingsDialogForm()
         if settings_dialog.exec_():
             print("asdf")
+
+    def consolebutton_onclick(self):
+        self.console_widget = ConsoleWidgetForm()
+        self.console_widget.show()
 
     def newfirstscan_onclick(self):
         if self.pushButton_NewFirstScan.text() == "First Scan":
@@ -681,6 +688,60 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
     def change_display(self, index):
         self.stackedWidget.setCurrentIndex(index)
+
+
+class ConsoleWidgetForm(QWidget, ConsoleWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center(self)
+        self.await_async_output_thread = Thread(target=self.await_async_output)
+        self.await_async_output_thread.daemon = True
+        self.await_async_output_thread.start()
+        self.pushButton_Send.clicked.connect(self.communicate)
+        self.pushButton_SendCtrl.clicked.connect(lambda: self.communicate(control=True))
+        self.shortcut_send = QShortcut(QKeySequence("Return"), self)
+        self.shortcut_send.activated.connect(self.communicate)
+        self.shortcut_send_ctrl = QShortcut(QKeySequence("Ctrl+C"), self)
+        self.shortcut_send_ctrl.activated.connect(lambda: self.communicate(control=True))
+        self.textBrowser.append("Hotkeys:")
+        self.textBrowser.append("--------------------")
+        self.textBrowser.append("Send=Enter         |\nSend ctrl+c=Ctrl+C |")
+        self.textBrowser.append("--------------------")
+        self.textBrowser.append("Commands:")
+        self.textBrowser.append("---------------------------")
+        self.textBrowser.append("/clear: Clear the console |")
+        self.textBrowser.append("---------------------------")
+
+    def communicate(self, control=False):
+        if control:
+            console_input = "/Ctrl+C"
+        else:
+            console_input = self.lineEdit.text()
+        if console_input.lower() == "/clear":
+            self.textBrowser.clear()
+            console_output = "Cleared"
+        elif console_input.strip().lower().startswith("-"):
+            console_output = "GDB/MI command parsing isn't implemented yet"
+        elif console_input.strip().lower() == "q" or console_input.strip().lower() == "quit":
+            console_output = "pls don't"
+        else:
+            if not control:
+                console_output = GDB_Engine.send_command(console_input)
+                if console_output == None:
+                    console_output = "Inferior is running"
+            else:
+                GDB_Engine.interrupt_inferior()
+                console_output = "STOPPED"
+        self.textBrowser.append("-->" + console_input)
+        self.textBrowser.append(console_output)
+
+    def await_async_output(self):
+        while True:
+            with GDB_Engine.condition:
+                GDB_Engine.condition.wait()
+                self.textBrowser.append(GDB_Engine.gdb_async_output)
+            self.textBrowser.verticalScrollBar().setValue(self.textBrowser.verticalScrollBar().maximum())
 
 
 if __name__ == "__main__":

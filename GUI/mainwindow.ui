@@ -133,6 +133,16 @@
        </spacer>
       </item>
       <item>
+       <widget class="QPushButton" name="pushButton_Console">
+        <property name="toolTip">
+         <string>Open a gdb console</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="pushButton_Settings">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
