@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from re import search, split, findall
-from threading import Lock, Thread
+from threading import Lock, Thread, Condition
 from time import sleep, time
 import pexpect
 import pexpect.fdpexpect
@@ -29,8 +29,10 @@ INFERIOR_STOPPED = type_defs.INFERIOR_STOPPED
 currentpid = 0
 child = object  # this object will be used with pexpect operations
 lock = Lock()
+condition = Condition()
 inferior_status = -1
 gdb_output = ""
+gdb_async_output = ""
 
 index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
@@ -39,6 +41,7 @@ index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
 
 # issues the command sent
+# all CLI commands and ctrl+key are supported, GDB/MI specific command parsing isn't implemented yet
 def send_command(command, control=False):
     global child
     global gdb_output
@@ -59,7 +62,7 @@ def send_command(command, control=False):
         print(time1 - time0)
         output = gdb_output
         gdb_output = ""
-        return output
+        return output.strip()
 
 
 # check if we can attach to the target
@@ -77,6 +80,7 @@ def state_observe_thread():
     global inferior_status
     global child
     global gdb_output
+    global gdb_async_output
     while True:
         child.expect_exact("(gdb)")
         print(child.before)  # debug mode on!
@@ -92,6 +96,9 @@ def state_observe_thread():
             gdb_output = split(r"&\".*\\n\"", child.before, 1)[1]  # &"command\n"
         except:
             gdb_output = ""
+            with condition:
+                gdb_async_output = child.before
+                condition.notify_all()
 
 
 def interrupt_inferior():
