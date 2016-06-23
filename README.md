@@ -19,8 +19,8 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
   * Can interrupt and continue the inferior, Check wiki for instructions
 - **Code Injection** **[Done?]**
   * Check wiki
-- **GDB Console**
-  * Is the power of PINCE not enough for you? Then you can use the gdb console provided by PINCE, it's on the top right in main window **[Done]**
+- **GDB Console** **[Done]**
+  * Is the power of PINCE not enough for you? Then you can use the gdb console provided by PINCE, it's on the top right in main window
 - **Simplified/Optimized gdb command alternatives** **[Working on it]**
   * Custom scripts instead of using gdb's x command for reading memory **[Done]**
   * Custom scripts instead of using gdb's set command for modifying memory **[Done]**
