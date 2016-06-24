@@ -722,7 +722,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             self.textBrowser.clear()
             console_output = "Cleared"
         elif console_input.strip().lower().startswith("-"):
-            console_output = "GDB/MI command parsing isn't implemented yet"
+            console_output = "GDB/MI commands aren't supported yet"
         elif console_input.strip().lower() == "q" or console_input.strip().lower() == "quit":
             console_output = "pls don't"
         else:
@@ -738,8 +738,8 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
 
     def await_async_output(self):
         while True:
-            with GDB_Engine.condition:
-                GDB_Engine.condition.wait()
+            with GDB_Engine.gdb_async_condition:
+                GDB_Engine.gdb_async_condition.wait()
                 self.textBrowser.append(GDB_Engine.gdb_async_output)
             self.textBrowser.verticalScrollBar().setValue(self.textBrowser.verticalScrollBar().maximum())
 
