@@ -3,7 +3,6 @@ from re import search, split, findall, escape
 from threading import Lock, Thread, Condition
 from time import sleep, time
 import pexpect
-import pexpect.fdpexpect
 import os
 import ctypes
 import struct
