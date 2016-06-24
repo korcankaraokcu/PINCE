@@ -137,3 +137,7 @@ def get_PINCE_IPC_directory(pid):
 
 def get_gdb_async_file(pid):
     return get_PINCE_IPC_directory(pid) + "/gdb_async_output.txt"
+
+
+def get_gdb_command_file(pid):
+    return get_PINCE_IPC_directory(pid) + "/gdb_command.txt"

@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from re import search, split, findall
+from re import search, split, findall, escape
 from threading import Lock, Thread, Condition
 from time import sleep, time
 import pexpect
@@ -29,7 +29,7 @@ INFERIOR_STOPPED = type_defs.INFERIOR_STOPPED
 currentpid = 0
 child = object  # this object will be used with pexpect operations
 lock = Lock()
-condition = Condition()
+gdb_async_condition = Condition()
 inferior_status = -1
 gdb_output = ""
 gdb_async_output = ""
@@ -41,7 +41,7 @@ index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
 
 # issues the command sent
-# all CLI commands and ctrl+key are supported, GDB/MI specific command parsing isn't implemented yet
+# all CLI commands and ctrl+key are supported, GDB/MI commands aren't supported yet
 def send_command(command, control=False):
     global child
     global gdb_output
@@ -54,13 +54,20 @@ def send_command(command, control=False):
         if control:
             child.sendcontrol(command)
         else:
-            child.sendline(command)
+            command_file = SysUtils.get_gdb_command_file(currentpid)
+            command_fd = open(command_file, "w")
+            command_fd.write(command)
+            command_fd.close()
+            child.sendline("source " + command_file)
         if not control:
             while gdb_output is "":
                 sleep(0.00001)
         time1 = time()
         print(time1 - time0)
-        output = gdb_output
+        if not control:
+            output = gdb_output
+        else:
+            output = ""
         gdb_output = ""
         return output.strip()
 
@@ -86,19 +93,22 @@ def state_observe_thread():
         print(child.before)  # debug mode on!
 
         # Check .gdbinit file for these strings
-        matches = findall(r"<\-\-STOPPED\-\->|<\-\-RUNNING\-\->", child.before)  # <--STOPPED-->  # <--RUNNING-->
+        matches = findall(r"<\-\-STOPPED\-\->|\*running,thread\-id=\"all\"",
+                          child.before)  # <--STOPPED-->  # *running,thread-id="all"
         if len(matches) > 0:
             if search(r"STOPPED", matches[-1]):
                 inferior_status = INFERIOR_STOPPED
             else:
                 inferior_status = INFERIOR_RUNNING
         try:
-            gdb_output = split(r"&\".*\\n\"", child.before, 1)[1]  # &"command\n"
+            # The command will always start with the word "source", check send_command function for the cause
+            command_file = escape(SysUtils.get_gdb_command_file(currentpid))
+            gdb_output = split(r"&\"source\s" + command_file + r"\\n\"", child.before, 1)[1]  # &"command\n"
         except:
             gdb_output = ""
-            with condition:
+            with gdb_async_condition:
                 gdb_async_output = child.before
-                condition.notify_all()
+                gdb_async_condition.notify_all()
 
 
 def interrupt_inferior():
@@ -119,7 +129,7 @@ def attach(pid=str, injection_method=1):
     currentdir = SysUtils.get_current_script_directory()
     child = pexpect.spawnu('sudo LC_NUMERIC=C gdb --interpreter=mi', cwd=currentdir)
     child.setecho(False)
-    child.delaybeforesend = 0.00001
+    child.delaybeforesend = 0
     child.timeout = None
     child.expect_exact("(gdb)")
     status_thread = Thread(target=state_observe_thread)
@@ -307,7 +317,6 @@ def read_value_from_single_address(address, typeofaddress, length, unicode, zero
 
 
 # Converts the given address to symbol if any symbol exists for it
-# TODO: Implement a loop-version
 def convert_address_to_symbol(string):
     if check_for_restricted_gdb_symbols(string):
         return string
@@ -319,7 +328,6 @@ def convert_address_to_symbol(string):
 
 
 # Converts the given symbol to address if symbol is valid
-# TODO: Implement a loop-version
 def convert_symbol_to_address(string):
     if check_for_restricted_gdb_symbols(string):
         return string
