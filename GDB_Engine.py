@@ -126,7 +126,7 @@ def attach(pid=str, injection_method=1):
     currentpid = int(pid)
     SysUtils.create_PINCE_IPC_PATH(pid)
     currentdir = SysUtils.get_current_script_directory()
-    child = pexpect.spawnu('sudo LC_NUMERIC=C gdb --interpreter=mi', cwd=currentdir)
+    child = pexpect.spawn('sudo LC_NUMERIC=C gdb --interpreter=mi', cwd=currentdir, encoding="utf-8")
     child.setecho(False)
     child.delaybeforesend = 0
     child.timeout = None
