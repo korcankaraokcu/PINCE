@@ -53,6 +53,15 @@ class AwaitProcessExit(QThread):
             sleep(0.01)
         self.process_exited.emit()
 
+# Await async output from gdb
+class AwaitAsyncOutput(QThread):
+    async_output_ready=pyqtSignal()
+
+    def run(self):
+        while True:
+            with GDB_Engine.gdb_async_condition:
+                GDB_Engine.gdb_async_condition.wait()
+            self.async_output_ready.emit()
 
 class CheckInferiorStatus(QThread):
     status_stopped = pyqtSignal()
@@ -695,8 +704,8 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center(self)
-        self.await_async_output_thread = Thread(target=self.await_async_output)
-        self.await_async_output_thread.daemon = True
+        self.await_async_output_thread = AwaitAsyncOutput()
+        self.await_async_output_thread.async_output_ready.connect(self.on_async_output)
         self.await_async_output_thread.start()
         self.pushButton_Send.clicked.connect(self.communicate)
         self.pushButton_SendCtrl.clicked.connect(lambda: self.communicate(control=True))
@@ -736,13 +745,9 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.textBrowser.append("-->" + console_input)
         self.textBrowser.append(console_output)
 
-    def await_async_output(self):
-        while True:
-            with GDB_Engine.gdb_async_condition:
-                GDB_Engine.gdb_async_condition.wait()
-                self.textBrowser.append(GDB_Engine.gdb_async_output)
-            self.textBrowser.verticalScrollBar().setValue(self.textBrowser.verticalScrollBar().maximum())
-
+    def on_async_output(self):
+        self.textBrowser.append(GDB_Engine.gdb_async_output)
+        self.textBrowser.verticalScrollBar().setValue(self.textBrowser.verticalScrollBar().maximum())
 
 if __name__ == "__main__":
     import sys
