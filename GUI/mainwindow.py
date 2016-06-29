@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Thu Jun 23 20:51:17 2016
+# Created: Wed Jun 29 14:12:48 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -59,6 +59,14 @@ class Ui_MainWindow(object):
         self.pushButton_Save.setText("")
         self.pushButton_Save.setObjectName("pushButton_Save")
         self.horizontalLayout_5.addWidget(self.pushButton_Save)
+        self.pushButton_Wiki = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_Wiki.setText("")
+        self.pushButton_Wiki.setObjectName("pushButton_Wiki")
+        self.horizontalLayout_5.addWidget(self.pushButton_Wiki)
+        self.pushButton_About = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_About.setText("")
+        self.pushButton_About.setObjectName("pushButton_About")
+        self.horizontalLayout_5.addWidget(self.pushButton_About)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem)
         self.label_SelectedProcess = QtWidgets.QLabel(self.centralwidget)
@@ -298,6 +306,8 @@ class Ui_MainWindow(object):
         self.processbutton.setToolTip(_translate("MainWindow", "Create or attach to a process"))
         self.pushButton_Open.setToolTip(_translate("MainWindow", "Open a file, script or a cheat table"))
         self.pushButton_Save.setToolTip(_translate("MainWindow", "Save current tables to a file"))
+        self.pushButton_Wiki.setToolTip(_translate("MainWindow", "Wiki"))
+        self.pushButton_About.setToolTip(_translate("MainWindow", "About"))
         self.label_SelectedProcess.setText(_translate("MainWindow", "No Process Selected"))
         self.pushButton_Console.setToolTip(_translate("MainWindow", "Open a gdb console"))
         self.pushButton_Settings.setToolTip(_translate("MainWindow", "Configure options"))

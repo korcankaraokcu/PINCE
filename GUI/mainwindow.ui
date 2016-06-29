@@ -93,6 +93,26 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="pushButton_Wiki">
+        <property name="toolTip">
+         <string>Wiki</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_About">
+        <property name="toolTip">
+         <string>About</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="horizontalSpacer_6">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
