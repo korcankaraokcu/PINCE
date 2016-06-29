@@ -4,9 +4,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
     QShortcut, QKeySequenceEdit, QTabWidget
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication
 from time import sleep
-from threading import Thread, Lock
+from threading import Thread
 import os
-import pickle
 import webbrowser
 
 import GuiUtils
@@ -26,7 +25,6 @@ from GUI.aboutwidget import Ui_TabWidget as AboutWidget
 # the PID of the process we'll attach to
 currentpid = 0
 selfpid = os.getpid()
-lock = Lock()
 
 # settings
 update_table = bool
@@ -41,14 +39,14 @@ ADDR_COL = type_defs.ADDR_COL
 TYPE_COL = type_defs.TYPE_COL
 VALUE_COL = type_defs.VALUE_COL
 
-COMBOBOX_BYTE = type_defs.COMBOBOX_BYTE
-COMBOBOX_2BYTES = type_defs.COMBOBOX_2BYTES
-COMBOBOX_4BYTES = type_defs.COMBOBOX_4BYTES
-COMBOBOX_8BYTES = type_defs.COMBOBOX_8BYTES
-COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
-COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
-COMBOBOX_STRING = type_defs.COMBOBOX_STRING
-COMBOBOX_AOB = type_defs.COMBOBOX_AOB
+INDEX_BYTE = type_defs.INDEX_BYTE
+INDEX_2BYTES = type_defs.INDEX_2BYTES
+INDEX_4BYTES = type_defs.INDEX_4BYTES
+INDEX_8BYTES = type_defs.INDEX_8BYTES
+INDEX_FLOAT = type_defs.INDEX_FLOAT
+INDEX_DOUBLE = type_defs.INDEX_DOUBLE
+INDEX_STRING = type_defs.INDEX_STRING
+INDEX_AOB = type_defs.INDEX_AOB
 
 INFERIOR_STOPPED = type_defs.INFERIOR_STOPPED
 INFERIOR_RUNNING = type_defs.INFERIOR_RUNNING
@@ -271,25 +269,15 @@ class MainForm(QMainWindow, MainWindow):
                 self.tableWidget_addresstable.removeRow(item.row())
 
     def update_address_table_manually(self):
-        table_contents_send = []
+        table_contents = []
         row_count = self.tableWidget_addresstable.rowCount()
         for row in range(row_count):
             address = self.tableWidget_addresstable.item(row, ADDR_COL).text()
-            value_type = self.tableWidget_addresstable.item(row, TYPE_COL).text()
-            table_contents_send.append([address, value_type])
-        directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
-        send_file = directory_path + "/read-list-from-PINCE.txt"
-        recv_file = directory_path + "/read-list-to-PINCE.txt"
-        with lock:
-            open(recv_file, "w").close()
-            pickle.dump(table_contents_send, open(send_file, "wb"))
-            GDB_Engine.send_command("pince-read-multiple-addresses")
-            try:
-                table_contents_recv = pickle.load(open(recv_file, "rb"))
-            except EOFError:
-                print("couldn't update the address table")
-                table_contents_recv = []
-        for row, item in enumerate(table_contents_recv):
+            index, length, unicode, zero_terminate = GuiUtils.text_to_valuetype(
+                self.tableWidget_addresstable.item(row, TYPE_COL).text())
+            table_contents.append([address, index, length, unicode, zero_terminate])
+        new_table_contents = GDB_Engine.read_multiple_addresses(table_contents)
+        for row, item in enumerate(new_table_contents):
             self.tableWidget_addresstable.setItem(row, VALUE_COL, QTableWidgetItem(str(item)))
 
     # gets the information from the dialog then adds it to addresstable
@@ -396,27 +384,24 @@ class MainForm(QMainWindow, MainWindow):
             value = self.tableWidget_addresstable.item(current_row, VALUE_COL).text()
             value_index = GuiUtils.text_to_index(self.tableWidget_addresstable.item(current_row, TYPE_COL).text())
             dialog = DialogWithButtonsForm(label_text="Enter the new value", hide_line_edit=False,
-                                           line_edit_text=value, parse_string=True, value_type=value_index)
+                                           line_edit_text=value, parse_string=True, value_index=value_index)
             if dialog.exec_():
-                table_contents_send = []
+                table_contents = []
                 value_text = dialog.get_values()
                 selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
                 for item in selected_rows:
                     row = item.row()
                     address = self.tableWidget_addresstable.item(row, ADDR_COL).text()
                     value_type = self.tableWidget_addresstable.item(row, TYPE_COL).text()
-                    table_contents_send.append([address, value_type])
+                    value_index = GuiUtils.text_to_index(value_type)
                     if GuiUtils.text_to_length(value_type) is not -1:
-                        value_index = GuiUtils.text_to_index(value_type)
-                        unknown_type = GuiUtils.parse_string(value_text, value_index)[1]
+                        unknown_type = SysUtils.parse_string(value_text, value_index)[1]
                         length = len(unknown_type)
                         self.tableWidget_addresstable.setItem(row, TYPE_COL, QTableWidgetItem(
                             GuiUtils.change_text_length(value_type, length)))
-                table_contents_send.append(value_text)
-                directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
-                send_file = directory_path + "/set-list-from-PINCE.txt"
-                pickle.dump(table_contents_send, open(send_file, "wb"))
-                GDB_Engine.send_command("pince-set-multiple-addresses")
+                    table_contents.append([address, value_index])
+                table_contents.append(value_text)
+                GDB_Engine.set_multiple_addresses(table_contents)
                 self.update_address_table_manually()
 
         elif current_column is DESC_COL:
@@ -556,7 +541,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
 
 # Add Address Manually Dialog
 class ManualAddressDialogForm(QDialog, ManualAddressDialog):
-    def __init__(self, parent=None, description="No Description", address="0x", index=COMBOBOX_4BYTES, length=10,
+    def __init__(self, parent=None, description="No Description", address="0x", index=INDEX_4BYTES, length=10,
                  unicode=False,
                  zero_terminate=True):
         super().__init__(parent=parent)
@@ -564,7 +549,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.lineEdit_description.setText(description)
         self.lineEdit_address.setText(address)
         self.comboBox_ValueType.setCurrentIndex(index)
-        if self.comboBox_ValueType.currentIndex() is COMBOBOX_STRING:
+        if self.comboBox_ValueType.currentIndex() is INDEX_STRING:
             self.label_length.show()
             self.lineEdit_length.show()
             try:
@@ -576,7 +561,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.checkBox_Unicode.setChecked(unicode)
             self.checkBox_zeroterminate.show()
             self.checkBox_zeroterminate.setChecked(zero_terminate)
-        elif self.comboBox_ValueType.currentIndex() is COMBOBOX_AOB:
+        elif self.comboBox_ValueType.currentIndex() is INDEX_AOB:
             self.label_length.show()
             self.lineEdit_length.show()
             try:
@@ -609,10 +594,10 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                 self.update_needed = False
                 address = self.lineEdit_address.text()
                 address_type = self.comboBox_ValueType.currentIndex()
-                if address_type is COMBOBOX_AOB:
+                if address_type is INDEX_AOB:
                     length = self.lineEdit_length.text()
                     self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type, length))
-                elif address_type is COMBOBOX_STRING:
+                elif address_type is INDEX_STRING:
                     length = self.lineEdit_length.text()
                     is_unicode = self.checkBox_Unicode.isChecked()
                     is_zeroterminate = self.checkBox_zeroterminate.isChecked()
@@ -634,12 +619,12 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.update_needed = True
 
     def valuetype_on_current_index_change(self):
-        if self.comboBox_ValueType.currentIndex() is COMBOBOX_STRING:
+        if self.comboBox_ValueType.currentIndex() is INDEX_STRING:
             self.label_length.show()
             self.lineEdit_length.show()
             self.checkBox_Unicode.show()
             self.checkBox_zeroterminate.show()
-        elif self.comboBox_ValueType.currentIndex() is COMBOBOX_AOB:
+        elif self.comboBox_ValueType.currentIndex() is INDEX_AOB:
             self.label_length.show()
             self.lineEdit_length.show()
             self.checkBox_Unicode.hide()
@@ -738,11 +723,11 @@ class LoadingWindowThread(QThread):
 
 class DialogWithButtonsForm(QDialog, DialogWithButtons):
     def __init__(self, parent=None, label_text="", hide_line_edit=True, line_edit_text="", parse_string=False,
-                 value_type=COMBOBOX_4BYTES):
+                 value_index=INDEX_4BYTES):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.parse_string = parse_string
-        self.value_type = value_type
+        self.value_index = value_index
         label_text = str(label_text)
         self.label.setText(label_text)
         if hide_line_edit:
@@ -758,7 +743,7 @@ class DialogWithButtonsForm(QDialog, DialogWithButtons):
     def accept(self):
         if self.parse_string:
             string = self.lineEdit.text()
-            if not GuiUtils.parse_string(string, self.value_type)[0]:
+            if not SysUtils.parse_string(string, self.value_index)[0]:
                 QMessageBox.information(self, "Error", "Can't parse the input")
                 return
         super(DialogWithButtonsForm, self).accept()
