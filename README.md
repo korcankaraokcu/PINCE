@@ -4,7 +4,7 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
 - **NO BRAKES ON THIS TRAIN:** PINCE can run **ANY** gdb command without having to pause the inferior **[Postponed\Done]**
   * *Postpone reason:* Check wiki
 - **Memory searching** **[Planned]**  (The plan is to use libscanmem by wrapping it with a gdb python script)
-- **Variable Inspection&Modifcation** **[Done]**
+- **Variable Inspection&Modifcation** **[Done/Basic]**
   * **CheatEngine-like value type support:** Byte to 8 Bytes, Float, Double, Strings(including utf-8 and zero-terminate strings), Array of Bytes **[Done]**
   * **Symbol Recognition:** Try typing any widely used library function(such as malloc, open, printf, scanf etc) to AddAddressManually dialog **[Done]**
   * **Automatic Variable Allocation:** In AddAddressManually dialog, if your input is in quotes it's treated as a string, if your input is in curly brackets, it's treated as an array of variables(for instance: "asdf"=string, {0x00ffba42}=integer(4byte), {0x00000023,0x00513245,..}=array of 2 integers. After pressing OK button PINCE will allocate memory for you to use that variable right away! **[Done]**
@@ -14,7 +14,7 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
   * **Continuous Address Table Update:** You can adjust update timer or cancel updating by modifying settings. Non-stop version is Postponed\Quarterway Done **[Done\Only works when the inferior is stopped]**
   * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables **[Postponed\Quarterway Done]**
   * *Postpone reason:* These two features requires thread injection to the target or gdb and PINCE's injection methods are not perfect yet, I've already spent more(read:WAY MORE) time than I should on this, these features are not vital for now, also you have got the options to manually update the table and set the value manually already
-- **Disassemble** **[Planned]**
+- **Disassemble** **[Working on it]**
 - **Debugging** **[Working on it]**
   * Can interrupt and continue the inferior, Check wiki for instructions
 - **Code Injection** **[Done?]**
@@ -24,6 +24,8 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
 - **Simplified/Optimized gdb command alternatives** **[Working on it]**
   * Custom scripts instead of using gdb's x command for reading memory **[Done]**
   * Custom scripts instead of using gdb's set command for modifying memory **[Done]**
+- **libPINCE- A reusable python library** **[Current Status:*Reusable*]**
+  * PINCE provides a easily configurable and reusable python library. I'll write a fully-documented guide about how to use it as soon as the project finishes at basic level. Until that moment, I'll keep developing this project as modular as possible  
 
 #Building  
 To run PINCE, run this command chain then compile gdb if necessary:  
