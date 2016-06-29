@@ -2,7 +2,7 @@
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication
 from time import sleep
 from threading import Thread, Lock
 import os
@@ -26,6 +26,13 @@ currentpid = 0
 selfpid = os.getpid()
 lock = Lock()
 
+# settings
+update_table = bool
+table_update_interval = float
+pause_hotkey = str
+continue_hotkey = str
+initial_code_injection_method = int
+
 FROZEN_COL = type_defs.FROZEN_COL
 DESC_COL = type_defs.DESC_COL
 ADDR_COL = type_defs.ADDR_COL
@@ -40,8 +47,17 @@ COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
 COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
 COMBOBOX_STRING = type_defs.COMBOBOX_STRING
 COMBOBOX_AOB = type_defs.COMBOBOX_AOB
+
 INFERIOR_STOPPED = type_defs.INFERIOR_STOPPED
 INFERIOR_RUNNING = type_defs.INFERIOR_RUNNING
+
+NO_INJECTION = type_defs.NO_INJECTION
+SIMPLE_DLOPEN_CALL = type_defs.SIMPLE_DLOPEN_CALL
+LINUX_INJECT = type_defs.LINUX_INJECT
+
+INJECTION_SUCCESSFUL = type_defs.INJECTION_SUCCESSFUL
+INJECTION_FAILED = type_defs.INJECTION_FAILED
+NO_INJECTION_ATTEMPT = type_defs.NO_INJECTION_ATTEMPT
 
 
 # Checks if the inferior has been terminated
@@ -53,15 +69,17 @@ class AwaitProcessExit(QThread):
             sleep(0.01)
         self.process_exited.emit()
 
+
 # Await async output from gdb
 class AwaitAsyncOutput(QThread):
-    async_output_ready=pyqtSignal()
+    async_output_ready = pyqtSignal()
 
     def run(self):
         while True:
             with GDB_Engine.gdb_async_condition:
                 GDB_Engine.gdb_async_condition.wait()
             self.async_output_ready.emit()
+
 
 class CheckInferiorStatus(QThread):
     status_stopped = pyqtSignal()
@@ -80,13 +98,15 @@ class CheckInferiorStatus(QThread):
 
 
 class UpdateAddressTableThread(QThread):
-    update_table = pyqtSignal()
+    update_table_signal = pyqtSignal()
 
     def run(self):
         while True:
+            while not update_table:
+                sleep(0.1)
             if GDB_Engine.inferior_status is INFERIOR_STOPPED:
-                self.update_table.emit()
-            sleep(0.5)
+                self.update_table_signal.emit()
+            sleep(table_update_interval)
 
 
 # A thread that updates the address table constantly
@@ -151,7 +171,13 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_addresstable.setColumnWidth(DESC_COL, 150)
         self.tableWidget_addresstable.setColumnWidth(ADDR_COL, 150)
         self.tableWidget_addresstable.setColumnWidth(TYPE_COL, 120)
-        # self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        QCoreApplication.setOrganizationName("PINCE")
+        QCoreApplication.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
+        QCoreApplication.setApplicationName("PINCE")
+        self.settings = QSettings()
+        if not SysUtils.is_path_valid(self.settings.fileName()):
+            self.set_default_settings()
+        self.apply_settings()
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
@@ -160,12 +186,12 @@ class MainForm(QMainWindow, MainWindow):
         self.check_status_thread.status_running.connect(self.on_status_running)
         self.check_status_thread.start()
         self.update_address_table_thread = UpdateAddressTableThread()
-        self.update_address_table_thread.update_table.connect(self.update_address_table_manually)
+        self.update_address_table_thread.update_table_signal.connect(self.update_address_table_manually)
         self.update_address_table_thread.start()
-        self.shortcut_F2 = QShortcut(QKeySequence("F2"), self)
-        self.shortcut_F2.activated.connect(self.F2_pressed)
-        self.shortcut_F3 = QShortcut(QKeySequence("F3"), self)
-        self.shortcut_F3.activated.connect(self.F3_pressed)
+        self.shortcut_pause = QShortcut(QKeySequence(pause_hotkey), self)
+        self.shortcut_pause.activated.connect(self.pause_hotkey_pressed)
+        self.shortcut_continue = QShortcut(QKeySequence(continue_hotkey), self)
+        self.shortcut_continue.activated.connect(self.continue_hotkey_pressed)
         self.tableWidget_addresstable.keyPressEvent = self.tableWidget_addresstable_keyPressEvent
         self.processbutton.clicked.connect(self.processbutton_onclick)
         self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
@@ -186,10 +212,49 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_RefreshAdressTable.setIcon(QIcon(QPixmap(icons_directory + "/table_refresh.png")))
         self.pushButton_Console.setIcon(QIcon(QPixmap(icons_directory + "/application_xp_terminal.png")))
 
-    def F2_pressed(self):
+    def set_default_settings(self):
+        self.settings.beginGroup("General")
+        self.settings.setValue("always_on_top", False)
+        self.settings.setValue("auto_update_address_table", True)
+        self.settings.setValue("address_table_update_interval", 0.5)
+        self.settings.endGroup()
+        self.settings.beginGroup("Hotkeys")
+        self.settings.setValue("pause", "F2")
+        self.settings.setValue("continue", "F3")
+        self.settings.endGroup()
+        self.settings.beginGroup("CodeInjection")
+        self.settings.setValue("initial_code_injection_method", SIMPLE_DLOPEN_CALL)
+        self.settings.endGroup()
+
+    def apply_settings(self):
+        if self.settings.value("General/always_on_top", type=bool):
+            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        else:
+            self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+        self.show()
+        global update_table
+        global table_update_interval
+        global pause_hotkey
+        global continue_hotkey
+        global initial_code_injection_method
+        update_table = self.settings.value("General/auto_update_address_table", type=bool)
+        table_update_interval = self.settings.value("General/address_table_update_interval", type=float)
+        pause_hotkey = self.settings.value("Hotkeys/pause")
+        continue_hotkey = self.settings.value("Hotkeys/continue")
+        try:
+            self.shortcut_pause.setKey(QKeySequence(pause_hotkey))
+        except AttributeError:
+            pass
+        try:
+            self.shortcut_continue.setKey(QKeySequence(continue_hotkey))
+        except AttributeError:
+            pass
+        initial_code_injection_method = self.settings.value("CodeInjection/initial_code_injection_method", type=int)
+
+    def pause_hotkey_pressed(self):
         GDB_Engine.interrupt_inferior()
 
-    def F3_pressed(self):
+    def continue_hotkey_pressed(self):
         GDB_Engine.continue_inferior()
 
     # I don't know if this is some kind of retarded hack
@@ -232,8 +297,9 @@ class MainForm(QMainWindow, MainWindow):
 
     def settingsbutton_onclick(self):
         settings_dialog = SettingsDialogForm()
+        settings_dialog.reset_settings.connect(self.set_default_settings)
         if settings_dialog.exec_():
-            print("asdf")
+            self.apply_settings()
 
     def consolebutton_onclick(self):
         self.console_widget = ConsoleWidgetForm()
@@ -453,7 +519,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             if not currentpid == 0:
                 GDB_Engine.detach()
             currentpid = pid
-            code_injection_successful = GDB_Engine.attach(str(currentpid))
+            code_injection_status = GDB_Engine.attach(str(currentpid), initial_code_injection_method)
             p = SysUtils.get_process_information(currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
@@ -469,7 +535,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             #                            "\nPINCE non-stop mode" +
             #                            "\nContinuous Address Table Update" +
             #                            "\nVariable Locking")
-            if not code_injection_successful:
+            if code_injection_status is INJECTION_FAILED:
                 QMessageBox.information(self, "Warning", "Couldn't inject the .so file")
             # self.loadingwidget.hide()
             self.close()
@@ -686,6 +752,8 @@ class DialogWithButtonsForm(QDialog, DialogWithButtons):
 
 
 class SettingsDialogForm(QDialog, SettingsDialog):
+    reset_settings = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -694,9 +762,76 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.keySequenceEdit = QKeySequenceEdit()
         self.verticalLayout_Hotkey.addWidget(self.keySequenceEdit)
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
+        self.listWidget_Functions.currentRowChanged.connect(self.on_hotkey_index_change)
+        self.keySequenceEdit.keySequenceChanged.connect(self.on_key_sequence_change)
+        self.pushButton_ClearHotkey.clicked.connect(self.on_clear_button_pressed)
+        self.pushButton_ResetSettings.clicked.connect(self.on_reset_button_pressed)
+        self.config_gui()
+
+    def accept(self):
+        try:
+            float(self.lineEdit_UpdateInterval.text())
+        except:
+            QMessageBox.information(self, "Error", "Update interval must be a float")
+            return
+        self.settings.setValue("General/always_on_top", self.checkBox_AlwaysOnTop.isChecked())
+        self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
+        self.settings.setValue("General/address_table_update_interval", float(self.lineEdit_UpdateInterval.text()))
+        self.settings.setValue("Hotkeys/pause", self.pause_hotkey)
+        self.settings.setValue("Hotkeys/continue", self.continue_hotkey)
+        if self.radioButton_SimpleDLopenCall.isChecked():
+            injection_method = SIMPLE_DLOPEN_CALL
+        elif self.radioButton_LinuxInject.isChecked():
+            injection_method = LINUX_INJECT
+        self.settings.setValue("CodeInjection/initial_code_injection_method", injection_method)
+        super(SettingsDialogForm, self).accept()
+
+    def config_gui(self):
+        self.settings = QSettings()
+        if self.settings.value("General/always_on_top", type=bool):
+            self.checkBox_AlwaysOnTop.setChecked(True)
+        else:
+            self.checkBox_AlwaysOnTop.setChecked(False)
+        if self.settings.value("General/auto_update_address_table", type=bool):
+            self.checkBox_AutoUpdateAddressTable.setChecked(True)
+        else:
+            self.checkBox_AutoUpdateAddressTable.setChecked(False)
+        self.lineEdit_UpdateInterval.setText(
+            str(self.settings.value("General/address_table_update_interval", type=float)))
+        self.pause_hotkey = self.settings.value("Hotkeys/pause")
+        self.continue_hotkey = self.settings.value("Hotkeys/continue")
+        injection_method = self.settings.value("CodeInjection/initial_code_injection_method", type=int)
+        if injection_method == SIMPLE_DLOPEN_CALL:
+            self.radioButton_SimpleDLopenCall.setChecked(True)
+        elif injection_method == LINUX_INJECT:
+            self.radioButton_LinuxInject.setChecked(True)
 
     def change_display(self, index):
         self.stackedWidget.setCurrentIndex(index)
+
+    def on_hotkey_index_change(self, index):
+        if index is 0:
+            self.keySequenceEdit.setKeySequence(self.pause_hotkey)
+        elif index is 1:
+            self.keySequenceEdit.setKeySequence(self.continue_hotkey)
+
+    def on_key_sequence_change(self):
+        current_index = self.listWidget_Functions.currentIndex().row()
+        if current_index is 0:
+            self.pause_hotkey = self.keySequenceEdit.keySequence().toString()
+        elif current_index is 1:
+            self.continue_hotkey = self.keySequenceEdit.keySequence().toString()
+
+    def on_clear_button_pressed(self):
+        self.keySequenceEdit.clear()
+
+    def on_reset_button_pressed(self):
+        confirm_dialog = DialogWithButtonsForm(label_text="This will reset to the default settings\n\tProceed?")
+        if confirm_dialog.exec_():
+            self.reset_settings.emit()
+        else:
+            return
+        self.config_gui()
 
 
 class ConsoleWidgetForm(QWidget, ConsoleWidget):
@@ -748,6 +883,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
     def on_async_output(self):
         self.textBrowser.append(GDB_Engine.gdb_async_output)
         self.textBrowser.verticalScrollBar().setValue(self.textBrowser.verticalScrollBar().maximum())
+
 
 if __name__ == "__main__":
     import sys

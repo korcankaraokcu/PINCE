@@ -4,6 +4,14 @@ INITIAL_INJECTION_PATH = "/Injection/InitialCodeInjections.so"
 INFERIOR_RUNNING = 0
 INFERIOR_STOPPED = 1
 
+NO_INJECTION = 0
+SIMPLE_DLOPEN_CALL = 1
+LINUX_INJECT = 2
+
+INJECTION_SUCCESSFUL = 1
+INJECTION_FAILED = 0
+NO_INJECTION_ATTEMPT = -1
+
 # represents the index of columns in address table
 FROZEN_COL = 0  # Frozen
 DESC_COL = 1  # Description
