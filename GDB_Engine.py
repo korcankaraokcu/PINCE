@@ -6,6 +6,7 @@ import pexpect
 import os
 import ctypes
 import struct
+import pickle
 
 libc = ctypes.CDLL('libc.so.6')
 is_32bit = struct.calcsize("P") * 8 == 32
@@ -13,14 +14,14 @@ is_32bit = struct.calcsize("P") * 8 == 32
 import SysUtils
 import type_defs
 
-COMBOBOX_BYTE = type_defs.COMBOBOX_BYTE
-COMBOBOX_2BYTES = type_defs.COMBOBOX_2BYTES
-COMBOBOX_4BYTES = type_defs.COMBOBOX_4BYTES
-COMBOBOX_8BYTES = type_defs.COMBOBOX_8BYTES
-COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
-COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
-COMBOBOX_STRING = type_defs.COMBOBOX_STRING
-COMBOBOX_AOB = type_defs.COMBOBOX_AOB
+INDEX_BYTE = type_defs.INDEX_BYTE
+INDEX_2BYTES = type_defs.INDEX_2BYTES
+INDEX_4BYTES = type_defs.INDEX_4BYTES
+INDEX_8BYTES = type_defs.INDEX_8BYTES
+INDEX_FLOAT = type_defs.INDEX_FLOAT
+INDEX_DOUBLE = type_defs.INDEX_DOUBLE
+INDEX_STRING = type_defs.INDEX_STRING
+INDEX_AOB = type_defs.INDEX_AOB
 
 INITIAL_INJECTION_PATH = type_defs.INITIAL_INJECTION_PATH
 
@@ -37,7 +38,9 @@ NO_INJECTION_ATTEMPT = type_defs.NO_INJECTION_ATTEMPT
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
-lock = Lock()
+lock_send_command = Lock()
+lock_read_multiple_addresses = Lock()
+lock_set_multiple_addresses = Lock()
 gdb_async_condition = Condition()
 inferior_status = -1
 gdb_output = ""
@@ -54,7 +57,7 @@ index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 def send_command(command, control=False):
     global child
     global gdb_output
-    with lock:
+    with lock_send_command:
         if inferior_status is INFERIOR_RUNNING and not control:
             print("inferior is running")
             return
@@ -246,7 +249,7 @@ def read_single_address(address, typeofaddress, length=None, is_unicode=False, z
         return "??"
     if length is "":
         return "??"
-    if typeofaddress is COMBOBOX_AOB:
+    if typeofaddress is INDEX_AOB:
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
         try:
             expectedlength = str(int(length))  # length must be a legit number, so had to do this trick
@@ -258,7 +261,7 @@ def read_single_address(address, typeofaddress, length=None, is_unicode=False, z
             returned_string = ''.join(filteredresult)  # combine all the matched results
             return returned_string.replace(r"\t0x", " ")
         return "??"
-    elif typeofaddress is COMBOBOX_STRING:
+    elif typeofaddress is INDEX_STRING:
         typeofaddress = valuetype_to_gdbcommand(typeofaddress)
         if not is_unicode:
             try:
@@ -309,7 +312,7 @@ def read_value_from_single_address(address, typeofaddress, length, unicode, zero
     result = split(r"\\", result)[0]  # result
 
     # check ReadSingleAddress class in GDBCommandExtensions.py to understand why do we separate this parsing from others
-    if typeofaddress is COMBOBOX_STRING:
+    if typeofaddress is INDEX_STRING:
         returned_string = result.replace(" ", "")
         if not unicode:
             returned_string = bytes.fromhex(returned_string).decode("ascii", "replace")
@@ -322,6 +325,37 @@ def read_value_from_single_address(address, typeofaddress, length, unicode, zero
                 returned_string = returned_string.split('\x00')[0]
         return returned_string[0:int(length)]
     return result
+
+
+# Optimized version of the function read_value_from_single_address
+# Format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
+# If any errors occurs while reading addresses, it's ignored and the belonging address is returned as null string
+# For instance: 4 addresses readed and 3rd one is problematic, the return value will be [return1,return2,"",return4]
+def read_multiple_addresses(nested_list):
+    directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
+    send_file = directory_path + "/read-list-from-PINCE.txt"
+    recv_file = directory_path + "/read-list-to-PINCE.txt"
+    with lock_read_multiple_addresses:
+        open(recv_file, "w").close()
+        pickle.dump(nested_list, open(send_file, "wb"))
+        send_command("pince-read-multiple-addresses")
+        try:
+            contents_recv = pickle.load(open(recv_file, "rb"))
+        except EOFError:
+            print("couldn't update the address table")
+            contents_recv = []
+    return contents_recv
+
+
+# Optimized version of the function set_value_from_single_address
+# Format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
+# If any errors occurs while reading addresses, it'll be ignored but the information about error will be printed to the terminal
+def set_multiple_addresses(nested_list):
+    with lock_set_multiple_addresses:
+        directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
+        send_file = directory_path + "/set-list-from-PINCE.txt"
+        pickle.dump(nested_list, open(send_file, "wb"))
+        send_command("pince-set-multiple-addresses")
 
 
 # Converts the given address to symbol if any symbol exists for it

@@ -4,9 +4,17 @@ import os
 import shutil
 import sys
 import type_defs
-from re import match, search, IGNORECASE
+from re import match, search, IGNORECASE, split
 
 PINCE_IPC_PATH = type_defs.PINCE_IPC_PATH
+INDEX_BYTE = type_defs.INDEX_BYTE
+INDEX_2BYTES = type_defs.INDEX_2BYTES
+INDEX_4BYTES = type_defs.INDEX_4BYTES
+INDEX_8BYTES = type_defs.INDEX_8BYTES
+INDEX_FLOAT = type_defs.INDEX_FLOAT
+INDEX_DOUBLE = type_defs.INDEX_DOUBLE
+INDEX_STRING = type_defs.INDEX_STRING
+INDEX_AOB = type_defs.INDEX_AOB
 
 
 # returns a list of currently working processes
@@ -141,3 +149,63 @@ def get_gdb_async_file(pid):
 
 def get_gdb_command_file(pid):
     return get_PINCE_IPC_directory(pid) + "/gdb_command.txt"
+
+
+def parse_string(string, value_index):
+    string = str(string)
+    if not string:
+        print("please enter a string first")
+        return False, string
+    try:
+        value_index = int(value_index)
+    except:
+        print(str(value_index) + " can't be converted to int")
+        return False, string
+    if value_index is INDEX_STRING:
+        return True, string
+    string = string.strip()
+    if value_index is INDEX_AOB:
+        try:
+            string = str(string)
+            stripped_string = string.strip()
+            string_list = split(r"\s+", stripped_string)
+            for item in string_list:
+                if len(item) > 2:
+                    print(string + " can't be parsed as array of bytes")
+                    return False, string
+            hex_list = [int(x, 16) for x in string_list]
+            return True, hex_list
+        except:
+            print(string + " can't be parsed as array of bytes")
+            return False, string
+    elif value_index is INDEX_FLOAT or value_index is INDEX_DOUBLE:
+        try:
+            string = float(string)
+        except:
+            try:
+                string = float(int(string, 16))
+            except:
+                print(string + " can't be parsed as floating point variable")
+                return False, string
+        return True, string
+    else:
+        try:
+            string = int(string)
+        except:
+            try:
+                string = int(string, 16)
+            except:
+                try:
+                    string = int(float(string))
+                except:
+                    print(string + " can't be parsed as integer or hexadecimal")
+                    return False, string
+        if value_index is INDEX_BYTE:
+            string = string % 256
+        elif value_index is INDEX_2BYTES:
+            string = string % 65536
+        elif value_index is INDEX_4BYTES:
+            string = string % 4294967296
+        elif value_index is INDEX_8BYTES:
+            string = string % 18446744073709551616
+        return True, string

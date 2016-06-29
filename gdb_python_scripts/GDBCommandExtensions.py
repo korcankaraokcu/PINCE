@@ -7,18 +7,17 @@ gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
 PINCE_PATH = gdbvalue.string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 import gdb_python_scripts.ScriptUtils as ScriptUtils
-import GuiUtils
 import SysUtils
 import type_defs
 
-COMBOBOX_BYTE = type_defs.COMBOBOX_BYTE
-COMBOBOX_2BYTES = type_defs.COMBOBOX_2BYTES
-COMBOBOX_4BYTES = type_defs.COMBOBOX_4BYTES
-COMBOBOX_8BYTES = type_defs.COMBOBOX_8BYTES
-COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
-COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
-COMBOBOX_STRING = type_defs.COMBOBOX_STRING
-COMBOBOX_AOB = type_defs.COMBOBOX_AOB
+INDEX_BYTE = type_defs.INDEX_BYTE
+INDEX_2BYTES = type_defs.INDEX_2BYTES
+INDEX_4BYTES = type_defs.INDEX_4BYTES
+INDEX_8BYTES = type_defs.INDEX_8BYTES
+INDEX_FLOAT = type_defs.INDEX_FLOAT
+INDEX_DOUBLE = type_defs.INDEX_DOUBLE
+INDEX_STRING = type_defs.INDEX_STRING
+INDEX_AOB = type_defs.INDEX_AOB
 
 
 class ReadMultipleAddresses(gdb.Command):
@@ -34,11 +33,13 @@ class ReadMultipleAddresses(gdb.Command):
         send_file = directory_path + "/read-list-to-PINCE.txt"
         file_contents_recv = pickle.load(open(recv_file, "rb"))
 
-        # file_contents_recv format: [[address1,string1],[address2,string2],..]
+        # Format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
         for item in file_contents_recv:
             address = item[0]
-            string = item[1]
-            index, length, unicode, zero_terminate = GuiUtils.text_to_valuetype(string)
+            index = item[1]
+            length = item[2]
+            unicode = item[3]
+            zero_terminate = item[4]
             readed = ScriptUtils.read_single_address(address, index, length, unicode, zero_terminate)
             file_contents_send.append(readed)
         pickle.dump(file_contents_send, open(send_file, "wb"))
@@ -57,11 +58,10 @@ class SetMultipleAddresses(gdb.Command):
         value = file_contents_recv[-1]
         file_contents_recv.pop()
 
-        # file_contents_recv format: [[address1,string1],[address2,string2],..]
+        # file_contents_recv format: [[address1, index1, value1],[address2, ...], ...]
         for item in file_contents_recv:
             address = item[0]
-            string = item[1]
-            index = GuiUtils.text_to_index(string)
+            index = item[1]
             ScriptUtils.set_single_address(address, index, value)
 
 
@@ -75,7 +75,7 @@ class ReadSingleAddress(gdb.Command):
                 arg)  # more like EVIL mwahahahaha... HAHAHAHAHA... **muffled evil laughter from distance**
 
             # 5 is the number of parameters coming from PINCE
-            address, value_type, length, unicode, zero_terminate = parameters + (None,) * (5 - len(parameters))
+            address, value_index, length, unicode, zero_terminate = parameters + (None,) * (5 - len(parameters))
             address = hex(address)
         except:
             print("")
@@ -83,15 +83,15 @@ class ReadSingleAddress(gdb.Command):
 
         # python can't print a string that has null bytes in it, so we'll have to print the raw bytes instead and let PINCE do the parsing
         # Weird enough, even when python can't print those strings, pyqt can(in it's gui elements like labels)
-        if value_type is COMBOBOX_STRING:
-            value_type = COMBOBOX_AOB
+        if value_index is INDEX_STRING:
+            value_index = INDEX_AOB
             if unicode:
                 try:
                     length = int(length)
                     length = length * 2
                 except:
                     print("")
-        print(ScriptUtils.read_single_address(address, value_type, length, unicode, zero_terminate))
+        print(ScriptUtils.read_single_address(address, value_index, length, unicode, zero_terminate))
 
 
 class IgnoreErrors(gdb.Command):
