@@ -305,7 +305,7 @@ class MainForm(QMainWindow, MainWindow):
         webbrowser.open("https://github.com/korcankaraokcu/PINCE/wiki")
 
     def aboutbutton_onclick(self):
-        self.about_widget=AboutWidgetForm()
+        self.about_widget = AboutWidgetForm()
         self.about_widget.show()
 
     def settingsbutton_onclick(self):
@@ -783,13 +783,26 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
     def accept(self):
         try:
-            float(self.lineEdit_UpdateInterval.text())
+            current_table_update_interval = float(self.lineEdit_UpdateInterval.text())
         except:
             QMessageBox.information(self, "Error", "Update interval must be a float")
             return
+        if current_table_update_interval < 0:
+            QMessageBox.information(self, "Error", "Update interval cannot be a negative number")
+            return
+        elif current_table_update_interval == 0:
+
+            # Easter egg #2
+            if not DialogWithButtonsForm(self, label_text="You are asking for it, aren't you?").exec_():
+                return
+        elif current_table_update_interval < 0.1:
+            if not DialogWithButtonsForm(self, label_text="Update interval should be bigger than 0.1 seconds" +
+                    "\nSetting update interval less than 0.1 seconds may cause slowness" +
+                    "\n\tProceed?").exec_():
+                return
         self.settings.setValue("General/always_on_top", self.checkBox_AlwaysOnTop.isChecked())
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
-        self.settings.setValue("General/address_table_update_interval", float(self.lineEdit_UpdateInterval.text()))
+        self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
         self.settings.setValue("Hotkeys/pause", self.pause_hotkey)
         self.settings.setValue("Hotkeys/continue", self.continue_hotkey)
         if self.radioButton_SimpleDLopenCall.isChecked():
@@ -897,15 +910,17 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.textBrowser.append(GDB_Engine.gdb_async_output)
         self.textBrowser.verticalScrollBar().setValue(self.textBrowser.verticalScrollBar().maximum())
 
+
 class AboutWidgetForm(QTabWidget, AboutWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center(self)
-        license_text=open("LICENSE.md").read()
-        contributors_text=open("CONTRIBUTORS.txt").read()
+        license_text = open("LICENSE.md").read()
+        contributors_text = open("CONTRIBUTORS.txt").read()
         self.textBrowser_License.setPlainText(license_text)
         self.textBrowser_Contributors.setPlainText(contributors_text)
+
 
 if __name__ == "__main__":
     import sys
