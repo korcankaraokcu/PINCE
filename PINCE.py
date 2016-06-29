@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
-    QShortcut, QKeySequenceEdit
+    QShortcut, QKeySequenceEdit, QTabWidget
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication
 from time import sleep
 from threading import Thread, Lock
 import os
 import pickle
+import webbrowser
 
 import GuiUtils
 import SysUtils
@@ -20,6 +21,7 @@ from GUI.loadingwidget import Ui_Form as LoadingWidget
 from GUI.dialogwithbuttons import Ui_Dialog as DialogWithButtons
 from GUI.settingsdialog import Ui_Dialog as SettingsDialog
 from GUI.consolewidget import Ui_Form as ConsoleWidget
+from GUI.aboutwidget import Ui_TabWidget as AboutWidget
 
 # the PID of the process we'll attach to
 currentpid = 0
@@ -198,6 +200,8 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
         self.pushButton_Settings.clicked.connect(self.settingsbutton_onclick)
         self.pushButton_Console.clicked.connect(self.consolebutton_onclick)
+        self.pushButton_Wiki.clicked.connect(self.wikibutton_onclick)
+        self.pushButton_About.clicked.connect(self.aboutbutton_onclick)
         self.pushButton_AddAddressManually.clicked.connect(self.addaddressmanually_onclick)
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
@@ -211,6 +215,8 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_CleanAddressTable.setIcon(QIcon(QPixmap(icons_directory + "/bin_closed.png")))
         self.pushButton_RefreshAdressTable.setIcon(QIcon(QPixmap(icons_directory + "/table_refresh.png")))
         self.pushButton_Console.setIcon(QIcon(QPixmap(icons_directory + "/application_xp_terminal.png")))
+        self.pushButton_Wiki.setIcon(QIcon(QPixmap(icons_directory + "/book_open.png")))
+        self.pushButton_About.setIcon(QIcon(QPixmap(icons_directory + "/information.png")))
 
     def set_default_settings(self):
         self.settings.beginGroup("General")
@@ -294,6 +300,13 @@ class MainForm(QMainWindow, MainWindow):
             self.add_element_to_addresstable(description=description, address=address, typeofaddress=typeofaddress,
                                              length=length, unicode=unicode,
                                              zero_terminate=zero_terminate)
+
+    def wikibutton_onclick(self):
+        webbrowser.open("https://github.com/korcankaraokcu/PINCE/wiki")
+
+    def aboutbutton_onclick(self):
+        self.about_widget=AboutWidgetForm()
+        self.about_widget.show()
 
     def settingsbutton_onclick(self):
         settings_dialog = SettingsDialogForm()
@@ -884,6 +897,15 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.textBrowser.append(GDB_Engine.gdb_async_output)
         self.textBrowser.verticalScrollBar().setValue(self.textBrowser.verticalScrollBar().maximum())
 
+class AboutWidgetForm(QTabWidget, AboutWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center(self)
+        license_text=open("LICENSE.md").read()
+        contributors_text=open("CONTRIBUTORS.txt").read()
+        self.textBrowser_License.setPlainText(license_text)
+        self.textBrowser_Contributors.setPlainText(contributors_text)
 
 if __name__ == "__main__":
     import sys

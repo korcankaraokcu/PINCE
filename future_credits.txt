@@ -1,3 +1,0 @@
-icons are taken from http://www.famfamfam.com
-
-linux-inject by gaffe23 - https://github.com/gaffe23/linux-inject
