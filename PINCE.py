@@ -278,12 +278,12 @@ class MainForm(QMainWindow, MainWindow):
             value_type = self.tableWidget_addresstable.item(row, TYPE_COL).text()
             table_contents_send.append([address, value_type])
         directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
-        send_file = directory_path + "/address-table-from-PINCE.txt"
-        recv_file = directory_path + "/address-table-to-PINCE.txt"
+        send_file = directory_path + "/read-list-from-PINCE.txt"
+        recv_file = directory_path + "/read-list-to-PINCE.txt"
         with lock:
             open(recv_file, "w").close()
             pickle.dump(table_contents_send, open(send_file, "wb"))
-            GDB_Engine.send_command("pince-update-address-table")
+            GDB_Engine.send_command("pince-read-multiple-addresses")
             try:
                 table_contents_recv = pickle.load(open(recv_file, "rb"))
             except EOFError:
@@ -414,9 +414,9 @@ class MainForm(QMainWindow, MainWindow):
                             GuiUtils.change_text_length(value_type, length)))
                 table_contents_send.append(value_text)
                 directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
-                send_file = directory_path + "/value-list-from-PINCE.txt"
+                send_file = directory_path + "/set-list-from-PINCE.txt"
                 pickle.dump(table_contents_send, open(send_file, "wb"))
-                GDB_Engine.send_command("pince-set-memory-cells")
+                GDB_Engine.send_command("pince-set-multiple-addresses")
                 self.update_address_table_manually()
 
         elif current_column is DESC_COL:
