@@ -21,9 +21,19 @@ COMBOBOX_FLOAT = type_defs.COMBOBOX_FLOAT
 COMBOBOX_DOUBLE = type_defs.COMBOBOX_DOUBLE
 COMBOBOX_STRING = type_defs.COMBOBOX_STRING
 COMBOBOX_AOB = type_defs.COMBOBOX_AOB
+
 INITIAL_INJECTION_PATH = type_defs.INITIAL_INJECTION_PATH
+
 INFERIOR_RUNNING = type_defs.INFERIOR_RUNNING
 INFERIOR_STOPPED = type_defs.INFERIOR_STOPPED
+
+NO_INJECTION = type_defs.NO_INJECTION
+SIMPLE_DLOPEN_CALL = type_defs.SIMPLE_DLOPEN_CALL
+LINUX_INJECT = type_defs.LINUX_INJECT
+
+INJECTION_SUCCESSFUL = type_defs.INJECTION_SUCCESSFUL
+INJECTION_FAILED = type_defs.INJECTION_FAILED
+NO_INJECTION_ATTEMPT = type_defs.NO_INJECTION_ATTEMPT
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
@@ -119,8 +129,8 @@ def continue_inferior():
 
 
 # Attaches gdb to the target pid
-# Returns False if the thread injection fails, True otherwise
-def attach(pid=str, injection_method=1):
+# Returns the status of the thread injection
+def attach(pid=str, injection_method=SIMPLE_DLOPEN_CALL):
     global currentpid
     global child
     currentpid = int(pid)
@@ -142,13 +152,13 @@ def attach(pid=str, injection_method=1):
     send_command("source gdb_python_scripts/GDBCommandExtensions.py")
     injection_path = currentdir + INITIAL_INJECTION_PATH
     if not SysUtils.is_path_valid(injection_path):
-        injection_method = -1  # no .so file found
-    if injection_method is -1:
-        codes_injected = True
-    if injection_method is 2:  # linux-inject
-        codes_injected = inject_with_linux_inject(pid)
+        injection_method = NO_INJECTION  # no .so file found
+    if injection_method is NO_INJECTION:
+        codes_injected = NO_INJECTION_ATTEMPT
+    elif injection_method is LINUX_INJECT:
+        codes_injected = inject_with_linux_inject(injection_path, pid)
     send_command("attach " + pid)
-    if injection_method is 1:  # simple dlopen call
+    if injection_method is SIMPLE_DLOPEN_CALL:
         codes_injected = inject_with_dlopen_call(injection_path)
     continue_inferior()
     return codes_injected
@@ -165,19 +175,18 @@ def detach():
     inferior_status = -1
 
 
-# Injects a thread that runs forever at the background, it'll be used to execute GDB commands on
+# Don't try to use this function after gdb is attached, try inject_with_dlopen_call instead
 # FIXME: linux-inject is insufficient for multi-threaded programs, it makes big titles such as Torchlight to segfault
-def inject_with_linux_inject(pid=str):
+def inject_with_linux_inject(library_path, pid=str):
     scriptdirectory = SysUtils.get_current_script_directory()
-    injectionpath = scriptdirectory + INITIAL_INJECTION_PATH
     if is_32bit:
-        result = pexpect.run("sudo ./inject32 -p " + pid + " " + injectionpath, cwd=scriptdirectory + "/linux-inject")
+        result = pexpect.run("sudo ./inject32 -p " + pid + " " + library_path, cwd=scriptdirectory + "/linux-inject")
     else:
-        result = pexpect.run("sudo ./inject -p " + pid + " " + injectionpath, cwd=scriptdirectory + "/linux-inject")
+        result = pexpect.run("sudo ./inject -p " + pid + " " + library_path, cwd=scriptdirectory + "/linux-inject")
     print(result)  # for debug
     if search(b"successfully injected", result):  # literal string
-        return True
-    return False
+        return INJECTION_SUCCESSFUL
+    return INJECTION_FAILED
 
 
 # variant of inject_with_linux_inject
@@ -193,18 +202,18 @@ def inject_with_dlopen_call(library_path):
             if filtered_result:
                 dlopen_return_value = split(" ", filtered_result.group(0))[-1]
                 if dlopen_return_value is "0":
-                    return False
-                return True
-            return False
-        return True
+                    return INJECTION_FAILED
+                return INJECTION_SUCCESSFUL
+            return INJECTION_FAILED
+        return INJECTION_SUCCESSFUL
     result = send_command("call __libc_dlopen_mode(" + injectionpath + ", 1)")
     filtered_result = search(r"\$\d+\s*=\s*\-*\d+", result)  # $1 = -1633996800
     if filtered_result:
         dlopen_return_value = split(" ", filtered_result.group(0))[-1]
         if dlopen_return_value is "0":
-            return False
-        return True
-    return False
+            return INJECTION_FAILED
+        return INJECTION_SUCCESSFUL
+    return INJECTION_FAILED
 
 
 # return a string corresponding to the selected index
