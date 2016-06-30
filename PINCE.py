@@ -49,6 +49,11 @@ INDEX_DOUBLE = type_defs.INDEX_DOUBLE
 INDEX_STRING = type_defs.INDEX_STRING
 INDEX_AOB = type_defs.INDEX_AOB
 
+DISAS_ADDR_COL = type_defs.DISAS_ADDR_COL
+DISAS_BYTES_COL = type_defs.DISAS_BYTES_COL
+DISAS_OPCODES_COL = type_defs.DISAS_OPCODES_COL
+DISAS_COMMENT_COL = type_defs.DISAS_COMMENT_COL
+
 INFERIOR_STOPPED = type_defs.INFERIOR_STOPPED
 INFERIOR_RUNNING = type_defs.INFERIOR_RUNNING
 
@@ -179,7 +184,6 @@ class MainForm(QMainWindow, MainWindow):
         if not SysUtils.is_path_valid(self.settings.fileName()):
             self.set_default_settings()
         self.apply_settings()
-        self.memory_view_window = MemoryViewWindowForm()
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
@@ -293,7 +297,11 @@ class MainForm(QMainWindow, MainWindow):
                                              zero_terminate=zero_terminate)
 
     def memoryview_onlick(self):
-        self.memory_view_window.show()
+        try:
+            self.memory_view_window.show()
+        except AttributeError:
+            self.memory_view_window = MemoryViewWindowForm()
+            self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
     def wikibutton_onclick(self):
@@ -919,6 +927,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center(self)
+        disas_data = GDB_Engine.disassemble("_start", "+400")
+        self.tableWidget_Disassemble.setRowCount(0)
+        self.tableWidget_Disassemble.setRowCount(len(disas_data))
+        for row, item in enumerate(disas_data):
+            self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, QTableWidgetItem(item[0]))
+            self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, QTableWidgetItem(item[1]))
+            self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, QTableWidgetItem(item[2]))
 
 
 if __name__ == "__main__":

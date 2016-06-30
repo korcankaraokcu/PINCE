@@ -30,6 +30,12 @@ INDEX_DOUBLE = 5
 INDEX_STRING = 6
 INDEX_AOB = 7  # Array of Bytes
 
+# represents the index of columns in disassemble table
+DISAS_ADDR_COL = 0
+DISAS_BYTES_COL = 1
+DISAS_OPCODES_COL = 2
+DISAS_COMMENT_COL = 3
+
 # Represents the texts at indexes in combobox
 index_to_text_dict = {
     INDEX_BYTE: "Byte",

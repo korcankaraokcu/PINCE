@@ -44,7 +44,7 @@
          <widget class="QWidget" name="widget" native="true">
           <layout class="QGridLayout" name="gridLayout_2">
            <item row="0" column="0">
-            <widget class="QTableWidget" name="tableWidget">
+            <widget class="QTableWidget" name="tableWidget_Disassemble">
              <attribute name="horizontalHeaderStretchLastSection">
               <bool>true</bool>
              </attribute>
