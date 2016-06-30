@@ -21,6 +21,7 @@ from GUI.dialogwithbuttons import Ui_Dialog as DialogWithButtons
 from GUI.settingsdialog import Ui_Dialog as SettingsDialog
 from GUI.consolewidget import Ui_Form as ConsoleWidget
 from GUI.aboutwidget import Ui_TabWidget as AboutWidget
+from GUI.memoryviewerwindow import Ui_MainWindow as MemoryViewWindow
 
 # the PID of the process we'll attach to
 currentpid = 0
@@ -178,6 +179,7 @@ class MainForm(QMainWindow, MainWindow):
         if not SysUtils.is_path_valid(self.settings.fileName()):
             self.set_default_settings()
         self.apply_settings()
+        self.memory_view_window = MemoryViewWindowForm()
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
@@ -201,6 +203,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Wiki.clicked.connect(self.wikibutton_onclick)
         self.pushButton_About.clicked.connect(self.aboutbutton_onclick)
         self.pushButton_AddAddressManually.clicked.connect(self.addaddressmanually_onclick)
+        self.pushButton_MemoryView.clicked.connect(self.memoryview_onlick)
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
         self.tableWidget_addresstable.itemDoubleClicked.connect(self.on_address_table_double_click)
@@ -288,6 +291,10 @@ class MainForm(QMainWindow, MainWindow):
             self.add_element_to_addresstable(description=description, address=address, typeofaddress=typeofaddress,
                                              length=length, unicode=unicode,
                                              zero_terminate=zero_terminate)
+
+    def memoryview_onlick(self):
+        self.memory_view_window.show()
+        self.memory_view_window.activateWindow()
 
     def wikibutton_onclick(self):
         webbrowser.open("https://github.com/korcankaraokcu/PINCE/wiki")
@@ -905,6 +912,13 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
         contributors_text = open("CONTRIBUTORS.txt").read()
         self.textBrowser_License.setPlainText(license_text)
         self.textBrowser_Contributors.setPlainText(contributors_text)
+
+
+class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center(self)
 
 
 if __name__ == "__main__":
