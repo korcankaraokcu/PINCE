@@ -358,6 +358,18 @@ def set_multiple_addresses(nested_list):
         send_command("pince-set-multiple-addresses")
 
 
+# If the second parameter is an offset, you should add "+" in front of it(e.g +42 or +0x42)
+# Return format:[[address1,bytes1,opcodes1],[address2, ...], ...]
+def disassemble(expression, offset_or_address):
+    returned_list = []
+    output = send_command("disas /r " + expression + "," + offset_or_address)
+    filtered_output = findall(r"0x[0-9a-fA-F]+.*\\t.+\\t.+\\n",
+                              output)  # 0x00007fd81d4c7400 <__printf+0>:\t48 81 ec d8 00 00 00\tsub    rsp,0xd8\n
+    for item in filtered_output:
+        returned_list.append(list(filter(None, split(r"\\t|\\n", item))))
+    return returned_list
+
+
 # Converts the given address to symbol if any symbol exists for it
 def convert_address_to_symbol(string):
     if check_for_restricted_gdb_symbols(string):
