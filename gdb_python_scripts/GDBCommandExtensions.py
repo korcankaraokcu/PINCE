@@ -33,7 +33,7 @@ class ReadMultipleAddresses(gdb.Command):
         send_file = directory_path + "/read-list-to-PINCE.txt"
         file_contents_recv = pickle.load(open(recv_file, "rb"))
 
-        # Format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
+        # file_contents_recv format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
         for item in file_contents_recv:
             address = item[0]
             index = item[1]
