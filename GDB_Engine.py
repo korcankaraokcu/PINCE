@@ -328,7 +328,7 @@ def read_value_from_single_address(address, typeofaddress, length, unicode, zero
 
 
 # Optimized version of the function read_value_from_single_address
-# Format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
+# Parameter format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
 # If any errors occurs while reading addresses, it's ignored and the belonging address is returned as null string
 # For instance: 4 addresses readed and 3rd one is problematic, the return value will be [return1,return2,"",return4]
 def read_multiple_addresses(nested_list):
@@ -348,7 +348,7 @@ def read_multiple_addresses(nested_list):
 
 
 # Optimized version of the function set_value_from_single_address
-# Format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
+# Parameter format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
 # If any errors occurs while reading addresses, it'll be ignored but the information about error will be printed to the terminal
 def set_multiple_addresses(nested_list):
     with lock_set_multiple_addresses:
