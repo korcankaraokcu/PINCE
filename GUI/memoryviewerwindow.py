@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'memoryviewerwindow.ui'
 #
-# Created: Fri Jul  1 00:58:03 2016
+# Created: Fri Jul  1 13:33:53 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -36,6 +36,10 @@ class Ui_MainWindow(object):
         self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.tableWidget_Disassemble = QtWidgets.QTableWidget(self.widget)
+        font = QtGui.QFont()
+        font.setPointSize(7)
+        self.tableWidget_Disassemble.setFont(font)
+        self.tableWidget_Disassemble.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tableWidget_Disassemble.setObjectName("tableWidget_Disassemble")
         self.tableWidget_Disassemble.setColumnCount(4)
         self.tableWidget_Disassemble.setRowCount(0)
@@ -48,6 +52,7 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_Disassemble.setHorizontalHeaderItem(3, item)
         self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_Disassemble.verticalHeader().setDefaultSectionSize(15)
         self.tableWidget_Disassemble.verticalHeader().setStretchLastSection(False)
         self.gridLayout_2.addWidget(self.tableWidget_Disassemble, 0, 0, 1, 1)
         self.widget_2 = QtWidgets.QWidget(self.splitter)

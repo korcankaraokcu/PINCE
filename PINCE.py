@@ -927,13 +927,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center(self)
-        disas_data = GDB_Engine.disassemble("_start", "+400")
+        disas_data = GDB_Engine.disassemble("_start", "+600")
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         for row, item in enumerate(disas_data):
             self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, QTableWidgetItem(item[0]))
             self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, QTableWidgetItem(item[1]))
             self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, QTableWidgetItem(item[2]))
+        self.tableWidget_Disassemble.resizeColumnsToContents()
 
 
 if __name__ == "__main__":
