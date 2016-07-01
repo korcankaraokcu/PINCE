@@ -42,6 +42,7 @@ lock_send_command = Lock()
 lock_read_multiple_addresses = Lock()
 lock_set_multiple_addresses = Lock()
 gdb_async_condition = Condition()
+status_changed_condition = Condition()
 inferior_status = -1
 gdb_output = ""
 gdb_async_output = ""
@@ -112,6 +113,8 @@ def state_observe_thread():
                 inferior_status = INFERIOR_STOPPED
             else:
                 inferior_status = INFERIOR_RUNNING
+            with status_changed_condition:
+                status_changed_condition.notify_all()
         try:
             # The command will always start with the word "source", check send_command function for the cause
             command_file = escape(SysUtils.get_gdb_command_file(currentpid))
@@ -375,10 +378,11 @@ def convert_address_to_symbol(string):
     if check_for_restricted_gdb_symbols(string):
         return string
     result = send_command("x/x " + string)
+    if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
+        return
     filteredresult = search(r"<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
     if filteredresult:
         return split(">:", filteredresult.group(0))[0].split("<")[1]
-    return string
 
 
 # Converts the given symbol to address if symbol is valid
@@ -386,6 +390,8 @@ def convert_symbol_to_address(string):
     if check_for_restricted_gdb_symbols(string):
         return string
     result = send_command("x/x " + string)
+    if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
+        return
     filteredresult = search(r"0x[0-9a-fA-F]+\s+<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
     if filteredresult:
         return split(" ", filteredresult.group(0))[0]
@@ -393,7 +399,6 @@ def convert_symbol_to_address(string):
         filteredresult = search(r"0x[0-9a-fA-F]+:\\t", result)  # 0x1f58010:\t0x00647361\n
         if filteredresult:
             return split(":", filteredresult.group(0))[0]
-    return string
 
 
 def test():

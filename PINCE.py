@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication
 from time import sleep
 from threading import Thread
+from re import search
 import os
 import webbrowser
 
@@ -115,6 +116,17 @@ class UpdateAddressTableThread(QThread):
             sleep(table_update_interval)
 
 
+class MemoryViewWindowAwaitStop(QThread):
+    process_stopped = pyqtSignal()
+
+    def run(self):
+        while True:
+            with GDB_Engine.status_changed_condition:
+                GDB_Engine.status_changed_condition.wait()
+            if GDB_Engine.inferior_status is INFERIOR_STOPPED:
+                self.process_stopped.emit()
+
+
 # A thread that updates the address table constantly
 # planned for future
 class UpdateAddressTable_planned(QThread):
@@ -184,6 +196,7 @@ class MainForm(QMainWindow, MainWindow):
         if not SysUtils.is_path_valid(self.settings.fileName()):
             self.set_default_settings()
         self.apply_settings()
+        self.memory_view_window = MemoryViewWindowForm()
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
@@ -297,11 +310,7 @@ class MainForm(QMainWindow, MainWindow):
                                              zero_terminate=zero_terminate)
 
     def memoryview_onlick(self):
-        try:
-            self.memory_view_window.show()
-        except AttributeError:
-            self.memory_view_window = MemoryViewWindowForm()
-            self.memory_view_window.show()
+        self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
     def wikibutton_onclick(self):
@@ -384,7 +393,9 @@ class MainForm(QMainWindow, MainWindow):
         typeofaddress_text = GuiUtils.valuetype_to_text(typeofaddress, length, unicode, zero_terminate)
 
         # this line lets us take symbols as parameters, pretty rad isn't it?
-        address = GDB_Engine.convert_symbol_to_address(address)
+        address_text = GDB_Engine.convert_symbol_to_address(address)
+        if address_text:
+            address = address_text
         self.tableWidget_addresstable.setRowCount(self.tableWidget_addresstable.rowCount() + 1)
         currentrow = self.tableWidget_addresstable.rowCount() - 1
         value = GDB_Engine.read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate)
@@ -438,7 +449,9 @@ class MainForm(QMainWindow, MainWindow):
                 description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
                 typeofaddress_text = GuiUtils.valuetype_to_text(index=typeofaddress, length=length, unicode=unicode,
                                                                 zero_terminate=zero_terminate)
-                address = GDB_Engine.convert_symbol_to_address(address)
+                address_text = GDB_Engine.convert_symbol_to_address(address)
+                if address_text:
+                    address = address_text
                 value = GDB_Engine.read_value_from_single_address(address=address, typeofaddress=typeofaddress,
                                                                   length=length, unicode=unicode,
                                                                   zero_terminate=zero_terminate)
@@ -927,7 +940,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center(self)
-        disas_data = GDB_Engine.disassemble("_start", "+600")
+        self.await_process_stop_thread = MemoryViewWindowAwaitStop()
+        self.await_process_stop_thread.process_stopped.connect(self.on_process_stop)
+        self.await_process_stop_thread.start()
+
+    def go_to_address(self, expression):
+        absolute_address = GDB_Engine.convert_symbol_to_address(expression)
+        if not absolute_address:
+            QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
+            return
+        disas_data = GDB_Engine.disassemble(absolute_address + "-1000", "+2000")
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         for row, item in enumerate(disas_data):
@@ -935,6 +957,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, QTableWidgetItem(item[1]))
             self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, QTableWidgetItem(item[2]))
         self.tableWidget_Disassemble.resizeColumnsToContents()
+
+    def on_process_stop(self):
+        self.go_to_address("$pc")
+        self.show()
+        self.activateWindow()
 
 
 if __name__ == "__main__":
