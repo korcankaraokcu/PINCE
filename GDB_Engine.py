@@ -345,7 +345,7 @@ def read_multiple_addresses(nested_list):
         try:
             contents_recv = pickle.load(open(recv_file, "rb"))
         except EOFError:
-            print("couldn't update the address table")
+            print("an error occurred while reading addresses")
             contents_recv = []
     return contents_recv
 
@@ -374,9 +374,11 @@ def disassemble(expression, offset_or_address):
 
 
 # Converts the given address to symbol if any symbol exists for it
-def convert_address_to_symbol(string):
-    if check_for_restricted_gdb_symbols(string):
-        return string
+# If your string contains one of the restricted symbols(such as $) pass the check parameter as False
+def convert_address_to_symbol(string, check=True):
+    if check:
+        if check_for_restricted_gdb_symbols(string):
+            return string
     result = send_command("x/x " + string)
     if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
         return
@@ -386,9 +388,11 @@ def convert_address_to_symbol(string):
 
 
 # Converts the given symbol to address if symbol is valid
-def convert_symbol_to_address(string):
-    if check_for_restricted_gdb_symbols(string):
-        return string
+# If your string contains one of the restricted symbols(such as $) pass the check parameter as False
+def convert_symbol_to_address(string, check=True):
+    if check:
+        if check_for_restricted_gdb_symbols(string):
+            return string
     result = send_command("x/x " + string)
     if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
         return
@@ -399,6 +403,32 @@ def convert_symbol_to_address(string):
         filteredresult = search(r"0x[0-9a-fA-F]+:\\t", result)  # 0x1f58010:\t0x00647361\n
         if filteredresult:
             return split(":", filteredresult.group(0))[0]
+
+
+# Parameters should be splitted by ","
+def parse_convenience_variables(variables=str):
+    variables = variables.replace(" ", "")
+    variable_list = variables.split(",")
+    directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
+    send_file = directory_path + "/variables-from-PINCE.txt"
+    recv_file = directory_path + "/variables-to-PINCE.txt"
+    with lock_read_multiple_addresses:
+        open(recv_file, "w").close()
+        pickle.dump(variable_list, open(send_file, "wb"))
+        send_command("pince-parse-convenience-variables")
+        try:
+            contents_recv = pickle.load(open(recv_file, "rb"))
+        except EOFError:
+            print("an error occurred while reading variables")
+            contents_recv = []
+    return contents_recv
+
+
+def get_current_thread_information():
+    thread_info = send_command("info threads")
+    parsed_info = search(r"\*\s+\d+\s+Thread\s+0x[0-9a-fA-F]+\s+\(LWP\s+\d+\)",
+                         thread_info).group(0)  # * 1    Thread 0x7f34730d77c0 (LWP 6189)
+    return split(r"Thread\s+", parsed_info)[-1]
 
 
 def test():

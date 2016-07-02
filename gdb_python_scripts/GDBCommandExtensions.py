@@ -105,7 +105,30 @@ class IgnoreErrors(gdb.Command):
             pass
 
 
+class ParseConvenienceVariables(gdb.Command):
+    def __init__(self):
+        super(ParseConvenienceVariables, self).__init__("pince-parse-convenience-variables", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        file_contents_send = []
+        inferior = gdb.selected_inferior()
+        pid = inferior.pid
+        directory_path = SysUtils.get_PINCE_IPC_directory(pid)
+        recv_file = directory_path + "/variables-from-PINCE.txt"
+        send_file = directory_path + "/variables-to-PINCE.txt"
+        file_contents_recv = pickle.load(open(recv_file, "rb"))
+        for item in file_contents_recv:
+            try:
+                value = gdb.parse_and_eval(item)
+                parsed_value = str(value)
+            except:
+                parsed_value = None
+            file_contents_send.append(parsed_value)
+        pickle.dump(file_contents_send, open(send_file, "wb"))
+
+
 IgnoreErrors()
 ReadMultipleAddresses()
 SetMultipleAddresses()
 ReadSingleAddress()
+ParseConvenienceVariables()

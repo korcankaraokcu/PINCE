@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'memoryviewerwindow.ui'
 #
-# Created: Fri Jul  1 13:33:53 2016
+# Created: Fri Jul  1 23:57:06 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -40,6 +40,8 @@ class Ui_MainWindow(object):
         font.setPointSize(7)
         self.tableWidget_Disassemble.setFont(font)
         self.tableWidget_Disassemble.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tableWidget_Disassemble.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.tableWidget_Disassemble.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidget_Disassemble.setObjectName("tableWidget_Disassemble")
         self.tableWidget_Disassemble.setColumnCount(4)
         self.tableWidget_Disassemble.setRowCount(0)
