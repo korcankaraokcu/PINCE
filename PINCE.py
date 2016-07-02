@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication
 from time import sleep
 from threading import Thread
-from re import search
 import os
 import webbrowser
 
@@ -950,7 +949,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.verticalScrollBar().valueChanged.connect(
             self.tableWidget_Disassemble_vertical_scroll_event)
 
-    def disassemble_expression(self, expression):
+    def disassemble_expression(self, expression, offset_minus="-100", offset_plus="+300"):
         absolute_address = GDB_Engine.convert_symbol_to_address(expression, check=False)
         if not absolute_address:
             QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
@@ -958,13 +957,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         absolute_address_int = int(absolute_address, 16)
         program_counter = GDB_Engine.convert_symbol_to_address("$pc", check=False)
         program_counter_int = int(program_counter, 16)
-        disas_data = GDB_Engine.disassemble(absolute_address + "-500", "+1000")
+        disas_data = GDB_Engine.disassemble(absolute_address + offset_minus, offset_plus)
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         for row, item in enumerate(disas_data):
-            current_address = int(search(r"0x[0-9a-fA-F]+", item[0]).group(0), 16)
+            current_address = int(GuiUtils.extract_address(item[0]), 16)
             if current_address == absolute_address_int:
-                self.currently_displayed_line = row
+                currently_displayed_line = row
             if current_address == program_counter_int:
                 item[0] = ">>>" + item[0]
             self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, QTableWidgetItem(item[0]))
@@ -972,9 +971,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, QTableWidgetItem(item[2]))
         self.tableWidget_Disassemble.resizeColumnsToContents()
         self.tableWidget_Disassemble.scrollToItem(
-            self.tableWidget_Disassemble.item(self.currently_displayed_line, DISAS_OPCODES_COL),
+            self.tableWidget_Disassemble.item(currently_displayed_line, DISAS_ADDR_COL),
             QAbstractItemView.PositionAtCenter)
-        self.tableWidget_Disassemble.selectRow(self.currently_displayed_line)
+        self.tableWidget_Disassemble.selectRow(currently_displayed_line)
 
     def on_process_stop(self):
         thread_info = GDB_Engine.get_current_thread_information()
@@ -988,14 +987,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def tableWidget_Disassemble_vertical_scroll_event(self, value):
         if value == self.tableWidget_Disassemble.verticalScrollBar().maximum():
-            last_line = self.tableWidget_Disassemble.rowCount() - 1
-            expression = self.tableWidget_Disassemble.item(last_line, DISAS_ADDR_COL).text()
-            expression = search(r"0x[0-9a-fA-F]+", expression).group(0)
-            self.disassemble_expression(expression)
+            expression = self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text()
+            expression = GuiUtils.extract_address(expression)
+            self.disassemble_expression(expression, "+20", "+300")
         if value == self.tableWidget_Disassemble.verticalScrollBar().minimum():
             expression = self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text()
-            expression = search(r"0x[0-9a-fA-F]+", expression).group(0)
-            self.disassemble_expression(expression)
+            expression = GuiUtils.extract_address(expression)
+            self.disassemble_expression(expression, "-20", "+300")
 
 
 if __name__ == "__main__":

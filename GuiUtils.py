@@ -88,3 +88,7 @@ def change_text_length(string, length):
     if index is -1:
         return sub(r"\[\d*\]", "[" + str(length) + "]", string)
     return -1
+
+
+def extract_address(string):
+    return search(r"0x[0-9a-fA-F]+", string).group(0)
