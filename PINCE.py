@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
-    QShortcut, QKeySequenceEdit, QTabWidget
+    QShortcut, QKeySequenceEdit, QTabWidget, QAbstractItemView
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication
 from time import sleep
 from threading import Thread
@@ -118,6 +118,7 @@ class UpdateAddressTableThread(QThread):
 
 class MemoryViewWindowAwaitStop(QThread):
     process_stopped = pyqtSignal()
+    process_running = pyqtSignal()
 
     def run(self):
         while True:
@@ -125,6 +126,8 @@ class MemoryViewWindowAwaitStop(QThread):
                 GDB_Engine.status_changed_condition.wait()
             if GDB_Engine.inferior_status is INFERIOR_STOPPED:
                 self.process_stopped.emit()
+            else:
+                self.process_running.emit()
 
 
 # A thread that updates the address table constantly
@@ -942,26 +945,57 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         GuiUtils.center(self)
         self.await_process_stop_thread = MemoryViewWindowAwaitStop()
         self.await_process_stop_thread.process_stopped.connect(self.on_process_stop)
+        self.await_process_stop_thread.process_running.connect(self.on_process_running)
         self.await_process_stop_thread.start()
+        self.tableWidget_Disassemble.verticalScrollBar().valueChanged.connect(
+            self.tableWidget_Disassemble_vertical_scroll_event)
 
-    def go_to_address(self, expression):
-        absolute_address = GDB_Engine.convert_symbol_to_address(expression)
+    def disassemble_expression(self, expression):
+        absolute_address = GDB_Engine.convert_symbol_to_address(expression, check=False)
         if not absolute_address:
             QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
             return
-        disas_data = GDB_Engine.disassemble(absolute_address + "-1000", "+2000")
+        absolute_address_int = int(absolute_address, 16)
+        program_counter = GDB_Engine.convert_symbol_to_address("$pc", check=False)
+        program_counter_int = int(program_counter, 16)
+        disas_data = GDB_Engine.disassemble(absolute_address + "-500", "+1000")
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         for row, item in enumerate(disas_data):
+            current_address = int(search(r"0x[0-9a-fA-F]+", item[0]).group(0), 16)
+            if current_address == absolute_address_int:
+                self.currently_displayed_line = row
+            if current_address == program_counter_int:
+                item[0] = ">>>" + item[0]
             self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, QTableWidgetItem(item[0]))
             self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, QTableWidgetItem(item[1]))
             self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, QTableWidgetItem(item[2]))
         self.tableWidget_Disassemble.resizeColumnsToContents()
+        self.tableWidget_Disassemble.scrollToItem(
+            self.tableWidget_Disassemble.item(self.currently_displayed_line, DISAS_OPCODES_COL),
+            QAbstractItemView.PositionAtCenter)
+        self.tableWidget_Disassemble.selectRow(self.currently_displayed_line)
 
     def on_process_stop(self):
-        self.go_to_address("$pc")
+        thread_info = GDB_Engine.get_current_thread_information()
+        self.setWindowTitle("Memory Viewer - Currently Debugging Thread " + thread_info)
+        self.disassemble_expression("$pc")
         self.show()
         self.activateWindow()
+
+    def on_process_running(self):
+        self.setWindowTitle("Memory Viewer - Running")
+
+    def tableWidget_Disassemble_vertical_scroll_event(self, value):
+        if value == self.tableWidget_Disassemble.verticalScrollBar().maximum():
+            last_line = self.tableWidget_Disassemble.rowCount() - 1
+            expression = self.tableWidget_Disassemble.item(last_line, DISAS_ADDR_COL).text()
+            expression = search(r"0x[0-9a-fA-F]+", expression).group(0)
+            self.disassemble_expression(expression)
+        if value == self.tableWidget_Disassemble.verticalScrollBar().minimum():
+            expression = self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text()
+            expression = search(r"0x[0-9a-fA-F]+", expression).group(0)
+            self.disassemble_expression(expression)
 
 
 if __name__ == "__main__":
