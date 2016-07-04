@@ -209,3 +209,25 @@ def parse_string(string, value_index):
         elif value_index is INDEX_8BYTES:
             string = string % 18446744073709551616
         return True, string
+
+
+def extract_address(string):
+    return search(r"0x[0-9a-fA-F]+", string).group(0)
+
+
+# Find the closest valid starting/ending address to given address, assuming given address is in the valid address range
+def find_closest_address(pid, memory_address, look_to="start"):
+    if type(pid) != int:
+        pid = int(pid)
+    if type(memory_address) != int:
+        memory_address = int(memory_address, 16)
+    region_list = get_memory_regions(pid)
+    for item in region_list:
+        splitted_address = item.addr.split("-")
+        start = int(splitted_address[0], 16)
+        end = int(splitted_address[1], 16)
+        if start <= memory_address <= end:
+            if look_to == "start":
+                return hex(start)
+            else:
+                return hex(end)
