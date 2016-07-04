@@ -362,6 +362,7 @@ def set_multiple_addresses(nested_list):
 
 
 # If the second parameter is an offset, you should add "+" in front of it(e.g +42 or +0x42)
+# IMPORTANT: Second parameter always should be bigger than the first
 # Return format:[[address1,bytes1,opcodes1],[address2, ...], ...]
 def disassemble(expression, offset_or_address):
     returned_list = []
@@ -379,7 +380,7 @@ def convert_address_to_symbol(string, check=True):
     if check:
         if check_for_restricted_gdb_symbols(string):
             return string
-    result = send_command("x/x " + string)
+    result = send_command("x/b " + string)
     if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
         return
     filteredresult = search(r"<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
@@ -389,11 +390,12 @@ def convert_address_to_symbol(string, check=True):
 
 # Converts the given symbol to address if symbol is valid
 # If your string contains one of the restricted symbols(such as $) pass the check parameter as False
+# You can also you this function to check if a memory cell is valid or not
 def convert_symbol_to_address(string, check=True):
     if check:
         if check_for_restricted_gdb_symbols(string):
             return string
-    result = send_command("x/x " + string)
+    result = send_command("x/b " + string)
     if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
         return
     filteredresult = search(r"0x[0-9a-fA-F]+\s+<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
@@ -424,11 +426,41 @@ def parse_convenience_variables(variables=str):
     return contents_recv
 
 
+# Returns address and the LWP of the current thread
 def get_current_thread_information():
     thread_info = send_command("info threads")
     parsed_info = search(r"\*\s+\d+\s+Thread\s+0x[0-9a-fA-F]+\s+\(LWP\s+\d+\)",
                          thread_info).group(0)  # * 1    Thread 0x7f34730d77c0 (LWP 6189)
     return split(r"Thread\s+", parsed_info)[-1]
+
+
+# Find address of the closest instruction next to the given address, assuming given address is valid
+# Instruction location can be "next" or "previous". Well, in fact it doesn't have to be "previous", but wouldn't it be
+# logical to call it like that? Or you could call it something like "the thing that comes before the current thingy",
+# that would be even more expository!
+def find_address_of_closest_instruction(address, how_many_instructions_to_look_for=1, instruction_location="next"):
+    if instruction_location == "next":
+        offset = "+" + str(how_many_instructions_to_look_for * 30)
+        disas_data = disassemble(address, address + offset)
+    else:
+        offset = "-" + str(how_many_instructions_to_look_for * 30)
+        disas_data = disassemble(address + offset, address)
+    if not disas_data:
+        if instruction_location == "next":
+            return
+        else:
+            start_address = SysUtils.find_closest_address(currentpid, address)
+            disas_data = disassemble(start_address, address)
+    if instruction_location == "next":
+        try:
+            return SysUtils.extract_address(disas_data[how_many_instructions_to_look_for][0])
+        except IndexError:
+            return SysUtils.find_closest_address(currentpid, address, look_to="end")
+    else:
+        try:
+            return SysUtils.extract_address(disas_data[-how_many_instructions_to_look_for][0])
+        except IndexError:
+            return start_address
 
 
 def test():

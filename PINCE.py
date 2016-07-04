@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
-    QShortcut, QKeySequenceEdit, QTabWidget, QAbstractItemView
+    QShortcut, QKeySequenceEdit, QTabWidget
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication
 from time import sleep
 from threading import Thread
@@ -33,6 +33,7 @@ table_update_interval = float
 pause_hotkey = str
 continue_hotkey = str
 initial_code_injection_method = int
+instructions_per_scroll = 2
 
 FROZEN_COL = type_defs.FROZEN_COL
 DESC_COL = type_defs.DESC_COL
@@ -949,31 +950,32 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.verticalScrollBar().valueChanged.connect(
             self.tableWidget_Disassemble_vertical_scroll_event)
 
-    def disassemble_expression(self, expression, offset_minus="-100", offset_plus="+300"):
-        absolute_address = GDB_Engine.convert_symbol_to_address(expression, check=False)
-        if not absolute_address:
+    # Select_mode can be "top" or "bottom", it represents the location of selected item
+    # offset can also be an address
+    def disassemble_expression(self, expression, offset="+300", select_mode="top"):
+        disas_data = GDB_Engine.disassemble(expression, offset)
+        if not disas_data:
             QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
             return
-        absolute_address_int = int(absolute_address, 16)
         program_counter = GDB_Engine.convert_symbol_to_address("$pc", check=False)
         program_counter_int = int(program_counter, 16)
-        disas_data = GDB_Engine.disassemble(absolute_address + offset_minus, offset_plus)
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         for row, item in enumerate(disas_data):
-            current_address = int(GuiUtils.extract_address(item[0]), 16)
-            if current_address == absolute_address_int:
-                currently_displayed_line = row
+            current_address = int(SysUtils.extract_address(item[0]), 16)
             if current_address == program_counter_int:
                 item[0] = ">>>" + item[0]
             self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, QTableWidgetItem(item[0]))
             self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, QTableWidgetItem(item[1]))
             self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, QTableWidgetItem(item[2]))
         self.tableWidget_Disassemble.resizeColumnsToContents()
-        self.tableWidget_Disassemble.scrollToItem(
-            self.tableWidget_Disassemble.item(currently_displayed_line, DISAS_ADDR_COL),
-            QAbstractItemView.PositionAtCenter)
-        self.tableWidget_Disassemble.selectRow(currently_displayed_line)
+        if select_mode == "top":
+            self.tableWidget_Disassemble.scrollToItem(self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL))
+            self.tableWidget_Disassemble.selectRow(0)
+        elif select_mode == "bottom":
+            last_item = self.tableWidget_Disassemble.rowCount() - 1
+            self.tableWidget_Disassemble.scrollToItem(self.tableWidget_Disassemble.item(last_item, DISAS_ADDR_COL))
+            self.tableWidget_Disassemble.selectRow(last_item)
 
     def on_process_stop(self):
         thread_info = GDB_Engine.get_current_thread_information()
@@ -986,14 +988,19 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.setWindowTitle("Memory Viewer - Running")
 
     def tableWidget_Disassemble_vertical_scroll_event(self, value):
-        if value == self.tableWidget_Disassemble.verticalScrollBar().maximum():
-            expression = self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text()
-            expression = GuiUtils.extract_address(expression)
-            self.disassemble_expression(expression, "+20", "+300")
         if value == self.tableWidget_Disassemble.verticalScrollBar().minimum():
-            expression = self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text()
-            expression = GuiUtils.extract_address(expression)
-            self.disassemble_expression(expression, "-20", "+300")
+            address = self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text()
+            address = hex(int(SysUtils.extract_address(address), 16))
+            address = GDB_Engine.find_address_of_closest_instruction(address, instructions_per_scroll, "previous")
+            self.disassemble_expression(address)
+        if value == self.tableWidget_Disassemble.verticalScrollBar().maximum():
+            last_item = self.tableWidget_Disassemble.rowCount() - 1
+            address = self.tableWidget_Disassemble.item(last_item, DISAS_ADDR_COL).text()
+            address = hex(int(SysUtils.extract_address(address), 16))
+            address = GDB_Engine.find_address_of_closest_instruction(address, instructions_per_scroll, "next")
+
+            # Change this line if disassemble_expression offset changes to anything other than 300
+            self.disassemble_expression(address + "-300", select_mode="bottom")
 
 
 if __name__ == "__main__":
