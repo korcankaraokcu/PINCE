@@ -2,11 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="26a0030d-f8a3-4790-bcea-d5cfde026b84" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GDB_Engine.py" afterPath="$PROJECT_DIR$/GDB_Engine.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GuiUtils.py" afterPath="$PROJECT_DIR$/GuiUtils.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GUI/settingsdialog.ui" afterPath="$PROJECT_DIR$/GUI/settingsdialog.ui" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GUI/settingsdialog.py" afterPath="$PROJECT_DIR$/GUI/settingsdialog.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PINCE.py" afterPath="$PROJECT_DIR$/PINCE.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SysUtils.py" afterPath="$PROJECT_DIR$/SysUtils.py" />
     </list>
     <ignored path="untitled.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -30,8 +28,8 @@
       <file leaf-file-name="PINCE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PINCE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.40983605">
-              <caret line="982" column="42" selection-start-line="982" selection-start-column="42" selection-end-line="982" selection-end-column="42" />
+            <state vertical-scroll-proportion="0.08852459">
+              <caret line="882" column="21" selection-start-line="882" selection-start-column="21" selection-end-line="882" selection-end-column="21" />
               <folding>
                 <element signature="e#19#88#0" expanded="true" />
               </folding>
@@ -1017,8 +1015,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PINCE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.40983605">
-          <caret line="982" column="42" selection-start-line="982" selection-start-column="42" selection-end-line="982" selection-end-column="42" />
+        <state vertical-scroll-proportion="0.08852459">
+          <caret line="882" column="21" selection-start-line="882" selection-start-column="21" selection-end-line="882" selection-end-column="21" />
           <folding>
             <element signature="e#19#88#0" expanded="true" />
           </folding>
