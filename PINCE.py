@@ -33,7 +33,7 @@ table_update_interval = float
 pause_hotkey = str
 continue_hotkey = str
 initial_code_injection_method = int
-instructions_per_scroll = 2
+instructions_per_scroll = int
 
 FROZEN_COL = type_defs.FROZEN_COL
 DESC_COL = type_defs.DESC_COL
@@ -252,6 +252,9 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.beginGroup("CodeInjection")
         self.settings.setValue("initial_code_injection_method", SIMPLE_DLOPEN_CALL)
         self.settings.endGroup()
+        self.settings.beginGroup("Disassemble")
+        self.settings.setValue("instructions_per_scroll", 2)
+        self.settings.endGroup()
 
     def apply_settings(self):
         if self.settings.value("General/always_on_top", type=bool):
@@ -264,6 +267,7 @@ class MainForm(QMainWindow, MainWindow):
         global pause_hotkey
         global continue_hotkey
         global initial_code_injection_method
+        global instructions_per_scroll
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
         table_update_interval = self.settings.value("General/address_table_update_interval", type=float)
         pause_hotkey = self.settings.value("Hotkeys/pause")
@@ -277,6 +281,7 @@ class MainForm(QMainWindow, MainWindow):
         except AttributeError:
             pass
         initial_code_injection_method = self.settings.value("CodeInjection/initial_code_injection_method", type=int)
+        instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
 
     def pause_hotkey_pressed(self):
         GDB_Engine.interrupt_inferior()
@@ -795,6 +800,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.keySequenceEdit.keySequenceChanged.connect(self.on_key_sequence_change)
         self.pushButton_ClearHotkey.clicked.connect(self.on_clear_button_pressed)
         self.pushButton_ResetSettings.clicked.connect(self.on_reset_button_pressed)
+        self.checkBox_AutoUpdateAddressTable.stateChanged.connect(self.on_checkbox_auto_update_address_table_pressed)
         self.config_gui()
 
     def accept(self):
@@ -802,6 +808,15 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             current_table_update_interval = float(self.lineEdit_UpdateInterval.text())
         except:
             QMessageBox.information(self, "Error", "Update interval must be a float")
+            return
+        try:
+            current_insturctions_shown = int(self.lineEdit_InstructionsPerScroll.text())
+        except:
+            QMessageBox.information(self, "Error", "Instruction count must be an integer")
+            return
+        if current_insturctions_shown < 1:
+            QMessageBox.information(self, "Error", "Instruction count cannot be lower than 1" +
+                                    "\nIt would be retarded anyways, wouldn't it?")
             return
         if current_table_update_interval < 0:
             QMessageBox.information(self, "Error", "Update interval cannot be a negative number")
@@ -826,6 +841,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         elif self.radioButton_LinuxInject.isChecked():
             injection_method = LINUX_INJECT
         self.settings.setValue("CodeInjection/initial_code_injection_method", injection_method)
+        self.settings.setValue("Disassemble/instructions_per_scroll", current_insturctions_shown)
         super(SettingsDialogForm, self).accept()
 
     def config_gui(self):
@@ -847,6 +863,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.radioButton_SimpleDLopenCall.setChecked(True)
         elif injection_method == LINUX_INJECT:
             self.radioButton_LinuxInject.setChecked(True)
+        self.lineEdit_InstructionsPerScroll.setText(
+            str(self.settings.value("Disassemble/instructions_per_scroll", type=int)))
 
     def change_display(self, index):
         self.stackedWidget.setCurrentIndex(index)
@@ -874,6 +892,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         else:
             return
         self.config_gui()
+
+    def on_checkbox_auto_update_address_table_pressed(self):
+        if self.checkBox_AutoUpdateAddressTable.isChecked():
+            self.QWidget_UpdateInterval.setEnabled(True)
+        else:
+            self.QWidget_UpdateInterval.setEnabled(False)
 
 
 class ConsoleWidgetForm(QWidget, ConsoleWidget):
