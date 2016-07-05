@@ -435,6 +435,7 @@ def get_current_thread_information():
 
 
 # Find address of the closest instruction next to the given address, assuming given address is valid
+# If starting/ending of a valid memory range is reached, starting/ending address is returned instead
 # Instruction location can be "next" or "previous". Well, in fact it doesn't have to be "previous", but wouldn't it be
 # logical to call it like that? Or you could call it something like "the thing that comes before the current thingy",
 # that would be even more expository!
@@ -446,9 +447,7 @@ def find_address_of_closest_instruction(address, how_many_instructions_to_look_f
         offset = "-" + str(how_many_instructions_to_look_for * 30)
         disas_data = disassemble(address + offset, address)
     if not disas_data:
-        if instruction_location == "next":
-            return
-        else:
+        if instruction_location != "next":
             start_address = SysUtils.find_closest_address(currentpid, address)
             disas_data = disassemble(start_address, address)
     if instruction_location == "next":
@@ -460,7 +459,10 @@ def find_address_of_closest_instruction(address, how_many_instructions_to_look_f
         try:
             return SysUtils.extract_address(disas_data[-how_many_instructions_to_look_for][0])
         except IndexError:
-            return start_address
+            try:
+                return start_address
+            except UnboundLocalError:
+                return SysUtils.find_closest_address(currentpid, address)
 
 
 def test():
