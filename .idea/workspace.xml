@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="26a0030d-f8a3-4790-bcea-d5cfde026b84" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PINCE.py" afterPath="$PROJECT_DIR$/PINCE.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SysUtils.py" afterPath="$PROJECT_DIR$/SysUtils.py" />
     </list>
     <ignored path="untitled.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -27,8 +27,8 @@
       <file leaf-file-name="PINCE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PINCE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.58196723">
-              <caret line="1032" column="43" selection-start-line="1032" selection-start-column="43" selection-end-line="1032" selection-end-column="43" />
+            <state vertical-scroll-proportion="0.48360655">
+              <caret line="1053" column="50" selection-start-line="1053" selection-start-column="50" selection-end-line="1053" selection-end-column="50" />
               <folding>
                 <element signature="e#19#88#0" expanded="true" />
               </folding>
@@ -151,8 +151,8 @@
         <option value="$PROJECT_DIR$/type_defs.py" />
         <option value="$PROJECT_DIR$/GuiUtils.py" />
         <option value="$PROJECT_DIR$/GDB_Engine.py" />
-        <option value="$PROJECT_DIR$/PINCE.py" />
         <option value="$PROJECT_DIR$/SysUtils.py" />
+        <option value="$PROJECT_DIR$/PINCE.py" />
       </list>
     </option>
   </component>
@@ -1014,8 +1014,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PINCE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.58196723">
-          <caret line="1032" column="43" selection-start-line="1032" selection-start-column="43" selection-end-line="1032" selection-end-column="43" />
+        <state vertical-scroll-proportion="0.48360655">
+          <caret line="1053" column="50" selection-start-line="1053" selection-start-column="50" selection-end-line="1053" selection-end-column="50" />
           <folding>
             <element signature="e#19#88#0" expanded="true" />
           </folding>

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
-    QShortcut, QKeySequenceEdit, QTabWidget
+    QShortcut, QKeySequenceEdit, QTabWidget, QMenu
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication
 from time import sleep
 from threading import Thread
@@ -972,7 +972,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.await_process_stop_thread.process_running.connect(self.on_process_running)
         self.await_process_stop_thread.start()
         self.widget_Disassemble.wheelEvent = self.tableWidget_Disassemble_wheel_event
+        self.tableWidget_Disassemble.travel_history = []
         self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
+        self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
 
     # Select_mode can be "top" or "bottom", it represents the location of selected item
     # offset can also be an address
@@ -1034,7 +1036,36 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.tableWidget_Disassemble.item(selected_rows[-1].row(), DISAS_OPCODES_COL).text(),
                 search_for_location_changing_instructions=True)
             if address:
+                current_address = SysUtils.extract_address(
+                    self.tableWidget_Disassemble.item(selected_rows[-1].row(), DISAS_ADDR_COL).text())
+                self.tableWidget_Disassemble.travel_history.append(current_address)
                 self.disassemble_expression(address)
+
+    def tableWidget_Disassemble_context_menu_event(self, event):
+        menu = QMenu()
+        go_to = menu.addAction("Go to expression")
+        back = menu.addAction("Back")
+        bookmark = menu.addAction("Bookmark")
+        menu.setStyleSheet("font-size: 7pt;")
+        action = menu.exec_(event.globalPos())
+        selected_rows = self.tableWidget_Disassemble.selectionModel().selectedRows()
+        if action == go_to:
+            current_address = SysUtils.extract_address(
+                self.tableWidget_Disassemble.item(selected_rows[-1].row(), DISAS_ADDR_COL).text())
+            go_to_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False,
+                                                 line_edit_text=current_address)
+            if go_to_dialog.exec_():
+                self.tableWidget_Disassemble.travel_history.append(current_address)
+                traveled_exp = go_to_dialog.get_values()
+                self.disassemble_expression(traveled_exp)
+        elif action == back:
+            try:
+                last_location = self.tableWidget_Disassemble.travel_history.pop()
+            except IndexError:
+                return
+            self.disassemble_expression(last_location)
+        elif action == bookmark:
+            pass
 
 
 if __name__ == "__main__":
