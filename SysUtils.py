@@ -211,8 +211,16 @@ def parse_string(string, value_index):
         return True, string
 
 
-def extract_address(string):
-    return search(r"0x[0-9a-fA-F]+", string).group(0)
+def extract_address(string, search_for_location_changing_instructions=False):
+    if search_for_location_changing_instructions:
+        result = search(r"(j|call|loop).*\s+0x[0-9a-fA-F]+", string)
+        if result:
+            result = result.group(0).split()[-1]
+            return result
+    else:
+        result = search(r"0x[0-9a-fA-F]+", string)
+        if result:
+            return result.group(0)
 
 
 # Find the closest valid starting/ending address to given address, assuming given address is in the valid address range
