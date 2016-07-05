@@ -15,7 +15,8 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
   * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables **[Postponed\Quarterway Done]**
   * *Postpone reason:* These two features requires thread injection to the target or gdb and PINCE's injection methods are not perfect yet, I've already spent more(read:WAY MORE) time than I should on this, these features are not vital for now, also you have got the options to manually update the table and set the value manually already
 - **Disassemble** **[Working on it]**
-  * **Smart Scrolling:** When mouse wheeled, if scrollbar has reached it's maximum or minimum value, MemoryView screen automatically disassembles the next available instruction(s). Instruction count can be changed from settings **[Done]**
+  * **Smart Scrolling:** When mouse wheeled, if scrollbar has reached it's maximum or minimum value, PINCE automatically disassembles the next available instruction(s). Instruction count can be changed from settings **[Done]**
+  * **Smart Following:** If you press [space], PINCE automatically analyzes the selected instruction and if any location changing instruction is found, PINCE disassembles the address that's pointed by the instruction **[Done]**
 - **Debugging** **[Working on it]**
   * Can interrupt and continue the inferior, Check wiki for instructions
 - **Code Injection** **[Done?]**
