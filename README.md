@@ -17,6 +17,7 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
 - **Disassemble** **[Working on it]**
   * **Smart Scrolling:** When mouse wheeled, if scrollbar has reached it's maximum or minimum value, PINCE automatically disassembles the next available instruction(s). Instruction count can be changed from settings **[Done]**
   * **Smart Following:** If you press [space], PINCE automatically analyzes the selected instruction and if any location changing instruction is found, PINCE disassembles the address that's pointed by the instruction **[Done]**
+  * **Travel History:** PINCE records your previous location when you jump to an address explicitly(e.g by pressing [space] or using "Go to expression" etc.). Right click->Back to go back to your previous location(s) **[Done]**
 - **Debugging** **[Working on it]**
   * Can interrupt and continue the inferior, Check wiki for instructions
 - **Code Injection** **[Done?]**
