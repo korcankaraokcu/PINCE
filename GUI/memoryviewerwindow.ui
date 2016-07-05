@@ -41,7 +41,7 @@
          <property name="handleWidth">
           <number>10</number>
          </property>
-         <widget class="QWidget" name="widget" native="true">
+         <widget class="QWidget" name="widget_Disassemble" native="true">
           <layout class="QGridLayout" name="gridLayout_2">
            <item row="0" column="0">
             <widget class="QTableWidget" name="tableWidget_Disassemble">
@@ -92,7 +92,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="widget_2" native="true">
+         <widget class="QWidget" name="widget_Registers" native="true">
           <layout class="QGridLayout" name="gridLayout_4">
            <item row="0" column="0">
             <widget class="QLabel" name="label_3">
@@ -111,7 +111,7 @@
          <property name="handleWidth">
           <number>10</number>
          </property>
-         <widget class="QWidget" name="widget_3" native="true">
+         <widget class="QWidget" name="widget_HexView" native="true">
           <layout class="QGridLayout" name="gridLayout">
            <item row="0" column="0">
             <widget class="QLabel" name="label">
@@ -122,7 +122,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="widget_4" native="true">
+         <widget class="QWidget" name="widget_StackView" native="true">
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="0" column="0">
             <widget class="QLabel" name="label_2">
