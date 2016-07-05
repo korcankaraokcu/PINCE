@@ -972,6 +972,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.await_process_stop_thread.process_running.connect(self.on_process_running)
         self.await_process_stop_thread.start()
         self.widget_Disassemble.wheelEvent = self.tableWidget_Disassemble_wheel_event
+        self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
 
     # Select_mode can be "top" or "bottom", it represents the location of selected item
     # offset can also be an address
@@ -1025,6 +1026,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
             # Change this line if disassemble_expression offset changes to anything other than 300
             self.disassemble_expression(address + "-300", select_mode="bottom")
+
+    def tableWidget_Disassemble_key_press_event(self, event):
+        if event.key() == Qt.Key_Space:
+            selected_rows = self.tableWidget_Disassemble.selectionModel().selectedRows()
+            address = SysUtils.extract_address(
+                self.tableWidget_Disassemble.item(selected_rows[-1].row(), DISAS_OPCODES_COL).text(),
+                search_for_location_changing_instructions=True)
+            if address:
+                self.disassemble_expression(address)
 
 
 if __name__ == "__main__":
