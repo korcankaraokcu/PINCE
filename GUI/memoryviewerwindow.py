@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'memoryviewerwindow.ui'
 #
-# Created: Tue Jul  5 14:22:41 2016
+# Created: Tue Jul  5 20:09:47 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -91,10 +91,16 @@ class Ui_MainWindow(object):
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
         self.menubar.setObjectName("menubar")
+        self.menuView = QtWidgets.QMenu(self.menubar)
+        self.menuView.setObjectName("menuView")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+        self.actionBookmarks = QtWidgets.QAction(MainWindow)
+        self.actionBookmarks.setObjectName("actionBookmarks")
+        self.menuView.addAction(self.actionBookmarks)
+        self.menubar.addAction(self.menuView.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -113,4 +119,6 @@ class Ui_MainWindow(object):
         self.label_3.setText(_translate("MainWindow", "Reserved for Registers"))
         self.label.setText(_translate("MainWindow", "Reserved for Hexview"))
         self.label_2.setText(_translate("MainWindow", "Reserved for StackView"))
+        self.menuView.setTitle(_translate("MainWindow", "View"))
+        self.actionBookmarks.setText(_translate("MainWindow", "Bookmarks"))
 

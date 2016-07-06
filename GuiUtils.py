@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from PyQt5.QtWidgets import QDesktopWidget
-from re import search, sub
+from re import search, match, sub
 import type_defs
 
 INDEX_BYTE = type_defs.INDEX_BYTE
@@ -88,3 +88,11 @@ def change_text_length(string, length):
     if index is -1:
         return sub(r"\[\d*\]", "[" + str(length) + "]", string)
     return -1
+
+
+def check_for_bookmark_mark(string):
+    return match(r"\(M\)", string)
+
+
+def remove_bookmark_mark(string):
+    return sub(r"\(M\)", "", string, count=1)
