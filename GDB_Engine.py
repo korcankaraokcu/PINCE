@@ -185,10 +185,7 @@ def detach():
 # FIXME: linux-inject is insufficient for multi-threaded programs, it makes big titles such as Torchlight to segfault
 def inject_with_linux_inject(library_path, pid=str):
     scriptdirectory = SysUtils.get_current_script_directory()
-    if is_32bit:
-        result = pexpect.run("sudo ./inject32 -p " + pid + " " + library_path, cwd=scriptdirectory + "/linux-inject")
-    else:
-        result = pexpect.run("sudo ./inject -p " + pid + " " + library_path, cwd=scriptdirectory + "/linux-inject")
+    result = pexpect.run("sudo ./inject -p " + pid + " " + library_path, cwd=scriptdirectory + "/linux-inject")
     print(result)  # for debug
     if search(b"successfully injected", result):  # literal string
         return INJECTION_SUCCESSFUL
@@ -247,9 +244,10 @@ def check_for_restricted_gdb_symbols(string):
 # length parameter only gets passed when reading strings or array of bytes
 # unicode and zero_terminate parameters are only for strings
 # if you just want to get the value of an address, use the function read_value_from_single_address() instead
-def read_single_address(address, typeofaddress, length=None, is_unicode=False, zero_terminate=True):
-    if check_for_restricted_gdb_symbols(address):
-        return "??"
+def read_single_address(address, typeofaddress, length=None, is_unicode=False, zero_terminate=True, check=True):
+    if check:
+        if check_for_restricted_gdb_symbols(address):
+            return "??"
     if length is "":
         return "??"
     if typeofaddress is INDEX_AOB:
@@ -463,6 +461,15 @@ def find_address_of_closest_instruction(address, how_many_instructions_to_look_f
                 return start_address
             except UnboundLocalError:
                 return SysUtils.find_closest_address(currentpid, address)
+
+
+# Simply parses the output of gdb command "info symbol"
+def get_info_about_address(address):
+    info = send_command("info symbol " + address)
+    result = search(r"~\".*\\n\"", info).group(0)  # ~"result\n"
+    result = split(r'\"', result)[1]  # result\n"
+    result = split(r"\\", result)[0]  # result
+    return result
 
 
 def test():

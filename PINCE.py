@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence
+from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication
@@ -22,10 +22,16 @@ from GUI.settingsdialog import Ui_Dialog as SettingsDialog
 from GUI.consolewidget import Ui_Form as ConsoleWidget
 from GUI.aboutwidget import Ui_TabWidget as AboutWidget
 from GUI.memoryviewerwindow import Ui_MainWindow as MemoryViewWindow
+from GUI.bookmarkwidget import Ui_Form as BookmarkWidget
 
 # the PID of the process we'll attach to
 currentpid = 0
 selfpid = os.getpid()
+
+# row colours for disassemble qtablewidget
+pc_colour = Qt.blue
+bookmark_colour = Qt.yellow
+default_colour = Qt.white
 
 # settings
 update_table = bool
@@ -973,8 +979,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.await_process_stop_thread.start()
         self.widget_Disassemble.wheelEvent = self.tableWidget_Disassemble_wheel_event
         self.tableWidget_Disassemble.travel_history = []
+        self.tableWidget_Disassemble.bookmarks = []
         self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
         self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
+        self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
 
     # Select_mode can be "top" or "bottom", it represents the location of selected item
     # offset can also be an address
@@ -985,15 +993,27 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         program_counter = GDB_Engine.convert_symbol_to_address("$pc", check=False)
         program_counter_int = int(program_counter, 16)
+        row_of_pc = False
+        bookmark_list = []
+        for item in self.tableWidget_Disassemble.bookmarks:
+            bookmark_list.append(int(SysUtils.extract_address(item), 16))
+        rows_of_encountered_bookmarks_list = []
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         for row, item in enumerate(disas_data):
             current_address = int(SysUtils.extract_address(item[0]), 16)
             if current_address == program_counter_int:
                 item[0] = ">>>" + item[0]
+                row_of_pc = row
+            for bookmark_item in bookmark_list:
+                if current_address == bookmark_item:
+                    rows_of_encountered_bookmarks_list.append(row)
+                    item[0] = "(M)" + item[0]
             self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, QTableWidgetItem(item[0]))
             self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, QTableWidgetItem(item[1]))
             self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, QTableWidgetItem(item[2]))
+            self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, QTableWidgetItem(""))  # will be implemented
+        self.handle_colours(row_of_pc, rows_of_encountered_bookmarks_list)
         self.tableWidget_Disassemble.resizeColumnsToContents()
         if select_mode == "top":
             self.tableWidget_Disassemble.scrollToItem(self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL))
@@ -1002,6 +1022,19 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             last_item = self.tableWidget_Disassemble.rowCount() - 1
             self.tableWidget_Disassemble.scrollToItem(self.tableWidget_Disassemble.item(last_item, DISAS_ADDR_COL))
             self.tableWidget_Disassemble.selectRow(last_item)
+
+    # Set colour of a row if a specific address is encountered(e.g $pc, a bookmarked address etc.)
+    def handle_colours(self, row_of_pc, encountered_bookmark_list):
+        if row_of_pc:
+            self.set_row_colour(row_of_pc, pc_colour)
+        if encountered_bookmark_list:
+            for encountered_row in encountered_bookmark_list:
+                self.set_row_colour(encountered_row, bookmark_colour)
+
+    # color parameter should be Qt.colour
+    def set_row_colour(self, row, colour):
+        for item in range(self.tableWidget_Disassemble.columnCount()):
+            self.tableWidget_Disassemble.item(row, item).setData(Qt.BackgroundColorRole, QColor(colour))
 
     def on_process_stop(self):
         thread_info = GDB_Engine.get_current_thread_information()
@@ -1030,42 +1063,117 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.disassemble_expression(address + "-300", select_mode="bottom")
 
     def tableWidget_Disassemble_key_press_event(self, event):
+        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         if event.key() == Qt.Key_Space:
-            selected_rows = self.tableWidget_Disassemble.selectionModel().selectedRows()
-            address = SysUtils.extract_address(
-                self.tableWidget_Disassemble.item(selected_rows[-1].row(), DISAS_OPCODES_COL).text(),
-                search_for_location_changing_instructions=True)
-            if address:
-                current_address = SysUtils.extract_address(
-                    self.tableWidget_Disassemble.item(selected_rows[-1].row(), DISAS_ADDR_COL).text())
-                self.tableWidget_Disassemble.travel_history.append(current_address)
-                self.disassemble_expression(address)
+            self.follow_instruction(selected_row)
+        elif event.key() == Qt.Key_B:
+            self.bookmark_address(selected_row, current_address_text)
+
+    # Search the item in given row for location changing instructions
+    # Go to the address pointed by that instruction if it contains any
+    def follow_instruction(self, selected_row):
+        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+        address = SysUtils.extract_address(
+            self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text(),
+            search_for_location_changing_instructions=True)
+        if address:
+            self.tableWidget_Disassemble.travel_history.append(current_address)
+            self.disassemble_expression(address)
 
     def tableWidget_Disassemble_context_menu_event(self, event):
+        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
         menu = QMenu()
         go_to = menu.addAction("Go to expression")
         back = menu.addAction("Back")
-        bookmark = menu.addAction("Bookmark")
+        followable = SysUtils.extract_address(
+            self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text(),
+            search_for_location_changing_instructions=True)
+        if followable:
+            follow = menu.addAction("Follow[Space]")
+        else:
+            follow = -1
+        has_mark = GuiUtils.check_for_bookmark_mark(current_address_text)
+        if not has_mark:
+            bookmark = menu.addAction("Bookmark this address[B]")
+            delete_bookmark = -1
+        else:
+            bookmark = -1
+            delete_bookmark = menu.addAction("Delete this bookmark")
+        go_to_bookmark = menu.addMenu("Go to bookmarked address")
+        bookmark_action_list = []
+        for item in self.tableWidget_Disassemble.bookmarks:
+            bookmark_action_list.append(go_to_bookmark.addAction(item))
+        menu.addSeparator()
         menu.setStyleSheet("font-size: 7pt;")
         action = menu.exec_(event.globalPos())
-        selected_rows = self.tableWidget_Disassemble.selectionModel().selectedRows()
         if action == go_to:
-            current_address = SysUtils.extract_address(
-                self.tableWidget_Disassemble.item(selected_rows[-1].row(), DISAS_ADDR_COL).text())
             go_to_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False,
                                                  line_edit_text=current_address)
             if go_to_dialog.exec_():
-                self.tableWidget_Disassemble.travel_history.append(current_address)
                 traveled_exp = go_to_dialog.get_values()
                 self.disassemble_expression(traveled_exp)
+                self.tableWidget_Disassemble.travel_history.append(current_address)
         elif action == back:
-            try:
-                last_location = self.tableWidget_Disassemble.travel_history.pop()
-            except IndexError:
-                return
-            self.disassemble_expression(last_location)
+            if self.tableWidget_Disassemble.travel_history:
+                last_location = self.tableWidget_Disassemble.travel_history[-1]
+                self.disassemble_expression(last_location)
+                self.tableWidget_Disassemble.travel_history.pop()
+        elif action == follow:
+            self.follow_instruction(selected_row)
         elif action == bookmark:
-            pass
+            self.bookmark_address(selected_row, current_address_text)
+        elif action == delete_bookmark:
+            self.delete_bookmark(selected_row, current_address_text)
+        for item in bookmark_action_list:
+            if action == item:
+                self.disassemble_expression(SysUtils.extract_address(action.text()))
+                self.tableWidget_Disassemble.travel_history.append(current_address)
+
+    def bookmark_address(self, selected_row, string):
+        if GuiUtils.check_for_bookmark_mark(string):
+            QMessageBox.information(self, "Error", "This address has already been bookmarked")
+            return
+        self.tableWidget_Disassemble.bookmarks.append(string)
+        current_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        self.tableWidget_Disassemble.setItem(selected_row, DISAS_ADDR_COL, QTableWidgetItem("(M)" + current_text))
+        self.set_row_colour(selected_row, bookmark_colour)
+
+    def delete_bookmark(self, selected_row, string):
+        if GuiUtils.check_for_bookmark_mark(string):
+            string = GuiUtils.remove_bookmark_mark(string)
+            self.tableWidget_Disassemble.bookmarks.remove(string)
+            self.tableWidget_Disassemble.setItem(selected_row, DISAS_ADDR_COL, QTableWidgetItem(string))
+            self.set_row_colour(selected_row, default_colour)
+
+    def on_ViewBookmarks_triggered(self):
+        self.bookmark_widget = BookmarkWidgetForm(self)
+        self.bookmark_widget.show()
+
+
+class BookmarkWidgetForm(QWidget, BookmarkWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center(self)
+        self.setWindowFlags(Qt.Window)
+        self.listWidget.addItems(self.parent().tableWidget_Disassemble.bookmarks)
+        self.listWidget.currentRowChanged.connect(self.change_display)
+        self.listWidget.itemDoubleClicked.connect(self.on_item_double_clicked)
+
+    def change_display(self):
+        current_address = SysUtils.extract_address(self.listWidget.currentItem().text())
+        self.lineEdit.setText(GDB_Engine.get_info_about_address(current_address))
+
+    def on_item_double_clicked(self, item):
+        selected_row = self.parent().tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        current_address_text = self.parent().tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+        self.parent().disassemble_expression(SysUtils.extract_address(item.text()))
+        self.parent().tableWidget_Disassemble.travel_history.append(current_address)
 
 
 if __name__ == "__main__":
