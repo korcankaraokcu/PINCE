@@ -18,6 +18,7 @@ PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt
   * **Smart Scrolling:** When mouse wheeled, if scrollbar has reached it's maximum or minimum value, PINCE automatically disassembles the next available instruction(s). Instruction count can be changed from settings **[Done]**
   * **Smart Following:** If you press [space], PINCE automatically analyzes the selected instruction and if any location changing instruction is found, PINCE disassembles the address that's pointed by the instruction **[Done]**
   * **Travel History:** PINCE records your previous location when you jump to an address explicitly(e.g by pressing [space] or using "Go to expression" etc.). Right click->Back to go back to your previous location(s) **[Done]**
+  * **Bookmarking:** Bookmark menu is dynamically created when right clicked in the disassemble screen. So unlike Cheat Engine, PINCE lets you set unlimited number of bookmarks. List of bookmarks can also be viewed from View->Bookmarks in the MemoryView window **[Done]**
 - **Debugging** **[Working on it]**
   * Can interrupt and continue the inferior, Check wiki for instructions
 - **Code Injection** **[Done?]**
@@ -62,7 +63,7 @@ sudo cp libcc1.so.0.0.0 libcc1.so
 ```
 #####Relocating PINCE files  
 Create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
-Then ```cd``` to PINCE/linux-inject directory and simply run ```make```  
+Then ```cd``` to PINCE/linux-inject directory and simply run ```make```(IMPORTANT: If you have a 32bit linux distro, run ```make x86``` instead)  
 Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```  
 
 ###For developers:  
@@ -91,7 +92,7 @@ GPLv3
 
 #Supported platforms
 - **Platforms tested so far:**
-  * Kubuntu 14.04 & 16.04
+  * Kubuntu 14.04 & 16.04(Also tested on x86 variants)
   * Archlinux
 - **Games&Applications tested so far:**
   * KMines
