@@ -261,6 +261,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.beginGroup("Disassemble")
         self.settings.setValue("instructions_per_scroll", 2)
         self.settings.endGroup()
+        self.apply_settings()
 
     def apply_settings(self):
         if self.settings.value("General/always_on_top", type=bool):
