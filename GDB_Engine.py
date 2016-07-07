@@ -348,7 +348,7 @@ def read_multiple_addresses(nested_list):
 
 
 # Optimized version of the function set_value_from_single_address
-# Parameter format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
+# Parameter format: [[address1, index1],[address2, index2], ..., value]
 # If any errors occurs while reading addresses, it'll be ignored but the information about error will be printed to the terminal
 def set_multiple_addresses(nested_list):
     with lock_set_multiple_addresses:

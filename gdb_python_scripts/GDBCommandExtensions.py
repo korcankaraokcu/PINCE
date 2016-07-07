@@ -55,10 +55,11 @@ class SetMultipleAddresses(gdb.Command):
         directory_path = SysUtils.get_PINCE_IPC_directory(pid)
         recv_file = directory_path + "/set-list-from-PINCE.txt"
         file_contents_recv = pickle.load(open(recv_file, "rb"))
-        value = file_contents_recv[-1]
-        file_contents_recv.pop()
 
-        # file_contents_recv format: [[address1, index1, value1],[address2, ...], ...]
+        # last item of file_contents_recv is always value, so we pop it from the list first
+        value = file_contents_recv.pop()
+
+        # file_contents_recv format after popping the value: [[address1, index1],[address2, index2], ...]
         for item in file_contents_recv:
             address = item[0]
             index = item[1]
