@@ -120,7 +120,6 @@ def state_observe_thread():
             command_file = escape(SysUtils.get_gdb_command_file(currentpid))
             gdb_output = split(r"&\"source\s" + command_file + r"\\n\"", child.before, 1)[1]  # &"command\n"
         except:
-            gdb_output = ""
             with gdb_async_condition:
                 gdb_async_output = child.before
                 gdb_async_condition.notify_all()
