@@ -987,7 +987,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     # Select_mode can be "top" or "bottom", it represents the location of selected item
     # offset can also be an address
-    def disassemble_expression(self, expression, offset="+300", select_mode="top"):
+    def disassemble_expression(self, expression, offset="+300", select_mode="top", append_to_travel_history=False):
         disas_data = GDB_Engine.disassemble(expression, offset)
         if not disas_data:
             QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
@@ -999,6 +999,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         for item in self.tableWidget_Disassemble.bookmarks:
             bookmark_list.append(int(SysUtils.extract_address(item), 16))
         rows_of_encountered_bookmarks_list = []
+
+        # We won't append it to travel_history yet, see the reasoning at below
+        if append_to_travel_history:
+            selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+            travel_history_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+            travel_history_address = SysUtils.extract_address(travel_history_address_text)
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         for row, item in enumerate(disas_data):
@@ -1023,6 +1029,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             last_item = self.tableWidget_Disassemble.rowCount() - 1
             self.tableWidget_Disassemble.scrollToItem(self.tableWidget_Disassemble.item(last_item, DISAS_ADDR_COL))
             self.tableWidget_Disassemble.selectRow(last_item)
+
+        # We append the old record to travel history as last action because we wouldn't like to see unnecessary
+        # addresses in travel history if any error occurs while displaying the next location
+        if append_to_travel_history:
+            self.tableWidget_Disassemble.travel_history.append(travel_history_address)
 
     # Set colour of a row if a specific address is encountered(e.g $pc, a bookmarked address etc.)
     def handle_colours(self, row_of_pc, encountered_bookmark_list):
@@ -1074,14 +1085,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     # Search the item in given row for location changing instructions
     # Go to the address pointed by that instruction if it contains any
     def follow_instruction(self, selected_row):
-        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
         address = SysUtils.extract_address(
             self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text(),
             search_for_location_changing_instructions=True)
         if address:
-            self.tableWidget_Disassemble.travel_history.append(current_address)
-            self.disassemble_expression(address)
+            self.disassemble_expression(address, append_to_travel_history=True)
 
     def tableWidget_Disassemble_context_menu_event(self, event):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
@@ -1116,8 +1124,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                                                  line_edit_text=current_address)
             if go_to_dialog.exec_():
                 traveled_exp = go_to_dialog.get_values()
-                self.disassemble_expression(traveled_exp)
-                self.tableWidget_Disassemble.travel_history.append(current_address)
+                self.disassemble_expression(traveled_exp, append_to_travel_history=True)
         elif action == back:
             if self.tableWidget_Disassemble.travel_history:
                 last_location = self.tableWidget_Disassemble.travel_history[-1]
@@ -1131,8 +1138,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.delete_bookmark(selected_row, current_address_text)
         for item in bookmark_action_list:
             if action == item:
-                self.disassemble_expression(SysUtils.extract_address(action.text()))
-                self.tableWidget_Disassemble.travel_history.append(current_address)
+                self.disassemble_expression(SysUtils.extract_address(action.text()), append_to_travel_history=True)
 
     def bookmark_address(self, selected_row, string):
         if GuiUtils.check_for_bookmark_mark(string):
@@ -1170,11 +1176,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.lineEdit.setText(GDB_Engine.get_info_about_address(current_address))
 
     def on_item_double_clicked(self, item):
-        selected_row = self.parent().tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
-        current_address_text = self.parent().tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
-        self.parent().disassemble_expression(SysUtils.extract_address(item.text()))
-        self.parent().tableWidget_Disassemble.travel_history.append(current_address)
+        self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
 
 
 if __name__ == "__main__":
