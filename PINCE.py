@@ -28,11 +28,6 @@ from GUI.bookmarkwidget import Ui_Form as BookmarkWidget
 currentpid = 0
 selfpid = os.getpid()
 
-# row colours for disassemble qtablewidget
-pc_colour = Qt.blue
-bookmark_colour = Qt.yellow
-default_colour = Qt.white
-
 # settings
 update_table = bool
 table_update_interval = float
@@ -40,6 +35,11 @@ pause_hotkey = str
 continue_hotkey = str
 initial_code_injection_method = int
 instructions_per_scroll = int
+
+# row colours for disassemble qtablewidget
+PC_COLOUR = Qt.blue
+BOOKMARK_COLOUR = Qt.yellow
+DEFAULT_COLOUR = Qt.white
 
 FROZEN_COL = type_defs.FROZEN_COL
 DESC_COL = type_defs.DESC_COL
@@ -1038,10 +1038,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     # Set colour of a row if a specific address is encountered(e.g $pc, a bookmarked address etc.)
     def handle_colours(self, row_of_pc, encountered_bookmark_list):
         if row_of_pc:
-            self.set_row_colour(row_of_pc, pc_colour)
+            self.set_row_colour(row_of_pc, PC_COLOUR)
         if encountered_bookmark_list:
             for encountered_row in encountered_bookmark_list:
-                self.set_row_colour(encountered_row, bookmark_colour)
+                self.set_row_colour(encountered_row, BOOKMARK_COLOUR)
 
     # color parameter should be Qt.colour
     def set_row_colour(self, row, colour):
@@ -1147,14 +1147,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.bookmarks.append(string)
         current_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         self.tableWidget_Disassemble.setItem(selected_row, DISAS_ADDR_COL, QTableWidgetItem("(M)" + current_text))
-        self.set_row_colour(selected_row, bookmark_colour)
+        self.set_row_colour(selected_row, BOOKMARK_COLOUR)
 
     def delete_bookmark(self, selected_row, string):
         if GuiUtils.check_for_bookmark_mark(string):
             string = GuiUtils.remove_bookmark_mark(string)
             self.tableWidget_Disassemble.bookmarks.remove(string)
             self.tableWidget_Disassemble.setItem(selected_row, DISAS_ADDR_COL, QTableWidgetItem(string))
-            self.set_row_colour(selected_row, default_colour)
+            self.set_row_colour(selected_row, DEFAULT_COLOUR)
 
     def on_ViewBookmarks_triggered(self):
         self.bookmark_widget = BookmarkWidgetForm(self)
