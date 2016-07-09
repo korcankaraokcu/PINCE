@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'bookmarkwidget.ui'
 #
-# Created: Thu Jul  7 01:19:11 2016
+# Created: Sat Jul  9 16:03:34 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -31,10 +31,17 @@ class Ui_Form(object):
         self.label_2 = QtWidgets.QLabel(Form)
         self.label_2.setObjectName("label_2")
         self.verticalLayout_2.addWidget(self.label_2)
-        self.lineEdit = QtWidgets.QLineEdit(Form)
-        self.lineEdit.setReadOnly(True)
-        self.lineEdit.setObjectName("lineEdit")
-        self.verticalLayout_2.addWidget(self.lineEdit)
+        self.lineEdit_Info = QtWidgets.QLineEdit(Form)
+        self.lineEdit_Info.setReadOnly(True)
+        self.lineEdit_Info.setObjectName("lineEdit_Info")
+        self.verticalLayout_2.addWidget(self.lineEdit_Info)
+        self.label_3 = QtWidgets.QLabel(Form)
+        self.label_3.setObjectName("label_3")
+        self.verticalLayout_2.addWidget(self.label_3)
+        self.lineEdit_Comment = QtWidgets.QLineEdit(Form)
+        self.lineEdit_Comment.setReadOnly(True)
+        self.lineEdit_Comment.setObjectName("lineEdit_Comment")
+        self.verticalLayout_2.addWidget(self.lineEdit_Comment)
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_2.addItem(spacerItem)
         self.horizontalLayout.addLayout(self.verticalLayout_2)
@@ -48,4 +55,5 @@ class Ui_Form(object):
         Form.setWindowTitle(_translate("Form", "Bookmarks"))
         self.label.setText(_translate("Form", "Bookmarked Addresses"))
         self.label_2.setText(_translate("Form", "Info"))
+        self.label_3.setText(_translate("Form", "Comment"))
 
