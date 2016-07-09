@@ -979,11 +979,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.await_process_stop_thread.process_running.connect(self.on_process_running)
         self.await_process_stop_thread.start()
         self.widget_Disassemble.wheelEvent = self.tableWidget_Disassemble_wheel_event
+
+        # Format: [address1, address2, ...]
         self.tableWidget_Disassemble.travel_history = []
-        self.tableWidget_Disassemble.bookmarks = []
+
+        # Format: {address1:comment1,address2:comment2, ...}
+        self.tableWidget_Disassemble.bookmarks = {}
         self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
         self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
+        self.tableWidget_Disassemble.itemDoubleClicked.connect(self.on_disassemble_double_click)
 
     # Select_mode can be "top" or "bottom", it represents the location of selected item
     # offset can also be an address
@@ -995,9 +1000,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         program_counter = GDB_Engine.convert_symbol_to_address("$pc", check=False)
         program_counter_int = int(program_counter, 16)
         row_of_pc = False
-        bookmark_list = []
-        for item in self.tableWidget_Disassemble.bookmarks:
-            bookmark_list.append(int(SysUtils.extract_address(item), 16))
         rows_of_encountered_bookmarks_list = []
 
         # We won't append it to travel_history yet, see the reasoning at below
@@ -1008,18 +1010,21 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         for row, item in enumerate(disas_data):
+            comment = ""
             current_address = int(SysUtils.extract_address(item[0]), 16)
             if current_address == program_counter_int:
                 item[0] = ">>>" + item[0]
                 row_of_pc = row
-            for bookmark_item in bookmark_list:
-                if current_address == bookmark_item:
+            for bookmark_item in self.tableWidget_Disassemble.bookmarks.keys():
+                if current_address == int(SysUtils.extract_address(bookmark_item), 16):
                     rows_of_encountered_bookmarks_list.append(row)
                     item[0] = "(M)" + item[0]
+                    comment = self.tableWidget_Disassemble.bookmarks[bookmark_item]
+                    break
             self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, QTableWidgetItem(item[0]))
             self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, QTableWidgetItem(item[1]))
             self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, QTableWidgetItem(item[2]))
-            self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, QTableWidgetItem(""))  # will be implemented
+            self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, QTableWidgetItem(comment))
         self.handle_colours(row_of_pc, rows_of_encountered_bookmarks_list)
         self.tableWidget_Disassemble.resizeColumnsToContents()
         if select_mode == "top":
@@ -1082,6 +1087,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         elif event.key() == Qt.Key_B:
             self.bookmark_address(selected_row, current_address_text)
 
+    def on_disassemble_double_click(self, index):
+        if index.column() == DISAS_COMMENT_COL:
+            selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+            current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+            if GuiUtils.check_for_bookmark_mark(current_address_text):
+                self.change_bookmark_comment(selected_row)
+            else:
+                self.bookmark_address(selected_row, current_address_text)
+
     # Search the item in given row for location changing instructions
     # Go to the address pointed by that instruction if it contains any
     def follow_instruction(self, selected_row):
@@ -1114,7 +1128,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             delete_bookmark = menu.addAction("Delete this bookmark")
         go_to_bookmark = menu.addMenu("Go to bookmarked address")
         bookmark_action_list = []
-        for item in self.tableWidget_Disassemble.bookmarks:
+        for item in self.tableWidget_Disassemble.bookmarks.keys():
             bookmark_action_list.append(go_to_bookmark.addAction(item))
         menu.addSeparator()
         menu.setStyleSheet("font-size: 7pt;")
@@ -1144,17 +1158,42 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GuiUtils.check_for_bookmark_mark(string):
             QMessageBox.information(self, "Error", "This address has already been bookmarked")
             return
-        self.tableWidget_Disassemble.bookmarks.append(string)
+        comment_dialog = DialogWithButtonsForm(label_text="Enter the comment for bookmarked address",
+                                               hide_line_edit=False)
+        if comment_dialog.exec_():
+            comment = comment_dialog.get_values()
+        else:
+            return
+        self.tableWidget_Disassemble.bookmarks[string] = comment
         current_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         self.tableWidget_Disassemble.setItem(selected_row, DISAS_ADDR_COL, QTableWidgetItem("(M)" + current_text))
+        self.tableWidget_Disassemble.setItem(selected_row, DISAS_COMMENT_COL, QTableWidgetItem(comment))
         self.set_row_colour(selected_row, BOOKMARK_COLOUR)
+        self.tableWidget_Disassemble.resizeColumnsToContents()
+
+    def change_bookmark_comment(self, selected_row):
+        current_comment = self.tableWidget_Disassemble.item(selected_row, DISAS_COMMENT_COL).text()
+        comment_dialog = DialogWithButtonsForm(label_text="Enter the comment for bookmarked address",
+                                               hide_line_edit=False, line_edit_text=current_comment)
+        if comment_dialog.exec_():
+            new_comment = comment_dialog.get_values()
+        else:
+            return
+        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        current_address_text = GuiUtils.remove_bookmark_mark(current_address_text)
+        self.tableWidget_Disassemble.setItem(selected_row, DISAS_COMMENT_COL, QTableWidgetItem(new_comment))
+        self.set_row_colour(selected_row, BOOKMARK_COLOUR)
+        self.tableWidget_Disassemble.resizeColumnsToContents()
+        self.tableWidget_Disassemble.bookmarks[current_address_text] = new_comment
 
     def delete_bookmark(self, selected_row, string):
         if GuiUtils.check_for_bookmark_mark(string):
             string = GuiUtils.remove_bookmark_mark(string)
-            self.tableWidget_Disassemble.bookmarks.remove(string)
+            del self.tableWidget_Disassemble.bookmarks[string]
             self.tableWidget_Disassemble.setItem(selected_row, DISAS_ADDR_COL, QTableWidgetItem(string))
+            self.tableWidget_Disassemble.setItem(selected_row, DISAS_COMMENT_COL, QTableWidgetItem(""))
             self.set_row_colour(selected_row, DEFAULT_COLOUR)
+            self.tableWidget_Disassemble.resizeColumnsToContents()
 
     def on_ViewBookmarks_triggered(self):
         self.bookmark_widget = BookmarkWidgetForm(self)
@@ -1167,13 +1206,15 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.setupUi(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
-        self.listWidget.addItems(self.parent().tableWidget_Disassemble.bookmarks)
+        self.listWidget.addItems(self.parent().tableWidget_Disassemble.bookmarks.keys())
         self.listWidget.currentRowChanged.connect(self.change_display)
         self.listWidget.itemDoubleClicked.connect(self.on_item_double_clicked)
 
     def change_display(self):
-        current_address = SysUtils.extract_address(self.listWidget.currentItem().text())
-        self.lineEdit.setText(GDB_Engine.get_info_about_address(current_address))
+        current_item = self.listWidget.currentItem().text()
+        current_address = SysUtils.extract_address(current_item)
+        self.lineEdit_Info.setText(GDB_Engine.get_info_about_address(current_address))
+        self.lineEdit_Comment.setText(self.parent().tableWidget_Disassemble.bookmarks[current_item])
 
     def on_item_double_clicked(self, item):
         self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
