@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import gdb
 import pickle
 import sys
@@ -10,14 +11,14 @@ import gdb_python_scripts.ScriptUtils as ScriptUtils
 import SysUtils
 import type_defs
 
-INDEX_BYTE = type_defs.INDEX_BYTE
-INDEX_2BYTES = type_defs.INDEX_2BYTES
-INDEX_4BYTES = type_defs.INDEX_4BYTES
-INDEX_8BYTES = type_defs.INDEX_8BYTES
-INDEX_FLOAT = type_defs.INDEX_FLOAT
-INDEX_DOUBLE = type_defs.INDEX_DOUBLE
-INDEX_STRING = type_defs.INDEX_STRING
-INDEX_AOB = type_defs.INDEX_AOB
+INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
+INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
+INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
+INDEX_8BYTES = type_defs.VALUE_INDEX.INDEX_8BYTES
+INDEX_FLOAT = type_defs.VALUE_INDEX.INDEX_FLOAT
+INDEX_DOUBLE = type_defs.VALUE_INDEX.INDEX_DOUBLE
+INDEX_STRING = type_defs.VALUE_INDEX.INDEX_STRING
+INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
 
 
 class ReadMultipleAddresses(gdb.Command):
@@ -37,9 +38,18 @@ class ReadMultipleAddresses(gdb.Command):
         for item in file_contents_recv:
             address = item[0]
             index = item[1]
-            length = item[2]
-            unicode = item[3]
-            zero_terminate = item[4]
+            try:
+                length = item[2]
+            except IndexError:
+                length = 0
+            try:
+                unicode = item[3]
+            except IndexError:
+                unicode = False
+            try:
+                zero_terminate = item[4]
+            except IndexError:
+                zero_terminate = True
             readed = ScriptUtils.read_single_address(address, index, length, unicode, zero_terminate)
             file_contents_send.append(readed)
         pickle.dump(file_contents_send, open(send_file, "wb"))

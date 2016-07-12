@@ -1,4 +1,5 @@
-#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# !/usr/bin/python3
 from re import search, split, findall, escape
 from threading import Lock, Thread, Condition
 from time import sleep, time
@@ -7,34 +8,33 @@ import os
 import ctypes
 import struct
 import pickle
+import SysUtils
+import type_defs
 
 libc = ctypes.CDLL('libc.so.6')
 is_32bit = struct.calcsize("P") * 8 == 32
 
-import SysUtils
-import type_defs
+INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
+INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
+INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
+INDEX_8BYTES = type_defs.VALUE_INDEX.INDEX_8BYTES
+INDEX_FLOAT = type_defs.VALUE_INDEX.INDEX_FLOAT
+INDEX_DOUBLE = type_defs.VALUE_INDEX.INDEX_DOUBLE
+INDEX_STRING = type_defs.VALUE_INDEX.INDEX_STRING
+INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
 
-INDEX_BYTE = type_defs.INDEX_BYTE
-INDEX_2BYTES = type_defs.INDEX_2BYTES
-INDEX_4BYTES = type_defs.INDEX_4BYTES
-INDEX_8BYTES = type_defs.INDEX_8BYTES
-INDEX_FLOAT = type_defs.INDEX_FLOAT
-INDEX_DOUBLE = type_defs.INDEX_DOUBLE
-INDEX_STRING = type_defs.INDEX_STRING
-INDEX_AOB = type_defs.INDEX_AOB
+INITIAL_INJECTION_PATH = type_defs.PATHS.INITIAL_INJECTION_PATH
 
-INITIAL_INJECTION_PATH = type_defs.INITIAL_INJECTION_PATH
+INFERIOR_RUNNING = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
+INFERIOR_STOPPED = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
 
-INFERIOR_RUNNING = type_defs.INFERIOR_RUNNING
-INFERIOR_STOPPED = type_defs.INFERIOR_STOPPED
+NO_INJECTION = type_defs.INJECTION_METHOD.NO_INJECTION
+SIMPLE_DLOPEN_CALL = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
+LINUX_INJECT = type_defs.INJECTION_METHOD.LINUX_INJECT
 
-NO_INJECTION = type_defs.NO_INJECTION
-SIMPLE_DLOPEN_CALL = type_defs.SIMPLE_DLOPEN_CALL
-LINUX_INJECT = type_defs.LINUX_INJECT
-
-INJECTION_SUCCESSFUL = type_defs.INJECTION_SUCCESSFUL
-INJECTION_FAILED = type_defs.INJECTION_FAILED
-NO_INJECTION_ATTEMPT = type_defs.NO_INJECTION_ATTEMPT
+INJECTION_SUCCESSFUL = type_defs.INJECTION_RESULT.INJECTION_SUCCESSFUL
+INJECTION_FAILED = type_defs.INJECTION_RESULT.INJECTION_FAILED
+NO_INJECTION_ATTEMPT = type_defs.INJECTION_RESULT.NO_INJECTION_ATTEMPT
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
@@ -50,12 +50,24 @@ gdb_async_output = ""
 index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
 
-# The comments next to the regular expressions shows the expected gdb output, an elucidating light for the future developers
+# The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
 
-
-# issues the command sent
-# all CLI commands and ctrl+key are supported, GDB/MI commands aren't supported yet
 def send_command(command, control=False):
+    """Issues the command sent
+
+    Args:
+        command (str): The command that'll be sent
+        control (bool): This param should be True if the command sent is ctrl+key instead of the regular command
+
+    Examples:
+        send_command(c,control=True) sends ctrl+c instead of the str "c"
+
+    Returns:
+        str: Result of the command sent, commands in the form of "ctrl+key" always returns a null string
+
+    Todo:
+        Support GDB/MI commands
+    """
     global child
     global gdb_output
     with lock_send_command:
@@ -85,8 +97,15 @@ def send_command(command, control=False):
         return output.strip()
 
 
-# check if we can attach to the target
-def can_attach(pid=str):
+def can_attach(pid):
+    """Check if we can attach to the target
+
+    Args:
+        pid (int,str): PID of the process that'll be attached
+
+    Returns:
+        bool: True if attaching is successful, False otherwise
+    """
     result = libc.ptrace(16, int(pid), 0, 0)  # 16 is PTRACE_ATTACH, check ptrace.h for details
     if result is -1:
         return False
@@ -97,6 +116,11 @@ def can_attach(pid=str):
 
 
 def state_observe_thread():
+    """
+    Observes the state of gdb, uses conditions to inform other functions and threads about gdb's state
+    Also generates output for send_command function
+    Should be called by creating a thread. Usually called in initialization process by attach function
+    """
     global inferior_status
     global child
     global gdb_output
@@ -126,19 +150,31 @@ def state_observe_thread():
 
 
 def interrupt_inferior():
+    """Interrupt the inferior"""
     send_command("c", control=True)
 
 
 def continue_inferior():
+    """Continue the inferior"""
     send_command("c")
 
 
-# Attaches gdb to the target pid
-# Returns the status of the thread injection
-def attach(pid=str, injection_method=SIMPLE_DLOPEN_CALL):
+def attach(pid, injection_method=SIMPLE_DLOPEN_CALL):
+    """Attaches gdb to the target and initializes some of the global variables
+
+    Args:
+        pid (int,str): PID of the process that'll be attached to
+        injection_method (int): Method of the .so injection before attaching
+        It can be a member of type_defs.INJECTION_METHOD
+        If there's no .so file found in INITIAL_INJECTION_PATH, the injection_method becomes NO_INJECTION
+
+    Returns:
+        int: The result of the thread injection as a member of type_defs.INJECTION_RESULT
+    """
     global currentpid
     global child
     currentpid = int(pid)
+    pid = str(pid)
     SysUtils.create_PINCE_IPC_PATH(pid)
     currentdir = SysUtils.get_current_script_directory()
     child = pexpect.spawn('sudo LC_NUMERIC=C gdb --interpreter=mi', cwd=currentdir, encoding="utf-8")
@@ -169,8 +205,8 @@ def attach(pid=str, injection_method=SIMPLE_DLOPEN_CALL):
     return codes_injected
 
 
-# Farewell...
 def detach():
+    """See you, space cowboy"""
     global child
     global currentpid
     global inferior_status
@@ -180,19 +216,41 @@ def detach():
     inferior_status = -1
 
 
-# Don't try to use this function after gdb is attached, try inject_with_dlopen_call instead
-# FIXME: linux-inject is insufficient for multi-threaded programs, it makes big titles such as Torchlight to segfault
-def inject_with_linux_inject(library_path, pid=str):
+def inject_with_linux_inject(library_path, pid):
+    """Injects the given .so file to given process
+
+    Args:
+        library_path (str): Path to the .so file that'll be injected
+        pid (int,str): PID of the process that'll be attached to
+
+    Returns:
+        int: Result of the injection as a member of type_defs.INJECTION_RESULT
+
+    Fixme:
+        Linux-inject is insufficient for multi-threaded programs, it makes big titles such as Torchlight to segfault
+
+    Note:
+        Don't try to use this function after gdb is attached, try inject_with_dlopen_call instead
+    """
     scriptdirectory = SysUtils.get_current_script_directory()
-    result = pexpect.run("sudo ./inject -p " + pid + " " + library_path, cwd=scriptdirectory + "/linux-inject")
+    result = pexpect.run("sudo ./inject -p " + str(pid) + " " + library_path, cwd=scriptdirectory + "/linux-inject")
     print(result)  # for debug
     if search(b"successfully injected", result):  # literal string
         return INJECTION_SUCCESSFUL
     return INJECTION_FAILED
 
 
-# variant of inject_with_linux_inject
 def inject_with_dlopen_call(library_path):
+    """Injects the given .so file to current process
+    This is a variant of the function inject_with_linux_inject, but it supports injection after attaching
+    The downside is it fails if the target doesn't support dlopen calls or simply doesn't have the library
+
+    Args:
+        library_path (str): Path to the .so file that'll be injected
+
+    Returns:
+        int: Result of the injection as a member of type_defs.INJECTION_RESULT
+    """
     injectionpath = '"' + library_path + '"'
     result = send_command("call dlopen(" + injectionpath + ", 1)")
     filtered_result = search(r"\$\d+\s*=\s*\-*\d+", result)  # $1 = -1633996800
@@ -218,63 +276,96 @@ def inject_with_dlopen_call(library_path):
     return INJECTION_FAILED
 
 
-# return a string corresponding to the selected index
-# returns "out of bounds" string if the index doesn't match the dictionary
-def valuetype_to_gdbcommand(index=int):
+def value_index_to_gdbcommand(index=int):
+    """Converts the given value_index to a parameter that'll be used in "x" command of gdb
+
+    Args:
+        index (int): Can be a member of type_defs.VALUE_INDEX
+
+    Returns:
+        str: The str corresponding to the index in type_defs.index_to_gdbcommand_dict
+    """
     return index_to_gdbcommand_dict.get(index, "out of bounds")
 
 
 def check_for_restricted_gdb_symbols(string):
+    """Checks for characters that cause unexpected behaviour
+    "$" makes gdb show it's value history(e.g $4=4th value) and it's convenience variables(such as $pc, $g_thread)
+    Also whitespaces(or simply inputting nothing) makes gdb show the last shown value
+    If you don't like the user to see these, use this function to check the input
+
+    Args:
+        string (str): The str that'll be checked for specific characters
+
+    Returns:
+        bool: True if one of the characters are encountered, False otherwise
+    """
     string = str(string)
     string = string.strip()
     if string is "":
         return True
     if search(r"\".*\"", string) or search(r"\{.*\}", string):  # For string and array expressions
         return False
-    if search(r'\$|\s', string):  # These characters make gdb show it's value history, so they should be avoided
+    if search(r'\$', string):  # These characters make gdb show it's value history, so they should be avoided
         return True
     return False
 
 
-# returns the value of the expression if it is valid, return the string "??" if not
-# this function is mainly used for display in AddAddressManually dialog
-# this function also can read symbols such as "_start", "malloc", "printf" and "scanf" as addresses
-# typeofaddress is derived from valuetype_to_gdbcommand
-# length parameter only gets passed when reading strings or array of bytes
-# unicode and zero_terminate parameters are only for strings
-# if you just want to get the value of an address, use the function read_value_from_single_address() instead
-def read_single_address(address, typeofaddress, length=None, is_unicode=False, zero_terminate=True, check=True):
+def read_single_address_by_expression(expression, value_index, length=None, is_unicode=False, zero_terminate=True,
+                                      check=True):
+    """Reads value from the given address or expression by using "x" command of gdb then converts it to the given
+    value type
+
+    The expression can also be a function name such as "_start", "malloc", "printf" and "scanf"
+
+    Args:
+        expression (str): Can be a hex string or an expression. By default, expressions using the character "$" are not
+        permitted. The character "$" is useful when displaying convenience variables, but it's also confusing because it
+        makes gdb show it's value history. To include "$" in the permitted characters, pass the parameter check as True
+        value_index (int): Determines the type of data read. Can be a member of type_defs.VALUE_INDEX
+        length (int): Length of the data that'll be read. Only used when the value_index is INDEX_STRING or INDEX_AOB.
+        Ignored otherwise.
+        is_unicode (bool): If True, data will be considered as utf-8, ascii otherwise. Only used when value_index is
+        INDEX_STRING. Ignored otherwise.
+        zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
+        value_index is INDEX_STRING. Ignored otherwise.
+        check (bool): If True, the parameter expression will be checked by check_for_restricted_gdb_symbols function. If
+        any specific character is found, this function will return "??"
+
+    Returns:
+        str: The value of address read as str. If the expression/address is not valid, returns the string "??"
+    """
     if check:
-        if check_for_restricted_gdb_symbols(address):
+        if check_for_restricted_gdb_symbols(expression):
             return "??"
     if length is "":
         return "??"
-    if typeofaddress is INDEX_AOB:
-        typeofaddress = valuetype_to_gdbcommand(typeofaddress)
+    if value_index is INDEX_AOB:
+        typeofaddress = value_index_to_gdbcommand(value_index)
         try:
             expectedlength = str(int(length))  # length must be a legit number, so had to do this trick
         except:
             return "??"
-        result = send_command("x/" + expectedlength + typeofaddress + " " + address)
+        result = send_command("x/" + expectedlength + typeofaddress + " " + expression)
         filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
         if filteredresult:
             returned_string = ''.join(filteredresult)  # combine all the matched results
             return returned_string.replace(r"\t0x", " ")
         return "??"
-    elif typeofaddress is INDEX_STRING:
-        typeofaddress = valuetype_to_gdbcommand(typeofaddress)
+    elif value_index is INDEX_STRING:
+        typeofaddress = value_index_to_gdbcommand(value_index)
         if not is_unicode:
             try:
                 expectedlength = str(int(length))
             except:
                 return "??"
-            result = send_command("x/" + expectedlength + typeofaddress + " " + address)
+            result = send_command("x/" + expectedlength + typeofaddress + " " + expression)
         else:
             try:
                 expectedlength = str(int(length) * 2)
             except:
                 return "??"
-            result = send_command("x/" + expectedlength + typeofaddress + " " + address)
+            result = send_command("x/" + expectedlength + typeofaddress + " " + expression)
         filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
         if filteredresult:
             filteredresult = ''.join(filteredresult)
@@ -291,30 +382,48 @@ def read_single_address(address, typeofaddress, length=None, is_unicode=False, z
             return returned_string[0:int(length)]
         return "??"
     else:
-        typeofaddress = valuetype_to_gdbcommand(typeofaddress)
-        result = send_command("x/" + typeofaddress + " " + address)
+        typeofaddress = value_index_to_gdbcommand(value_index)
+        result = send_command("x/" + typeofaddress + " " + expression)
         filteredresult = search(r":\\t[0-9a-fA-F-,]+", result)  # 0x400000:\t1,3961517377359369e-309
         if filteredresult:
             return split("t", filteredresult.group(0))[-1]
         return "??"
 
 
-# This function is the same with the read_single_address but it reads values from proc/pid/maps instead
-# This function is usable even when thread injection fails but it's more primitive than read_single_address
-# Use this if you only want to read some values from an address
-# If you want PINCE to parse expressions, use read_single_address instead
-def read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate):
-    readed = send_command(
-        "pince-read-single-address " + str(address) + "," + str(typeofaddress) + "," + str(length) + "," + str(
-            unicode) + "," + str(zero_terminate))
-    result = search(r"~\".*\\n\"", readed).group(0)  # ~"result\n"
+def read_single_address(address, value_index, length, is_unicode, zero_terminate):
+    """Reads value from the given address by using an optimized gdb python script
+
+    A variant of the function read_single_address_by_expression. This function is slightly faster and it only accepts
+    addresses instead of expressions. Use this function if you like to read only addresses, use the other variant if you
+    also would like to input expressions. This function also calculates float and double variables more precisely, for
+    instance, if you calculate the address 0x40c495(_start+100) on KMines with value_index=INDEX_DOUBLE with the
+    function read_single_address_by_expression(which uses gdb's "x" command), you'll get the result "6". But if you use
+    this function instead(custom script), you'll get the result "6.968143721100816e+38" instead
+
+    Args:
+        address (str): Can be a hex string.
+        value_index (int): Determines the type of data read. Can be a member of type_defs.VALUE_INDEX
+        length (int): Length of the data that'll be read. Only used when the value_index is INDEX_STRING or INDEX_AOB.
+        Ignored otherwise.
+        is_unicode (bool): If True, data will be considered as utf-8, ascii otherwise. Only used when value_index is
+        INDEX_STRING. Ignored otherwise.
+        zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
+        value_index is INDEX_STRING. Ignored otherwise.
+
+    Returns:
+        str: The value of address read as str. If the address is not valid, returns a null string
+    """
+    data_read = send_command(
+        "pince-read-single-address " + str(address) + "," + str(value_index) + "," + str(length) + "," + str(
+            is_unicode) + "," + str(zero_terminate))
+    result = search(r"~\".*\\n\"", data_read).group(0)  # ~"result\n"
     result = split(r'\"', result)[1]  # result\n"
     result = split(r"\\", result)[0]  # result
 
     # check ReadSingleAddress class in GDBCommandExtensions.py to understand why do we separate this parsing from others
-    if typeofaddress is INDEX_STRING:
+    if value_index is INDEX_STRING:
         returned_string = result.replace(" ", "")
-        if not unicode:
+        if not is_unicode:
             returned_string = bytes.fromhex(returned_string).decode("ascii", "replace")
         else:
             returned_string = bytes.fromhex(returned_string).decode("utf-8", "replace")
@@ -327,11 +436,28 @@ def read_value_from_single_address(address, typeofaddress, length, unicode, zero
     return result
 
 
-# Optimized version of the function read_value_from_single_address
-# Parameter format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
-# If any errors occurs while reading addresses, it's ignored and the belonging address is returned as null string
-# For instance: 4 addresses readed and 3rd one is problematic, the return value will be [return1,return2,"",return4]
 def read_multiple_addresses(nested_list):
+    """Reads multiple values from the given addresses by using an optimized gdb python script
+
+    Optimized version of the function read_single_address. This function is significantly faster after 100 addresses
+    compared to using read_single_address in a for loop.
+
+    Args:
+        nested_list (list): List of *args of the function read_single_address. You don't have to pass all of the
+        parameters for each list in the nested_list, only parameters address and value_index are obligatory. Defaults
+        of the other parameters are the same with the function read_single_address.
+
+    Examples:
+        All parameters are passed-->[[address1, value_index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
+        Parameters are partially passed--▼
+        [[address1, value_index1],[address2, value_index2, length2],[address3, value_index3, zero_terminate], ...]
+
+    Returns:
+        list: A list of the values read as str.
+        If any errors occurs while reading addresses, it's ignored and the belonging address is returned as null string
+        For instance; If 4 addresses has been read and 3rd one is problematic, the returned list will be
+        [returned_str1,returned_str2,"",returned_str4]
+    """
     directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
     send_file = directory_path + "/read-list-from-PINCE.txt"
     recv_file = directory_path + "/read-list-to-PINCE.txt"
@@ -347,21 +473,42 @@ def read_multiple_addresses(nested_list):
     return contents_recv
 
 
-# Optimized version of the function set_value_from_single_address
-# Parameter format: [[address1, index1],[address2, index2], ..., value]
-# If any errors occurs while reading addresses, it'll be ignored but the information about error will be printed to the terminal
-def set_multiple_addresses(nested_list):
+def set_multiple_addresses(nested_list, value):
+    """Sets the given value to the given addresses by using an optimized gdb python script
+
+    There's no single version of this function yet. Use this even for single addresses
+    If any errors occurs while setting values to the according addresses, it'll be ignored but the information about
+    error will be printed to the terminal.
+
+    Args:
+        nested_list (list): List of the address and value_index parameters of the function read_single_address
+        Both parameters address and value_index are necessary.
+        value (str): The value that'll be written to the given addresses
+
+    Examples:
+        nested_list-->[[address1, value_index1],[address2, value_index2], ...]
+    """
     with lock_set_multiple_addresses:
         directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
         send_file = directory_path + "/set-list-from-PINCE.txt"
+        nested_list.append(value)
         pickle.dump(nested_list, open(send_file, "wb"))
         send_command("pince-set-multiple-addresses")
 
 
-# If the second parameter is an offset, you should add "+" in front of it(e.g +42 or +0x42)
-# IMPORTANT: Second parameter always should be bigger than the first
-# Return format:[[address1,bytes1,opcodes1],[address2, ...], ...]
 def disassemble(expression, offset_or_address):
+    """Disassembles the address evaluated by the given expression
+
+    Args:
+        expression (str): Any gdb expression
+        offset_or_address (str): If you pass this parameter as an offset, you should add "+" in front of it
+        (e.g "+42" or "+0x42"). If you pass this parameter as an hex address, the address range between the expression
+        and the secondary address is disassembled.
+        If the second parameter is an address. it always should be bigger than the first address.
+
+    Returns:
+        list: A list of str values in this format-->[[address1,bytes1,opcodes1],[address2, ...], ...]
+    """
     returned_list = []
     output = send_command("disas /r " + expression + "," + offset_or_address)
     filtered_output = findall(r"0x[0-9a-fA-F]+.*\\t.+\\t.+\\n",
@@ -371,13 +518,22 @@ def disassemble(expression, offset_or_address):
     return returned_list
 
 
-# Converts the given address to symbol if any symbol exists for it
-# If your string contains one of the restricted symbols(such as $) pass the check parameter as False
-def convert_address_to_symbol(string, check=True):
+def convert_address_to_symbol(expression, check=True):
+    """Converts the address evaluated by the given expression to symbol if any symbol exists for it
+
+    Args:
+        expression (str): Any gdb expression
+        check (bool): If your string contains one of the restricted characters($ etc.) pass the check parameter as False
+
+    Returns:
+        str: Symbol of corresponding address(such as printf, scanf, _start etc.)
+        If the parameter "check" is True, returns the expression itself untouched if any restricted characters are found
+        None: If the address is unreachable
+    """
     if check:
-        if check_for_restricted_gdb_symbols(string):
-            return string
-    result = send_command("x/b " + string)
+        if check_for_restricted_gdb_symbols(expression):
+            return expression
+    result = send_command("x/b " + expression)
     if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
         return
     filteredresult = search(r"<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
@@ -385,14 +541,22 @@ def convert_address_to_symbol(string, check=True):
         return split(">:", filteredresult.group(0))[0].split("<")[1]
 
 
-# Converts the given symbol to address if symbol is valid
-# If your string contains one of the restricted symbols(such as $) pass the check parameter as False
-# You can also you this function to check if a memory cell is valid or not
-def convert_symbol_to_address(string, check=True):
+def convert_symbol_to_address(expression, check=True):
+    """Converts the symbol evaluated by the given expression to address
+
+    Args:
+        expression (str): Any gdb expression
+        check (bool): If your string contains one of the restricted symbols(such as $) pass the check parameter as False
+
+    Returns:
+        str: Address of corresponding symbol
+        If the parameter "check" is True, returns the expression itself untouched if any restricted characters are found
+        None: If the address is unreachable
+    """
     if check:
-        if check_for_restricted_gdb_symbols(string):
-            return string
-    result = send_command("x/b " + string)
+        if check_for_restricted_gdb_symbols(expression):
+            return expression
+    result = send_command("x/b " + expression)
     if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
         return
     filteredresult = search(r"0x[0-9a-fA-F]+\s+<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
@@ -404,8 +568,18 @@ def convert_symbol_to_address(string, check=True):
             return split(":", filteredresult.group(0))[0]
 
 
-# Parameters should be splitted by ","
-def parse_convenience_variables(variables=str):
+def parse_convenience_variables(variables):
+    """Converts the convenience variables to their str equivalents
+
+    Args:
+        variables (str): The convenience variables, splitted by a ",".
+
+    Examples:
+        variables-->"$pc,$_gthread,$_inferior,$_exitcode,$_siginfo"
+
+    Returns:
+        list: List of str values of the corresponding convenience variables
+    """
     variables = variables.replace(" ", "")
     variable_list = variables.split(",")
     directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
@@ -425,33 +599,50 @@ def parse_convenience_variables(variables=str):
 
 # Returns address and the LWP of the current thread
 def get_current_thread_information():
+    """Gather information about the current thread
+
+    Returns:
+        str: "Thread "+thread_address+" (LWP "+LWP_ID+")"
+
+    Examples:
+        returned_str-->"Thread 0x7f34730d77c0 (LWP 6189)"
+    """
     thread_info = send_command("info threads")
     parsed_info = search(r"\*\s+\d+\s+Thread\s+0x[0-9a-fA-F]+\s+\(LWP\s+\d+\)",
                          thread_info).group(0)  # * 1    Thread 0x7f34730d77c0 (LWP 6189)
     return split(r"Thread\s+", parsed_info)[-1]
 
 
-# Find address of the closest instruction next to the given address, assuming given address is valid
-# If starting/ending of a valid memory range is reached, starting/ending address is returned instead
-# Instruction location can be "next" or "previous". Well, in fact it doesn't have to be "previous", but wouldn't it be
-# logical to call it like that? Or you could call it something like "the thing that comes before the current thingy",
-# that would be even more expository!
-def find_address_of_closest_instruction(address, how_many_instructions_to_look_for=1, instruction_location="next"):
+def find_address_of_closest_instruction(expression, how_many_instructions_to_look_for=1, instruction_location="next"):
+    """Finds address of the closest instruction next to the address evaluated by the given expression, assuming that the
+    evaluated address is valid
+
+    Args:
+        expression (str): Any gdb expression
+        how_many_instructions_to_look_for (int): Number of the instructions that'll be lo- OH COME ON NOW! That one is
+        obvious!
+        instruction_location (str): If it's "next", instructions coming after the address is searched. If it's anything
+        else, the instructions coming before the address is searched instead.
+
+    Returns:
+        str: The address found as hex string. If starting/ending of a valid memory range is reached, starting/ending
+        address is returned instead as hex string.
+    """
     if instruction_location == "next":
         offset = "+" + str(how_many_instructions_to_look_for * 30)
-        disas_data = disassemble(address, address + offset)
+        disas_data = disassemble(expression, expression + offset)
     else:
         offset = "-" + str(how_many_instructions_to_look_for * 30)
-        disas_data = disassemble(address + offset, address)
+        disas_data = disassemble(expression + offset, expression)
     if not disas_data:
         if instruction_location != "next":
-            start_address = SysUtils.find_closest_address(currentpid, address)
-            disas_data = disassemble(start_address, address)
+            start_address = SysUtils.find_closest_address(currentpid, expression)
+            disas_data = disassemble(start_address, expression)
     if instruction_location == "next":
         try:
             return SysUtils.extract_address(disas_data[how_many_instructions_to_look_for][0])
         except IndexError:
-            return SysUtils.find_closest_address(currentpid, address, look_to="end")
+            return SysUtils.find_closest_address(currentpid, expression, look_to="end")
     else:
         try:
             return SysUtils.extract_address(disas_data[-how_many_instructions_to_look_for][0])
@@ -459,30 +650,20 @@ def find_address_of_closest_instruction(address, how_many_instructions_to_look_f
             try:
                 return start_address
             except UnboundLocalError:
-                return SysUtils.find_closest_address(currentpid, address)
+                return SysUtils.find_closest_address(currentpid, expression)
 
 
-# Simply parses the output of gdb command "info symbol"
-def get_info_about_address(address):
-    info = send_command("info symbol " + address)
+def get_info_about_address(expression):
+    """Runs the gdb command "info symbol" for given expression and returns the result of it
+
+    Args:
+        expression (str): Any gdb expression
+
+    Returns:
+        str: The result of the command "info symbol" for given expression
+    """
+    info = send_command("info symbol " + expression)
     result = search(r"~\".*\\n\"", info).group(0)  # ~"result\n"
     result = split(r'\"', result)[1]  # result\n"
     result = split(r"\\", result)[0]  # result
     return result
-
-
-def test():
-    for x in range(0, 10):
-        print(send_command('x/x _start'))
-
-
-def test2():
-    for x in range(0, 10):
-        print(send_command("disas /r 0x00400000,+10"))
-
-
-def test3():
-    global child
-    while True:
-        sleep(1)
-        print(child.stdout)

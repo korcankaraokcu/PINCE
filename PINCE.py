@@ -1,4 +1,5 @@
-#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# !/usr/bin/python3
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu
@@ -41,36 +42,38 @@ PC_COLOUR = Qt.blue
 BOOKMARK_COLOUR = Qt.yellow
 DEFAULT_COLOUR = Qt.white
 
-FROZEN_COL = type_defs.FROZEN_COL
-DESC_COL = type_defs.DESC_COL
-ADDR_COL = type_defs.ADDR_COL
-TYPE_COL = type_defs.TYPE_COL
-VALUE_COL = type_defs.VALUE_COL
+# represents the index of columns in address table
+FROZEN_COL = 0  # Frozen
+DESC_COL = 1  # Description
+ADDR_COL = 2  # Address
+TYPE_COL = 3  # Type
+VALUE_COL = 4  # Value
 
-INDEX_BYTE = type_defs.INDEX_BYTE
-INDEX_2BYTES = type_defs.INDEX_2BYTES
-INDEX_4BYTES = type_defs.INDEX_4BYTES
-INDEX_8BYTES = type_defs.INDEX_8BYTES
-INDEX_FLOAT = type_defs.INDEX_FLOAT
-INDEX_DOUBLE = type_defs.INDEX_DOUBLE
-INDEX_STRING = type_defs.INDEX_STRING
-INDEX_AOB = type_defs.INDEX_AOB
+# represents the index of columns in disassemble table
+DISAS_ADDR_COL = 0
+DISAS_BYTES_COL = 1
+DISAS_OPCODES_COL = 2
+DISAS_COMMENT_COL = 3
 
-DISAS_ADDR_COL = type_defs.DISAS_ADDR_COL
-DISAS_BYTES_COL = type_defs.DISAS_BYTES_COL
-DISAS_OPCODES_COL = type_defs.DISAS_OPCODES_COL
-DISAS_COMMENT_COL = type_defs.DISAS_COMMENT_COL
+INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
+INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
+INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
+INDEX_8BYTES = type_defs.VALUE_INDEX.INDEX_8BYTES
+INDEX_FLOAT = type_defs.VALUE_INDEX.INDEX_FLOAT
+INDEX_DOUBLE = type_defs.VALUE_INDEX.INDEX_DOUBLE
+INDEX_STRING = type_defs.VALUE_INDEX.INDEX_STRING
+INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
 
-INFERIOR_STOPPED = type_defs.INFERIOR_STOPPED
-INFERIOR_RUNNING = type_defs.INFERIOR_RUNNING
+INFERIOR_RUNNING = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
+INFERIOR_STOPPED = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
 
-NO_INJECTION = type_defs.NO_INJECTION
-SIMPLE_DLOPEN_CALL = type_defs.SIMPLE_DLOPEN_CALL
-LINUX_INJECT = type_defs.LINUX_INJECT
+NO_INJECTION = type_defs.INJECTION_METHOD.NO_INJECTION
+SIMPLE_DLOPEN_CALL = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
+LINUX_INJECT = type_defs.INJECTION_METHOD.LINUX_INJECT
 
-INJECTION_SUCCESSFUL = type_defs.INJECTION_SUCCESSFUL
-INJECTION_FAILED = type_defs.INJECTION_FAILED
-NO_INJECTION_ATTEMPT = type_defs.NO_INJECTION_ATTEMPT
+INJECTION_SUCCESSFUL = type_defs.INJECTION_RESULT.INJECTION_SUCCESSFUL
+INJECTION_FAILED = type_defs.INJECTION_RESULT.INJECTION_FAILED
+NO_INJECTION_ATTEMPT = type_defs.INJECTION_RESULT.NO_INJECTION_ATTEMPT
 
 
 # Checks if the inferior has been terminated
@@ -413,7 +416,7 @@ class MainForm(QMainWindow, MainWindow):
             address = address_text
         self.tableWidget_addresstable.setRowCount(self.tableWidget_addresstable.rowCount() + 1)
         currentrow = self.tableWidget_addresstable.rowCount() - 1
-        value = GDB_Engine.read_value_from_single_address(address, typeofaddress, length, unicode, zero_terminate)
+        value = GDB_Engine.read_single_address(address, typeofaddress, length, unicode, zero_terminate)
         self.tableWidget_addresstable.setCellWidget(currentrow, FROZEN_COL, frozen_checkbox)
         self.change_address_table_elements(row=currentrow, description=description, address=address,
                                            typeofaddress=typeofaddress_text, value=value)
@@ -436,13 +439,12 @@ class MainForm(QMainWindow, MainWindow):
                     value_type = self.tableWidget_addresstable.item(row, TYPE_COL).text()
                     value_index = GuiUtils.text_to_index(value_type)
                     if GuiUtils.text_to_length(value_type) is not -1:
-                        unknown_type = SysUtils.parse_string(value_text, value_index)[1]
+                        unknown_type = SysUtils.parse_string(value_text, value_index)
                         length = len(unknown_type)
                         self.tableWidget_addresstable.setItem(row, TYPE_COL, QTableWidgetItem(
                             GuiUtils.change_text_length(value_type, length)))
                     table_contents.append([address, value_index])
-                table_contents.append(value_text)
-                GDB_Engine.set_multiple_addresses(table_contents)
+                GDB_Engine.set_multiple_addresses(table_contents, value_text)
                 self.update_address_table_manually()
 
         elif current_column is DESC_COL:
@@ -462,14 +464,15 @@ class MainForm(QMainWindow, MainWindow):
                                                             zero_terminate=zero_terminate)
             if manual_address_dialog.exec_():
                 description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
-                typeofaddress_text = GuiUtils.valuetype_to_text(index=typeofaddress, length=length, unicode=unicode,
+                typeofaddress_text = GuiUtils.valuetype_to_text(value_index=typeofaddress, length=length,
+                                                                is_unicode=unicode,
                                                                 zero_terminate=zero_terminate)
                 address_text = GDB_Engine.convert_symbol_to_address(address)
                 if address_text:
                     address = address_text
-                value = GDB_Engine.read_value_from_single_address(address=address, typeofaddress=typeofaddress,
-                                                                  length=length, unicode=unicode,
-                                                                  zero_terminate=zero_terminate)
+                value = GDB_Engine.read_single_address(address=address, value_index=typeofaddress,
+                                                       length=length, is_unicode=unicode,
+                                                       zero_terminate=zero_terminate)
                 self.change_address_table_elements(row=current_row, description=description, address=address,
                                                    typeofaddress=typeofaddress_text, value=value)
 
@@ -639,15 +642,18 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                 address_type = self.comboBox_ValueType.currentIndex()
                 if address_type is INDEX_AOB:
                     length = self.lineEdit_length.text()
-                    self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type, length))
+                    self.label_valueofaddress.setText(
+                        GDB_Engine.read_single_address_by_expression(address, address_type, length))
                 elif address_type is INDEX_STRING:
                     length = self.lineEdit_length.text()
                     is_unicode = self.checkBox_Unicode.isChecked()
                     is_zeroterminate = self.checkBox_zeroterminate.isChecked()
                     self.label_valueofaddress.setText(
-                        GDB_Engine.read_single_address(address, address_type, length, is_unicode, is_zeroterminate))
+                        GDB_Engine.read_single_address_by_expression(address, address_type, length, is_unicode,
+                                                                     is_zeroterminate))
                 else:
-                    self.label_valueofaddress.setText(GDB_Engine.read_single_address(address, address_type))
+                    self.label_valueofaddress.setText(
+                        GDB_Engine.read_single_address_by_expression(address, address_type))
 
     def address_on_change(self):
         self.update_needed = True
@@ -786,7 +792,7 @@ class DialogWithButtonsForm(QDialog, DialogWithButtons):
     def accept(self):
         if self.parse_string:
             string = self.lineEdit.text()
-            if not SysUtils.parse_string(string, self.value_index)[0]:
+            if not SysUtils.parse_string(string, self.value_index):
                 QMessageBox.information(self, "Error", "Can't parse the input")
                 return
         super(DialogWithButtonsForm, self).accept()
@@ -945,7 +951,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         else:
             if not control:
                 console_output = GDB_Engine.send_command(console_input)
-                if console_output == None:
+                if not console_output:
                     console_output = "Inferior is running"
             else:
                 GDB_Engine.interrupt_inferior()
