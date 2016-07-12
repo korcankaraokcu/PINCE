@@ -1,8 +1,6 @@
 #PINCE  
-PINCE is a gdb front-end/reverse engineering tool written in python3, C and pyqt5. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine.  
-#Features   
-- **NO BRAKES ON THIS TRAIN:** PINCE can run **ANY** gdb command without having to pause the inferior **[Postponed\Done]**
-  * *Postpone reason:* Check wiki
+PINCE is a gdb front-end/reverse engineering tool focused on games, but it can be used for any reverse-engineering related stuff. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine.  
+#Features  
 - **Memory searching** **[Planned]**  (The plan is to use libscanmem by wrapping it with a gdb python script)
 - **Variable Inspection&Modification** **[Done/Basic]**
   * **CheatEngine-like value type support:** Byte to 8 Bytes, Float, Double, Strings(including utf-8 and zero-terminate strings), Array of Bytes **[Done]**
