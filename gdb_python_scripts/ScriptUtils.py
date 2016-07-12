@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import gdb
 import struct
 import sys
@@ -10,14 +11,14 @@ sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import 
 import SysUtils
 import type_defs
 
-INDEX_BYTE = type_defs.INDEX_BYTE
-INDEX_2BYTES = type_defs.INDEX_2BYTES
-INDEX_4BYTES = type_defs.INDEX_4BYTES
-INDEX_8BYTES = type_defs.INDEX_8BYTES
-INDEX_FLOAT = type_defs.INDEX_FLOAT
-INDEX_DOUBLE = type_defs.INDEX_DOUBLE
-INDEX_STRING = type_defs.INDEX_STRING
-INDEX_AOB = type_defs.INDEX_AOB
+INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
+INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
+INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
+INDEX_8BYTES = type_defs.VALUE_INDEX.INDEX_8BYTES
+INDEX_FLOAT = type_defs.VALUE_INDEX.INDEX_FLOAT
+INDEX_DOUBLE = type_defs.VALUE_INDEX.INDEX_DOUBLE
+INDEX_STRING = type_defs.VALUE_INDEX.INDEX_STRING
+INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
 
 index_to_valuetype_dict = type_defs.index_to_valuetype_dict
 index_to_struct_pack_dict = type_defs.index_to_struct_pack_dict
@@ -89,8 +90,8 @@ def set_single_address(address, value_index, value):
     except:
         print(str(address) + " is not a valid address")
         return
-    valid, write_data = SysUtils.parse_string(value, value_index)
-    if not valid:
+    write_data = SysUtils.parse_string(value, value_index)
+    if not write_data:
         return
     if value_index is INDEX_STRING:
         write_data = bytearray(write_data, "utf-8", "replace")
