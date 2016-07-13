@@ -71,7 +71,7 @@ def text_to_valuetype(string):
     """Returns a tuple of parameters of the function valuetype_to_text evaluated according to given str
 
     Args:
-        string (str): String that'll be converted to the tuple
+        string (str): String must be generated from the function valuetype_to_text
 
     Returns:
         tuple: A tuple consisting of parameters of the function valuetype_to_text--▼
@@ -109,7 +109,7 @@ def text_to_index(string):
     Simplified version of the function text_to_valuetype for only extracting value_index
 
     Args:
-        string (str): String that'll be converted to type_defs.VALUE_INDEX
+        string (str): String must be generated from the function valuetype_to_text
 
     Returns:
         int: A member of type_defs.VALUE_INDEX
@@ -129,7 +129,7 @@ def text_to_length(string):
     Simplified version of the function text_to_valuetype for only extracting length
 
     Args:
-        string (str): String that'll be converted to length
+        string (str): String must be generated from the function valuetype_to_text
 
     Returns:
         int: Length
@@ -147,7 +147,7 @@ def change_text_length(string, length):
     """Changes the length of the given str to the given length
 
     Args:
-        string (str): String that'll be changed
+        string (str): String must be generated from the function valuetype_to_text
         length (int,str): New length
 
     Returns:
