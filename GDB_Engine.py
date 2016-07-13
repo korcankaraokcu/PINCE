@@ -11,9 +11,6 @@ import pickle
 import SysUtils
 import type_defs
 
-libc = ctypes.CDLL('libc.so.6')
-is_32bit = struct.calcsize("P") * 8 == 32
-
 INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
 INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
 INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
@@ -35,6 +32,12 @@ LINUX_INJECT = type_defs.INJECTION_METHOD.LINUX_INJECT
 INJECTION_SUCCESSFUL = type_defs.INJECTION_RESULT.INJECTION_SUCCESSFUL
 INJECTION_FAILED = type_defs.INJECTION_RESULT.INJECTION_FAILED
 NO_INJECTION_ATTEMPT = type_defs.INJECTION_RESULT.NO_INJECTION_ATTEMPT
+
+ARCH_32 = type_defs.INFERIOR_ARCH.ARCH_32
+ARCH_64 = type_defs.INFERIOR_ARCH.ARCH_64
+
+libc = ctypes.CDLL('libc.so.6')
+inferior_arch = int
 
 currentpid = 0
 child = object  # this object will be used with pexpect operations
@@ -173,6 +176,7 @@ def attach(pid, injection_method=SIMPLE_DLOPEN_CALL):
     """
     global currentpid
     global child
+    global inferior_arch
     currentpid = int(pid)
     pid = str(pid)
     SysUtils.create_PINCE_IPC_PATH(pid)
@@ -201,6 +205,7 @@ def attach(pid, injection_method=SIMPLE_DLOPEN_CALL):
     send_command("attach " + pid)
     if injection_method is SIMPLE_DLOPEN_CALL:
         codes_injected = inject_with_dlopen_call(injection_path)
+    inferior_arch = get_inferior_arch()
     continue_inferior()
     return codes_injected
 
@@ -667,3 +672,14 @@ def get_info_about_address(expression):
     result = split(r'\"', result)[1]  # result\n"
     result = split(r"\\", result)[0]  # result
     return result
+
+
+def get_inferior_arch():
+    """Returns the architecture of the current inferior
+
+    Returns:
+        int: A member of type_defs.INFERIOR_ARCH
+    """
+    if parse_convenience_variables("$rax")[0] == "void":
+        return ARCH_32
+    return ARCH_64
