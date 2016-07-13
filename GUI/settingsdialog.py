@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'settingsdialog.ui'
 #
-# Created: Tue Jul  5 01:23:56 2016
+# Created: Wed Jul 13 13:01:31 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(658, 553)
+        Dialog.resize(658, 555)
         self.gridLayout_2 = QtWidgets.QGridLayout(Dialog)
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.verticalLayout = QtWidgets.QVBoxLayout()
@@ -164,6 +164,10 @@ class Ui_Dialog(object):
         self.gridLayout_5.setObjectName("gridLayout_5")
         self.verticalLayout_10 = QtWidgets.QVBoxLayout()
         self.verticalLayout_10.setObjectName("verticalLayout_10")
+        self.checkBox_BringDisassembleToFront = QtWidgets.QCheckBox(self.page_4)
+        self.checkBox_BringDisassembleToFront.setChecked(True)
+        self.checkBox_BringDisassembleToFront.setObjectName("checkBox_BringDisassembleToFront")
+        self.verticalLayout_10.addWidget(self.checkBox_BringDisassembleToFront)
         self.horizontalLayout_10 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_10.setObjectName("horizontalLayout_10")
         self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
@@ -238,6 +242,7 @@ class Ui_Dialog(object):
         self.label_5.setText(_translate("Dialog", "Initial code injection method:"))
         self.radioButton_SimpleDLopenCall.setText(_translate("Dialog", "Simple dlopen call"))
         self.radioButton_LinuxInject.setText(_translate("Dialog", "Linux-inject"))
+        self.checkBox_BringDisassembleToFront.setText(_translate("Dialog", "Bring disassemble screen to front when the inferior is stopped"))
         self.label_6.setText(_translate("Dialog", "Instructions shown per scroll"))
         self.pushButton_ResetSettings.setText(_translate("Dialog", "Reset Settings"))
 

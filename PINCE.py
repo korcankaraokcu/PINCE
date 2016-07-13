@@ -35,6 +35,7 @@ table_update_interval = float
 pause_hotkey = str
 continue_hotkey = str
 initial_code_injection_method = int
+bring_disassemble_to_front = bool
 instructions_per_scroll = int
 
 # row colours for disassemble qtablewidget
@@ -262,6 +263,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("initial_code_injection_method", SIMPLE_DLOPEN_CALL)
         self.settings.endGroup()
         self.settings.beginGroup("Disassemble")
+        self.settings.setValue("bring_disassemble_to_front", True)
         self.settings.setValue("instructions_per_scroll", 2)
         self.settings.endGroup()
         self.apply_settings()
@@ -277,6 +279,7 @@ class MainForm(QMainWindow, MainWindow):
         global pause_hotkey
         global continue_hotkey
         global initial_code_injection_method
+        global bring_disassemble_to_front
         global instructions_per_scroll
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
         table_update_interval = self.settings.value("General/address_table_update_interval", type=float)
@@ -291,6 +294,7 @@ class MainForm(QMainWindow, MainWindow):
         except AttributeError:
             pass
         initial_code_injection_method = self.settings.value("CodeInjection/initial_code_injection_method", type=int)
+        bring_disassemble_to_front = self.settings.value("Disassemble/bring_disassemble_to_front", type=bool)
         instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
 
     def pause_hotkey_pressed(self):
@@ -854,19 +858,16 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         elif self.radioButton_LinuxInject.isChecked():
             injection_method = LINUX_INJECT
         self.settings.setValue("CodeInjection/initial_code_injection_method", injection_method)
+        self.settings.setValue("Disassemble/bring_disassemble_to_front",
+                               self.checkBox_BringDisassembleToFront.isChecked())
         self.settings.setValue("Disassemble/instructions_per_scroll", current_insturctions_shown)
         super(SettingsDialogForm, self).accept()
 
     def config_gui(self):
         self.settings = QSettings()
-        if self.settings.value("General/always_on_top", type=bool):
-            self.checkBox_AlwaysOnTop.setChecked(True)
-        else:
-            self.checkBox_AlwaysOnTop.setChecked(False)
-        if self.settings.value("General/auto_update_address_table", type=bool):
-            self.checkBox_AutoUpdateAddressTable.setChecked(True)
-        else:
-            self.checkBox_AutoUpdateAddressTable.setChecked(False)
+        self.checkBox_AlwaysOnTop.setChecked(self.settings.value("General/always_on_top", type=bool))
+        self.checkBox_AutoUpdateAddressTable.setChecked(
+            self.settings.value("General/auto_update_address_table", type=bool))
         self.lineEdit_UpdateInterval.setText(
             str(self.settings.value("General/address_table_update_interval", type=float)))
         self.pause_hotkey = self.settings.value("Hotkeys/pause")
@@ -876,6 +877,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.radioButton_SimpleDLopenCall.setChecked(True)
         elif injection_method == LINUX_INJECT:
             self.radioButton_LinuxInject.setChecked(True)
+        self.checkBox_BringDisassembleToFront.setChecked(
+            self.settings.value("Disassemble/bring_disassemble_to_front", type=bool))
         self.lineEdit_InstructionsPerScroll.setText(
             str(self.settings.value("Disassemble/instructions_per_scroll", type=int)))
 
@@ -1064,7 +1067,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.setWindowTitle("Memory Viewer - Currently Debugging Thread " + thread_info)
         self.disassemble_expression("$pc")
         self.show()
-        self.activateWindow()
+        if bring_disassemble_to_front:
+            self.activateWindow()
 
     def on_process_running(self):
         self.setWindowTitle("Memory Viewer - Running")
