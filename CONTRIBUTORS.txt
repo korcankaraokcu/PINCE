@@ -1,6 +1,3 @@
-This is only a placeholder, this section may look different when the project finishes
-In fact, something like a demo-scene for here would look absolutely fabulous <:
-
 	Main Developers
 Copyright (C) 2016 Korcan Karaokçu <korcankaraokcu@gmail.com> [Almost everything]
 Copyright (C) 2016 Çağrı Ulaş <cagriulas@gmail.com> [GUI/Testing for Archlinux]
