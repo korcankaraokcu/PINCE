@@ -976,7 +976,10 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
         license_text = open("LICENSE.md").read()
         contributors_text = open("CONTRIBUTORS.txt").read()
         self.textBrowser_License.setPlainText(license_text)
-        self.textBrowser_Contributors.setPlainText(contributors_text)
+        self.textBrowser_Contributors.append(
+            "This is only a placeholder, this section may look different when the project finishes" +
+            "\nIn fact, something like a demo-scene for here would look absolutely fabulous <:\n")
+        self.textBrowser_Contributors.append(contributors_text)
 
 
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
