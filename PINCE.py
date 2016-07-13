@@ -961,6 +961,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
                 console_output = "STOPPED"
         self.textBrowser.append("-->" + console_input)
         self.textBrowser.append(console_output)
+        self.textBrowser.verticalScrollBar().setValue(self.textBrowser.verticalScrollBar().maximum())
 
     def on_async_output(self):
         self.textBrowser.append(GDB_Engine.gdb_async_output)
