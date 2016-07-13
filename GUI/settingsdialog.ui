@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>658</width>
-    <height>553</height>
+    <height>555</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -334,6 +334,16 @@
           <layout class="QGridLayout" name="gridLayout_5">
            <item row="0" column="0">
             <layout class="QVBoxLayout" name="verticalLayout_10">
+             <item>
+              <widget class="QCheckBox" name="checkBox_BringDisassembleToFront">
+               <property name="text">
+                <string>Bring disassemble screen to front when the inferior is stopped</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_10">
                <item>
