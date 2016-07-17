@@ -1123,6 +1123,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.IF.setText(registers["if"])
         self.DF.setText(registers["df"])
         self.OF.setText(registers["of"])
+        self.CS.set_value(registers["cs"])
+        self.SS.set_value(registers["ss"])
+        self.DS.set_value(registers["ds"])
+        self.ES.set_value(registers["es"])
+        self.GS.set_value(registers["gs"])
+        self.FS.set_value(registers["fs"])
 
     def tableWidget_Disassemble_wheel_event(self, event):
         value = self.tableWidget_Disassemble.verticalScrollBar().value()
