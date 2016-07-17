@@ -699,3 +699,29 @@ def read_registers():
         print("an error occurred while reading registers")
         contents_recv = {}
     return contents_recv
+
+
+def set_convenience_variable(variable, value):
+    """Sets given convenience variable to given value
+
+    Args:
+        variable (str): Any gdb convenience variable(with "$" character removed)
+        value (str): Anything
+    """
+    send_command("set $" + variable + "=" + value)
+
+
+def set_register_flag(flag, value):
+    """Sets given register flag to given value
+
+    Args:
+        flag (str): "cf", "pf", "af", "zf", "sf", "tf", "if", "df" or "of"
+        value (str): "0" or "1"
+        Theoretically, you can pass anything as value. But, it may fuck other flag registers... VERY BADLY!
+    """
+    registers = read_registers()
+    registers[flag] = value
+    eflags_hex_value = hex(int(
+        registers["of"] + registers["df"] + registers["if"] + registers["tf"] + registers["sf"] + registers[
+            "zf"] + "0" + registers["af"] + "0" + registers["pf"] + "0" + registers["cf"], 2))
+    set_convenience_variable("eflags", eflags_hex_value)

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'memoryviewerwindow.ui'
 #
-# Created: Sun Jul 17 18:44:02 2016
+# Created: Mon Jul 18 01:50:36 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -59,6 +59,7 @@ class Ui_MainWindow(object):
         self.tableWidget_Disassemble.verticalHeader().setStretchLastSection(False)
         self.gridLayout_2.addWidget(self.tableWidget_Disassemble, 0, 0, 1, 1)
         self.widget_Registers = QtWidgets.QWidget(self.splitter_Disassemble_Registers)
+        self.widget_Registers.setMinimumSize(QtCore.QSize(0, 0))
         self.widget_Registers.setObjectName("widget_Registers")
         self.gridLayout_4 = QtWidgets.QGridLayout(self.widget_Registers)
         self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -67,7 +68,7 @@ class Ui_MainWindow(object):
         self.scrollArea_Registers.setWidgetResizable(True)
         self.scrollArea_Registers.setObjectName("scrollArea_Registers")
         self.scrollAreaWidgetContents_Registers = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 361, 465))
+        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 361, 466))
         self.scrollAreaWidgetContents_Registers.setObjectName("scrollAreaWidgetContents_Registers")
         self.gridLayout_8 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_Registers)
         self.gridLayout_8.setObjectName("gridLayout_8")
