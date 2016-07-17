@@ -791,6 +791,9 @@ class DialogWithButtonsForm(QDialog, DialogWithButtons):
         else:
             line_edit_text = str(line_edit_text)
             self.lineEdit.setText(line_edit_text)
+        self.lineEdit.setStyleSheet("color: black")
+        self.label.setStyleSheet("color: black")
+        self.buttonBox.setStyleSheet("color: black")
 
     def get_values(self):
         line_edit_text = self.lineEdit.text()
@@ -1006,6 +1009,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
         self.tableWidget_Disassemble.itemDoubleClicked.connect(self.on_disassemble_double_click)
         self.splitter_MainMiddle.setSizes([25, 25, 25])
+        self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
+        self.widget_Registers.resize(270, self.widget_Registers.height())
 
     # Select_mode can be "top" or "bottom", it represents the location of selected item
     # offset can also be an address
@@ -1044,6 +1049,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, QTableWidgetItem(comment))
         self.handle_colours(row_of_pc, rows_of_encountered_bookmarks_list)
         self.tableWidget_Disassemble.resizeColumnsToContents()
+        self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
         if select_mode == "top":
             self.tableWidget_Disassemble.scrollToItem(self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL))
             self.tableWidget_Disassemble.selectRow(0)
@@ -1114,15 +1120,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.EBP.set_value(registers["ebp"])
             self.ESP.set_value(registers["esp"])
             self.EIP.set_value(registers["eip"])
-        self.CF.setText(registers["cf"])
-        self.PF.setText(registers["pf"])
-        self.AF.setText(registers["af"])
-        self.ZF.setText(registers["zf"])
-        self.SF.setText(registers["sf"])
-        self.TF.setText(registers["tf"])
-        self.IF.setText(registers["if"])
-        self.DF.setText(registers["df"])
-        self.OF.setText(registers["of"])
+        self.CF.set_value(registers["cf"])
+        self.PF.set_value(registers["pf"])
+        self.AF.set_value(registers["af"])
+        self.ZF.set_value(registers["zf"])
+        self.SF.set_value(registers["sf"])
+        self.TF.set_value(registers["tf"])
+        self.IF.set_value(registers["if"])
+        self.DF.set_value(registers["df"])
+        self.OF.set_value(registers["of"])
         self.CS.set_value(registers["cs"])
         self.SS.set_value(registers["ss"])
         self.DS.set_value(registers["ds"])
@@ -1237,6 +1243,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.setItem(selected_row, DISAS_COMMENT_COL, QTableWidgetItem(comment))
         self.set_row_colour(selected_row, BOOKMARK_COLOUR)
         self.tableWidget_Disassemble.resizeColumnsToContents()
+        self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
 
     def change_bookmark_comment(self, selected_row):
         current_comment = self.tableWidget_Disassemble.item(selected_row, DISAS_COMMENT_COL).text()
