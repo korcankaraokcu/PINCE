@@ -6,7 +6,6 @@ from time import sleep, time
 import pexpect
 import os
 import ctypes
-import struct
 import pickle
 import SysUtils
 import type_defs
@@ -683,3 +682,20 @@ def get_inferior_arch():
     if parse_convenience_variables("$rax")[0] == "void":
         return ARCH_32
     return ARCH_64
+
+
+def read_registers():
+    """Returns the current registers
+
+    Returns:
+        dict: A dict that holds general registers, flags and segment registers
+    """
+    directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
+    recv_file = directory_path + "/registers-to-PINCE.txt"
+    send_command("pince-read-registers")
+    try:
+        contents_recv = pickle.load(open(recv_file, "rb"))
+    except EOFError:
+        print("an error occurred while reading registers")
+        contents_recv = {}
+    return contents_recv

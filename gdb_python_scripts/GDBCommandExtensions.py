@@ -2,6 +2,7 @@
 import gdb
 import pickle
 import sys
+from re import search
 
 # This is some retarded hack
 gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
@@ -11,6 +12,11 @@ import gdb_python_scripts.ScriptUtils as ScriptUtils
 import SysUtils
 import type_defs
 
+REGISTERS_32 = ["eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp", "eip"]
+REGISTERS_64 = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip", "r8", "r9", "r10", "r11", "r12",
+                "r13", "r14", "r15"]
+REGISTERS_SEGMENT = ["cs", "ss", "ds", "es", "fs", "gs"]
+
 INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
 INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
 INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
@@ -19,6 +25,9 @@ INDEX_FLOAT = type_defs.VALUE_INDEX.INDEX_FLOAT
 INDEX_DOUBLE = type_defs.VALUE_INDEX.INDEX_DOUBLE
 INDEX_STRING = type_defs.VALUE_INDEX.INDEX_STRING
 INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
+
+ARCH_32 = type_defs.INFERIOR_ARCH.ARCH_32
+ARCH_64 = type_defs.INFERIOR_ARCH.ARCH_64
 
 
 class ReadMultipleAddresses(gdb.Command):
@@ -138,8 +147,55 @@ class ParseConvenienceVariables(gdb.Command):
         pickle.dump(file_contents_send, open(send_file, "wb"))
 
 
+class ReadRegisters(gdb.Command):
+    def __init__(self):
+        super(ReadRegisters, self).__init__("pince-read-registers", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        file_contents_send = {"cf": "0", "pf": "0", "af": "0", "zf": "0", "sf": "0", "tf": "0", "if": "0", "df": "0",
+                              "of": "0"}
+        inferior = gdb.selected_inferior()
+        pid = inferior.pid
+        directory_path = SysUtils.get_PINCE_IPC_directory(pid)
+        send_file = directory_path + "/registers-to-PINCE.txt"
+        open(send_file, "w").close()
+        if str(gdb.parse_and_eval("$rax")) == "void":
+            current_arch = ARCH_32
+        else:
+            current_arch = ARCH_64
+        if current_arch == ARCH_64:
+            general_register_list = REGISTERS_64
+        else:
+            general_register_list = REGISTERS_32
+        for item in general_register_list:
+            result = gdb.execute("p/x $" + item, from_tty, to_string=True)
+            parsed_result = search(r"0x[0-9a-fA-F]+", result).group(0)  # $6 = 0x7f0bc0b6bb40
+            file_contents_send[item] = parsed_result
+        result = gdb.execute("p/t $eflags", from_tty, to_string=True)
+        parsed_result = search(r"=\s+\d+", result).group(0).split()[-1]  # $8 = 1010010011
+        reversed_parsed_result = "".join(reversed(parsed_result))
+        try:
+            file_contents_send["cf"] = reversed_parsed_result[0]
+            file_contents_send["pf"] = reversed_parsed_result[2]
+            file_contents_send["af"] = reversed_parsed_result[4]
+            file_contents_send["zf"] = reversed_parsed_result[6]
+            file_contents_send["sf"] = reversed_parsed_result[7]
+            file_contents_send["tf"] = reversed_parsed_result[8]
+            file_contents_send["if"] = reversed_parsed_result[9]
+            file_contents_send["df"] = reversed_parsed_result[10]
+            file_contents_send["of"] = reversed_parsed_result[11]
+        except IndexError:
+            pass
+        for item in REGISTERS_SEGMENT:
+            result = gdb.execute("p/x $" + item, from_tty, to_string=True)
+            parsed_result = search(r"0x[0-9a-fA-F]+", result).group(0)  # $6 = 0x7f0bc0b6bb40
+            file_contents_send[item] = parsed_result
+        pickle.dump(file_contents_send, open(send_file, "wb"))
+
+
 IgnoreErrors()
 ReadMultipleAddresses()
 SetMultipleAddresses()
 ReadSingleAddress()
 ParseConvenienceVariables()
+ReadRegisters()

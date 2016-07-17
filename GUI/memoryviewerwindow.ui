@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QSplitter" name="splitter_3">
+       <widget class="QSplitter" name="splitter_MainMiddle">
         <property name="lineWidth">
          <number>1</number>
         </property>
@@ -34,7 +34,7 @@
         <property name="childrenCollapsible">
          <bool>true</bool>
         </property>
-        <widget class="QSplitter" name="splitter">
+        <widget class="QSplitter" name="splitter_Disassemble_Registers">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -61,6 +61,9 @@
              </property>
              <attribute name="horizontalHeaderStretchLastSection">
               <bool>true</bool>
+             </attribute>
+             <attribute name="verticalHeaderVisible">
+              <bool>false</bool>
              </attribute>
              <attribute name="verticalHeaderDefaultSectionSize">
               <number>15</number>
@@ -95,16 +98,798 @@
          <widget class="QWidget" name="widget_Registers" native="true">
           <layout class="QGridLayout" name="gridLayout_4">
            <item row="0" column="0">
-            <widget class="QLabel" name="label_3">
-             <property name="text">
-              <string>Reserved for Registers</string>
+            <widget class="QScrollArea" name="scrollArea_Registers">
+             <property name="widgetResizable">
+              <bool>true</bool>
              </property>
+             <widget class="QWidget" name="scrollAreaWidgetContents_Registers">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>361</width>
+                <height>465</height>
+               </rect>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_8">
+               <item row="0" column="0">
+                <layout class="QHBoxLayout" name="horizontalLayout_2">
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_4">
+                   <item>
+                    <widget class="QLabel" name="label_3">
+                     <property name="font">
+                      <font>
+                       <pointsize>7</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Registers</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="Line" name="line">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QStackedWidget" name="stackedWidget">
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>200</height>
+                      </size>
+                     </property>
+                     <property name="currentIndex">
+                      <number>0</number>
+                     </property>
+                     <widget class="QWidget" name="registers_64">
+                      <layout class="QGridLayout" name="gridLayout_7">
+                       <item row="0" column="0">
+                        <layout class="QVBoxLayout" name="verticalLayout_17">
+                         <item>
+                          <layout class="QHBoxLayout" name="horizontalLayout">
+                           <item>
+                            <layout class="QVBoxLayout" name="verticalLayout_16">
+                             <item>
+                              <widget class="QRegisterLabel" name="RAX">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>RAX=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="RBX">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>RBX=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="RCX">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>RCX=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="RDX">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>RDX=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="RSI">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>RSI=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="RDI">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>RDI=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="RBP">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>RBP=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="RSP">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>RSP=</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </item>
+                           <item>
+                            <spacer name="horizontalSpacer_2">
+                             <property name="orientation">
+                              <enum>Qt::Horizontal</enum>
+                             </property>
+                             <property name="sizeHint" stdset="0">
+                              <size>
+                               <width>40</width>
+                               <height>20</height>
+                              </size>
+                             </property>
+                            </spacer>
+                           </item>
+                           <item>
+                            <layout class="QVBoxLayout" name="verticalLayout_3">
+                             <item>
+                              <widget class="QRegisterLabel" name="R8">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>R8=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="R9">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>R9=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="R10">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>R10=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="R11">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>R11=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="R12">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>R12=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="R13">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>R13=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="R14">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>R14=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="R15">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>R15=</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </item>
+                          </layout>
+                         </item>
+                         <item>
+                          <layout class="QHBoxLayout" name="horizontalLayout_18">
+                           <item>
+                            <widget class="QRegisterLabel" name="RIP">
+                             <property name="font">
+                              <font>
+                               <pointsize>7</pointsize>
+                              </font>
+                             </property>
+                             <property name="text">
+                              <string>RIP=</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <spacer name="horizontalSpacer_19">
+                             <property name="orientation">
+                              <enum>Qt::Horizontal</enum>
+                             </property>
+                             <property name="sizeHint" stdset="0">
+                              <size>
+                               <width>40</width>
+                               <height>20</height>
+                              </size>
+                             </property>
+                            </spacer>
+                           </item>
+                          </layout>
+                         </item>
+                         <item>
+                          <spacer name="verticalSpacer">
+                           <property name="orientation">
+                            <enum>Qt::Vertical</enum>
+                           </property>
+                           <property name="sizeHint" stdset="0">
+                            <size>
+                             <width>20</width>
+                             <height>40</height>
+                            </size>
+                           </property>
+                          </spacer>
+                         </item>
+                        </layout>
+                       </item>
+                      </layout>
+                     </widget>
+                     <widget class="QWidget" name="registers_32">
+                      <layout class="QGridLayout" name="gridLayout_6">
+                       <item row="0" column="0">
+                        <layout class="QVBoxLayout" name="verticalLayout_14">
+                         <item>
+                          <layout class="QHBoxLayout" name="horizontalLayout_3">
+                           <item>
+                            <layout class="QVBoxLayout" name="verticalLayout_2">
+                             <item>
+                              <widget class="QRegisterLabel" name="EAX">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>EAX=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="EBX">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>EBX=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="ECX">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>ECX=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="EDX">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>EDX=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="ESI">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>ESI=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="EDI">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>EDI=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="EBP">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>EBP=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="ESP">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>ESP=</string>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QRegisterLabel" name="EIP">
+                               <property name="font">
+                                <font>
+                                 <pointsize>7</pointsize>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>EIP=</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </item>
+                           <item>
+                            <spacer name="horizontalSpacer_10">
+                             <property name="orientation">
+                              <enum>Qt::Horizontal</enum>
+                             </property>
+                             <property name="sizeHint" stdset="0">
+                              <size>
+                               <width>40</width>
+                               <height>20</height>
+                              </size>
+                             </property>
+                            </spacer>
+                           </item>
+                          </layout>
+                         </item>
+                         <item>
+                          <spacer name="verticalSpacer_2">
+                           <property name="orientation">
+                            <enum>Qt::Vertical</enum>
+                           </property>
+                           <property name="sizeHint" stdset="0">
+                            <size>
+                             <width>156</width>
+                             <height>16</height>
+                            </size>
+                           </property>
+                          </spacer>
+                         </item>
+                        </layout>
+                       </item>
+                      </layout>
+                     </widget>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_29">
+                     <property name="font">
+                      <font>
+                       <pointsize>7</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Flags</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="Line" name="line_2">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_21">
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_5">
+                       <item>
+                        <widget class="QLabel" name="label_31">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>CF</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFlagRegisterLabel" name="CF">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>0</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_6">
+                       <item>
+                        <widget class="QLabel" name="label_35">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>PF</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFlagRegisterLabel" name="PF">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>0</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_7">
+                       <item>
+                        <widget class="QLabel" name="label_37">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>AF</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFlagRegisterLabel" name="AF">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>0</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_8">
+                       <item>
+                        <widget class="QLabel" name="label_39">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>ZF</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFlagRegisterLabel" name="ZF">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>0</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_9">
+                       <item>
+                        <widget class="QLabel" name="label_41">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>SF</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFlagRegisterLabel" name="SF">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>0</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_10">
+                       <item>
+                        <widget class="QLabel" name="label_43">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>TF</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFlagRegisterLabel" name="TF">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>0</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_11">
+                       <item>
+                        <widget class="QLabel" name="label_45">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>IF</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFlagRegisterLabel" name="IF">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>0</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_12">
+                       <item>
+                        <widget class="QLabel" name="label_47">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>DF</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFlagRegisterLabel" name="DF">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>0</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_13">
+                       <item>
+                        <widget class="QLabel" name="label_49">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>OF</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFlagRegisterLabel" name="OF">
+                         <property name="font">
+                          <font>
+                           <pointsize>7</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>0</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="pushButton">
+                     <property name="font">
+                      <font>
+                       <pointsize>7</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Show Float Registers</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="verticalSpacer_3">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_21">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
             </widget>
            </item>
           </layout>
          </widget>
         </widget>
-        <widget class="QSplitter" name="splitter_2">
+        <widget class="QSplitter" name="splitter_HexView_StackView">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -164,6 +949,18 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QRegisterLabel</class>
+   <extends>QLabel</extends>
+   <header location="global">GUI.CustomLabels.registerlabel</header>
+  </customwidget>
+  <customwidget>
+   <class>QFlagRegisterLabel</class>
+   <extends>QLabel</extends>
+   <header location="global">GUI.CustomLabels.flagregisterlabel</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

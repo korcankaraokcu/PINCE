@@ -76,6 +76,9 @@ INJECTION_SUCCESSFUL = type_defs.INJECTION_RESULT.INJECTION_SUCCESSFUL
 INJECTION_FAILED = type_defs.INJECTION_RESULT.INJECTION_FAILED
 NO_INJECTION_ATTEMPT = type_defs.INJECTION_RESULT.NO_INJECTION_ATTEMPT
 
+ARCH_32 = type_defs.INFERIOR_ARCH.ARCH_32
+ARCH_64 = type_defs.INFERIOR_ARCH.ARCH_64
+
 
 # Checks if the inferior has been terminated
 class AwaitProcessExit(QThread):
@@ -332,7 +335,7 @@ class MainForm(QMainWindow, MainWindow):
                                              zero_terminate=zero_terminate)
 
     def memoryview_onlick(self):
-        self.memory_view_window.show()
+        self.memory_view_window.showMaximized()
         self.memory_view_window.activateWindow()
 
     def wikibutton_onclick(self):
@@ -1002,6 +1005,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
         self.tableWidget_Disassemble.itemDoubleClicked.connect(self.on_disassemble_double_click)
+        self.splitter_MainMiddle.setSizes([25, 25, 25])
 
     # Select_mode can be "top" or "bottom", it represents the location of selected item
     # offset can also be an address
@@ -1070,12 +1074,55 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         thread_info = GDB_Engine.get_current_thread_information()
         self.setWindowTitle("Memory Viewer - Currently Debugging Thread " + thread_info)
         self.disassemble_expression("$pc")
-        self.show()
+        self.update_registers()
+        self.showMaximized()
         if bring_disassemble_to_front:
             self.activateWindow()
 
     def on_process_running(self):
         self.setWindowTitle("Memory Viewer - Running")
+
+    def update_registers(self):
+        registers = GDB_Engine.read_registers()
+        if GDB_Engine.inferior_arch == ARCH_64:
+            self.stackedWidget.setCurrentWidget(self.registers_64)
+            self.RAX.set_value(registers["rax"])
+            self.RBX.set_value(registers["rbx"])
+            self.RCX.set_value(registers["rcx"])
+            self.RDX.set_value(registers["rdx"])
+            self.RSI.set_value(registers["rsi"])
+            self.RDI.set_value(registers["rdi"])
+            self.RBP.set_value(registers["rbp"])
+            self.RSP.set_value(registers["rsp"])
+            self.RIP.set_value(registers["rip"])
+            self.R8.set_value(registers["r8"])
+            self.R9.set_value(registers["r9"])
+            self.R10.set_value(registers["r10"])
+            self.R11.set_value(registers["r11"])
+            self.R12.set_value(registers["r12"])
+            self.R13.set_value(registers["r13"])
+            self.R14.set_value(registers["r14"])
+            self.R15.set_value(registers["r15"])
+        elif GDB_Engine.inferior_arch == ARCH_32:
+            self.stackedWidget.setCurrentWidget(self.registers_32)
+            self.EAX.set_value(registers["eax"])
+            self.EBX.set_value(registers["ebx"])
+            self.ECX.set_value(registers["ecx"])
+            self.EDX.set_value(registers["edx"])
+            self.ESI.set_value(registers["esi"])
+            self.EDI.set_value(registers["edi"])
+            self.EBP.set_value(registers["ebp"])
+            self.ESP.set_value(registers["esp"])
+            self.EIP.set_value(registers["eip"])
+        self.CF.setText(registers["cf"])
+        self.PF.setText(registers["pf"])
+        self.AF.setText(registers["af"])
+        self.ZF.setText(registers["zf"])
+        self.SF.setText(registers["sf"])
+        self.TF.setText(registers["tf"])
+        self.IF.setText(registers["if"])
+        self.DF.setText(registers["df"])
+        self.OF.setText(registers["of"])
 
     def tableWidget_Disassemble_wheel_event(self, event):
         value = self.tableWidget_Disassemble.verticalScrollBar().value()
