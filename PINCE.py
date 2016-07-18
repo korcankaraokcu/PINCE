@@ -25,8 +25,6 @@ from GUI.aboutwidget import Ui_TabWidget as AboutWidget
 from GUI.memoryviewerwindow import Ui_MainWindow as MemoryViewWindow
 from GUI.bookmarkwidget import Ui_Form as BookmarkWidget
 
-# the PID of the process we'll attach to
-currentpid = 0
 selfpid = os.getpid()
 
 # settings
@@ -85,7 +83,7 @@ class AwaitProcessExit(QThread):
     process_exited = pyqtSignal()
 
     def run(self):
-        while currentpid is 0 or SysUtils.is_process_valid(currentpid):
+        while GDB_Engine.currentpid is 0 or SysUtils.is_process_valid(GDB_Engine.currentpid):
             sleep(0.01)
         self.process_exited.emit()
 
@@ -387,9 +385,7 @@ class MainForm(QMainWindow, MainWindow):
             self.tableWidget_addresstable.setRowCount(0)
 
     def on_inferior_exit(self):
-        global currentpid
         GDB_Engine.detach()
-        currentpid = 0
         self.label_SelectedProcess.setText("No Process Selected")
         QMessageBox.information(self, "Warning", "Process has been terminated")
         self.await_exit_thread.start()
@@ -407,7 +403,7 @@ class MainForm(QMainWindow, MainWindow):
 
     # closes all windows on exit
     def closeEvent(self, event):
-        if not currentpid == 0:
+        if not GDB_Engine.currentpid == 0:
             GDB_Engine.detach()
         application = QApplication.instance()
         application.closeAllWindows()
@@ -536,9 +532,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
     def pushbutton_close_onclick(self):
         self.close()
 
-    # gets the pid out of the selection to set currentpid
+    # gets the pid out of the selection to attach
     def pushbutton_open_onclick(self):
-        global currentpid
         currentitem = self.processtable.item(self.processtable.currentIndex().row(), 0)
         if currentitem is None:
             QMessageBox.information(self, "Error", "Please select a process first")
@@ -550,7 +545,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             if pid == selfpid:
                 QMessageBox.information(self, "Error", "What the fuck are you trying to do?")  # planned easter egg
                 return
-            if pid == currentpid:
+            if pid == GDB_Engine.currentpid:
                 QMessageBox.information(self, "Error", "You're debugging this process already")
                 return
             tracedby = SysUtils.is_traced(pid)
@@ -567,16 +562,16 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 print("done")  # loading_widget finish
                 QMessageBox.information(self, "Error", "Permission denied, could not attach to the process")
                 return
-            if not currentpid == 0:
+            if not GDB_Engine.currentpid == 0:
                 GDB_Engine.detach()
-            currentpid = pid
-            code_injection_status = GDB_Engine.attach(str(currentpid), initial_code_injection_method)
-            p = SysUtils.get_process_information(currentpid)
+            code_injection_status = GDB_Engine.attach(str(pid), initial_code_injection_method)
+            p = SysUtils.get_process_information(GDB_Engine.currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
             self.parent().pushButton_NextScan.setEnabled(False)
             self.parent().pushButton_UndoScan.setEnabled(False)
-            readable_only, writeable, executable, readable = SysUtils.get_memory_regions_by_perms(currentpid)  # test
+            readable_only, writeable, executable, readable = SysUtils.get_memory_regions_by_perms(
+                GDB_Engine.currentpid)  # test
             SysUtils.exclude_system_memory_regions(readable)
             print(len(readable))
             print("done")  # loading_widget finish
