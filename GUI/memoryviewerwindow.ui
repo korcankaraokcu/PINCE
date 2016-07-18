@@ -980,7 +980,7 @@
                     </layout>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="pushButton">
+                    <widget class="QPushButton" name="pushButton_ShowFloatRegisters">
                      <property name="font">
                       <font>
                        <pointsize>7</pointsize>

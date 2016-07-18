@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'memoryviewerwindow.ui'
 #
-# Created: Mon Jul 18 01:50:36 2016
+# Created: Mon Jul 18 22:58:35 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -503,12 +503,12 @@ class Ui_MainWindow(object):
         self.verticalLayout_18.addWidget(self.FS)
         self.horizontalLayout_2.addLayout(self.verticalLayout_18)
         self.verticalLayout_19.addLayout(self.horizontalLayout_2)
-        self.pushButton = QtWidgets.QPushButton(self.scrollAreaWidgetContents_Registers)
+        self.pushButton_ShowFloatRegisters = QtWidgets.QPushButton(self.scrollAreaWidgetContents_Registers)
         font = QtGui.QFont()
         font.setPointSize(7)
-        self.pushButton.setFont(font)
-        self.pushButton.setObjectName("pushButton")
-        self.verticalLayout_19.addWidget(self.pushButton)
+        self.pushButton_ShowFloatRegisters.setFont(font)
+        self.pushButton_ShowFloatRegisters.setObjectName("pushButton_ShowFloatRegisters")
+        self.verticalLayout_19.addWidget(self.pushButton_ShowFloatRegisters)
         spacerItem7 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_19.addItem(spacerItem7)
         self.horizontalLayout_4.addLayout(self.verticalLayout_19)
@@ -622,11 +622,11 @@ class Ui_MainWindow(object):
         self.GS.setText(_translate("MainWindow", "GS="))
         self.DS.setText(_translate("MainWindow", "DS="))
         self.FS.setText(_translate("MainWindow", "FS="))
-        self.pushButton.setText(_translate("MainWindow", "Show Float Registers"))
+        self.pushButton_ShowFloatRegisters.setText(_translate("MainWindow", "Show Float Registers"))
         self.label.setText(_translate("MainWindow", "Reserved for Hexview"))
         self.label_2.setText(_translate("MainWindow", "Reserved for StackView"))
         self.menuView.setTitle(_translate("MainWindow", "View"))
         self.actionBookmarks.setText(_translate("MainWindow", "Bookmarks"))
 
-from GUI.CustomLabels.registerlabel import QRegisterLabel
 from GUI.CustomLabels.flagregisterlabel import QFlagRegisterLabel
+from GUI.CustomLabels.registerlabel import QRegisterLabel
