@@ -1204,6 +1204,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         for item in self.tableWidget_Disassemble.bookmarks.keys():
             bookmark_action_list.append(go_to_bookmark.addAction(item))
         menu.addSeparator()
+        clipboard_menu = menu.addMenu("Copy to Clipboard")
+        copy_address = clipboard_menu.addAction("Copy Address")
+        copy_bytes = clipboard_menu.addAction("Copy Bytes")
+        copy_opcode = clipboard_menu.addAction("Copy Opcode")
+        copy_comment = clipboard_menu.addAction("Copy Comment")
         menu.setStyleSheet("font-size: 7pt;")
         action = menu.exec_(event.globalPos())
         if action == go_to:
@@ -1223,6 +1228,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.bookmark_address(selected_row, current_address_text)
         elif action == delete_bookmark:
             self.delete_bookmark(selected_row, current_address_text)
+        elif action == copy_address:
+            QApplication.clipboard().setText(self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text())
+        elif action == copy_bytes:
+            QApplication.clipboard().setText(self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text())
+        elif action == copy_opcode:
+            QApplication.clipboard().setText(self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text())
+        elif action == copy_comment:
+            QApplication.clipboard().setText(self.tableWidget_Disassemble.item(selected_row, DISAS_COMMENT_COL).text())
         for item in bookmark_action_list:
             if action == item:
                 self.disassemble_expression(SysUtils.extract_address(action.text()), append_to_travel_history=True)
