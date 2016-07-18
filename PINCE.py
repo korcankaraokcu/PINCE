@@ -24,6 +24,7 @@ from GUI.consolewidget import Ui_Form as ConsoleWidget
 from GUI.aboutwidget import Ui_TabWidget as AboutWidget
 from GUI.memoryviewerwindow import Ui_MainWindow as MemoryViewWindow
 from GUI.bookmarkwidget import Ui_Form as BookmarkWidget
+from GUI.floatregisterwidget import Ui_TabWidget as FloatRegisterWidget
 
 selfpid = os.getpid()
 
@@ -53,6 +54,10 @@ DISAS_ADDR_COL = 0
 DISAS_BYTES_COL = 1
 DISAS_OPCODES_COL = 2
 DISAS_COMMENT_COL = 3
+
+# represents the index of columns in floating point table
+FLOAT_REGISTERS_NAME_COL = 0
+FLOAT_REGISTERS_VALUE_COL = 1
 
 INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
 INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
@@ -1003,6 +1008,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
         self.tableWidget_Disassemble.itemDoubleClicked.connect(self.on_disassemble_double_click)
+        self.pushButton_ShowFloatRegisters.clicked.connect(self.on_show_float_registers_button_clicked)
         self.splitter_MainMiddle.setSizes([25, 25, 25])
         self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
         self.widget_Registers.resize(270, self.widget_Registers.height())
@@ -1281,6 +1287,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.bookmark_widget = BookmarkWidgetForm(self)
         self.bookmark_widget.show()
 
+    def on_show_float_registers_button_clicked(self):
+        self.float_registers_widget = FloatRegisterWidgetForm()
+        try:
+            self.await_process_stop_thread.process_stopped.disconnect(self.float_registers_widget.update_registers)
+        except TypeError:
+            pass
+        self.await_process_stop_thread.process_stopped.connect(self.float_registers_widget.update_registers)
+        self.float_registers_widget.show()
+        GuiUtils.center_to_window(self.float_registers_widget, self.widget_Registers)
+
 
 class BookmarkWidgetForm(QWidget, BookmarkWidget):
     def __init__(self, parent=None):
@@ -1300,6 +1316,55 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
 
     def on_item_double_clicked(self, item):
         self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
+
+
+class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.setWindowFlags(Qt.Window)
+        self.update_registers()
+        self.tableWidget_FPU.itemDoubleClicked.connect(self.set_register)
+        self.tableWidget_XMM.itemDoubleClicked.connect(self.set_register)
+
+    def update_registers(self):
+        self.tableWidget_FPU.setRowCount(0)
+        self.tableWidget_FPU.setRowCount(8)
+        self.tableWidget_XMM.setRowCount(0)
+        self.tableWidget_XMM.setRowCount(8)
+        float_registers = GDB_Engine.read_float_registers()
+
+        # st0-7, xmm0-7
+        for row, index in enumerate(range(8)):
+            current_st_register = "st" + str(index)
+            current_xmm_register = "xmm" + str(index)
+            self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(current_st_register))
+            self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_VALUE_COL,
+                                         QTableWidgetItem(float_registers[current_st_register]))
+            self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(current_xmm_register))
+            self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_VALUE_COL,
+                                         QTableWidgetItem(float_registers[current_xmm_register]))
+
+    def set_register(self, index):
+        current_row = index.row()
+        if self.currentWidget() == self.FPU:
+            current_table_widget = self.tableWidget_FPU
+        elif self.currentWidget() == self.XMM:
+            current_table_widget = self.tableWidget_XMM
+        current_register = current_table_widget.item(current_row, FLOAT_REGISTERS_NAME_COL).text()
+        current_value = current_table_widget.item(current_row, FLOAT_REGISTERS_VALUE_COL).text()
+        try:
+            current_value = float(current_value)
+        except:
+            current_value = ""
+        label_text = "Enter the new value of register " + current_register.upper()
+        register_dialog = DialogWithButtonsForm(self, label_text=label_text, hide_line_edit=False,
+                                                line_edit_text=str(current_value))
+        if register_dialog.exec_():
+            if self.currentWidget() == self.XMM:
+                current_register = current_register + ".uint128"
+            GDB_Engine.set_convenience_variable(current_register, register_dialog.get_values())
+            self.update_registers()
 
 
 if __name__ == "__main__":

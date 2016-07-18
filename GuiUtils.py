@@ -26,7 +26,6 @@ def center(window):
     window.move(QDesktopWidget().availableGeometry().center() - window.frameGeometry().center())
 
 
-# centering a child window
 def center_to_parent(window):
     """Center the given window to it's parent
 
@@ -34,6 +33,16 @@ def center_to_parent(window):
         window (QMainWindow, QWidget etc.): The window that'll be centered to it's parent
     """
     window.move(window.parent().frameGeometry().center() - window.frameGeometry().center())
+
+
+def center_to_window(window_secondary, window_main):
+    """Center the given window_secondary to window_main
+
+    Args:
+        window_secondary (QMainWindow, QWidget etc.): The window that'll be centered to window_main
+        window_main (QMainWindow, QWidget etc.): The window that window_secondary will centered to
+    """
+    window_secondary.move(window_main.frameGeometry().center() - window_secondary.frameGeometry().center())
 
 
 def valuetype_to_text(value_index=int, length=0, is_unicode=False, zero_terminate=True):

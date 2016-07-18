@@ -193,9 +193,36 @@ class ReadRegisters(gdb.Command):
         pickle.dump(file_contents_send, open(send_file, "wb"))
 
 
+class ReadFloatRegisters(gdb.Command):
+    def __init__(self):
+        super(ReadFloatRegisters, self).__init__("pince-read-float-registers", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        file_contents_send = {}
+        inferior = gdb.selected_inferior()
+        pid = inferior.pid
+        directory_path = SysUtils.get_PINCE_IPC_directory(pid)
+        send_file = directory_path + "/float-registers-to-PINCE.txt"
+        open(send_file, "w").close()
+
+        # st0-7
+        for index in range(8):
+            current_register = "st" + str(index)
+            value = gdb.parse_and_eval("$" + current_register)
+            file_contents_send[current_register] = str(value)
+
+        # xmm0-7
+        for index in range(8):
+            current_register = "xmm" + str(index)
+            value = gdb.parse_and_eval("$" + current_register + ".uint128")
+            file_contents_send[current_register] = str(value)
+        pickle.dump(file_contents_send, open(send_file, "wb"))
+
+
 IgnoreErrors()
 ReadMultipleAddresses()
 SetMultipleAddresses()
 ReadSingleAddress()
 ParseConvenienceVariables()
 ReadRegisters()
+ReadFloatRegisters()

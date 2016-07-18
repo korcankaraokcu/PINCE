@@ -701,6 +701,23 @@ def read_registers():
     return contents_recv
 
 
+def read_float_registers():
+    """Returns the current floating point registers
+
+    Returns:
+        dict: A dict that holds float registers(st0-7, xmm0-7)
+    """
+    directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
+    recv_file = directory_path + "/float-registers-to-PINCE.txt"
+    send_command("pince-read-float-registers")
+    try:
+        contents_recv = pickle.load(open(recv_file, "rb"))
+    except EOFError:
+        print("an error occurred while reading float registers")
+        contents_recv = {}
+    return contents_recv
+
+
 def set_convenience_variable(variable, value):
     """Sets given convenience variable to given value
 
