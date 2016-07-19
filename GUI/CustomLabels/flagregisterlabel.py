@@ -26,7 +26,7 @@ class QFlagRegisterLabel(QLabel):
         current_flag = self.objectName().lower()
         label_text = "Enter the new value of flag " + self.objectName() + "(0 or 1)" + \
                      "\nInputting other than 0 or 1 may fuck something up badly... VERY BADLY"
-        register_dialog = DialogWithButtonsForm(self, label_text=label_text,
+        register_dialog = DialogWithButtonsForm(label_text=label_text,
                                                 hide_line_edit=False, line_edit_text=registers[current_flag])
         if register_dialog.exec_():
             GDB_Engine.set_register_flag(current_flag, register_dialog.get_values())

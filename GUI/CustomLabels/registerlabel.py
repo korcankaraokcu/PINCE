@@ -24,7 +24,7 @@ class QRegisterLabel(QLabel):
     def mouseDoubleClickEvent(self, QMouseEvent):
         registers = GDB_Engine.read_registers()
         current_register = self.objectName().lower()
-        register_dialog = DialogWithButtonsForm(self, label_text="Enter the new value of register " + self.objectName(),
+        register_dialog = DialogWithButtonsForm(label_text="Enter the new value of register " + self.objectName(),
                                                 hide_line_edit=False, line_edit_text=registers[current_register])
         if register_dialog.exec_():
             GDB_Engine.set_convenience_variable(current_register, register_dialog.get_values())
