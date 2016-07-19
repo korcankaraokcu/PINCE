@@ -105,19 +105,17 @@ class AwaitAsyncOutput(QThread):
 
 
 class CheckInferiorStatus(QThread):
-    status_stopped = pyqtSignal()
-    status_running = pyqtSignal()
-    current_status = INFERIOR_RUNNING
+    process_stopped = pyqtSignal()
+    process_running = pyqtSignal()
 
     def run(self):
         while True:
-            if self.current_status is not GDB_Engine.inferior_status:
-                if GDB_Engine.inferior_status is INFERIOR_STOPPED:
-                    self.status_stopped.emit()
-                else:
-                    self.status_running.emit()
-                self.current_status = GDB_Engine.inferior_status
-            sleep(0.01)
+            with GDB_Engine.status_changed_condition:
+                GDB_Engine.status_changed_condition.wait()
+            if GDB_Engine.inferior_status is INFERIOR_STOPPED:
+                self.process_stopped.emit()
+            else:
+                self.process_running.emit()
 
 
 class UpdateAddressTableThread(QThread):
@@ -130,20 +128,6 @@ class UpdateAddressTableThread(QThread):
             if GDB_Engine.inferior_status is INFERIOR_STOPPED:
                 self.update_table_signal.emit()
             sleep(table_update_interval)
-
-
-class MemoryViewWindowAwaitStop(QThread):
-    process_stopped = pyqtSignal()
-    process_running = pyqtSignal()
-
-    def run(self):
-        while True:
-            with GDB_Engine.status_changed_condition:
-                GDB_Engine.status_changed_condition.wait()
-            if GDB_Engine.inferior_status is INFERIOR_STOPPED:
-                self.process_stopped.emit()
-            else:
-                self.process_running.emit()
 
 
 # A thread that updates the address table constantly
@@ -220,8 +204,10 @@ class MainForm(QMainWindow, MainWindow):
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
         self.check_status_thread = CheckInferiorStatus()
-        self.check_status_thread.status_stopped.connect(self.on_status_stopped)
-        self.check_status_thread.status_running.connect(self.on_status_running)
+        self.check_status_thread.process_stopped.connect(self.on_status_stopped)
+        self.check_status_thread.process_running.connect(self.on_status_running)
+        self.check_status_thread.process_stopped.connect(self.memory_view_window.process_stopped)
+        self.check_status_thread.process_running.connect(self.memory_view_window.process_running)
         self.check_status_thread.start()
         self.update_address_table_thread = UpdateAddressTableThread()
         self.update_address_table_thread.update_table_signal.connect(self.update_address_table_manually)
@@ -989,14 +975,15 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
 
 
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
+    process_stopped = pyqtSignal()
+    process_running = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center(self)
-        self.await_process_stop_thread = MemoryViewWindowAwaitStop()
-        self.await_process_stop_thread.process_stopped.connect(self.on_process_stop)
-        self.await_process_stop_thread.process_running.connect(self.on_process_running)
-        self.await_process_stop_thread.start()
+        self.process_stopped.connect(self.on_process_stop)
+        self.process_running.connect(self.on_process_running)
         self.widget_Disassemble.wheelEvent = self.tableWidget_Disassemble_wheel_event
 
         # Format: [address1, address2, ...]
@@ -1290,10 +1277,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def on_show_float_registers_button_clicked(self):
         self.float_registers_widget = FloatRegisterWidgetForm()
         try:
-            self.await_process_stop_thread.process_stopped.disconnect(self.float_registers_widget.update_registers)
+            self.process_stopped.disconnect(self.float_registers_widget.update_registers)
         except TypeError:
             pass
-        self.await_process_stop_thread.process_stopped.connect(self.float_registers_widget.update_registers)
+        self.process_stopped.connect(self.float_registers_widget.update_registers)
         self.float_registers_widget.show()
         GuiUtils.center_to_window(self.float_registers_widget, self.widget_Registers)
 
@@ -1323,11 +1310,14 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlags(Qt.Window)
+        self.active = True
         self.update_registers()
         self.tableWidget_FPU.itemDoubleClicked.connect(self.set_register)
         self.tableWidget_XMM.itemDoubleClicked.connect(self.set_register)
 
     def update_registers(self):
+        if not self.active:
+            return
         self.tableWidget_FPU.setRowCount(0)
         self.tableWidget_FPU.setRowCount(8)
         self.tableWidget_XMM.setRowCount(0)
@@ -1365,6 +1355,9 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
                 current_register = current_register + ".uint128"
             GDB_Engine.set_convenience_variable(current_register, register_dialog.get_values())
             self.update_registers()
+
+    def closeEvent(self, QCloseEvent):
+        self.active = False
 
 
 if __name__ == "__main__":
