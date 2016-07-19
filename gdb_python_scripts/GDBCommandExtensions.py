@@ -2,7 +2,7 @@
 import gdb
 import pickle
 import sys
-from re import search
+import re
 
 # This is some retarded hack
 gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
@@ -167,12 +167,13 @@ class ReadRegisters(gdb.Command):
             general_register_list = REGISTERS_64
         else:
             general_register_list = REGISTERS_32
+        regex_register = re.compile(r"0x[0-9a-fA-F]+")  # $6 = 0x7f0bc0b6bb40
         for item in general_register_list:
             result = gdb.execute("p/x $" + item, from_tty, to_string=True)
-            parsed_result = search(r"0x[0-9a-fA-F]+", result).group(0)  # $6 = 0x7f0bc0b6bb40
+            parsed_result = regex_register.search(result).group(0)
             file_contents_send[item] = parsed_result
         result = gdb.execute("p/t $eflags", from_tty, to_string=True)
-        parsed_result = search(r"=\s+\d+", result).group(0).split()[-1]  # $8 = 1010010011
+        parsed_result = re.search(r"=\s+\d+", result).group(0).split()[-1]  # $8 = 1010010011
         reversed_parsed_result = "".join(reversed(parsed_result))
         try:
             file_contents_send["cf"] = reversed_parsed_result[0]
@@ -188,7 +189,7 @@ class ReadRegisters(gdb.Command):
             pass
         for item in REGISTERS_SEGMENT:
             result = gdb.execute("p/x $" + item, from_tty, to_string=True)
-            parsed_result = search(r"0x[0-9a-fA-F]+", result).group(0)  # $6 = 0x7f0bc0b6bb40
+            parsed_result = regex_register.search(result).group(0)
             file_contents_send[item] = parsed_result
         pickle.dump(file_contents_send, open(send_file, "wb"))
 
