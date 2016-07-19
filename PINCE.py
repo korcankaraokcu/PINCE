@@ -777,9 +777,6 @@ class DialogWithButtonsForm(QDialog, DialogWithButtons):
         else:
             line_edit_text = str(line_edit_text)
             self.lineEdit.setText(line_edit_text)
-        self.lineEdit.setStyleSheet("color: black")
-        self.label.setStyleSheet("color: black")
-        self.buttonBox.setStyleSheet("color: black")
 
     def get_values(self):
         line_edit_text = self.lineEdit.text()
@@ -833,10 +830,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         elif current_table_update_interval == 0:
 
             # Easter egg #2
-            if not DialogWithButtonsForm(self, label_text="You are asking for it, aren't you?").exec_():
+            if not DialogWithButtonsForm(label_text="You are asking for it, aren't you?").exec_():
                 return
         elif current_table_update_interval < 0.1:
-            if not DialogWithButtonsForm(self, label_text="Update interval should be bigger than 0.1 seconds" +
+            if not DialogWithButtonsForm(label_text="Update interval should be bigger than 0.1 seconds" +
                     "\nSetting update interval less than 0.1 seconds may cause slowness" +
                     "\n\tProceed?").exec_():
                 return
@@ -1348,7 +1345,7 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         except:
             current_value = ""
         label_text = "Enter the new value of register " + current_register.upper()
-        register_dialog = DialogWithButtonsForm(self, label_text=label_text, hide_line_edit=False,
+        register_dialog = DialogWithButtonsForm(label_text=label_text, hide_line_edit=False,
                                                 line_edit_text=str(current_value))
         if register_dialog.exec_():
             if self.currentWidget() == self.XMM:
