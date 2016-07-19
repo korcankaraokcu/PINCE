@@ -40,3 +40,6 @@ sample-library32.so
 peda-session-*.txt
 .gdb_history
 core*
+
+# KDE
+.directory
