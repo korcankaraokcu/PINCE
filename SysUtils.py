@@ -275,6 +275,18 @@ def get_gdb_command_file(pid):
     return get_PINCE_IPC_directory(pid) + "/gdb_command.txt"
 
 
+def get_cli_output_file(pid):
+    """Get the path of cli output file of given pid
+
+    Args:
+        pid (int,str): PID of the process
+
+    Returns:
+        str: Path of cli output file
+    """
+    return get_PINCE_IPC_directory(pid) + "/cli-output-to-PINCE.txt"
+
+
 def parse_string(string, value_index):
     """Parses the string according to the given value_index
 
