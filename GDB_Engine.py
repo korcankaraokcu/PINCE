@@ -54,7 +54,7 @@ index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
 # The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
 
-def send_command(command, control=False):
+def send_command(command, control=False, cli_output=False):
     """Issues the command sent
 
     Args:
@@ -85,14 +85,23 @@ def send_command(command, control=False):
             command_fd = open(command_file, "w")
             command_fd.write(command)
             command_fd.close()
-            child.sendline("source " + command_file)
+            if not cli_output:
+                child.sendline("source " + command_file)
+            else:
+                child.sendline("cli-output source " + command_file)
         if not control:
             while gdb_output is "":
                 sleep(0.00001)
         time1 = time()
         print(time1 - time0)
         if not control:
-            output = gdb_output
+            if not cli_output:
+                output = gdb_output
+            else:
+                cli_file = SysUtils.get_cli_output_file(currentpid)
+                cli_fd = open(cli_file, "r")
+                output = cli_fd.read()
+                cli_fd.close()
         else:
             output = ""
         gdb_output = ""
@@ -130,12 +139,10 @@ def state_observe_thread():
     while True:
         child.expect_exact("(gdb)")
         print(child.before)  # debug mode on!
-
-        # Check .gdbinit file for these strings
-        matches = findall(r"<\-\-STOPPED\-\->|\*running,thread\-id=\"all\"",
-                          child.before)  # <--STOPPED-->  # *running,thread-id="all"
+        matches = findall(r"stopped\-threads=\"all\"|\*running,thread\-id=\"all\"",
+                          child.before)  # stopped-threads="all"  # *running,thread-id="all"
         if len(matches) > 0:
-            if search(r"STOPPED", matches[-1]):
+            if search(r"stopped", matches[-1]):
                 inferior_status = INFERIOR_STOPPED
             else:
                 inferior_status = INFERIOR_RUNNING
@@ -144,7 +151,7 @@ def state_observe_thread():
         try:
             # The command will always start with the word "source", check send_command function for the cause
             command_file = escape(SysUtils.get_gdb_command_file(currentpid))
-            gdb_output = split(r"&\"source\s" + command_file + r"\\n\"", child.before, 1)[1]  # &"command\n"
+            gdb_output = split(r"&\".*source\s" + command_file + r"\\n\"", child.before, 1)[1]  # &"command\n"
         except:
             with gdb_async_condition:
                 gdb_async_output = child.before

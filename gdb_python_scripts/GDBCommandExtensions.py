@@ -125,6 +125,24 @@ class IgnoreErrors(gdb.Command):
             pass
 
 
+class CLIOutput(gdb.Command):
+    def __init__(self):
+        super(CLIOutput, self).__init__("cli-output", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        inferior = gdb.selected_inferior()
+        pid = inferior.pid
+        directory_path = SysUtils.get_PINCE_IPC_directory(pid)
+        send_file = directory_path + "/cli-output-to-PINCE.txt"
+        try:
+            file_contents_send = gdb.execute(arg, from_tty, to_string=True)
+        except Exception as e:
+            file_contents_send = str(e)
+        FILE = open(send_file, "w")
+        FILE.write(file_contents_send)
+        FILE.close()
+
+
 class ParseConvenienceVariables(gdb.Command):
     def __init__(self):
         super(ParseConvenienceVariables, self).__init__("pince-parse-convenience-variables", gdb.COMMAND_USER)
@@ -221,6 +239,7 @@ class ReadFloatRegisters(gdb.Command):
 
 
 IgnoreErrors()
+CLIOutput()
 ReadMultipleAddresses()
 SetMultipleAddresses()
 ReadSingleAddress()
