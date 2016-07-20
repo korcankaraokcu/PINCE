@@ -377,6 +377,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def on_inferior_exit(self):
         GDB_Engine.detach()
+        self.on_status_running()
         self.label_SelectedProcess.setText("No Process Selected")
         QMessageBox.information(self, "Warning", "Process has been terminated")
         self.await_exit_thread.start()
