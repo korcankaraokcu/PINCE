@@ -279,25 +279,25 @@ def get_gdb_command_file(pid):
 
 
 def get_ipc_from_PINCE_file(pid):
-    """Get the path of IPC send file of given pid
+    """Get the path of IPC file sent to custom gdb commands from PINCE for given pid
 
     Args:
         pid (int,str): PID of the process
 
     Returns:
-        str: Path of IPC send file
+        str: Path of IPC file
     """
     return get_PINCE_IPC_directory(pid) + IPC_FROM_PINCE_PATH
 
 
 def get_ipc_to_PINCE_file(pid):
-    """Get the path of IPC recv file of given pid
+    """Get the path of IPC file sent to PINCE from custom gdb commands for given pid
 
     Args:
         pid (int,str): PID of the process
 
     Returns:
-        str: Path of IPC recv file
+        str: Path of IPC file
     """
     return get_PINCE_IPC_directory(pid) + IPC_TO_PINCE_PATH
 
