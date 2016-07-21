@@ -928,6 +928,9 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.textBrowser.append("---------------------------")
         self.textBrowser.append("/clear: Clear the console |")
         self.textBrowser.append("---------------------------")
+        self.textBrowser.append("You can change the output mode from bottom right")
+        self.textBrowser.append("Note: Changing output mode only affects commands sent. Any other " +
+                                "output coming from external sources(e.g async output) will be shown in MI format")
 
     def communicate(self, control=False):
         if control:
@@ -943,7 +946,10 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             console_output = "pls don't"
         else:
             if not control:
-                console_output = GDB_Engine.send_command(console_input)
+                if self.radioButton_CLI.isChecked():
+                    console_output = GDB_Engine.send_command(console_input, cli_output=True)
+                else:
+                    console_output = GDB_Engine.send_command(console_input)
                 if not console_output:
                     console_output = "Inferior is running"
             else:

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'consolewidget.ui'
 #
-# Created: Thu Jun 23 17:29:37 2016
+# Created: Thu Jul 21 18:11:36 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -63,6 +63,13 @@ class Ui_Form(object):
         self.pushButton_SendCtrl = QtWidgets.QPushButton(Form)
         self.pushButton_SendCtrl.setObjectName("pushButton_SendCtrl")
         self.horizontalLayout.addWidget(self.pushButton_SendCtrl)
+        self.radioButton_CLI = QtWidgets.QRadioButton(Form)
+        self.radioButton_CLI.setObjectName("radioButton_CLI")
+        self.horizontalLayout.addWidget(self.radioButton_CLI)
+        self.radioButton_MI = QtWidgets.QRadioButton(Form)
+        self.radioButton_MI.setChecked(True)
+        self.radioButton_MI.setObjectName("radioButton_MI")
+        self.horizontalLayout.addWidget(self.radioButton_MI)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout_2.addLayout(self.verticalLayout)
 
@@ -79,4 +86,6 @@ class Ui_Form(object):
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
         self.pushButton_Send.setText(_translate("Form", "Send"))
         self.pushButton_SendCtrl.setText(_translate("Form", "Send ctrl+c"))
+        self.radioButton_CLI.setText(_translate("Form", "CLI"))
+        self.radioButton_MI.setText(_translate("Form", "MI"))
 
