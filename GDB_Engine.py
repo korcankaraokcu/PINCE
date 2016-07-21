@@ -41,8 +41,6 @@ inferior_arch = int
 currentpid = 0
 child = object  # this object will be used with pexpect operations
 lock_send_command = Lock()
-lock_read_multiple_addresses = Lock()
-lock_set_multiple_addresses = Lock()
 gdb_async_condition = Condition()
 status_changed_condition = Condition()
 inferior_status = -1
@@ -54,15 +52,22 @@ index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
 # The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
 
-def send_command(command, control=False, cli_output=False):
+def send_command(command, control=False, cli_output=False, file_contents_send=None, recv_file=False):
     """Issues the command sent
 
     Args:
         command (str): The command that'll be sent
         control (bool): This param should be True if the command sent is ctrl+key instead of the regular command
+        cli_output (bool): If True, returns the readable parsed cli output instead of gdb/mi garbage
+        file_contents_send (any type): Custom commands declared in GDBCommandExtensions.py requires file communication,
+        so this parameter is actually the argument for the called custom gdb command
+        recv_file (bool): Pass this as True if the called custom gdb command returns something
 
     Examples:
-        send_command(c,control=True) sends ctrl+c instead of the str "c"
+        send_command(c,control=True)--> Sends ctrl+c instead of the str "c"
+        send_command("pince-read-multiple-addresses", file_contents_send=nested_list, recv_file=True)--> This line calls
+        the custom gdb command "pince-read-multiple-addresses" with parameter nested_list and since that gdb command
+        returns the addresses read as a list, we also pass the parameter recv_file as True
 
     Returns:
         str: Result of the command sent, commands in the form of "ctrl+key" always returns a null string
@@ -73,11 +78,14 @@ def send_command(command, control=False, cli_output=False):
     global child
     global gdb_output
     with lock_send_command:
+        time0 = time()
         if inferior_status is INFERIOR_RUNNING and not control:
             print("inferior is running")
             return
+        if file_contents_send:
+            send_file = SysUtils.get_ipc_from_PINCE_file(currentpid)
+            pickle.dump(file_contents_send, open(send_file, "wb"))
         command = str(command)
-        time0 = time()
         if control:
             child.sendcontrol(command)
         else:
@@ -92,20 +100,20 @@ def send_command(command, control=False, cli_output=False):
         if not control:
             while gdb_output is "":
                 sleep(0.00001)
-        time1 = time()
-        print(time1 - time0)
         if not control:
-            if not cli_output:
-                output = gdb_output
+            if recv_file or cli_output:
+                recv_file = SysUtils.get_ipc_to_PINCE_file(currentpid)
+                output = pickle.load(open(recv_file, "rb"))
             else:
-                cli_file = SysUtils.get_cli_output_file(currentpid)
-                cli_fd = open(cli_file, "r")
-                output = cli_fd.read()
-                cli_fd.close()
+                output = gdb_output
         else:
             output = ""
         gdb_output = ""
-        return output.strip()
+        if type(output) == str:
+            output = output.strip()
+        time1 = time()
+        print(time1 - time0)
+        return output
 
 
 def can_attach(pid):
@@ -424,12 +432,9 @@ def read_single_address(address, value_index, length, is_unicode, zero_terminate
     Returns:
         str: The value of address read as str. If the address is not valid, returns a null string
     """
-    data_read = send_command(
+    result = send_command(
         "pince-read-single-address " + str(address) + "," + str(value_index) + "," + str(length) + "," + str(
-            is_unicode) + "," + str(zero_terminate))
-    result = search(r"~\".*\\n\"", data_read).group(0)  # ~"result\n"
-    result = split(r'\"', result)[1]  # result\n"
-    result = split(r"\\", result)[0]  # result
+            is_unicode) + "," + str(zero_terminate), cli_output=True)
 
     # check ReadSingleAddress class in GDBCommandExtensions.py to understand why do we separate this parsing from others
     if value_index is INDEX_STRING:
@@ -469,18 +474,10 @@ def read_multiple_addresses(nested_list):
         For instance; If 4 addresses has been read and 3rd one is problematic, the returned list will be
         [returned_str1,returned_str2,"",returned_str4]
     """
-    directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
-    send_file = directory_path + "/read-list-from-PINCE.txt"
-    recv_file = directory_path + "/read-list-to-PINCE.txt"
-    with lock_read_multiple_addresses:
-        open(recv_file, "w").close()
-        pickle.dump(nested_list, open(send_file, "wb"))
-        send_command("pince-read-multiple-addresses")
-        try:
-            contents_recv = pickle.load(open(recv_file, "rb"))
-        except EOFError:
-            print("an error occurred while reading addresses")
-            contents_recv = []
+    contents_recv = send_command("pince-read-multiple-addresses", file_contents_send=nested_list, recv_file=True)
+    if not contents_recv:
+        print("an error occurred while reading addresses")
+        contents_recv = []
     return contents_recv
 
 
@@ -499,12 +496,8 @@ def set_multiple_addresses(nested_list, value):
     Examples:
         nested_list-->[[address1, value_index1],[address2, value_index2], ...]
     """
-    with lock_set_multiple_addresses:
-        directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
-        send_file = directory_path + "/set-list-from-PINCE.txt"
-        nested_list.append(value)
-        pickle.dump(nested_list, open(send_file, "wb"))
-        send_command("pince-set-multiple-addresses")
+    nested_list.append(value)
+    send_command("pince-set-multiple-addresses", file_contents_send=nested_list)
 
 
 def disassemble(expression, offset_or_address):
@@ -593,18 +586,10 @@ def parse_convenience_variables(variables):
     """
     variables = variables.replace(" ", "")
     variable_list = variables.split(",")
-    directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
-    send_file = directory_path + "/variables-from-PINCE.txt"
-    recv_file = directory_path + "/variables-to-PINCE.txt"
-    with lock_read_multiple_addresses:
-        open(recv_file, "w").close()
-        pickle.dump(variable_list, open(send_file, "wb"))
-        send_command("pince-parse-convenience-variables")
-        try:
-            contents_recv = pickle.load(open(recv_file, "rb"))
-        except EOFError:
-            print("an error occurred while reading variables")
-            contents_recv = []
+    contents_recv = send_command("pince-parse-convenience-variables", file_contents_send=variable_list, recv_file=True)
+    if not contents_recv:
+        print("an error occurred while reading variables")
+        contents_recv = []
     return contents_recv
 
 
@@ -673,11 +658,7 @@ def get_info_about_address(expression):
     Returns:
         str: The result of the command "info symbol" for given expression
     """
-    info = send_command("info symbol " + expression)
-    result = search(r"~\".*\\n\"", info).group(0)  # ~"result\n"
-    result = split(r'\"', result)[1]  # result\n"
-    result = split(r"\\", result)[0]  # result
-    return result
+    return send_command("info symbol " + expression, cli_output=True)
 
 
 def get_inferior_arch():
@@ -697,12 +678,8 @@ def read_registers():
     Returns:
         dict: A dict that holds general registers, flags and segment registers
     """
-    directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
-    recv_file = directory_path + "/registers-to-PINCE.txt"
-    send_command("pince-read-registers")
-    try:
-        contents_recv = pickle.load(open(recv_file, "rb"))
-    except EOFError:
+    contents_recv = send_command("pince-read-registers", recv_file=True)
+    if not contents_recv:
         print("an error occurred while reading registers")
         contents_recv = {}
     return contents_recv
@@ -714,12 +691,8 @@ def read_float_registers():
     Returns:
         dict: A dict that holds float registers(st0-7, xmm0-7)
     """
-    directory_path = SysUtils.get_PINCE_IPC_directory(currentpid)
-    recv_file = directory_path + "/float-registers-to-PINCE.txt"
-    send_command("pince-read-float-registers")
-    try:
-        contents_recv = pickle.load(open(recv_file, "rb"))
-    except EOFError:
+    contents_recv = send_command("pince-read-float-registers", recv_file=True)
+    if not contents_recv:
         print("an error occurred while reading float registers")
         contents_recv = {}
     return contents_recv

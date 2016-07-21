@@ -8,6 +8,9 @@ import type_defs
 from re import match, search, IGNORECASE, split
 
 PINCE_IPC_PATH = type_defs.PATHS.PINCE_IPC_PATH
+IPC_FROM_PINCE_PATH = type_defs.PATHS.IPC_FROM_PINCE_PATH
+IPC_TO_PINCE_PATH = type_defs.PATHS.IPC_TO_PINCE_PATH
+
 INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
 INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
 INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
@@ -275,16 +278,28 @@ def get_gdb_command_file(pid):
     return get_PINCE_IPC_directory(pid) + "/gdb_command.txt"
 
 
-def get_cli_output_file(pid):
-    """Get the path of cli output file of given pid
+def get_ipc_from_PINCE_file(pid):
+    """Get the path of IPC send file of given pid
 
     Args:
         pid (int,str): PID of the process
 
     Returns:
-        str: Path of cli output file
+        str: Path of IPC send file
     """
-    return get_PINCE_IPC_directory(pid) + "/cli-output-to-PINCE.txt"
+    return get_PINCE_IPC_directory(pid) + IPC_FROM_PINCE_PATH
+
+
+def get_ipc_to_PINCE_file(pid):
+    """Get the path of IPC recv file of given pid
+
+    Args:
+        pid (int,str): PID of the process
+
+    Returns:
+        str: Path of IPC recv file
+    """
+    return get_PINCE_IPC_directory(pid) + IPC_TO_PINCE_PATH
 
 
 def parse_string(string, value_index):

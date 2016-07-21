@@ -38,9 +38,8 @@ class ReadMultipleAddresses(gdb.Command):
         file_contents_send = []
         inferior = gdb.selected_inferior()
         pid = inferior.pid
-        directory_path = SysUtils.get_PINCE_IPC_directory(pid)
-        recv_file = directory_path + "/read-list-from-PINCE.txt"
-        send_file = directory_path + "/read-list-to-PINCE.txt"
+        recv_file = SysUtils.get_ipc_from_PINCE_file(pid)
+        send_file = SysUtils.get_ipc_to_PINCE_file(pid)
         file_contents_recv = pickle.load(open(recv_file, "rb"))
 
         # file_contents_recv format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
@@ -71,8 +70,7 @@ class SetMultipleAddresses(gdb.Command):
     def invoke(self, arg, from_tty):
         inferior = gdb.selected_inferior()
         pid = inferior.pid
-        directory_path = SysUtils.get_PINCE_IPC_directory(pid)
-        recv_file = directory_path + "/set-list-from-PINCE.txt"
+        recv_file = SysUtils.get_ipc_from_PINCE_file(pid)
         file_contents_recv = pickle.load(open(recv_file, "rb"))
 
         # last item of file_contents_recv is always value, so we pop it from the list first
@@ -132,15 +130,13 @@ class CLIOutput(gdb.Command):
     def invoke(self, arg, from_tty):
         inferior = gdb.selected_inferior()
         pid = inferior.pid
-        directory_path = SysUtils.get_PINCE_IPC_directory(pid)
-        send_file = directory_path + "/cli-output-to-PINCE.txt"
+        send_file = SysUtils.get_ipc_to_PINCE_file(pid)
         try:
             file_contents_send = gdb.execute(arg, from_tty, to_string=True)
         except Exception as e:
             file_contents_send = str(e)
-        FILE = open(send_file, "w")
-        FILE.write(file_contents_send)
-        FILE.close()
+        print(file_contents_send)
+        pickle.dump(file_contents_send, open(send_file, "wb"))
 
 
 class ParseConvenienceVariables(gdb.Command):
@@ -151,9 +147,8 @@ class ParseConvenienceVariables(gdb.Command):
         file_contents_send = []
         inferior = gdb.selected_inferior()
         pid = inferior.pid
-        directory_path = SysUtils.get_PINCE_IPC_directory(pid)
-        recv_file = directory_path + "/variables-from-PINCE.txt"
-        send_file = directory_path + "/variables-to-PINCE.txt"
+        recv_file = SysUtils.get_ipc_from_PINCE_file(pid)
+        send_file = SysUtils.get_ipc_to_PINCE_file(pid)
         file_contents_recv = pickle.load(open(recv_file, "rb"))
         for item in file_contents_recv:
             try:
@@ -174,9 +169,7 @@ class ReadRegisters(gdb.Command):
                               "of": "0"}
         inferior = gdb.selected_inferior()
         pid = inferior.pid
-        directory_path = SysUtils.get_PINCE_IPC_directory(pid)
-        send_file = directory_path + "/registers-to-PINCE.txt"
-        open(send_file, "w").close()
+        send_file = SysUtils.get_ipc_to_PINCE_file(pid)
         if str(gdb.parse_and_eval("$rax")) == "void":
             current_arch = ARCH_32
         else:
@@ -220,9 +213,7 @@ class ReadFloatRegisters(gdb.Command):
         file_contents_send = {}
         inferior = gdb.selected_inferior()
         pid = inferior.pid
-        directory_path = SysUtils.get_PINCE_IPC_directory(pid)
-        send_file = directory_path + "/float-registers-to-PINCE.txt"
-        open(send_file, "w").close()
+        send_file = SysUtils.get_ipc_to_PINCE_file(pid)
 
         # st0-7
         for index in range(8):
