@@ -4,6 +4,8 @@
 class PATHS:
     PINCE_IPC_PATH = "/tmp/PINCE-connection/"
     INITIAL_INJECTION_PATH = "/Injection/InitialCodeInjections.so"
+    IPC_FROM_PINCE_PATH = "/from_PINCE_file"
+    IPC_TO_PINCE_PATH = "/to_PINCE_file"
 
 
 class INFERIOR_STATUS:
