@@ -415,10 +415,10 @@ def read_single_address_by_expression(expression, value_index, length=None, is_u
 
 
 def read_single_address(address, value_index, length, is_unicode, zero_terminate):
-    """Reads value from the given address by using an optimized gdb python script
+    """Reads value from the given address by using a gdb python script
 
-    A variant of the function read_single_address_by_expression. This function is slightly faster and it only accepts
-    addresses instead of expressions. Use this function if you like to read only addresses, use the other variant if you
+    A variant of the function read_single_address_by_expression. It can work in non-stop mode without stopping and only
+    accepts addresses instead of expressions. Use this function if you like to read only addresses, use other one if you
     also would like to input expressions. This function also calculates float and double variables more precisely, for
     instance, if you calculate the address 0x40c495(_start+100) on KMines with value_index=INDEX_DOUBLE with the
     function read_single_address_by_expression(which uses gdb's "x" command), you'll get the result "6". But if you use
@@ -435,7 +435,9 @@ def read_single_address(address, value_index, length, is_unicode, zero_terminate
         value_index is INDEX_STRING. Ignored otherwise.
 
     Returns:
-        str: The value of address read as str. If the address is not valid, returns a null string
+        str: If the value_index is INDEX_STRING or INDEX_AOB. If an error occurs when reading, returns a null string
+        float: If the value_index is INDEX_FLOAT or INDEX_DOUBLE
+        int: If the value_index is anything else
     """
     result = send_command(
         "pince-read-single-address " + str(address) + "," + str(value_index) + "," + str(length) + "," + str(
