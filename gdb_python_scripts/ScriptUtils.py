@@ -117,6 +117,6 @@ def set_single_address(address, value_index, value):
         FILE.write(write_data)
     except:
         FILE.close()
-        print("can't access the address " + str(address))
+        print("Can't access the address " + str(address))
         return ""
     FILE.close()
