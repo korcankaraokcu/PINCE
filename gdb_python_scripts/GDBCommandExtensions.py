@@ -88,28 +88,18 @@ class ReadSingleAddress(gdb.Command):
         super(ReadSingleAddress, self).__init__("pince-read-single-address", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        try:
-            parameters = eval(
-                arg)  # more like EVIL mwahahahaha... HAHAHAHAHA... **muffled evil laughter from distance**
-
-            # 5 is the number of parameters coming from PINCE
-            address, value_index, length, unicode, zero_terminate = parameters + (None,) * (5 - len(parameters))
-            address = hex(address)
-        except:
-            print("")
-            return
-
-        # python can't print a string that has null bytes in it, so we'll have to print the raw bytes instead and let PINCE do the parsing
-        # Weird enough, even when python can't print those strings, pyqt can(in it's gui elements like labels)
-        if value_index is INDEX_STRING:
-            value_index = INDEX_AOB
-            if unicode:
-                try:
-                    length = int(length)
-                    length = length * 2
-                except:
-                    print("")
-        print(ScriptUtils.read_single_address(address, value_index, length, unicode, zero_terminate))
+        inferior = gdb.selected_inferior()
+        pid = inferior.pid
+        send_file = SysUtils.get_ipc_to_PINCE_file(pid)
+        recv_file = SysUtils.get_ipc_from_PINCE_file(pid)
+        file_contents_recv = pickle.load(open(recv_file, "rb"))
+        address = file_contents_recv[0]
+        value_index = file_contents_recv[1]
+        length = file_contents_recv[2]
+        is_unicode = file_contents_recv[3]
+        zero_terminate = file_contents_recv[4]
+        file_contents_send = ScriptUtils.read_single_address(address, value_index, length, is_unicode, zero_terminate)
+        pickle.dump(file_contents_send, open(send_file, "wb"))
 
 
 class IgnoreErrors(gdb.Command):
