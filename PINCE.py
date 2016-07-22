@@ -414,7 +414,7 @@ class MainForm(QMainWindow, MainWindow):
         value = GDB_Engine.read_single_address(address, typeofaddress, length, unicode, zero_terminate)
         self.tableWidget_addresstable.setCellWidget(currentrow, FROZEN_COL, frozen_checkbox)
         self.change_address_table_elements(row=currentrow, description=description, address=address,
-                                           typeofaddress=typeofaddress_text, value=value)
+                                           typeofaddress=typeofaddress_text, value=str(value))
 
     def on_address_table_double_click(self, index):
         current_row = index.row()
@@ -469,7 +469,7 @@ class MainForm(QMainWindow, MainWindow):
                                                        length=length, is_unicode=unicode,
                                                        zero_terminate=zero_terminate)
                 self.change_address_table_elements(row=current_row, description=description, address=address,
-                                                   typeofaddress=typeofaddress_text, value=value)
+                                                   typeofaddress=typeofaddress_text, value=str(value))
 
     # Changes the column values of the given row
     def change_address_table_elements(self, row, description="", address="", typeofaddress="", value=""):

@@ -91,6 +91,7 @@ def send_command(command, control=False, cli_output=False, file_contents_send=No
             send_file = SysUtils.get_ipc_from_PINCE_file(currentpid)
             pickle.dump(file_contents_send, open(send_file, "wb"))
         command = str(command)
+        print("Last command: " + command)
         if control:
             child.sendcontrol(command)
         else:
@@ -414,11 +415,11 @@ def read_single_address_by_expression(expression, value_index, length=None, is_u
         return "??"
 
 
-def read_single_address(address, value_index, length, is_unicode, zero_terminate):
-    """Reads value from the given address by using a gdb python script
+def read_single_address(address, value_index, length=None, is_unicode=False, zero_terminate=True):
+    """Reads value from the given address by using an optimized gdb python script
 
-    A variant of the function read_single_address_by_expression. It can work in non-stop mode without stopping and only
-    accepts addresses instead of expressions. Use this function if you like to read only addresses, use other one if you
+    A variant of the function read_single_address_by_expression. This function is slightly faster and it only accepts
+    addresses instead of expressions. Use this function if you like to read only addresses, use the other variant if you
     also would like to input expressions. This function also calculates float and double variables more precisely, for
     instance, if you calculate the address 0x40c495(_start+100) on KMines with value_index=INDEX_DOUBLE with the
     function read_single_address_by_expression(which uses gdb's "x" command), you'll get the result "6". But if you use
@@ -439,24 +440,9 @@ def read_single_address(address, value_index, length, is_unicode, zero_terminate
         float: If the value_index is INDEX_FLOAT or INDEX_DOUBLE
         int: If the value_index is anything else
     """
-    result = send_command(
-        "pince-read-single-address " + str(address) + "," + str(value_index) + "," + str(length) + "," + str(
-            is_unicode) + "," + str(zero_terminate), cli_output=True)
-
-    # check ReadSingleAddress class in GDBCommandExtensions.py to understand why do we separate this parsing from others
-    if value_index is INDEX_STRING:
-        returned_string = result.replace(" ", "")
-        if not is_unicode:
-            returned_string = bytes.fromhex(returned_string).decode("ascii", "replace")
-        else:
-            returned_string = bytes.fromhex(returned_string).decode("utf-8", "replace")
-        if zero_terminate:
-            if returned_string.startswith('\x00'):
-                returned_string = '\x00'
-            else:
-                returned_string = returned_string.split('\x00')[0]
-        return returned_string[0:int(length)]
-    return result
+    return send_command("pince-read-single-address",
+                        file_contents_send=(address, value_index, length, is_unicode, zero_terminate),
+                        recv_file=True)
 
 
 def read_multiple_addresses(nested_list):
@@ -476,10 +462,10 @@ def read_multiple_addresses(nested_list):
         [[address1, value_index1],[address2, value_index2, length2],[address3, value_index3, zero_terminate], ...]
 
     Returns:
-        list: A list of the values read as str.
+        list: A list of the values read.
         If any errors occurs while reading addresses, it's ignored and the belonging address is returned as null string
         For instance; If 4 addresses has been read and 3rd one is problematic, the returned list will be
-        [returned_str1,returned_str2,"",returned_str4]
+        [returned_value1,returned_value2,"",returned_value4]
     """
     contents_recv = send_command("pince-read-multiple-addresses", file_contents_send=nested_list, recv_file=True)
     if not contents_recv:

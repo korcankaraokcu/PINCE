@@ -37,14 +37,20 @@ def issue_command(command, error_message=""):
 def read_single_address(address, value_type, length=0, unicode=False, zero_terminate=True):
     try:
         value_type = int(value_type)
+    except:
+        print(str(value_type) + " is not a valid value index")
+        return ""
+    try:
         address = int(address, 16)
     except:
+        print(str(address) + " is not a valid address")
         return ""
     packed_data = index_to_valuetype_dict.get(value_type, -1)
     if value_type is INDEX_STRING:
         try:
             expected_length = int(length)
         except:
+            print(str(length) + " is not a valid length")
             return ""
         if unicode:
             expected_length = length * 2
@@ -52,6 +58,7 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
         try:
             expected_length = int(length)
         except:
+            print(str(length) + " is not a valid length")
             return ""
     else:
         expected_length = packed_data[0]
@@ -65,6 +72,7 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
         readed = FILE.read(expected_length)
     except:
         FILE.close()
+        print("Can't access the memory at address " + str(address))
         return ""
     FILE.close()
     if value_type is INDEX_STRING:
