@@ -168,10 +168,10 @@ class ReadRegisters(gdb.Command):
             general_register_list = REGISTERS_64
         else:
             general_register_list = REGISTERS_32
-        regex_register = re.compile(r"0x[0-9a-fA-F]+")  # $6 = 0x7f0bc0b6bb40
+        regex_hex = re.compile(r"0x[0-9a-fA-F]+")  # $6 = 0x7f0bc0b6bb40
         for item in general_register_list:
             result = gdb.execute("p/x $" + item, from_tty, to_string=True)
-            parsed_result = regex_register.search(result).group(0)
+            parsed_result = regex_hex.search(result).group(0)
             file_contents_send[item] = parsed_result
         result = gdb.execute("p/t $eflags", from_tty, to_string=True)
         parsed_result = re.search(r"=\s+\d+", result).group(0).split()[-1]  # $8 = 1010010011
@@ -190,7 +190,7 @@ class ReadRegisters(gdb.Command):
             pass
         for item in REGISTERS_SEGMENT:
             result = gdb.execute("p/x $" + item, from_tty, to_string=True)
-            parsed_result = regex_register.search(result).group(0)
+            parsed_result = regex_hex.search(result).group(0)
             file_contents_send[item] = parsed_result
         pickle.dump(file_contents_send, open(send_file, "wb"))
 
@@ -219,6 +219,54 @@ class ReadFloatRegisters(gdb.Command):
         pickle.dump(file_contents_send, open(send_file, "wb"))
 
 
+class GetStackTraceInfo(gdb.Command):
+    def __init__(self):
+        super(GetStackTraceInfo, self).__init__("pince-get-stack-trace-info", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        file_contents_send = []
+        inferior = gdb.selected_inferior()
+        pid = inferior.pid
+        send_file = SysUtils.get_ipc_to_PINCE_file(pid)
+        if str(gdb.parse_and_eval("$rax")) == "void":
+            current_arch = ARCH_32
+        else:
+            current_arch = ARCH_64
+        if current_arch == ARCH_64:
+            sp_register = "rsp"
+            result = gdb.execute("p/x $rsp", from_tty, to_string=True)
+        else:
+            sp_register = "esp"
+            result = gdb.execute("p/x $esp", from_tty, to_string=True)
+        stack_pointer_int = int(re.search(r"0x[0-9a-fA-F]+", result).group(0), 16)  # $6 = 0x7f0bc0b6bb40
+        result = gdb.execute("bt", from_tty, to_string=True)
+
+        # Example: #10 0x000000000040c45a in--->#10--->10
+        frame_count = re.findall(r"#\d+\s+0x[0-9a-fA-F]+\s+in", result)[-1].split()[0].replace("#", "")
+
+        # +1 because frame numbers start from 0
+        for item in range(int(frame_count) + 1):
+            result = gdb.execute("info frame " + str(item), from_tty, to_string=True)
+
+            # frame at 0x7ffe1e989950--->0x7ffe1e989950
+            frame_address = re.search(r"frame\s+at\s+0x[0-9a-fA-F]+", result).group(0).split()[-1]
+            difference = hex(int(frame_address, 16) - stack_pointer_int)
+            frame_address_with_difference = frame_address + "(" + sp_register + "+" + difference + ")"
+
+            # saved rip = 0x7f633a853fe4
+            return_address = re.search(r"saved.*=\s+0x[0-9a-fA-F]+", result)
+            if return_address:
+                return_address = return_address.group(0).split()[-1]
+                result = gdb.execute("x/b " + return_address, from_tty, to_string=True)
+
+                # 0x40c431 <_start>:--->0x40c431 <_start>
+                return_address_with_info = re.search(r"0x[0-9a-fA-F]+.*:", result).group(0).split(":")[0]
+            else:
+                return_address_with_info = "<unavailable>"
+            file_contents_send.append([return_address_with_info, frame_address_with_difference])
+        pickle.dump(file_contents_send, open(send_file, "wb"))
+
+
 IgnoreErrors()
 CLIOutput()
 ReadMultipleAddresses()
@@ -227,3 +275,4 @@ ReadSingleAddress()
 ParseConvenienceVariables()
 ReadRegisters()
 ReadFloatRegisters()
+GetStackTraceInfo()

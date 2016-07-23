@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'memoryviewerwindow.ui'
 #
-# Created: Mon Jul 18 22:58:35 2016
+# Created: Sat Jul 23 23:22:37 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -68,7 +68,7 @@ class Ui_MainWindow(object):
         self.scrollArea_Registers.setWidgetResizable(True)
         self.scrollArea_Registers.setObjectName("scrollArea_Registers")
         self.scrollAreaWidgetContents_Registers = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 361, 466))
+        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 347, 423))
         self.scrollAreaWidgetContents_Registers.setObjectName("scrollAreaWidgetContents_Registers")
         self.gridLayout_8 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_Registers)
         self.gridLayout_8.setObjectName("gridLayout_8")
@@ -534,9 +534,34 @@ class Ui_MainWindow(object):
         self.gridLayout_3 = QtWidgets.QGridLayout(self.widget_StackView)
         self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_3.setObjectName("gridLayout_3")
-        self.label_2 = QtWidgets.QLabel(self.widget_StackView)
-        self.label_2.setObjectName("label_2")
-        self.gridLayout_3.addWidget(self.label_2, 0, 0, 1, 1)
+        self.stackedWidget_StackScreens = QtWidgets.QStackedWidget(self.widget_StackView)
+        self.stackedWidget_StackScreens.setObjectName("stackedWidget_StackScreens")
+        self.StackTrace = QtWidgets.QWidget()
+        self.StackTrace.setObjectName("StackTrace")
+        self.gridLayout_9 = QtWidgets.QGridLayout(self.StackTrace)
+        self.gridLayout_9.setObjectName("gridLayout_9")
+        self.tableWidget_StackTrace = QtWidgets.QTableWidget(self.StackTrace)
+        font = QtGui.QFont()
+        font.setPointSize(7)
+        self.tableWidget_StackTrace.setFont(font)
+        self.tableWidget_StackTrace.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tableWidget_StackTrace.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.tableWidget_StackTrace.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tableWidget_StackTrace.setObjectName("tableWidget_StackTrace")
+        self.tableWidget_StackTrace.setColumnCount(2)
+        self.tableWidget_StackTrace.setRowCount(0)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_StackTrace.setHorizontalHeaderItem(0, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_StackTrace.setHorizontalHeaderItem(1, item)
+        self.tableWidget_StackTrace.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_StackTrace.verticalHeader().setDefaultSectionSize(15)
+        self.gridLayout_9.addWidget(self.tableWidget_StackTrace, 0, 0, 1, 1)
+        self.stackedWidget_StackScreens.addWidget(self.StackTrace)
+        self.page_2 = QtWidgets.QWidget()
+        self.page_2.setObjectName("page_2")
+        self.stackedWidget_StackScreens.addWidget(self.page_2)
+        self.gridLayout_3.addWidget(self.stackedWidget_StackScreens, 0, 0, 1, 1)
         self.verticalLayout.addWidget(self.splitter_MainMiddle)
         self.gridLayout_5.addLayout(self.verticalLayout, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -624,9 +649,12 @@ class Ui_MainWindow(object):
         self.FS.setText(_translate("MainWindow", "FS="))
         self.pushButton_ShowFloatRegisters.setText(_translate("MainWindow", "Show Float Registers"))
         self.label.setText(_translate("MainWindow", "Reserved for Hexview"))
-        self.label_2.setText(_translate("MainWindow", "Reserved for StackView"))
+        item = self.tableWidget_StackTrace.horizontalHeaderItem(0)
+        item.setText(_translate("MainWindow", "Return Address"))
+        item = self.tableWidget_StackTrace.horizontalHeaderItem(1)
+        item.setText(_translate("MainWindow", "Frame Address"))
         self.menuView.setTitle(_translate("MainWindow", "View"))
         self.actionBookmarks.setText(_translate("MainWindow", "Bookmarks"))
 
-from GUI.CustomLabels.flagregisterlabel import QFlagRegisterLabel
 from GUI.CustomLabels.registerlabel import QRegisterLabel
+from GUI.CustomLabels.flagregisterlabel import QFlagRegisterLabel

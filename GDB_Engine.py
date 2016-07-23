@@ -715,3 +715,18 @@ def set_register_flag(flag, value):
         registers["of"] + registers["df"] + registers["if"] + registers["tf"] + registers["sf"] + registers[
             "zf"] + "0" + registers["af"] + "0" + registers["pf"] + "0" + registers["cf"], 2))
     set_convenience_variable("eflags", eflags_hex_value)
+
+
+def get_stacktrace_info():
+    """Returns information about current stacktrace
+
+    Returns:
+        list: A list of str values in this format-->[[return_address_info1,frame_address_info1],[info2, ...], ...]
+        return_address_info looks like this-->Hex address+symbol-->0x40c431 <_start>
+        frame_address_info looks like this-->Hex address+distance from stack pointer-->0x7ffe1e989a40(rsp+0x100)
+    """
+    contents_recv = send_command("pince-get-stack-trace-info", recv_file=True)
+    if not contents_recv:
+        print("an error occurred while reading stacktrace")
+        contents_recv = []
+    return contents_recv
