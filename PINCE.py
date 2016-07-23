@@ -59,6 +59,10 @@ DISAS_COMMENT_COL = 3
 FLOAT_REGISTERS_NAME_COL = 0
 FLOAT_REGISTERS_VALUE_COL = 1
 
+# represents the index of columns in stacktrace table
+STACKTRACE_RETURN_ADDRESS_COL = 0
+STACKTRACE_FRAME_ADDRESS_COL = 1
+
 INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
 INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
 INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
@@ -1000,7 +1004,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
         self.tableWidget_Disassemble.itemDoubleClicked.connect(self.on_disassemble_double_click)
         self.pushButton_ShowFloatRegisters.clicked.connect(self.on_show_float_registers_button_clicked)
-        self.splitter_MainMiddle.setSizes([25, 25, 25])
         self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
         self.widget_Registers.resize(270, self.widget_Registers.height())
 
@@ -1073,6 +1076,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.setWindowTitle("Memory Viewer - Currently Debugging Thread " + thread_info)
         self.disassemble_expression("$pc")
         self.update_registers()
+        self.update_stacktrace()
         self.showMaximized()
         if bring_disassemble_to_front:
             self.activateWindow()
@@ -1127,6 +1131,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.ES.set_value(registers["es"])
         self.GS.set_value(registers["gs"])
         self.FS.set_value(registers["fs"])
+
+    def update_stacktrace(self):
+        stack_trace_info = GDB_Engine.get_stacktrace_info()
+        self.tableWidget_StackTrace.setRowCount(0)
+        self.tableWidget_StackTrace.setRowCount(len(stack_trace_info))
+        for row, item in enumerate(stack_trace_info):
+            self.tableWidget_StackTrace.setItem(row, STACKTRACE_RETURN_ADDRESS_COL, QTableWidgetItem(item[0]))
+            self.tableWidget_StackTrace.setItem(row, STACKTRACE_FRAME_ADDRESS_COL, QTableWidgetItem(item[1]))
+        self.tableWidget_StackTrace.resizeColumnsToContents()
+        self.tableWidget_StackTrace.horizontalHeader().setStretchLastSection(True)
 
     def tableWidget_Disassemble_wheel_event(self, event):
         value = self.tableWidget_Disassemble.verticalScrollBar().value()
