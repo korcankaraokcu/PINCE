@@ -742,10 +742,11 @@ def get_stack_info():
     """Returns information about current stack
 
     Returns:
-        list: A list of str values in this format-->[[stack_pointer_info1,value_info1],[info2, ...], ...]
+        list: A list of str values in this format-->[[stack_pointer_info1,hex_value1,representation1],[info2, ...], ...]
         stack_pointer_info looks like this-->Hex address+distance from stack pointer-->0x7ffd0d232f88(rsp+0xff8)
-        value_info looks like this-->Value holden by corresponding address+integer and float representation of it--▼
-        0x00302e322d63726b(i:13561591926846059,f:9.000675827832922e-308)
+        hex_value looks like this-->Value holden by corresponding address-->0x00302e322d63726b
+        representation looks like this-->integer and float representation of the hex_value--▼
+        INT:13561591926846059|||FLOAT:9.000675827832922e-308
     """
     contents_recv = send_command("pince-get-stack-info", recv_with_file=True)
     if not contents_recv:

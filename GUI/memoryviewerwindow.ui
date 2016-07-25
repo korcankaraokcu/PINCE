@@ -112,7 +112,7 @@
               <property name="geometry">
                <rect>
                 <x>0</x>
-                <y>-100</y>
+                <y>0</y>
                 <width>347</width>
                 <height>423</height>
                </rect>
@@ -1123,6 +1123,11 @@
                  <column>
                   <property name="text">
                    <string>Value</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>Representation</string>
                   </property>
                  </column>
                 </widget>
