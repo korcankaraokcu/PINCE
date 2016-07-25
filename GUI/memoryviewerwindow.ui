@@ -1127,7 +1127,12 @@
                  </column>
                  <column>
                   <property name="text">
-                   <string>Representation</string>
+                   <string>Int Repr</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>Float Repr</string>
                   </property>
                  </column>
                 </widget>
