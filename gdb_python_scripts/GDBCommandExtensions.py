@@ -303,8 +303,8 @@ class GetStackInfo(gdb.Command):
                 hex_data = "0x" + "".join(format(n, '02x') for n in reversed(read))
                 int_data = str(int(hex_data, 16))
                 float_data = str(struct.unpack_from(float_format, read)[0])
-                value = hex_data + "(i:" + int_data + ",f:" + float_data + ")"
-                file_contents_send.append([stack_indicator, value])
+                representation = "INT:" + int_data + "|||FLOAT:" + float_data
+                file_contents_send.append([stack_indicator, hex_data, representation])
         pickle.dump(file_contents_send, open(send_file, "wb"))
 
 
