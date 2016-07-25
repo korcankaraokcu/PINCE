@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'memoryviewerwindow.ui'
 #
-# Created: Sat Jul 23 23:22:37 2016
+# Created: Sun Jul 24 16:48:32 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -68,7 +68,7 @@ class Ui_MainWindow(object):
         self.scrollArea_Registers.setWidgetResizable(True)
         self.scrollArea_Registers.setObjectName("scrollArea_Registers")
         self.scrollAreaWidgetContents_Registers = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 347, 423))
+        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, -100, 347, 423))
         self.scrollAreaWidgetContents_Registers.setObjectName("scrollAreaWidgetContents_Registers")
         self.gridLayout_8 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_Registers)
         self.gridLayout_8.setObjectName("gridLayout_8")
@@ -558,9 +558,28 @@ class Ui_MainWindow(object):
         self.tableWidget_StackTrace.verticalHeader().setDefaultSectionSize(15)
         self.gridLayout_9.addWidget(self.tableWidget_StackTrace, 0, 0, 1, 1)
         self.stackedWidget_StackScreens.addWidget(self.StackTrace)
-        self.page_2 = QtWidgets.QWidget()
-        self.page_2.setObjectName("page_2")
-        self.stackedWidget_StackScreens.addWidget(self.page_2)
+        self.Stack = QtWidgets.QWidget()
+        self.Stack.setObjectName("Stack")
+        self.gridLayout_10 = QtWidgets.QGridLayout(self.Stack)
+        self.gridLayout_10.setObjectName("gridLayout_10")
+        self.tableWidget_Stack = QtWidgets.QTableWidget(self.Stack)
+        font = QtGui.QFont()
+        font.setPointSize(7)
+        self.tableWidget_Stack.setFont(font)
+        self.tableWidget_Stack.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tableWidget_Stack.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.tableWidget_Stack.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tableWidget_Stack.setObjectName("tableWidget_Stack")
+        self.tableWidget_Stack.setColumnCount(2)
+        self.tableWidget_Stack.setRowCount(0)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_Stack.setHorizontalHeaderItem(0, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_Stack.setHorizontalHeaderItem(1, item)
+        self.tableWidget_Stack.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_Stack.verticalHeader().setDefaultSectionSize(15)
+        self.gridLayout_10.addWidget(self.tableWidget_Stack, 0, 0, 1, 1)
+        self.stackedWidget_StackScreens.addWidget(self.Stack)
         self.gridLayout_3.addWidget(self.stackedWidget_StackScreens, 0, 0, 1, 1)
         self.verticalLayout.addWidget(self.splitter_MainMiddle)
         self.gridLayout_5.addLayout(self.verticalLayout, 0, 0, 1, 1)
@@ -581,6 +600,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget_StackScreens.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -653,8 +673,12 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Return Address"))
         item = self.tableWidget_StackTrace.horizontalHeaderItem(1)
         item.setText(_translate("MainWindow", "Frame Address"))
+        item = self.tableWidget_Stack.horizontalHeaderItem(0)
+        item.setText(_translate("MainWindow", "Address"))
+        item = self.tableWidget_Stack.horizontalHeaderItem(1)
+        item.setText(_translate("MainWindow", "Value"))
         self.menuView.setTitle(_translate("MainWindow", "View"))
         self.actionBookmarks.setText(_translate("MainWindow", "Bookmarks"))
 
-from GUI.CustomLabels.registerlabel import QRegisterLabel
 from GUI.CustomLabels.flagregisterlabel import QFlagRegisterLabel
+from GUI.CustomLabels.registerlabel import QRegisterLabel

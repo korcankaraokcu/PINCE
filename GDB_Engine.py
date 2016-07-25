@@ -52,16 +52,16 @@ index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
 # The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
 
-def send_command(command, control=False, cli_output=False, file_contents_send=None, recv_file=False):
+def send_command(command, control=False, cli_output=False, file_contents_send=None, recv_with_file=False):
     """Issues the command sent
 
     Args:
         command (str): The command that'll be sent
         control (bool): This param should be True if the command sent is ctrl+key instead of the regular command
         cli_output (bool): If True, returns the readable parsed cli output instead of gdb/mi garbage
-        file_contents_send (any type): Custom commands declared in GDBCommandExtensions.py requires file communication,
-        so this parameter is actually the argument for the called custom gdb command
-        recv_file (bool): Pass this as True if the called custom gdb command returns something
+        file_contents_send (any type that pickle.dump supports): Custom commands declared in GDBCommandExtensions.py
+        requires file communication, so this parameter is actually the argument for the called custom gdb command
+        recv_with_file (bool): Pass this as True if the called custom gdb command returns something
 
     Examples:
         send_command(c,control=True)--> Sends ctrl+c instead of the str "c"
@@ -73,7 +73,8 @@ def send_command(command, control=False, cli_output=False, file_contents_send=No
         str: Result of the command sent, commands in the form of "ctrl+key" always returns a null string
 
     Todo:
-        Support GDB/MI commands
+        Support GDB/MI commands. In fact, this is something gdb itself should fix. Because gdb python API doesn't
+        support gdb/mi commands and since PINCE uses gdb python API, it can't support gdb/mi commands as well
 
     Note:
         File communication system is used to avoid BEL emitting bug of pexpect. If you send more than a certain amount
@@ -90,6 +91,11 @@ def send_command(command, control=False, cli_output=False, file_contents_send=No
         if file_contents_send:
             send_file = SysUtils.get_ipc_from_PINCE_file(currentpid)
             pickle.dump(file_contents_send, open(send_file, "wb"))
+        if recv_with_file or cli_output:
+            recv_file = SysUtils.get_ipc_to_PINCE_file(currentpid)
+
+            # Truncating the recv_file because we wouldn't like to see output of previous command in case of errors
+            open(recv_file, "w").close()
         command = str(command)
         print("Last command: " + command)
         if control:
@@ -107,8 +113,7 @@ def send_command(command, control=False, cli_output=False, file_contents_send=No
             while gdb_output is "":
                 sleep(0.00001)
         if not control:
-            if recv_file or cli_output:
-                recv_file = SysUtils.get_ipc_to_PINCE_file(currentpid)
+            if recv_with_file or cli_output:
                 output = pickle.load(open(recv_file, "rb"))
             else:
                 output = gdb_output
@@ -442,7 +447,7 @@ def read_single_address(address, value_index, length=None, is_unicode=False, zer
     """
     return send_command("pince-read-single-address",
                         file_contents_send=(address, value_index, length, is_unicode, zero_terminate),
-                        recv_file=True)
+                        recv_with_file=True)
 
 
 def read_multiple_addresses(nested_list):
@@ -467,7 +472,7 @@ def read_multiple_addresses(nested_list):
         For instance; If 4 addresses has been read and 3rd one is problematic, the returned list will be
         [returned_value1,returned_value2,"",returned_value4]
     """
-    contents_recv = send_command("pince-read-multiple-addresses", file_contents_send=nested_list, recv_file=True)
+    contents_recv = send_command("pince-read-multiple-addresses", file_contents_send=nested_list, recv_with_file=True)
     if not contents_recv:
         print("an error occurred while reading addresses")
         contents_recv = []
@@ -579,7 +584,8 @@ def parse_convenience_variables(variables):
     """
     variables = variables.replace(" ", "")
     variable_list = variables.split(",")
-    contents_recv = send_command("pince-parse-convenience-variables", file_contents_send=variable_list, recv_file=True)
+    contents_recv = send_command("pince-parse-convenience-variables", file_contents_send=variable_list,
+                                 recv_with_file=True)
     if not contents_recv:
         print("an error occurred while reading variables")
         contents_recv = []
@@ -671,7 +677,7 @@ def read_registers():
     Returns:
         dict: A dict that holds general registers, flags and segment registers
     """
-    contents_recv = send_command("pince-read-registers", recv_file=True)
+    contents_recv = send_command("pince-read-registers", recv_with_file=True)
     if not contents_recv:
         print("an error occurred while reading registers")
         contents_recv = {}
@@ -684,7 +690,7 @@ def read_float_registers():
     Returns:
         dict: A dict that holds float registers(st0-7, xmm0-7)
     """
-    contents_recv = send_command("pince-read-float-registers", recv_file=True)
+    contents_recv = send_command("pince-read-float-registers", recv_with_file=True)
     if not contents_recv:
         print("an error occurred while reading float registers")
         contents_recv = {}
@@ -722,11 +728,27 @@ def get_stacktrace_info():
 
     Returns:
         list: A list of str values in this format-->[[return_address_info1,frame_address_info1],[info2, ...], ...]
-        return_address_info looks like this-->Hex address+symbol-->0x40c431 <_start>
-        frame_address_info looks like this-->Hex address+distance from stack pointer-->0x7ffe1e989a40(rsp+0x100)
+        return_address_info looks like this-->Return address of frame+symbol-->0x40c431 <_start>
+        frame_address_info looks like this-->Beginning of frame+distance from stack pointer-->0x7ffe1e989a40(rsp+0x100)
     """
-    contents_recv = send_command("pince-get-stack-trace-info", recv_file=True)
+    contents_recv = send_command("pince-get-stack-trace-info", recv_with_file=True)
     if not contents_recv:
         print("an error occurred while reading stacktrace")
+        contents_recv = []
+    return contents_recv
+
+
+def get_stack_info():
+    """Returns information about current stack
+
+    Returns:
+        list: A list of str values in this format-->[[stack_pointer_info1,value_info1],[info2, ...], ...]
+        stack_pointer_info looks like this-->Hex address+distance from stack pointer-->0x7ffd0d232f88(rsp+0xff8)
+        value_info looks like this-->Value holden by corresponding address+integer and float representation of it--▼
+        0x00302e322d63726b(i:13561591926846059,f:9.000675827832922e-308)
+    """
+    contents_recv = send_command("pince-get-stack-info", recv_with_file=True)
+    if not contents_recv:
+        print("an error occurred while reading stack")
         contents_recv = []
     return contents_recv

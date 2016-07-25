@@ -3,6 +3,7 @@ import gdb
 import pickle
 import sys
 import re
+import struct
 
 # This is some retarded hack
 gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
@@ -267,6 +268,46 @@ class GetStackTraceInfo(gdb.Command):
         pickle.dump(file_contents_send, open(send_file, "wb"))
 
 
+class GetStackInfo(gdb.Command):
+    def __init__(self):
+        super(GetStackInfo, self).__init__("pince-get-stack-info", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        file_contents_send = []
+        inferior = gdb.selected_inferior()
+        pid = inferior.pid
+        send_file = SysUtils.get_ipc_to_PINCE_file(pid)
+        if str(gdb.parse_and_eval("$rax")) == "void":
+            chunk_size = 4
+            float_format = "f"
+            stack_register = "esp"
+            result = gdb.execute("p/x $esp", from_tty, to_string=True)
+        else:
+            chunk_size = 8
+            float_format = "d"
+            stack_register = "rsp"
+            result = gdb.execute("p/x $rsp", from_tty, to_string=True)
+        stack_address = int(re.search(r"0x[0-9a-fA-F]+", result).group(0), 16)  # $6 = 0x7f0bc0b6bb40
+        mem_file = "/proc/" + str(pid) + "/mem"
+        with open(mem_file, "rb") as FILE:
+            FILE.seek(stack_address)
+            for index in range(int(4096 / chunk_size)):
+                current_offset = chunk_size * index
+                stack_indicator = hex(stack_address + current_offset) + "(" + stack_register + "+" + hex(
+                    current_offset) + ")"
+                try:
+                    read = FILE.read(chunk_size)
+                except:
+                    print("Can't access the stack after address " + stack_indicator)
+                    break
+                hex_data = "0x" + "".join(format(n, '02x') for n in reversed(read))
+                int_data = str(int(hex_data, 16))
+                float_data = str(struct.unpack_from(float_format, read)[0])
+                value = hex_data + "(i:" + int_data + ",f:" + float_data + ")"
+                file_contents_send.append([stack_indicator, value])
+        pickle.dump(file_contents_send, open(send_file, "wb"))
+
+
 IgnoreErrors()
 CLIOutput()
 ReadMultipleAddresses()
@@ -276,3 +317,4 @@ ParseConvenienceVariables()
 ReadRegisters()
 ReadFloatRegisters()
 GetStackTraceInfo()
+GetStackInfo()
