@@ -4,7 +4,7 @@ from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication
-from time import sleep
+from time import sleep, time
 from threading import Thread
 import os
 import webbrowser
@@ -62,6 +62,10 @@ FLOAT_REGISTERS_VALUE_COL = 1
 # represents the index of columns in stacktrace table
 STACKTRACE_RETURN_ADDRESS_COL = 0
 STACKTRACE_FRAME_ADDRESS_COL = 1
+
+# represents the index of columns in stack table
+STACK_POINTER_ADDRESS_COL = 0
+STACK_VALUE_COL = 1
 
 INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
 INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
@@ -1001,6 +1005,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.bookmarks = {}
         self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
         self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
+        self.tableWidget_Stack.contextMenuEvent = self.tableWidget_Stack_context_menu_event
+        self.tableWidget_StackTrace.contextMenuEvent = self.tableWidget_StackTrace_context_menu_event
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
         self.tableWidget_Disassemble.itemDoubleClicked.connect(self.on_disassemble_double_click)
         self.pushButton_ShowFloatRegisters.clicked.connect(self.on_show_float_registers_button_clicked)
@@ -1072,11 +1078,17 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.item(row, item).setData(Qt.BackgroundColorRole, QColor(colour))
 
     def on_process_stop(self):
+        time0 = time()
         thread_info = GDB_Engine.get_current_thread_information()
         self.setWindowTitle("Memory Viewer - Currently Debugging Thread " + thread_info)
         self.disassemble_expression("$pc")
         self.update_registers()
-        self.update_stacktrace()
+        if self.stackedWidget_StackScreens.currentWidget() == self.StackTrace:
+            self.update_stacktrace()
+        elif self.stackedWidget_StackScreens.currentWidget() == self.Stack:
+            self.update_stack()
+        time1 = time()
+        print("UPDATED TABLE AT:" + str(time1 - time0))
         self.showMaximized()
         if bring_disassemble_to_front:
             self.activateWindow()
@@ -1139,8 +1151,30 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         for row, item in enumerate(stack_trace_info):
             self.tableWidget_StackTrace.setItem(row, STACKTRACE_RETURN_ADDRESS_COL, QTableWidgetItem(item[0]))
             self.tableWidget_StackTrace.setItem(row, STACKTRACE_FRAME_ADDRESS_COL, QTableWidgetItem(item[1]))
-        self.tableWidget_StackTrace.resizeColumnsToContents()
-        self.tableWidget_StackTrace.horizontalHeader().setStretchLastSection(True)
+
+    def tableWidget_StackTrace_context_menu_event(self, event):
+        menu = QMenu()
+        switch_to_stack = menu.addAction("Full Stack")
+        action = menu.exec_(event.globalPos())
+        if action == switch_to_stack:
+            self.stackedWidget_StackScreens.setCurrentWidget(self.Stack)
+            self.update_stack()
+
+    def update_stack(self):
+        stack_info = GDB_Engine.get_stack_info()
+        self.tableWidget_Stack.setRowCount(0)
+        self.tableWidget_Stack.setRowCount(len(stack_info))
+        for row, item in enumerate(stack_info):
+            self.tableWidget_Stack.setItem(row, STACK_POINTER_ADDRESS_COL, QTableWidgetItem(item[0]))
+            self.tableWidget_Stack.setItem(row, STACK_VALUE_COL, QTableWidgetItem(item[1]))
+
+    def tableWidget_Stack_context_menu_event(self, event):
+        menu = QMenu()
+        switch_to_stacktrace = menu.addAction("Stacktrace")
+        action = menu.exec_(event.globalPos())
+        if action == switch_to_stacktrace:
+            self.stackedWidget_StackScreens.setCurrentWidget(self.StackTrace)
+            self.update_stacktrace()
 
     def tableWidget_Disassemble_wheel_event(self, event):
         value = self.tableWidget_Disassemble.verticalScrollBar().value()
