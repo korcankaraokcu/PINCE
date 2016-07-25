@@ -728,6 +728,7 @@ def get_stacktrace_info():
 
     Returns:
         list: A list of str values in this format-->[[return_address_info1,frame_address_info1],[info2, ...], ...]
+
         return_address_info looks like this-->Return address of frame+symbol-->0x40c431 <_start>
         frame_address_info looks like this-->Beginning of frame+distance from stack pointer-->0x7ffe1e989a40(rsp+0x100)
     """
@@ -742,11 +743,13 @@ def get_stack_info():
     """Returns information about current stack
 
     Returns:
-        list: A list of str values in this format-->[[stack_pointer_info1,hex_value1,representation1],[info2, ...], ...]
+        list: A list of str values in this format--▼
+        [[stack_pointer_info1,hex_value1,int_representation1,float_representation1],[stack_pointer_info2, ...], ...]
+
         stack_pointer_info looks like this-->Hex address+distance from stack pointer-->0x7ffd0d232f88(rsp+0xff8)
         hex_value looks like this-->Value holden by corresponding address-->0x00302e322d63726b
-        representation looks like this-->integer and float representation of the hex_value--▼
-        INT:13561591926846059|||FLOAT:9.000675827832922e-308
+        int_representation looks like this-->integer representation of the hex_value-->13561591926846059
+        float_representation looks like this-->float representation of the hex_value--->9.000675827832922e-308
     """
     contents_recv = send_command("pince-get-stack-info", recv_with_file=True)
     if not contents_recv:

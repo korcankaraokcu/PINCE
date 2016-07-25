@@ -66,7 +66,8 @@ STACKTRACE_FRAME_ADDRESS_COL = 1
 # represents the index of columns in stack table
 STACK_POINTER_ADDRESS_COL = 0
 STACK_VALUE_COL = 1
-STACK_REPRESENTATION_COL = 2
+STACK_INT_REPRESENTATION_COL = 2
+STACK_FLOAT_REPRESENTATION_COL = 3
 
 INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
 INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
@@ -1168,7 +1169,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         for row, item in enumerate(stack_info):
             self.tableWidget_Stack.setItem(row, STACK_POINTER_ADDRESS_COL, QTableWidgetItem(item[0]))
             self.tableWidget_Stack.setItem(row, STACK_VALUE_COL, QTableWidgetItem(item[1]))
-            self.tableWidget_Stack.setItem(row, STACK_REPRESENTATION_COL, QTableWidgetItem(item[2]))
+            self.tableWidget_Stack.setItem(row, STACK_INT_REPRESENTATION_COL, QTableWidgetItem(item[2]))
+            self.tableWidget_Stack.setItem(row, STACK_FLOAT_REPRESENTATION_COL, QTableWidgetItem(item[3]))
 
     def tableWidget_Stack_context_menu_event(self, event):
         menu = QMenu()

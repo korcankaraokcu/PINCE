@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'memoryviewerwindow.ui'
 #
-# Created: Tue Jul 26 00:58:23 2016
+# Created: Tue Jul 26 02:09:07 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -570,7 +570,7 @@ class Ui_MainWindow(object):
         self.tableWidget_Stack.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.tableWidget_Stack.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidget_Stack.setObjectName("tableWidget_Stack")
-        self.tableWidget_Stack.setColumnCount(3)
+        self.tableWidget_Stack.setColumnCount(4)
         self.tableWidget_Stack.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_Stack.setHorizontalHeaderItem(0, item)
@@ -578,6 +578,8 @@ class Ui_MainWindow(object):
         self.tableWidget_Stack.setHorizontalHeaderItem(1, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_Stack.setHorizontalHeaderItem(2, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_Stack.setHorizontalHeaderItem(3, item)
         self.tableWidget_Stack.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_Stack.verticalHeader().setDefaultSectionSize(15)
         self.gridLayout_10.addWidget(self.tableWidget_Stack, 0, 0, 1, 1)
@@ -680,7 +682,9 @@ class Ui_MainWindow(object):
         item = self.tableWidget_Stack.horizontalHeaderItem(1)
         item.setText(_translate("MainWindow", "Value"))
         item = self.tableWidget_Stack.horizontalHeaderItem(2)
-        item.setText(_translate("MainWindow", "Representation"))
+        item.setText(_translate("MainWindow", "Int Repr"))
+        item = self.tableWidget_Stack.horizontalHeaderItem(3)
+        item.setText(_translate("MainWindow", "Float Repr"))
         self.menuView.setTitle(_translate("MainWindow", "View"))
         self.actionBookmarks.setText(_translate("MainWindow", "Bookmarks"))
 
