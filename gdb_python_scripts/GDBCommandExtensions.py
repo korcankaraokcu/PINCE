@@ -205,7 +205,7 @@ class ReadFloatRegisters(gdb.Command):
         # xmm0-7
         for index in range(8):
             current_register = "xmm" + str(index)
-            value = gdb.parse_and_eval("$" + current_register + ".uint128")
+            value = gdb.parse_and_eval("$" + current_register + ".v4_float")
             contents_send[current_register] = str(value)
         send_to_pince(contents_send)
 
