@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'memoryviewerwindow.ui'
 #
-# Created: Tue Jul 26 02:09:07 2016
+# Created: Tue Jul 26 13:14:59 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -555,6 +555,7 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_StackTrace.setHorizontalHeaderItem(1, item)
         self.tableWidget_StackTrace.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_StackTrace.verticalHeader().setVisible(False)
         self.tableWidget_StackTrace.verticalHeader().setDefaultSectionSize(15)
         self.gridLayout_9.addWidget(self.tableWidget_StackTrace, 0, 0, 1, 1)
         self.stackedWidget_StackScreens.addWidget(self.StackTrace)
@@ -581,6 +582,7 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_Stack.setHorizontalHeaderItem(3, item)
         self.tableWidget_Stack.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_Stack.verticalHeader().setVisible(False)
         self.tableWidget_Stack.verticalHeader().setDefaultSectionSize(15)
         self.gridLayout_10.addWidget(self.tableWidget_Stack, 0, 0, 1, 1)
         self.stackedWidget_StackScreens.addWidget(self.Stack)
@@ -599,7 +601,10 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.actionBookmarks = QtWidgets.QAction(MainWindow)
         self.actionBookmarks.setObjectName("actionBookmarks")
+        self.actionStackTrace_Info = QtWidgets.QAction(MainWindow)
+        self.actionStackTrace_Info.setObjectName("actionStackTrace_Info")
         self.menuView.addAction(self.actionBookmarks)
+        self.menuView.addAction(self.actionStackTrace_Info)
         self.menubar.addAction(self.menuView.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -687,6 +692,7 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Float Repr"))
         self.menuView.setTitle(_translate("MainWindow", "View"))
         self.actionBookmarks.setText(_translate("MainWindow", "Bookmarks"))
+        self.actionStackTrace_Info.setText(_translate("MainWindow", "StackTrace Info"))
 
 from GUI.CustomLabels.flagregisterlabel import QFlagRegisterLabel
 from GUI.CustomLabels.registerlabel import QRegisterLabel

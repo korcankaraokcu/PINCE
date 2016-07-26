@@ -1074,6 +1074,9 @@
                  <attribute name="horizontalHeaderStretchLastSection">
                   <bool>true</bool>
                  </attribute>
+                 <attribute name="verticalHeaderVisible">
+                  <bool>false</bool>
+                 </attribute>
                  <attribute name="verticalHeaderDefaultSectionSize">
                   <number>15</number>
                  </attribute>
@@ -1111,6 +1114,9 @@
                  </property>
                  <attribute name="horizontalHeaderStretchLastSection">
                   <bool>true</bool>
+                 </attribute>
+                 <attribute name="verticalHeaderVisible">
+                  <bool>false</bool>
                  </attribute>
                  <attribute name="verticalHeaderDefaultSectionSize">
                   <number>15</number>
@@ -1164,6 +1170,7 @@
      <string>View</string>
     </property>
     <addaction name="actionBookmarks"/>
+    <addaction name="actionStackTrace_Info"/>
    </widget>
    <addaction name="menuView"/>
   </widget>
@@ -1171,6 +1178,11 @@
   <action name="actionBookmarks">
    <property name="text">
     <string>Bookmarks</string>
+   </property>
+  </action>
+  <action name="actionStackTrace_Info">
+   <property name="text">
+    <string>StackTrace Info</string>
    </property>
   </action>
  </widget>
