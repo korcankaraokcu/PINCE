@@ -88,6 +88,7 @@ def send_command(command, control=False, cli_output=False, file_contents_send=No
         if inferior_status is INFERIOR_RUNNING and not control:
             print("inferior is running")
             return
+        gdb_output = ""
         if file_contents_send:
             send_file = SysUtils.get_ipc_from_PINCE_file(currentpid)
             pickle.dump(file_contents_send, open(send_file, "wb"))
@@ -119,7 +120,6 @@ def send_command(command, control=False, cli_output=False, file_contents_send=No
                 output = gdb_output
         else:
             output = ""
-        gdb_output = ""
         if type(output) == str:
             output = output.strip()
         time1 = time()
@@ -755,4 +755,42 @@ def get_stack_info():
     if not contents_recv:
         print("an error occurred while reading stack")
         contents_recv = []
+    return contents_recv
+
+
+def get_stack_frame_return_addresses():
+    """Returns return addresses of stack frames
+
+    Returns:
+        list: A list of str values in this format-->[return_address_info1,return_address_info2, ...]
+
+        return_address_info looks like this-->Return address of frame+symbol-->0x40c431 <_start>
+    """
+    contents_recv = send_command("pince-get-frame-return-addresses", recv_with_file=True)
+    if not contents_recv:
+        print("an error occurred while reading return addresses of stack frames")
+        contents_recv = []
+    return contents_recv
+
+
+def get_stack_frame_info(index):
+    """Returns information about stack by the given index
+
+    Args:
+        index (int,str): Index of the frame
+
+    Returns:
+        str: Information that looks like this--▼
+        Stack level 0, frame at 0x7ffc5f87f6a0:
+            rip = 0x7fd1d639412d in poll (../sysdeps/unix/syscall-template.S:81); saved rip = 0x7fd1d27fcfe4
+            called by frame at 0x7ffc5f87f700
+            source language asm.
+            Arglist at 0x7ffc5f87f688, args:
+            Locals at 0x7ffc5f87f688, Previous frame's sp is 0x7ffc5f87f6a0
+            Saved registers:
+                rip at 0x7ffc5f87f698
+    """
+    contents_recv = send_command("pince-get-frame-info", file_contents_send=str(index), recv_with_file=True)
+    if not contents_recv:
+        print("an error occurred while reading stack frame " + str(index))
     return contents_recv

@@ -25,6 +25,7 @@ from GUI.aboutwidget import Ui_TabWidget as AboutWidget
 from GUI.memoryviewerwindow import Ui_MainWindow as MemoryViewWindow
 from GUI.bookmarkwidget import Ui_Form as BookmarkWidget
 from GUI.floatregisterwidget import Ui_TabWidget as FloatRegisterWidget
+from GUI.stacktraceinfowidget import Ui_Form as StackTraceInfoWidget
 
 selfpid = os.getpid()
 
@@ -1010,6 +1011,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Stack.contextMenuEvent = self.tableWidget_Stack_context_menu_event
         self.tableWidget_StackTrace.contextMenuEvent = self.tableWidget_StackTrace_context_menu_event
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
+        self.actionStackTrace_Info.triggered.connect(self.on_stacktrace_info_triggered)
         self.tableWidget_Disassemble.itemDoubleClicked.connect(self.on_disassemble_double_click)
         self.pushButton_ShowFloatRegisters.clicked.connect(self.on_show_float_registers_button_clicked)
         self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
@@ -1157,6 +1159,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def tableWidget_StackTrace_context_menu_event(self, event):
         menu = QMenu()
         switch_to_stack = menu.addAction("Full Stack")
+        font_size = self.tableWidget_StackTrace.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         if action == switch_to_stack:
             self.stackedWidget_StackScreens.setCurrentWidget(self.Stack)
@@ -1175,6 +1179,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def tableWidget_Stack_context_menu_event(self, event):
         menu = QMenu()
         switch_to_stacktrace = menu.addAction("Stacktrace")
+        font_size = self.tableWidget_Stack.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         if action == switch_to_stacktrace:
             self.stackedWidget_StackScreens.setCurrentWidget(self.StackTrace)
@@ -1253,7 +1259,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         copy_bytes = clipboard_menu.addAction("Copy Bytes")
         copy_opcode = clipboard_menu.addAction("Copy Opcode")
         copy_comment = clipboard_menu.addAction("Copy Comment")
-        menu.setStyleSheet("font-size: 7pt;")
+        font_size = self.tableWidget_Disassemble.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         if action == go_to:
             go_to_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False,
@@ -1329,6 +1336,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def on_ViewBookmarks_triggered(self):
         self.bookmark_widget = BookmarkWidgetForm(self)
         self.bookmark_widget.show()
+
+    def on_stacktrace_info_triggered(self):
+        self.stacktrace_info_widget = StackTraceInfoWidgetForm()
+        try:
+            self.process_stopped.disconnect(self.stacktrace_info_widget.update_stacktrace)
+        except TypeError:
+            pass
+        self.process_stopped.connect(self.stacktrace_info_widget.update_stacktrace)
+        self.stacktrace_info_widget.show()
 
     def on_show_float_registers_button_clicked(self):
         self.float_registers_widget = FloatRegisterWidgetForm()
@@ -1411,6 +1427,31 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
                 current_register = current_register + ".uint128"
             GDB_Engine.set_convenience_variable(current_register, register_dialog.get_values())
             self.update_registers()
+
+    def closeEvent(self, QCloseEvent):
+        self.active = False
+
+
+class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center(self)
+        self.setWindowFlags(Qt.Window)
+        self.active = True
+        self.listWidget_ReturnAddresses.currentRowChanged.connect(self.update_frame_info)
+        self.update_stacktrace()
+
+    def update_stacktrace(self):
+        if not self.active:
+            return
+        self.listWidget_ReturnAddresses.clear()
+        return_addresses = GDB_Engine.get_stack_frame_return_addresses()
+        self.listWidget_ReturnAddresses.addItems(return_addresses)
+
+    def update_frame_info(self, index):
+        frame_info = GDB_Engine.get_stack_frame_info(index)
+        self.textBrowser_Info.setText(frame_info)
 
     def closeEvent(self, QCloseEvent):
         self.active = False

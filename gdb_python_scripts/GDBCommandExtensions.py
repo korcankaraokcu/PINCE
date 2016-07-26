@@ -243,10 +243,10 @@ class GetStackTraceInfo(gdb.Command):
         result = gdb.execute("bt", from_tty, to_string=True)
 
         # Example: #10 0x000000000040c45a in--->#10--->10
-        frame_count = re.findall(r"#\d+\s+0x[0-9a-fA-F]+\s+in", result)[-1].split()[0].replace("#", "")
+        max_frame = re.findall(r"#\d+\s+0x[0-9a-fA-F]+\s+in", result)[-1].split()[0].replace("#", "")
 
         # +1 because frame numbers start from 0
-        for item in range(int(frame_count) + 1):
+        for item in range(int(max_frame) + 1):
             result = gdb.execute("info frame " + str(item), from_tty, to_string=True)
 
             # frame at 0x7ffe1e989950--->0x7ffe1e989950
@@ -307,6 +307,60 @@ class GetStackInfo(gdb.Command):
         pickle.dump(file_contents_send, open(send_file, "wb"))
 
 
+class GetFrameReturnAddresses(gdb.Command):
+    def __init__(self):
+        super(GetFrameReturnAddresses, self).__init__("pince-get-frame-return-addresses", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        file_contents_send = []
+        inferior = gdb.selected_inferior()
+        pid = inferior.pid
+        send_file = SysUtils.get_ipc_to_PINCE_file(pid)
+        result = gdb.execute("bt", from_tty, to_string=True)
+
+        # Example: #10 0x000000000040c45a in--->#10--->10
+        max_frame = re.findall(r"#\d+\s+0x[0-9a-fA-F]+\s+in", result)[-1].split()[0].replace("#", "")
+
+        # +1 because frame numbers start from 0
+        for item in range(int(max_frame) + 1):
+            result = gdb.execute("info frame " + str(item), from_tty, to_string=True)
+
+            # saved rip = 0x7f633a853fe4
+            return_address = re.search(r"saved.*=\s+0x[0-9a-fA-F]+", result)
+            if return_address:
+                return_address = return_address.group(0).split()[-1]
+                result = gdb.execute("x/b " + return_address, from_tty, to_string=True)
+
+                # 0x40c431 <_start>:--->0x40c431 <_start>
+                return_address_with_info = re.search(r"0x[0-9a-fA-F]+.*:", result).group(0).split(":")[0]
+            else:
+                return_address_with_info = "<unavailable>"
+            file_contents_send.append(return_address_with_info)
+        pickle.dump(file_contents_send, open(send_file, "wb"))
+
+
+class GetFrameInfo(gdb.Command):
+    def __init__(self):
+        super(GetFrameInfo, self).__init__("pince-get-frame-info", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        inferior = gdb.selected_inferior()
+        pid = inferior.pid
+        send_file = SysUtils.get_ipc_to_PINCE_file(pid)
+        recv_file = SysUtils.get_ipc_from_PINCE_file(pid)
+        file_contents_recv = pickle.load(open(recv_file, "rb"))
+        result = gdb.execute("bt", from_tty, to_string=True)
+
+        # Example: #10 0x000000000040c45a in--->#10--->10
+        max_frame = re.findall(r"#\d+\s+0x[0-9a-fA-F]+\s+in", result)[-1].split()[0].replace("#", "")
+        if 0 <= int(file_contents_recv) <= int(max_frame):
+            file_contents_send = gdb.execute("info frame " + file_contents_recv, from_tty, to_string=True)
+        else:
+            print("Frame " + file_contents_recv + " doesn't exist")
+            file_contents_send = None
+        pickle.dump(file_contents_send, open(send_file, "wb"))
+
+
 IgnoreErrors()
 CLIOutput()
 ReadMultipleAddresses()
@@ -317,3 +371,5 @@ ReadRegisters()
 ReadFloatRegisters()
 GetStackTraceInfo()
 GetStackInfo()
+GetFrameReturnAddresses()
+GetFrameInfo()
