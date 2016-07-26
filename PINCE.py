@@ -1415,16 +1415,12 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
             current_table_widget = self.tableWidget_XMM
         current_register = current_table_widget.item(current_row, FLOAT_REGISTERS_NAME_COL).text()
         current_value = current_table_widget.item(current_row, FLOAT_REGISTERS_VALUE_COL).text()
-        try:
-            current_value = float(current_value)
-        except:
-            current_value = ""
         label_text = "Enter the new value of register " + current_register.upper()
         register_dialog = DialogWithButtonsForm(label_text=label_text, hide_line_edit=False,
-                                                line_edit_text=str(current_value))
+                                                line_edit_text=current_value)
         if register_dialog.exec_():
             if self.currentWidget() == self.XMM:
-                current_register = current_register + ".uint128"
+                current_register = current_register + ".v4_float"
             GDB_Engine.set_convenience_variable(current_register, register_dialog.get_values())
             self.update_registers()
 
