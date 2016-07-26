@@ -216,10 +216,6 @@ def attach(pid, injection_method=SIMPLE_DLOPEN_CALL):
     status_thread.start()
     send_command("set logging file " + SysUtils.get_gdb_async_file(pid))
     send_command("set logging on")
-
-    # gdb scripts needs to know PINCE directory, unfortunately they don't start from the place where script exists
-    send_command('set $PINCE_PATH=' + '"' + currentdir + '"')
-    send_command("source gdb_python_scripts/GDBCommandExtensions.py")
     injection_path = currentdir + INITIAL_INJECTION_PATH
     if not SysUtils.is_path_valid(injection_path):
         injection_method = NO_INJECTION  # no .so file found
@@ -228,6 +224,10 @@ def attach(pid, injection_method=SIMPLE_DLOPEN_CALL):
     elif injection_method is LINUX_INJECT:
         codes_injected = inject_with_linux_inject(injection_path, pid)
     send_command("attach " + pid)
+
+    # gdb scripts needs to know PINCE directory, unfortunately they don't start from the place where script exists
+    send_command('set $PINCE_PATH=' + '"' + currentdir + '"')
+    send_command("source gdb_python_scripts/GDBCommandExtensions.py")
     if injection_method is SIMPLE_DLOPEN_CALL:
         codes_injected = inject_with_dlopen_call(injection_path)
     inferior_arch = get_inferior_arch()
