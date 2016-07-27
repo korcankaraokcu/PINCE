@@ -52,15 +52,17 @@ index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
 # The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
 
-def send_command(command, control=False, cli_output=False, file_contents_send=None, recv_with_file=False):
+def send_command(command, control=False, cli_output=False, send_with_file=False, file_contents_send=None,
+                 recv_with_file=False):
     """Issues the command sent
 
     Args:
         command (str): The command that'll be sent
         control (bool): This param should be True if the command sent is ctrl+key instead of the regular command
         cli_output (bool): If True, returns the readable parsed cli output instead of gdb/mi garbage
-        file_contents_send (any type that pickle.dump supports): Custom commands declared in GDBCommandExtensions.py
-        requires file communication, so this parameter is actually the argument for the called custom gdb command
+        send_with_file (bool): Custom commands declared in GDBCommandExtensions.py requires file communication. If
+        called command has any parameters, pass this as True
+        file_contents_send (any type that pickle.dump supports): Arguments for the called custom gdb command
         recv_with_file (bool): Pass this as True if the called custom gdb command returns something
 
     Examples:
@@ -71,6 +73,7 @@ def send_command(command, control=False, cli_output=False, file_contents_send=No
 
     Returns:
         str: Result of the command sent, commands in the form of "ctrl+key" always returns a null string
+        None: If the inferior is running or no inferior has been selected
 
     Todo:
         Support GDB/MI commands. In fact, this is something gdb itself should fix. Because gdb python API doesn't
@@ -85,11 +88,14 @@ def send_command(command, control=False, cli_output=False, file_contents_send=No
     global gdb_output
     with lock_send_command:
         time0 = time()
+        if currentpid == 0:
+            print("no process has been selected")
+            return
         if inferior_status is INFERIOR_RUNNING and not control:
             print("inferior is running")
             return
         gdb_output = ""
-        if file_contents_send:
+        if send_with_file:
             send_file = SysUtils.get_ipc_from_PINCE_file(currentpid)
             pickle.dump(file_contents_send, open(send_file, "wb"))
         if recv_with_file or cli_output:
@@ -445,7 +451,7 @@ def read_single_address(address, value_index, length=None, is_unicode=False, zer
         float: If the value_index is INDEX_FLOAT or INDEX_DOUBLE
         int: If the value_index is anything else
     """
-    return send_command("pince-read-single-address",
+    return send_command("pince-read-single-address", send_with_file=True,
                         file_contents_send=(address, value_index, length, is_unicode, zero_terminate),
                         recv_with_file=True)
 
@@ -472,7 +478,8 @@ def read_multiple_addresses(nested_list):
         For instance; If 4 addresses has been read and 3rd one is problematic, the returned list will be
         [returned_value1,returned_value2,"",returned_value4]
     """
-    contents_recv = send_command("pince-read-multiple-addresses", file_contents_send=nested_list, recv_with_file=True)
+    contents_recv = send_command("pince-read-multiple-addresses", send_with_file=True, file_contents_send=nested_list,
+                                 recv_with_file=True)
     if not contents_recv:
         print("an error occurred while reading addresses")
         contents_recv = []
@@ -495,7 +502,7 @@ def set_multiple_addresses(nested_list, value):
         nested_list-->[[address1, value_index1],[address2, value_index2], ...]
     """
     nested_list.append(value)
-    send_command("pince-set-multiple-addresses", file_contents_send=nested_list)
+    send_command("pince-set-multiple-addresses", send_with_file=True, file_contents_send=nested_list)
 
 
 def disassemble(expression, offset_or_address):
@@ -584,7 +591,8 @@ def parse_convenience_variables(variables):
     """
     variables = variables.replace(" ", "")
     variable_list = variables.split(",")
-    contents_recv = send_command("pince-parse-convenience-variables", file_contents_send=variable_list,
+    contents_recv = send_command("pince-parse-convenience-variables", send_with_file=True,
+                                 file_contents_send=variable_list,
                                  recv_with_file=True)
     if not contents_recv:
         print("an error occurred while reading variables")
@@ -790,7 +798,8 @@ def get_stack_frame_info(index):
             Saved registers:
                 rip at 0x7ffc5f87f698
     """
-    contents_recv = send_command("pince-get-frame-info", file_contents_send=str(index), recv_with_file=True)
+    contents_recv = send_command("pince-get-frame-info", send_with_file=True, file_contents_send=str(index),
+                                 recv_with_file=True)
     if not contents_recv:
         print("an error occurred while reading stack frame " + str(index))
     return contents_recv
