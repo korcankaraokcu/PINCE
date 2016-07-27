@@ -1091,11 +1091,21 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.update_stacktrace()
         elif self.stackedWidget_StackScreens.currentWidget() == self.Stack:
             self.update_stack()
-        time1 = time()
-        print("UPDATED TABLE AT:" + str(time1 - time0))
         self.showMaximized()
         if bring_disassemble_to_front:
             self.activateWindow()
+        try:
+            if self.stacktrace_info_widget.isVisible():
+                self.stacktrace_info_widget.update_stacktrace()
+        except AttributeError:
+            pass
+        try:
+            if self.float_registers_widget.isVisible():
+                self.float_registers_widget.update_registers()
+        except AttributeError:
+            pass
+        time1 = time()
+        print("UPDATED MEMORYVIEW IN:" + str(time1 - time0))
 
     def on_process_running(self):
         self.setWindowTitle("Memory Viewer - Running")
@@ -1339,20 +1349,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def on_stacktrace_info_triggered(self):
         self.stacktrace_info_widget = StackTraceInfoWidgetForm()
-        try:
-            self.process_stopped.disconnect(self.stacktrace_info_widget.update_stacktrace)
-        except TypeError:
-            pass
-        self.process_stopped.connect(self.stacktrace_info_widget.update_stacktrace)
         self.stacktrace_info_widget.show()
 
     def on_show_float_registers_button_clicked(self):
         self.float_registers_widget = FloatRegisterWidgetForm()
-        try:
-            self.process_stopped.disconnect(self.float_registers_widget.update_registers)
-        except TypeError:
-            pass
-        self.process_stopped.connect(self.float_registers_widget.update_registers)
         self.float_registers_widget.show()
         GuiUtils.center_to_window(self.float_registers_widget, self.widget_Registers)
 
@@ -1382,14 +1382,11 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlags(Qt.Window)
-        self.active = True
         self.update_registers()
         self.tableWidget_FPU.itemDoubleClicked.connect(self.set_register)
         self.tableWidget_XMM.itemDoubleClicked.connect(self.set_register)
 
     def update_registers(self):
-        if not self.active:
-            return
         self.tableWidget_FPU.setRowCount(0)
         self.tableWidget_FPU.setRowCount(8)
         self.tableWidget_XMM.setRowCount(0)
@@ -1424,9 +1421,6 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
             GDB_Engine.set_convenience_variable(current_register, register_dialog.get_values())
             self.update_registers()
 
-    def closeEvent(self, QCloseEvent):
-        self.active = False
-
 
 class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
     def __init__(self, parent=None):
@@ -1434,13 +1428,10 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
         self.setupUi(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
-        self.active = True
         self.listWidget_ReturnAddresses.currentRowChanged.connect(self.update_frame_info)
         self.update_stacktrace()
 
     def update_stacktrace(self):
-        if not self.active:
-            return
         self.listWidget_ReturnAddresses.clear()
         return_addresses = GDB_Engine.get_stack_frame_return_addresses()
         self.listWidget_ReturnAddresses.addItems(return_addresses)
@@ -1448,9 +1439,6 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
     def update_frame_info(self, index):
         frame_info = GDB_Engine.get_stack_frame_info(index)
         self.textBrowser_Info.setText(frame_info)
-
-    def closeEvent(self, QCloseEvent):
-        self.active = False
 
 
 if __name__ == "__main__":
