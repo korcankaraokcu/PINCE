@@ -69,17 +69,17 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
     FILE = open(mem_file, "rb")
     try:
         FILE.seek(address)
-        readed = FILE.read(expected_length)
-    except:
+        data_read = FILE.read(expected_length)
+    except IOError:
         FILE.close()
-        print("Can't access the memory at address " + str(address))
+        print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return ""
     FILE.close()
     if value_type is INDEX_STRING:
         if unicode:
-            returned_string = readed.decode("utf-8", "replace")
+            returned_string = data_read.decode("utf-8", "replace")
         else:
-            returned_string = readed.decode("ascii", "replace")
+            returned_string = data_read.decode("ascii", "replace")
         if zero_terminate:
             if returned_string.startswith('\x00'):
                 returned_string = '\x00'
@@ -87,9 +87,9 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
                 returned_string = returned_string.split('\x00')[0]
         return returned_string[0:length]
     elif value_type is INDEX_AOB:
-        return " ".join(format(n, '02x') for n in readed)
+        return " ".join(format(n, '02x') for n in data_read)
     else:
-        return struct.unpack_from(data_type, readed)[0]
+        return struct.unpack_from(data_type, data_read)[0]
 
 
 def set_single_address(address, value_index, value):
@@ -99,7 +99,7 @@ def set_single_address(address, value_index, value):
         print(str(address) + " is not a valid address")
         return
     write_data = SysUtils.parse_string(value, value_index)
-    if not write_data:
+    if write_data is None:
         return
     if value_index is INDEX_STRING:
         write_data = bytearray(write_data, "utf-8", "replace")
@@ -117,6 +117,6 @@ def set_single_address(address, value_index, value):
         FILE.write(write_data)
     except:
         FILE.close()
-        print("Can't access the address " + str(address))
-        return ""
+        print("Can't access the address " + hex(address))
+        return
     FILE.close()
