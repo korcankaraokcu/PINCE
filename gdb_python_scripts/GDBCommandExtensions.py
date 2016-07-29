@@ -73,8 +73,8 @@ class ReadMultipleAddresses(gdb.Command):
                 zero_terminate = item[4]
             except IndexError:
                 zero_terminate = True
-            readed = ScriptUtils.read_single_address(address, index, length, unicode, zero_terminate)
-            contents_send.append(readed)
+            data_read = ScriptUtils.read_single_address(address, index, length, unicode, zero_terminate)
+            contents_send.append(data_read)
         send_to_pince(contents_send)
 
 
