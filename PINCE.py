@@ -797,7 +797,7 @@ class DialogWithButtonsForm(QDialog, DialogWithButtons):
     def accept(self):
         if self.parse_string:
             string = self.lineEdit.text()
-            if not SysUtils.parse_string(string, self.value_index):
+            if SysUtils.parse_string(string, self.value_index) is None:
                 QMessageBox.information(self, "Error", "Can't parse the input")
                 return
         super(DialogWithButtonsForm, self).accept()
