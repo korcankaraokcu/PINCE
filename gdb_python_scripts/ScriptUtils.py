@@ -23,6 +23,10 @@ INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
 index_to_valuetype_dict = type_defs.index_to_valuetype_dict
 index_to_struct_pack_dict = type_defs.index_to_struct_pack_dict
 
+inferior = gdb.selected_inferior()
+pid = inferior.pid
+mem_file = "/proc/" + str(pid) + "/mem"
+
 
 # This function is used to avoid errors in gdb scripts, because gdb scripts stop working when encountered an error
 def issue_command(command, error_message=""):
@@ -63,9 +67,6 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
     else:
         expected_length = packed_data[0]
         data_type = packed_data[1]
-    inferior = gdb.selected_inferior()
-    pid = inferior.pid
-    mem_file = "/proc/" + str(pid) + "/mem"
     FILE = open(mem_file, "rb")
     try:
         FILE.seek(address)
@@ -108,9 +109,6 @@ def set_single_address(address, value_index, value):
     else:
         data_type = index_to_struct_pack_dict.get(value_index, -1)
         write_data = struct.pack(data_type, write_data)
-    inferior = gdb.selected_inferior()
-    pid = inferior.pid
-    mem_file = "/proc/" + str(pid) + "/mem"
     FILE = open(mem_file, "rb+")
 
     # Check SetMultipleAddresses class in GDBCommandExtensions.py to see why we moved away the try/except block
