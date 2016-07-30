@@ -112,11 +112,8 @@ def set_single_address(address, value_index, value):
     pid = inferior.pid
     mem_file = "/proc/" + str(pid) + "/mem"
     FILE = open(mem_file, "rb+")
-    try:
-        FILE.seek(address)
-        FILE.write(write_data)
-    except:
-        FILE.close()
-        print("Can't access the address " + hex(address))
-        return
+
+    # Check SetMultipleAddresses class in GDBCommandExtensions.py to see why we moved away the try/except block
+    FILE.seek(address)
+    FILE.write(write_data)
     FILE.close()

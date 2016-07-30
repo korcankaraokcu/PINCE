@@ -92,7 +92,18 @@ class SetMultipleAddresses(gdb.Command):
         for item in contents_recv:
             address = item[0]
             index = item[1]
-            ScriptUtils.set_single_address(address, index, value)
+
+            '''
+            The reason we do the check here instead of inside of the function set_single_address() is because try/except
+            block doesn't work in function set_single_address() when writing something to file in /proc/$pid/mem. Python
+            is normally capable of catching IOError exception, but I have no idea about why it doesn't work in function
+            set_single_address()
+            '''
+            try:
+                ScriptUtils.set_single_address(address, index, value)
+            except IOError:
+                print("Can't access the address " + address if type(address) == str else hex(address))
+                pass
 
 
 class ReadSingleAddress(gdb.Command):
