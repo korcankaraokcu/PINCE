@@ -527,15 +527,17 @@ def disassemble(expression, offset_or_address):
     return returned_list
 
 
-def convert_address_to_symbol(expression, check=True):
+def convert_address_to_symbol(expression, include_address=False, check=True):
     """Converts the address evaluated by the given expression to symbol if any symbol exists for it
 
     Args:
         expression (str): Any gdb expression
+        include_address (bool): If true, returned string includes address
         check (bool): If your string contains one of the restricted characters($ etc.) pass the check parameter as False
 
     Returns:
-        str: Symbol of corresponding address(such as printf, scanf, _start etc.)
+        str: Symbol of corresponding address(such as printf, scanf, _start etc.). If no symbols are found, address as
+        str returned instead. If include_address is passed as True, returned str looks like this-->0x40c435 <_start+4>
         If the parameter "check" is True, returns the expression itself untouched if any restricted characters are found
         None: If the address is unreachable
     """
@@ -545,9 +547,15 @@ def convert_address_to_symbol(expression, check=True):
     result = send_command("x/b " + expression)
     if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
         return
-    filteredresult = search(r"<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
+    filteredresult = search(r"0x[0-9a-fA-F]+\s+<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
     if filteredresult:
+        if include_address:
+            return split(":", filteredresult.group(0))[0]
         return split(">:", filteredresult.group(0))[0].split("<")[1]
+    else:
+        filteredresult = search(r"0x[0-9a-fA-F]+:\\t", result)  # 0x1f58010:\t0x00647361\n
+        if filteredresult:
+            return split(":", filteredresult.group(0))[0]
 
 
 def convert_symbol_to_address(expression, check=True):
