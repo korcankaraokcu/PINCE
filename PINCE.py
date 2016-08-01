@@ -1388,6 +1388,15 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.setupUi(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
+        self.listWidget.contextMenuEvent = self.listWidget_context_menu_event
+        self.listWidget.currentRowChanged.connect(self.change_display)
+        self.listWidget.itemDoubleClicked.connect(self.on_item_double_clicked)
+        self.shortcut_delete = QShortcut(QKeySequence("Del"), self)
+        self.shortcut_delete.activated.connect(self.delete_record)
+        self.refresh_table()
+
+    def refresh_table(self):
+        self.listWidget.clear()
         for item in self.parent().tableWidget_Disassemble.bookmarks.keys():
 
             # FIXME: Implement and use optimized version of convert_address_to_symbol if performance issues occur
@@ -1397,17 +1406,67 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
             else:
                 text_append = current_text
             self.listWidget.addItem(text_append)
-        self.listWidget.currentRowChanged.connect(self.change_display)
-        self.listWidget.itemDoubleClicked.connect(self.on_item_double_clicked)
 
     def change_display(self):
-        current_item = self.listWidget.currentItem().text()
+        try:
+            current_item = self.listWidget.currentItem().text()
+        except AttributeError:
+            return
         current_address = SysUtils.extract_address(current_item)
         self.lineEdit_Info.setText(GDB_Engine.get_info_about_address(current_address))
         self.lineEdit_Comment.setText(self.parent().tableWidget_Disassemble.bookmarks[int(current_address, 16)])
 
     def on_item_double_clicked(self, item):
         self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
+
+    def listWidget_context_menu_event(self, event):
+        if self.listWidget.count() != 0:
+            current_item = self.listWidget.currentItem().text()
+            current_address = int(SysUtils.extract_address(current_item), 16)
+        else:
+            current_item = None
+            current_address = None
+        if current_item is not None:
+            if not current_address in self.parent().tableWidget_Disassemble.bookmarks:
+                QMessageBox.information(self, "Error", "Invalid entries detected, refreshing the page")
+                self.refresh_table()
+                return
+        menu = QMenu()
+        add_entry = menu.addAction("Add new entry")
+        if current_item is not None:
+            change_comment = menu.addAction("Change comment of this record")
+            delete_record = menu.addAction("Delete this record[Del]")
+        else:
+            change_comment = -1
+            delete_record = -1
+        menu.addSeparator()
+        refresh = menu.addAction("Refresh")
+        font_size = self.listWidget.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == add_entry:
+            entry_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False)
+            if entry_dialog.exec_():
+                text = entry_dialog.get_values()
+                address = GDB_Engine.convert_symbol_to_address(text)
+                if address is None:
+                    QMessageBox.information(self, "Error", "Invalid expression or address")
+                    return
+                self.parent().bookmark_address(int(address, 16))
+                self.refresh_table()
+        elif action == change_comment:
+            self.parent().change_bookmark_comment(current_address)
+            self.refresh_table()
+        elif action == delete_record:
+            self.delete_record()
+        elif action == refresh:
+            self.refresh_table()
+
+    def delete_record(self):
+        current_item = self.listWidget.currentItem().text()
+        current_address = int(SysUtils.extract_address(current_item), 16)
+        self.parent().delete_bookmark(current_address)
+        self.refresh_table()
 
 
 class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
