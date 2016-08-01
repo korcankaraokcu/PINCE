@@ -169,19 +169,6 @@ def change_text_length(string, length):
     return -1
 
 
-def check_for_bookmark_mark(string):
-    """Checks for the bookmark mark in the given string
-
-    Args:
-        string (str): String that'll be checked for the bookmark mark
-
-    Returns:
-        _sre.SRE_Match object: If string have the bookmark mark
-        None: If string doesn't have the bookmark mark
-    """
-    return match(r"\(M\)", string)
-
-
 def remove_bookmark_mark(string):
     """Removes the bookmark mark from the given string
 
