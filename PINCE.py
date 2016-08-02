@@ -266,7 +266,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("initial_code_injection_method", SIMPLE_DLOPEN_CALL)
         self.settings.endGroup()
         self.settings.beginGroup("Disassemble")
-        self.settings.setValue("bring_disassemble_to_front", True)
+        self.settings.setValue("bring_disassemble_to_front", False)
         self.settings.setValue("instructions_per_scroll", 2)
         self.settings.endGroup()
         self.apply_settings()
