@@ -42,7 +42,7 @@ sudo apt-get install clang
 sudo apt-get install g++-multilib  
 ```  
 ###**Compiling the most recent gdb version with python support**  
-#####*You can skip this part if you already have gdb 7.11.1 with python3 support*  
+#####*You can skip this part if you already have gdb 7.11.1 with python3 support, but it's strongly recommended to compile from source instead of downloading from repos because python version of gdb may mismatch with default interpreter and it usually causes ImportError within gdb scripts*  
 Download the latest source from [here](http://ftp.gnu.org/gnu/gdb/gdb-7.11.1.tar.gz), then install packages required for gdb
 ```
 sudo apt-get install python3-dev  
