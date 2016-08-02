@@ -42,27 +42,22 @@ sudo apt-get install clang
 sudo apt-get install g++-multilib  
 ```  
 ###**Compiling the most recent gdb version with python support**  
-#####*You can skip this part if you already have gdb 7.11.1 with python3 support and libcc1.so from gcc-6 is correctly located*  
+#####*You can skip this part if you already have gdb 7.11.1 with python3 support*  
 Download the latest source from [here](http://ftp.gnu.org/gnu/gdb/gdb-7.11.1.tar.gz), then install packages required for gdb
 ```
-sudo apt-get install libreadline-dev  
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test  
-sudo apt-get update  
-sudo apt-get install gcc-6  
+sudo apt-get install python3-dev  
+sudo apt-get install gcc  
 ```
 Then ```cd``` to the source file you downloaded and run:  
-```CC=gcc-6 ./configure --prefix=/usr --with-system-readline --with-python=python3 && make && sudo make -C gdb install```  
-Then move the contents of gdb/data-directory to /usr/share/gdb by doing:  
+```CC=gcc ./configure --prefix=/usr --with-python=python3 && make && sudo make -C gdb install```  
+Note: If gdb says something about missing python files, move the contents of gdb/data-directory to /usr/share/gdb:  
 ```sudo cp -R gdb/data-directory/* /usr/share/gdb/```  
-Finally relocate libcc1.so by doing:
-```
-cd /usr/lib/x86_64-linux-gnu/
-sudo cp libcc1.so.0.0.0 libcc1.so
-```
 #####Relocating PINCE files  
 Create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
 Then ```cd``` to PINCE/linux-inject directory and simply run ```make```(IMPORTANT: If you have a 32bit linux distro, run ```make x86``` instead)  
 Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```  
+#####*Debian Only:*  
+Run ```gksudo python3 PINCE.py``` instead
 
 ###For developers:  
 ```
@@ -91,6 +86,7 @@ GPLv3
 #Supported platforms
 - **Platforms tested so far:**
   * Kubuntu 14.04 & 16.04(Also tested on x86 variants)
+  * Debian 8.5
   * Archlinux
 - **Games&Applications tested so far:**
   * KMines
