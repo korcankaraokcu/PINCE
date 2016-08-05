@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# !/usr/bin/python3
 from re import search, split, findall, escape
 from threading import Lock, Thread, Condition
 from time import sleep, time

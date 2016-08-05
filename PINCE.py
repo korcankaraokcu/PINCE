@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# !/usr/bin/python3
+# !/usr/bin/env python3
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu
