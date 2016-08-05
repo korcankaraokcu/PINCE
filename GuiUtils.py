@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from PyQt5.QtWidgets import QDesktopWidget
-from re import search, match, sub
+from re import search, sub
 import type_defs
 
 INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
