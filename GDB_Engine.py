@@ -479,7 +479,7 @@ def read_multiple_addresses(nested_list):
     """
     contents_recv = send_command("pince-read-multiple-addresses", send_with_file=True, file_contents_send=nested_list,
                                  recv_with_file=True)
-    if not contents_recv:
+    if contents_recv is None:
         print("an error occurred while reading addresses")
         contents_recv = []
     return contents_recv
@@ -601,7 +601,7 @@ def parse_convenience_variables(variables):
     contents_recv = send_command("pince-parse-convenience-variables", send_with_file=True,
                                  file_contents_send=variable_list,
                                  recv_with_file=True)
-    if not contents_recv:
+    if contents_recv is None:
         print("an error occurred while reading variables")
         contents_recv = []
     return contents_recv
@@ -693,7 +693,7 @@ def read_registers():
         dict: A dict that holds general registers, flags and segment registers
     """
     contents_recv = send_command("pince-read-registers", recv_with_file=True)
-    if not contents_recv:
+    if contents_recv is None:
         print("an error occurred while reading registers")
         contents_recv = {}
     return contents_recv
@@ -706,7 +706,7 @@ def read_float_registers():
         dict: A dict that holds float registers(st0-7, xmm0-7)
     """
     contents_recv = send_command("pince-read-float-registers", recv_with_file=True)
-    if not contents_recv:
+    if contents_recv is None:
         print("an error occurred while reading float registers")
         contents_recv = {}
     return contents_recv
@@ -748,7 +748,7 @@ def get_stacktrace_info():
         frame_address_info looks like this-->Beginning of frame+distance from stack pointer-->0x7ffe1e989a40(rsp+0x100)
     """
     contents_recv = send_command("pince-get-stack-trace-info", recv_with_file=True)
-    if not contents_recv:
+    if contents_recv is None:
         print("an error occurred while reading stacktrace")
         contents_recv = []
     return contents_recv
@@ -767,7 +767,7 @@ def get_stack_info():
         float_representation looks like this-->float representation of the hex_value--->9.000675827832922e-308
     """
     contents_recv = send_command("pince-get-stack-info", recv_with_file=True)
-    if not contents_recv:
+    if contents_recv is None:
         print("an error occurred while reading stack")
         contents_recv = []
     return contents_recv
@@ -782,7 +782,7 @@ def get_stack_frame_return_addresses():
         return_address_info looks like this-->Return address of frame+symbol-->0x40c431 <_start>
     """
     contents_recv = send_command("pince-get-frame-return-addresses", recv_with_file=True)
-    if not contents_recv:
+    if contents_recv is None:
         print("an error occurred while reading return addresses of stack frames")
         contents_recv = []
     return contents_recv
@@ -807,6 +807,6 @@ def get_stack_frame_info(index):
     """
     contents_recv = send_command("pince-get-frame-info", send_with_file=True, file_contents_send=str(index),
                                  recv_with_file=True)
-    if not contents_recv:
+    if contents_recv is None:
         print("an error occurred while reading stack frame " + str(index))
     return contents_recv
