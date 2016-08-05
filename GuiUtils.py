@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# !/usr/bin/python3
 from PyQt5.QtWidgets import QDesktopWidget
 from re import search, match, sub
 import type_defs
