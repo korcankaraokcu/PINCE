@@ -103,7 +103,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             # Truncating the recv_file because we wouldn't like to see output of previous command in case of errors
             open(recv_file, "w").close()
         command = str(command)
-        print("Last command: " + command)
+        print("Last command: " + (command if not control else "Ctrl+" + command))
         if control:
             child.sendcontrol(command)
         else:
