@@ -9,6 +9,7 @@ from threading import Thread
 import os
 import webbrowser
 import sys
+import traceback
 
 import GuiUtils
 import SysUtils
@@ -93,6 +94,8 @@ NO_INJECTION_ATTEMPT = type_defs.INJECTION_RESULT.NO_INJECTION_ATTEMPT
 
 ARCH_32 = type_defs.INFERIOR_ARCH.ARCH_32
 ARCH_64 = type_defs.INFERIOR_ARCH.ARCH_64
+
+sys.excepthook = traceback.print_exception
 
 
 # Checks if the inferior has been terminated
@@ -357,6 +360,8 @@ class MainForm(QMainWindow, MainWindow):
         self.console_widget.show()
 
     def newfirstscan_onclick(self):
+        print("Exception test")
+        x = 0 / 0
         if self.pushButton_NewFirstScan.text() == "First Scan":
             self.pushButton_NextScan.setEnabled(True)
             self.pushButton_UndoScan.setEnabled(True)
