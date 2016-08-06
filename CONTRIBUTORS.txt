@@ -3,8 +3,8 @@ Copyright (C) 2016 Korcan Karaokçu <korcankaraokcu@gmail.com> [Almost everythin
 Copyright (C) 2016 Çağrı Ulaş <cagriulas@gmail.com> [GUI/Testing for Archlinux]
 
 	Special Thanks
-Sebastian Parschauer <s.parschauer@gmx.de> [libscanmem(planned for future), suggestions]
-WANG Lu <coolwanglu@gmail.com> [libscanmem(planned for future)]
+Sebastian Parschauer <s.parschauer@gmx.de> [suggestions]
+Andrea Stacchiotti [suggestions]
 Salih Marangoz <salihmarangoz.github@gmail.com> [bugfixes]
 Hjalte Skjold Hørsdal <hjaltello@gmail.com> [suggestions]
 "gaffe23" <https://github.com/gaffe23> [linux-inject]
