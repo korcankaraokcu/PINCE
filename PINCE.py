@@ -8,6 +8,7 @@ from time import sleep, time
 from threading import Thread
 import os
 import webbrowser
+import sys
 
 import GuiUtils
 import SysUtils
@@ -1534,8 +1535,6 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
 
 
 if __name__ == "__main__":
-    import sys
-
     app = QApplication(sys.argv)
     window = MainForm()
     window.show()
