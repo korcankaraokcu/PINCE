@@ -260,7 +260,6 @@ class MainForm(QMainWindow, MainWindow):
 
     def set_default_settings(self):
         self.settings.beginGroup("General")
-        self.settings.setValue("always_on_top", False)
         self.settings.setValue("auto_update_address_table", True)
         self.settings.setValue("address_table_update_interval", 0.5)
         self.settings.endGroup()
@@ -278,11 +277,6 @@ class MainForm(QMainWindow, MainWindow):
         self.apply_settings()
 
     def apply_settings(self):
-        if self.settings.value("General/always_on_top", type=bool):
-            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-        else:
-            self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
-        self.show()
         global update_table
         global table_update_interval
         global pause_hotkey
@@ -858,7 +852,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                     "\nSetting update interval less than 0.1 seconds may cause slowness" +
                     "\n\tProceed?").exec_():
                 return
-        self.settings.setValue("General/always_on_top", self.checkBox_AlwaysOnTop.isChecked())
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
         self.settings.setValue("Hotkeys/pause", self.pause_hotkey)
@@ -875,7 +868,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
     def config_gui(self):
         self.settings = QSettings()
-        self.checkBox_AlwaysOnTop.setChecked(self.settings.value("General/always_on_top", type=bool))
         self.checkBox_AutoUpdateAddressTable.setChecked(
             self.settings.value("General/auto_update_address_table", type=bool))
         self.lineEdit_UpdateInterval.setText(
