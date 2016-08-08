@@ -76,13 +76,6 @@
                  <item>
                   <layout class="QVBoxLayout" name="verticalLayout_2">
                    <item>
-                    <widget class="QCheckBox" name="checkBox_AlwaysOnTop">
-                     <property name="text">
-                      <string>Always on top</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
                     <widget class="QCheckBox" name="checkBox_AutoUpdateAddressTable">
                      <property name="text">
                       <string>Auto-update address table</string>

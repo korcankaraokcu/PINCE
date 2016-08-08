@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'settingsdialog.ui'
 #
-# Created: Wed Jul 13 13:01:31 2016
+# Created: Mon Aug  8 11:30:56 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -51,9 +51,6 @@ class Ui_Dialog(object):
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
         self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.checkBox_AlwaysOnTop = QtWidgets.QCheckBox(self.page)
-        self.checkBox_AlwaysOnTop.setObjectName("checkBox_AlwaysOnTop")
-        self.verticalLayout_2.addWidget(self.checkBox_AlwaysOnTop)
         self.checkBox_AutoUpdateAddressTable = QtWidgets.QCheckBox(self.page)
         self.checkBox_AutoUpdateAddressTable.setChecked(True)
         self.checkBox_AutoUpdateAddressTable.setObjectName("checkBox_AutoUpdateAddressTable")
@@ -224,7 +221,6 @@ class Ui_Dialog(object):
         item = self.listWidget_Options.item(3)
         item.setText(_translate("Dialog", "Disassemble"))
         self.listWidget_Options.setSortingEnabled(__sortingEnabled)
-        self.checkBox_AlwaysOnTop.setText(_translate("Dialog", "Always on top"))
         self.checkBox_AutoUpdateAddressTable.setText(_translate("Dialog", "Auto-update address table"))
         self.label.setText(_translate("Dialog", "Update interval"))
         self.lineEdit_UpdateInterval.setText(_translate("Dialog", "0.5"))
