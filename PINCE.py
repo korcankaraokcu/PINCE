@@ -3,7 +3,8 @@
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
+    QItemSelectionModel
 from time import sleep, time
 from threading import Thread
 import os
@@ -28,6 +29,9 @@ from GUI.memoryviewerwindow import Ui_MainWindow as MemoryViewWindow
 from GUI.bookmarkwidget import Ui_Form as BookmarkWidget
 from GUI.floatregisterwidget import Ui_TabWidget as FloatRegisterWidget
 from GUI.stacktraceinfowidget import Ui_Form as StackTraceInfoWidget
+
+from GUI.CustomAbstractTableModels.HexModel import QHexModel
+from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
 
 selfpid = os.getpid()
 
@@ -71,6 +75,10 @@ STACK_POINTER_ADDRESS_COL = 0
 STACK_VALUE_COL = 1
 STACK_INT_REPRESENTATION_COL = 2
 STACK_FLOAT_REPRESENTATION_COL = 3
+
+# represents row and column counts of Hex table
+HEX_VIEW_COL_COUNT = 16
+HEX_VIEW_ROW_COUNT = 42  # J-JUST A COINCIDENCE, I SWEAR!
 
 INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
 INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
@@ -1002,21 +1010,78 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.process_running.connect(self.on_process_running)
         self.widget_Disassemble.wheelEvent = self.tableWidget_Disassemble_wheel_event
 
+        self.verticalScrollBar_HexView.wheelEvent = QEvent.ignore
+        self.listWidget_HexView_Address.wheelEvent = QEvent.ignore
+        self.listWidget_HexView_Address.setAutoScroll(False)
+        self.listWidget_HexView_Address.setStyleSheet("QListWidget {background-color: transparent;}")
+
+        self.hex_model = QHexModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
+        self.ascii_model = QAsciiModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
+        self.tableView_HexView_Hex.setModel(self.hex_model)
+        self.tableView_HexView_Ascii.setModel(self.ascii_model)
+
+        self.tableView_HexView_Hex.selectionModel().currentChanged.connect(self.on_hex_view_current_changed)
+        self.tableView_HexView_Ascii.selectionModel().currentChanged.connect(self.on_ascii_view_current_changed)
+
+        self.scrollArea_Hex.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scrollArea_Hex.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.listWidget_HexView_Address.setVerticalScrollBarPolicy((Qt.ScrollBarAlwaysOff))
+        self.listWidget_HexView_Address.setHorizontalScrollBarPolicy((Qt.ScrollBarAlwaysOff))
+
         # Format: [address1, address2, ...]
         self.tableWidget_Disassemble.travel_history = []
 
         # Format: {address1:comment1,address2:comment2, ...}
         self.tableWidget_Disassemble.bookmarks = {}
+
         self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
         self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
         self.tableWidget_Stack.contextMenuEvent = self.tableWidget_Stack_context_menu_event
         self.tableWidget_StackTrace.contextMenuEvent = self.tableWidget_StackTrace_context_menu_event
+
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
         self.actionStackTrace_Info.triggered.connect(self.on_stacktrace_info_triggered)
         self.tableWidget_Disassemble.itemDoubleClicked.connect(self.on_disassemble_double_click)
         self.pushButton_ShowFloatRegisters.clicked.connect(self.on_show_float_registers_button_clicked)
+
         self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
         self.widget_Registers.resize(270, self.widget_Registers.height())
+        self.widget_StackView.resize(420, self.widget_StackView.height())  # blaze it
+
+    def on_hex_view_current_changed(self, QModelIndex_current):
+        self.tableView_HexView_Ascii.selectionModel().setCurrentIndex(QModelIndex_current,
+                                                                      QItemSelectionModel.ClearAndSelect)
+
+    def on_ascii_view_current_changed(self, QModelIndex_current):
+        self.tableView_HexView_Hex.selectionModel().setCurrentIndex(QModelIndex_current,
+                                                                    QItemSelectionModel.ClearAndSelect)
+
+    def hex_dump_address(self, int_address, offset):
+        information = SysUtils.get_region_info(GDB_Engine.currentpid, int_address)
+        if information is not None:
+            self.label_HexView_Information.setText(
+                "Protection:" + information.region.perms + " | Base:" + information.start + "-" + information.end)
+        else:
+            self.label_HexView_Information.setText("")
+        self.listWidget_HexView_Address.clear()
+        for current_offset in range(HEX_VIEW_ROW_COUNT):
+            self.listWidget_HexView_Address.addItem(hex(int_address + current_offset * 16))
+        listwidget_column_size = self.listWidget_HexView_Address.sizeHintForColumn(0) + 10
+        self.listWidget_HexView_Address.setMaximumWidth(listwidget_column_size)
+        self.listWidget_HexView_Address.setMinimumWidth(listwidget_column_size)
+        hex_list = GDB_Engine.hex_dump(int_address, offset)
+        self.hex_model.refresh(hex_list)
+        self.ascii_model.refresh(hex_list)
+        self.tableView_HexView_Hex.resize_to_contents()
+        self.tableView_HexView_Ascii.resize_to_contents()
+
+    def refresh_hex_view(self):
+        if self.listWidget_HexView_Address.count() == 0:
+            # ELF header usually starts at address 0x00400000
+            self.hex_dump_address(0x00400000, HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
+        else:
+            self.hex_dump_address(int(self.listWidget_HexView_Address.item(0).text(), 16),
+                                  HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
 
     # Select_mode can be "top" or "bottom", it represents the location of selected item
     # offset can also be an address
@@ -1092,6 +1157,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.update_stacktrace()
         elif self.stackedWidget_StackScreens.currentWidget() == self.Stack:
             self.update_stack()
+        self.refresh_hex_view()
         self.showMaximized()
         if bring_disassemble_to_front:
             self.activateWindow()

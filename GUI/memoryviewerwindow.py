@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'memoryviewerwindow.ui'
 #
-# Created: Tue Jul 26 13:14:59 2016
+# Created: Thu Aug 18 18:11:56 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -37,7 +37,7 @@ class Ui_MainWindow(object):
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.tableWidget_Disassemble = QtWidgets.QTableWidget(self.widget_Disassemble)
         font = QtGui.QFont()
-        font.setPointSize(7)
+        font.setPointSize(9)
         self.tableWidget_Disassemble.setFont(font)
         self.tableWidget_Disassemble.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tableWidget_Disassemble.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
@@ -68,7 +68,7 @@ class Ui_MainWindow(object):
         self.scrollArea_Registers.setWidgetResizable(True)
         self.scrollArea_Registers.setObjectName("scrollArea_Registers")
         self.scrollAreaWidgetContents_Registers = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 347, 423))
+        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 344, 411))
         self.scrollAreaWidgetContents_Registers.setObjectName("scrollAreaWidgetContents_Registers")
         self.gridLayout_8 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_Registers)
         self.gridLayout_8.setObjectName("gridLayout_8")
@@ -526,9 +526,53 @@ class Ui_MainWindow(object):
         self.gridLayout = QtWidgets.QGridLayout(self.widget_HexView)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
-        self.label = QtWidgets.QLabel(self.widget_HexView)
-        self.label.setObjectName("label")
-        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+        self.scrollArea_Hex = QtWidgets.QScrollArea(self.widget_HexView)
+        self.scrollArea_Hex.setWidgetResizable(True)
+        self.scrollArea_Hex.setObjectName("scrollArea_Hex")
+        self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 472, 196))
+        self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
+        self.gridLayout_11 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_2)
+        self.gridLayout_11.setObjectName("gridLayout_11")
+        self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
+        self.listWidget_HexView_Address = QtWidgets.QListWidget(self.scrollAreaWidgetContents_2)
+        self.listWidget_HexView_Address.setObjectName("listWidget_HexView_Address")
+        self.horizontalLayout_5.addWidget(self.listWidget_HexView_Address)
+        self.line_5 = QtWidgets.QFrame(self.scrollAreaWidgetContents_2)
+        self.line_5.setFrameShape(QtWidgets.QFrame.VLine)
+        self.line_5.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_5.setObjectName("line_5")
+        self.horizontalLayout_5.addWidget(self.line_5)
+        self.tableView_HexView_Hex = QHexView(self.scrollAreaWidgetContents_2)
+        self.tableView_HexView_Hex.setObjectName("tableView_HexView_Hex")
+        self.horizontalLayout_5.addWidget(self.tableView_HexView_Hex)
+        self.line_4 = QtWidgets.QFrame(self.scrollAreaWidgetContents_2)
+        self.line_4.setFrameShape(QtWidgets.QFrame.VLine)
+        self.line_4.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_4.setObjectName("line_4")
+        self.horizontalLayout_5.addWidget(self.line_4)
+        self.tableView_HexView_Ascii = QAsciiView(self.scrollAreaWidgetContents_2)
+        self.tableView_HexView_Ascii.setObjectName("tableView_HexView_Ascii")
+        self.horizontalLayout_5.addWidget(self.tableView_HexView_Ascii)
+        spacerItem9 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_5.addItem(spacerItem9)
+        self.gridLayout_11.addLayout(self.horizontalLayout_5, 2, 0, 1, 1)
+        self.label_HexView_Information = QtWidgets.QLabel(self.scrollAreaWidgetContents_2)
+        self.label_HexView_Information.setText("")
+        self.label_HexView_Information.setObjectName("label_HexView_Information")
+        self.gridLayout_11.addWidget(self.label_HexView_Information, 0, 0, 1, 1)
+        self.line_6 = QtWidgets.QFrame(self.scrollAreaWidgetContents_2)
+        self.line_6.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line_6.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_6.setObjectName("line_6")
+        self.gridLayout_11.addWidget(self.line_6, 1, 0, 1, 1)
+        self.scrollArea_Hex.setWidget(self.scrollAreaWidgetContents_2)
+        self.gridLayout.addWidget(self.scrollArea_Hex, 0, 0, 1, 1)
+        self.verticalScrollBar_HexView = QtWidgets.QScrollBar(self.widget_HexView)
+        self.verticalScrollBar_HexView.setOrientation(QtCore.Qt.Vertical)
+        self.verticalScrollBar_HexView.setObjectName("verticalScrollBar_HexView")
+        self.gridLayout.addWidget(self.verticalScrollBar_HexView, 0, 1, 1, 1)
         self.widget_StackView = QtWidgets.QWidget(self.splitter_HexView_StackView)
         self.widget_StackView.setObjectName("widget_StackView")
         self.gridLayout_3 = QtWidgets.QGridLayout(self.widget_StackView)
@@ -542,7 +586,7 @@ class Ui_MainWindow(object):
         self.gridLayout_9.setObjectName("gridLayout_9")
         self.tableWidget_StackTrace = QtWidgets.QTableWidget(self.StackTrace)
         font = QtGui.QFont()
-        font.setPointSize(7)
+        font.setPointSize(9)
         self.tableWidget_StackTrace.setFont(font)
         self.tableWidget_StackTrace.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tableWidget_StackTrace.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
@@ -591,7 +635,7 @@ class Ui_MainWindow(object):
         self.gridLayout_5.addLayout(self.verticalLayout, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 20))
         self.menubar.setObjectName("menubar")
         self.menuView = QtWidgets.QMenu(self.menubar)
         self.menuView.setObjectName("menuView")
@@ -608,7 +652,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuView.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(1)
         self.stackedWidget_StackScreens.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -677,7 +721,6 @@ class Ui_MainWindow(object):
         self.DS.setText(_translate("MainWindow", "DS="))
         self.FS.setText(_translate("MainWindow", "FS="))
         self.pushButton_ShowFloatRegisters.setText(_translate("MainWindow", "Show Float Registers"))
-        self.label.setText(_translate("MainWindow", "Reserved for Hexview"))
         item = self.tableWidget_StackTrace.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Return Address"))
         item = self.tableWidget_StackTrace.horizontalHeaderItem(1)
@@ -694,5 +737,7 @@ class Ui_MainWindow(object):
         self.actionBookmarks.setText(_translate("MainWindow", "Bookmarks"))
         self.actionStackTrace_Info.setText(_translate("MainWindow", "StackTrace Info"))
 
-from GUI.CustomLabels.flagregisterlabel import QFlagRegisterLabel
-from GUI.CustomLabels.registerlabel import QRegisterLabel
+from GUI.CustomTableViews.HexView import QHexView
+from GUI.CustomLabels.RegisterLabel import QRegisterLabel
+from GUI.CustomTableViews.AsciiView import QAsciiView
+from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel

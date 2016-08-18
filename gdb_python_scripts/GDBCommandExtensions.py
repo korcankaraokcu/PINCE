@@ -4,6 +4,7 @@ import pickle
 import sys
 import re
 import struct
+import io
 
 # This is some retarded hack
 gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
@@ -345,6 +346,28 @@ class GetFrameInfo(gdb.Command):
         send_to_pince(contents_send)
 
 
+class HexDump(gdb.Command):
+    def __init__(self):
+        super(HexDump, self).__init__("pince-hex-dump", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        contents_recv = receive_from_pince()
+        contents_send = []
+        address = contents_recv[0]
+        offset = contents_recv[1]
+        mem_file = "/proc/" + str(pid) + "/mem"
+        with open(mem_file, "rb") as FILE:
+            FILE.seek(address)
+            for item in range(offset):
+                try:
+                    current_item = " ".join(format(n, '02x') for n in FILE.read(1))
+                except IOError:
+                    current_item = "??"
+                    FILE.seek(1, io.SEEK_CUR)  # Necessary since read() failed to execute
+                contents_send.append(current_item)
+        send_to_pince(contents_send)
+
+
 IgnoreErrors()
 CLIOutput()
 ReadMultipleAddresses()
@@ -357,3 +380,4 @@ GetStackTraceInfo()
 GetStackInfo()
 GetFrameReturnAddresses()
 GetFrameInfo()
+HexDump()

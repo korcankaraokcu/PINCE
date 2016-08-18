@@ -623,12 +623,11 @@ def get_current_thread_information():
     return split(r"Thread\s+", parsed_info)[-1]
 
 
-def find_address_of_closest_instruction(expression, how_many_instructions_to_look_for=1, instruction_location="next"):
-    """Finds address of the closest instruction next to the address evaluated by the given expression, assuming that the
-    evaluated address is valid
+def find_address_of_closest_instruction(address, how_many_instructions_to_look_for=1, instruction_location="next"):
+    """Finds address of the closest instruction next to the given address, assuming that the given address is valid
 
     Args:
-        expression (str): Any gdb expression
+        address (str): Hex address
         how_many_instructions_to_look_for (int): Number of the instructions that'll be lo- OH COME ON NOW! That one is
         obvious!
         instruction_location (str): If it's "next", instructions coming after the address is searched. If it's anything
@@ -640,19 +639,19 @@ def find_address_of_closest_instruction(expression, how_many_instructions_to_loo
     """
     if instruction_location == "next":
         offset = "+" + str(how_many_instructions_to_look_for * 30)
-        disas_data = disassemble(expression, expression + offset)
+        disas_data = disassemble(address, address + offset)
     else:
         offset = "-" + str(how_many_instructions_to_look_for * 30)
-        disas_data = disassemble(expression + offset, expression)
+        disas_data = disassemble(address + offset, address)
     if not disas_data:
         if instruction_location != "next":
-            start_address = SysUtils.find_closest_address(currentpid, expression)
-            disas_data = disassemble(start_address, expression)
+            start_address = SysUtils.get_region_info(currentpid, address).start
+            disas_data = disassemble(start_address, address)
     if instruction_location == "next":
         try:
             return SysUtils.extract_address(disas_data[how_many_instructions_to_look_for][0])
         except IndexError:
-            return SysUtils.find_closest_address(currentpid, expression, look_to="end")
+            return SysUtils.get_region_info(currentpid, address).end
     else:
         try:
             return SysUtils.extract_address(disas_data[-how_many_instructions_to_look_for][0])
@@ -660,7 +659,7 @@ def find_address_of_closest_instruction(expression, how_many_instructions_to_loo
             try:
                 return start_address
             except UnboundLocalError:
-                return SysUtils.find_closest_address(currentpid, expression)
+                return SysUtils.get_region_info(currentpid, address).start
 
 
 def get_info_about_address(expression):
@@ -809,4 +808,28 @@ def get_stack_frame_info(index):
                                  recv_with_file=True)
     if contents_recv is None:
         print("an error occurred while reading stack frame " + str(index))
+    return contents_recv
+
+
+def hex_dump(address, offset):
+    """Returns hex dump of range (address to address+offset)
+
+    Args:
+        address (int,str): Hex address or an int
+        offset (int,str): The range that'll be read
+
+    Returns:
+        list: List of strings read as str. If an error occurs while reading a memory cell, that cell is returned as "??"
+
+    Examples:
+        returned list-->["??","??","??","7f","43","67","40","??","??, ...]
+    """
+    if type(address) != int:
+        address = int(address, 16)
+    if type(offset) != int:
+        offset = int(offset)
+    contents_recv = send_command("pince-hex-dump", send_with_file=True, file_contents_send=(address, offset),
+                                 recv_with_file=True)
+    if contents_recv is None:
+        print("an error occurred while hex dumping address " + hex(address) + " with offset " + str(offset))
     return contents_recv
