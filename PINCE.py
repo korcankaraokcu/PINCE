@@ -1012,6 +1012,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.verticalScrollBar_HexView.wheelEvent = QEvent.ignore
         self.listWidget_HexView_Address.wheelEvent = QEvent.ignore
+        self.scrollArea_Hex.keyPressEvent = QEvent.ignore
         self.listWidget_HexView_Address.setAutoScroll(False)
         self.listWidget_HexView_Address.setStyleSheet("QListWidget {background-color: transparent;}")
 
