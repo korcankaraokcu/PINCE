@@ -1051,10 +1051,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def on_hex_view_current_changed(self, QModelIndex_current):
         self.tableView_HexView_Ascii.selectionModel().setCurrentIndex(QModelIndex_current,
                                                                       QItemSelectionModel.ClearAndSelect)
+        self.listWidget_HexView_Address.setCurrentRow(QModelIndex_current.row())
 
     def on_ascii_view_current_changed(self, QModelIndex_current):
         self.tableView_HexView_Hex.selectionModel().setCurrentIndex(QModelIndex_current,
                                                                     QItemSelectionModel.ClearAndSelect)
+        self.listWidget_HexView_Address.setCurrentRow(QModelIndex_current.row())
 
     def hex_dump_address(self, int_address, offset):
         information = SysUtils.get_region_info(GDB_Engine.currentpid, int_address)
