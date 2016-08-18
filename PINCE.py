@@ -17,18 +17,18 @@ import SysUtils
 import GDB_Engine
 import type_defs
 
-from GUI.mainwindow import Ui_MainWindow as MainWindow
-from GUI.selectprocess import Ui_MainWindow as ProcessWindow
-from GUI.addaddressmanuallydialog import Ui_Dialog as ManualAddressDialog
-from GUI.loadingwidget import Ui_Form as LoadingWidget
-from GUI.dialogwithbuttons import Ui_Dialog as DialogWithButtons
-from GUI.settingsdialog import Ui_Dialog as SettingsDialog
-from GUI.consolewidget import Ui_Form as ConsoleWidget
-from GUI.aboutwidget import Ui_TabWidget as AboutWidget
-from GUI.memoryviewerwindow import Ui_MainWindow as MemoryViewWindow
-from GUI.bookmarkwidget import Ui_Form as BookmarkWidget
-from GUI.floatregisterwidget import Ui_TabWidget as FloatRegisterWidget
-from GUI.stacktraceinfowidget import Ui_Form as StackTraceInfoWidget
+from GUI.MainWindow import Ui_MainWindow as MainWindow
+from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
+from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
+from GUI.LoadingWidget import Ui_Form as LoadingWidget
+from GUI.DialogWithButtons import Ui_Dialog as DialogWithButtons
+from GUI.SettingsDialog import Ui_Dialog as SettingsDialog
+from GUI.ConsoleWidget import Ui_Form as ConsoleWidget
+from GUI.AboutWidget import Ui_TabWidget as AboutWidget
+from GUI.MemoryViewerWindow import Ui_MainWindow as MemoryViewWindow
+from GUI.BookmarkWidget import Ui_Form as BookmarkWidget
+from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
+from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
