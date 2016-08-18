@@ -47,7 +47,7 @@
             <widget class="QTableWidget" name="tableWidget_Disassemble">
              <property name="font">
               <font>
-               <pointsize>7</pointsize>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="editTriggers">
@@ -113,8 +113,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>347</width>
-                <height>423</height>
+                <width>344</width>
+                <height>411</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_8">
@@ -150,7 +150,7 @@
                       </size>
                      </property>
                      <property name="currentIndex">
-                      <number>0</number>
+                      <number>1</number>
                      </property>
                      <widget class="QWidget" name="registers_64">
                       <layout class="QGridLayout" name="gridLayout_7">
@@ -1038,9 +1038,85 @@
          <widget class="QWidget" name="widget_HexView" native="true">
           <layout class="QGridLayout" name="gridLayout">
            <item row="0" column="0">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>Reserved for Hexview</string>
+            <widget class="QScrollArea" name="scrollArea_Hex">
+             <property name="widgetResizable">
+              <bool>true</bool>
+             </property>
+             <widget class="QWidget" name="scrollAreaWidgetContents_2">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>472</width>
+                <height>196</height>
+               </rect>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_11">
+               <item row="2" column="0">
+                <layout class="QHBoxLayout" name="horizontalLayout_5">
+                 <item>
+                  <widget class="QListWidget" name="listWidget_HexView_Address"/>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_5">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QHexView" name="tableView_HexView_Hex"/>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_4">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QAsciiView" name="tableView_HexView_Ascii"/>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_4">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_HexView_Information">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="Line" name="line_6">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+              <zorder></zorder>
+              <zorder>label_HexView_Information</zorder>
+              <zorder>line_6</zorder>
+             </widget>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QScrollBar" name="verticalScrollBar_HexView">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
              </property>
             </widget>
            </item>
@@ -1059,7 +1135,7 @@
                 <widget class="QTableWidget" name="tableWidget_StackTrace">
                  <property name="font">
                   <font>
-                   <pointsize>7</pointsize>
+                   <pointsize>9</pointsize>
                   </font>
                  </property>
                  <property name="editTriggers">
@@ -1162,7 +1238,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">
@@ -1190,12 +1266,22 @@
   <customwidget>
    <class>QRegisterLabel</class>
    <extends>QLabel</extends>
-   <header location="global">GUI.CustomLabels.registerlabel</header>
+   <header location="global">GUI.CustomLabels.RegisterLabel</header>
   </customwidget>
   <customwidget>
    <class>QFlagRegisterLabel</class>
    <extends>QLabel</extends>
-   <header location="global">GUI.CustomLabels.flagregisterlabel</header>
+   <header location="global">GUI.CustomLabels.FlagRegisterLabel</header>
+  </customwidget>
+  <customwidget>
+   <class>QHexView</class>
+   <extends>QTableView</extends>
+   <header location="global">GUI.CustomTableViews.HexView</header>
+  </customwidget>
+  <customwidget>
+   <class>QAsciiView</class>
+   <extends>QTableView</extends>
+   <header location="global">GUI.CustomTableViews.AsciiView</header>
   </customwidget>
  </customwidgets>
  <resources/>

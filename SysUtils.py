@@ -3,6 +3,7 @@ import psutil
 import os
 import shutil
 import sys
+import collections
 import type_defs
 from re import match, search, IGNORECASE, split
 
@@ -76,6 +77,32 @@ def get_memory_regions(pid):
     for m in p.memory_maps(grouped=False):
         maplist.append(m)
     return maplist
+
+
+def get_region_info(pid, address):
+    """Finds the closest valid starting/ending address and region to given address, assuming given address is in the
+    valid address range
+
+    Args:
+        pid (int): PID of the process
+        address (int,str): Can be an int or a hex str
+
+    Returns:
+        collections.namedtuple("get_region_info","start end region"): Starting address as hex str, ending address as hex
+        str and region corresponding to the given address as pmmap_ext object
+    """
+    if type(pid) != int:
+        pid = int(pid)
+    if type(address) != int:
+        address = int(address, 16)
+    region_list = get_memory_regions(pid)
+    for item in region_list:
+        splitted_address = item.addr.split("-")
+        start = int(splitted_address[0], 16)
+        end = int(splitted_address[1], 16)
+        if start <= address <= end:
+            returned_tuple = collections.namedtuple("get_region_info", "start end region")
+            return returned_tuple(hex(start), hex(end), item)
 
 
 def get_memory_regions_by_perms(pid):
@@ -401,30 +428,13 @@ def extract_address(string, search_for_location_changing_instructions=False):
             return result.group(0)
 
 
-def find_closest_address(pid, memory_address, look_to="start"):
-    """Finds the closest valid starting/ending address to given address, assuming given address is in the valid address
-    range
+def aob_to_ascii(list_of_bytes):
+    """Converts given array of hex strings to ascii str
 
     Args:
-        pid (int): PID of the process
-        memory_address (int,str): Can be an int or a hex str
-        look_to (str): If it's "start", closest starting address will be returned. If it's anything else, ending address
-        will be returned
+        list_of_bytes (list): Must be returned from GDB_Engine.hex_dump()
 
     Returns:
-        str: starting/ending address as hex str
+        str: Ascii equivalent of array
     """
-    if type(pid) != int:
-        pid = int(pid)
-    if type(memory_address) != int:
-        memory_address = int(memory_address, 16)
-    region_list = get_memory_regions(pid)
-    for item in region_list:
-        splitted_address = item.addr.split("-")
-        start = int(splitted_address[0], 16)
-        end = int(splitted_address[1], 16)
-        if start <= memory_address <= end:
-            if look_to == "start":
-                return hex(start)
-            else:
-                return hex(end)
+    return bytes.fromhex("".join(list_of_bytes)).decode("ascii", "replace")
