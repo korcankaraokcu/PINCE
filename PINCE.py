@@ -4,7 +4,7 @@ from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
-    QItemSelectionModel
+    QItemSelectionModel, QTimer
 from time import sleep, time
 from threading import Thread
 import os
@@ -1008,7 +1008,41 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         GuiUtils.center(self)
         self.process_stopped.connect(self.on_process_stop)
         self.process_running.connect(self.on_process_running)
+        self.initialize_disassemble_view()
+        self.initialize_register_view()
+        self.initialize_stack_view()
+        self.initialize_hex_view()
+
+        self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
+        self.actionStackTrace_Info.triggered.connect(self.on_stacktrace_info_triggered)
+
+        self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
+        self.widget_Registers.resize(270, self.widget_Registers.height())
+        self.widget_StackView.resize(420, self.widget_StackView.height())  # blaze it
+
+    def initialize_register_view(self):
+        self.pushButton_ShowFloatRegisters.clicked.connect(self.on_show_float_registers_button_clicked)
+
+    def initialize_stack_view(self):
+        self.tableWidget_Stack.contextMenuEvent = self.tableWidget_Stack_context_menu_event
+        self.tableWidget_StackTrace.contextMenuEvent = self.tableWidget_StackTrace_context_menu_event
+
+    def initialize_disassemble_view(self):
         self.widget_Disassemble.wheelEvent = self.tableWidget_Disassemble_wheel_event
+
+        # Format: [address1, address2, ...]
+        self.tableWidget_Disassemble.travel_history = []
+
+        # Format: {address1:comment1,address2:comment2, ...}
+        self.tableWidget_Disassemble.bookmarks = {}
+
+        self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
+        self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
+
+        self.tableWidget_Disassemble.itemDoubleClicked.connect(self.on_disassemble_double_click)
+
+    def initialize_hex_view(self):
+        self.hex_view_currently_displayed_address = 0x00400000
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
 
         self.verticalScrollBar_HexView.wheelEvent = QEvent.ignore
@@ -1030,25 +1064,36 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.listWidget_HexView_Address.setVerticalScrollBarPolicy((Qt.ScrollBarAlwaysOff))
         self.listWidget_HexView_Address.setHorizontalScrollBarPolicy((Qt.ScrollBarAlwaysOff))
 
-        # Format: [address1, address2, ...]
-        self.tableWidget_Disassemble.travel_history = []
+        self.center_hex_view_scrollbar()
+        self.hex_view_scroll_bar_timer = QTimer()
+        self.hex_view_scroll_bar_timer.setInterval(100)
+        self.hex_view_scroll_bar_timer.timeout.connect(self.check_hex_view_scrollbar)
+        self.hex_view_scroll_bar_timer.start()
+        self.verticalScrollBar_HexView.mouseReleaseEvent = self.verticalScrollBar_HexView_mouse_release_event
 
-        # Format: {address1:comment1,address2:comment2, ...}
-        self.tableWidget_Disassemble.bookmarks = {}
+    def verticalScrollBar_HexView_mouse_release_event(self, event):
+        self.center_hex_view_scrollbar()
 
-        self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
-        self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
-        self.tableWidget_Stack.contextMenuEvent = self.tableWidget_Stack_context_menu_event
-        self.tableWidget_StackTrace.contextMenuEvent = self.tableWidget_StackTrace_context_menu_event
+    def center_hex_view_scrollbar(self):
+        maximum = self.verticalScrollBar_HexView.maximum()
+        minimum = self.verticalScrollBar_HexView.minimum()
+        self.verticalScrollBar_HexView.setValue((maximum + minimum) / 2)
 
-        self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
-        self.actionStackTrace_Info.triggered.connect(self.on_stacktrace_info_triggered)
-        self.tableWidget_Disassemble.itemDoubleClicked.connect(self.on_disassemble_double_click)
-        self.pushButton_ShowFloatRegisters.clicked.connect(self.on_show_float_registers_button_clicked)
-
-        self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
-        self.widget_Registers.resize(270, self.widget_Registers.height())
-        self.widget_StackView.resize(420, self.widget_StackView.height())  # blaze it
+    def check_hex_view_scrollbar(self):
+        if GDB_Engine.inferior_status != INFERIOR_STOPPED:
+            return
+        maximum = self.verticalScrollBar_HexView.maximum()
+        minimum = self.verticalScrollBar_HexView.minimum()
+        midst = (maximum + minimum) / 2
+        current_value = self.verticalScrollBar_HexView.value()
+        if midst - 10 < current_value < midst + 10:
+            return
+        current_address = self.hex_view_currently_displayed_address
+        if current_value < midst:
+            next_address = current_address - 0x40
+        else:
+            next_address = current_address + 0x40
+        self.hex_dump_address(next_address)
 
     def on_hex_view_current_changed(self, QModelIndex_current):
         self.tableView_HexView_Ascii.selectionModel().setCurrentIndex(QModelIndex_current,
@@ -1060,7 +1105,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                                                                     QItemSelectionModel.ClearAndSelect)
         self.listWidget_HexView_Address.setCurrentRow(QModelIndex_current.row())
 
-    def hex_dump_address(self, int_address, offset):
+    def hex_dump_address(self, int_address, offset=HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT):
         information = SysUtils.get_region_info(GDB_Engine.currentpid, int_address)
         if information is not None:
             self.label_HexView_Information.setText(
@@ -1076,16 +1121,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         hex_list = GDB_Engine.hex_dump(int_address, offset)
         self.hex_model.refresh(hex_list)
         self.ascii_model.refresh(hex_list)
+        self.hex_view_currently_displayed_address = int_address
 
     def refresh_hex_view(self):
         if self.listWidget_HexView_Address.count() == 0:
             # ELF header usually starts at address 0x00400000
-            self.hex_dump_address(0x00400000, HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
+            self.hex_dump_address(0x00400000)
             self.tableView_HexView_Hex.resize_to_contents()
             self.tableView_HexView_Ascii.resize_to_contents()
         else:
-            self.hex_dump_address(int(self.listWidget_HexView_Address.item(0).text(), 16),
-                                  HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
+            self.hex_dump_address(self.hex_view_currently_displayed_address)
 
     # Select_mode can be "top" or "bottom", it represents the location of selected item
     # offset can also be an address
@@ -1285,12 +1330,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def widget_HexView_wheel_event(self, event):
         steps = event.angleDelta()
-        current_address = int(self.listWidget_HexView_Address.item(0).text(), 16)
+        current_address = self.hex_view_currently_displayed_address
         if steps.y() > 0:
             next_address = current_address - 0x40
         else:
             next_address = current_address + 0x40
-        self.hex_dump_address(next_address, HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
+        self.hex_dump_address(next_address)
 
     def tableWidget_Disassemble_key_press_event(self, event):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
