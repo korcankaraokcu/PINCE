@@ -1028,6 +1028,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.tableWidget_Stack.contextMenuEvent = self.tableWidget_Stack_context_menu_event
         self.tableWidget_StackTrace.contextMenuEvent = self.tableWidget_StackTrace_context_menu_event
+        self.tableWidget_StackTrace.itemDoubleClicked.connect(self.tableWidget_StackTrace_double_click)
 
     def initialize_disassemble_view(self):
         self.widget_Disassemble.wheelEvent = self.tableWidget_Disassemble_wheel_event
@@ -1334,6 +1335,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if action == switch_to_stacktrace:
             self.stackedWidget_StackScreens.setCurrentWidget(self.StackTrace)
             self.update_stacktrace()
+
+    def tableWidget_StackTrace_double_click(self, index):
+        if index.column() == STACKTRACE_RETURN_ADDRESS_COL:
+            selected_row = self.tableWidget_StackTrace.selectionModel().selectedRows()[-1].row()
+            current_address_text = self.tableWidget_StackTrace.item(selected_row, DISAS_ADDR_COL).text()
+            current_address = SysUtils.extract_address(current_address_text)
+            self.disassemble_expression(current_address, append_to_travel_history=True)
 
     def tableWidget_Disassemble_wheel_event(self, event):
         value = self.tableWidget_Disassemble.verticalScrollBar().value()
