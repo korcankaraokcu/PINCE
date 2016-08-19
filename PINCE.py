@@ -1009,6 +1009,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.process_stopped.connect(self.on_process_stop)
         self.process_running.connect(self.on_process_running)
         self.widget_Disassemble.wheelEvent = self.tableWidget_Disassemble_wheel_event
+        self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
 
         self.verticalScrollBar_HexView.wheelEvent = QEvent.ignore
         self.listWidget_HexView_Address.wheelEvent = QEvent.ignore
@@ -1075,13 +1076,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         hex_list = GDB_Engine.hex_dump(int_address, offset)
         self.hex_model.refresh(hex_list)
         self.ascii_model.refresh(hex_list)
-        self.tableView_HexView_Hex.resize_to_contents()
-        self.tableView_HexView_Ascii.resize_to_contents()
 
     def refresh_hex_view(self):
         if self.listWidget_HexView_Address.count() == 0:
             # ELF header usually starts at address 0x00400000
             self.hex_dump_address(0x00400000, HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
+            self.tableView_HexView_Hex.resize_to_contents()
+            self.tableView_HexView_Ascii.resize_to_contents()
         else:
             self.hex_dump_address(int(self.listWidget_HexView_Address.item(0).text(), 16),
                                   HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
@@ -1281,6 +1282,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
             # Change this line if disassemble_expression offset changes to anything other than 300
             self.disassemble_expression(address + "-300", select_mode="bottom")
+
+    def widget_HexView_wheel_event(self, event):
+        steps = event.angleDelta()
+        current_address = int(self.listWidget_HexView_Address.item(0).text(), 16)
+        if steps.y() > 0:
+            next_address = current_address - 0x40
+        else:
+            next_address = current_address + 0x40
+        self.hex_dump_address(next_address, HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
 
     def tableWidget_Disassemble_key_press_event(self, event):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
