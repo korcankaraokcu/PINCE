@@ -1066,7 +1066,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.label_HexView_Information.setText(
                 "Protection:" + information.region.perms + " | Base:" + information.start + "-" + information.end)
         else:
-            self.label_HexView_Information.setText("")
+            self.label_HexView_Information.setText("This region is invalid")
         self.listWidget_HexView_Address.clear()
         for current_offset in range(HEX_VIEW_ROW_COUNT):
             self.listWidget_HexView_Address.addItem(hex(int_address + current_offset * 16))
