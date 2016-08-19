@@ -1024,6 +1024,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.pushButton_ShowFloatRegisters.clicked.connect(self.on_show_float_registers_button_clicked)
 
     def initialize_stack_view(self):
+        self.tableWidget_StackTrace.setColumnWidth(STACKTRACE_RETURN_ADDRESS_COL, 350)
+
         self.tableWidget_Stack.contextMenuEvent = self.tableWidget_Stack_context_menu_event
         self.tableWidget_StackTrace.contextMenuEvent = self.tableWidget_StackTrace_context_menu_event
 
@@ -1301,6 +1303,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Stack.setItem(row, STACK_VALUE_COL, QTableWidgetItem(item[1]))
             self.tableWidget_Stack.setItem(row, STACK_INT_REPRESENTATION_COL, QTableWidgetItem(item[2]))
             self.tableWidget_Stack.setItem(row, STACK_FLOAT_REPRESENTATION_COL, QTableWidgetItem(item[3]))
+        self.tableWidget_Stack.resizeColumnsToContents()
 
     def tableWidget_Stack_context_menu_event(self, event):
         menu = QMenu()

@@ -1176,7 +1176,7 @@
                 <widget class="QTableWidget" name="tableWidget_Stack">
                  <property name="font">
                   <font>
-                   <pointsize>7</pointsize>
+                   <pointsize>9</pointsize>
                   </font>
                  </property>
                  <property name="editTriggers">
