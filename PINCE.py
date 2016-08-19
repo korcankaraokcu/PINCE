@@ -1047,6 +1047,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_view_currently_displayed_address = 0x00400000
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
 
+        self.widget_HexView.contextMenuEvent = self.widget_HexView_context_menu_event
+
         self.verticalScrollBar_HexView.wheelEvent = QEvent.ignore
         self.listWidget_HexView_Address.wheelEvent = QEvent.ignore
         self.scrollArea_Hex.keyPressEvent = QEvent.ignore
@@ -1072,6 +1074,24 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_view_scroll_bar_timer.timeout.connect(self.check_hex_view_scrollbar)
         self.hex_view_scroll_bar_timer.start()
         self.verticalScrollBar_HexView.mouseReleaseEvent = self.verticalScrollBar_HexView_mouse_release_event
+
+    def widget_HexView_context_menu_event(self, event):
+        menu = QMenu()
+        go_to = menu.addAction("Go to expression")
+        font_size = self.widget_HexView.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        current_address = hex(self.hex_view_currently_displayed_address)
+        action = menu.exec_(event.globalPos())
+        if action == go_to:
+            go_to_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False,
+                                                 line_edit_text=current_address)
+            if go_to_dialog.exec_():
+                expression = go_to_dialog.get_values()
+                dest_address = GDB_Engine.convert_symbol_to_address(expression)
+                if dest_address is None:
+                    QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
+                    return
+                self.hex_dump_address(int(dest_address, 16))
 
     def verticalScrollBar_HexView_mouse_release_event(self, event):
         self.center_hex_view_scrollbar()
