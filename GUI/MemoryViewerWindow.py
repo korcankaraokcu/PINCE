@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'memoryviewerwindow.ui'
+# Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Thu Aug 18 18:11:56 2016
+# Created: Fri Aug 19 20:39:49 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -609,7 +609,7 @@ class Ui_MainWindow(object):
         self.gridLayout_10.setObjectName("gridLayout_10")
         self.tableWidget_Stack = QtWidgets.QTableWidget(self.Stack)
         font = QtGui.QFont()
-        font.setPointSize(7)
+        font.setPointSize(9)
         self.tableWidget_Stack.setFont(font)
         self.tableWidget_Stack.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tableWidget_Stack.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
@@ -737,7 +737,7 @@ class Ui_MainWindow(object):
         self.actionBookmarks.setText(_translate("MainWindow", "Bookmarks"))
         self.actionStackTrace_Info.setText(_translate("MainWindow", "StackTrace Info"))
 
-from GUI.CustomTableViews.HexView import QHexView
-from GUI.CustomLabels.RegisterLabel import QRegisterLabel
-from GUI.CustomTableViews.AsciiView import QAsciiView
 from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
+from GUI.CustomTableViews.HexView import QHexView
+from GUI.CustomTableViews.AsciiView import QAsciiView
+from GUI.CustomLabels.RegisterLabel import QRegisterLabel
