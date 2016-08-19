@@ -26,3 +26,4 @@ class QHexModel(QAbstractTableModel):
 
     def refresh(self, new_data_array):
         self.data_array = new_data_array
+        self.layoutChanged.emit()

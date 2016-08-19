@@ -437,4 +437,6 @@ def aob_to_ascii(list_of_bytes):
     Returns:
         str: Ascii equivalent of array
     """
-    return bytes.fromhex("".join(list_of_bytes)).decode("ascii", "replace")
+
+    # 3f is ascii hex representation of char "?"
+    return bytes.fromhex("".join(list_of_bytes).replace("??", "3f")).decode("ascii", "replace")
