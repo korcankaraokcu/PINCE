@@ -81,7 +81,11 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 [Update-24/05/2016 : Thread injection to gdb itself works %100 of the time with a small gdb script and it enables the automatic address table update but it might crash gdb later on, needs extra research]
 
 #License
-GPLv3
+GPLv3. See COPYING file for details
+
+#Contact Information
+Korcan Karaokçu <korcankaraokcu@gmail.com>  
+Çağrı Ulaş <cagriulas@gmail.com>  
 
 #Supported platforms
 - **Platforms tested so far:**
