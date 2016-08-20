@@ -1,5 +1,22 @@
 # -*- coding: utf-8 -*-
 # !/usr/bin/env python3
+"""
+Copyright (C) 2016 Korcan Karaokçu <korcankaraokcu@gmail.com>
+Copyright (C) 2016 Çağrı Ulaş <cagriulas@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu
@@ -989,13 +1006,21 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center(self)
-        license_text = open("LICENSE.md").read()
-        contributors_text = open("CONTRIBUTORS.txt").read()
+        license_text = open("COPYING").read()
+        authors_text = open("AUTHORS").read()
+        thanks_text = open("THANKS").read()
         self.textBrowser_License.setPlainText(license_text)
         self.textBrowser_Contributors.append(
             "This is only a placeholder, this section may look different when the project finishes" +
-            "\nIn fact, something like a demo-scene for here would look absolutely fabulous <:\n")
-        self.textBrowser_Contributors.append(contributors_text)
+            "\nIn fact, something like a demo-scene for here would look absolutely fabulous <:")
+        self.textBrowser_Contributors.append("\n########")
+        self.textBrowser_Contributors.append("#AUTHORS#")
+        self.textBrowser_Contributors.append("########\n")
+        self.textBrowser_Contributors.append(authors_text)
+        self.textBrowser_Contributors.append("\n#######")
+        self.textBrowser_Contributors.append("#THANKS#")
+        self.textBrowser_Contributors.append("#######\n")
+        self.textBrowser_Contributors.append(thanks_text)
 
 
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
