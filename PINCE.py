@@ -1227,7 +1227,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.hex_dump_address(self.hex_view_currently_displayed_address)
 
     # offset can also be an address as hex str
-    def disassemble_expression(self, expression, offset="+300", append_to_travel_history=False):
+    def disassemble_expression(self, expression, offset="+200", append_to_travel_history=False):
         disas_data = GDB_Engine.disassemble(expression, offset)
         if not disas_data:
             QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
