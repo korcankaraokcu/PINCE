@@ -1062,7 +1062,19 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_StackTrace.itemDoubleClicked.connect(self.tableWidget_StackTrace_double_click)
 
     def initialize_disassemble_view(self):
-        self.widget_Disassemble.wheelEvent = self.tableWidget_Disassemble_wheel_event
+        self.disassemble_currently_displayed_address = "0x00400000"
+        self.widget_Disassemble.wheelEvent = self.widget_Disassemble_wheel_event
+
+        self.tableWidget_Disassemble.wheelEvent = QEvent.ignore
+        self.verticalScrollBar_Disassemble.wheelEvent = QEvent.ignore
+
+        GuiUtils.center_scroll_bar(self.verticalScrollBar_Disassemble)
+        self.verticalScrollBar_Disassemble.mouseReleaseEvent = self.verticalScrollBar_Disassemble_mouse_release_event
+
+        self.disassemble_scroll_bar_timer = QTimer()
+        self.disassemble_scroll_bar_timer.setInterval(100)
+        self.disassemble_scroll_bar_timer.timeout.connect(self.check_disassemble_scrollbar)
+        self.disassemble_scroll_bar_timer.start()
 
         # Format: [address1, address2, ...]
         self.tableWidget_Disassemble.travel_history = []
@@ -1100,7 +1112,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.listWidget_HexView_Address.setVerticalScrollBarPolicy((Qt.ScrollBarAlwaysOff))
         self.listWidget_HexView_Address.setHorizontalScrollBarPolicy((Qt.ScrollBarAlwaysOff))
 
-        self.center_hex_view_scrollbar()
+        GuiUtils.center_scroll_bar(self.verticalScrollBar_HexView)
         self.hex_view_scroll_bar_timer = QTimer()
         self.hex_view_scroll_bar_timer.setInterval(100)
         self.hex_view_scroll_bar_timer.timeout.connect(self.check_hex_view_scrollbar)
@@ -1138,12 +1150,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.hex_dump_address(self.hex_view_currently_displayed_address)
 
     def verticalScrollBar_HexView_mouse_release_event(self, event):
-        self.center_hex_view_scrollbar()
+        GuiUtils.center_scroll_bar(self.verticalScrollBar_HexView)
 
-    def center_hex_view_scrollbar(self):
-        maximum = self.verticalScrollBar_HexView.maximum()
-        minimum = self.verticalScrollBar_HexView.minimum()
-        self.verticalScrollBar_HexView.setValue((maximum + minimum) / 2)
+    def verticalScrollBar_Disassemble_mouse_release_event(self, event):
+        GuiUtils.center_scroll_bar(self.verticalScrollBar_Disassemble)
 
     def check_hex_view_scrollbar(self):
         if GDB_Engine.inferior_status != INFERIOR_STOPPED:
@@ -1160,6 +1170,24 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         else:
             next_address = current_address + 0x40
         self.hex_dump_address(next_address)
+
+    def check_disassemble_scrollbar(self):
+        if GDB_Engine.inferior_status != INFERIOR_STOPPED:
+            return
+        maximum = self.verticalScrollBar_Disassemble.maximum()
+        minimum = self.verticalScrollBar_Disassemble.minimum()
+        midst = (maximum + minimum) / 2
+        current_value = self.verticalScrollBar_Disassemble.value()
+        if midst - 10 < current_value < midst + 10:
+            return
+        current_address = self.disassemble_currently_displayed_address
+        if current_value < midst:
+            next_address = GDB_Engine.find_address_of_closest_instruction(current_address, instructions_per_scroll,
+                                                                          "previous")
+        else:
+            next_address = GDB_Engine.find_address_of_closest_instruction(current_address, instructions_per_scroll,
+                                                                          "next")
+        self.disassemble_expression(next_address)
 
     def on_hex_view_current_changed(self, QModelIndex_current):
         self.tableView_HexView_Ascii.selectionModel().setCurrentIndex(QModelIndex_current,
@@ -1198,9 +1226,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         else:
             self.hex_dump_address(self.hex_view_currently_displayed_address)
 
-    # Select_mode can be "top" or "bottom", it represents the location of selected item
-    # offset can also be an address
-    def disassemble_expression(self, expression, offset="+300", select_mode="top", append_to_travel_history=False):
+    # offset can also be an address as hex str
+    def disassemble_expression(self, expression, offset="+300", append_to_travel_history=False):
         disas_data = GDB_Engine.disassemble(expression, offset)
         if not disas_data:
             QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
@@ -1210,11 +1237,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         row_of_pc = False
         rows_of_encountered_bookmarks_list = []
 
-        # We won't append it to travel_history yet, see the reasoning at below
-        if append_to_travel_history:
-            selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
-            travel_history_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-            travel_history_address = SysUtils.extract_address(travel_history_address_text)
+        # TODO: Change this nonsense when the huge refactorization happens
+        current_first_address = SysUtils.extract_address(disas_data[0][0])  # address of first list entry
+        try:
+            previous_first_address = SysUtils.extract_address(
+                self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text())
+        except AttributeError:
+            previous_first_address = current_first_address
+
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         for row, item in enumerate(disas_data):
@@ -1236,18 +1266,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.handle_colours(row_of_pc, rows_of_encountered_bookmarks_list)
         self.tableWidget_Disassemble.resizeColumnsToContents()
         self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
-        if select_mode == "top":
-            self.tableWidget_Disassemble.scrollToItem(self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL))
-            self.tableWidget_Disassemble.selectRow(0)
-        elif select_mode == "bottom":
-            last_item = self.tableWidget_Disassemble.rowCount() - 1
-            self.tableWidget_Disassemble.scrollToItem(self.tableWidget_Disassemble.item(last_item, DISAS_ADDR_COL))
-            self.tableWidget_Disassemble.selectRow(last_item)
 
         # We append the old record to travel history as last action because we wouldn't like to see unnecessary
         # addresses in travel history if any error occurs while displaying the next location
         if append_to_travel_history:
-            self.tableWidget_Disassemble.travel_history.append(travel_history_address)
+            self.tableWidget_Disassemble.travel_history.append(previous_first_address)
+        self.disassemble_currently_displayed_address = current_first_address
 
     # Set colour of a row if a specific address is encountered(e.g $pc, a bookmarked address etc.)
     def handle_colours(self, row_of_pc, encountered_bookmark_list):
@@ -1386,21 +1410,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             current_address = SysUtils.extract_address(current_address_text)
             self.disassemble_expression(current_address, append_to_travel_history=True)
 
-    def tableWidget_Disassemble_wheel_event(self, event):
-        value = self.tableWidget_Disassemble.verticalScrollBar().value()
-        if value == self.tableWidget_Disassemble.verticalScrollBar().minimum():
-            address = self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text()
-            address = hex(int(SysUtils.extract_address(address), 16))
-            address = GDB_Engine.find_address_of_closest_instruction(address, instructions_per_scroll, "previous")
-            self.disassemble_expression(address)
-        if value == self.tableWidget_Disassemble.verticalScrollBar().maximum():
-            last_item = self.tableWidget_Disassemble.rowCount() - 1
-            address = self.tableWidget_Disassemble.item(last_item, DISAS_ADDR_COL).text()
-            address = hex(int(SysUtils.extract_address(address), 16))
-            address = GDB_Engine.find_address_of_closest_instruction(address, instructions_per_scroll + 1, "next")
-
-            # Change this line if disassemble_expression offset changes to anything other than 300
-            self.disassemble_expression(address + "-300", select_mode="bottom")
+    def widget_Disassemble_wheel_event(self, event):
+        steps = event.angleDelta()
+        current_address = self.disassemble_currently_displayed_address
+        if steps.y() > 0:
+            next_address = GDB_Engine.find_address_of_closest_instruction(current_address, instructions_per_scroll,
+                                                                          "previous")
+        else:
+            next_address = GDB_Engine.find_address_of_closest_instruction(current_address, instructions_per_scroll,
+                                                                          "next")
+        self.disassemble_expression(next_address)
 
     def widget_HexView_wheel_event(self, event):
         steps = event.angleDelta()
@@ -1444,6 +1463,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
+        first_address = self.disassemble_currently_displayed_address
+
         menu = QMenu()
         go_to = menu.addAction("Go to expression")
         back = menu.addAction("Back")
@@ -1483,7 +1504,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         action = menu.exec_(event.globalPos())
         if action == go_to:
             go_to_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False,
-                                                 line_edit_text=current_address)
+                                                 line_edit_text=first_address)
             if go_to_dialog.exec_():
                 traveled_exp = go_to_dialog.get_values()
                 self.disassemble_expression(traveled_exp, append_to_travel_history=True)

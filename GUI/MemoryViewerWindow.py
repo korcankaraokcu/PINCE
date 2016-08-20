@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Fri Aug 19 20:39:49 2016
+# Created: Sat Aug 20 21:00:33 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -39,6 +39,8 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setPointSize(9)
         self.tableWidget_Disassemble.setFont(font)
+        self.tableWidget_Disassemble.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.tableWidget_Disassemble.setAutoScroll(False)
         self.tableWidget_Disassemble.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tableWidget_Disassemble.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.tableWidget_Disassemble.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -58,6 +60,10 @@ class Ui_MainWindow(object):
         self.tableWidget_Disassemble.verticalHeader().setDefaultSectionSize(15)
         self.tableWidget_Disassemble.verticalHeader().setStretchLastSection(False)
         self.gridLayout_2.addWidget(self.tableWidget_Disassemble, 0, 0, 1, 1)
+        self.verticalScrollBar_Disassemble = QtWidgets.QScrollBar(self.widget_Disassemble)
+        self.verticalScrollBar_Disassemble.setOrientation(QtCore.Qt.Vertical)
+        self.verticalScrollBar_Disassemble.setObjectName("verticalScrollBar_Disassemble")
+        self.gridLayout_2.addWidget(self.verticalScrollBar_Disassemble, 0, 1, 1, 1)
         self.widget_Registers = QtWidgets.QWidget(self.splitter_Disassemble_Registers)
         self.widget_Registers.setMinimumSize(QtCore.QSize(0, 0))
         self.widget_Registers.setObjectName("widget_Registers")
@@ -737,7 +743,7 @@ class Ui_MainWindow(object):
         self.actionBookmarks.setText(_translate("MainWindow", "Bookmarks"))
         self.actionStackTrace_Info.setText(_translate("MainWindow", "StackTrace Info"))
 
+from GUI.CustomLabels.RegisterLabel import QRegisterLabel
 from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
 from GUI.CustomTableViews.HexView import QHexView
 from GUI.CustomTableViews.AsciiView import QAsciiView
-from GUI.CustomLabels.RegisterLabel import QRegisterLabel
