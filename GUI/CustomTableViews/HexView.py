@@ -26,3 +26,6 @@ class QHexView(QTableView):
         size = self.sizeHintForColumn(0) * (self.model().columnCount() + 1)
         self.setMinimumWidth(size)
         self.setMaximumWidth(size)
+
+    def get_current_offset(self):
+        return self.currentIndex().row() * self.model().columnCount() + self.currentIndex().column()

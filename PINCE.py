@@ -242,6 +242,7 @@ class MainForm(QMainWindow, MainWindow):
             self.set_default_settings()
         self.apply_settings()
         self.memory_view_window = MemoryViewWindowForm()
+        self.memory_view_window.address_added.connect(self.add_entry_to_addresstable)
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
@@ -355,9 +356,9 @@ class MainForm(QMainWindow, MainWindow):
         manual_address_dialog = ManualAddressDialogForm()
         if manual_address_dialog.exec_():
             description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
-            self.add_element_to_addresstable(description=description, address=address, typeofaddress=typeofaddress,
-                                             length=length, unicode=unicode,
-                                             zero_terminate=zero_terminate)
+            self.add_entry_to_addresstable(description=description, address=address, typeofaddress=typeofaddress,
+                                           length=length, unicode=unicode,
+                                           zero_terminate=zero_terminate)
 
     def memoryview_onlick(self):
         self.memory_view_window.showMaximized()
@@ -438,8 +439,8 @@ class MainForm(QMainWindow, MainWindow):
         application = QApplication.instance()
         application.closeAllWindows()
 
-    def add_element_to_addresstable(self, description, address, typeofaddress, length=0, unicode=False,
-                                    zero_terminate=True):
+    def add_entry_to_addresstable(self, description, address, typeofaddress, length=0, unicode=False,
+                                  zero_terminate=True):
         frozen_checkbox = QCheckBox()
         typeofaddress_text = GuiUtils.valuetype_to_text(typeofaddress, length, unicode, zero_terminate)
 
@@ -451,8 +452,10 @@ class MainForm(QMainWindow, MainWindow):
         currentrow = self.tableWidget_addresstable.rowCount() - 1
         value = GDB_Engine.read_single_address(address, typeofaddress, length, unicode, zero_terminate)
         self.tableWidget_addresstable.setCellWidget(currentrow, FROZEN_COL, frozen_checkbox)
-        self.change_address_table_elements(row=currentrow, description=description, address=address,
-                                           typeofaddress=typeofaddress_text, value=str(value))
+        self.change_address_table_entries(row=currentrow, description=description, address=address,
+                                          typeofaddress=typeofaddress_text, value=str(value))
+        self.show()  # In case of getting called from elsewhere
+        self.activateWindow()
 
     def on_address_table_double_click(self, index):
         current_row = index.row()
@@ -491,7 +494,7 @@ class MainForm(QMainWindow, MainWindow):
                 for item in selected_rows:
                     self.tableWidget_addresstable.setItem(item.row(), DESC_COL, QTableWidgetItem(description_text))
         elif current_column is ADDR_COL or current_column is TYPE_COL:
-            description, address, value_type = self.read_address_table_elements(row=current_row)
+            description, address, value_type = self.read_address_table_entries(row=current_row)
             index, length, unicode, zero_terminate = GuiUtils.text_to_valuetype(value_type)
             manual_address_dialog = ManualAddressDialogForm(description=description, address=address, index=index,
                                                             length=length, unicode=unicode,
@@ -507,18 +510,18 @@ class MainForm(QMainWindow, MainWindow):
                 value = GDB_Engine.read_single_address(address=address, value_index=typeofaddress,
                                                        length=length, is_unicode=unicode,
                                                        zero_terminate=zero_terminate)
-                self.change_address_table_elements(row=current_row, description=description, address=address,
-                                                   typeofaddress=typeofaddress_text, value=str(value))
+                self.change_address_table_entries(row=current_row, description=description, address=address,
+                                                  typeofaddress=typeofaddress_text, value=str(value))
 
     # Changes the column values of the given row
-    def change_address_table_elements(self, row, description="", address="", typeofaddress="", value=""):
+    def change_address_table_entries(self, row, description="", address="", typeofaddress="", value=""):
         self.tableWidget_addresstable.setItem(row, DESC_COL, QTableWidgetItem(description))
         self.tableWidget_addresstable.setItem(row, ADDR_COL, QTableWidgetItem(address))
         self.tableWidget_addresstable.setItem(row, TYPE_COL, QTableWidgetItem(typeofaddress))
         self.tableWidget_addresstable.setItem(row, VALUE_COL, QTableWidgetItem(value))
 
     # Returns the column values of the given row
-    def read_address_table_elements(self, row):
+    def read_address_table_entries(self, row):
         description = self.tableWidget_addresstable.item(row, DESC_COL).text()
         address = self.tableWidget_addresstable.item(row, ADDR_COL).text()
         value_type = self.tableWidget_addresstable.item(row, TYPE_COL).text()
@@ -1027,6 +1030,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     process_stopped = pyqtSignal()
     process_running = pyqtSignal()
 
+    # TODO: Change this nonsense when the huge refactorization happens
+    address_added = pyqtSignal(object, object, object, object, object, object)
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -1104,6 +1110,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def widget_HexView_context_menu_event(self, event):
         menu = QMenu()
         go_to = menu.addAction("Go to expression")
+        menu.addSeparator()
+        add_address = menu.addAction("Add this address to address list")
+        menu.addSeparator()
+        refresh = menu.addAction("Refresh")
         font_size = self.widget_HexView.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         current_address = hex(self.hex_view_currently_displayed_address)
@@ -1118,6 +1128,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
                     return
                 self.hex_dump_address(int(dest_address, 16))
+        elif action == add_address:
+            selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
+            manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address), index=INDEX_AOB)
+            if manual_address_dialog.exec_():
+                description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
+                self.address_added.emit(description, address, typeofaddress, length, unicode, zero_terminate)
+        elif action == refresh:
+            self.hex_dump_address(self.hex_view_currently_displayed_address)
 
     def verticalScrollBar_HexView_mouse_release_event(self, event):
         self.center_hex_view_scrollbar()
