@@ -50,6 +50,12 @@
                <pointsize>9</pointsize>
               </font>
              </property>
+             <property name="verticalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOff</enum>
+             </property>
+             <property name="autoScroll">
+              <bool>false</bool>
+             </property>
              <property name="editTriggers">
               <set>QAbstractItemView::NoEditTriggers</set>
              </property>
@@ -91,6 +97,13 @@
                <string>Comment</string>
               </property>
              </column>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QScrollBar" name="verticalScrollBar_Disassemble">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
             </widget>
            </item>
           </layout>

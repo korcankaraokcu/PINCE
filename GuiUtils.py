@@ -60,6 +60,17 @@ def center_to_window(window_secondary, window_main):
     window_secondary.move(window_main.frameGeometry().center() - window_secondary.frameGeometry().center())
 
 
+def center_scroll_bar(QScrollBar):
+    """Center the given scrollbar
+
+    Args:
+        QScrollBar (QScrollbar): The scrollbar that'll be centered
+    """
+    maximum = QScrollBar.maximum()
+    minimum = QScrollBar.minimum()
+    QScrollBar.setValue((maximum + minimum) / 2)
+
+
 def valuetype_to_text(value_index=int, length=0, is_unicode=False, zero_terminate=True):
     """Returns a str according to given parameters
 
