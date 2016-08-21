@@ -1048,8 +1048,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionStackTrace_Info.triggered.connect(self.on_stacktrace_info_triggered)
 
         self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
-        self.widget_Registers.resize(270, self.widget_Registers.height())
         self.widget_StackView.resize(420, self.widget_StackView.height())  # blaze it
+        self.widget_Registers.resize(330, self.widget_Registers.height())
 
     def initialize_register_view(self):
         self.pushButton_ShowFloatRegisters.clicked.connect(self.on_show_float_registers_button_clicked)
