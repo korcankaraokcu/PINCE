@@ -18,21 +18,23 @@ Pre-release screenshots:
   * **Continuous Address Table Update:** You can adjust update timer or cancel updating by modifying settings. Non-stop version is Postponed\Quarterway Done **[Done\Only works when the inferior is stopped]**
   * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables **[Postponed\Quarterway Done]**
   * *Postpone reason:* These two features requires thread injection to the target or gdb and PINCE's injection methods are not perfect yet, I've already spent more(read:WAY MORE) time than I should on this, these features are not vital for now, also you have got the options to manually update the table and set the value manually already
-- **Disassemble** **[Working on it]**
-  * **Smart Scrolling:** When mouse wheeled, if scrollbar has reached it's maximum or minimum value, PINCE automatically disassembles the next available instruction(s). Instruction count can be changed from settings **[Done]**
-  * **Smart Following:** If you press [space], PINCE automatically analyzes the selected instruction and if any location changing instruction is found, PINCE disassembles the address that's pointed by the instruction **[Done]**
+- **Memory View** **[Done]**
+  * **Infinite Scrolling:** PINCE automatically disassembles the next available instruction(s) on mouse wheel/scrollbar move. Instruction count can be changed from settings. Hex View also supports this feature **[Done]**
+  * **Following:** If you press [space], PINCE automatically analyzes the selected instruction and if any location changing instruction is found, PINCE disassembles the address that's pointed by the instruction **[Done]**
   * **Travel History:** PINCE records your previous location when you jump to an address explicitly(e.g by pressing [space] or using "Go to expression" etc.). Right click->Back to go back to your previous location(s) **[Done]**
   * **Bookmarking:** Bookmark menu is dynamically created when right clicked in the disassemble screen. So unlike Cheat Engine, PINCE lets you set unlimited number of bookmarks. List of bookmarks can also be viewed from View->Bookmarks in the MemoryView window. Commenting on an address automatically bookmarks it. **[Done]**
+  * **Modify on the fly:** PINCE lets you modify registers on the fly. Unlike CE, you can also change XMM and FPU registers. **[Done]**  
 - **Debugging** **[Working on it]**
   * Can interrupt and continue the inferior, Check wiki for instructions
-- **Code Injection** **[Done?]**
-  * Check wiki
+- **Code Injection** **[Working on it]**
+  * **Pre-attach injection:** Only .so files are supported. Read Wiki **[Done]**
+  * **Run-time injection:** PINCE can inject single line instructions or code caves **[Planned]**
 - **GDB Console** **[Done]**
   * Is the power of PINCE not enough for you? Then you can use the gdb console provided by PINCE, it's on the top right in main window
 - **Simplified/Optimized gdb command alternatives** **[Working on it]**
   * Custom scripts instead of using gdb's x command for reading memory **[Done]**
   * Custom scripts instead of using gdb's set command for modifying memory **[Done]**
-- **libPINCE- A reusable python library** **[Current Status:*Reusable*]**
+- **libPINCE- A reusable python library** **[Current Status:*Reusable for FP* , *Refactoring for OOP*]**
   * PINCE provides a easily configurable and reusable python library. I'll write a fully-documented guide about how to use it as soon as the project finishes at basic level. Until that moment, I'll keep developing this project as modular as possible  
 
 #Building  
@@ -78,7 +80,8 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - 19/02/2016 : Moved to Github from Bitbucket
 - 25/02/2016 : First successful implementation of thread injection(A new age dawns!)[Update-08/05/2016 : PINCE now uses ```linux-inject``` instead of injection method of mine]*  
 - 18/06/2016 : PINCE now supports all-stop mode instead of non-stop mode
-- 21/06/2016 : Variable Inspection&Modification is finished
+- 21/06/2016 : Variable Inspection&Modification is finished  
+- 21/08/2016 : Memory View is finished
   
 
 
