@@ -126,8 +126,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>344</width>
-                <height>411</height>
+                <width>351</width>
+                <height>439</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_8">
@@ -139,7 +139,7 @@
                     <widget class="QLabel" name="label_3">
                      <property name="font">
                       <font>
-                       <pointsize>7</pointsize>
+                       <pointsize>9</pointsize>
                       </font>
                      </property>
                      <property name="text">
@@ -163,7 +163,7 @@
                       </size>
                      </property>
                      <property name="currentIndex">
-                      <number>1</number>
+                      <number>0</number>
                      </property>
                      <widget class="QWidget" name="registers_64">
                       <layout class="QGridLayout" name="gridLayout_7">
@@ -177,7 +177,7 @@
                               <widget class="QRegisterLabel" name="RAX">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -189,7 +189,7 @@
                               <widget class="QRegisterLabel" name="RBX">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -201,7 +201,7 @@
                               <widget class="QRegisterLabel" name="RCX">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -213,7 +213,7 @@
                               <widget class="QRegisterLabel" name="RDX">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -225,7 +225,7 @@
                               <widget class="QRegisterLabel" name="RSI">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -237,7 +237,7 @@
                               <widget class="QRegisterLabel" name="RDI">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -249,7 +249,7 @@
                               <widget class="QRegisterLabel" name="RBP">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -261,7 +261,7 @@
                               <widget class="QRegisterLabel" name="RSP">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -290,7 +290,7 @@
                               <widget class="QRegisterLabel" name="R8">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -302,7 +302,7 @@
                               <widget class="QRegisterLabel" name="R9">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -314,7 +314,7 @@
                               <widget class="QRegisterLabel" name="R10">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -326,7 +326,7 @@
                               <widget class="QRegisterLabel" name="R11">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -338,7 +338,7 @@
                               <widget class="QRegisterLabel" name="R12">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -350,7 +350,7 @@
                               <widget class="QRegisterLabel" name="R13">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -362,7 +362,7 @@
                               <widget class="QRegisterLabel" name="R14">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -374,7 +374,7 @@
                               <widget class="QRegisterLabel" name="R15">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -392,7 +392,7 @@
                             <widget class="QRegisterLabel" name="RIP">
                              <property name="font">
                               <font>
-                               <pointsize>7</pointsize>
+                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -444,7 +444,7 @@
                               <widget class="QRegisterLabel" name="EAX">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -456,7 +456,7 @@
                               <widget class="QRegisterLabel" name="EBX">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -468,7 +468,7 @@
                               <widget class="QRegisterLabel" name="ECX">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -480,7 +480,7 @@
                               <widget class="QRegisterLabel" name="EDX">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -492,7 +492,7 @@
                               <widget class="QRegisterLabel" name="ESI">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -504,7 +504,7 @@
                               <widget class="QRegisterLabel" name="EDI">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -516,7 +516,7 @@
                               <widget class="QRegisterLabel" name="EBP">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -528,7 +528,7 @@
                               <widget class="QRegisterLabel" name="ESP">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -540,7 +540,7 @@
                               <widget class="QRegisterLabel" name="EIP">
                                <property name="font">
                                 <font>
-                                 <pointsize>7</pointsize>
+                                 <pointsize>9</pointsize>
                                 </font>
                                </property>
                                <property name="text">
@@ -588,7 +588,7 @@
                     <widget class="QLabel" name="label_29">
                      <property name="font">
                       <font>
-                       <pointsize>7</pointsize>
+                       <pointsize>9</pointsize>
                       </font>
                      </property>
                      <property name="text">
@@ -611,7 +611,7 @@
                         <widget class="QLabel" name="label_31">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -623,7 +623,7 @@
                         <widget class="QFlagRegisterLabel" name="CF">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -639,7 +639,7 @@
                         <widget class="QLabel" name="label_35">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -651,7 +651,7 @@
                         <widget class="QFlagRegisterLabel" name="PF">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -667,7 +667,7 @@
                         <widget class="QLabel" name="label_37">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -679,7 +679,7 @@
                         <widget class="QFlagRegisterLabel" name="AF">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -695,7 +695,7 @@
                         <widget class="QLabel" name="label_39">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -707,7 +707,7 @@
                         <widget class="QFlagRegisterLabel" name="ZF">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -723,7 +723,7 @@
                         <widget class="QLabel" name="label_41">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -735,7 +735,7 @@
                         <widget class="QFlagRegisterLabel" name="SF">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -751,7 +751,7 @@
                         <widget class="QLabel" name="label_43">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -763,7 +763,7 @@
                         <widget class="QFlagRegisterLabel" name="TF">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -779,7 +779,7 @@
                         <widget class="QLabel" name="label_45">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -791,7 +791,7 @@
                         <widget class="QFlagRegisterLabel" name="IF">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -807,7 +807,7 @@
                         <widget class="QLabel" name="label_47">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -819,7 +819,7 @@
                         <widget class="QFlagRegisterLabel" name="DF">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -835,7 +835,7 @@
                         <widget class="QLabel" name="label_49">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -847,7 +847,7 @@
                         <widget class="QFlagRegisterLabel" name="OF">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -863,7 +863,7 @@
                     <widget class="QLabel" name="label_30">
                      <property name="font">
                       <font>
-                       <pointsize>7</pointsize>
+                       <pointsize>9</pointsize>
                       </font>
                      </property>
                      <property name="text">
@@ -886,7 +886,7 @@
                         <widget class="QRegisterLabel" name="CS">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -898,7 +898,7 @@
                         <widget class="QRegisterLabel" name="ES">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -927,7 +927,7 @@
                         <widget class="QRegisterLabel" name="SS">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -939,7 +939,7 @@
                         <widget class="QRegisterLabel" name="GS">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -968,7 +968,7 @@
                         <widget class="QRegisterLabel" name="DS">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -980,7 +980,7 @@
                         <widget class="QRegisterLabel" name="FS">
                          <property name="font">
                           <font>
-                           <pointsize>7</pointsize>
+                           <pointsize>9</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -996,7 +996,7 @@
                     <widget class="QPushButton" name="pushButton_ShowFloatRegisters">
                      <property name="font">
                       <font>
-                       <pointsize>7</pointsize>
+                       <pointsize>9</pointsize>
                       </font>
                      </property>
                      <property name="text">
@@ -1261,7 +1261,19 @@
     <addaction name="actionBookmarks"/>
     <addaction name="actionStackTrace_Info"/>
    </widget>
+   <widget class="QMenu" name="menuDebug">
+    <property name="title">
+     <string>Debug</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+   </widget>
    <addaction name="menuView"/>
+   <addaction name="menuDebug"/>
+   <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionBookmarks">
