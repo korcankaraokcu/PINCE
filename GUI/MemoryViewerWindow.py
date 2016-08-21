@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Sun Aug 21 13:57:17 2016
+# Created: Sun Aug 21 15:02:56 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,8 +17,6 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_5 = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout_5.setObjectName("gridLayout_5")
-        self.verticalLayout = QtWidgets.QVBoxLayout()
-        self.verticalLayout.setObjectName("verticalLayout")
         self.splitter_MainMiddle = QtWidgets.QSplitter(self.centralwidget)
         self.splitter_MainMiddle.setLineWidth(1)
         self.splitter_MainMiddle.setOrientation(QtCore.Qt.Vertical)
@@ -74,7 +72,7 @@ class Ui_MainWindow(object):
         self.scrollArea_Registers.setWidgetResizable(True)
         self.scrollArea_Registers.setObjectName("scrollArea_Registers")
         self.scrollAreaWidgetContents_Registers = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 351, 439))
+        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 352, 439))
         self.scrollAreaWidgetContents_Registers.setObjectName("scrollAreaWidgetContents_Registers")
         self.gridLayout_8 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_Registers)
         self.gridLayout_8.setObjectName("gridLayout_8")
@@ -536,7 +534,7 @@ class Ui_MainWindow(object):
         self.scrollArea_Hex.setWidgetResizable(True)
         self.scrollArea_Hex.setObjectName("scrollArea_Hex")
         self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 472, 196))
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 473, 196))
         self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
         self.gridLayout_11 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_11.setObjectName("gridLayout_11")
@@ -637,8 +635,7 @@ class Ui_MainWindow(object):
         self.gridLayout_10.addWidget(self.tableWidget_Stack, 0, 0, 1, 1)
         self.stackedWidget_StackScreens.addWidget(self.Stack)
         self.gridLayout_3.addWidget(self.stackedWidget_StackScreens, 0, 0, 1, 1)
-        self.verticalLayout.addWidget(self.splitter_MainMiddle)
-        self.gridLayout_5.addLayout(self.verticalLayout, 0, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.splitter_MainMiddle, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 20))
@@ -751,7 +748,7 @@ class Ui_MainWindow(object):
         self.actionBookmarks.setText(_translate("MainWindow", "Bookmarks"))
         self.actionStackTrace_Info.setText(_translate("MainWindow", "StackTrace Info"))
 
-from GUI.CustomLabels.RegisterLabel import QRegisterLabel
 from GUI.CustomTableViews.HexView import QHexView
+from GUI.CustomLabels.RegisterLabel import QRegisterLabel
 from GUI.CustomTableViews.AsciiView import QAsciiView
 from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
