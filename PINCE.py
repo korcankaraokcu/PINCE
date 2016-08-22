@@ -1494,6 +1494,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 text_append = current_text
             bookmark_action_list.append(go_to_bookmark.addAction(text_append))
         menu.addSeparator()
+        refresh = menu.addAction("Refresh")
+        menu.addSeparator()
         clipboard_menu = menu.addMenu("Copy to Clipboard")
         copy_address = clipboard_menu.addAction("Copy Address")
         copy_bytes = clipboard_menu.addAction("Copy Bytes")
@@ -1519,6 +1521,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.bookmark_address(current_address_int)
         elif action == delete_bookmark:
             self.delete_bookmark(current_address_int)
+        elif action == refresh:
+            self.disassemble_expression(self.disassemble_currently_displayed_address)
         elif action == copy_address:
             QApplication.clipboard().setText(self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text())
         elif action == copy_bytes:
