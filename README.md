@@ -35,7 +35,9 @@ Pre-release screenshots:
   * Custom scripts instead of using gdb's x command for reading memory **[Done]**
   * Custom scripts instead of using gdb's set command for modifying memory **[Done]**
 - **libPINCE- A reusable python library** **[Current Status:*Reusable for FP* , *Refactoring for OOP*]**
-  * PINCE provides a easily configurable and reusable python library. I'll write a fully-documented guide about how to use it as soon as the project finishes at basic level. Until that moment, I'll keep developing this project as modular as possible  
+  * PINCE provides a reusable python library. I'll write a fully-documented guide about how to use it as soon as the project finishes at basic level. Until that moment, I'll keep developing libPINCE as modular as possible  
+- **Automatic Trainer Generation:** **[Planned]**  
+  * PINCE provides a trainer auto-generated from current address table on demand by using libPINCE and PyQT5 together
 
 #Building  
 To run PINCE, run this command chain then compile gdb if necessary:  
