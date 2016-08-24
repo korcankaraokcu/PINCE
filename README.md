@@ -27,8 +27,7 @@ Pre-release screenshots:
 - **Debugging** **[Working on it]**
   * Can interrupt and continue the inferior, Check wiki for instructions
 - **Code Injection** **[Working on it]**
-  * **Pre-attach injection:** Only .so files are supported. Read Wiki **[Done]**
-  * **Run-time injection:** PINCE can inject single line instructions or code caves **[Planned]**
+  * **Run-time injection:** Only .so injection is supported for now. PINCE will be able to inject single line instructions or code caves in near future **[Partially Done?]**
 - **GDB Console** **[Done]**
   * Is the power of PINCE not enough for you? Then you can use the gdb console provided by PINCE, it's on the top right in main window
 - **Simplified/Optimized gdb command alternatives** **[Working on it]**
@@ -39,7 +38,8 @@ Pre-release screenshots:
 - **Automatic Trainer Generation:** **[Planned]**  
   * PINCE provides a trainer auto-generated from current address table on demand by using libPINCE and PyQT5 together
 
-#Building  
+#Installing Manually  
+*Setup.py coming soon*  
 To run PINCE, run this command chain then compile gdb if necessary:  
   
 ```
@@ -48,8 +48,6 @@ sudo apt-get install python3-pip
 sudo apt-get install python3-pyqt5  
 sudo pip3 install psutil  
 sudo pip3 install pexpect  
-sudo apt-get install clang  
-sudo apt-get install g++-multilib  
 ```  
 ###**Compiling the most recent gdb version with python support**  
 #####*You can skip this part if you already have gdb 7.11.1 with python3 support, but it's strongly recommended to compile from source instead of downloading from repos because python version of gdb may mismatch with default interpreter and it usually causes ImportError within gdb scripts*  
@@ -64,7 +62,6 @@ Note: If gdb says something about missing python files, move the contents of gdb
 ```sudo cp -R gdb/data-directory/* /usr/share/gdb/```  
 #####Relocating PINCE files  
 Create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
-Then ```cd``` to PINCE/linux-inject directory and simply run ```make```(IMPORTANT: If you have a 32bit linux distro, run ```make x86``` instead)  
 Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```  
 #####*Debian Only:*  
 Run ```gksudo python3 PINCE.py``` instead
@@ -80,16 +77,11 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - 17/01/2016-22/01/2016 : Basic design, grasping of Python3 and Pyqt5, proof-testing
 - 22/01/2016 : First commit
 - 19/02/2016 : Moved to Github from Bitbucket
-- 25/02/2016 : First successful implementation of thread injection(A new age dawns!)[Update-08/05/2016 : PINCE now uses ```linux-inject``` instead of injection method of mine]*  
+- 25/02/2016 : First successful implementation of thread injection(A new age dawns!)[Update-08/05/2016 : PINCE now uses ```linux-inject``` as a secondary injection method]  
 - 18/06/2016 : PINCE now supports all-stop mode instead of non-stop mode
 - 21/06/2016 : Variable Inspection&Modification is finished  
 - 21/08/2016 : Memory View is finished
-  
-
-
-*my method's success ratio was around %70, ```linux-inject```'s ratio is very close to %100. Well... at least working on code injection by myself for 2 months taught me very valuable lessons about linux internals, gdb, some standard libraries and the most importantly, ptrace.  
-[Update-18/05/2016 : ```linux-inject```'s ratio is close to %100 only when attaching to small processes, it dramatically decrases(around %30-40) when attaching to the bigger processes]  
-[Update-24/05/2016 : Thread injection to gdb itself works %100 of the time with a small gdb script and it enables the automatic address table update but it might crash gdb later on, needs extra research]
+- 24/08/2016 : PINCE no more uses linux-inject because of licensing and stability issues
 
 #License
 GPLv3. See COPYING file for details
