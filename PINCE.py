@@ -882,7 +882,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("Hotkeys/continue", self.continue_hotkey)
         if self.radioButton_SimpleDLopenCall.isChecked():
             injection_method = SIMPLE_DLOPEN_CALL
-        elif self.radioButton_LinuxInject.isChecked():
+        elif self.radioButton_AdvancedInjection.isChecked():
             injection_method = ADVANCED_INJECTION
         self.settings.setValue("CodeInjection/code_injection_method", injection_method)
         self.settings.setValue("Disassemble/bring_disassemble_to_front",
@@ -902,7 +902,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if injection_method == SIMPLE_DLOPEN_CALL:
             self.radioButton_SimpleDLopenCall.setChecked(True)
         elif injection_method == ADVANCED_INJECTION:
-            self.radioButton_LinuxInject.setChecked(True)
+            self.radioButton_AdvancedInjection.setChecked(True)
         self.checkBox_BringDisassembleToFront.setChecked(
             self.settings.value("Disassemble/bring_disassemble_to_front", type=bool))
         self.lineEdit_InstructionsPerScroll.setText(
