@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'settingsdialog.ui'
+# Form implementation generated from reading ui file 'SettingsDialog.ui'
 #
-# Created: Mon Aug  8 11:30:56 2016
+# Created: Wed Aug 24 16:12:06 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -142,9 +142,10 @@ class Ui_Dialog(object):
         self.radioButton_SimpleDLopenCall.setChecked(True)
         self.radioButton_SimpleDLopenCall.setObjectName("radioButton_SimpleDLopenCall")
         self.verticalLayout_7.addWidget(self.radioButton_SimpleDLopenCall)
-        self.radioButton_LinuxInject = QtWidgets.QRadioButton(self.page_3)
-        self.radioButton_LinuxInject.setObjectName("radioButton_LinuxInject")
-        self.verticalLayout_7.addWidget(self.radioButton_LinuxInject)
+        self.radioButton_AdvancedInjection = QtWidgets.QRadioButton(self.page_3)
+        self.radioButton_AdvancedInjection.setEnabled(False)
+        self.radioButton_AdvancedInjection.setObjectName("radioButton_AdvancedInjection")
+        self.verticalLayout_7.addWidget(self.radioButton_AdvancedInjection)
         self.horizontalLayout_6.addLayout(self.verticalLayout_7)
         self.verticalLayout_8.addLayout(self.horizontalLayout_6)
         self.horizontalLayout_8.addLayout(self.verticalLayout_8)
@@ -235,9 +236,9 @@ class Ui_Dialog(object):
         self.listWidget_Functions.setSortingEnabled(__sortingEnabled)
         self.label_4.setText(_translate("Dialog", "Hotkey"))
         self.pushButton_ClearHotkey.setText(_translate("Dialog", "Clear"))
-        self.label_5.setText(_translate("Dialog", "Initial code injection method:"))
+        self.label_5.setText(_translate("Dialog", "Code injection method:"))
         self.radioButton_SimpleDLopenCall.setText(_translate("Dialog", "Simple dlopen call"))
-        self.radioButton_LinuxInject.setText(_translate("Dialog", "Linux-inject"))
+        self.radioButton_AdvancedInjection.setText(_translate("Dialog", "Advanced Injection"))
         self.checkBox_BringDisassembleToFront.setText(_translate("Dialog", "Bring disassemble screen to front when the inferior is stopped"))
         self.label_6.setText(_translate("Dialog", "Instructions shown per scroll"))
         self.pushButton_ResetSettings.setText(_translate("Dialog", "Reset Settings"))

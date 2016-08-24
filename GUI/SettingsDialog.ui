@@ -247,7 +247,7 @@
                  <item>
                   <widget class="QLabel" name="label_5">
                    <property name="text">
-                    <string>Initial code injection method:</string>
+                    <string>Code injection method:</string>
                    </property>
                   </widget>
                  </item>
@@ -279,9 +279,12 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRadioButton" name="radioButton_LinuxInject">
+                      <widget class="QRadioButton" name="radioButton_AdvancedInjection">
+                       <property name="enabled">
+                        <bool>false</bool>
+                       </property>
                        <property name="text">
-                        <string>Linux-inject</string>
+                        <string>Advanced Injection</string>
                        </property>
                       </widget>
                      </item>

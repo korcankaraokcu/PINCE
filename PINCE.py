@@ -57,7 +57,7 @@ update_table = bool
 table_update_interval = float
 pause_hotkey = str
 continue_hotkey = str
-initial_code_injection_method = int
+code_injection_method = int
 bring_disassemble_to_front = bool
 instructions_per_scroll = int
 
@@ -111,7 +111,7 @@ INFERIOR_STOPPED = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
 
 NO_INJECTION = type_defs.INJECTION_METHOD.NO_INJECTION
 SIMPLE_DLOPEN_CALL = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
-LINUX_INJECT = type_defs.INJECTION_METHOD.LINUX_INJECT
+ADVANCED_INJECTION = type_defs.INJECTION_METHOD.ADVANCED_INJECTION
 
 INJECTION_SUCCESSFUL = type_defs.INJECTION_RESULT.INJECTION_SUCCESSFUL
 INJECTION_FAILED = type_defs.INJECTION_RESULT.INJECTION_FAILED
@@ -240,7 +240,11 @@ class MainForm(QMainWindow, MainWindow):
         self.settings = QSettings()
         if not SysUtils.is_path_valid(self.settings.fileName()):
             self.set_default_settings()
-        self.apply_settings()
+        try:
+            self.apply_settings()
+        except:
+            self.settings.clear()
+            self.set_default_settings()
         self.memory_view_window = MemoryViewWindowForm()
         self.memory_view_window.address_added.connect(self.add_entry_to_addresstable)
         self.await_exit_thread = AwaitProcessExit()
@@ -294,7 +298,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("continue", "F3")
         self.settings.endGroup()
         self.settings.beginGroup("CodeInjection")
-        self.settings.setValue("initial_code_injection_method", SIMPLE_DLOPEN_CALL)
+        self.settings.setValue("code_injection_method", SIMPLE_DLOPEN_CALL)
         self.settings.endGroup()
         self.settings.beginGroup("Disassemble")
         self.settings.setValue("bring_disassemble_to_front", False)
@@ -307,7 +311,7 @@ class MainForm(QMainWindow, MainWindow):
         global table_update_interval
         global pause_hotkey
         global continue_hotkey
-        global initial_code_injection_method
+        global code_injection_method
         global bring_disassemble_to_front
         global instructions_per_scroll
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
@@ -322,7 +326,7 @@ class MainForm(QMainWindow, MainWindow):
             self.shortcut_continue.setKey(QKeySequence(continue_hotkey))
         except AttributeError:
             pass
-        initial_code_injection_method = self.settings.value("CodeInjection/initial_code_injection_method", type=int)
+        code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
         bring_disassemble_to_front = self.settings.value("Disassemble/bring_disassemble_to_front", type=bool)
         instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
 
@@ -591,14 +595,14 @@ class ProcessForm(QMainWindow, ProcessWindow):
             # self.setCentralWidget(self.loadingwidget)
             # self.loadingwidget.show()
             print("processing")  # loading_widget start
-            result = GDB_Engine.can_attach(str(pid))
+            result = GDB_Engine.can_attach(pid)
             if not result:
                 print("done")  # loading_widget finish
                 QMessageBox.information(self, "Error", "Permission denied, could not attach to the process")
                 return
             if not GDB_Engine.currentpid == 0:
                 GDB_Engine.detach()
-            code_injection_status = GDB_Engine.attach(str(pid), initial_code_injection_method)
+            GDB_Engine.attach(pid)
             p = SysUtils.get_process_information(GDB_Engine.currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
@@ -609,14 +613,6 @@ class ProcessForm(QMainWindow, ProcessWindow):
             SysUtils.exclude_system_memory_regions(readable)
             print(len(readable))
             print("done")  # loading_widget finish
-            # if not thread_injection_successful:
-            #    QMessageBox.information(self, "Warning",
-            #                            "Unable to inject threads, following features has been disabled:" +
-            #                            "\nPINCE non-stop mode" +
-            #                            "\nContinuous Address Table Update" +
-            #                            "\nVariable Locking")
-            if code_injection_status is INJECTION_FAILED:
-                QMessageBox.information(self, "Warning", "Couldn't inject the .so file")
             # self.loadingwidget.hide()
             self.close()
 
@@ -887,8 +883,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if self.radioButton_SimpleDLopenCall.isChecked():
             injection_method = SIMPLE_DLOPEN_CALL
         elif self.radioButton_LinuxInject.isChecked():
-            injection_method = LINUX_INJECT
-        self.settings.setValue("CodeInjection/initial_code_injection_method", injection_method)
+            injection_method = ADVANCED_INJECTION
+        self.settings.setValue("CodeInjection/code_injection_method", injection_method)
         self.settings.setValue("Disassemble/bring_disassemble_to_front",
                                self.checkBox_BringDisassembleToFront.isChecked())
         self.settings.setValue("Disassemble/instructions_per_scroll", current_insturctions_shown)
@@ -902,10 +898,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             str(self.settings.value("General/address_table_update_interval", type=float)))
         self.pause_hotkey = self.settings.value("Hotkeys/pause")
         self.continue_hotkey = self.settings.value("Hotkeys/continue")
-        injection_method = self.settings.value("CodeInjection/initial_code_injection_method", type=int)
+        injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
         if injection_method == SIMPLE_DLOPEN_CALL:
             self.radioButton_SimpleDLopenCall.setChecked(True)
-        elif injection_method == LINUX_INJECT:
+        elif injection_method == ADVANCED_INJECTION:
             self.radioButton_LinuxInject.setChecked(True)
         self.checkBox_BringDisassembleToFront.setChecked(
             self.settings.value("Disassemble/bring_disassemble_to_front", type=bool))
