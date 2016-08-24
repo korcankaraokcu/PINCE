@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Sun Aug 21 15:02:56 2016
+# Created: Wed Aug 24 16:42:12 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -654,8 +654,11 @@ class Ui_MainWindow(object):
         self.actionBookmarks.setObjectName("actionBookmarks")
         self.actionStackTrace_Info = QtWidgets.QAction(MainWindow)
         self.actionStackTrace_Info.setObjectName("actionStackTrace_Info")
+        self.actionInject_so_file = QtWidgets.QAction(MainWindow)
+        self.actionInject_so_file.setObjectName("actionInject_so_file")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
+        self.menuTools.addAction(self.actionInject_so_file)
         self.menubar.addAction(self.menuView.menuAction())
         self.menubar.addAction(self.menuDebug.menuAction())
         self.menubar.addAction(self.menuTools.menuAction())
@@ -747,8 +750,9 @@ class Ui_MainWindow(object):
         self.menuTools.setTitle(_translate("MainWindow", "Tools"))
         self.actionBookmarks.setText(_translate("MainWindow", "Bookmarks"))
         self.actionStackTrace_Info.setText(_translate("MainWindow", "StackTrace Info"))
+        self.actionInject_so_file.setText(_translate("MainWindow", "Inject .so file"))
 
-from GUI.CustomTableViews.HexView import QHexView
 from GUI.CustomLabels.RegisterLabel import QRegisterLabel
 from GUI.CustomTableViews.AsciiView import QAsciiView
+from GUI.CustomTableViews.HexView import QHexView
 from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
