@@ -41,7 +41,7 @@ INFERIOR_STOPPED = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
 
 NO_INJECTION = type_defs.INJECTION_METHOD.NO_INJECTION
 SIMPLE_DLOPEN_CALL = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
-LINUX_INJECT = type_defs.INJECTION_METHOD.LINUX_INJECT
+ADVANCED_INJECTION = type_defs.INJECTION_METHOD.ADVANCED_INJECTION
 
 INJECTION_SUCCESSFUL = type_defs.INJECTION_RESULT.INJECTION_SUCCESSFUL
 INJECTION_FAILED = type_defs.INJECTION_RESULT.INJECTION_FAILED
@@ -208,23 +208,16 @@ def continue_inferior():
     send_command("c")
 
 
-def attach(pid, injection_method=SIMPLE_DLOPEN_CALL):
+def attach(pid):
     """Attaches gdb to the target and initializes some of the global variables
 
     Args:
         pid (int,str): PID of the process that'll be attached to
-        injection_method (int): Method of the .so injection before attaching
-        It can be a member of type_defs.INJECTION_METHOD
-        If there's no .so file found in INITIAL_INJECTION_PATH, the injection_method becomes NO_INJECTION
-
-    Returns:
-        int: The result of the thread injection as a member of type_defs.INJECTION_RESULT
     """
     global currentpid
     global child
     global inferior_arch
     currentpid = int(pid)
-    pid = str(pid)
     SysUtils.create_PINCE_IPC_PATH(pid)
     currentdir = SysUtils.get_current_script_directory()
     child = pexpect.spawn('sudo LC_NUMERIC=C gdb --interpreter=mi', cwd=currentdir, encoding="utf-8")
@@ -237,23 +230,13 @@ def attach(pid, injection_method=SIMPLE_DLOPEN_CALL):
     status_thread.start()
     send_command("set logging file " + SysUtils.get_gdb_async_file(pid))
     send_command("set logging on")
-    injection_path = currentdir + INITIAL_INJECTION_PATH
-    if not SysUtils.is_path_valid(injection_path):
-        injection_method = NO_INJECTION  # no .so file found
-    if injection_method is NO_INJECTION:
-        codes_injected = NO_INJECTION_ATTEMPT
-    elif injection_method is LINUX_INJECT:
-        codes_injected = inject_with_linux_inject(injection_path, pid)
-    send_command("attach " + pid)
+    send_command("attach " + str(pid))
 
     # gdb scripts needs to know PINCE directory, unfortunately they don't start from the place where script exists
     send_command('set $PINCE_PATH=' + '"' + currentdir + '"')
     send_command("source gdb_python_scripts/GDBCommandExtensions.py")
-    if injection_method is SIMPLE_DLOPEN_CALL:
-        codes_injected = inject_with_dlopen_call(injection_path)
     inferior_arch = get_inferior_arch()
     continue_inferior()
-    return codes_injected
 
 
 def detach():
@@ -267,33 +250,26 @@ def detach():
     inferior_status = -1
 
 
-def inject_with_linux_inject(library_path, pid):
-    """Injects the given .so file to given process
+def inject_with_advanced_injection(library_path):
+    """Injects the given .so file to current process
 
     Args:
         library_path (str): Path to the .so file that'll be injected
-        pid (int,str): PID of the process that'll be attached to
 
     Returns:
         int: Result of the injection as a member of type_defs.INJECTION_RESULT
 
-    Fixme:
-        Linux-inject is insufficient for multi-threaded programs, it makes big titles such as Torchlight to segfault
-
-    Note:
-        Don't try to use this function after gdb is attached, try inject_with_dlopen_call instead
+    Notes:
+        This function was reserved for linux-inject and since linux-inject is no more(F to pay respects), I'll leave
+        this function as a template for now
     """
-    scriptdirectory = SysUtils.get_current_script_directory()
-    result = pexpect.run("sudo ./inject -p " + str(pid) + " " + library_path, cwd=scriptdirectory + "/linux-inject")
-    print(result)  # for debug
-    if search(b"successfully injected", result):  # literal string
-        return INJECTION_SUCCESSFUL
-    return INJECTION_FAILED
+    raise NotImplementedError
 
 
 def inject_with_dlopen_call(library_path):
     """Injects the given .so file to current process
-    This is a variant of the function inject_with_linux_inject, but it supports injection after attaching
+    This is a variant of the function inject_with_advanced_injection
+    This function won't break the target process unlike other complex injection methods
     The downside is it fails if the target doesn't support dlopen calls or simply doesn't have the library
 
     Args:
