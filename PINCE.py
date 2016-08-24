@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
-    QShortcut, QKeySequenceEdit, QTabWidget, QMenu
+    QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer
 from time import sleep, time
@@ -109,13 +109,8 @@ INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
 INFERIOR_RUNNING = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
 INFERIOR_STOPPED = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
 
-NO_INJECTION = type_defs.INJECTION_METHOD.NO_INJECTION
 SIMPLE_DLOPEN_CALL = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
 ADVANCED_INJECTION = type_defs.INJECTION_METHOD.ADVANCED_INJECTION
-
-INJECTION_SUCCESSFUL = type_defs.INJECTION_RESULT.INJECTION_SUCCESSFUL
-INJECTION_FAILED = type_defs.INJECTION_RESULT.INJECTION_FAILED
-NO_INJECTION_ATTEMPT = type_defs.INJECTION_RESULT.NO_INJECTION_ATTEMPT
 
 ARCH_32 = type_defs.INFERIOR_ARCH.ARCH_32
 ARCH_64 = type_defs.INFERIOR_ARCH.ARCH_64
@@ -1042,6 +1037,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
         self.actionStackTrace_Info.triggered.connect(self.on_stacktrace_info_triggered)
+        self.actionInject_so_file.triggered.connect(self.on_inject_so_file_triggered)
 
         self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
         self.widget_StackView.resize(420, self.widget_StackView.height())  # blaze it
@@ -1594,6 +1590,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def on_stacktrace_info_triggered(self):
         self.stacktrace_info_widget = StackTraceInfoWidgetForm()
         self.stacktrace_info_widget.show()
+
+    def on_inject_so_file_triggered(self):
+        file_name = QFileDialog.getOpenFileName(self, "Select the .so file", "", "Shared object library (*.so)")[0]
+        if file_name:
+            if GDB_Engine.inject_with_dlopen_call(file_name):
+                QMessageBox.information(self, "Success!", "The file has been injected")
+            else:
+                QMessageBox.information(self, "Error", "Failed to inject the .so file")
 
     def on_show_float_registers_button_clicked(self):
         self.float_registers_widget = FloatRegisterWidgetForm()

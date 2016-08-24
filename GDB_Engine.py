@@ -39,13 +39,8 @@ INITIAL_INJECTION_PATH = type_defs.PATHS.INITIAL_INJECTION_PATH
 INFERIOR_RUNNING = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
 INFERIOR_STOPPED = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
 
-NO_INJECTION = type_defs.INJECTION_METHOD.NO_INJECTION
 SIMPLE_DLOPEN_CALL = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
 ADVANCED_INJECTION = type_defs.INJECTION_METHOD.ADVANCED_INJECTION
-
-INJECTION_SUCCESSFUL = type_defs.INJECTION_RESULT.INJECTION_SUCCESSFUL
-INJECTION_FAILED = type_defs.INJECTION_RESULT.INJECTION_FAILED
-NO_INJECTION_ATTEMPT = type_defs.INJECTION_RESULT.NO_INJECTION_ATTEMPT
 
 ARCH_32 = type_defs.INFERIOR_ARCH.ARCH_32
 ARCH_64 = type_defs.INFERIOR_ARCH.ARCH_64
@@ -257,7 +252,7 @@ def inject_with_advanced_injection(library_path):
         library_path (str): Path to the .so file that'll be injected
 
     Returns:
-        int: Result of the injection as a member of type_defs.INJECTION_RESULT
+        bool: Result of the injection
 
     Notes:
         This function was reserved for linux-inject and since linux-inject is no more(F to pay respects), I'll leave
@@ -276,7 +271,7 @@ def inject_with_dlopen_call(library_path):
         library_path (str): Path to the .so file that'll be injected
 
     Returns:
-        int: Result of the injection as a member of type_defs.INJECTION_RESULT
+        bool: Result of the injection
     """
     injectionpath = '"' + library_path + '"'
     result = send_command("call dlopen(" + injectionpath + ", 1)")
@@ -289,18 +284,18 @@ def inject_with_dlopen_call(library_path):
             if filtered_result:
                 dlopen_return_value = split(" ", filtered_result.group(0))[-1]
                 if dlopen_return_value is "0":
-                    return INJECTION_FAILED
-                return INJECTION_SUCCESSFUL
-            return INJECTION_FAILED
-        return INJECTION_SUCCESSFUL
+                    return False
+                return True
+            return False
+        return True
     result = send_command("call __libc_dlopen_mode(" + injectionpath + ", 1)")
     filtered_result = search(r"\$\d+\s*=\s*\-*\d+", result)  # $1 = -1633996800
     if filtered_result:
         dlopen_return_value = split(" ", filtered_result.group(0))[-1]
         if dlopen_return_value is "0":
-            return INJECTION_FAILED
-        return INJECTION_SUCCESSFUL
-    return INJECTION_FAILED
+            return False
+        return True
+    return False
 
 
 def value_index_to_gdbcommand(index=int):

@@ -37,15 +37,8 @@ class INFERIOR_ARCH:
 
 
 class INJECTION_METHOD:
-    NO_INJECTION = 0
     SIMPLE_DLOPEN_CALL = 1
     ADVANCED_INJECTION = 2
-
-
-class INJECTION_RESULT:
-    INJECTION_SUCCESSFUL = 1
-    INJECTION_FAILED = 0
-    NO_INJECTION_ATTEMPT = -1
 
 
 # represents the indexes of value types

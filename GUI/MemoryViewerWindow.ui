@@ -1266,6 +1266,7 @@
     <property name="title">
      <string>Tools</string>
     </property>
+    <addaction name="actionInject_so_file"/>
    </widget>
    <addaction name="menuView"/>
    <addaction name="menuDebug"/>
@@ -1280,6 +1281,11 @@
   <action name="actionStackTrace_Info">
    <property name="text">
     <string>StackTrace Info</string>
+   </property>
+  </action>
+  <action name="actionInject_so_file">
+   <property name="text">
+    <string>Inject .so file</string>
    </property>
   </action>
  </widget>
