@@ -27,7 +27,7 @@ Pre-release screenshots:
 - **Debugging** **[Working on it]**
   * Can interrupt and continue the inferior, Check wiki for instructions
 - **Code Injection** **[Working on it]**
-  * **Run-time injection:** Only .so injection is supported for now. In Memory View window, click Tools->Inject .so file to select the .so file. PINCE will be able to inject single line instructions or code caves in near future **[Partially Done?]**
+  * **Run-time injection:** Only .so injection is supported for now. In Memory View window, click Tools->Inject .so file to select the .so file. An example for creating .so file can be found in "libPINCE/Injection/". PINCE will be able to inject single line instructions or code caves in near future **[Partially Done?]**
 - **GDB Console** **[Done]**
   * Is the power of PINCE not enough for you? Then you can use the gdb console provided by PINCE, it's on the top right in main window
 - **Simplified/Optimized gdb command alternatives** **[Working on it]**
