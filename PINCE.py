@@ -29,10 +29,10 @@ import webbrowser
 import sys
 import traceback
 
-import GuiUtils
-import SysUtils
-import GDB_Engine
-import type_defs
+from libPINCE import GuiUtils
+from libPINCE import SysUtils
+from libPINCE import GDB_Engine
+from libPINCE import type_defs
 
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow

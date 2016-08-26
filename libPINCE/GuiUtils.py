@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt5.QtWidgets import QDesktopWidget
 from re import search, sub
-import type_defs
+from . import type_defs
 
 INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
 INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES

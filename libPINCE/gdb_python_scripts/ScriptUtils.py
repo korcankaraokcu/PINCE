@@ -24,8 +24,8 @@ gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
 PINCE_PATH = gdbvalue.string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
-import SysUtils
-import type_defs
+from libPINCE import SysUtils
+from libPINCE import type_defs
 
 INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
 INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
