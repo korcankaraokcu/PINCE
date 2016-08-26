@@ -20,7 +20,7 @@ import os
 import shutil
 import sys
 import collections
-import type_defs
+from . import type_defs
 from re import match, search, IGNORECASE, split
 
 PINCE_IPC_PATH = type_defs.PATHS.PINCE_IPC_PATH

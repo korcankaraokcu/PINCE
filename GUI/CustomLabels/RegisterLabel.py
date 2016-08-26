@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtGui import QCursor
 from PyQt5.QtCore import Qt
-import GDB_Engine
+from libPINCE import GDB_Engine
 from PINCE import DialogWithButtonsForm
 
 

@@ -22,8 +22,8 @@ import pexpect
 import os
 import ctypes
 import pickle
-import SysUtils
-import type_defs
+from . import SysUtils
+from . import type_defs
 
 INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
 INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
@@ -229,7 +229,7 @@ def attach(pid):
 
     # gdb scripts needs to know PINCE directory, unfortunately they don't start from the place where script exists
     send_command('set $PINCE_PATH=' + '"' + currentdir + '"')
-    send_command("source gdb_python_scripts/GDBCommandExtensions.py")
+    send_command("source libPINCE/gdb_python_scripts/GDBCommandExtensions.py")
     inferior_arch = get_inferior_arch()
     continue_inferior()
 

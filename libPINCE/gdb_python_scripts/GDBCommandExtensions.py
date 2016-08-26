@@ -27,9 +27,9 @@ gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
 PINCE_PATH = gdbvalue.string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
-import gdb_python_scripts.ScriptUtils as ScriptUtils
-import SysUtils
-import type_defs
+from libPINCE.gdb_python_scripts import ScriptUtils
+from libPINCE import SysUtils
+from libPINCE import type_defs
 
 REGISTERS_32 = ["eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp", "eip"]
 REGISTERS_64 = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip", "r8", "r9", "r10", "r11", "r12",

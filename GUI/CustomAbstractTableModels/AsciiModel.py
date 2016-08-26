@@ -1,7 +1,7 @@
 from PyQt5.QtCore import QVariant, Qt
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 
-import SysUtils
+from libPINCE import SysUtils
 
 
 class QAsciiModel(QHexModel):
