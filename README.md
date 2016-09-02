@@ -1,5 +1,5 @@
 #PINCE  
-PINCE is a gdb front-end/reverse engineering tool focused on games, but it can be used for any reverse-engineering related stuff. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine. PINCE is in development right now, read features part of the project to see what is planned and what is done for now. Also, please read [Wiki Page](https://github.com/korcankaraokcu/PINCE/wiki) of the project to understand how PINCE works.  
+PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB), focused on games. But it can be used for any reverse-engineering related stuff. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine. PINCE is in development right now, read features part of the project to see what is planned and what is done for now. Also, please read [Wiki Page](https://github.com/korcankaraokcu/PINCE/wiki) of the project to understand how PINCE works.  
   
 Pre-release screenshots:  
 ![](screenshots/pince.png)
@@ -84,7 +84,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - 24/08/2016 : PINCE no more uses linux-inject because of licensing and stability issues
 
 #License
-GPLv3. See COPYING file for details
+GPLv3+. See COPYING file for details
 
 #Contact Information
 Korcan Karaokçu <korcankaraokcu@gmail.com>  
