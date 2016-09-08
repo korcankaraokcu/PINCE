@@ -234,7 +234,8 @@ class MainForm(QMainWindow, MainWindow):
             self.set_default_settings()
         try:
             self.apply_settings()
-        except:
+        except Exception as e:
+            print(e)
             self.settings.clear()
             self.set_default_settings()
         self.memory_view_window = MemoryViewWindowForm()
