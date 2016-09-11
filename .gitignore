@@ -3,3 +3,4 @@ __pycache__/
 .directory
 *.py[cod]
 *$py.class
+gdb_pince/*
