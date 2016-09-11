@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
+: '
 sudo apt-get install python3-setuptools
 sudo apt-get install python3-pip
 sudo apt-get install python3-pyqt5
@@ -36,10 +37,18 @@ sudo apt-get install gcc
 
 # FIXME: Is setting prefix as "/usr" bad?
 CC=gcc ./configure --prefix=/usr --with-python=python3 && make && sudo make -C gdb install
-
+'
 # Relocating PINCE files
 cd
 auto_load_command="set auto-load safe-path /"
-echo "\n"$auto_load_command >> .gdbinit
+if [ ! -e .gdbinit ] ; then
+    touch .gdbinit
+fi
+if grep "$auto_load_command" .gdbinit
+then
+  echo "auto_load already satisfied"
+else
+  echo "\n"$auto_load_command >> .gdbinit
+fi
 echo "PINCE has been installed successfully!"
 echo "Now, just run 'sh PINCE.sh' from terminal"
