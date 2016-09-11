@@ -42,4 +42,4 @@ cd
 auto_load_command="set auto-load safe-path /"
 echo "\n"$auto_load_command >> .gdbinit
 echo "PINCE has been installed successfully!"
-echo "Now, just run 
+echo "Now, just run 'sh PINCE.sh' from terminal"
