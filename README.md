@@ -38,8 +38,9 @@ Pre-release screenshots:
 - **Automatic Trainer Generation:** **[Planned]**  
   * PINCE provides a trainer auto-generated from current address table on demand by using libPINCE and PyQT5 together
 
+#Installing Automatically
+Just run ```sudo sh install.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. For other operating systems, see below
 #Installing Manually  
-*Setup.py coming soon*  
 To run PINCE, run this command chain then compile gdb if necessary:  
   
 ```
@@ -62,9 +63,8 @@ Note: If gdb says something about missing python files, move the contents of gdb
 ```sudo cp -R gdb/data-directory/* /usr/share/gdb/```  
 #####Relocating PINCE files  
 Create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
-Finally, ```cd``` to PINCE directory and run ```sudo python3 PINCE.py```  
-#####*Debian Only:*  
-Run ```gksudo python3 PINCE.py``` instead
+#Running PINCE  
+Just run ```sh PINCE.sh``` in the PINCE directory
 
 ###For developers:  
 ```
