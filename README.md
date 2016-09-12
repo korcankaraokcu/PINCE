@@ -39,7 +39,7 @@ Pre-release screenshots:
   * PINCE provides a trainer auto-generated from current address table on demand by using libPINCE and PyQT5 together
 
 #Installing Automatically
-Just run ```sudo sh install.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. For other operating systems, see below. This install script is temporary. I'll make a PPA when this project finishes.
+Just run ```sudo sh install.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. See below if the automatic installation fails. This install script is temporary. I'll make a PPA when this project finishes.
 #Installing Manually  
 To run PINCE, run this command chain then compile gdb if necessary:  
   
