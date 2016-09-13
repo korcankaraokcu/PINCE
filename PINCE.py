@@ -257,6 +257,7 @@ class MainForm(QMainWindow, MainWindow):
         self.shortcut_continue = QShortcut(QKeySequence(continue_hotkey), self)
         self.shortcut_continue.activated.connect(self.continue_hotkey_pressed)
         self.tableWidget_addresstable.keyPressEvent = self.tableWidget_addresstable_keyPressEvent
+        self.tableWidget_addresstable.contextMenuEvent = self.tableWidget_addresstable_context_menu_event
         self.processbutton.clicked.connect(self.processbutton_onclick)
         self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
@@ -329,12 +330,28 @@ class MainForm(QMainWindow, MainWindow):
     def continue_hotkey_pressed(self):
         GDB_Engine.continue_inferior()
 
-    # I don't know if this is some kind of retarded hack
+    def tableWidget_addresstable_context_menu_event(self, event):
+        menu = QMenu()
+        browse_region = menu.addAction("Browse this memory region[B]")
+        menu.addSeparator()
+        font_size = self.tableWidget_addresstable.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == browse_region:
+            self.browse_region_for_selected_row()
+
+    def browse_region_for_selected_row(self):
+        last_selected_row = self.tableWidget_addresstable.selectionModel().selectedRows()[-1].row()
+        self.memory_view_window.hex_dump_address(
+            int(self.tableWidget_addresstable.item(last_selected_row, ADDR_COL).text(), 16))
+
     def tableWidget_addresstable_keyPressEvent(self, e):
         if e.key() == Qt.Key_Delete:
             selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
             for item in selected_rows:
                 self.tableWidget_addresstable.removeRow(item.row())
+        if e.key() == Qt.Key_B:
+            self.browse_region_for_selected_row()
 
     def update_address_table_manually(self):
         table_contents = []
