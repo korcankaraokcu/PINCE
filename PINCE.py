@@ -344,6 +344,8 @@ class MainForm(QMainWindow, MainWindow):
         last_selected_row = self.tableWidget_addresstable.selectionModel().selectedRows()[-1].row()
         self.memory_view_window.hex_dump_address(
             int(self.tableWidget_addresstable.item(last_selected_row, ADDR_COL).text(), 16))
+        self.memory_view_window.show()
+        self.memory_view_window.activateWindow()
 
     def tableWidget_addresstable_keyPressEvent(self, e):
         if e.key() == Qt.Key_Delete:
