@@ -203,6 +203,21 @@ def continue_inferior():
     send_command("c")
 
 
+def step_instruction():
+    """Step one assembly instruction"""
+    send_command("stepi")
+
+
+def step_over_instruction():
+    """Step over one assembly instruction"""
+    send_command("nexti")
+
+
+def execute_till_return():
+    """Continues inferior till current stack frame returns"""
+    send_command("finish")
+
+
 def attach(pid):
     """Attaches gdb to the target and initializes some of the global variables
 
@@ -215,7 +230,7 @@ def attach(pid):
     currentpid = int(pid)
     SysUtils.create_PINCE_IPC_PATH(pid)
     currentdir = SysUtils.get_current_script_directory()
-    child = pexpect.spawn('sudo LC_NUMERIC=C gdb --interpreter=mi', cwd=currentdir, encoding="utf-8")
+    child = pexpect.spawn('sudo LC_NUMERIC=C gdb --interpreter=mi', cwd=currentdir + "/libPINCE", encoding="utf-8")
     child.setecho(False)
     child.delaybeforesend = 0
     child.timeout = None
@@ -229,7 +244,7 @@ def attach(pid):
 
     # gdb scripts needs to know PINCE directory, unfortunately they don't start from the place where script exists
     send_command('set $PINCE_PATH=' + '"' + currentdir + '"')
-    send_command("source libPINCE/gdb_python_scripts/GDBCommandExtensions.py")
+    send_command("source gdb_python_scripts/GDBCommandExtensions.py")
     inferior_arch = get_inferior_arch()
     continue_inferior()
 

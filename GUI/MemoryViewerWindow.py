@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Wed Aug 24 16:42:12 2016
+# Created: Tue Sep 13 20:06:27 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -656,8 +656,27 @@ class Ui_MainWindow(object):
         self.actionStackTrace_Info.setObjectName("actionStackTrace_Info")
         self.actionInject_so_file = QtWidgets.QAction(MainWindow)
         self.actionInject_so_file.setObjectName("actionInject_so_file")
+        self.actionRun = QtWidgets.QAction(MainWindow)
+        self.actionRun.setObjectName("actionRun")
+        self.actionBreak = QtWidgets.QAction(MainWindow)
+        self.actionBreak.setObjectName("actionBreak")
+        self.actionStep = QtWidgets.QAction(MainWindow)
+        self.actionStep.setObjectName("actionStep")
+        self.actionStep_Over = QtWidgets.QAction(MainWindow)
+        self.actionStep_Over.setObjectName("actionStep_Over")
+        self.actionExecute_Till_Return = QtWidgets.QAction(MainWindow)
+        self.actionExecute_Till_Return.setObjectName("actionExecute_Till_Return")
+        self.actionToggle_Breakpoint = QtWidgets.QAction(MainWindow)
+        self.actionToggle_Breakpoint.setObjectName("actionToggle_Breakpoint")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
+        self.menuDebug.addAction(self.actionRun)
+        self.menuDebug.addAction(self.actionBreak)
+        self.menuDebug.addSeparator()
+        self.menuDebug.addAction(self.actionStep)
+        self.menuDebug.addAction(self.actionStep_Over)
+        self.menuDebug.addAction(self.actionExecute_Till_Return)
+        self.menuDebug.addAction(self.actionToggle_Breakpoint)
         self.menuTools.addAction(self.actionInject_so_file)
         self.menubar.addAction(self.menuView.menuAction())
         self.menubar.addAction(self.menuDebug.menuAction())
@@ -751,8 +770,14 @@ class Ui_MainWindow(object):
         self.actionBookmarks.setText(_translate("MainWindow", "Bookmarks"))
         self.actionStackTrace_Info.setText(_translate("MainWindow", "StackTrace Info"))
         self.actionInject_so_file.setText(_translate("MainWindow", "Inject .so file"))
+        self.actionRun.setText(_translate("MainWindow", "Break"))
+        self.actionBreak.setText(_translate("MainWindow", "Run"))
+        self.actionStep.setText(_translate("MainWindow", "Step[F7]"))
+        self.actionStep_Over.setText(_translate("MainWindow", "Step Over[F8]"))
+        self.actionExecute_Till_Return.setText(_translate("MainWindow", "Execute Till Return[Shift+F8]"))
+        self.actionToggle_Breakpoint.setText(_translate("MainWindow", "Toggle Breakpoint[F5]"))
 
-from GUI.CustomLabels.RegisterLabel import QRegisterLabel
 from GUI.CustomTableViews.AsciiView import QAsciiView
-from GUI.CustomTableViews.HexView import QHexView
 from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
+from GUI.CustomTableViews.HexView import QHexView
+from GUI.CustomLabels.RegisterLabel import QRegisterLabel

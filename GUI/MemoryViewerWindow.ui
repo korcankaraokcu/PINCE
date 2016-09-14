@@ -1261,6 +1261,13 @@
     <property name="title">
      <string>Debug</string>
     </property>
+    <addaction name="actionRun"/>
+    <addaction name="actionBreak"/>
+    <addaction name="separator"/>
+    <addaction name="actionStep"/>
+    <addaction name="actionStep_Over"/>
+    <addaction name="actionExecute_Till_Return"/>
+    <addaction name="actionToggle_Breakpoint"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -1286,6 +1293,36 @@
   <action name="actionInject_so_file">
    <property name="text">
     <string>Inject .so file</string>
+   </property>
+  </action>
+  <action name="actionRun">
+   <property name="text">
+    <string>Break</string>
+   </property>
+  </action>
+  <action name="actionBreak">
+   <property name="text">
+    <string>Run</string>
+   </property>
+  </action>
+  <action name="actionStep">
+   <property name="text">
+    <string>Step[F7]</string>
+   </property>
+  </action>
+  <action name="actionStep_Over">
+   <property name="text">
+    <string>Step Over[F8]</string>
+   </property>
+  </action>
+  <action name="actionExecute_Till_Return">
+   <property name="text">
+    <string>Execute Till Return[Shift+F8]</string>
+   </property>
+  </action>
+  <action name="actionToggle_Breakpoint">
+   <property name="text">
+    <string>Toggle Breakpoint[F5]</string>
    </property>
   </action>
  </widget>

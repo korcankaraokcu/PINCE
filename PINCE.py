@@ -320,6 +320,10 @@ class MainForm(QMainWindow, MainWindow):
             self.shortcut_continue.setKey(QKeySequence(continue_hotkey))
         except AttributeError:
             pass
+        try:
+            self.memory_view_window.set_dynamic_debug_hotkeys()
+        except AttributeError:
+            pass
         code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
         bring_disassemble_to_front = self.settings.value("Disassemble/bring_disassemble_to_front", type=bool)
         instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
@@ -1041,12 +1045,41 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     # TODO: Change this nonsense when the huge refactorization happens
     address_added = pyqtSignal(object, object, object, object, object, object)
 
+    def set_dynamic_debug_hotkeys(self):
+        self.shortcut_break.setKey(QKeySequence(pause_hotkey))
+        self.shortcut_run.setKey(QKeySequence(continue_hotkey))
+        self.actionBreak.setText("Break[" + pause_hotkey + "]")
+        self.actionRun.setText("Run[" + continue_hotkey + "]")
+
+    def set_debug_menu_shortcuts(self):
+        self.shortcut_break = QShortcut(QKeySequence(pause_hotkey), self)
+        self.shortcut_break.activated.connect(GDB_Engine.interrupt_inferior)
+        self.shortcut_run = QShortcut(QKeySequence(continue_hotkey), self)
+        self.shortcut_run.activated.connect(GDB_Engine.continue_inferior)
+        self.shortcut_step = QShortcut(QKeySequence("F7"), self)
+        self.shortcut_step.activated.connect(GDB_Engine.step_instruction)
+        self.shortcut_step_over = QShortcut(QKeySequence("F8"), self)
+        self.shortcut_step_over.activated.connect(GDB_Engine.step_over_instruction)
+        self.shortcut_execute_till_return = QShortcut(QKeySequence("Shift+F8"), self)
+        self.shortcut_execute_till_return.activated.connect(GDB_Engine.execute_till_return)
+        self.shortcut_toggle_breakpoint = QShortcut(QKeySequence("F5"), self)
+
+    def initialize_debug_context_menu(self):
+        self.actionBreak.triggered.connect(GDB_Engine.interrupt_inferior)
+        self.actionRun.triggered.connect(GDB_Engine.continue_inferior)
+        self.actionStep.triggered.connect(GDB_Engine.step_instruction)
+        self.actionStep_Over.triggered.connect(GDB_Engine.step_over_instruction)
+        self.actionExecute_Till_Return.triggered.connect(GDB_Engine.execute_till_return)
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center(self)
         self.process_stopped.connect(self.on_process_stop)
         self.process_running.connect(self.on_process_running)
+        self.set_debug_menu_shortcuts()
+        self.set_dynamic_debug_hotkeys()
+        self.initialize_debug_context_menu()
         self.initialize_disassemble_view()
         self.initialize_register_view()
         self.initialize_stack_view()
