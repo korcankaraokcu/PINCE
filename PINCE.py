@@ -164,58 +164,6 @@ class UpdateAddressTableThread(QThread):
             sleep(table_update_interval)
 
 
-# A thread that updates the address table constantly
-# planned for future
-class UpdateAddressTable_planned(QThread):
-    def __init__(self, pid):
-        super().__init__()
-        self.pid = pid
-
-    # communicates with the inferior via files and reads the values from them
-    # planned for future
-    def run(self):
-        SysUtils.do_cleanups(self.pid)
-        directory_path = SysUtils.get_PINCE_IPC_directory(self.pid)
-        SysUtils.is_path_valid(directory_path, "create")
-        send_file = directory_path + "/PINCE-to-Inferior.txt"
-        recv_file = directory_path + "/Inferior-to-PINCE.txt"
-        status_file = directory_path + "/status.txt"
-        abort_file = directory_path + "/abort.txt"
-        open(send_file, "w").close()
-        open(recv_file, "w").close()
-        FILE = open(status_file, "w")
-
-        # Inferior will try to check PINCE's presence with this information
-        FILE.write(str(selfpid))
-        FILE.close()
-        SysUtils.fix_path_permissions(send_file)
-        SysUtils.fix_path_permissions(recv_file)
-        SysUtils.fix_path_permissions(status_file)
-        while True:
-            sleep(0.01)
-            status_word = "waiting"
-            while status_word not in "sync-request-recieve":
-                sleep(0.01)
-                status = open(status_file, "r")
-                status_word = status.read()
-                status.close()
-                try:
-                    abort = open(abort_file, "r")
-                    abort.close()
-                    return
-                except:
-                    pass
-            status = open(status_file, "w")
-            status.write("sync-request-send")
-            status.close()
-            FILE = open(send_file, "w")
-            FILE.close()
-            FILE = open(recv_file, "r")
-            readed = FILE.read()
-            # print(readed)
-            FILE.close()
-
-
 # the mainwindow
 class MainForm(QMainWindow, MainWindow):
     def __init__(self):
