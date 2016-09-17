@@ -247,22 +247,7 @@ def is_path_valid(dest_path, issue_path=""):
     else:
         if issue_path is "create":
             os.makedirs(dest_path)
-            fix_path_permissions(dest_path)
         return False
-
-
-def fix_path_permissions(dest_path):
-    """Gives the path permissions back to user
-
-    Necessary because the inferior PINCE communicating with won't be able to access to the communication files at /tmp
-    otherwise
-
-    Args:
-        dest_path (str): Path
-    """
-    uid = int(os.environ.get('SUDO_UID'))
-    gid = int(os.environ.get('SUDO_GID'))
-    os.chown(dest_path, uid, gid)
 
 
 def do_cleanups(pid):
