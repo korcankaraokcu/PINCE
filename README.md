@@ -77,7 +77,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - 17/01/2016-22/01/2016 : Basic design, grasping of Python3 and Pyqt5, proof-testing
 - 22/01/2016 : First commit
 - 19/02/2016 : Moved to Github from Bitbucket
-- 25/02/2016 : First successful implementation of thread injection(A new age dawns!)[Update-08/05/2016 : PINCE now uses ```linux-inject``` as a secondary injection method]  
+- 25/02/2016 : First successful implementation of thread injection[Update-08/05/2016 : PINCE now uses ```linux-inject``` as a secondary injection method]  
 - 18/06/2016 : PINCE now supports all-stop mode instead of non-stop mode
 - 21/06/2016 : Variable Inspection&Modification is finished  
 - 21/08/2016 : Memory View is finished
