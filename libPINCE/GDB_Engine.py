@@ -586,20 +586,18 @@ def convert_symbol_to_address(expression, check=True):
             return split(":", filteredresult.group(0))[0]
 
 
-def parse_convenience_variables(variables):
+def parse_convenience_variables(variable_list):
     """Converts the convenience variables to their str equivalents
 
     Args:
-        variables (str): The convenience variables, splitted by a ",".
+        variable_list (list of str): List of convenience variables as strings.
 
     Examples:
-        variables-->"$pc,$_gthread,$_inferior,$_exitcode,$_siginfo"
+        variable_list-->["$pc","$_gthread","$_inferior","$_exitcode","$_siginfo"]
 
     Returns:
         list: List of str values of the corresponding convenience variables
     """
-    variables = variables.replace(" ", "")
-    variable_list = variables.split(",")
     contents_recv = send_command("pince-parse-convenience-variables", send_with_file=True,
                                  file_contents_send=variable_list,
                                  recv_with_file=True)
@@ -682,7 +680,7 @@ def get_inferior_arch():
     Returns:
         int: A member of type_defs.INFERIOR_ARCH
     """
-    if parse_convenience_variables("$rax")[0] == "void":
+    if parse_convenience_variables(["$rax"])[0] == "void":
         return ARCH_32
     return ARCH_64
 
