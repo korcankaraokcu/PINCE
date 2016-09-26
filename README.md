@@ -61,6 +61,7 @@ Then ```cd``` to the source file you downloaded and run:
 ```CC=gcc ./configure --prefix=/usr --with-python=python3 && make && sudo make -C gdb install```  
 Note: If gdb says something about missing python files, move the contents of gdb/data-directory to /usr/share/gdb:  
 ```sudo cp -R gdb/data-directory/* /usr/share/gdb/```  
+The solution above also fixes the *"Undefined command"* error in Ubuntu 14.04
 #####Relocating PINCE files  
 Create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
 #Running PINCE  
