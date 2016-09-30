@@ -25,7 +25,7 @@ Pre-release screenshots:
   * **Bookmarking:** Bookmark menu is dynamically created when right clicked in the disassemble screen. So unlike Cheat Engine, PINCE lets you set unlimited number of bookmarks. List of bookmarks can also be viewed from View->Bookmarks in the MemoryView window. Commenting on an address automatically bookmarks it. **[Done]**
   * **Modify on the fly:** PINCE lets you modify registers on the fly. Unlike CE, you can also change XMM and FPU registers. **[Done]**  
 - **Debugging** **[Working on it]**
-  * Can interrupt and continue the inferior, Check wiki for instructions
+  * Has basic debugging features such as stepping, stepping over, execute till return, break, continue. Check wiki for instructions
 - **Code Injection** **[Working on it]**
   * **Run-time injection:** Only .so injection is supported for now. In Memory View window, click Tools->Inject .so file to select the .so file. An example for creating .so file can be found in "libPINCE/Injection/". PINCE will be able to inject single line instructions or code caves in near future **[Partially Done?]**
 - **GDB Console** **[Done]**
@@ -33,7 +33,7 @@ Pre-release screenshots:
 - **Simplified/Optimized gdb command alternatives** **[Working on it]**
   * Custom scripts instead of using gdb's x command for reading memory **[Done]**
   * Custom scripts instead of using gdb's set command for modifying memory **[Done]**
-- **libPINCE- A reusable python library** **[Current Status:*Reusable for FP* , *Refactoring for OOP*]**
+- **libPINCE- A reusable python library** **[Current Status:*Reusable*]**
   * PINCE provides a reusable python library. I'll write a fully-documented guide about how to use it as soon as the project finishes at basic level. Until that moment, I'll keep developing libPINCE as modular as possible  
 - **Automatic Trainer Generation:** **[Planned]**  
   * PINCE provides a trainer auto-generated from current address table on demand by using libPINCE and PyQT5 together
