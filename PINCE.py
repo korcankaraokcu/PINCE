@@ -62,6 +62,7 @@ instructions_per_scroll = int
 PC_COLOUR = Qt.blue
 BOOKMARK_COLOUR = Qt.yellow
 DEFAULT_COLOUR = Qt.white
+BREAKPOINT_COLOUR = Qt.red
 
 # represents the index of columns in address table
 FROZEN_COL = 0  # Frozen
@@ -1014,6 +1015,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.shortcut_execute_till_return = QShortcut(QKeySequence("Shift+F8"), self)
         self.shortcut_execute_till_return.activated.connect(GDB_Engine.execute_till_return)
         self.shortcut_toggle_breakpoint = QShortcut(QKeySequence("F5"), self)
+        self.shortcut_toggle_breakpoint.activated.connect(self.toggle_breakpoint)
 
     def initialize_debug_context_menu(self):
         self.actionBreak.triggered.connect(GDB_Engine.interrupt_inferior)
@@ -1111,6 +1113,18 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_view_scroll_bar_timer.timeout.connect(self.check_hex_view_scrollbar)
         self.hex_view_scroll_bar_timer.start()
         self.verticalScrollBar_HexView.mouseReleaseEvent = self.verticalScrollBar_HexView_mouse_release_event
+
+    def toggle_breakpoint(self):
+        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+        current_address_int = int(current_address, 16)
+        if GDB_Engine.check_address_in_breakpoints(current_address_int):
+            GDB_Engine.delete_breakpoint(current_address)
+        else:
+            if not GDB_Engine.add_breakpoint(current_address):
+                QMessageBox.information(self, "Error", "Failed to set breakpoint at address " + current_address)
+        self.refresh_disassemble_view()
 
     def widget_HexView_context_menu_event(self, event):
         menu = QMenu()
@@ -1229,6 +1243,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         program_counter_int = int(program_counter, 16)
         row_of_pc = False
         rows_of_encountered_bookmarks_list = []
+        breakpoint_list = []
+        rows_of_encountered_breakpoints_list = []
+        breakpoint_info = GDB_Engine.get_breakpoint_info()
+        for item in breakpoint_info:
+            breakpoint_list.append(int(item.address, 16))
 
         # TODO: Change this nonsense when the huge refactorization happens
         current_first_address = SysUtils.extract_address(disas_data[0][0])  # address of first list entry
@@ -1252,11 +1271,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     item[0] = "(M)" + item[0]
                     comment = self.tableWidget_Disassemble.bookmarks[bookmark_item]
                     break
+            for breakpoint in breakpoint_list:
+                if current_address == breakpoint:
+                    rows_of_encountered_breakpoints_list.append(row)
+                    item[0] = "(B)" + item[0]
+                    break
             self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, QTableWidgetItem(item[0]))
             self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, QTableWidgetItem(item[1]))
             self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, QTableWidgetItem(item[2]))
             self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, QTableWidgetItem(comment))
-        self.handle_colours(row_of_pc, rows_of_encountered_bookmarks_list)
+        self.handle_colours(row_of_pc, rows_of_encountered_bookmarks_list, rows_of_encountered_breakpoints_list)
         self.tableWidget_Disassemble.resizeColumnsToContents()
         self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
 
@@ -1266,13 +1290,19 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.travel_history.append(previous_first_address)
         self.disassemble_currently_displayed_address = current_first_address
 
+    def refresh_disassemble_view(self):
+        self.disassemble_expression(self.disassemble_currently_displayed_address)
+
     # Set colour of a row if a specific address is encountered(e.g $pc, a bookmarked address etc.)
-    def handle_colours(self, row_of_pc, encountered_bookmark_list):
+    def handle_colours(self, row_of_pc, encountered_bookmark_list, encountered_breakpoints_list):
         if row_of_pc:
             self.set_row_colour(row_of_pc, PC_COLOUR)
         if encountered_bookmark_list:
             for encountered_row in encountered_bookmark_list:
                 self.set_row_colour(encountered_row, BOOKMARK_COLOUR)
+        if encountered_breakpoints_list:
+            for encountered_row in encountered_breakpoints_list:
+                self.set_row_colour(encountered_row, BREAKPOINT_COLOUR)
 
     # color parameter should be Qt.colour
     def set_row_colour(self, row, colour):
@@ -1515,7 +1545,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         elif action == delete_bookmark:
             self.delete_bookmark(current_address_int)
         elif action == refresh:
-            self.disassemble_expression(self.disassemble_currently_displayed_address)
+            self.refresh_disassemble_view()
         elif action == copy_address:
             QApplication.clipboard().setText(self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text())
         elif action == copy_bytes:

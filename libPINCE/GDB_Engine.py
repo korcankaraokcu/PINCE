@@ -22,6 +22,7 @@ import pexpect
 import os
 import ctypes
 import pickle
+import collections
 from . import SysUtils
 from . import type_defs
 
@@ -586,6 +587,21 @@ def convert_symbol_to_address(expression, check=True):
             return split(":", filteredresult.group(0))[0]
 
 
+def validate_memory_address(expression, check=True):
+    """Check if the address evaluated by the given expression is valid
+
+    Args:
+        expression (str): Any gdb expression
+        check (bool): If your string contains one of the restricted symbols(such as $) pass the check parameter as False
+
+    Returns:
+        bool: True if address is reachable, False if not
+    """
+    if convert_symbol_to_address(expression=expression, check=check) == None:
+        return False
+    return True
+
+
 def parse_convenience_variables(variable_list):
     """Converts the convenience variables to their str equivalents
 
@@ -833,3 +849,85 @@ def hex_dump(address, offset):
     if contents_recv is None:
         print("an error occurred while hex dumping address " + hex(address) + " with offset " + str(offset))
     return contents_recv
+
+
+def get_breakpoint_info():
+    """Returns current breakpoint/watchpoint list
+
+    Returns:
+        list: A list of collections.namedtuple("get_breakpoint_info", "number breakpoint_type address") where number is
+        the gdb breakpoint number, breakpoint_type is the breakpoint type and the address is the address of breakpoint,
+        all represented as strings.
+    """
+    returned_list = []
+    returned_tuple = collections.namedtuple("get_breakpoint_info", "number breakpoint_type address")
+    raw_info = send_command("info break")
+
+    # 7       acc watchpoint  keep y                      *0x00400f00
+    # 13      hw breakpoint   keep y   0x000000000040c435 <_start+4>
+    parsed_info = findall(r"(\d+.*(watchpoint|breakpoint).*0x[0-9a-fA-F]+)", raw_info)
+    for item in parsed_info:
+        number = search(r"\d+", item[0]).group(0)
+        breakpoint_type = search(r"(hw|read|acc)*\s*(watchpoint|breakpoint)", item[0]).group(0)
+        address = search(r"0x[0-9a-fA-F]+", item[0]).group(0)
+        returned_list.append(returned_tuple(number, breakpoint_type, address))
+    return returned_list
+
+
+def check_address_in_breakpoints(address):
+    """Checks if given address exists in breakpoint list
+
+    Args:
+        address (int,str): Hex address or an int
+
+    Returns:
+        bool: True if address exists, False if not
+    """
+    if type(address) != int:
+        address = int(address, 16)
+    raw_info = send_command("info break")
+    parsed_info = findall(r"0x[0-9a-fA-F]+", raw_info)
+    for item in parsed_info:
+        if int(item, 16) == address:
+            return True
+    return False
+
+
+def add_breakpoint(expression):
+    """Adds a software breakpoint at the address evaluated by the given expression
+
+    Args:
+        expression (str): Any gdb expression
+
+    Returns:
+        bool: True if set breakpoint without an error, False if with error
+    """
+    str_address = convert_symbol_to_address(expression)
+    if str_address == None:
+        print("expression for breakpoint is not valid")
+        return False
+    if check_address_in_breakpoints(str_address):
+        print("breakpoint for address " + str_address + " is already set")
+        return False
+    send_command("break *" + str_address)
+    return True
+
+
+def delete_breakpoint(expression):
+    """Deletes a breakpoint at the address evaluated by the given expression
+
+    Args:
+        expression (str): Any gdb expression
+    """
+    breakpoint_number = -1
+    str_address = convert_symbol_to_address(expression)
+    if str_address == None:
+        print("expression for breakpoint is not valid")
+        return False
+    breakpoint_info = get_breakpoint_info()
+    for item in breakpoint_info:
+        if int(item.address, 16) == int(str_address, 16):
+            breakpoint_number = item.number
+            break
+    send_command("delete " + str(breakpoint_number))
+    return True
