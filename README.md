@@ -25,7 +25,7 @@ Pre-release screenshots:
   * **Bookmarking:** Bookmark menu is dynamically created when right clicked in the disassemble screen. So unlike Cheat Engine, PINCE lets you set unlimited number of bookmarks. List of bookmarks can also be viewed from View->Bookmarks in the MemoryView window. Commenting on an address automatically bookmarks it. **[Done]**
   * **Modify on the fly:** PINCE lets you modify registers on the fly. Unlike CE, you can also change XMM and FPU registers. **[Done]**  
 - **Debugging** **[Working on it]**
-  * Has basic debugging features such as stepping, stepping over, execute till return, break, continue. Check wiki for instructions
+  * Has basic debugging features such as stepping, stepping over, execute till return, break, continue. Has also basic breakpoints. Check wiki for instructions
 - **Code Injection** **[Working on it]**
   * **Run-time injection:** Only .so injection is supported for now. In Memory View window, click Tools->Inject .so file to select the .so file. An example for creating .so file can be found in "libPINCE/Injection/". PINCE will be able to inject single line instructions or code caves in near future **[Partially Done?]**
 - **GDB Console** **[Done]**
