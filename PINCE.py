@@ -1089,10 +1089,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.widget_HexView.contextMenuEvent = self.widget_HexView_context_menu_event
 
         self.verticalScrollBar_HexView.wheelEvent = QEvent.ignore
-        self.listWidget_HexView_Address.wheelEvent = QEvent.ignore
+        self.tableWidget_HexView_Address.wheelEvent = QEvent.ignore
         self.scrollArea_Hex.keyPressEvent = QEvent.ignore
-        self.listWidget_HexView_Address.setAutoScroll(False)
-        self.listWidget_HexView_Address.setStyleSheet("QListWidget {background-color: transparent;}")
+        self.tableWidget_HexView_Address.setAutoScroll(False)
+        self.tableWidget_HexView_Address.setStyleSheet("QTableWidget {background-color: transparent;}")
 
         self.hex_model = QHexModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
         self.ascii_model = QAsciiModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
@@ -1104,8 +1104,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.scrollArea_Hex.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.scrollArea_Hex.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.listWidget_HexView_Address.setVerticalScrollBarPolicy((Qt.ScrollBarAlwaysOff))
-        self.listWidget_HexView_Address.setHorizontalScrollBarPolicy((Qt.ScrollBarAlwaysOff))
+        self.tableWidget_HexView_Address.setVerticalScrollBarPolicy((Qt.ScrollBarAlwaysOff))
+        self.tableWidget_HexView_Address.setHorizontalScrollBarPolicy((Qt.ScrollBarAlwaysOff))
+        self.tableWidget_HexView_Address.verticalHeader().setDefaultSectionSize(
+            self.tableView_HexView_Hex.verticalHeader().defaultSectionSize())
 
         GuiUtils.center_scroll_bar(self.verticalScrollBar_HexView)
         self.hex_view_scroll_bar_timer = QTimer()
@@ -1199,12 +1201,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def on_hex_view_current_changed(self, QModelIndex_current):
         self.tableView_HexView_Ascii.selectionModel().setCurrentIndex(QModelIndex_current,
                                                                       QItemSelectionModel.ClearAndSelect)
-        self.listWidget_HexView_Address.setCurrentRow(QModelIndex_current.row())
+        self.tableWidget_HexView_Address.selectRow(QModelIndex_current.row())
 
     def on_ascii_view_current_changed(self, QModelIndex_current):
         self.tableView_HexView_Hex.selectionModel().setCurrentIndex(QModelIndex_current,
                                                                     QItemSelectionModel.ClearAndSelect)
-        self.listWidget_HexView_Address.setCurrentRow(QModelIndex_current.row())
+        self.tableWidget_HexView_Address.selectRow(QModelIndex_current.row())
 
     def hex_dump_address(self, int_address, offset=HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT):
         information = SysUtils.get_region_info(GDB_Engine.currentpid, int_address)
@@ -1213,19 +1215,21 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 "Protection:" + information.region.perms + " | Base:" + information.start + "-" + information.end)
         else:
             self.label_HexView_Information.setText("This region is invalid")
-        self.listWidget_HexView_Address.clear()
-        for current_offset in range(HEX_VIEW_ROW_COUNT):
-            self.listWidget_HexView_Address.addItem(hex(int_address + current_offset * 16))
-        listwidget_column_size = self.listWidget_HexView_Address.sizeHintForColumn(0) + 10
-        self.listWidget_HexView_Address.setMaximumWidth(listwidget_column_size)
-        self.listWidget_HexView_Address.setMinimumWidth(listwidget_column_size)
+        self.tableWidget_HexView_Address.setRowCount(0)
+        self.tableWidget_HexView_Address.setRowCount(HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
+        for row, current_offset in enumerate(range(HEX_VIEW_ROW_COUNT)):
+            self.tableWidget_HexView_Address.setItem(row, 0, QTableWidgetItem(hex(int_address + current_offset * 16)))
+        tableWidget_HexView_column_size = self.tableWidget_HexView_Address.sizeHintForColumn(0) + 5
+        self.tableWidget_HexView_Address.setMaximumWidth(tableWidget_HexView_column_size)
+        self.tableWidget_HexView_Address.setMinimumWidth(tableWidget_HexView_column_size)
+        self.tableWidget_HexView_Address.setColumnWidth(0, tableWidget_HexView_column_size)
         hex_list = GDB_Engine.hex_dump(int_address, offset)
         self.hex_model.refresh(hex_list)
         self.ascii_model.refresh(hex_list)
         self.hex_view_currently_displayed_address = int_address
 
     def refresh_hex_view(self):
-        if self.listWidget_HexView_Address.count() == 0:
+        if self.tableWidget_HexView_Address.rowCount() == 0:
             # ELF header usually starts at address 0x00400000
             self.hex_dump_address(0x00400000)
             self.tableView_HexView_Hex.resize_to_contents()

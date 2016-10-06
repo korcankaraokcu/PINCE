@@ -124,8 +124,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>352</width>
-              <height>439</height>
+              <width>358</width>
+              <height>455</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_8">
@@ -1058,15 +1058,39 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>473</width>
-              <height>196</height>
+              <width>493</width>
+              <height>181</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_11">
              <item row="2" column="0">
               <layout class="QHBoxLayout" name="horizontalLayout_5">
                <item>
-                <widget class="QListWidget" name="listWidget_HexView_Address"/>
+                <widget class="QTableWidget" name="tableWidget_HexView_Address">
+                 <property name="editTriggers">
+                  <set>QAbstractItemView::NoEditTriggers</set>
+                 </property>
+                 <property name="selectionMode">
+                  <enum>QAbstractItemView::SingleSelection</enum>
+                 </property>
+                 <property name="selectionBehavior">
+                  <enum>QAbstractItemView::SelectRows</enum>
+                 </property>
+                 <property name="showGrid">
+                  <bool>false</bool>
+                 </property>
+                 <attribute name="horizontalHeaderVisible">
+                  <bool>false</bool>
+                 </attribute>
+                 <attribute name="verticalHeaderVisible">
+                  <bool>false</bool>
+                 </attribute>
+                 <column>
+                  <property name="text">
+                   <string>Address</string>
+                  </property>
+                 </column>
+                </widget>
                </item>
                <item>
                 <widget class="Line" name="line_5">
@@ -1247,7 +1271,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">
