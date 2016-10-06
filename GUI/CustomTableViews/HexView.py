@@ -7,9 +7,6 @@ class QHexView(QTableView):
         super().__init__(parent)
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
-
-        # TODO: 15 is a magic number, it makes the entries in address listwidget and hexview be in the same height
-        # TODO: Change design of the hexview group if any display problems occur in different pyqt versions
         self.verticalHeader().setDefaultSectionSize(15)
         self.horizontalHeader().setDefaultSectionSize(23)
         self.setStyleSheet("QTableView {background-color: transparent;}")
@@ -23,7 +20,7 @@ class QHexView(QTableView):
         QWheelEvent.ignore()
 
     def resize_to_contents(self):
-        size = self.sizeHintForColumn(0) * (self.model().columnCount() + 1)
+        size = self.sizeHintForColumn(0) * self.model().columnCount()
         self.setMinimumWidth(size)
         self.setMaximumWidth(size)
 

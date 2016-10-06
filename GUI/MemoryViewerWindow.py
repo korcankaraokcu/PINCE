@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Tue Sep 13 20:06:27 2016
+# Created: Thu Oct  6 23:42:20 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -72,7 +72,7 @@ class Ui_MainWindow(object):
         self.scrollArea_Registers.setWidgetResizable(True)
         self.scrollArea_Registers.setObjectName("scrollArea_Registers")
         self.scrollAreaWidgetContents_Registers = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 352, 439))
+        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 358, 455))
         self.scrollAreaWidgetContents_Registers.setObjectName("scrollAreaWidgetContents_Registers")
         self.gridLayout_8 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_Registers)
         self.gridLayout_8.setObjectName("gridLayout_8")
@@ -534,15 +534,25 @@ class Ui_MainWindow(object):
         self.scrollArea_Hex.setWidgetResizable(True)
         self.scrollArea_Hex.setObjectName("scrollArea_Hex")
         self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 473, 196))
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 493, 181))
         self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
         self.gridLayout_11 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_11.setObjectName("gridLayout_11")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.listWidget_HexView_Address = QtWidgets.QListWidget(self.scrollAreaWidgetContents_2)
-        self.listWidget_HexView_Address.setObjectName("listWidget_HexView_Address")
-        self.horizontalLayout_5.addWidget(self.listWidget_HexView_Address)
+        self.tableWidget_HexView_Address = QtWidgets.QTableWidget(self.scrollAreaWidgetContents_2)
+        self.tableWidget_HexView_Address.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tableWidget_HexView_Address.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.tableWidget_HexView_Address.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tableWidget_HexView_Address.setShowGrid(False)
+        self.tableWidget_HexView_Address.setObjectName("tableWidget_HexView_Address")
+        self.tableWidget_HexView_Address.setColumnCount(1)
+        self.tableWidget_HexView_Address.setRowCount(0)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_HexView_Address.setHorizontalHeaderItem(0, item)
+        self.tableWidget_HexView_Address.horizontalHeader().setVisible(False)
+        self.tableWidget_HexView_Address.verticalHeader().setVisible(False)
+        self.horizontalLayout_5.addWidget(self.tableWidget_HexView_Address)
         self.line_5 = QtWidgets.QFrame(self.scrollAreaWidgetContents_2)
         self.line_5.setFrameShape(QtWidgets.QFrame.VLine)
         self.line_5.setFrameShadow(QtWidgets.QFrame.Sunken)
@@ -638,7 +648,7 @@ class Ui_MainWindow(object):
         self.gridLayout_5.addWidget(self.splitter_MainMiddle, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 20))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
         self.menubar.setObjectName("menubar")
         self.menuView = QtWidgets.QMenu(self.menubar)
         self.menuView.setObjectName("menuView")
@@ -752,6 +762,8 @@ class Ui_MainWindow(object):
         self.DS.setText(_translate("MainWindow", "DS="))
         self.FS.setText(_translate("MainWindow", "FS="))
         self.pushButton_ShowFloatRegisters.setText(_translate("MainWindow", "Show Float Registers"))
+        item = self.tableWidget_HexView_Address.horizontalHeaderItem(0)
+        item.setText(_translate("MainWindow", "Address"))
         item = self.tableWidget_StackTrace.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Return Address"))
         item = self.tableWidget_StackTrace.horizontalHeaderItem(1)
@@ -777,7 +789,7 @@ class Ui_MainWindow(object):
         self.actionExecute_Till_Return.setText(_translate("MainWindow", "Execute Till Return[Shift+F8]"))
         self.actionToggle_Breakpoint.setText(_translate("MainWindow", "Toggle Breakpoint[F5]"))
 
-from GUI.CustomTableViews.AsciiView import QAsciiView
-from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
-from GUI.CustomTableViews.HexView import QHexView
 from GUI.CustomLabels.RegisterLabel import QRegisterLabel
+from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
+from GUI.CustomTableViews.AsciiView import QAsciiView
+from GUI.CustomTableViews.HexView import QHexView

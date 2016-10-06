@@ -1,1 +1,3 @@
-IMPORTANT: Don't try to add a QKeySequenceEdit to the 2nd widget of stacked widget in settingsdialog.ui, pyuic5 gives error when QKeySequenceEdit is used. I had to implement it in PINCE.py because of this unfortunately. Check SettingsDialogForm class for the usage.
+IMPORTANT: SettingsDialog.ui: Don't try to add a QKeySequenceEdit to the 2nd widget of stacked widget, pyuic5 gives error when QKeySequenceEdit is used. I had to implement it in PINCE.py because of this unfortunately. Check SettingsDialogForm class for the usage.
+
+6/10/2016 - HexView section of MemoryViewerWindow.ui: Changed listWidget_HexView_Address to tableWidget_HexView_Address in order to prevent possible future visual bugs. Logically, it should stay as a listwidget considering it's functionality. But it doesn't play nice with the other neighboring tablewidgets in different pyqt versions, forcing me to use magic numbers for adjusting, which is disgusting(I got the rhymes woohoo)
