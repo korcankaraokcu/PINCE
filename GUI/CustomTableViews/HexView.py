@@ -20,7 +20,7 @@ class QHexView(QTableView):
         QWheelEvent.ignore()
 
     def resize_to_contents(self):
-        size = self.sizeHintForColumn(0) * self.model().columnCount()
+        size = self.columnWidth(0) * self.model().columnCount()
         self.setMinimumWidth(size)
         self.setMaximumWidth(size)
 
