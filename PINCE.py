@@ -287,11 +287,14 @@ class MainForm(QMainWindow, MainWindow):
         menu = QMenu()
         browse_region = menu.addAction("Browse this memory region[B]")
         menu.addSeparator()
+        delete_record = menu.addAction("Delete selected records[Del]")
         font_size = self.tableWidget_addresstable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         if action == browse_region:
             self.browse_region_for_selected_row()
+        elif action == delete_record:
+            self.delete_selected_records()
 
     def browse_region_for_selected_row(self):
         last_selected_row = self.tableWidget_addresstable.selectionModel().selectedRows()[-1].row()
@@ -300,11 +303,17 @@ class MainForm(QMainWindow, MainWindow):
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
+    def delete_selected_records(self):
+        selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
+        while selected_rows:
+            selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
+            if selected_rows:
+                first_selected_row = selected_rows[0].row()
+                self.tableWidget_addresstable.removeRow(first_selected_row)
+
     def tableWidget_addresstable_keyPressEvent(self, e):
         if e.key() == Qt.Key_Delete:
-            selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
-            for item in selected_rows:
-                self.tableWidget_addresstable.removeRow(item.row())
+            self.delete_selected_records()
         if e.key() == Qt.Key_B:
             self.browse_region_for_selected_row()
 
@@ -1023,6 +1032,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionStep.triggered.connect(GDB_Engine.step_instruction)
         self.actionStep_Over.triggered.connect(GDB_Engine.step_over_instruction)
         self.actionExecute_Till_Return.triggered.connect(GDB_Engine.execute_till_return)
+        self.actionToggle_Breakpoint.triggered.connect(self.toggle_breakpoint)
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -1506,9 +1516,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if not is_bookmarked:
             bookmark = menu.addAction("Bookmark this address[B]")
             delete_bookmark = -1
+            change_comment = -1
         else:
             bookmark = -1
             delete_bookmark = menu.addAction("Delete this bookmark")
+            change_comment = menu.addAction("Change comment")
         go_to_bookmark = menu.addMenu("Go to bookmarked address")
         bookmark_action_list = []
         for item in self.tableWidget_Disassemble.bookmarks.keys():
@@ -1548,6 +1560,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.bookmark_address(current_address_int)
         elif action == delete_bookmark:
             self.delete_bookmark(current_address_int)
+        elif action == change_comment:
+            self.change_bookmark_comment(current_address_int)
         elif action == refresh:
             self.refresh_disassemble_view()
         elif action == copy_address:
@@ -1573,16 +1587,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         else:
             return
         self.tableWidget_Disassemble.bookmarks[int_address] = comment
-        for row in range(self.tableWidget_Disassemble.rowCount()):
-            current_text = self.tableWidget_Disassemble.item(row, DISAS_ADDR_COL).text()
-            current_address = int(SysUtils.extract_address(current_text), 16)
-            if current_address == int_address:
-                self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, QTableWidgetItem("(M)" + current_text))
-                self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, QTableWidgetItem(comment))
-                self.set_row_colour(row, BOOKMARK_COLOUR)
-                self.tableWidget_Disassemble.resizeColumnsToContents()
-                self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
-                break
+        self.refresh_disassemble_view()
 
     def change_bookmark_comment(self, int_address):
         current_comment = self.tableWidget_Disassemble.bookmarks[int_address]
@@ -1593,30 +1598,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         else:
             return
         self.tableWidget_Disassemble.bookmarks[int_address] = new_comment
-        for row in range(self.tableWidget_Disassemble.rowCount()):
-            current_text = self.tableWidget_Disassemble.item(row, DISAS_ADDR_COL).text()
-            current_address = int(SysUtils.extract_address(current_text), 16)
-            if current_address == int_address:
-                self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, QTableWidgetItem(new_comment))
-                self.set_row_colour(row, BOOKMARK_COLOUR)
-                self.tableWidget_Disassemble.resizeColumnsToContents()
-                self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
-                break
+        self.refresh_disassemble_view()
 
     def delete_bookmark(self, int_address):
         if int_address in self.tableWidget_Disassemble.bookmarks:
             del self.tableWidget_Disassemble.bookmarks[int_address]
-            for row in range(self.tableWidget_Disassemble.rowCount()):
-                current_text = self.tableWidget_Disassemble.item(row, DISAS_ADDR_COL).text()
-                current_address = int(SysUtils.extract_address(current_text), 16)
-                if current_address == int_address:
-                    mark_removed_text = GuiUtils.remove_bookmark_mark(current_text)
-                    self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, QTableWidgetItem(mark_removed_text))
-                    self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, QTableWidgetItem(""))
-                    self.set_row_colour(row, DEFAULT_COLOUR)
-                    self.tableWidget_Disassemble.resizeColumnsToContents()
-                    self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
-                    break
+            self.refresh_disassemble_view()
 
     def on_ViewBookmarks_triggered(self):
         self.bookmark_widget = BookmarkWidgetForm(self)
