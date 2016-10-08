@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'addaddressmanuallydialog.ui'
+# Form implementation generated from reading ui file 'AddAddressManuallyDialog.ui'
 #
-# Created: Fri Jun 10 16:09:42 2016
+# Created: Sat Oct  8 22:33:09 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -38,6 +38,7 @@ class Ui_Dialog(object):
         self.label_2.setObjectName("label_2")
         self.horizontalLayout.addWidget(self.label_2)
         self.label_valueofaddress = QtWidgets.QLabel(Dialog)
+        self.label_valueofaddress.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
         self.label_valueofaddress.setObjectName("label_valueofaddress")
         self.horizontalLayout.addWidget(self.label_valueofaddress)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
