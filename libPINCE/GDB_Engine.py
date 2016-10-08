@@ -652,6 +652,12 @@ def find_address_of_closest_instruction(address, how_many_instructions_to_look_f
     Returns:
         str: The address found as hex string. If starting/ending of a valid memory range is reached, starting/ending
         address is returned instead as hex string.
+
+    Note:
+        From gdb version 7.12 and onwards, inputting negative numbers in x command are supported(x/-3i for instance)
+        So, modifying this function according to the changes in 7.12 may speed up things a little bit but also breaks
+        the backwards compatibility. The speed gain is not much of a big deal compared to backwards compatibility, so
+        I'm not changing this function for now
     """
     if instruction_location == "next":
         offset = "+" + str(how_many_instructions_to_look_for * 30)
