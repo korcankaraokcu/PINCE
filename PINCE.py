@@ -948,7 +948,8 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
                 else:
                     console_output = GDB_Engine.send_command(console_input)
                 if not console_output:
-                    console_output = "Inferior is running"
+                    if GDB_Engine.inferior_status == INFERIOR_RUNNING:
+                        console_output = "Inferior is running"
             else:
                 GDB_Engine.interrupt_inferior()
                 if GDB_Engine.inferior_status == INFERIOR_STOPPED:
