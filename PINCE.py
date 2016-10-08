@@ -629,49 +629,38 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.checkBox_Unicode.hide()
             self.checkBox_zeroterminate.hide()
         self.comboBox_ValueType.currentIndexChanged.connect(self.valuetype_on_current_index_change)
-        self.lineEdit_length.textChanged.connect(self.length_text_on_change)
-        self.checkBox_Unicode.stateChanged.connect(self.unicode_box_on_check)
-        self.checkBox_zeroterminate.stateChanged.connect(self.zeroterminate_box_on_check)
-        self.update_needed = True
-        self.lineEdit_address.textChanged.connect(self.address_on_change)
-        self.update_thread = Thread(target=self.update_value_of_address)
-        self.update_thread.daemon = True
-        self.update_thread.start()
+        self.lineEdit_length.textChanged.connect(self.update_value_of_address)
+        self.checkBox_Unicode.stateChanged.connect(self.update_value_of_address)
+        self.checkBox_zeroterminate.stateChanged.connect(self.update_value_of_address)
+        self.lineEdit_address.textChanged.connect(self.update_value_of_address)
+        self.label_valueofaddress.contextMenuEvent = self.label_valueofaddress_context_menu_event
 
-    # constantly updates the value of the address
+    def label_valueofaddress_context_menu_event(self, event):
+        menu = QMenu()
+        refresh = menu.addAction("Refresh")
+        font_size = self.label_valueofaddress.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == refresh:
+            self.update_value_of_address()
+
     def update_value_of_address(self):
-        while not self.update_thread._is_stopped:
-            sleep(0.01)
-            if self.update_needed:
-                self.update_needed = False
-                address = self.lineEdit_address.text()
-                address_type = self.comboBox_ValueType.currentIndex()
-                if address_type is INDEX_AOB:
-                    length = self.lineEdit_length.text()
-                    self.label_valueofaddress.setText(
-                        GDB_Engine.read_single_address_by_expression(address, address_type, length))
-                elif address_type is INDEX_STRING:
-                    length = self.lineEdit_length.text()
-                    is_unicode = self.checkBox_Unicode.isChecked()
-                    is_zeroterminate = self.checkBox_zeroterminate.isChecked()
-                    self.label_valueofaddress.setText(
-                        GDB_Engine.read_single_address_by_expression(address, address_type, length, is_unicode,
-                                                                     is_zeroterminate))
-                else:
-                    self.label_valueofaddress.setText(
-                        GDB_Engine.read_single_address_by_expression(address, address_type))
-
-    def address_on_change(self):
-        self.update_needed = True
-
-    def length_text_on_change(self):
-        self.update_needed = True
-
-    def unicode_box_on_check(self):
-        self.update_needed = True
-
-    def zeroterminate_box_on_check(self):
-        self.update_needed = True
+        address = self.lineEdit_address.text()
+        address_type = self.comboBox_ValueType.currentIndex()
+        if address_type is INDEX_AOB:
+            length = self.lineEdit_length.text()
+            self.label_valueofaddress.setText(
+                GDB_Engine.read_single_address_by_expression(address, address_type, length))
+        elif address_type is INDEX_STRING:
+            length = self.lineEdit_length.text()
+            is_unicode = self.checkBox_Unicode.isChecked()
+            is_zeroterminate = self.checkBox_zeroterminate.isChecked()
+            self.label_valueofaddress.setText(
+                GDB_Engine.read_single_address_by_expression(address, address_type, length, is_unicode,
+                                                             is_zeroterminate))
+        else:
+            self.label_valueofaddress.setText(
+                GDB_Engine.read_single_address_by_expression(address, address_type))
 
     def valuetype_on_current_index_change(self):
         if self.comboBox_ValueType.currentIndex() is INDEX_STRING:
@@ -689,10 +678,9 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_length.hide()
             self.checkBox_Unicode.hide()
             self.checkBox_zeroterminate.hide()
-        self.update_needed = True
+        self.update_value_of_address()
 
     def reject(self):
-        self.update_thread._is_stopped = True
         super(ManualAddressDialogForm, self).reject()
 
     def accept(self):
@@ -706,7 +694,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             if length < 0:
                 QMessageBox.information(self, "Error", "Length cannot be smaller than 0")
                 return
-        self.update_thread._is_stopped = True
         super(ManualAddressDialogForm, self).accept()
 
     def get_values(self):
