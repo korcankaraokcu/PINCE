@@ -935,6 +935,7 @@ def add_breakpoint(expression):
     if hardware_breakpoint_available():
         send_command("hbreak *" + str_address)
     else:
+        print("All hardware breakpoint slots are being used, using a software breakpoint instead")
         send_command("break *" + str_address)
     return True
 
@@ -944,6 +945,9 @@ def delete_breakpoint(expression):
 
     Args:
         expression (str): Any gdb expression
+
+    Returns:
+        bool: True if the breakpoint has been deleted successfully, False otherwise
     """
     breakpoint_number = -1
     str_address = convert_symbol_to_address(expression)
