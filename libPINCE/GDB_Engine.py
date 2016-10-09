@@ -899,14 +899,31 @@ def check_address_in_breakpoints(address):
     return False
 
 
+def hardware_breakpoint_available():
+    """Checks if there is an available hardware breakpoint slot
+
+    Returns:
+        bool: True if there is at least one available slot, False if not
+
+    Todo:
+        Check debug registers to determine hardware breakpoint state rather than relying on gdb output because inferior
+        might modify it's own debug registers
+    """
+    raw_info = send_command("info break")
+    hw_bp_total = len(findall(r"((hw|read|acc)\s*(watchpoint|breakpoint))", raw_info))
+
+    # Maximum number of hardware breakpoints is limited to 4 in x86 architecture
+    return hw_bp_total < 4
+
+
 def add_breakpoint(expression):
-    """Adds a software breakpoint at the address evaluated by the given expression
+    """Adds a breakpoint at the address evaluated by the given expression. Uses a hardware breakpoint if available
 
     Args:
         expression (str): Any gdb expression
 
     Returns:
-        bool: True if set breakpoint without an error, False if with error
+        bool: True if the breakpoint has been set successfully, False otherwise
     """
     str_address = convert_symbol_to_address(expression)
     if str_address == None:
@@ -915,7 +932,10 @@ def add_breakpoint(expression):
     if check_address_in_breakpoints(str_address):
         print("breakpoint for address " + str_address + " is already set")
         return False
-    send_command("break *" + str_address)
+    if hardware_breakpoint_available():
+        send_command("hbreak *" + str_address)
+    else:
+        send_command("break *" + str_address)
     return True
 
 
