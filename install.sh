@@ -21,13 +21,17 @@ sudo apt-get install python3-pip
 sudo apt-get install python3-pyqt5
 sudo pip3 install psutil
 sudo pip3 install pexpect
+
+cd libPINCE
 mkdir -p gdb_pince
 cd gdb_pince
 
-# clean the directory if another install happened
+# clean the directory if another installation happened
 rm -rf gdb-7.11.1
 
-wget "http://ftp.gnu.org/gnu/gdb/gdb-7.11.1.tar.gz"
+if [ ! -e gdb-7.11.1.tar.gz ] ; then
+    wget "http://ftp.gnu.org/gnu/gdb/gdb-7.11.1.tar.gz"
+fi
 tar -zxvf gdb-7.11.1.tar.gz
 cd gdb-7.11.1
 
@@ -35,8 +39,11 @@ cd gdb-7.11.1
 sudo apt-get install python3-dev
 sudo apt-get install gcc
 
-# FIXME: Is setting prefix as "/usr" bad?
-CC=gcc ./configure --prefix=/usr --with-python=python3 && make && sudo make -C gdb install
+CC=gcc ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
+if [ ! -e bin/gdb ] ; then
+    echo "Failed to install gdb, restart the installation process"
+    exit
+fi
 
 # Relocating PINCE files
 cd
