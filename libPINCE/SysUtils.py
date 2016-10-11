@@ -229,6 +229,19 @@ def get_current_script_directory():
     return sys.path[0]
 
 
+def get_libpince_directory():
+    """Get libPINCE directory
+
+    Returns:
+        str: A string pointing to the libPINCE directory
+
+    Note:
+        In fact this function returns the directory where SysUtils in and considering the fact that SysUtils resides in
+        libPINCE, it works. So, please don't move out SysUtils outside of libPINCE folder!
+    """
+    return os.path.dirname(os.path.realpath(__file__))
+
+
 def is_path_valid(dest_path, issue_path=""):
     """Check if the given path is valid
 
