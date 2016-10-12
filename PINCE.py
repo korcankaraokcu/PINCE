@@ -25,7 +25,7 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, 
 from time import sleep, time
 from threading import Thread
 import os
-import webbrowser
+import pexpect
 import sys
 import traceback
 
@@ -343,7 +343,9 @@ class MainForm(QMainWindow, MainWindow):
         self.memory_view_window.activateWindow()
 
     def wikibutton_onclick(self):
-        webbrowser.open("https://github.com/korcankaraokcu/PINCE/wiki")
+        output = pexpect.run("who").decode("utf-8")
+        user_name = output.split()[0]
+        pexpect.run('sudo -u ' + user_name + ' python3 -m webbrowser "https://github.com/korcankaraokcu/PINCE/wiki"')
 
     def aboutbutton_onclick(self):
         self.about_widget = AboutWidgetForm()
