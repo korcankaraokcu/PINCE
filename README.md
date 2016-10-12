@@ -51,7 +51,7 @@ sudo pip3 install psutil
 sudo pip3 install pexpect  
 ```  
 ###**Compiling gdb with python support**  
-Install the packages required for compiling gdb
+Install the packages required for compiling gdb:
 ```
 sudo apt-get install python3-dev  
 sudo apt-get install gcc  
