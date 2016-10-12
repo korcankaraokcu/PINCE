@@ -3,8 +3,3 @@ Just run "sudo sh install.sh" in this directory. This automated script currently
 To run PINCE after installation, run "sh PINCE.sh"
 
 If you like to uninstall PINCE, just delete this folder. Everything is installed locally, including gdb.
-
-Btw, there's an exception for Ubuntu 14.04. If you get errors such as "Undefined command" while trying to attach a process, it means that python part of gdb installation has been failed, but the solution is very simple: You just need to move contents of "gdb/data-directory/" to "share/gdb/". So, it goes like this:
-
-cd libPINCE/gdb_pince/gdb-7.11.1/
-sudo cp -R gdb/data-directory/* share/gdb/

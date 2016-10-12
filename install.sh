@@ -45,7 +45,10 @@ if [ ! -e bin/gdb ] ; then
     exit
 fi
 
-# Relocating PINCE files
+# In case of python part of gdb installation fails
+sudo cp -R gdb/data-directory/* share/gdb/
+
+# Creating .gdbinit in $HOME
 cd
 auto_load_command="set auto-load safe-path /"
 if [ ! -e .gdbinit ] ; then
