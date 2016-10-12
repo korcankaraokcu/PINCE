@@ -634,6 +634,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.checkBox_zeroterminate.stateChanged.connect(self.update_value_of_address)
         self.lineEdit_address.textChanged.connect(self.update_value_of_address)
         self.label_valueofaddress.contextMenuEvent = self.label_valueofaddress_context_menu_event
+        self.update_value_of_address()
 
     def label_valueofaddress_context_menu_event(self, event):
         menu = QMenu()
