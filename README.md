@@ -72,16 +72,15 @@ Then compile&install locally:
 ```  
 CC=gcc ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
 ```  
+Move the contents of gdb/data-directory to share/gdb in case of python part of gdb installation fails:
+```  
+sudo cp -R gdb/data-directory/* share/gdb/
+```  
 Finally, create .gdbinit file in home directory and add the line ```set auto-load safe-path /```  into it:
 ```  
 cd
 touch .gdbinit
 echo "\n"$auto_load_command >> .gdbinit
-```  
-Note: If you get errors such as "Undefined command" while trying to attach a process, move the contents of gdb/data-directory to share/gdb:  
-```
-cd libPINCE/gdb_pince/gdb-7.11.1/
-sudo cp -R gdb/data-directory/* share/gdb/
 ```  
 #Running PINCE  
 Just run ```sh PINCE.sh``` in the PINCE directory
