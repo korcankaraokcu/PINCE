@@ -35,8 +35,6 @@ INDEX_DOUBLE = type_defs.VALUE_INDEX.INDEX_DOUBLE
 INDEX_STRING = type_defs.VALUE_INDEX.INDEX_STRING
 INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
 
-INITIAL_INJECTION_PATH = type_defs.PATHS.INITIAL_INJECTION_PATH
-
 INFERIOR_RUNNING = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
 INFERIOR_STOPPED = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
 
@@ -249,7 +247,6 @@ def attach(pid):
     send_command('set $PINCE_PATH=' + '"' + pince_dir + '"')
     send_command("source gdb_python_scripts/GDBCommandExtensions.py")
     inferior_arch = get_inferior_arch()
-    continue_inferior()
 
 
 def detach():
