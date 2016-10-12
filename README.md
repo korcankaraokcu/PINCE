@@ -39,9 +39,9 @@ Pre-release screenshots:
   * PINCE provides a trainer auto-generated from current address table on demand by using libPINCE and PyQT5 together
 
 #Installing Automatically
-Just run ```sudo sh install.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. See below if the automatic installation fails. This install script is temporary. I'll make a PPA when this project finishes.
+Just run ```sudo sh install.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. See below if the automatic installation fails.
 #Installing Manually  
-To run PINCE, run this command chain then compile gdb if necessary:  
+To run PINCE, run this command chain then compile gdb:  
   
 ```
 sudo apt-get install python3-setuptools  
@@ -50,20 +50,39 @@ sudo apt-get install python3-pyqt5
 sudo pip3 install psutil  
 sudo pip3 install pexpect  
 ```  
-###**Compiling the most recent gdb version with python support**  
-#####*You can skip this part if you already have gdb 7.11.1 with python3 support, but it's strongly recommended to compile from source instead of downloading from repos because python version of gdb may mismatch with default interpreter and it usually causes ImportError within gdb scripts*  
-Download the latest source from [here](http://ftp.gnu.org/gnu/gdb/gdb-7.11.1.tar.gz), then install packages required for gdb
+###**Compiling gdb with python support**  
+Install the packages required for compiling gdb
 ```
 sudo apt-get install python3-dev  
 sudo apt-get install gcc  
 ```
-Then ```cd``` to the source file you downloaded and run:  
-```CC=gcc ./configure --prefix=/usr --with-python=python3 && make && sudo make -C gdb install```  
-Note: If gdb says something about missing python files, move the contents of gdb/data-directory to /usr/share/gdb:  
-```sudo cp -R gdb/data-directory/* /usr/share/gdb/```  
-The solution above also fixes the *"Undefined command"* error in Ubuntu 14.04
-#####Relocating PINCE files  
-Create the file ```.gdbinit``` in your home directory and add the line ```set auto-load safe-path /``` to it  
+Then ```cd``` to the libPINCE folder and make a folder for gdb:  
+```
+cd libPINCE
+mkdir -p gdb_pince
+cd gdb_pince
+```  
+Download and extract the gdb source code:
+```  
+wget "http://ftp.gnu.org/gnu/gdb/gdb-7.11.1.tar.gz"
+tar -zxvf gdb-7.11.1.tar.gz
+cd gdb-7.11.1
+```  
+Then compile&install locally:
+```  
+CC=gcc ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
+```  
+Finally, create .gdbinit file in home directory and add the line ```set auto-load safe-path /```  into it:
+```  
+cd
+touch .gdbinit
+echo "\n"$auto_load_command >> .gdbinit
+```  
+Note: If you get errors such as "Undefined command" while trying to attach a process, move the contents of gdb/data-directory to share/gdb:  
+```
+cd libPINCE/gdb_pince/gdb-7.11.1/
+sudo cp -R gdb/data-directory/* share/gdb/
+```  
 #Running PINCE  
 Just run ```sh PINCE.sh``` in the PINCE directory
 
