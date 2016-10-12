@@ -233,7 +233,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def set_default_settings(self):
         self.settings.beginGroup("General")
-        self.settings.setValue("auto_update_address_table", True)
+        self.settings.setValue("auto_update_address_table", False)
         self.settings.setValue("address_table_update_interval", 0.5)
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
