@@ -41,7 +41,7 @@ Pre-release screenshots:
 #Installing Automatically
 Just run ```sudo sh install.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. See below if the automatic installation fails.
 #Installing Manually  
-To run PINCE, run this command chain then compile gdb:  
+To install PINCE, run this command chain then compile gdb:  
   
 ```
 sudo apt-get install python3-setuptools  
