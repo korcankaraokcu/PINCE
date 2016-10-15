@@ -40,6 +40,11 @@ class INJECTION_METHOD:
     ADVANCED_INJECTION = 2
 
 
+class BREAKPOINT_TYPE:
+    HARDWARE_BP = 1
+    SOFTWARE_BP = 2
+
+
 # represents the indexes of value types
 # Also used in PINCE's value comboboxes
 class VALUE_INDEX:

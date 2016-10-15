@@ -768,9 +768,10 @@ class LoadingWindowThread(QThread):
 
 class DialogWithButtonsForm(QDialog, DialogWithButtons):
     def __init__(self, parent=None, label_text="", hide_line_edit=True, line_edit_text="", parse_string=False,
-                 value_index=INDEX_4BYTES):
+                 value_index=INDEX_4BYTES, align=Qt.AlignCenter):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.label.setAlignment(align)
         self.parse_string = parse_string
         self.value_index = value_index
         label_text = str(label_text)
@@ -1344,6 +1345,25 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def on_process_running(self):
         self.setWindowTitle("Memory Viewer - Running")
 
+    def add_breakpoint_condition(self, int_address):
+        condition_text = "Enter the expression for condition, for instance:\n\n" + \
+                         "$eax==0x523\n" + \
+                         "$rax>0 && ($rbp<0 || $rsp==0)\n" + \
+                         "printf($r10)==3"
+        break_info = GDB_Engine.get_breakpoint_info()
+        condition_line_edit_text = ""
+        for item in break_info:
+            if int(item.address, 16) == int_address:
+                condition_line_edit_text = item.condition
+                break
+        condition_dialog = DialogWithButtonsForm(label_text=condition_text, hide_line_edit=False,
+                                                 line_edit_text=condition_line_edit_text, align=Qt.AlignLeft)
+        if condition_dialog.exec_():
+            condition = condition_dialog.get_values()
+            if not GDB_Engine.add_breakpoint_condition(hex(int_address), condition):
+                QMessageBox.information(self, "Error", "Failed to set condition for address " + hex(int_address) +
+                                        "\nCheck terminal for details")
+
     def update_registers(self):
         registers = GDB_Engine.read_registers()
         if GDB_Engine.inferior_arch == ARCH_64:
@@ -1524,6 +1544,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 text_append = current_text
             bookmark_action_list.append(go_to_bookmark.addAction(text_append))
         menu.addSeparator()
+        toggle_breakpoint = menu.addAction("Toggle Breakpoint[F5]")
+        if GDB_Engine.check_address_in_breakpoints(current_address_int):
+            add_condition = menu.addAction("Add/Change condition for breakpoint")
+        else:
+            add_condition = -1
+        menu.addSeparator()
         refresh = menu.addAction("Refresh")
         menu.addSeparator()
         clipboard_menu = menu.addMenu("Copy to Clipboard")
@@ -1553,6 +1579,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.delete_bookmark(current_address_int)
         elif action == change_comment:
             self.change_bookmark_comment(current_address_int)
+        elif action == toggle_breakpoint:
+            self.toggle_breakpoint()
+        elif action == add_condition:
+            self.add_breakpoint_condition(current_address_int)
         elif action == refresh:
             self.refresh_disassemble_view()
         elif action == copy_address:
