@@ -41,18 +41,24 @@ INFERIOR_STOPPED = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
 SIMPLE_DLOPEN_CALL = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
 ADVANCED_INJECTION = type_defs.INJECTION_METHOD.ADVANCED_INJECTION
 
+HARDWARE_BP = type_defs.BREAKPOINT_TYPE.HARDWARE_BP
+SOFTWARE_BP = type_defs.BREAKPOINT_TYPE.SOFTWARE_BP
+
 ARCH_32 = type_defs.INFERIOR_ARCH.ARCH_32
 ARCH_64 = type_defs.INFERIOR_ARCH.ARCH_64
 
 libc = ctypes.CDLL('libc.so.6')
-inferior_arch = int
 
+inferior_arch = int
+inferior_status = -1
 currentpid = 0
+breakpoint_condition_dict = {}  # Format: {address1:condition1,address2:condition2, ...}
 child = object  # this object will be used with pexpect operations
+
 lock_send_command = Lock()
 gdb_async_condition = Condition()
 status_changed_condition = Condition()
-inferior_status = -1
+
 gdb_output = ""
 gdb_async_output = ""
 
@@ -860,12 +866,12 @@ def get_breakpoint_info():
     """Returns current breakpoint/watchpoint list
 
     Returns:
-        list: A list of collections.namedtuple("get_breakpoint_info", "number breakpoint_type address") where number is
-        the gdb breakpoint number, breakpoint_type is the breakpoint type and the address is the address of breakpoint,
-        all represented as strings.
+        list: A list of collections.namedtuple("breakpoint_info", "number breakpoint_type address") where number is
+        the gdb breakpoint number, breakpoint_type is the breakpoint type, address is the address of breakpoint and the
+        condition is the condition of breakpoint, all represented as strings.
     """
     returned_list = []
-    returned_tuple = collections.namedtuple("get_breakpoint_info", "number breakpoint_type address")
+    returned_tuple = collections.namedtuple("breakpoint_info", "number breakpoint_type address condition")
     raw_info = send_command("info break")
 
     # 7       acc watchpoint  keep y                      *0x00400f00
@@ -875,7 +881,11 @@ def get_breakpoint_info():
         number = search(r"\d+", item[0]).group(0)
         breakpoint_type = search(r"(hw|read|acc)*\s*(watchpoint|breakpoint)", item[0]).group(0)
         address = search(r"0x[0-9a-fA-F]+", item[0]).group(0)
-        returned_list.append(returned_tuple(number, breakpoint_type, address))
+        try:
+            condition = breakpoint_condition_dict[int(address, 16)]
+        except KeyError:
+            condition = ""
+        returned_list.append(returned_tuple(number, breakpoint_type, address, condition))
     return returned_list
 
 
@@ -915,11 +925,13 @@ def hardware_breakpoint_available():
     return hw_bp_total < 4
 
 
-def add_breakpoint(expression):
-    """Adds a breakpoint at the address evaluated by the given expression. Uses a hardware breakpoint if available
+def add_breakpoint(expression, breakpoint_type=HARDWARE_BP):
+    """Adds a breakpoint at the address evaluated by the given expression. Uses a software breakpoint if all hardware
+    breakpoint slots are being used
 
     Args:
         expression (str): Any gdb expression
+        breakpoint_type (int): Can be a member of type_defs.BREAKPOINT_TYPE
 
     Returns:
         bool: True if the breakpoint has been set successfully, False otherwise
@@ -931,12 +943,52 @@ def add_breakpoint(expression):
     if check_address_in_breakpoints(str_address):
         print("breakpoint for address " + str_address + " is already set")
         return False
-    if hardware_breakpoint_available():
-        send_command("hbreak *" + str_address)
-    else:
-        print("All hardware breakpoint slots are being used, using a software breakpoint instead")
+    if breakpoint_type == HARDWARE_BP:
+        if hardware_breakpoint_available():
+            send_command("hbreak *" + str_address)
+        else:
+            print("All hardware breakpoint slots are being used, using a software breakpoint instead")
+            send_command("break *" + str_address)
+    elif breakpoint_type == SOFTWARE_BP:
         send_command("break *" + str_address)
     return True
+
+
+def add_breakpoint_condition(expression, condition):
+    """Adds a condition to the breakpoint at the address evaluated by the given expression
+
+    Args:
+        expression (str): Any gdb expression
+        condition (str): Any gdb condition expression
+
+    Returns:
+        bool: True if the condition has been set successfully, False otherwise
+
+    Examples:
+        condition-->$eax==0x523
+        condition-->$rax>0 && ($rbp<0 || $rsp==0)
+        condition-->printf($r10)==3
+    """
+    str_address = convert_symbol_to_address(expression)
+    str_address_int = int(str_address, 16)
+    breakpoint_number = -1
+    if str_address == None:
+        print("expression for breakpoint is not valid")
+        return False
+    break_info = get_breakpoint_info()
+    for item in break_info:
+        if int(item.address, 16) == str_address_int:
+            breakpoint_number = item.number
+            break
+    if breakpoint_number == -1:
+        print("no such breakpoint exists for address " + str_address)
+        return False
+    output = send_command("condition " + breakpoint_number + " " + condition)
+    if search(r"breakpoint-modified", output):
+        global breakpoint_condition_dict
+        breakpoint_condition_dict[str_address_int] = condition
+        return True
+    return False
 
 
 def delete_breakpoint(expression):
@@ -950,13 +1002,22 @@ def delete_breakpoint(expression):
     """
     breakpoint_number = -1
     str_address = convert_symbol_to_address(expression)
+    str_address_int = int(str_address, 16)
     if str_address == None:
         print("expression for breakpoint is not valid")
         return False
     breakpoint_info = get_breakpoint_info()
     for item in breakpoint_info:
-        if int(item.address, 16) == int(str_address, 16):
+        if int(item.address, 16) == str_address_int:
             breakpoint_number = item.number
             break
+    if breakpoint_number == -1:
+        print("no such breakpoint exists for address " + str_address)
+        return False
+    global breakpoint_condition_dict
+    try:
+        del breakpoint_condition_dict[str_address_int]
+    except KeyError:
+        pass
     send_command("delete " + str(breakpoint_number))
     return True
