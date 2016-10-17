@@ -27,18 +27,6 @@ sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import 
 from libPINCE import SysUtils
 from libPINCE import type_defs
 
-INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
-INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
-INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
-INDEX_8BYTES = type_defs.VALUE_INDEX.INDEX_8BYTES
-INDEX_FLOAT = type_defs.VALUE_INDEX.INDEX_FLOAT
-INDEX_DOUBLE = type_defs.VALUE_INDEX.INDEX_DOUBLE
-INDEX_STRING = type_defs.VALUE_INDEX.INDEX_STRING
-INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
-
-index_to_valuetype_dict = type_defs.index_to_valuetype_dict
-index_to_struct_pack_dict = type_defs.index_to_struct_pack_dict
-
 inferior = gdb.selected_inferior()
 pid = inferior.pid
 mem_file = "/proc/" + str(pid) + "/mem"
@@ -65,8 +53,8 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
     except:
         print(str(address) + " is not a valid address")
         return ""
-    packed_data = index_to_valuetype_dict.get(value_type, -1)
-    if value_type is INDEX_STRING:
+    packed_data = type_defs.index_to_valuetype_dict.get(value_type, -1)
+    if value_type is type_defs.VALUE_INDEX.INDEX_STRING:
         try:
             expected_length = int(length)
         except:
@@ -74,7 +62,7 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
             return ""
         if unicode:
             expected_length = length * 2
-    elif value_type is INDEX_AOB:
+    elif value_type is type_defs.VALUE_INDEX.INDEX_AOB:
         try:
             expected_length = int(length)
         except:
@@ -92,7 +80,7 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
         print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return ""
     FILE.close()
-    if value_type is INDEX_STRING:
+    if value_type is type_defs.VALUE_INDEX.INDEX_STRING:
         if unicode:
             returned_string = data_read.decode("utf-8", "replace")
         else:
@@ -103,7 +91,7 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
             else:
                 returned_string = returned_string.split('\x00')[0]
         return returned_string[0:length]
-    elif value_type is INDEX_AOB:
+    elif value_type is type_defs.VALUE_INDEX.INDEX_AOB:
         return " ".join(format(n, '02x') for n in data_read)
     else:
         return struct.unpack_from(data_type, data_read)[0]
@@ -118,12 +106,12 @@ def set_single_address(address, value_index, value):
     write_data = SysUtils.parse_string(value, value_index)
     if write_data is None:
         return
-    if value_index is INDEX_STRING:
+    if value_index is type_defs.VALUE_INDEX.INDEX_STRING:
         write_data = bytearray(write_data, "utf-8", "replace")
-    elif value_index is INDEX_AOB:
+    elif value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         write_data = bytearray(write_data)
     else:
-        data_type = index_to_struct_pack_dict.get(value_index, -1)
+        data_type = type_defs.index_to_struct_pack_dict.get(value_index, -1)
         write_data = struct.pack(data_type, write_data)
     FILE = open(mem_file, "rb+")
 

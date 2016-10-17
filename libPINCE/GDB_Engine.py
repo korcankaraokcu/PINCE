@@ -26,27 +26,6 @@ import collections
 from . import SysUtils
 from . import type_defs
 
-INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
-INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
-INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
-INDEX_8BYTES = type_defs.VALUE_INDEX.INDEX_8BYTES
-INDEX_FLOAT = type_defs.VALUE_INDEX.INDEX_FLOAT
-INDEX_DOUBLE = type_defs.VALUE_INDEX.INDEX_DOUBLE
-INDEX_STRING = type_defs.VALUE_INDEX.INDEX_STRING
-INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
-
-INFERIOR_RUNNING = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
-INFERIOR_STOPPED = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
-
-SIMPLE_DLOPEN_CALL = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
-ADVANCED_INJECTION = type_defs.INJECTION_METHOD.ADVANCED_INJECTION
-
-HARDWARE_BP = type_defs.BREAKPOINT_TYPE.HARDWARE_BP
-SOFTWARE_BP = type_defs.BREAKPOINT_TYPE.SOFTWARE_BP
-
-ARCH_32 = type_defs.INFERIOR_ARCH.ARCH_32
-ARCH_64 = type_defs.INFERIOR_ARCH.ARCH_64
-
 libc = ctypes.CDLL('libc.so.6')
 
 inferior_arch = int
@@ -106,7 +85,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         if currentpid == 0:
             print("no process has been selected")
             return
-        if inferior_status is INFERIOR_RUNNING and not control:
+        if inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_RUNNING and not control:
             print("inferior is running")
             return
         gdb_output = ""
@@ -183,9 +162,9 @@ def state_observe_thread():
                           child.before)  # stopped-threads="all"  # *running,thread-id="all"
         if len(matches) > 0:
             if search(r"stopped", matches[-1]):
-                inferior_status = INFERIOR_STOPPED
+                inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
             else:
-                inferior_status = INFERIOR_RUNNING
+                inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
             with status_changed_condition:
                 status_changed_condition.notify_all()
         try:
@@ -383,7 +362,7 @@ def read_single_address_by_expression(expression, value_index, length=None, is_u
             return "??"
     if length is "":
         return "??"
-    if value_index is INDEX_AOB:
+    if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         typeofaddress = value_index_to_gdbcommand(value_index)
         try:
             expectedlength = str(int(length))  # length must be a legit number, so had to do this trick
@@ -395,7 +374,7 @@ def read_single_address_by_expression(expression, value_index, length=None, is_u
             returned_string = ''.join(filteredresult)  # combine all the matched results
             return returned_string.replace(r"\t0x", " ")
         return "??"
-    elif value_index is INDEX_STRING:
+    elif value_index is type_defs.VALUE_INDEX.INDEX_STRING:
         typeofaddress = value_index_to_gdbcommand(value_index)
         if not is_unicode:
             try:
@@ -708,8 +687,8 @@ def get_inferior_arch():
         int: A member of type_defs.INFERIOR_ARCH
     """
     if parse_convenience_variables(["$rax"])[0] == "void":
-        return ARCH_32
-    return ARCH_64
+        return type_defs.INFERIOR_ARCH.ARCH_32
+    return type_defs.INFERIOR_ARCH.ARCH_64
 
 
 def read_registers():
@@ -925,7 +904,7 @@ def hardware_breakpoint_available():
     return hw_bp_total < 4
 
 
-def add_breakpoint(expression, breakpoint_type=HARDWARE_BP):
+def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWARE_BP):
     """Adds a breakpoint at the address evaluated by the given expression. Uses a software breakpoint if all hardware
     breakpoint slots are being used
 
@@ -943,13 +922,13 @@ def add_breakpoint(expression, breakpoint_type=HARDWARE_BP):
     if check_address_in_breakpoints(str_address):
         print("breakpoint for address " + str_address + " is already set")
         return False
-    if breakpoint_type == HARDWARE_BP:
+    if breakpoint_type == type_defs.BREAKPOINT_TYPE.HARDWARE_BP:
         if hardware_breakpoint_available():
             send_command("hbreak *" + str_address)
         else:
             print("All hardware breakpoint slots are being used, using a software breakpoint instead")
             send_command("break *" + str_address)
-    elif breakpoint_type == SOFTWARE_BP:
+    elif breakpoint_type == type_defs.BREAKPOINT_TYPE.SOFTWARE_BP:
         send_command("break *" + str_address)
     return True
 

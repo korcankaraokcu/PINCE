@@ -23,19 +23,6 @@ import collections
 from . import type_defs
 from re import match, search, IGNORECASE, split
 
-PINCE_IPC_PATH = type_defs.PATHS.PINCE_IPC_PATH
-IPC_FROM_PINCE_PATH = type_defs.PATHS.IPC_FROM_PINCE_PATH
-IPC_TO_PINCE_PATH = type_defs.PATHS.IPC_TO_PINCE_PATH
-
-INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
-INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
-INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
-INDEX_8BYTES = type_defs.VALUE_INDEX.INDEX_8BYTES
-INDEX_FLOAT = type_defs.VALUE_INDEX.INDEX_FLOAT
-INDEX_DOUBLE = type_defs.VALUE_INDEX.INDEX_DOUBLE
-INDEX_STRING = type_defs.VALUE_INDEX.INDEX_STRING
-INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
-
 
 def get_process_list():
     """Returns a list of psutil.Process objects corresponding to currently running processes
@@ -291,7 +278,7 @@ def get_PINCE_IPC_directory(pid):
     Returns:
         str: Path of IPC directory
     """
-    return PINCE_IPC_PATH + str(pid)
+    return type_defs.PATHS.PINCE_IPC_PATH + str(pid)
 
 
 def get_gdb_async_file(pid):
@@ -327,7 +314,7 @@ def get_ipc_from_PINCE_file(pid):
     Returns:
         str: Path of IPC file
     """
-    return get_PINCE_IPC_directory(pid) + IPC_FROM_PINCE_PATH
+    return get_PINCE_IPC_directory(pid) + type_defs.PATHS.IPC_FROM_PINCE_PATH
 
 
 def get_ipc_to_PINCE_file(pid):
@@ -339,7 +326,7 @@ def get_ipc_to_PINCE_file(pid):
     Returns:
         str: Path of IPC file
     """
-    return get_PINCE_IPC_directory(pid) + IPC_TO_PINCE_PATH
+    return get_PINCE_IPC_directory(pid) + type_defs.PATHS.IPC_TO_PINCE_PATH
 
 
 def parse_string(string, value_index):
@@ -357,7 +344,8 @@ def parse_string(string, value_index):
         None: If the string is not parseable by using the parameter value_index
 
     Examples:
-        string="42 DE AD BE EF 24",value_index=INDEX_AOB-->returned_list=[66, 222, 173, 190, 239, 36]
+        string="42 DE AD BE EF 24",value_index=type_defs.VALUE_INDEX.INDEX_AOB--▼
+        returned_list=[66, 222, 173, 190, 239, 36]
     """
     string = str(string)
     if not string:
@@ -368,10 +356,10 @@ def parse_string(string, value_index):
     except:
         print(str(value_index) + " can't be converted to int")
         return
-    if value_index is INDEX_STRING:
+    if value_index is type_defs.VALUE_INDEX.INDEX_STRING:
         return string
     string = string.strip()
-    if value_index is INDEX_AOB:
+    if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         try:
             string = str(string)
             stripped_string = string.strip()
@@ -385,7 +373,7 @@ def parse_string(string, value_index):
         except:
             print(string + " can't be parsed as array of bytes")
             return
-    elif value_index is INDEX_FLOAT or value_index is INDEX_DOUBLE:
+    elif value_index is type_defs.VALUE_INDEX.INDEX_FLOAT or value_index is type_defs.VALUE_INDEX.INDEX_DOUBLE:
         try:
             string = float(string)
         except:
@@ -407,13 +395,13 @@ def parse_string(string, value_index):
                 except:
                     print(string + " can't be parsed as integer or hexadecimal")
                     return
-        if value_index is INDEX_BYTE:
+        if value_index is type_defs.VALUE_INDEX.INDEX_BYTE:
             string = string % 256
-        elif value_index is INDEX_2BYTES:
+        elif value_index is type_defs.VALUE_INDEX.INDEX_2BYTES:
             string = string % 65536
-        elif value_index is INDEX_4BYTES:
+        elif value_index is type_defs.VALUE_INDEX.INDEX_4BYTES:
             string = string % 4294967296
-        elif value_index is INDEX_8BYTES:
+        elif value_index is type_defs.VALUE_INDEX.INDEX_8BYTES:
             string = string % 18446744073709551616
         return string
 
