@@ -95,24 +95,6 @@ STACK_FLOAT_REPRESENTATION_COL = 3
 HEX_VIEW_COL_COUNT = 16
 HEX_VIEW_ROW_COUNT = 42  # J-JUST A COINCIDENCE, I SWEAR!
 
-INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
-INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
-INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
-INDEX_8BYTES = type_defs.VALUE_INDEX.INDEX_8BYTES
-INDEX_FLOAT = type_defs.VALUE_INDEX.INDEX_FLOAT
-INDEX_DOUBLE = type_defs.VALUE_INDEX.INDEX_DOUBLE
-INDEX_STRING = type_defs.VALUE_INDEX.INDEX_STRING
-INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
-
-INFERIOR_RUNNING = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
-INFERIOR_STOPPED = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
-
-SIMPLE_DLOPEN_CALL = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
-ADVANCED_INJECTION = type_defs.INJECTION_METHOD.ADVANCED_INJECTION
-
-ARCH_32 = type_defs.INFERIOR_ARCH.ARCH_32
-ARCH_64 = type_defs.INFERIOR_ARCH.ARCH_64
-
 # From version 5.5 and onwards, PyQT calls qFatal() when an exception has been encountered
 # So, we must override sys.excepthook to avoid calling of qFatal()
 sys.excepthook = traceback.print_exception
@@ -147,7 +129,7 @@ class CheckInferiorStatus(QThread):
         while True:
             with GDB_Engine.status_changed_condition:
                 GDB_Engine.status_changed_condition.wait()
-            if GDB_Engine.inferior_status is INFERIOR_STOPPED:
+            if GDB_Engine.inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
                 self.process_stopped.emit()
             else:
                 self.process_running.emit()
@@ -160,7 +142,7 @@ class UpdateAddressTableThread(QThread):
         while True:
             while not update_table:
                 sleep(0.1)
-            if GDB_Engine.inferior_status is INFERIOR_STOPPED:
+            if GDB_Engine.inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
                 self.update_table_signal.emit()
             sleep(table_update_interval)
 
@@ -241,7 +223,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("continue", "F3")
         self.settings.endGroup()
         self.settings.beginGroup("CodeInjection")
-        self.settings.setValue("code_injection_method", SIMPLE_DLOPEN_CALL)
+        self.settings.setValue("code_injection_method", type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL)
         self.settings.endGroup()
         self.settings.beginGroup("Disassemble")
         self.settings.setValue("bring_disassemble_to_front", False)
@@ -595,7 +577,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
 
 # Add Address Manually Dialog
 class ManualAddressDialogForm(QDialog, ManualAddressDialog):
-    def __init__(self, parent=None, description="No Description", address="0x", index=INDEX_4BYTES, length=10,
+    def __init__(self, parent=None, description="No Description", address="0x",
+                 index=type_defs.VALUE_INDEX.INDEX_4BYTES, length=10,
                  unicode=False,
                  zero_terminate=True):
         super().__init__(parent=parent)
@@ -603,7 +586,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.lineEdit_description.setText(description)
         self.lineEdit_address.setText(address)
         self.comboBox_ValueType.setCurrentIndex(index)
-        if self.comboBox_ValueType.currentIndex() is INDEX_STRING:
+        if self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_STRING:
             self.label_length.show()
             self.lineEdit_length.show()
             try:
@@ -615,7 +598,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.checkBox_Unicode.setChecked(unicode)
             self.checkBox_zeroterminate.show()
             self.checkBox_zeroterminate.setChecked(zero_terminate)
-        elif self.comboBox_ValueType.currentIndex() is INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_AOB:
             self.label_length.show()
             self.lineEdit_length.show()
             try:
@@ -650,11 +633,11 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def update_value_of_address(self):
         address = self.lineEdit_address.text()
         address_type = self.comboBox_ValueType.currentIndex()
-        if address_type is INDEX_AOB:
+        if address_type is type_defs.VALUE_INDEX.INDEX_AOB:
             length = self.lineEdit_length.text()
             self.label_valueofaddress.setText(
                 GDB_Engine.read_single_address_by_expression(address, address_type, length))
-        elif address_type is INDEX_STRING:
+        elif address_type is type_defs.VALUE_INDEX.INDEX_STRING:
             length = self.lineEdit_length.text()
             is_unicode = self.checkBox_Unicode.isChecked()
             is_zeroterminate = self.checkBox_zeroterminate.isChecked()
@@ -666,12 +649,12 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                 GDB_Engine.read_single_address_by_expression(address, address_type))
 
     def valuetype_on_current_index_change(self):
-        if self.comboBox_ValueType.currentIndex() is INDEX_STRING:
+        if self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_STRING:
             self.label_length.show()
             self.lineEdit_length.show()
             self.checkBox_Unicode.show()
             self.checkBox_zeroterminate.show()
-        elif self.comboBox_ValueType.currentIndex() is INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_AOB:
             self.label_length.show()
             self.lineEdit_length.show()
             self.checkBox_Unicode.hide()
@@ -768,7 +751,7 @@ class LoadingWindowThread(QThread):
 
 class DialogWithButtonsForm(QDialog, DialogWithButtons):
     def __init__(self, parent=None, label_text="", hide_line_edit=True, line_edit_text="", parse_string=False,
-                 value_index=INDEX_4BYTES, align=Qt.AlignCenter):
+                 value_index=type_defs.VALUE_INDEX.INDEX_4BYTES, align=Qt.AlignCenter):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.label.setAlignment(align)
@@ -846,9 +829,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("Hotkeys/pause", self.pause_hotkey)
         self.settings.setValue("Hotkeys/continue", self.continue_hotkey)
         if self.radioButton_SimpleDLopenCall.isChecked():
-            injection_method = SIMPLE_DLOPEN_CALL
+            injection_method = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
         elif self.radioButton_AdvancedInjection.isChecked():
-            injection_method = ADVANCED_INJECTION
+            injection_method = type_defs.INJECTION_METHOD.ADVANCED_INJECTION
         self.settings.setValue("CodeInjection/code_injection_method", injection_method)
         self.settings.setValue("Disassemble/bring_disassemble_to_front",
                                self.checkBox_BringDisassembleToFront.isChecked())
@@ -864,9 +847,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.pause_hotkey = self.settings.value("Hotkeys/pause")
         self.continue_hotkey = self.settings.value("Hotkeys/continue")
         injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
-        if injection_method == SIMPLE_DLOPEN_CALL:
+        if injection_method == type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL:
             self.radioButton_SimpleDLopenCall.setChecked(True)
-        elif injection_method == ADVANCED_INJECTION:
+        elif injection_method == type_defs.INJECTION_METHOD.ADVANCED_INJECTION:
             self.radioButton_AdvancedInjection.setChecked(True)
         self.checkBox_BringDisassembleToFront.setChecked(
             self.settings.value("Disassemble/bring_disassemble_to_front", type=bool))
@@ -952,11 +935,11 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
                 else:
                     console_output = GDB_Engine.send_command(console_input)
                 if not console_output:
-                    if GDB_Engine.inferior_status == INFERIOR_RUNNING:
+                    if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
                         console_output = "Inferior is running"
             else:
                 GDB_Engine.interrupt_inferior()
-                if GDB_Engine.inferior_status == INFERIOR_STOPPED:
+                if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
                     console_output = "Inferior is already stopped"
                 else:
                     console_output = ""
@@ -1153,7 +1136,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.hex_dump_address(int(dest_address, 16))
         elif action == add_address:
             selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
-            manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address), index=INDEX_AOB)
+            manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address),
+                                                            index=type_defs.VALUE_INDEX.INDEX_AOB)
             if manual_address_dialog.exec_():
                 description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
                 self.address_added.emit(description, address, typeofaddress, length, unicode, zero_terminate)
@@ -1167,7 +1151,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         GuiUtils.center_scroll_bar(self.verticalScrollBar_Disassemble)
 
     def check_hex_view_scrollbar(self):
-        if GDB_Engine.inferior_status != INFERIOR_STOPPED:
+        if GDB_Engine.inferior_status != type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
             return
         maximum = self.verticalScrollBar_HexView.maximum()
         minimum = self.verticalScrollBar_HexView.minimum()
@@ -1183,7 +1167,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_dump_address(next_address)
 
     def check_disassemble_scrollbar(self):
-        if GDB_Engine.inferior_status != INFERIOR_STOPPED:
+        if GDB_Engine.inferior_status != type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
             return
         maximum = self.verticalScrollBar_Disassemble.maximum()
         minimum = self.verticalScrollBar_Disassemble.minimum()
@@ -1366,7 +1350,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def update_registers(self):
         registers = GDB_Engine.read_registers()
-        if GDB_Engine.inferior_arch == ARCH_64:
+        if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             self.stackedWidget.setCurrentWidget(self.registers_64)
             self.RAX.set_value(registers["rax"])
             self.RBX.set_value(registers["rbx"])
@@ -1385,7 +1369,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.R13.set_value(registers["r13"])
             self.R14.set_value(registers["r14"])
             self.R15.set_value(registers["r15"])
-        elif GDB_Engine.inferior_arch == ARCH_32:
+        elif GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_32:
             self.stackedWidget.setCurrentWidget(self.registers_32)
             self.EAX.set_value(registers["eax"])
             self.EBX.set_value(registers["ebx"])

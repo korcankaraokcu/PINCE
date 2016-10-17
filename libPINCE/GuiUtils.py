@@ -19,18 +19,6 @@ from PyQt5.QtWidgets import QDesktopWidget
 from re import search, sub
 from . import type_defs
 
-INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
-INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
-INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
-INDEX_8BYTES = type_defs.VALUE_INDEX.INDEX_8BYTES
-INDEX_FLOAT = type_defs.VALUE_INDEX.INDEX_FLOAT
-INDEX_DOUBLE = type_defs.VALUE_INDEX.INDEX_DOUBLE
-INDEX_STRING = type_defs.VALUE_INDEX.INDEX_STRING
-INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
-
-index_to_text_dict = type_defs.index_to_text_dict
-text_to_index_dict = type_defs.text_to_index_dict
-
 
 def center(window):
     """Center the given window to desktop
@@ -87,17 +75,18 @@ def valuetype_to_text(value_index=int, length=0, is_unicode=False, zero_terminat
         str "out of bounds" is returned if the value_index doesn't match the dictionary
 
     Examples:
-        value_index=INDEX_STRING, length=15, is_unicode=True, zero_terminate=False-->returned str="String[15],U,NZT"
-        value_index=INDEX_AOB, length=42-->returned str="AoB[42]"
+        value_index=type_defs.VALUE_INDEX.INDEX_STRING, length=15, is_unicode=True, zero_terminate=False--▼
+        returned str="String[15],U,NZT"
+        value_index=type_defs.VALUE_INDEX.INDEX_AOB, length=42-->returned str="AoB[42]"
     """
-    returned_string = index_to_text_dict.get(value_index, "out of bounds")
-    if value_index is INDEX_STRING:
+    returned_string = type_defs.index_to_text_dict.get(value_index, "out of bounds")
+    if value_index is type_defs.VALUE_INDEX.INDEX_STRING:
         returned_string = returned_string + "[" + str(length) + "]"
         if is_unicode:
             returned_string = returned_string + ",U"
         if not zero_terminate:
             returned_string = returned_string + ",NZT"
-    elif value_index is INDEX_AOB:
+    elif value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         returned_string = returned_string + "[" + str(length) + "]"
     return returned_string
 
@@ -113,14 +102,15 @@ def text_to_valuetype(string):
         value_index, length, unicode, zero_terminate
 
     Examples:
-        string="String[15],U,NZT"-->value_index=INDEX_STRING, length=15, is_unicode=True, zero_terminate=False
-        string="AoB[42]"-->value_index=INDEX_AOB, length=42, None, None
+        string="String[15],U,NZT"--▼
+        value_index=type_defs.VALUE_INDEX.INDEX_STRING, length=15, is_unicode=True, zero_terminate=False
+        string="AoB[42]"-->value_index=type_defs.VALUE_INDEX.INDEX_AOB, length=42, None, None
     """
     length = unicode = zero_terminate = None
-    index = text_to_index_dict.get(string, -1)
+    index = type_defs.text_to_index_dict.get(string, -1)
     if index is -1:
         if search(r"String\[\d*\]", string):  # String[10],U,NZT
-            index = INDEX_STRING
+            index = type_defs.VALUE_INDEX.INDEX_STRING
             length = sub("[^0-9]", "", string)
             length = int(length)
             if search(r",U", string):  # check if Unicode, literal string
@@ -132,7 +122,7 @@ def text_to_valuetype(string):
             else:
                 zero_terminate = True
         elif search(r"AoB\[\d*\]", string):  # AoB[10]
-            index = INDEX_AOB
+            index = type_defs.VALUE_INDEX.INDEX_AOB
             length = sub("[^0-9]", "", string)
             length = int(length)
     return index, length, unicode, zero_terminate
@@ -149,12 +139,12 @@ def text_to_index(string):
     Returns:
         int: A member of type_defs.VALUE_INDEX
     """
-    index = text_to_index_dict.get(string, -1)
+    index = type_defs.text_to_index_dict.get(string, -1)
     if index is -1:
         if search(r"String", string):  # String[10],U,NZT
-            index = INDEX_STRING
+            index = type_defs.VALUE_INDEX.INDEX_STRING
         elif search(r"AoB", string):  # AoB[10]
-            index = INDEX_AOB
+            index = type_defs.VALUE_INDEX.INDEX_AOB
     return index
 
 
@@ -170,7 +160,7 @@ def text_to_length(string):
         int: Length
         -1 is returned if the value_index of the given string isn't INDEX_STRING or INDEX_AOB
     """
-    index = text_to_index_dict.get(string, -1)
+    index = type_defs.text_to_index_dict.get(string, -1)
     if index is -1:
         search(r"\[\d*\]", string)
         length = sub("[^0-9]", "", string)
@@ -189,7 +179,7 @@ def change_text_length(string, length):
         str: The changed str
         int: -1 is returned if the value_index of the given string isn't INDEX_STRING or INDEX_AOB
     """
-    index = text_to_index_dict.get(string, -1)
+    index = type_defs.text_to_index_dict.get(string, -1)
     if index is -1:
         return sub(r"\[\d*\]", "[" + str(length) + "]", string)
     return -1

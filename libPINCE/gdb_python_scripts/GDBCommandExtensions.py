@@ -36,26 +36,14 @@ REGISTERS_64 = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip", "
                 "r13", "r14", "r15"]
 REGISTERS_SEGMENT = ["cs", "ss", "ds", "es", "fs", "gs"]
 
-INDEX_BYTE = type_defs.VALUE_INDEX.INDEX_BYTE
-INDEX_2BYTES = type_defs.VALUE_INDEX.INDEX_2BYTES
-INDEX_4BYTES = type_defs.VALUE_INDEX.INDEX_4BYTES
-INDEX_8BYTES = type_defs.VALUE_INDEX.INDEX_8BYTES
-INDEX_FLOAT = type_defs.VALUE_INDEX.INDEX_FLOAT
-INDEX_DOUBLE = type_defs.VALUE_INDEX.INDEX_DOUBLE
-INDEX_STRING = type_defs.VALUE_INDEX.INDEX_STRING
-INDEX_AOB = type_defs.VALUE_INDEX.INDEX_AOB
-
-ARCH_32 = type_defs.INFERIOR_ARCH.ARCH_32
-ARCH_64 = type_defs.INFERIOR_ARCH.ARCH_64
-
 inferior = gdb.selected_inferior()
 pid = inferior.pid
 recv_file = SysUtils.get_ipc_from_PINCE_file(pid)
 send_file = SysUtils.get_ipc_to_PINCE_file(pid)
 if str(gdb.parse_and_eval("$rax")) == "void":
-    current_arch = ARCH_32
+    current_arch = type_defs.INFERIOR_ARCH.ARCH_32
 else:
-    current_arch = ARCH_64
+    current_arch = type_defs.INFERIOR_ARCH.ARCH_64
 
 
 def receive_from_pince():
@@ -186,7 +174,7 @@ class ReadRegisters(gdb.Command):
     def invoke(self, arg, from_tty):
         contents_send = {"cf": "0", "pf": "0", "af": "0", "zf": "0", "sf": "0", "tf": "0", "if": "0", "df": "0",
                          "of": "0"}
-        if current_arch == ARCH_64:
+        if current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             general_register_list = REGISTERS_64
         else:
             general_register_list = REGISTERS_32
@@ -244,7 +232,7 @@ class GetStackTraceInfo(gdb.Command):
 
     def invoke(self, arg, from_tty):
         contents_send = []
-        if current_arch == ARCH_64:
+        if current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             sp_register = "rsp"
             result = gdb.execute("p/x $rsp", from_tty, to_string=True)
         else:
@@ -285,7 +273,7 @@ class GetStackInfo(gdb.Command):
 
     def invoke(self, arg, from_tty):
         contents_send = []
-        if current_arch == ARCH_64:
+        if current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             chunk_size = 8
             float_format = "d"
             stack_register = "rsp"
