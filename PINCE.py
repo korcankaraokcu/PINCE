@@ -23,7 +23,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer
 from time import sleep, time
-from threading import Thread
 import os
 import pexpect
 import sys
@@ -1042,6 +1041,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_StackTrace.itemDoubleClicked.connect(self.tableWidget_StackTrace_double_click)
 
     def initialize_disassemble_view(self):
+        self.disassemble_last_selected_address_int = 0
         self.disassemble_currently_displayed_address = "0x00400000"
         self.widget_Disassemble.wheelEvent = self.widget_Disassemble_wheel_event
 
@@ -1066,6 +1066,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
 
         self.tableWidget_Disassemble.itemDoubleClicked.connect(self.on_disassemble_double_click)
+        self.tableWidget_Disassemble.itemSelectionChanged.connect(self.on_disassemble_item_selection_changed)
 
     def initialize_hex_view(self):
         self.hex_view_currently_displayed_address = 0x00400000
@@ -1266,6 +1267,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     rows_of_encountered_breakpoints_list.append(row)
                     item[0] = "(B)" + item[0]
                     break
+            if current_address == self.disassemble_last_selected_address_int:
+                self.tableWidget_Disassemble.selectRow(row)
             self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, QTableWidgetItem(item[0]))
             self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, QTableWidgetItem(item[1]))
             self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, QTableWidgetItem(item[2]))
@@ -1438,7 +1441,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def tableWidget_StackTrace_double_click(self, index):
         if index.column() == STACKTRACE_RETURN_ADDRESS_COL:
             selected_row = self.tableWidget_StackTrace.selectionModel().selectedRows()[-1].row()
-            current_address_text = self.tableWidget_StackTrace.item(selected_row, DISAS_ADDR_COL).text()
+            current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_RETURN_ADDRESS_COL).text()
             current_address = SysUtils.extract_address(current_address_text)
             self.disassemble_expression(current_address, append_to_travel_history=True)
 
@@ -1480,6 +1483,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.change_bookmark_comment(current_address)
             else:
                 self.bookmark_address(current_address)
+
+    def on_disassemble_item_selection_changed(self):
+        try:
+            selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+            selected_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+            selected_address_int = int(SysUtils.extract_address(selected_address_text), 16)
+            self.disassemble_last_selected_address_int = selected_address_int
+        except:
+            pass
 
     # Search the item in given row for location changing instructions
     # Go to the address pointed by that instruction if it contains any
