@@ -1089,8 +1089,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.scrollArea_Hex.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.scrollArea_Hex.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.tableWidget_HexView_Address.setVerticalScrollBarPolicy((Qt.ScrollBarAlwaysOff))
-        self.tableWidget_HexView_Address.setHorizontalScrollBarPolicy((Qt.ScrollBarAlwaysOff))
+        self.tableWidget_HexView_Address.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.tableWidget_HexView_Address.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.tableWidget_HexView_Address.verticalHeader().setDefaultSectionSize(
             self.tableView_HexView_Hex.verticalHeader().defaultSectionSize())
 
@@ -1677,7 +1677,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
             current_item = None
             current_address = None
         if current_item is not None:
-            if not current_address in self.parent().tableWidget_Disassemble.bookmarks:
+            if current_address not in self.parent().tableWidget_Disassemble.bookmarks:
                 QMessageBox.information(self, "Error", "Invalid entries detected, refreshing the page")
                 self.refresh_table()
                 return
@@ -1759,7 +1759,7 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
                                                 line_edit_text=current_value)
         if register_dialog.exec_():
             if self.currentWidget() == self.XMM:
-                current_register = current_register + ".v4_float"
+                current_register += ".v4_float"
             GDB_Engine.set_convenience_variable(current_register, register_dialog.get_values())
             self.update_registers()
 
