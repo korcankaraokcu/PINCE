@@ -22,7 +22,6 @@ import pexpect
 import os
 import ctypes
 import pickle
-import collections
 from . import SysUtils
 from . import type_defs
 
@@ -607,7 +606,6 @@ def parse_convenience_variables(variable_list):
     return contents_recv
 
 
-# Returns address and the LWP of the current thread
 def get_current_thread_information():
     """Gather information about the current thread
 
@@ -845,12 +843,11 @@ def get_breakpoint_info():
     """Returns current breakpoint/watchpoint list
 
     Returns:
-        list: A list of collections.namedtuple("breakpoint_info", "number breakpoint_type address") where number is
-        the gdb breakpoint number, breakpoint_type is the breakpoint type, address is the address of breakpoint and the
-        condition is the condition of breakpoint, all represented as strings.
+        list: A list of type_defs.tuple_breakpoint_info where number is the gdb breakpoint number, breakpoint_type is
+        the breakpoint type, address is the address of breakpoint and the condition is the condition of breakpoint, all
+        represented as strings.
     """
     returned_list = []
-    returned_tuple = collections.namedtuple("breakpoint_info", "number breakpoint_type address condition")
     raw_info = send_command("info break")
 
     # 7       acc watchpoint  keep y                      *0x00400f00
@@ -864,7 +861,7 @@ def get_breakpoint_info():
             condition = breakpoint_condition_dict[int(address, 16)]
         except KeyError:
             condition = ""
-        returned_list.append(returned_tuple(number, breakpoint_type, address, condition))
+        returned_list.append(type_defs.tuple_breakpoint_info(number, breakpoint_type, address, condition))
     return returned_list
 
 

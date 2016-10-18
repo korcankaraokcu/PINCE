@@ -16,8 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 # IMPORTANT: Any constant involving only PINCE.py should be declared in PINCE.py
+
+import collections
+
 
 class PATHS:
     PINCE_IPC_PATH = "/tmp/PINCE-connection/"
@@ -114,3 +116,9 @@ index_to_struct_pack_dict = {
     VALUE_INDEX.INDEX_FLOAT: "f",
     VALUE_INDEX.INDEX_DOUBLE: "d"
 }
+
+# number-->str, breakpoint_type-->str, address-->str, condition-->str
+tuple_breakpoint_info = collections.namedtuple("breakpoint_info", "number breakpoint_type address condition")
+
+# start-->str, end-->str, region-->psutil.Process.memory_maps[item]
+tuple_region_info = collections.namedtuple("region_info", "start end region")

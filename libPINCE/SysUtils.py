@@ -19,7 +19,6 @@ import psutil
 import os
 import shutil
 import sys
-import collections
 from . import type_defs
 from re import match, search, IGNORECASE, split
 
@@ -91,8 +90,8 @@ def get_region_info(pid, address):
         address (int,str): Can be an int or a hex str
 
     Returns:
-        collections.namedtuple("get_region_info","start end region"): Starting address as hex str, ending address as hex
-        str and region corresponding to the given address as pmmap_ext object
+        type_defs.tuple_region_info: Starting address as hex str, ending address as hex str and region corresponding to
+        the given address as pmmap_ext object
     """
     if type(pid) != int:
         pid = int(pid)
@@ -104,8 +103,7 @@ def get_region_info(pid, address):
         start = int(splitted_address[0], 16)
         end = int(splitted_address[1], 16)
         if start <= address <= end:
-            returned_tuple = collections.namedtuple("get_region_info", "start end region")
-            return returned_tuple(hex(start), hex(end), item)
+            return type_defs.tuple_region_info(hex(start), hex(end), item)
 
 
 def get_memory_regions_by_perms(pid):
