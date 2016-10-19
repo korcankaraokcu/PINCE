@@ -120,5 +120,5 @@ index_to_struct_pack_dict = {
 # number-->str, breakpoint_type-->str, address-->str, condition-->str
 tuple_breakpoint_info = collections.namedtuple("breakpoint_info", "number breakpoint_type address condition")
 
-# start-->str, end-->str, region-->psutil.Process.memory_maps[item]
+# start-->str, end-->str, region-->psutil.Process.memory_maps()[item]
 tuple_region_info = collections.namedtuple("region_info", "start end region")
