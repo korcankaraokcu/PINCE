@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
-    QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog
+    QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer
 from time import sleep, time
@@ -1079,6 +1079,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.scrollArea_Hex.keyPressEvent = QEvent.ignore
         self.tableWidget_HexView_Address.setAutoScroll(False)
         self.tableWidget_HexView_Address.setStyleSheet("QTableWidget {background-color: transparent;}")
+        self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.NoSelection)
 
         self.hex_model = QHexModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
         self.ascii_model = QAsciiModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
@@ -1114,13 +1115,45 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 QMessageBox.information(self, "Error", "Failed to set breakpoint at address " + current_address)
         self.refresh_disassemble_view()
 
+    def toggle_watchpoint(self, address, watchpoint_type=type_defs.WATCHPOINT_TYPE.BOTH):
+        if GDB_Engine.check_address_in_breakpoints(address):
+            GDB_Engine.delete_breakpoint(hex(address))
+        else:
+            watchpoint_dialog = DialogWithButtonsForm(label_text="Enter the watchpoint length in size of bytes",
+                                                      hide_line_edit=False)
+            if watchpoint_dialog.exec_():
+                user_input = watchpoint_dialog.get_values()
+                user_input_int = SysUtils.parse_string(user_input, type_defs.VALUE_INDEX.INDEX_4BYTES)
+                if user_input_int is None:
+                    QMessageBox.information(self, "Error", user_input + " can't be parsed as an integer")
+                    return
+                if user_input_int < 1:
+                    QMessageBox.information(self, "Error", "Breakpoint length can't be lower than 1")
+                    return
+                if GDB_Engine.add_watchpoint(hex(address), user_input_int, watchpoint_type) < 1:
+                    QMessageBox.information(self, "Error", "Failed to set watchpoint at address " + hex(address))
+        self.refresh_hex_view()
+
     def widget_HexView_context_menu_event(self, event):
+        selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
         menu = QMenu()
         go_to = menu.addAction("Go to expression")
         menu.addSeparator()
         add_address = menu.addAction("Add this address to address list")
         menu.addSeparator()
         refresh = menu.addAction("Refresh")
+        menu.addSeparator()
+        if not GDB_Engine.check_address_in_breakpoints(selected_address):
+            watchpoint_menu = menu.addMenu("Set Watchpoint")
+            write_only_watchpoint = watchpoint_menu.addAction("Write Only")
+            read_only_watchpoint = watchpoint_menu.addAction("Read Only")
+            both_watchpoint = watchpoint_menu.addAction("Both")
+            delete_breakpoint = -1
+        else:
+            delete_breakpoint = menu.addAction("Delete Breakpoint")
+            write_only_watchpoint = -1
+            read_only_watchpoint = -1
+            both_watchpoint = -1
         font_size = self.widget_HexView.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         current_address = hex(self.hex_view_currently_displayed_address)
@@ -1136,7 +1169,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     return
                 self.hex_dump_address(int(dest_address, 16))
         elif action == add_address:
-            selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
             manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address),
                                                             index=type_defs.VALUE_INDEX.INDEX_AOB)
             if manual_address_dialog.exec_():
@@ -1144,6 +1176,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.address_added.emit(description, address, typeofaddress, length, unicode, zero_terminate)
         elif action == refresh:
             self.hex_dump_address(self.hex_view_currently_displayed_address)
+        elif action == write_only_watchpoint:
+            self.toggle_watchpoint(selected_address, type_defs.WATCHPOINT_TYPE.WRITE_ONLY)
+        elif action == read_only_watchpoint:
+            self.toggle_watchpoint(selected_address, type_defs.WATCHPOINT_TYPE.READ_ONLY)
+        elif action == both_watchpoint:
+            self.toggle_watchpoint(selected_address, type_defs.WATCHPOINT_TYPE.BOTH)
+        elif action == delete_breakpoint:
+            self.toggle_watchpoint(selected_address)
 
     def verticalScrollBar_HexView_mouse_release_event(self, event):
         GuiUtils.center_scroll_bar(self.verticalScrollBar_HexView)
@@ -1186,14 +1226,18 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.disassemble_expression(next_address)
 
     def on_hex_view_current_changed(self, QModelIndex_current):
+        self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SingleSelection)
         self.tableView_HexView_Ascii.selectionModel().setCurrentIndex(QModelIndex_current,
                                                                       QItemSelectionModel.ClearAndSelect)
         self.tableWidget_HexView_Address.selectRow(QModelIndex_current.row())
+        self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.NoSelection)
 
     def on_ascii_view_current_changed(self, QModelIndex_current):
+        self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SingleSelection)
         self.tableView_HexView_Hex.selectionModel().setCurrentIndex(QModelIndex_current,
                                                                     QItemSelectionModel.ClearAndSelect)
         self.tableWidget_HexView_Address.selectRow(QModelIndex_current.row())
+        self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.NoSelection)
 
     def hex_dump_address(self, int_address, offset=HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT):
         information = SysUtils.get_region_info(GDB_Engine.currentpid, int_address)
@@ -1210,9 +1254,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.setMaximumWidth(tableWidget_HexView_column_size)
         self.tableWidget_HexView_Address.setMinimumWidth(tableWidget_HexView_column_size)
         self.tableWidget_HexView_Address.setColumnWidth(0, tableWidget_HexView_column_size)
-        hex_list = GDB_Engine.hex_dump(int_address, offset)
-        self.hex_model.refresh(hex_list)
-        self.ascii_model.refresh(hex_list)
+        self.hex_model.refresh(int_address, offset)
+        self.ascii_model.refresh(int_address, offset)
         self.hex_view_currently_displayed_address = int_address
 
     def refresh_hex_view(self):
@@ -1337,12 +1380,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                          "$eax==0x523\n" + \
                          "$rax>0 && ($rbp<0 || $rsp==0)\n" + \
                          "printf($r10)==3"
-        break_info = GDB_Engine.get_breakpoint_info()
-        condition_line_edit_text = ""
-        for item in break_info:
-            if int(item.address, 16) == int_address:
-                condition_line_edit_text = item.condition
-                break
+        breakpoint = GDB_Engine.check_address_in_breakpoints(int_address)
+        if breakpoint:
+            condition_line_edit_text = breakpoint.condition
+        else:
+            condition_line_edit_text = ""
         condition_dialog = DialogWithButtonsForm(label_text=condition_text, hide_line_edit=False,
                                                  line_edit_text=condition_line_edit_text, align=Qt.AlignLeft)
         if condition_dialog.exec_():

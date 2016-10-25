@@ -47,6 +47,12 @@ class BREAKPOINT_TYPE:
     SOFTWARE_BP = 2
 
 
+class WATCHPOINT_TYPE:
+    WRITE_ONLY = 1
+    READ_ONLY = 2
+    BOTH = 3
+
+
 # represents the indexes of value types
 # Also used in PINCE's value comboboxes
 class VALUE_INDEX:
@@ -117,8 +123,8 @@ index_to_struct_pack_dict = {
     VALUE_INDEX.INDEX_DOUBLE: "d"
 }
 
-# number-->str, breakpoint_type-->str, address-->str, condition-->str
-tuple_breakpoint_info = collections.namedtuple("breakpoint_info", "number breakpoint_type address condition")
+# number-->str, breakpoint_type-->str, address-->str, size-->int, condition-->str
+tuple_breakpoint_info = collections.namedtuple("breakpoint_info", "number breakpoint_type address size condition")
 
 # start-->str, end-->str, region-->psutil.Process.memory_maps()[item]
 tuple_region_info = collections.namedtuple("region_info", "start end region")
