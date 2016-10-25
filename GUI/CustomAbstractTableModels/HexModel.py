@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt, QModelIndex
+from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
 from PyQt5.QtGui import QColor
 
 from libPINCE import GDB_Engine
