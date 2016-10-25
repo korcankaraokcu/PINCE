@@ -1148,12 +1148,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             write_only_watchpoint = watchpoint_menu.addAction("Write Only")
             read_only_watchpoint = watchpoint_menu.addAction("Read Only")
             both_watchpoint = watchpoint_menu.addAction("Both")
+            add_condition = -1
             delete_breakpoint = -1
         else:
-            delete_breakpoint = menu.addAction("Delete Breakpoint")
             write_only_watchpoint = -1
             read_only_watchpoint = -1
             both_watchpoint = -1
+            add_condition = menu.addAction("Add/Change condition for breakpoint")
+            delete_breakpoint = menu.addAction("Delete Breakpoint")
         font_size = self.widget_HexView.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         current_address = hex(self.hex_view_currently_displayed_address)
@@ -1182,6 +1184,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.toggle_watchpoint(selected_address, type_defs.WATCHPOINT_TYPE.READ_ONLY)
         elif action == both_watchpoint:
             self.toggle_watchpoint(selected_address, type_defs.WATCHPOINT_TYPE.BOTH)
+        elif action == add_condition:
+            self.add_breakpoint_condition(selected_address)
         elif action == delete_breakpoint:
             self.toggle_watchpoint(selected_address)
 
