@@ -31,6 +31,10 @@ inferior_arch = int
 inferior_status = -1
 currentpid = 0
 breakpoint_condition_dict = {}  # Format: {address1:condition1,address2:condition2, ...}
+
+# If an action such as deletion or condition modification happens in one of the breakpoints in a list, others in the
+# same list will get affected as well
+chained_breakpoints=[]  # Format: [[[address1, size1], [address2, size2], ...], [[address1, size1], ...], ...]
 child = object  # this object will be used with pexpect operations
 
 lock_send_command = Lock()
@@ -844,8 +848,8 @@ def get_breakpoint_info():
 
     Returns:
         list: A list of type_defs.tuple_breakpoint_info where number is the gdb breakpoint number, breakpoint_type is
-        the breakpoint type, address is the address of breakpoint and the condition is the condition of breakpoint, all
-        represented as strings.
+        the breakpoint type, address is the address of breakpoint, size is the size of breakpoint and the condition is
+        the condition of breakpoint, all represented as strings.
     """
     returned_list = []
     raw_info = send_command("info break")
@@ -857,31 +861,43 @@ def get_breakpoint_info():
         number = search(r"\d+", item[0]).group(0)
         breakpoint_type = search(r"(hw|read|acc)*\s*(watchpoint|breakpoint)", item[0]).group(0)
         address = search(r"0x[0-9a-fA-F]+", item[0]).group(0)
+        if search(r"breakpoint",item[0]):
+            size=1
+        else:
+            possible_size=search(r"char\[\d+\]",item[0])
+            if possible_size:
+                size=int(search(r"\d+",possible_size.group(0)).group(0))
+            else:
+                size=4
         try:
             condition = breakpoint_condition_dict[int(address, 16)]
         except KeyError:
             condition = ""
-        returned_list.append(type_defs.tuple_breakpoint_info(number, breakpoint_type, address, condition))
+        returned_list.append(type_defs.tuple_breakpoint_info(number, breakpoint_type, address, size, condition))
     return returned_list
 
 
-def check_address_in_breakpoints(address):
+def check_address_in_breakpoints(address, range_offset=0):
     """Checks if given address exists in breakpoint list
 
     Args:
         address (int,str): Hex address or an int
+        range_offset (int): If this parameter is different than 0, the range between address and address+offset is
+        checked instead of just address itself
 
     Returns:
-        bool: True if address exists, False if not
+        type_defs.tuple_breakpoint_info: Info of the existing breakpoint for given address range
+        None: If it doesn't exist
     """
     if type(address) != int:
         address = int(address, 16)
-    raw_info = send_command("info break")
-    parsed_info = findall(r"0x[0-9a-fA-F]+", raw_info)
-    for item in parsed_info:
-        if int(item, 16) == address:
-            return True
-    return False
+    max_address=max(address,address+range_offset)
+    min_address=min(address,address+range_offset)
+    breakpoint_info=get_breakpoint_info()
+    for item in breakpoint_info:
+        breakpoint_address=int(item.address, 16)
+        if not (max_address<breakpoint_address or min_address>breakpoint_address+item.size-1):
+            return item
 
 
 def hardware_breakpoint_available():
@@ -917,18 +933,79 @@ def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWAR
         print("expression for breakpoint is not valid")
         return False
     if check_address_in_breakpoints(str_address):
-        print("breakpoint for address " + str_address + " is already set")
+        print("breakpoint/watchpoint for address " + str_address + " is already set")
         return False
     if breakpoint_type == type_defs.BREAKPOINT_TYPE.HARDWARE_BP:
         if hardware_breakpoint_available():
-            send_command("hbreak *" + str_address)
+            output=send_command("hbreak *" + str_address)
+            if search(r"breakpoint-created", output):
+                return True
+            return False
         else:
             print("All hardware breakpoint slots are being used, using a software breakpoint instead")
-            send_command("break *" + str_address)
+            output=send_command("break *" + str_address)
+            if search(r"breakpoint-created", output):
+                return True
+            return False
     elif breakpoint_type == type_defs.BREAKPOINT_TYPE.SOFTWARE_BP:
-        send_command("break *" + str_address)
-    return True
+        output=send_command("break *" + str_address)
+        if search(r"breakpoint-created",output):
+            return True
+        return False
 
+def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TYPE.BOTH):
+    """Adds a watchpoint at the address evaluated by the given expression
+
+    Args:
+        expression (str): Any gdb expression
+        length (int): Length of the watchpoint
+        watchpoint_type (int): Can be a member of type_defs.WATCHPOINT_TYPE
+
+    Returns:
+        bool: True if the watchpoint has been set successfully, False otherwise
+    """
+    str_address = convert_symbol_to_address(expression)
+    if str_address == None:
+        print("expression for watchpoint is not valid")
+        return 0
+    if watchpoint_type==type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
+        watch_command="watch"
+    elif watchpoint_type==type_defs.WATCHPOINT_TYPE.READ_ONLY:
+        watch_command = "rwatch"
+    elif watchpoint_type == type_defs.WATCHPOINT_TYPE.BOTH:
+        watch_command = "awatch"
+    remaining_length=length
+    breakpoints_set=0
+    arch=get_inferior_arch()
+    str_address_int=int(str_address,16)
+    breakpoint_addresses=[]
+    if arch == type_defs.INFERIOR_ARCH.ARCH_64:
+        max_length=8
+    else:
+        max_length=4
+    while remaining_length>0:
+        if check_address_in_breakpoints(str_address_int):
+            print("breakpoint/watchpoint for address " + hex(str_address_int) + " is already set. Bailing out...")
+            break
+        if not hardware_breakpoint_available():
+            print("All hardware breakpoint slots are being used, unable to set a new watchpoint. Bailing out...")
+            break
+        if remaining_length>=max_length:
+            breakpoint_length=max_length
+        else:
+            breakpoint_length=remaining_length
+        output = send_command(watch_command+" * (char[" + str(breakpoint_length) + "] *) " + hex(str_address_int))
+        if search(r"breakpoint-created",output):
+            breakpoints_set+=1
+            breakpoint_addresses.append([str_address_int,breakpoint_length])
+        else:
+            print("Failed to create a watchpoint at address "+hex(str_address_int)+". Bailing out...")
+            break
+        remaining_length -= max_length
+        str_address_int += max_length
+    global chained_breakpoints
+    chained_breakpoints.append(breakpoint_addresses)
+    return breakpoints_set
 
 def add_breakpoint_condition(expression, condition):
     """Adds a condition to the breakpoint at the address evaluated by the given expression
@@ -976,24 +1053,30 @@ def delete_breakpoint(expression):
     Returns:
         bool: True if the breakpoint has been deleted successfully, False otherwise
     """
-    breakpoint_number = -1
     str_address = convert_symbol_to_address(expression)
-    str_address_int = int(str_address, 16)
     if str_address == None:
         print("expression for breakpoint is not valid")
         return False
-    breakpoint_info = get_breakpoint_info()
-    for item in breakpoint_info:
-        if int(item.address, 16) == str_address_int:
-            breakpoint_number = item.number
-            break
-    if breakpoint_number == -1:
-        print("no such breakpoint exists for address " + str_address)
-        return False
-    global breakpoint_condition_dict
-    try:
-        del breakpoint_condition_dict[str_address_int]
-    except KeyError:
-        pass
-    send_command("delete " + str(breakpoint_number))
+    str_address_int = int(str_address, 16)
+    deletion_list = [str_address_int]
+    global chained_breakpoints
+    for n,item in enumerate(chained_breakpoints):
+        for breakpoint in item:
+            if breakpoint[0]<=str_address_int<=breakpoint[0]+breakpoint[1]-1:
+                deletion_list=item
+                del chained_breakpoints[n]
+                break
+    for breakpoint in deletion_list:
+        found_breakpoint=check_address_in_breakpoints(breakpoint[0])
+        if not found_breakpoint:
+            print("no such breakpoint exists for address " + str_address)
+            continue
+        else:
+            breakpoint_number=found_breakpoint.number
+        global breakpoint_condition_dict
+        try:
+            del breakpoint_condition_dict[breakpoint[0]]
+        except KeyError:
+            pass
+        send_command("delete " + str(breakpoint_number))
     return True

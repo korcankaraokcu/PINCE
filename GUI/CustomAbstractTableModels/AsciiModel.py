@@ -5,9 +5,8 @@ from libPINCE import SysUtils
 
 
 class QAsciiModel(QHexModel):
-    # data_array is returned from GDB_Engine.hex_dump()
-    def __init__(self, row_count, column_count, data_array=None, parent=None):
-        super().__init__(row_count, column_count, data_array, parent)
+    def __init__(self, row_count, column_count, parent=None):
+        super().__init__(row_count, column_count, parent)
 
     def data(self, QModelIndex, int_role=None):
         if not QModelIndex.isValid():
