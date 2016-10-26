@@ -26,7 +26,7 @@ Pre-release screenshots:
   * **Modify on the fly:** PINCE lets you modify registers on the fly. Unlike CE, you can also change XMM and FPU registers. **[Done]**  
 - **Debugging** **[Working on it]**
   * Has basic debugging features such as stepping, stepping over, execute till return, break, continue. Has also basic breakpoints. Check wiki for instructions
-  * **Chained Breakpoints:** Just like CE, PINCE lets you set multiple, connected breakpoints at once. If an event(such as condition modification or deletion) happens one of the breakpoints, other connected breakpoints will get affected as well **[Done]**
+  * **Chained Breakpoints:** Just like CE, PINCE lets you set multiple, connected breakpoints at once. If an event(such as condition modification or deletion) happens in one of the breakpoints, other connected breakpoints will get affected as well **[Done]**
 - **Code Injection** **[Working on it]**
   * **Run-time injection:** Only .so injection is supported for now. In Memory View window, click Tools->Inject .so file to select the .so file. An example for creating .so file can be found in "libPINCE/Injection/". PINCE will be able to inject single line instructions or code caves in near future **[Partially Done?]**
 - **GDB Console** **[Done]**
