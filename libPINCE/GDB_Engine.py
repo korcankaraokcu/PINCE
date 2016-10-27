@@ -218,8 +218,8 @@ def attach(pid):
     SysUtils.create_PINCE_IPC_PATH(pid)
     libpince_dir = SysUtils.get_libpince_directory()
     pince_dir = os.path.dirname(libpince_dir)
-    child = pexpect.spawn('sudo LC_NUMERIC=C ./gdb_pince/gdb-7.11.1/bin/gdb --interpreter=mi',
-                          cwd=libpince_dir, encoding="utf-8")
+    child = pexpect.spawn('sudo LC_NUMERIC=C ' + type_defs.PATHS.GDB_PATH + ' --interpreter=mi', cwd=libpince_dir,
+                          encoding="utf-8")
     child.setecho(False)
     child.delaybeforesend = 0
     child.timeout = None

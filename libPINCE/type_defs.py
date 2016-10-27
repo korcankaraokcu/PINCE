@@ -25,6 +25,7 @@ class PATHS:
     PINCE_IPC_PATH = "/tmp/PINCE-connection/"
     IPC_FROM_PINCE_PATH = "/from_PINCE_file"
     IPC_TO_PINCE_PATH = "/to_PINCE_file"
+    GDB_PATH = "./gdb_pince/gdb-7.11.1/bin/gdb"
 
 
 class INFERIOR_STATUS:
