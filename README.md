@@ -1,6 +1,8 @@
 #PINCE  
 PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB), focused on games. But it can be used for any reverse-engineering related stuff. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine. PINCE is in development right now, read features part of the project to see what is planned and what is done for now. Also, please read [Wiki Page](https://github.com/korcankaraokcu/PINCE/wiki) of the project to understand how PINCE works.  
   
+*Disclaimer: Github is the only official website for PINCE right now. Do not trust to any source that claims to have the source code or package for PINCE and remember to report them* <em>**immediately**</em>  
+  
 Pre-release screenshots:  
 ![](screenshots/pince.png)
 ![](screenshots/pince1.png)
@@ -25,7 +27,7 @@ Pre-release screenshots:
   * **Bookmarking:** Bookmark menu is dynamically created when right clicked in the disassemble screen. So unlike Cheat Engine, PINCE lets you set unlimited number of bookmarks. List of bookmarks can also be viewed from View->Bookmarks in the MemoryView window. Commenting on an address automatically bookmarks it. **[Done]**
   * **Modify on the fly:** PINCE lets you modify registers on the fly. Unlike CE, you can also change XMM and FPU registers. Check GDB expressions in the Wiki page for additional information **[Done]**  
 - **Debugging** **[Working on it]**
-  * Has basic debugging features such as stepping, stepping over, execute till return, break, continue. Has also breakpoints and watchpoints.
+  * Has basic debugging features such as stepping, stepping over, execute till return, break, continue. Has also breakpoints, watchpoints and breakpoint conditions.
   * **Chained Breakpoints:** Just like CE, PINCE lets you set multiple, connected breakpoints at once. If an event(such as condition modification or deletion) happens in one of the breakpoints, other connected breakpoints will get affected as well **[Done]**
   * **Collision Detection:** GDB normally permits setting unlimited watchpoints next to each other. But this behaviour leads to unexpected outcomes such as causing GDB or the inferior become completely inoperable. GDB also doesn't care about the number(max 4) or the size(x86->max 4, x64->max 8) of hardware breakpoints. Fortunately, PINCE checks for these problems whenever you set a new breakpoint and detects them before they happen and then inhibits them in a smart way. Lets say you want to set a breakpoint in the size of 32 bytes. But the maximum size for a breakpoint is 8! So, PINCE creates 4 different breakpoints with the size of 8 bytes and then chains them for future actions **[Done]**
 - **Code Injection** **[Working on it]**
