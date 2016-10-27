@@ -187,7 +187,7 @@ class MainForm(QMainWindow, MainWindow):
         self.shortcut_continue = QShortcut(QKeySequence(continue_hotkey), self)
         self.shortcut_continue.activated.connect(self.continue_hotkey_pressed)
 
-        # Saving the original function because super() doesn't work when we override functions like that
+        # Saving the original function because super() doesn't work when we override functions like this
         self.tableWidget_addresstable.keyPressEvent_original=self.tableWidget_addresstable.keyPressEvent
         self.tableWidget_addresstable.keyPressEvent = self.tableWidget_addresstable_keyPressEvent
         self.tableWidget_addresstable.contextMenuEvent = self.tableWidget_addresstable_context_menu_event
@@ -1079,7 +1079,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         # Format: {address1:comment1,address2:comment2, ...}
         self.tableWidget_Disassemble.bookmarks = {}
 
-        # Saving the original function because super() doesn't work when we override functions like that
+        # Saving the original function because super() doesn't work when we override functions like this
         self.tableWidget_Disassemble.keyPressEvent_original=self.tableWidget_Disassemble.keyPressEvent
         self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
         self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
@@ -1093,7 +1093,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
         self.tableView_HexView_Ascii.contextMenuEvent = self.widget_HexView_context_menu_event
 
-        # Saving the original function because super() doesn't work when we override functions like that
+        # Saving the original function because super() doesn't work when we override functions like this
         self.tableView_HexView_Hex.keyPressEvent_original=self.tableView_HexView_Hex.keyPressEvent
         self.tableView_HexView_Hex.keyPressEvent = self.widget_HexView_key_press_event
         self.tableView_HexView_Ascii.keyPressEvent = self.widget_HexView_key_press_event
