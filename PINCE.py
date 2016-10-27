@@ -21,7 +21,7 @@ from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
-    QItemSelectionModel, QTimer
+    QItemSelectionModel, QTimer, QModelIndex
 from time import sleep, time
 import os
 import pexpect
@@ -1095,6 +1095,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.itemSelectionChanged.connect(self.on_disassemble_item_selection_changed)
 
     def initialize_hex_view(self):
+        self.hex_view_last_selected_address_int = 0
         self.hex_view_currently_displayed_address = 0x00400000
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
         self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
@@ -1281,6 +1282,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def on_hex_view_current_changed(self, QModelIndex_current):
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SingleSelection)
+        selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
+        self.hex_view_last_selected_address_int = selected_address
         self.tableView_HexView_Ascii.selectionModel().setCurrentIndex(QModelIndex_current,
                                                                       QItemSelectionModel.ClearAndSelect)
         self.tableWidget_HexView_Address.selectRow(QModelIndex_current.row())
@@ -1311,6 +1314,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_model.refresh(int_address, offset)
         self.ascii_model.refresh(int_address, offset)
         self.hex_view_currently_displayed_address = int_address
+        if int_address <= self.hex_view_last_selected_address_int <= int_address + offset:
+            difference = self.hex_view_last_selected_address_int - int_address
+            model_index = QModelIndex(
+                self.hex_model.index(int(difference / HEX_VIEW_COL_COUNT), difference % HEX_VIEW_COL_COUNT))
+            self.tableView_HexView_Hex.selectionModel().select(model_index, QItemSelectionModel.ClearAndSelect)
+            self.tableView_HexView_Ascii.selectionModel().select(model_index, QItemSelectionModel.ClearAndSelect)
+        else:
+            self.tableView_HexView_Hex.clearSelection()
+            self.tableView_HexView_Ascii.clearSelection()
 
     def refresh_hex_view(self):
         if self.tableWidget_HexView_Address.rowCount() == 0:
