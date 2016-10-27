@@ -188,7 +188,7 @@ class MainForm(QMainWindow, MainWindow):
         self.shortcut_continue.activated.connect(self.continue_hotkey_pressed)
 
         # Saving the original function because super() doesn't work when we override functions like this
-        self.tableWidget_addresstable.keyPressEvent_original=self.tableWidget_addresstable.keyPressEvent
+        self.tableWidget_addresstable.keyPressEvent_original = self.tableWidget_addresstable.keyPressEvent
         self.tableWidget_addresstable.keyPressEvent = self.tableWidget_addresstable_keyPressEvent
         self.tableWidget_addresstable.contextMenuEvent = self.tableWidget_addresstable_context_menu_event
         self.processbutton.clicked.connect(self.processbutton_onclick)
@@ -293,7 +293,7 @@ class MainForm(QMainWindow, MainWindow):
     def disassemble_selected_row(self):
         last_selected_row = self.tableWidget_addresstable.selectionModel().selectedRows()[-1].row()
         self.memory_view_window.disassemble_expression(
-            self.tableWidget_addresstable.item(last_selected_row, ADDR_COL).text(),append_to_travel_history=True)
+            self.tableWidget_addresstable.item(last_selected_row, ADDR_COL).text(), append_to_travel_history=True)
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
@@ -1025,6 +1025,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionExecute_Till_Return.triggered.connect(GDB_Engine.execute_till_return)
         self.actionToggle_Breakpoint.triggered.connect(self.toggle_breakpoint)
 
+    def initialize_view_context_menu(self):
+        self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
+        self.actionStackTrace_Info.triggered.connect(self.on_stacktrace_info_triggered)
+
+    def initialize_tools_context_menu(self):
+        self.actionInject_so_file.triggered.connect(self.on_inject_so_file_triggered)
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -1033,15 +1040,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.process_running.connect(self.on_process_running)
         self.set_debug_menu_shortcuts()
         self.set_dynamic_debug_hotkeys()
+        self.initialize_view_context_menu()
         self.initialize_debug_context_menu()
+        self.initialize_tools_context_menu()
         self.initialize_disassemble_view()
         self.initialize_register_view()
         self.initialize_stack_view()
         self.initialize_hex_view()
 
-        self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
-        self.actionStackTrace_Info.triggered.connect(self.on_stacktrace_info_triggered)
-        self.actionInject_so_file.triggered.connect(self.on_inject_so_file_triggered)
+        self.label_HexView_Information.contextMenuEvent = self.label_HexView_Information_context_menu_event
 
         self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
         self.widget_StackView.resize(420, self.widget_StackView.height())  # blaze it
@@ -1080,7 +1087,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.bookmarks = {}
 
         # Saving the original function because super() doesn't work when we override functions like this
-        self.tableWidget_Disassemble.keyPressEvent_original=self.tableWidget_Disassemble.keyPressEvent
+        self.tableWidget_Disassemble.keyPressEvent_original = self.tableWidget_Disassemble.keyPressEvent
         self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
         self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
 
@@ -1094,7 +1101,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableView_HexView_Ascii.contextMenuEvent = self.widget_HexView_context_menu_event
 
         # Saving the original function because super() doesn't work when we override functions like this
-        self.tableView_HexView_Hex.keyPressEvent_original=self.tableView_HexView_Hex.keyPressEvent
+        self.tableView_HexView_Hex.keyPressEvent_original = self.tableView_HexView_Hex.keyPressEvent
         self.tableView_HexView_Hex.keyPressEvent = self.widget_HexView_key_press_event
         self.tableView_HexView_Ascii.keyPressEvent = self.widget_HexView_key_press_event
 
@@ -1157,6 +1164,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 if GDB_Engine.add_watchpoint(hex(address), user_input_int, watchpoint_type) < 1:
                     QMessageBox.information(self, "Error", "Failed to set watchpoint at address " + hex(address))
         self.refresh_hex_view()
+
+    def label_HexView_Information_context_menu_event(self, event):
+        menu = QMenu()
+        copy = menu.addAction("Copy to Clipboard")
+        font_size = self.label_HexView_Information.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == copy:
+            QApplication.clipboard().setText(self.label_HexView_Information.text())
 
     def widget_HexView_context_menu_event(self, event):
         selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
