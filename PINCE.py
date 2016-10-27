@@ -186,6 +186,9 @@ class MainForm(QMainWindow, MainWindow):
         self.shortcut_pause.activated.connect(self.pause_hotkey_pressed)
         self.shortcut_continue = QShortcut(QKeySequence(continue_hotkey), self)
         self.shortcut_continue.activated.connect(self.continue_hotkey_pressed)
+
+        # Saving the original function because super() doesn't work when we override functions like that
+        self.tableWidget_addresstable.keyPressEvent_original=self.tableWidget_addresstable.keyPressEvent
         self.tableWidget_addresstable.keyPressEvent = self.tableWidget_addresstable_keyPressEvent
         self.tableWidget_addresstable.contextMenuEvent = self.tableWidget_addresstable_context_menu_event
         self.processbutton.clicked.connect(self.processbutton_onclick)
@@ -267,6 +270,7 @@ class MainForm(QMainWindow, MainWindow):
     def tableWidget_addresstable_context_menu_event(self, event):
         menu = QMenu()
         browse_region = menu.addAction("Browse this memory region[B]")
+        disassemble = menu.addAction("Disassemble this address[D]")
         menu.addSeparator()
         delete_record = menu.addAction("Delete selected records[Del]")
         font_size = self.tableWidget_addresstable.font().pointSize()
@@ -274,6 +278,8 @@ class MainForm(QMainWindow, MainWindow):
         action = menu.exec_(event.globalPos())
         if action == browse_region:
             self.browse_region_for_selected_row()
+        elif action == disassemble:
+            self.disassemble_selected_row()
         elif action == delete_record:
             self.delete_selected_records()
 
@@ -281,6 +287,13 @@ class MainForm(QMainWindow, MainWindow):
         last_selected_row = self.tableWidget_addresstable.selectionModel().selectedRows()[-1].row()
         self.memory_view_window.hex_dump_address(
             int(self.tableWidget_addresstable.item(last_selected_row, ADDR_COL).text(), 16))
+        self.memory_view_window.show()
+        self.memory_view_window.activateWindow()
+
+    def disassemble_selected_row(self):
+        last_selected_row = self.tableWidget_addresstable.selectionModel().selectedRows()[-1].row()
+        self.memory_view_window.disassemble_expression(
+            self.tableWidget_addresstable.item(last_selected_row, ADDR_COL).text(),append_to_travel_history=True)
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
@@ -295,8 +308,12 @@ class MainForm(QMainWindow, MainWindow):
     def tableWidget_addresstable_keyPressEvent(self, e):
         if e.key() == Qt.Key_Delete:
             self.delete_selected_records()
-        if e.key() == Qt.Key_B:
+        elif e.key() == Qt.Key_B:
             self.browse_region_for_selected_row()
+        elif e.key() == Qt.Key_D:
+            self.disassemble_selected_row()
+        else:
+            self.tableWidget_addresstable.keyPressEvent_original(e)
 
     def update_address_table_manually(self):
         table_contents = []
@@ -1062,6 +1079,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         # Format: {address1:comment1,address2:comment2, ...}
         self.tableWidget_Disassemble.bookmarks = {}
 
+        # Saving the original function because super() doesn't work when we override functions like that
+        self.tableWidget_Disassemble.keyPressEvent_original=self.tableWidget_Disassemble.keyPressEvent
         self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
         self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
 
@@ -1071,8 +1090,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def initialize_hex_view(self):
         self.hex_view_currently_displayed_address = 0x00400000
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
+        self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
+        self.tableView_HexView_Ascii.contextMenuEvent = self.widget_HexView_context_menu_event
 
-        self.widget_HexView.contextMenuEvent = self.widget_HexView_context_menu_event
+        # Saving the original function because super() doesn't work when we override functions like that
+        self.tableView_HexView_Hex.keyPressEvent_original=self.tableView_HexView_Hex.keyPressEvent
+        self.tableView_HexView_Hex.keyPressEvent = self.widget_HexView_key_press_event
+        self.tableView_HexView_Ascii.keyPressEvent = self.widget_HexView_key_press_event
 
         self.verticalScrollBar_HexView.wheelEvent = QEvent.ignore
         self.tableWidget_HexView_Address.wheelEvent = QEvent.ignore
@@ -1137,11 +1161,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def widget_HexView_context_menu_event(self, event):
         selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
         menu = QMenu()
-        go_to = menu.addAction("Go to expression")
+        go_to = menu.addAction("Go to expression[G]")
+        disassemble = menu.addAction("Disassemble this address[D]")
         menu.addSeparator()
-        add_address = menu.addAction("Add this address to address list")
+        add_address = menu.addAction("Add this address to address list[A]")
         menu.addSeparator()
-        refresh = menu.addAction("Refresh")
+        refresh = menu.addAction("Refresh[R]")
         menu.addSeparator()
         if not GDB_Engine.check_address_in_breakpoints(selected_address):
             watchpoint_menu = menu.addMenu("Set Watchpoint")
@@ -1158,24 +1183,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             delete_breakpoint = menu.addAction("Delete Breakpoint")
         font_size = self.widget_HexView.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        current_address = hex(self.hex_view_currently_displayed_address)
         action = menu.exec_(event.globalPos())
         if action == go_to:
-            go_to_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False,
-                                                 line_edit_text=current_address)
-            if go_to_dialog.exec_():
-                expression = go_to_dialog.get_values()
-                dest_address = GDB_Engine.convert_symbol_to_address(expression)
-                if dest_address is None:
-                    QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
-                    return
-                self.hex_dump_address(int(dest_address, 16))
+            self.exec_hex_view_go_to_dialog()
+        elif action == disassemble:
+            self.disassemble_expression(hex(selected_address), append_to_travel_history=True)
         elif action == add_address:
-            manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address),
-                                                            index=type_defs.VALUE_INDEX.INDEX_AOB)
-            if manual_address_dialog.exec_():
-                description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
-                self.address_added.emit(description, address, typeofaddress, length, unicode, zero_terminate)
+            self.exec_hex_view_add_address_dialog()
         elif action == refresh:
             self.hex_dump_address(self.hex_view_currently_displayed_address)
         elif action == write_only_watchpoint:
@@ -1188,6 +1202,26 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.add_breakpoint_condition(selected_address)
         elif action == delete_breakpoint:
             self.toggle_watchpoint(selected_address)
+
+    def exec_hex_view_go_to_dialog(self):
+        current_address = hex(self.hex_view_currently_displayed_address)
+        go_to_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False,
+                                             line_edit_text=current_address)
+        if go_to_dialog.exec_():
+            expression = go_to_dialog.get_values()
+            dest_address = GDB_Engine.convert_symbol_to_address(expression)
+            if dest_address is None:
+                QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
+                return
+            self.hex_dump_address(int(dest_address, 16))
+
+    def exec_hex_view_add_address_dialog(self):
+        selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
+        manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address),
+                                                        index=type_defs.VALUE_INDEX.INDEX_AOB)
+        if manual_address_dialog.exec_():
+            description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
+            self.address_added.emit(description, address, typeofaddress, length, unicode, zero_terminate)
 
     def verticalScrollBar_HexView_mouse_release_event(self, event):
         GuiUtils.center_scroll_bar(self.verticalScrollBar_HexView)
@@ -1511,14 +1545,38 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             next_address = current_address + 0x40
         self.hex_dump_address(next_address)
 
+    def widget_HexView_key_press_event(self, event):
+        selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
+
+        if event.key() == Qt.Key_G:
+            self.exec_hex_view_go_to_dialog()
+        elif event.key() == Qt.Key_D:
+            self.disassemble_expression(hex(selected_address), append_to_travel_history=True)
+        elif event.key() == Qt.Key_A:
+            self.exec_hex_view_add_address_dialog()
+        elif event.key() == Qt.Key_R:
+            self.refresh_hex_view()
+        else:
+            self.tableView_HexView_Hex.keyPressEvent_original(event)
+
     def tableWidget_Disassemble_key_press_event(self, event):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
+        current_address_int = int(current_address, 16)
+
         if event.key() == Qt.Key_Space:
             self.follow_instruction(selected_row)
+        elif event.key() == Qt.Key_G:
+            self.exec_disassemble_go_to_dialog()
+        elif event.key() == Qt.Key_H:
+            self.hex_dump_address(current_address_int)
         elif event.key() == Qt.Key_B:
-            self.bookmark_address(int(current_address, 16))
+            self.bookmark_address(current_address_int)
+        elif event.key() == Qt.Key_R:
+            self.refresh_disassemble_view()
+        else:
+            self.tableWidget_Disassemble.keyPressEvent_original(event)
 
     def on_disassemble_double_click(self, index):
         if index.column() == DISAS_COMMENT_COL:
@@ -1553,11 +1611,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
-        first_address = self.disassemble_currently_displayed_address
 
         menu = QMenu()
-        go_to = menu.addAction("Go to expression")
+        go_to = menu.addAction("Go to expression[G]")
         back = menu.addAction("Back")
+        show_in_hex_view = menu.addAction("Show this address in HexView[H]")
         followable = SysUtils.extract_address(
             self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text(),
             search_for_location_changing_instructions=True)
@@ -1592,7 +1650,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         else:
             add_condition = -1
         menu.addSeparator()
-        refresh = menu.addAction("Refresh")
+        refresh = menu.addAction("Refresh[R]")
         menu.addSeparator()
         clipboard_menu = menu.addMenu("Copy to Clipboard")
         copy_address = clipboard_menu.addAction("Copy Address")
@@ -1603,16 +1661,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         if action == go_to:
-            go_to_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False,
-                                                 line_edit_text=first_address)
-            if go_to_dialog.exec_():
-                traveled_exp = go_to_dialog.get_values()
-                self.disassemble_expression(traveled_exp, append_to_travel_history=True)
+            self.exec_disassemble_go_to_dialog()
         elif action == back:
             if self.tableWidget_Disassemble.travel_history:
                 last_location = self.tableWidget_Disassemble.travel_history[-1]
                 self.disassemble_expression(last_location)
                 self.tableWidget_Disassemble.travel_history.pop()
+        elif action == show_in_hex_view:
+            self.hex_dump_address(current_address_int)
         elif action == follow:
             self.follow_instruction(selected_row)
         elif action == bookmark:
@@ -1638,6 +1694,17 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         for item in bookmark_action_list:
             if action == item:
                 self.disassemble_expression(SysUtils.extract_address(action.text()), append_to_travel_history=True)
+
+    def exec_disassemble_go_to_dialog(self):
+        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+
+        go_to_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False,
+                                             line_edit_text=current_address)
+        if go_to_dialog.exec_():
+            traveled_exp = go_to_dialog.get_values()
+            self.disassemble_expression(traveled_exp, append_to_travel_history=True)
 
     def bookmark_address(self, int_address):
         if int_address in self.tableWidget_Disassemble.bookmarks:
