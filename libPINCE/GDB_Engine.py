@@ -1029,7 +1029,7 @@ def add_breakpoint_condition(expression, condition):
         print("expression for breakpoint is not valid")
         return False
     str_address_int = int(str_address, 16)
-    modification_list = [str_address_int]
+    modification_list = [[str_address_int]]
     for n, item in enumerate(chained_breakpoints):
         for breakpoint in item:
             if breakpoint[0] <= str_address_int <= breakpoint[0] + breakpoint[1] - 1:
@@ -1063,7 +1063,7 @@ def delete_breakpoint(expression):
         print("expression for breakpoint is not valid")
         return False
     str_address_int = int(str_address, 16)
-    deletion_list = [str_address_int]
+    deletion_list = [[str_address_int]]
     global chained_breakpoints
     for n, item in enumerate(chained_breakpoints):
         for breakpoint in item:
