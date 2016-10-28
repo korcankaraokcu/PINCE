@@ -312,6 +312,8 @@ class MainForm(QMainWindow, MainWindow):
             self.browse_region_for_selected_row()
         elif e.key() == Qt.Key_D:
             self.disassemble_selected_row()
+        elif e.key() == Qt.Key_R:
+            self.update_address_table_manually()
         else:
             self.tableWidget_addresstable.keyPressEvent_original(e)
 
@@ -1796,6 +1798,8 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.listWidget.itemDoubleClicked.connect(self.on_item_double_clicked)
         self.shortcut_delete = QShortcut(QKeySequence("Del"), self)
         self.shortcut_delete.activated.connect(self.delete_record)
+        self.shortcut_refresh = QShortcut(QKeySequence("R"), self)
+        self.shortcut_refresh.activated.connect(self.refresh_table)
         self.refresh_table()
 
     def refresh_table(self):
@@ -1843,7 +1847,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
             change_comment = -1
             delete_record = -1
         menu.addSeparator()
-        refresh = menu.addAction("Refresh")
+        refresh = menu.addAction("Refresh[R]")
         font_size = self.listWidget.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
