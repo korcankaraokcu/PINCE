@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mainwindow.ui'
+# Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Wed Jun 29 14:12:48 2016
+# Created: Fri Oct 28 17:35:21 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -343,7 +343,7 @@ class Ui_MainWindow(object):
         self.pushButton_MemoryView.setText(_translate("MainWindow", "Memory View"))
         self.pushButton_CopyToAddressTable.setToolTip(_translate("MainWindow", "Copy selected items to the address table"))
         self.pushButton_CleanAddressTable.setToolTip(_translate("MainWindow", "Erase all the table contents"))
-        self.pushButton_RefreshAdressTable.setToolTip(_translate("MainWindow", "Refresh the address table"))
+        self.pushButton_RefreshAdressTable.setToolTip(_translate("MainWindow", "Refresh the address table[R]"))
         self.pushButton_AddAddressManually.setText(_translate("MainWindow", "Add Address Manually"))
         item = self.tableWidget_addresstable.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "F"))

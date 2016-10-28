@@ -566,7 +566,7 @@
       <item>
        <widget class="QPushButton" name="pushButton_RefreshAdressTable">
         <property name="toolTip">
-         <string>Refresh the address table</string>
+         <string>Refresh the address table[R]</string>
         </property>
         <property name="text">
          <string/>
