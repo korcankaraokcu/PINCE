@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'SettingsDialog.ui'
+# Form implementation generated from reading ui file 'GUI/SettingsDialog.ui'
 #
-# Created: Wed Aug 24 16:12:06 2016
-#      by: PyQt5 UI code generator 5.2.1
+# Created by: PyQt5 UI code generator 5.7
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -35,6 +34,8 @@ class Ui_Dialog(object):
         self.listWidget_Options.addItem(item)
         item = QtWidgets.QListWidgetItem()
         self.listWidget_Options.addItem(item)
+        item = QtWidgets.QListWidgetItem()
+        self.listWidget_Options.addItem(item)
         self.horizontalLayout_2.addWidget(self.listWidget_Options)
         self.stackedWidget = QtWidgets.QStackedWidget(Dialog)
         self.stackedWidget.setMinimumSize(QtCore.QSize(500, 500))
@@ -42,6 +43,7 @@ class Ui_Dialog(object):
         self.page = QtWidgets.QWidget()
         self.page.setObjectName("page")
         self.gridLayout = QtWidgets.QGridLayout(self.page)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout()
         self.verticalLayout_5.setObjectName("verticalLayout_5")
@@ -82,6 +84,7 @@ class Ui_Dialog(object):
         self.page_2 = QtWidgets.QWidget()
         self.page_2.setObjectName("page_2")
         self.gridLayout_3 = QtWidgets.QGridLayout(self.page_2)
+        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_3.setObjectName("gridLayout_3")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
@@ -122,6 +125,7 @@ class Ui_Dialog(object):
         self.page_3 = QtWidgets.QWidget()
         self.page_3.setObjectName("page_3")
         self.gridLayout_4 = QtWidgets.QGridLayout(self.page_3)
+        self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_4.setObjectName("gridLayout_4")
         self.verticalLayout_9 = QtWidgets.QVBoxLayout()
         self.verticalLayout_9.setObjectName("verticalLayout_9")
@@ -159,6 +163,7 @@ class Ui_Dialog(object):
         self.page_4 = QtWidgets.QWidget()
         self.page_4.setObjectName("page_4")
         self.gridLayout_5 = QtWidgets.QGridLayout(self.page_4)
+        self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_5.setObjectName("gridLayout_5")
         self.verticalLayout_10 = QtWidgets.QVBoxLayout()
         self.verticalLayout_10.setObjectName("verticalLayout_10")
@@ -184,6 +189,31 @@ class Ui_Dialog(object):
         self.verticalLayout_10.addItem(spacerItem8)
         self.gridLayout_5.addLayout(self.verticalLayout_10, 0, 0, 1, 1)
         self.stackedWidget.addWidget(self.page_4)
+        self.page_5 = QtWidgets.QWidget()
+        self.page_5.setObjectName("page_5")
+        self.gridLayout_6 = QtWidgets.QGridLayout(self.page_5)
+        self.gridLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_6.setObjectName("gridLayout_6")
+        self.verticalLayout_11 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_11.setObjectName("verticalLayout_11")
+        self.horizontalLayout_11 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_11.setObjectName("horizontalLayout_11")
+        self.horizontalLayout_101 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_101.setObjectName("horizontalLayout_101")
+        self.label_7 = QtWidgets.QLabel(self.page_5)
+        self.label_7.setObjectName("label_7")
+        self.horizontalLayout_101.addWidget(self.label_7)
+        self.lineEdit_GDBPath = QtWidgets.QLineEdit(self.page_5)
+        self.lineEdit_GDBPath.setObjectName("lineEdit_GDBPath")
+        self.horizontalLayout_101.addWidget(self.lineEdit_GDBPath)
+        self.horizontalLayout_11.addLayout(self.horizontalLayout_101)
+        spacerItem9 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_11.addItem(spacerItem9)
+        self.verticalLayout_11.addLayout(self.horizontalLayout_11)
+        spacerItem10 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout_11.addItem(spacerItem10)
+        self.gridLayout_6.addLayout(self.verticalLayout_11, 0, 0, 1, 1)
+        self.stackedWidget.addWidget(self.page_5)
         self.horizontalLayout_2.addWidget(self.stackedWidget)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -191,8 +221,8 @@ class Ui_Dialog(object):
         self.pushButton_ResetSettings = QtWidgets.QPushButton(Dialog)
         self.pushButton_ResetSettings.setObjectName("pushButton_ResetSettings")
         self.horizontalLayout.addWidget(self.pushButton_ResetSettings)
-        spacerItem9 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem9)
+        spacerItem11 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem11)
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
@@ -202,7 +232,7 @@ class Ui_Dialog(object):
         self.gridLayout_2.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
         self.retranslateUi(Dialog)
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(4)
         self.listWidget_Functions.setCurrentRow(-1)
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
@@ -221,6 +251,8 @@ class Ui_Dialog(object):
         item.setText(_translate("Dialog", "Code Injection"))
         item = self.listWidget_Options.item(3)
         item.setText(_translate("Dialog", "Disassemble"))
+        item = self.listWidget_Options.item(4)
+        item.setText(_translate("Dialog", "Debug"))
         self.listWidget_Options.setSortingEnabled(__sortingEnabled)
         self.checkBox_AutoUpdateAddressTable.setText(_translate("Dialog", "Auto-update address table"))
         self.label.setText(_translate("Dialog", "Update interval"))
@@ -241,5 +273,6 @@ class Ui_Dialog(object):
         self.radioButton_AdvancedInjection.setText(_translate("Dialog", "Advanced Injection"))
         self.checkBox_BringDisassembleToFront.setText(_translate("Dialog", "Bring disassemble screen to front when the inferior is stopped"))
         self.label_6.setText(_translate("Dialog", "Instructions shown per scroll"))
+        self.label_7.setText(_translate("Dialog", "GDB Path"))
         self.pushButton_ResetSettings.setText(_translate("Dialog", "Reset Settings"))
 
