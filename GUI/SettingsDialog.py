@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'GUI/SettingsDialog.ui'
+# Form implementation generated from reading ui file 'SettingsDialog.ui'
 #
-# Created by: PyQt5 UI code generator 5.7
+# Created: Tue Nov  1 18:50:00 2016
+#      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -43,7 +44,6 @@ class Ui_Dialog(object):
         self.page = QtWidgets.QWidget()
         self.page.setObjectName("page")
         self.gridLayout = QtWidgets.QGridLayout(self.page)
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout()
         self.verticalLayout_5.setObjectName("verticalLayout_5")
@@ -84,7 +84,6 @@ class Ui_Dialog(object):
         self.page_2 = QtWidgets.QWidget()
         self.page_2.setObjectName("page_2")
         self.gridLayout_3 = QtWidgets.QGridLayout(self.page_2)
-        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_3.setObjectName("gridLayout_3")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
@@ -125,7 +124,6 @@ class Ui_Dialog(object):
         self.page_3 = QtWidgets.QWidget()
         self.page_3.setObjectName("page_3")
         self.gridLayout_4 = QtWidgets.QGridLayout(self.page_3)
-        self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_4.setObjectName("gridLayout_4")
         self.verticalLayout_9 = QtWidgets.QVBoxLayout()
         self.verticalLayout_9.setObjectName("verticalLayout_9")
@@ -163,7 +161,6 @@ class Ui_Dialog(object):
         self.page_4 = QtWidgets.QWidget()
         self.page_4.setObjectName("page_4")
         self.gridLayout_5 = QtWidgets.QGridLayout(self.page_4)
-        self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_5.setObjectName("gridLayout_5")
         self.verticalLayout_10 = QtWidgets.QVBoxLayout()
         self.verticalLayout_10.setObjectName("verticalLayout_10")
@@ -192,7 +189,6 @@ class Ui_Dialog(object):
         self.page_5 = QtWidgets.QWidget()
         self.page_5.setObjectName("page_5")
         self.gridLayout_6 = QtWidgets.QGridLayout(self.page_5)
-        self.gridLayout_6.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_6.setObjectName("gridLayout_6")
         self.verticalLayout_11 = QtWidgets.QVBoxLayout()
         self.verticalLayout_11.setObjectName("verticalLayout_11")
@@ -207,11 +203,13 @@ class Ui_Dialog(object):
         self.lineEdit_GDBPath.setObjectName("lineEdit_GDBPath")
         self.horizontalLayout_101.addWidget(self.lineEdit_GDBPath)
         self.horizontalLayout_11.addLayout(self.horizontalLayout_101)
-        spacerItem9 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_11.addItem(spacerItem9)
+        self.pushButton_GDBPath = QtWidgets.QPushButton(self.page_5)
+        self.pushButton_GDBPath.setText("")
+        self.pushButton_GDBPath.setObjectName("pushButton_GDBPath")
+        self.horizontalLayout_11.addWidget(self.pushButton_GDBPath)
         self.verticalLayout_11.addLayout(self.horizontalLayout_11)
-        spacerItem10 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout_11.addItem(spacerItem10)
+        spacerItem9 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout_11.addItem(spacerItem9)
         self.gridLayout_6.addLayout(self.verticalLayout_11, 0, 0, 1, 1)
         self.stackedWidget.addWidget(self.page_5)
         self.horizontalLayout_2.addWidget(self.stackedWidget)
@@ -221,8 +219,8 @@ class Ui_Dialog(object):
         self.pushButton_ResetSettings = QtWidgets.QPushButton(Dialog)
         self.pushButton_ResetSettings.setObjectName("pushButton_ResetSettings")
         self.horizontalLayout.addWidget(self.pushButton_ResetSettings)
-        spacerItem11 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem11)
+        spacerItem10 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem10)
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
