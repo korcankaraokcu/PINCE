@@ -205,7 +205,7 @@ def execute_till_return():
     send_command("finish")
 
 
-def attach(pid):
+def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
     """Attaches gdb to the target and initializes some of the global variables
 
     Args:
@@ -218,7 +218,7 @@ def attach(pid):
     SysUtils.create_PINCE_IPC_PATH(pid)
     libpince_dir = SysUtils.get_libpince_directory()
     pince_dir = os.path.dirname(libpince_dir)
-    child = pexpect.spawn('sudo LC_NUMERIC=C ' + type_defs.PATHS.GDB_PATH + ' --interpreter=mi', cwd=libpince_dir,
+    child = pexpect.spawn('sudo LC_NUMERIC=C ' + gdb_path + ' --interpreter=mi', cwd=libpince_dir,
                           encoding="utf-8")
     child.setecho(False)
     child.delaybeforesend = 0
