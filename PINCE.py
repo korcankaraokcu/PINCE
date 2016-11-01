@@ -822,11 +822,14 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.keySequenceEdit = QKeySequenceEdit()
         self.verticalLayout_Hotkey.addWidget(self.keySequenceEdit)
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
-        self.listWidget_Functions.currentRowChanged.connect(self.on_hotkey_index_change)
-        self.keySequenceEdit.keySequenceChanged.connect(self.on_key_sequence_change)
-        self.pushButton_ClearHotkey.clicked.connect(self.on_clear_button_pressed)
-        self.pushButton_ResetSettings.clicked.connect(self.on_reset_button_pressed)
-        self.checkBox_AutoUpdateAddressTable.stateChanged.connect(self.on_checkbox_auto_update_address_table_pressed)
+        icons_directory = SysUtils.get_current_script_directory() + "/media/icons"
+        self.pushButton_GDBPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
+        self.listWidget_Functions.currentRowChanged.connect(self.listWidget_Functions_current_row_changed)
+        self.keySequenceEdit.keySequenceChanged.connect(self.keySequenceEdit_key_sequence_changed)
+        self.pushButton_ClearHotkey.clicked.connect(self.pushButton_ClearHotkey_clicked)
+        self.pushButton_ResetSettings.clicked.connect(self.pushButton_ResetSettings_clicked)
+        self.pushButton_GDBPath.clicked.connect(self.pushButton_GDBPath_clicked)
+        self.checkBox_AutoUpdateAddressTable.stateChanged.connect(self.checkBox_AutoUpdateAddressTable_state_changed)
         self.config_gui()
 
     def accept(self):
@@ -894,23 +897,23 @@ class SettingsDialogForm(QDialog, SettingsDialog):
     def change_display(self, index):
         self.stackedWidget.setCurrentIndex(index)
 
-    def on_hotkey_index_change(self, index):
+    def listWidget_Functions_current_row_changed(self, index):
         if index is 0:
             self.keySequenceEdit.setKeySequence(self.pause_hotkey)
         elif index is 1:
             self.keySequenceEdit.setKeySequence(self.continue_hotkey)
 
-    def on_key_sequence_change(self):
+    def keySequenceEdit_key_sequence_changed(self):
         current_index = self.listWidget_Functions.currentIndex().row()
         if current_index is 0:
             self.pause_hotkey = self.keySequenceEdit.keySequence().toString()
         elif current_index is 1:
             self.continue_hotkey = self.keySequenceEdit.keySequence().toString()
 
-    def on_clear_button_pressed(self):
+    def pushButton_ClearHotkey_clicked(self):
         self.keySequenceEdit.clear()
 
-    def on_reset_button_pressed(self):
+    def pushButton_ResetSettings_clicked(self):
         confirm_dialog = DialogWithButtonsForm(label_text="This will reset to the default settings\nProceed?")
         if confirm_dialog.exec_():
             self.reset_settings.emit()
@@ -918,11 +921,17 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             return
         self.config_gui()
 
-    def on_checkbox_auto_update_address_table_pressed(self):
+    def checkBox_AutoUpdateAddressTable_state_changed(self):
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.QWidget_UpdateInterval.setEnabled(True)
         else:
             self.QWidget_UpdateInterval.setEnabled(False)
+
+    def pushButton_GDBPath_clicked(self):
+        current_path = self.lineEdit_GDBPath.text()
+        file_path = QFileDialog.getOpenFileName(self, "Select the gdb binary", os.path.dirname(current_path))[0]
+        if file_path:
+            self.lineEdit_GDBPath.setText(file_path)
 
 
 class ConsoleWidgetForm(QWidget, ConsoleWidget):
@@ -1796,9 +1805,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.breakpoint_widget.show()
 
     def on_inject_so_file_triggered(self):
-        file_name = QFileDialog.getOpenFileName(self, "Select the .so file", "", "Shared object library (*.so)")[0]
-        if file_name:
-            if GDB_Engine.inject_with_dlopen_call(file_name):
+        file_path = QFileDialog.getOpenFileName(self, "Select the .so file", "", "Shared object library (*.so)")[0]
+        if file_path:
+            if GDB_Engine.inject_with_dlopen_call(file_path):
                 QMessageBox.information(self, "Success!", "The file has been injected")
             else:
                 QMessageBox.information(self, "Error", "Failed to inject the .so file")
