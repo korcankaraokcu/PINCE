@@ -911,7 +911,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.keySequenceEdit.clear()
 
     def on_reset_button_pressed(self):
-        confirm_dialog = DialogWithButtonsForm(label_text="This will reset to the default settings\n\tProceed?")
+        confirm_dialog = DialogWithButtonsForm(label_text="This will reset to the default settings\nProceed?")
         if confirm_dialog.exec_():
             self.reset_settings.emit()
         else:
