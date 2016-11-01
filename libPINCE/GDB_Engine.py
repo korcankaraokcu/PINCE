@@ -210,6 +210,7 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
 
     Args:
         pid (int,str): PID of the process that'll be attached to
+        gdb_path (str): Path of the gdb binary
     """
     global currentpid
     global child
