@@ -57,6 +57,7 @@ continue_hotkey = str
 code_injection_method = int
 bring_disassemble_to_front = bool
 instructions_per_scroll = int
+gdb_path = str
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -240,6 +241,9 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("bring_disassemble_to_front", False)
         self.settings.setValue("instructions_per_scroll", 2)
         self.settings.endGroup()
+        self.settings.beginGroup("Debug")
+        self.settings.setValue("gdb_path", type_defs.PATHS.GDB_PATH)
+        self.settings.endGroup()
         self.apply_settings()
 
     def apply_settings(self):
@@ -250,6 +254,7 @@ class MainForm(QMainWindow, MainWindow):
         global code_injection_method
         global bring_disassemble_to_front
         global instructions_per_scroll
+        global gdb_path
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
         table_update_interval = self.settings.value("General/address_table_update_interval", type=float)
         pause_hotkey = self.settings.value("Hotkeys/pause")
@@ -269,6 +274,7 @@ class MainForm(QMainWindow, MainWindow):
         code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
         bring_disassemble_to_front = self.settings.value("Disassemble/bring_disassemble_to_front", type=bool)
         instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
+        gdb_path = self.settings.value("Debug/gdb_path", type=str)
 
     def pause_hotkey_pressed(self):
         GDB_Engine.interrupt_inferior()
@@ -587,7 +593,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 return
             if not GDB_Engine.currentpid == 0:
                 GDB_Engine.detach()
-            GDB_Engine.attach(pid)
+            GDB_Engine.attach(pid, gdb_path)
             p = SysUtils.get_process_information(GDB_Engine.currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
@@ -863,6 +869,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("Disassemble/bring_disassemble_to_front",
                                self.checkBox_BringDisassembleToFront.isChecked())
         self.settings.setValue("Disassemble/instructions_per_scroll", current_insturctions_shown)
+        self.settings.setValue("Debug/gdb_path", self.lineEdit_GDBPath.text())
         super(SettingsDialogForm, self).accept()
 
     def config_gui(self):
@@ -882,6 +889,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.settings.value("Disassemble/bring_disassemble_to_front", type=bool))
         self.lineEdit_InstructionsPerScroll.setText(
             str(self.settings.value("Disassemble/instructions_per_scroll", type=int)))
+        self.lineEdit_GDBPath.setText(str(self.settings.value("Debug/gdb_path", type=str)))
 
     def change_display(self, index):
         self.stackedWidget.setCurrentIndex(index)
