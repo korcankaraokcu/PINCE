@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Thu Oct  6 23:42:20 2016
+# Created: Fri Oct 28 19:48:46 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -678,8 +678,11 @@ class Ui_MainWindow(object):
         self.actionExecute_Till_Return.setObjectName("actionExecute_Till_Return")
         self.actionToggle_Breakpoint = QtWidgets.QAction(MainWindow)
         self.actionToggle_Breakpoint.setObjectName("actionToggle_Breakpoint")
+        self.actionBreakpoints = QtWidgets.QAction(MainWindow)
+        self.actionBreakpoints.setObjectName("actionBreakpoints")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
+        self.menuView.addAction(self.actionBreakpoints)
         self.menuDebug.addAction(self.actionRun)
         self.menuDebug.addAction(self.actionBreak)
         self.menuDebug.addSeparator()
@@ -788,8 +791,9 @@ class Ui_MainWindow(object):
         self.actionStep_Over.setText(_translate("MainWindow", "Step Over[F8]"))
         self.actionExecute_Till_Return.setText(_translate("MainWindow", "Execute Till Return[Shift+F8]"))
         self.actionToggle_Breakpoint.setText(_translate("MainWindow", "Toggle Breakpoint[F5]"))
+        self.actionBreakpoints.setText(_translate("MainWindow", "Breakpoints"))
 
-from GUI.CustomLabels.RegisterLabel import QRegisterLabel
 from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
 from GUI.CustomTableViews.AsciiView import QAsciiView
 from GUI.CustomTableViews.HexView import QHexView
+from GUI.CustomLabels.RegisterLabel import QRegisterLabel
