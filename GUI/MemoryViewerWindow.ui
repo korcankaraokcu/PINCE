@@ -1280,6 +1280,7 @@
     </property>
     <addaction name="actionBookmarks"/>
     <addaction name="actionStackTrace_Info"/>
+    <addaction name="actionBreakpoints"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -1347,6 +1348,11 @@
   <action name="actionToggle_Breakpoint">
    <property name="text">
     <string>Toggle Breakpoint[F5]</string>
+   </property>
+  </action>
+  <action name="actionBreakpoints">
+   <property name="text">
+    <string>Breakpoints</string>
    </property>
   </action>
  </widget>

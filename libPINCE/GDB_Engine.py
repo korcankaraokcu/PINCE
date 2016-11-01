@@ -848,8 +848,9 @@ def get_breakpoint_info():
 
     Returns:
         list: A list of type_defs.tuple_breakpoint_info where number is the gdb breakpoint number, breakpoint_type is
-        the breakpoint type, address is the address of breakpoint, size is the size of breakpoint and the condition is
-        the condition of breakpoint, all represented as strings.
+        the breakpoint type, address is the address of breakpoint, size is the size of breakpoint, condition is the
+        condition of breakpoint and the on_hit is the action that'll happen when the breakpoint is reached, all
+        represented as strings except size.
     """
     returned_list = []
     raw_info = send_command("info break")
@@ -873,7 +874,8 @@ def get_breakpoint_info():
             condition = breakpoint_condition_dict[int(address, 16)]
         except KeyError:
             condition = ""
-        returned_list.append(type_defs.tuple_breakpoint_info(number, breakpoint_type, address, size, condition))
+        on_hit = "break"
+        returned_list.append(type_defs.tuple_breakpoint_info(number, breakpoint_type, address, size, condition, on_hit))
     return returned_list
 
 

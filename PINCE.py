@@ -42,6 +42,7 @@ from GUI.MemoryViewerWindow import Ui_MainWindow as MemoryViewWindow
 from GUI.BookmarkWidget import Ui_Form as BookmarkWidget
 from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
 from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
+from GUI.BreakpointInfoWidget import Ui_TabWidget as BreakpointInfoWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -56,6 +57,14 @@ continue_hotkey = str
 code_injection_method = int
 bring_disassemble_to_front = bool
 instructions_per_scroll = int
+
+# represents the index of columns in breakpoint table
+BREAK_NUM_COL = 0
+BREAK_ADDR_COL = 1
+BREAK_TYPE_COL = 2
+BREAK_SIZE_COL = 3
+BREAK_ON_HIT_COL = 4
+BREAK_COND_COL = 5
 
 # row colours for disassemble qtablewidget
 PC_COLOUR = Qt.blue
@@ -165,7 +174,7 @@ class MainForm(QMainWindow, MainWindow):
         try:
             self.apply_settings()
         except Exception as e:
-            print(e)
+            print("An exception occurred while trying to load settings, rolling back to the default configuration\n", e)
             self.settings.clear()
             self.set_default_settings()
         self.memory_view_window = MemoryViewWindowForm()
@@ -1030,6 +1039,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def initialize_view_context_menu(self):
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
         self.actionStackTrace_Info.triggered.connect(self.on_stacktrace_info_triggered)
+        self.actionBreakpoints.triggered.connect(self.on_ViewBreakpoints_triggered)
 
     def initialize_tools_context_menu(self):
         self.actionInject_so_file.triggered.connect(self.on_inject_so_file_triggered)
@@ -1773,6 +1783,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.stacktrace_info_widget = StackTraceInfoWidgetForm()
         self.stacktrace_info_widget.show()
 
+    def on_ViewBreakpoints_triggered(self):
+        self.breakpoint_widget = BreakpointInfoWidgetForm(self)
+        self.breakpoint_widget.show()
+
     def on_inject_so_file_triggered(self):
         file_name = QFileDialog.getOpenFileName(self, "Select the .so file", "", "Shared object library (*.so)")[0]
         if file_name:
@@ -1938,6 +1952,108 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
     def update_frame_info(self, index):
         frame_info = GDB_Engine.get_stack_frame_info(index)
         self.textBrowser_Info.setText(frame_info)
+
+
+class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center(self)
+        self.setWindowFlags(Qt.Window)
+        self.tableWidget_BreakpointInfo.contextMenuEvent = self.tableWidget_BreakpointInfo_context_menu_event
+
+        # Saving the original function because super() doesn't work when we override functions like this
+        self.tableWidget_BreakpointInfo.keyPressEvent_original = self.tableWidget_BreakpointInfo.keyPressEvent
+        self.tableWidget_BreakpointInfo.keyPressEvent = self.tableWidget_BreakpointInfo_key_press_event
+        self.tableWidget_BreakpointInfo.itemDoubleClicked.connect(self.tableWidget_BreakpointInfo_double_clicked)
+        self.refresh()
+
+    def refresh(self):
+        break_info = GDB_Engine.get_breakpoint_info()
+        self.tableWidget_BreakpointInfo.setRowCount(0)
+        self.tableWidget_BreakpointInfo.setRowCount(len(break_info))
+        for row, item in enumerate(break_info):
+            self.tableWidget_BreakpointInfo.setItem(row, BREAK_NUM_COL, QTableWidgetItem(item.number))
+            self.tableWidget_BreakpointInfo.setItem(row, BREAK_ADDR_COL, QTableWidgetItem(item.address))
+            self.tableWidget_BreakpointInfo.setItem(row, BREAK_TYPE_COL, QTableWidgetItem(item.breakpoint_type))
+            self.tableWidget_BreakpointInfo.setItem(row, BREAK_SIZE_COL, QTableWidgetItem(str(item.size)))
+            self.tableWidget_BreakpointInfo.setItem(row, BREAK_ON_HIT_COL, QTableWidgetItem(item.on_hit))
+            self.tableWidget_BreakpointInfo.setItem(row, BREAK_COND_COL, QTableWidgetItem(item.condition))
+        self.tableWidget_BreakpointInfo.resizeColumnsToContents()
+        self.tableWidget_BreakpointInfo.horizontalHeader().setStretchLastSection(True)
+        self.textBrowser_BreakpointInfo.clear()
+        self.textBrowser_BreakpointInfo.setText(GDB_Engine.send_command("info break", cli_output=True))
+
+    def tableWidget_BreakpointInfo_key_press_event(self, event):
+        try:
+            selected_row = self.tableWidget_BreakpointInfo.selectionModel().selectedRows()[-1].row()
+            current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
+            current_address = SysUtils.extract_address(current_address_text)
+        except IndexError:
+            current_address = None
+
+        if event.key() == Qt.Key_Delete:
+            if current_address is not None:
+                self.delete_breakpoint(current_address)
+        elif event.key() == Qt.Key_R:
+            self.refresh()
+        else:
+            self.tableWidget_BreakpointInfo.keyPressEvent_original(event)
+
+    def tableWidget_BreakpointInfo_context_menu_event(self, event):
+        try:
+            selected_row = self.tableWidget_BreakpointInfo.selectionModel().selectedRows()[-1].row()
+            current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
+            current_address = SysUtils.extract_address(current_address_text)
+            current_address_int = int(current_address, 16)
+        except IndexError:
+            current_address = None
+            current_address_int = None
+
+        menu = QMenu()
+        if current_address is None:
+            change_condition = -1
+            delete_breakpoint = -1
+        else:
+            change_condition = menu.addAction("Change condition of this breakpoint")
+            delete_breakpoint = menu.addAction("Delete this breakpoint[Del]")
+            menu.addSeparator()
+        refresh = menu.addAction("Refresh[R]")
+        font_size = self.tableWidget_BreakpointInfo.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == change_condition:
+            self.change_condition(current_address_int)
+        elif action == delete_breakpoint:
+            self.delete_breakpoint(current_address)
+        elif action == refresh:
+            self.refresh()
+
+    def change_condition(self, int_address):
+        self.parent().add_breakpoint_condition(int_address)
+        self.parent().refresh_hex_view()
+        self.parent().refresh_disassemble_view()
+        self.refresh()
+
+    def delete_breakpoint(self, address):
+        GDB_Engine.delete_breakpoint(address)
+        self.parent().refresh_hex_view()
+        self.parent().refresh_disassemble_view()
+        self.refresh()
+
+    def tableWidget_BreakpointInfo_double_clicked(self, index):
+        current_address_text = self.tableWidget_BreakpointInfo.item(index.row(), BREAK_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+        current_address_int = int(current_address, 16)
+
+        if index.column() == BREAK_COND_COL:
+            self.change_condition(current_address_int)
+        else:
+            current_breakpoint_type = self.tableWidget_BreakpointInfo.item(index.row(), BREAK_TYPE_COL).text()
+            if "breakpoint" in current_breakpoint_type:
+                self.parent().disassemble_expression(current_address)
+            else:
+                self.parent().hex_dump_address(current_address_int)
 
 
 if __name__ == "__main__":
