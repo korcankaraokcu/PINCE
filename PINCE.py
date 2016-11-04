@@ -38,7 +38,9 @@ from GUI.DialogWithButtons import Ui_Dialog as DialogWithButtons
 from GUI.SettingsDialog import Ui_Dialog as SettingsDialog
 from GUI.ConsoleWidget import Ui_Form as ConsoleWidget
 from GUI.AboutWidget import Ui_TabWidget as AboutWidget
-from GUI.MemoryViewerWindow import Ui_MainWindow as MemoryViewWindow
+
+# If you are going to change the name "Ui_MainWindow_MemoryView", review GUI/CustomLabels/RegisterLabel.py as well
+from GUI.MemoryViewerWindow import Ui_MainWindow_MemoryView as MemoryViewWindow
 from GUI.BookmarkWidget import Ui_Form as BookmarkWidget
 from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
 from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget

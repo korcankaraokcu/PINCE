@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>MainWindow_MemoryView</class>
+ <widget class="QMainWindow" name="MainWindow_MemoryView">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -123,7 +123,7 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
+              <y>-148</y>
               <width>358</width>
               <height>455</height>
              </rect>

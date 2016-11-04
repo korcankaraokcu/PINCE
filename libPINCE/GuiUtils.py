@@ -59,6 +59,20 @@ def center_scroll_bar(QScrollBar):
     QScrollBar.setValue((maximum + minimum) / 2)
 
 
+def search_parents_by_function(qt_object, func_name):
+    """Search for func_name in the parents of given qt_object. Once function is found, parent that possesses func_name
+    is returned
+
+    Args:
+        qt_object (object): The object that'll be searched for it's parents
+        func_name (str): The name of the function that'll be searched
+    """
+    while qt_object is not None:
+        qt_object = qt_object.parent()
+        if func_name in dir(qt_object):
+            return qt_object
+
+
 def valuetype_to_text(value_index=int, length=0, is_unicode=False, zero_terminate=True):
     """Returns a str according to given parameters
 
