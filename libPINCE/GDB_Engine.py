@@ -615,15 +615,26 @@ def get_current_thread_information():
     """Gather information about the current thread
 
     Returns:
-        str: "Thread "+thread_address+" (LWP "+LWP_ID+")"
+        str: thread_address+" (LWP "+LWP_ID+")"
+        str: thread_address
+        None: If the output is unexpected
 
     Examples:
-        returned_str-->"Thread 0x7f34730d77c0 (LWP 6189)"
+        returned_str-->"0x7f34730d77c0 (LWP 6189)"
+        returned_str-->"0x00007fb29406faba"
     """
     thread_info = send_command("info threads")
     parsed_info = search(r"\*\s+\d+\s+Thread\s+0x[0-9a-fA-F]+\s+\(LWP\s+\d+\)",
-                         thread_info).group(0)  # * 1    Thread 0x7f34730d77c0 (LWP 6189)
-    return split(r"Thread\s+", parsed_info)[-1]
+                         thread_info)  # * 1    Thread 0x7f34730d77c0 (LWP 6189)
+    if parsed_info:
+        return split(r"Thread\s+", parsed_info.group(0))[-1]
+    else:
+
+        # Output is like this if the inferior has only one thread
+        parsed_info = search(r"\*\s+\d+\s+process.*0x[0-9a-fA-F]+",
+                             thread_info)  # * 1    process 2935 [process name] 0x00007fb29406faba
+        if parsed_info:
+            return search(r"0x[0-9a-fA-F]+", parsed_info.group(0)).group(0)
 
 
 def find_address_of_closest_instruction(address, how_many_instructions_to_look_for=1, instruction_location="next"):
