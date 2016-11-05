@@ -1097,7 +1097,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def initialize_disassemble_view(self):
         self.disassemble_last_selected_address_int = 0
-        self.disassemble_currently_displayed_address = "0x00400000"
+        self.disassemble_currently_displayed_address = "0"
         self.widget_Disassemble.wheelEvent = self.widget_Disassemble_wheel_event
 
         self.tableWidget_Disassemble.wheelEvent = QEvent.ignore
@@ -1127,7 +1127,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def initialize_hex_view(self):
         self.hex_view_last_selected_address_int = 0
-        self.hex_view_currently_displayed_address = 0x00400000
+        self.hex_view_currently_displayed_address = 0
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
         self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
         self.tableView_HexView_Ascii.contextMenuEvent = self.widget_HexView_context_menu_event
@@ -1357,8 +1357,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def refresh_hex_view(self):
         if self.tableWidget_HexView_Address.rowCount() == 0:
-            # ELF header usually starts at address 0x00400000
-            self.hex_dump_address(0x00400000)
+            entry_point_address = GDB_Engine.convert_symbol_to_address("_start")
+            self.hex_dump_address(int(entry_point_address, 16))
             self.tableView_HexView_Hex.resize_to_contents()
             self.tableView_HexView_Ascii.resize_to_contents()
         else:
