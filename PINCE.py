@@ -595,7 +595,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 return
             if not GDB_Engine.currentpid == 0:
                 GDB_Engine.detach()
-            GDB_Engine.attach(pid, gdb_path)
+            GDB_Engine.init_gdb(gdb_path)
+            GDB_Engine.attach(pid)
             p = SysUtils.get_process_information(GDB_Engine.currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.parent().QWidget_Toolbox.setEnabled(True)
