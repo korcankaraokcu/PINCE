@@ -536,6 +536,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         self.refresh_process_table(self.processtable, processlist)
         self.pushButton_Close.clicked.connect(self.pushbutton_close_onclick)
         self.pushButton_Open.clicked.connect(self.pushbutton_open_onclick)
+        self.pushButton_CreateProcess.clicked.connect(self.pushbutton_createprocess_onclick)
         self.lineEdit_searchprocess.textChanged.connect(self.generate_new_list)
         self.processtable.itemDoubleClicked.connect(self.pushbutton_open_onclick)
 
@@ -599,9 +600,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             GDB_Engine.attach(pid)
             p = SysUtils.get_process_information(GDB_Engine.currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
-            self.parent().QWidget_Toolbox.setEnabled(True)
-            self.parent().pushButton_NextScan.setEnabled(False)
-            self.parent().pushButton_UndoScan.setEnabled(False)
+            self.enable_scan_gui()
             readable_only, writeable, executable, readable = SysUtils.get_memory_regions_by_perms(
                 GDB_Engine.currentpid)  # test
             SysUtils.exclude_system_memory_regions(readable)
@@ -609,6 +608,26 @@ class ProcessForm(QMainWindow, ProcessWindow):
             print("done")  # loading_widget finish
             # self.loadingwidget.hide()
             self.close()
+
+    def pushbutton_createprocess_onclick(self):
+        file_path = QFileDialog.getOpenFileName(self, "Select the target binary")[0]
+        if file_path:
+            arg_dialog = DialogWithButtonsForm(label_text="Enter the optional arguments", hide_line_edit=False)
+            if arg_dialog.exec_():
+                args = arg_dialog.get_values()
+            else:
+                args = ""
+            GDB_Engine.init_gdb(gdb_path)
+            GDB_Engine.create_process(file_path, args)
+            p = SysUtils.get_process_information(GDB_Engine.currentpid)
+            self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
+            self.enable_scan_gui()
+            self.close()
+
+    def enable_scan_gui(self):
+        self.parent().QWidget_Toolbox.setEnabled(True)
+        self.parent().pushButton_NextScan.setEnabled(False)
+        self.parent().pushButton_UndoScan.setEnabled(False)
 
 
 # Add Address Manually Dialog
