@@ -86,8 +86,8 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
     global gdb_output
     with lock_send_command:
         time0 = time()
-        if currentpid == 0:
-            print("no process has been selected")
+        if not gdb_initialized:
+            print("gdb not initialized")
             return
         if inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_RUNNING and not control:
             print("inferior is running")
@@ -265,13 +265,43 @@ def attach(pid):
     inferior_arch = get_inferior_arch()
 
 
+def create_process(process_path, args=""):
+    """Creates a new process for debugging and initializes some of the global variables
+
+    Args:
+        process_path (str): Absolute path of the target binary
+        args (str): Arguments of the inferior, optional
+    """
+    if not gdb_initialized:
+        init_gdb()
+    global currentpid
+    global inferior_arch
+
+    # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
+    SysUtils.create_PINCE_IPC_PATH(0)
+    send_command("file " + process_path)
+    send_command("b _start")
+    send_command("set args " + args)
+    send_command("run")
+
+    # We have to wait till breakpoint hits
+    while inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        sleep(0.00001)
+    send_command("delete")
+    pid = get_inferior_pid()
+    currentpid = int(pid)
+    SysUtils.create_PINCE_IPC_PATH(pid)
+    create_gdb_log_file(pid)
+    set_pince_path()
+    inferior_arch = get_inferior_arch()
+
+
 def detach():
     """See you, space cowboy"""
     global child
     global currentpid
     global inferior_status
     global gdb_initialized
-    child.sendcontrol("d")
     child.close()
     currentpid = 0
     inferior_status = -1
@@ -721,6 +751,17 @@ def get_info_about_address(expression):
         str: The result of the command "info symbol" for given expression
     """
     return send_command("info symbol " + expression, cli_output=True)
+
+
+def get_inferior_pid():
+    """Get pid of the current inferior
+
+    Returns:
+        str: pid
+    """
+    output = send_command("info inferior")
+    parsed_output = search(r"process\s+\d+", output).group(0)
+    return parsed_output.split()[-1]
 
 
 def get_inferior_arch():
