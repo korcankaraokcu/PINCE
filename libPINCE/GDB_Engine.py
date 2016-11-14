@@ -27,6 +27,7 @@ from . import type_defs
 
 libc = ctypes.CDLL('libc.so.6')
 
+gdb_initialized = False
 inferior_arch = int
 inferior_status = -1
 currentpid = 0
@@ -205,20 +206,15 @@ def execute_till_return():
     send_command("finish")
 
 
-def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
-    """Attaches gdb to the target and initializes some of the global variables
+def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
+    """Spawns gdb and initializes some of the global variables
 
     Args:
-        pid (int,str): PID of the process that'll be attached to
         gdb_path (str): Path of the gdb binary
     """
-    global currentpid
     global child
-    global inferior_arch
-    currentpid = int(pid)
-    SysUtils.create_PINCE_IPC_PATH(pid)
+    global gdb_initialized
     libpince_dir = SysUtils.get_libpince_directory()
-    pince_dir = os.path.dirname(libpince_dir)
     child = pexpect.spawn('sudo LC_NUMERIC=C ' + gdb_path + ' --interpreter=mi', cwd=libpince_dir,
                           encoding="utf-8")
     child.setecho(False)
@@ -228,13 +224,44 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
     status_thread = Thread(target=state_observe_thread)
     status_thread.daemon = True
     status_thread.start()
+    gdb_initialized = True
+
+
+def create_gdb_log_file(pid):
+    """Creates a gdb log file for the current inferior
+
+    Args:
+        pid (int,str): PID of the current process
+    """
     send_command("set logging file " + SysUtils.get_gdb_async_file(pid))
     send_command("set logging on")
-    send_command("attach " + str(pid))
 
-    # gdb scripts needs to know libPINCE directory, unfortunately they don't start from the place where script exists
+
+def set_pince_path():
+    """Initializes $PINCE_PATH convenience variable to make commands in GDBCommandExtensions.py work
+    GDB scripts needs to know libPINCE directory, unfortunately they don't start from the place where script exists
+    """
+    libpince_dir = SysUtils.get_libpince_directory()
+    pince_dir = os.path.dirname(libpince_dir)
     send_command('set $PINCE_PATH=' + '"' + pince_dir + '"')
     send_command("source gdb_python_scripts/GDBCommandExtensions.py")
+
+
+def attach(pid):
+    """Attaches gdb to the target and initializes some of the global variables
+
+    Args:
+        pid (int,str): PID of the process that'll be attached to
+    """
+    if not gdb_initialized:
+        init_gdb()
+    global currentpid
+    global inferior_arch
+    currentpid = int(pid)
+    SysUtils.create_PINCE_IPC_PATH(pid)
+    create_gdb_log_file(pid)
+    send_command("attach " + str(pid))
+    set_pince_path()
     inferior_arch = get_inferior_arch()
 
 
@@ -243,10 +270,12 @@ def detach():
     global child
     global currentpid
     global inferior_status
+    global gdb_initialized
     child.sendcontrol("d")
     child.close()
     currentpid = 0
     inferior_status = -1
+    gdb_initialized = False
 
 
 def inject_with_advanced_injection(library_path):
