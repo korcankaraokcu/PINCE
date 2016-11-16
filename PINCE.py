@@ -116,9 +116,12 @@ class AwaitProcessExit(QThread):
     process_exited = pyqtSignal()
 
     def run(self):
-        while GDB_Engine.currentpid is 0 or SysUtils.is_process_valid(GDB_Engine.currentpid):
-            sleep(0.01)
-        self.process_exited.emit()
+        while True:
+            if GDB_Engine.currentpid is 0 or SysUtils.is_process_valid(GDB_Engine.currentpid):
+                pass
+            else:
+                self.process_exited.emit()
+            sleep(0.1)
 
 
 # Await async output from gdb
@@ -407,16 +410,13 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow.show()
 
     def delete_address_table_contents(self):
-        confirm_dialog = DialogWithButtonsForm(label_text="This will clear the contents of address table\n\tProceed?")
+        confirm_dialog = DialogWithButtonsForm(label_text="This will clear the contents of address table\nProceed?")
         if confirm_dialog.exec_():
             self.tableWidget_addresstable.setRowCount(0)
 
     def on_inferior_exit(self):
-        GDB_Engine.detach()
         self.on_status_running()
         self.label_SelectedProcess.setText("No Process Selected")
-        QMessageBox.information(self, "Warning", "Process has been terminated")
-        self.await_exit_thread.start()
 
     def on_status_stopped(self):
         self.label_SelectedProcess.setStyleSheet("color: red")
@@ -612,11 +612,14 @@ class ProcessForm(QMainWindow, ProcessWindow):
     def pushbutton_createprocess_onclick(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the target binary")[0]
         if file_path:
+            if not GDB_Engine.currentpid == 0:
+                GDB_Engine.detach()
             arg_dialog = DialogWithButtonsForm(label_text="Enter the optional arguments", hide_line_edit=False)
             if arg_dialog.exec_():
                 args = arg_dialog.get_values()
             else:
                 args = ""
+            self.setCursor(QCursor(Qt.WaitCursor))
             GDB_Engine.init_gdb(gdb_path)
             GDB_Engine.create_process(file_path, args)
             p = SysUtils.get_process_information(GDB_Engine.currentpid)
