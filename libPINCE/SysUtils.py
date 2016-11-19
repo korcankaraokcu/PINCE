@@ -15,7 +15,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import psutil
+
+# Fixes the ImportError problem in GDBCommandExtensions.py for Archlinux
+# This makes any psutil based function that's called from GDB unusable for Archlinux
+# Currently there's none but we can't take it for granted, can we?
+# TODO: Research the reason behind it or at least find a workaround
+try:
+    import psutil
+except ImportError:
+    print("WARNING: GDB couldn't locate the package psutil, psutil based user-defined functions won't work\n" +
+          "If you are getting this message without invoking GDB, it means that installation has failed, well, sort of")
 import os
 import shutil
 import sys
