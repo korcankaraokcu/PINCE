@@ -90,8 +90,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             print("gdb not initialized")
             return
         if inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_RUNNING and not control:
-            print("inferior is running")
-            return
+            raise type_defs.InferiorRunningException()
         gdb_output = ""
         if send_with_file:
             send_file = SysUtils.get_ipc_from_PINCE_file(currentpid)
