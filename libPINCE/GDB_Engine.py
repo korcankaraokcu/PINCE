@@ -31,11 +31,14 @@ gdb_initialized = False
 inferior_arch = int
 inferior_status = -1
 currentpid = 0
-breakpoint_condition_dict = {}  # Format: {address1:condition1,address2:condition2, ...}
+
+breakpoint_on_hit_dict = {}  # Format: {address1:on_hit1, address2:on_hit2, ...}
+breakpoint_condition_dict = {}  # Format: {address1:condition1, address2:condition2, ...}
 
 # If an action such as deletion or condition modification happens in one of the breakpoints in a list, others in the
 # same list will get affected as well
 chained_breakpoints = []  # Format: [[[address1, size1], [address2, size2], ...], [[address1, size1], ...], ...]
+
 child = object  # this object will be used with pexpect operations
 
 lock_send_command = Lock()
@@ -87,8 +90,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
     with lock_send_command:
         time0 = time()
         if not gdb_initialized:
-            print("gdb not initialized")
-            return
+            raise type_defs.GDBInitializeException
         if inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_RUNNING and not control:
             raise type_defs.InferiorRunningException()
         gdb_output = ""
@@ -955,7 +957,7 @@ def get_breakpoint_info():
             condition = breakpoint_condition_dict[int(address, 16)]
         except KeyError:
             condition = ""
-        on_hit = "break"
+        on_hit = type_defs.on_hit_to_text_dict.get(breakpoint_on_hit_dict[int(address, 16)], "unknown")
         returned_list.append(type_defs.tuple_breakpoint_info(number, breakpoint_type, address, size, condition, on_hit))
     return returned_list
 
@@ -1000,17 +1002,20 @@ def hardware_breakpoint_available():
     return hw_bp_total < 4
 
 
-def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWARE_BP):
+def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWARE_BP,
+                   on_hit=type_defs.BREAKPOINT_ON_HIT.BREAK):
     """Adds a breakpoint at the address evaluated by the given expression. Uses a software breakpoint if all hardware
     breakpoint slots are being used
 
     Args:
         expression (str): Any gdb expression
         breakpoint_type (int): Can be a member of type_defs.BREAKPOINT_TYPE
+        on_hit (int): Can be a member of type_defs.BREAKPOINT_ON_HIT
 
     Returns:
         bool: True if the breakpoint has been set successfully, False otherwise
     """
+    breakpoint_set = False
     str_address = convert_symbol_to_address(expression)
     if str_address == None:
         print("expression for breakpoint is not valid")
@@ -1022,36 +1027,41 @@ def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWAR
         if hardware_breakpoint_available():
             output = send_command("hbreak *" + str_address)
             if search(r"breakpoint-created", output):
-                return True
-            return False
+                breakpoint_set = True
         else:
             print("All hardware breakpoint slots are being used, using a software breakpoint instead")
             output = send_command("break *" + str_address)
             if search(r"breakpoint-created", output):
-                return True
-            return False
+                breakpoint_set = True
     elif breakpoint_type == type_defs.BREAKPOINT_TYPE.SOFTWARE_BP:
         output = send_command("break *" + str_address)
         if search(r"breakpoint-created", output):
-            return True
+            breakpoint_set = True
+    if breakpoint_set:
+        global breakpoint_on_hit_dict
+        breakpoint_on_hit_dict[int(str_address, 16)] = on_hit
+        return True
+    else:
         return False
 
 
-def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TYPE.BOTH):
+def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TYPE.BOTH,
+                   on_hit=type_defs.BREAKPOINT_ON_HIT.BREAK):
     """Adds a watchpoint at the address evaluated by the given expression
 
     Args:
         expression (str): Any gdb expression
         length (int): Length of the watchpoint
         watchpoint_type (int): Can be a member of type_defs.WATCHPOINT_TYPE
+        on_hit (int): Can be a member of type_defs.BREAKPOINT_ON_HIT
 
     Returns:
-        bool: True if the watchpoint has been set successfully, False otherwise
+        list: Numbers of the successfully set breakpoints as strings
     """
     str_address = convert_symbol_to_address(expression)
     if str_address == None:
         print("expression for watchpoint is not valid")
-        return 0
+        return
     if watchpoint_type == type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
         watch_command = "watch"
     elif watchpoint_type == type_defs.WATCHPOINT_TYPE.READ_ONLY:
@@ -1059,7 +1069,7 @@ def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TY
     elif watchpoint_type == type_defs.WATCHPOINT_TYPE.BOTH:
         watch_command = "awatch"
     remaining_length = length
-    breakpoints_set = 0
+    breakpoints_set = []
     arch = get_inferior_arch()
     str_address_int = int(str_address, 16)
     breakpoint_addresses = []
@@ -1080,11 +1090,14 @@ def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TY
             breakpoint_length = remaining_length
         output = send_command(watch_command + " * (char[" + str(breakpoint_length) + "] *) " + hex(str_address_int))
         if search(r"breakpoint-created", output):
-            breakpoints_set += 1
             breakpoint_addresses.append([str_address_int, breakpoint_length])
         else:
             print("Failed to create a watchpoint at address " + hex(str_address_int) + ". Bailing out...")
             break
+        breakpoint_number = search(r"\d+", search(r"number=\"\d+\"", output).group(0)).group(0)
+        breakpoints_set.append(breakpoint_number)
+        global breakpoint_on_hit_dict
+        breakpoint_on_hit_dict[str_address_int] = on_hit
         remaining_length -= max_length
         str_address_int += max_length
     global chained_breakpoints
@@ -1166,5 +1179,57 @@ def delete_breakpoint(expression):
             del breakpoint_condition_dict[breakpoint[0]]
         except KeyError:
             pass
+        global breakpoint_on_hit_dict
+        try:
+            del breakpoint_on_hit_dict[breakpoint[0]]
+        except KeyError:
+            pass
         send_command("delete " + str(breakpoint_number))
     return True
+
+
+def track_watchpoint(expression, length, watchpoint_type):
+    """Starts tracking a value by setting a watchpoint at the address holding it
+
+    Args:
+        expression (str): Any gdb expression
+        length (int): Length of the watchpoint
+        watchpoint_type (int): Can be a member of type_defs.WATCHPOINT_TYPE
+
+    Returns:
+        list: Numbers of the successfully set breakpoints as strings
+    """
+    breakpoints = add_watchpoint(expression, length, watchpoint_type, type_defs.BREAKPOINT_ON_HIT.FIND_CODE)
+    if not breakpoints:
+        return
+    for breakpoint in breakpoints:
+        send_command("commands " + breakpoint \
+                     + "\npince-get-track-watchpoint-info " + str(breakpoints) \
+                     + "\nc" \
+                     + "\nend")
+    return breakpoints
+
+
+def get_track_watchpoint_info(watchpoint_list):
+    """Gathers the information for the tracked watchpoint(s)
+
+    Args:
+        watchpoint_list (list): A list that holds the watchpoint numbers, must be returned from track_watchpoint()
+
+    Returns:
+        dict: Holds the program counter addresses at the moment watchpoint hits as keys
+        Format of dict--> {address1:info_list1, address2:info_list2, ...}
+        Format of info_list--> [count, previous_pc_address, register_info, float_info, disas_info]
+        count-->(int) Count of the hits for the same pc address
+        previous_pc_address-->(str) The address of the instruction that comes before the instruction pc address
+        holds. If there's no previous address available(end of region etc.), previous_pc_address=pc_address
+        register_info-->(dict) Same dict returned from read_registers()
+        float_info-->(dict) Same dict returned from read_float_registers()
+        disas_info-->(str) A small section that's disassembled just after previous_pc_counter
+    """
+    track_watchpoint_file = SysUtils.get_track_watchpoint_file(currentpid, watchpoint_list)
+    try:
+        output = pickle.load(open(track_watchpoint_file, "rb"))
+    except:
+        output = ""
+    return output

@@ -120,8 +120,9 @@ def text_to_valuetype(string):
         value_index=type_defs.VALUE_INDEX.INDEX_STRING, length=15, is_unicode=True, zero_terminate=False
         string="AoB[42]"-->value_index=type_defs.VALUE_INDEX.INDEX_AOB, length=42, None, None
     """
-    length = unicode = zero_terminate = None
+    unicode = zero_terminate = None
     index = type_defs.text_to_index_dict.get(string, -1)
+    length = type_defs.index_to_valuetype_dict.get(index, [-1])[0]
     if index is -1:
         if search(r"String\[\d*\]", string):  # String[10],U,NZT
             index = type_defs.VALUE_INDEX.INDEX_STRING

@@ -312,6 +312,19 @@ def get_gdb_command_file(pid):
     return get_PINCE_IPC_directory(pid) + "/gdb_command.txt"
 
 
+def get_track_watchpoint_file(pid, watchpoint_list):
+    """Get the path of track watchpoint file for given pid
+
+    Args:
+        pid (int,str): PID of the process
+        watchpoint_list (list,str): Numbers of the watchpoints
+
+    Returns:
+        str: Path of track watchpoint file
+    """
+    return get_PINCE_IPC_directory(pid) + "/" + str(watchpoint_list) + "_track_watchpoint.txt"
+
+
 def get_ipc_from_PINCE_file(pid):
     """Get the path of IPC file sent to custom gdb commands from PINCE for given pid
 
