@@ -29,13 +29,13 @@ class PATHS:
 
 
 class INFERIOR_STATUS:
-    INFERIOR_RUNNING = 0
-    INFERIOR_STOPPED = 1
+    INFERIOR_RUNNING = 1
+    INFERIOR_STOPPED = 2
 
 
 class INFERIOR_ARCH:
-    ARCH_32 = 0
-    ARCH_64 = 1
+    ARCH_32 = 1
+    ARCH_64 = 2
 
 
 class INJECTION_METHOD:
@@ -54,6 +54,12 @@ class WATCHPOINT_TYPE:
     BOTH = 3
 
 
+class BREAKPOINT_ON_HIT:
+    BREAK = 1
+    FIND_CODE = 2
+    FIND_ADDR = 3
+
+
 # represents the indexes of value types
 # Also used in PINCE's value comboboxes
 class VALUE_INDEX:
@@ -66,6 +72,12 @@ class VALUE_INDEX:
     INDEX_STRING = 6
     INDEX_AOB = 7  # Array of Bytes
 
+
+on_hit_to_text_dict = {
+    BREAKPOINT_ON_HIT.BREAK: "break",
+    BREAKPOINT_ON_HIT.FIND_CODE: "find code",
+    BREAKPOINT_ON_HIT.FIND_ADDR: "find address"
+}
 
 # Represents the texts at indexes in combobox
 index_to_text_dict = {
@@ -135,3 +147,8 @@ tuple_region_info = collections.namedtuple("region_info", "start end region")
 class InferiorRunningException(Exception):
     def __init__(self, message="Inferior is running"):
         super(InferiorRunningException, self).__init__(message)
+
+
+class GDBInitializeException(Exception):
+    def __init__(self, message="GDB not initialized"):
+        super(GDBInitializeException, self).__init__(message)

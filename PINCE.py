@@ -45,6 +45,7 @@ from GUI.BookmarkWidget import Ui_Form as BookmarkWidget
 from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
 from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
 from GUI.BreakpointInfoWidget import Ui_TabWidget as BreakpointInfoWidget
+from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -105,6 +106,10 @@ STACK_FLOAT_REPRESENTATION_COL = 3
 # represents row and column counts of Hex table
 HEX_VIEW_COL_COUNT = 16
 HEX_VIEW_ROW_COUNT = 42  # J-JUST A COINCIDENCE, I SWEAR!
+
+# represents the index of columns in track watchpoint table(what accesses this address thingy)
+TRACK_WATCHPOINT_COUNT_COL = 0
+TRACK_WATCHPOINT_ADDR_COL = 1
 
 # From version 5.5 and onwards, PyQT calls qFatal() when an exception has been encountered
 # So, we must override sys.excepthook to avoid calling of qFatal()
@@ -293,6 +298,10 @@ class MainForm(QMainWindow, MainWindow):
         disassemble = menu.addAction("Disassemble this address[D]")
         menu.addSeparator()
         delete_record = menu.addAction("Delete selected records[Del]")
+        menu.addSeparator()
+        what_writes = menu.addAction("Find out what writes to this address")
+        what_reads = menu.addAction("Find out what reads this address")
+        what_accesses = menu.addAction("Find out what accesses this address")
         font_size = self.tableWidget_addresstable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -302,6 +311,19 @@ class MainForm(QMainWindow, MainWindow):
             self.disassemble_selected_row()
         elif action == delete_record:
             self.delete_selected_records()
+        elif action == what_writes:
+            self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.WRITE_ONLY)
+        elif action == what_reads:
+            self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.READ_ONLY)
+        elif action == what_accesses:
+            self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.BOTH)
+
+    def exec_track_watchpoint_widget(self, watchpoint_type):
+        last_selected_row = self.tableWidget_addresstable.selectionModel().selectedRows()[-1].row()
+        address = self.tableWidget_addresstable.item(last_selected_row, ADDR_COL).text()
+        length = GuiUtils.text_to_valuetype(self.tableWidget_addresstable.item(last_selected_row, TYPE_COL).text())[1]
+        track_watchpoint_widget = TrackWatchpointWidgetForm(address, length, watchpoint_type, self)
+        track_watchpoint_widget.show()
 
     def browse_region_for_selected_row(self):
         last_selected_row = self.tableWidget_addresstable.selectionModel().selectedRows()[-1].row()
@@ -1216,7 +1238,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 if user_input_int < 1:
                     QMessageBox.information(self, "Error", "Breakpoint length can't be lower than 1")
                     return
-                if GDB_Engine.add_watchpoint(hex(address), user_input_int, watchpoint_type) < 1:
+                if len(GDB_Engine.add_watchpoint(hex(address), user_input_int, watchpoint_type)) < 1:
                     QMessageBox.information(self, "Error", "Failed to set watchpoint at address " + hex(address))
         self.refresh_hex_view()
 
@@ -2096,6 +2118,97 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
                 self.parent().disassemble_expression(current_address)
             else:
                 self.parent().hex_dump_address(current_address_int)
+
+
+class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
+    def __init__(self, address, length, watchpoint_type, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center(self)
+        self.setWindowFlags(Qt.Window)
+        if watchpoint_type == type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
+            string = "writing to"
+        elif watchpoint_type == type_defs.WATCHPOINT_TYPE.READ_ONLY:
+            string = "reading from"
+        elif watchpoint_type == type_defs.WATCHPOINT_TYPE.BOTH:
+            string = "accessing to"
+        self.setWindowTitle("Opcodes " + string + " the address " + address)
+        breakpoints = GDB_Engine.track_watchpoint(address, length, watchpoint_type)
+        if not breakpoints:
+            QMessageBox.information(self, "Error", "Unable to track watchpoint at expression " + address)
+            return
+        self.address = address
+        self.breakpoints = breakpoints
+        self.info = {}
+        self.last_selected_row = 0
+        self.stopped = False
+        self.pushButton_Stop.pressed.connect(self.pushButton_Stop_pressed)
+        self.pushButton_Refresh.pressed.connect(self.update_list)
+        self.tableWidget_Opcodes.itemDoubleClicked.connect(self.tableWidget_Opcodes_item_double_clicked)
+        self.tableWidget_Opcodes.selectionModel().currentChanged.connect(self.tableWidget_Opcodes_current_changed)
+        self.update_timer = QTimer()
+        self.update_timer.setInterval(100)
+        self.update_timer.timeout.connect(self.update_list)
+        self.update_timer.start()
+
+    def update_list(self):
+        info = GDB_Engine.get_track_watchpoint_info(self.breakpoints)
+        if not info:
+            return
+        if self.info == info:
+            return
+        self.info = info
+        self.tableWidget_Opcodes.setRowCount(0)
+        self.tableWidget_Opcodes.setRowCount(len(info))
+        for row, key in enumerate(info):
+            self.tableWidget_Opcodes.setItem(row, TRACK_WATCHPOINT_COUNT_COL, QTableWidgetItem(str(info[key][0])))
+            self.tableWidget_Opcodes.setItem(row, TRACK_WATCHPOINT_ADDR_COL, QTableWidgetItem(info[key][1]))
+        self.tableWidget_Opcodes.resizeColumnsToContents()
+        self.tableWidget_Opcodes.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_Opcodes.selectRow(self.last_selected_row)
+
+    def tableWidget_Opcodes_current_changed(self, QModelIndex_current):
+        current_row = QModelIndex_current.row()
+        if current_row >= 0:
+            self.last_selected_row = current_row
+
+        info = self.info
+        key_list = list(info)
+        key = key_list[self.last_selected_row]
+        self.textBrowser_Info.clear()
+        for item in info[key][2]:
+            self.textBrowser_Info.append(item + "=" + info[key][2][item])
+        self.textBrowser_Info.append(" ")
+        for row, index in enumerate(range(8)):
+            current_st_register = "st" + str(index)
+            string = current_st_register + "=" + info[key][3][current_st_register]
+            self.textBrowser_Info.append(string)
+        self.textBrowser_Info.append(" ")
+        for row, index in enumerate(range(8)):
+            current_xmm_register = "xmm" + str(index)
+            string = current_xmm_register + "=" + info[key][3][current_xmm_register]
+            self.textBrowser_Info.append(string)
+        self.textBrowser_Info.verticalScrollBar().setValue(self.textBrowser_Info.verticalScrollBar().minimum())
+        self.textBrowser_Disassemble.setPlainText(info[key][4])
+
+    def tableWidget_Opcodes_item_double_clicked(self, index):
+        self.parent().memory_view_window.disassemble_expression(
+            self.tableWidget_Opcodes.item(index.row(), TRACK_WATCHPOINT_ADDR_COL).text(),
+            append_to_travel_history=True)
+        self.parent().memory_view_window.show()
+        self.parent().memory_view_window.activateWindow()
+
+    def pushButton_Stop_pressed(self):
+        if self.stopped:
+            self.close()
+        if not GDB_Engine.delete_breakpoint(self.address):
+            QMessageBox.information(self, "Error", "Unable to delete watchpoint at expression " + self.address)
+            return
+        self.stopped = True
+        self.pushButton_Stop.setText("Close")
+
+    def closeEvent(self, QCloseEvent):
+        GDB_Engine.delete_breakpoint(self.address)
 
 
 if __name__ == "__main__":

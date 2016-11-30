@@ -21,6 +21,7 @@ import sys
 import re
 import struct
 import io
+from collections import OrderedDict
 
 # This is some retarded hack
 gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
@@ -44,6 +45,12 @@ if str(gdb.parse_and_eval("$rax")) == "void":
     current_arch = type_defs.INFERIOR_ARCH.ARCH_32
 else:
     current_arch = type_defs.INFERIOR_ARCH.ARCH_64
+
+# Format of info_list: [count, previous_pc_address, register_info, float_info, disas_info]
+# Format of watchpoint_dict: {address1:info_list1, address2:info_list2, ...}
+# Format of watchpoint_numbers: str([1,2,3,4,..])
+# Format: {watchpoint_numbers1:watchpoint_dict1, watchpoint_numbers2:track_watchpoint_dict2, ...}
+track_watchpoint_dict = {}
 
 
 def receive_from_pince():
@@ -172,8 +179,7 @@ class ReadRegisters(gdb.Command):
         super(ReadRegisters, self).__init__("pince-read-registers", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        contents_send = {"cf": "0", "pf": "0", "af": "0", "zf": "0", "sf": "0", "tf": "0", "if": "0", "df": "0",
-                         "of": "0"}
+        contents_send = OrderedDict()
         if current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             general_register_list = REGISTERS_64
         else:
@@ -186,6 +192,8 @@ class ReadRegisters(gdb.Command):
         result = gdb.execute("p/t $eflags", from_tty, to_string=True)
         parsed_result = re.search(r"=\s+\d+", result).group(0).split()[-1]  # $8 = 1010010011
         reversed_parsed_result = "".join(reversed(parsed_result))
+        contents_send["cf"], contents_send["pf"], contents_send["af"], contents_send["zf"], contents_send["sf"], \
+        contents_send["tf"], contents_send["if"], contents_send["df"], contents_send["of"] = ["0"] * 9
         try:
             contents_send["cf"] = reversed_parsed_result[0]
             contents_send["pf"] = reversed_parsed_result[2]
@@ -202,7 +210,10 @@ class ReadRegisters(gdb.Command):
             result = gdb.execute("p/x $" + item, from_tty, to_string=True)
             parsed_result = regex_hex.search(result).group(0)
             contents_send[item] = parsed_result
-        send_to_pince(contents_send)
+        if arg == "print":
+            print(contents_send)
+        else:
+            send_to_pince(contents_send)
 
 
 class ReadFloatRegisters(gdb.Command):
@@ -223,7 +234,10 @@ class ReadFloatRegisters(gdb.Command):
             current_register = "xmm" + str(index)
             value = gdb.parse_and_eval("$" + current_register + ".v4_float")
             contents_send[current_register] = str(value)
-        send_to_pince(contents_send)
+        if arg == "print":
+            print(contents_send)
+        else:
+            send_to_pince(contents_send)
 
 
 class GetStackTraceInfo(gdb.Command):
@@ -372,6 +386,38 @@ class HexDump(gdb.Command):
         send_to_pince(contents_send)
 
 
+class GetTrackWatchpointInfo(gdb.Command):
+    def __init__(self):
+        super(GetTrackWatchpointInfo, self).__init__("pince-get-track-watchpoint-info", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        breakpoints = arg
+        current_pc_int = int(SysUtils.extract_address(str(gdb.parse_and_eval("$pc"))), 16)
+        try:
+            disas_output = gdb.execute("disas $pc-30,$pc", from_tty, to_string=True)
+
+            # Just before the line "End of assembler dump"
+            last_instruction = disas_output.splitlines()[-2]
+            previous_pc_address = SysUtils.extract_address(last_instruction)
+        except:
+            previous_pc_address = hex(current_pc_int)
+        global track_watchpoint_dict
+        try:
+            count = track_watchpoint_dict[breakpoints][current_pc_int][0]
+            count += 1
+        except KeyError:
+            if breakpoints not in track_watchpoint_dict:
+                track_watchpoint_dict[breakpoints] = OrderedDict()
+            count = 1
+        register_info = eval(gdb.execute("pince-read-registers print", from_tty, to_string=True))
+        float_info = eval(gdb.execute("pince-read-float-registers print", from_tty, to_string=True))
+        disas_info = gdb.execute("disas " + previous_pc_address + ",+40", from_tty, to_string=True).replace("=>", "  ")
+        track_watchpoint_dict[breakpoints][current_pc_int] = [count, previous_pc_address, register_info, float_info,
+                                                              disas_info]
+        track_watchpoint_file = SysUtils.get_track_watchpoint_file(pid, breakpoints)
+        pickle.dump(track_watchpoint_dict[breakpoints], open(track_watchpoint_file, "wb"))
+
+
 IgnoreErrors()
 CLIOutput()
 ReadMultipleAddresses()
@@ -385,3 +431,4 @@ GetStackInfo()
 GetFrameReturnAddresses()
 GetFrameInfo()
 HexDump()
+GetTrackWatchpointInfo()
