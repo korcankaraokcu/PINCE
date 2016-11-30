@@ -493,7 +493,7 @@ class MainForm(QMainWindow, MainWindow):
                     address = self.tableWidget_addresstable.item(row, ADDR_COL).text()
                     value_type = self.tableWidget_addresstable.item(row, TYPE_COL).text()
                     value_index = GuiUtils.text_to_index(value_type)
-                    if GuiUtils.text_to_length(value_type) is not -1:
+                    if value_index == type_defs.VALUE_INDEX.INDEX_STRING or value_index == type_defs.VALUE_INDEX.INDEX_AOB:
                         unknown_type = SysUtils.parse_string(value_text, value_index)
                         if unknown_type is not None:
                             length = len(unknown_type)

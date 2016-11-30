@@ -173,14 +173,15 @@ def text_to_length(string):
 
     Returns:
         int: Length
-        -1 is returned if the value_index of the given string isn't INDEX_STRING or INDEX_AOB
+        -1 is returned if the value_index is invalid
     """
     index = type_defs.text_to_index_dict.get(string, -1)
     if index is -1:
         search(r"\[\d*\]", string)
         length = sub("[^0-9]", "", string)
         return int(length)
-    return -1
+    else:
+        return type_defs.index_to_valuetype_dict.get(index, [-1])[0]
 
 
 def change_text_length(string, length):
