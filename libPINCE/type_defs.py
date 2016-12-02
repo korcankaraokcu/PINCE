@@ -74,9 +74,9 @@ class VALUE_INDEX:
 
 
 on_hit_to_text_dict = {
-    BREAKPOINT_ON_HIT.BREAK: "break",
-    BREAKPOINT_ON_HIT.FIND_CODE: "find code",
-    BREAKPOINT_ON_HIT.FIND_ADDR: "find address"
+    BREAKPOINT_ON_HIT.BREAK: "Break",
+    BREAKPOINT_ON_HIT.FIND_CODE: "Find Code",
+    BREAKPOINT_ON_HIT.FIND_ADDR: "Find Address"
 }
 
 # Represents the texts at indexes in combobox
