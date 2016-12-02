@@ -957,7 +957,8 @@ def get_breakpoint_info():
             condition = breakpoint_condition_dict[int(address, 16)]
         except KeyError:
             condition = ""
-        on_hit = type_defs.on_hit_to_text_dict.get(breakpoint_on_hit_dict[int(address, 16)], "unknown")
+        on_hit_dict_value = breakpoint_on_hit_dict.get(int(address, 16), type_defs.BREAKPOINT_ON_HIT.BREAK)
+        on_hit = type_defs.on_hit_to_text_dict.get(on_hit_dict_value, "unknown")
         returned_list.append(type_defs.tuple_breakpoint_info(number, breakpoint_type, address, size, condition, on_hit))
     return returned_list
 
