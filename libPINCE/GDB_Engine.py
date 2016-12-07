@@ -55,7 +55,7 @@ index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
 
 def send_command(command, control=False, cli_output=False, send_with_file=False, file_contents_send=None,
                  recv_with_file=False):
-    """Issues the command sent
+    """Issues the command sent, raises an exception if the inferior is running or no inferior has been selected
 
     Args:
         command (str): The command that'll be sent
@@ -74,7 +74,6 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
 
     Returns:
         str: Result of the command sent, commands in the form of "ctrl+key" always returns a null string
-        None: If the inferior is running or no inferior has been selected
 
     Todo:
         Support GDB/MI commands. In fact, this is something gdb itself should fix. Because gdb python API doesn't
@@ -752,6 +751,24 @@ def get_info_about_address(expression):
         str: The result of the command "info symbol" for given expression
     """
     return send_command("info symbol " + expression, cli_output=True)
+
+
+def get_info_about_functions(expression):
+    """Runs the gdb command "info functions" for given expression and returns the result of it
+
+    Args:
+        expression (str): Any gdb expression
+
+    Returns:
+        list: A list of type_defs.tuple_function_info
+    """
+    output = send_command("info functions " + expression, cli_output=True)
+    parsed_info = findall(r"0x[0-9a-fA-F]+\s+.*", output)
+    returned_list = []
+    for item in parsed_info:
+        address, symbol = item.split(maxsplit=1)
+        returned_list.append(type_defs.tuple_function_info(address, symbol))
+    return returned_list
 
 
 def get_inferior_pid():

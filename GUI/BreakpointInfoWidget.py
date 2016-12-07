@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'BreakpointInfoWidget.ui'
 #
-# Created: Tue Nov  1 17:47:54 2016
+# Created: Fri Dec  2 21:32:09 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -38,8 +38,8 @@ class Ui_TabWidget(object):
         self.tableWidget_BreakpointInfo.setHorizontalHeaderItem(5, item)
         self.tableWidget_BreakpointInfo.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_BreakpointInfo.verticalHeader().setVisible(False)
-        self.tableWidget_BreakpointInfo.verticalHeader().setDefaultSectionSize(15)
-        self.tableWidget_BreakpointInfo.verticalHeader().setMinimumSectionSize(15)
+        self.tableWidget_BreakpointInfo.verticalHeader().setDefaultSectionSize(16)
+        self.tableWidget_BreakpointInfo.verticalHeader().setMinimumSectionSize(16)
         self.gridLayout_2.addWidget(self.tableWidget_BreakpointInfo, 0, 0, 1, 1)
         TabWidget.addTab(self.tab_BreakpointInfo, "")
         self.tab_RawBreakpointInfo = QtWidgets.QWidget()

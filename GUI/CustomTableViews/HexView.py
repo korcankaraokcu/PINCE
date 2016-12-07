@@ -7,7 +7,7 @@ class QHexView(QTableView):
         super().__init__(parent)
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
-        self.verticalHeader().setDefaultSectionSize(15)
+        self.verticalHeader().setDefaultSectionSize(16)
         self.horizontalHeader().setDefaultSectionSize(23)
         self.setStyleSheet("QTableView {background-color: transparent;}")
         self.setShowGrid(False)

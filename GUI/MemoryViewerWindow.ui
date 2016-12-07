@@ -70,7 +70,10 @@
             <bool>false</bool>
            </attribute>
            <attribute name="verticalHeaderDefaultSectionSize">
-            <number>15</number>
+            <number>16</number>
+           </attribute>
+           <attribute name="verticalHeaderMinimumSectionSize">
+            <number>16</number>
            </attribute>
            <attribute name="verticalHeaderStretchLastSection">
             <bool>false</bool>
@@ -123,7 +126,7 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-148</y>
+              <y>0</y>
               <width>358</width>
               <height>455</height>
              </rect>
@@ -1189,7 +1192,10 @@
                 <bool>false</bool>
                </attribute>
                <attribute name="verticalHeaderDefaultSectionSize">
-                <number>15</number>
+                <number>16</number>
+               </attribute>
+               <attribute name="verticalHeaderMinimumSectionSize">
+                <number>16</number>
                </attribute>
                <column>
                 <property name="text">
@@ -1281,6 +1287,7 @@
     <addaction name="actionBookmarks"/>
     <addaction name="actionStackTrace_Info"/>
     <addaction name="actionBreakpoints"/>
+    <addaction name="actionFunctions"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -1353,6 +1360,11 @@
   <action name="actionBreakpoints">
    <property name="text">
     <string>Breakpoints</string>
+   </property>
+  </action>
+  <action name="actionFunctions">
+   <property name="text">
+    <string>Functions</string>
    </property>
   </action>
  </widget>
