@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Fri Nov  4 12:37:51 2016
+# Created: Fri Dec  2 21:30:55 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -55,7 +55,8 @@ class Ui_MainWindow_MemoryView(object):
         self.tableWidget_Disassemble.setHorizontalHeaderItem(3, item)
         self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_Disassemble.verticalHeader().setVisible(False)
-        self.tableWidget_Disassemble.verticalHeader().setDefaultSectionSize(15)
+        self.tableWidget_Disassemble.verticalHeader().setDefaultSectionSize(16)
+        self.tableWidget_Disassemble.verticalHeader().setMinimumSectionSize(16)
         self.tableWidget_Disassemble.verticalHeader().setStretchLastSection(False)
         self.gridLayout_2.addWidget(self.tableWidget_Disassemble, 0, 0, 1, 1)
         self.verticalScrollBar_Disassemble = QtWidgets.QScrollBar(self.widget_Disassemble)
@@ -72,7 +73,7 @@ class Ui_MainWindow_MemoryView(object):
         self.scrollArea_Registers.setWidgetResizable(True)
         self.scrollArea_Registers.setObjectName("scrollArea_Registers")
         self.scrollAreaWidgetContents_Registers = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, -148, 358, 455))
+        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 358, 455))
         self.scrollAreaWidgetContents_Registers.setObjectName("scrollAreaWidgetContents_Registers")
         self.gridLayout_8 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_Registers)
         self.gridLayout_8.setObjectName("gridLayout_8")
@@ -614,7 +615,8 @@ class Ui_MainWindow_MemoryView(object):
         self.tableWidget_StackTrace.setHorizontalHeaderItem(1, item)
         self.tableWidget_StackTrace.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_StackTrace.verticalHeader().setVisible(False)
-        self.tableWidget_StackTrace.verticalHeader().setDefaultSectionSize(15)
+        self.tableWidget_StackTrace.verticalHeader().setDefaultSectionSize(16)
+        self.tableWidget_StackTrace.verticalHeader().setMinimumSectionSize(16)
         self.gridLayout_9.addWidget(self.tableWidget_StackTrace, 0, 0, 1, 1)
         self.stackedWidget_StackScreens.addWidget(self.StackTrace)
         self.Stack = QtWidgets.QWidget()
@@ -680,9 +682,12 @@ class Ui_MainWindow_MemoryView(object):
         self.actionToggle_Breakpoint.setObjectName("actionToggle_Breakpoint")
         self.actionBreakpoints = QtWidgets.QAction(MainWindow_MemoryView)
         self.actionBreakpoints.setObjectName("actionBreakpoints")
+        self.actionFunctions = QtWidgets.QAction(MainWindow_MemoryView)
+        self.actionFunctions.setObjectName("actionFunctions")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
         self.menuView.addAction(self.actionBreakpoints)
+        self.menuView.addAction(self.actionFunctions)
         self.menuDebug.addAction(self.actionRun)
         self.menuDebug.addAction(self.actionBreak)
         self.menuDebug.addSeparator()
@@ -792,8 +797,9 @@ class Ui_MainWindow_MemoryView(object):
         self.actionExecute_Till_Return.setText(_translate("MainWindow_MemoryView", "Execute Till Return[Shift+F8]"))
         self.actionToggle_Breakpoint.setText(_translate("MainWindow_MemoryView", "Toggle Breakpoint[F5]"))
         self.actionBreakpoints.setText(_translate("MainWindow_MemoryView", "Breakpoints"))
+        self.actionFunctions.setText(_translate("MainWindow_MemoryView", "Functions"))
 
-from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
 from GUI.CustomTableViews.AsciiView import QAsciiView
-from GUI.CustomTableViews.HexView import QHexView
 from GUI.CustomLabels.RegisterLabel import QRegisterLabel
+from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
+from GUI.CustomTableViews.HexView import QHexView

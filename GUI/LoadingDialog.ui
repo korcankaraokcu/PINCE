@@ -1,29 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
-  <property name="windowModality">
-   <enum>Qt::WindowModal</enum>
-  </property>
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>447</width>
-    <height>300</height>
+    <width>195</width>
+    <height>40</height>
    </rect>
   </property>
-  <property name="cursor">
-   <cursorShape>WaitCursor</cursorShape>
-  </property>
   <property name="windowTitle">
-   <string/>
+   <string>Dialog</string>
   </property>
-  <property name="autoFillBackground">
-   <bool>true</bool>
-  </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_2">
-   <item>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <spacer name="horizontalSpacer">

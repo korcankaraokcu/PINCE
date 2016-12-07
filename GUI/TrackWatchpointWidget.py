@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'TrackWatchpointWidget.ui'
 #
-# Created: Wed Nov 30 16:47:13 2016
+# Created: Fri Dec  2 21:30:54 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -21,12 +21,12 @@ class Ui_Form(object):
         self.splitter = QtWidgets.QSplitter(self.splitter_2)
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
-        self.widget = QtWidgets.QWidget(self.splitter)
-        self.widget.setObjectName("widget")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.widget)
+        self.layoutWidget = QtWidgets.QWidget(self.splitter)
+        self.layoutWidget.setObjectName("layoutWidget")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.layoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.tableWidget_Opcodes = QtWidgets.QTableWidget(self.widget)
+        self.tableWidget_Opcodes = QtWidgets.QTableWidget(self.layoutWidget)
         self.tableWidget_Opcodes.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tableWidget_Opcodes.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.tableWidget_Opcodes.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -39,15 +39,15 @@ class Ui_Form(object):
         self.tableWidget_Opcodes.setHorizontalHeaderItem(1, item)
         self.tableWidget_Opcodes.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_Opcodes.verticalHeader().setVisible(False)
-        self.tableWidget_Opcodes.verticalHeader().setDefaultSectionSize(15)
-        self.tableWidget_Opcodes.verticalHeader().setMinimumSectionSize(15)
+        self.tableWidget_Opcodes.verticalHeader().setDefaultSectionSize(16)
+        self.tableWidget_Opcodes.verticalHeader().setMinimumSectionSize(16)
         self.verticalLayout.addWidget(self.tableWidget_Opcodes)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.pushButton_Refresh = QtWidgets.QPushButton(self.widget)
+        self.pushButton_Refresh = QtWidgets.QPushButton(self.layoutWidget)
         self.pushButton_Refresh.setObjectName("pushButton_Refresh")
         self.horizontalLayout.addWidget(self.pushButton_Refresh)
-        self.pushButton_Stop = QtWidgets.QPushButton(self.widget)
+        self.pushButton_Stop = QtWidgets.QPushButton(self.layoutWidget)
         self.pushButton_Stop.setObjectName("pushButton_Stop")
         self.horizontalLayout.addWidget(self.pushButton_Stop)
         self.verticalLayout.addLayout(self.horizontalLayout)

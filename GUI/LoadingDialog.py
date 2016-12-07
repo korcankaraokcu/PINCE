@@ -1,29 +1,25 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'loadingwidget.ui'
+# Form implementation generated from reading ui file 'LoadingDialog.ui'
 #
-# Created: Fri May 13 03:12:03 2016
+# Created: Wed Dec  7 19:30:07 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-class Ui_Form(object):
-    def setupUi(self, Form):
-        Form.setObjectName("Form")
-        Form.setWindowModality(QtCore.Qt.WindowModal)
-        Form.resize(447, 300)
-        Form.setCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
-        Form.setWindowTitle("")
-        Form.setAutoFillBackground(True)
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(Form)
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+class Ui_Dialog(object):
+    def setupUi(self, Dialog):
+        Dialog.setObjectName("Dialog")
+        Dialog.resize(195, 40)
+        self.gridLayout = QtWidgets.QGridLayout(Dialog)
+        self.gridLayout.setObjectName("gridLayout")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
-        self.label_Animated = QtWidgets.QLabel(Form)
+        self.label_Animated = QtWidgets.QLabel(Dialog)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -33,17 +29,18 @@ class Ui_Form(object):
         self.label_Animated.setScaledContents(False)
         self.label_Animated.setObjectName("label_Animated")
         self.horizontalLayout.addWidget(self.label_Animated)
-        self.label_StatusText = QtWidgets.QLabel(Form)
+        self.label_StatusText = QtWidgets.QLabel(Dialog)
         self.label_StatusText.setObjectName("label_StatusText")
         self.horizontalLayout.addWidget(self.label_StatusText)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
-        self.horizontalLayout_2.addLayout(self.horizontalLayout)
+        self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
 
-        self.retranslateUi(Form)
-        QtCore.QMetaObject.connectSlotsByName(Form)
+        self.retranslateUi(Dialog)
+        QtCore.QMetaObject.connectSlotsByName(Dialog)
 
-    def retranslateUi(self, Form):
+    def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        self.label_StatusText.setText(_translate("Form", "Processing"))
+        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        self.label_StatusText.setText(_translate("Dialog", "Processing"))
 

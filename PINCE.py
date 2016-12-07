@@ -33,7 +33,7 @@ from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
 from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
-from GUI.LoadingWidget import Ui_Form as LoadingWidget
+from GUI.LoadingDialog import Ui_Dialog as LoadingDialog
 from GUI.DialogWithButtons import Ui_Dialog as DialogWithButtons
 from GUI.SettingsDialog import Ui_Dialog as SettingsDialog
 from GUI.ConsoleWidget import Ui_Form as ConsoleWidget
@@ -46,6 +46,7 @@ from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
 from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
 from GUI.BreakpointInfoWidget import Ui_TabWidget as BreakpointInfoWidget
 from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
+from GUI.FunctionsInfoWidget import Ui_Form as FunctionsInfoWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -110,6 +111,10 @@ HEX_VIEW_ROW_COUNT = 42  # J-JUST A COINCIDENCE, I SWEAR!
 # represents the index of columns in track watchpoint table(what accesses this address thingy)
 TRACK_WATCHPOINT_COUNT_COL = 0
 TRACK_WATCHPOINT_ADDR_COL = 1
+
+# represents the index of columns in function info table
+FUNCTIONS_INFO_ADDR_COL = 0
+FUNCTIONS_INFO_SYMBOL_COL = 1
 
 # From version 5.5 and onwards, PyQT calls qFatal() when an exception has been encountered
 # So, we must override sys.excepthook to avoid calling of qFatal()
@@ -553,7 +558,6 @@ class ProcessForm(QMainWindow, ProcessWindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center_to_parent(self)
-        # self.loadingwidget = LoadingWidgetForm()
         processlist = SysUtils.get_process_list()
         self.refresh_process_table(self.processtable, processlist)
         self.pushButton_Close.clicked.connect(self.pushbutton_close_onclick)
@@ -608,12 +612,10 @@ class ProcessForm(QMainWindow, ProcessWindow):
                                         "That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
             self.setCursor(QCursor(Qt.WaitCursor))
-            # self.setCentralWidget(self.loadingwidget)
-            # self.loadingwidget.show()
-            print("processing")  # loading_widget start
+            print("processing")
             result = GDB_Engine.can_attach(pid)
             if not result:
-                print("done")  # loading_widget finish
+                print("done")
                 QMessageBox.information(self, "Error", "Permission denied, could not attach to the process")
                 return
             if not GDB_Engine.currentpid == 0:
@@ -627,8 +629,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 GDB_Engine.currentpid)  # test
             SysUtils.exclude_system_memory_regions(readable)
             print(len(readable))
-            print("done")  # loading_widget finish
-            # self.loadingwidget.hide()
+            print("done")
             self.close()
 
     def pushbutton_createprocess_onclick(self):
@@ -780,53 +781,60 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         return description, address, typeofaddress, length, unicode, zero_terminate
 
 
-# FIXME: the gif in qlabel won't update itself, also the design of this class is generally shitty
-# FIXME: this class is temporary and buggy, so all implementations of this shit should be fixed as soon as this class gets fixed
-# I designed(sorry) this as a widget, but you can transform it to anything if it's going to fix the gif problem
-class LoadingWidgetForm(QWidget, LoadingWidget):
+class LoadingDialogForm(QDialog, LoadingDialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
+        if parent:
+            GuiUtils.center_to_parent(self)
+        self.keyPressEvent = QEvent.ignore
+
+        # Make use of this background_thread when you spawn a LoadingDialogForm
+        # Warning: overrided_func() can only return one value, so if your overridden function returns more than one
+        # value, refactor your overriden function to return only one object(convert tuple to list etc.)
+        # Check refresh_table method of FunctionsInfoWidgetForm for exemplary usage
+        self.background_thread = self.BackgroundThread()
+        self.background_thread.output_ready.connect(self.accept)
         pince_directory = SysUtils.get_current_script_directory()
-        self.movie = QMovie(pince_directory + "/media/loading_widget_gondola.gif", QByteArray())
+        self.image_list = os.listdir(pince_directory + "/media/LoadingDialog")
+        self.current_image_index = 0
+        self.change_loading_picture()
+        self.image_timer = QTimer()
+        self.image_timer.setInterval(3000)
+        self.image_timer.timeout.connect(self.change_loading_picture)
+        self.image_timer.start()
+
+    def change_loading_picture(self):
+        pince_directory = SysUtils.get_current_script_directory()
+        self.current_image_index += 1
+        self.current_image_index %= len(self.image_list)
+        image_name = self.image_list[self.current_image_index]
+        self.movie = QMovie(pince_directory + "/media/LoadingDialog/" + image_name, QByteArray())
         self.label_Animated.setMovie(self.movie)
         self.movie.setScaledSize(QSize(50, 50))
         self.movie.setCacheMode(QMovie.CacheAll)
         self.movie.setSpeed(100)
         self.movie.start()
-        self.not_finished = True
-        # self.update_thread = Thread(target=self.update_widget)
-        # self.update_thread.daemon = True
-        # self.movie.frameChanged.connect(self.update_shit)
-        # self.loading_thread = LoadingWindowThread()
-        # self.loading_thread.update_needed.connect(QApplication.processEvents)
 
-    def showEvent(self, QShowEvent):  # from here
-        QApplication.processEvents()
-        # self.update_thread.start()
+    def exec_(self):
+        self.background_thread.start()
+        super(LoadingDialogForm, self).exec_()
 
-    def hideEvent(self, QHideEvent):
-        self.not_finished = False
+    class BackgroundThread(QThread):
+        output_ready = pyqtSignal(object)
 
-    def update_widget(self):
-        while self.not_finished:
-            QApplication.processEvents()
+        def __init__(self):
+            super().__init__()
 
-    def change_text(self, text):
-        self.label_StatusText.setText(text)
-        QApplication.processEvents()
+        def run(self):
+            output = self.overrided_func()
+            self.output_ready.emit(output)
 
-
-class LoadingWindowThread(QThread):
-    not_finished = True
-    update_needed = pyqtSignal()
-
-    def run(self):
-        while self.not_finished:
-            sleep(0.001)
-            self.update_needed.emit()  # to here should be reworked
+        def overrided_func(self):
+            print("Override this function")
+            return 0
 
 
 class DialogWithButtonsForm(QDialog, DialogWithButtons):
@@ -1102,8 +1110,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def initialize_view_context_menu(self):
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
-        self.actionStackTrace_Info.triggered.connect(self.on_stacktrace_info_triggered)
+        self.actionStackTrace_Info.triggered.connect(self.on_ViewStacktrace_Info_triggered)
         self.actionBreakpoints.triggered.connect(self.on_ViewBreakpoints_triggered)
+        self.actionFunctions.triggered.connect(self.on_ViewFunctions_triggered)
 
     def initialize_tools_context_menu(self):
         self.actionInject_so_file.triggered.connect(self.on_inject_so_file_triggered)
@@ -1843,13 +1852,17 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.bookmark_widget = BookmarkWidgetForm(self)
         self.bookmark_widget.show()
 
-    def on_stacktrace_info_triggered(self):
+    def on_ViewStacktrace_Info_triggered(self):
         self.stacktrace_info_widget = StackTraceInfoWidgetForm()
         self.stacktrace_info_widget.show()
 
     def on_ViewBreakpoints_triggered(self):
         self.breakpoint_widget = BreakpointInfoWidgetForm(self)
         self.breakpoint_widget.show()
+
+    def on_ViewFunctions_triggered(self):
+        functions_info_widget = FunctionsInfoWidgetForm(self)
+        functions_info_widget.show()
 
     def on_inject_so_file_triggered(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the .so file", "", "Shared object library (*.so)")[0]
@@ -2115,7 +2128,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         else:
             current_breakpoint_type = self.tableWidget_BreakpointInfo.item(index.row(), BREAK_TYPE_COL).text()
             if "breakpoint" in current_breakpoint_type:
-                self.parent().disassemble_expression(current_address)
+                self.parent().disassemble_expression(current_address, append_to_travel_history=True)
             else:
                 self.parent().hex_dump_address(current_address_int)
 
@@ -2142,8 +2155,8 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.info = {}
         self.last_selected_row = 0
         self.stopped = False
-        self.pushButton_Stop.pressed.connect(self.pushButton_Stop_pressed)
-        self.pushButton_Refresh.pressed.connect(self.update_list)
+        self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
+        self.pushButton_Refresh.clicked.connect(self.update_list)
         self.tableWidget_Opcodes.itemDoubleClicked.connect(self.tableWidget_Opcodes_item_double_clicked)
         self.tableWidget_Opcodes.selectionModel().currentChanged.connect(self.tableWidget_Opcodes_current_changed)
         self.update_timer = QTimer()
@@ -2198,7 +2211,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.parent().memory_view_window.show()
         self.parent().memory_view_window.activateWindow()
 
-    def pushButton_Stop_pressed(self):
+    def pushButton_Stop_clicked(self):
         if self.stopped:
             self.close()
         if not GDB_Engine.delete_breakpoint(self.address):
@@ -2209,6 +2222,81 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
 
     def closeEvent(self, QCloseEvent):
         GDB_Engine.delete_breakpoint(self.address)
+
+
+class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center(self)
+        self.setWindowFlags(Qt.Window)
+        self.pushButton_Search.clicked.connect(self.refresh_table)
+        self.shortcut_search = QShortcut(QKeySequence("Return"), self)
+        self.shortcut_search.activated.connect(self.refresh_table)
+        self.tableWidget_SymbolInfo.selectionModel().currentChanged.connect(self.tableWidget_SymbolInfo_current_changed)
+        self.tableWidget_SymbolInfo.itemDoubleClicked.connect(self.tableWidget_SymbolInfo_item_double_clicked)
+        self.tableWidget_SymbolInfo.contextMenuEvent = self.tableWidget_SymbolInfo_context_menu_event
+        icons_directory = SysUtils.get_current_script_directory() + "/media/icons"
+        self.pushButton_Help.setIcon(QIcon(QPixmap(icons_directory + "/help.png")))
+        self.pushButton_Help.clicked.connect(self.pushButton_Help_clicked)
+
+    def refresh_table(self):
+        input_text = self.lineEdit_SearchInput.text()
+        self.loading_dialog = LoadingDialogForm(self)
+        self.background_thread = self.loading_dialog.background_thread
+        self.background_thread.overrided_func = lambda: self.process_data(gdb_input=input_text)
+        self.background_thread.output_ready.connect(self.apply_data)
+        self.loading_dialog.exec_()
+
+    def process_data(self, gdb_input):
+        return GDB_Engine.get_info_about_functions(gdb_input)
+
+    def apply_data(self, output):
+        self.tableWidget_SymbolInfo.setRowCount(0)
+        self.tableWidget_SymbolInfo.setRowCount(len(output))
+        for row, item in enumerate(output):
+            self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_ADDR_COL, QTableWidgetItem(item.address))
+            self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_SYMBOL_COL, QTableWidgetItem(item.symbol))
+        self.tableWidget_SymbolInfo.resizeColumnsToContents()
+        self.tableWidget_SymbolInfo.horizontalHeader().setStretchLastSection(True)
+
+    def tableWidget_SymbolInfo_current_changed(self, QModelIndex_current):
+        address = self.tableWidget_SymbolInfo.item(QModelIndex_current.row(), FUNCTIONS_INFO_ADDR_COL).text()
+        info = GDB_Engine.get_info_about_address(address)
+        self.lineEdit_AddressInfo.setText(info)
+
+    def tableWidget_SymbolInfo_context_menu_event(self, event):
+        selected_row = self.tableWidget_SymbolInfo.selectionModel().selectedRows()[-1].row()
+
+        menu = QMenu()
+        copy_address = menu.addAction("Copy Address")
+        copy_symbol = menu.addAction("Copy Symbol")
+        font_size = self.tableWidget_SymbolInfo.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == copy_address:
+            QApplication.clipboard().setText(
+                self.tableWidget_SymbolInfo.item(selected_row, FUNCTIONS_INFO_ADDR_COL).text())
+        elif action == copy_symbol:
+            QApplication.clipboard().setText(
+                self.tableWidget_SymbolInfo.item(selected_row, FUNCTIONS_INFO_SYMBOL_COL).text())
+
+    def tableWidget_SymbolInfo_item_double_clicked(self, index):
+        address = self.tableWidget_SymbolInfo.item(index.row(), FUNCTIONS_INFO_ADDR_COL).text()
+        self.parent().disassemble_expression(address, append_to_travel_history=True)
+
+    def pushButton_Help_clicked(self):
+        text = "\tHere's some useful regex tips:" \
+               "\n'^string' searches for everything that starts with 'string'" \
+               "\n'[ab]cd' searches for both 'acd' and 'bcd'" \
+               "\n\n\tHow to interpret symbols:" \
+               "\nA symbol that looks like 'func(param)@plt' consists of 3 pieces" \
+               "\nfunc, func(param), func(param)@plt" \
+               "\nThese 3 functions will have different addresses" \
+               "\n@plt means this function is a subroutine for the original one" \
+               "\nThere can be more than one of the same function" \
+               "\nIt means that the function is overloaded"
+        DialogWithButtonsForm(label_text=text, align=Qt.AlignLeft).exec_()
 
 
 if __name__ == "__main__":
