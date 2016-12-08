@@ -799,6 +799,7 @@ class LoadingDialogForm(QDialog, LoadingDialog):
         self.background_thread.output_ready.connect(self.accept)
         pince_directory = SysUtils.get_current_script_directory()
         self.image_list = os.listdir(pince_directory + "/media/LoadingDialog")
+        self.image_list.sort()
         self.current_image_index = 0
         self.change_loading_picture()
         self.image_timer = QTimer()
@@ -808,14 +809,14 @@ class LoadingDialogForm(QDialog, LoadingDialog):
 
     def change_loading_picture(self):
         pince_directory = SysUtils.get_current_script_directory()
-        self.current_image_index += 1
-        self.current_image_index %= len(self.image_list)
         image_name = self.image_list[self.current_image_index]
         self.movie = QMovie(pince_directory + "/media/LoadingDialog/" + image_name, QByteArray())
         self.label_Animated.setMovie(self.movie)
         self.movie.setScaledSize(QSize(50, 50))
         self.movie.setCacheMode(QMovie.CacheAll)
         self.movie.setSpeed(100)
+        self.current_image_index += 1
+        self.current_image_index %= len(self.image_list)
         self.movie.start()
 
     def exec_(self):
