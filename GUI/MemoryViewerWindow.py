@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Fri Dec  2 21:30:55 2016
+# Created: Fri Dec  9 14:44:25 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -684,6 +684,8 @@ class Ui_MainWindow_MemoryView(object):
         self.actionBreakpoints.setObjectName("actionBreakpoints")
         self.actionFunctions = QtWidgets.QAction(MainWindow_MemoryView)
         self.actionFunctions.setObjectName("actionFunctions")
+        self.actionSet_Address = QtWidgets.QAction(MainWindow_MemoryView)
+        self.actionSet_Address.setObjectName("actionSet_Address")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
         self.menuView.addAction(self.actionBreakpoints)
@@ -695,6 +697,7 @@ class Ui_MainWindow_MemoryView(object):
         self.menuDebug.addAction(self.actionStep_Over)
         self.menuDebug.addAction(self.actionExecute_Till_Return)
         self.menuDebug.addAction(self.actionToggle_Breakpoint)
+        self.menuDebug.addAction(self.actionSet_Address)
         self.menuTools.addAction(self.actionInject_so_file)
         self.menubar.addAction(self.menuView.menuAction())
         self.menubar.addAction(self.menuDebug.menuAction())
@@ -798,8 +801,9 @@ class Ui_MainWindow_MemoryView(object):
         self.actionToggle_Breakpoint.setText(_translate("MainWindow_MemoryView", "Toggle Breakpoint[F5]"))
         self.actionBreakpoints.setText(_translate("MainWindow_MemoryView", "Breakpoints"))
         self.actionFunctions.setText(_translate("MainWindow_MemoryView", "Functions"))
+        self.actionSet_Address.setText(_translate("MainWindow_MemoryView", "Set Address[F4]"))
 
 from GUI.CustomTableViews.AsciiView import QAsciiView
 from GUI.CustomLabels.RegisterLabel import QRegisterLabel
-from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
 from GUI.CustomTableViews.HexView import QHexView
+from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
