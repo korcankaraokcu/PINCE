@@ -753,6 +753,18 @@ def get_info_about_address(expression):
     return send_command("info symbol " + expression, cli_output=True)
 
 
+def get_info_about_symbol(expression):
+    """Runs the gdb command "info address" for given expression and returns the result of it
+
+    Args:
+        expression (str): Any gdb expression
+
+    Returns:
+        str: The result of the command "info address" for given expression
+    """
+    return send_command("info address " + expression, cli_output=True)
+
+
 def get_info_about_functions(expression):
     """Runs the gdb command "info functions" for given expression and returns the result of it
 

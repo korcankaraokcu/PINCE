@@ -2231,6 +2231,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.setupUi(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
+        self.textBrowser_AddressInfo.setFixedHeight(100)
         self.pushButton_Search.clicked.connect(self.refresh_table)
         self.shortcut_search = QShortcut(QKeySequence("Return"), self)
         self.shortcut_search.activated.connect(self.refresh_table)
@@ -2262,9 +2263,11 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.tableWidget_SymbolInfo.horizontalHeader().setStretchLastSection(True)
 
     def tableWidget_SymbolInfo_current_changed(self, QModelIndex_current):
-        address = self.tableWidget_SymbolInfo.item(QModelIndex_current.row(), FUNCTIONS_INFO_ADDR_COL).text()
-        info = GDB_Engine.get_info_about_address(address)
-        self.lineEdit_AddressInfo.setText(info)
+        symbol = self.tableWidget_SymbolInfo.item(QModelIndex_current.row(), FUNCTIONS_INFO_SYMBOL_COL).text()
+        self.textBrowser_AddressInfo.clear()
+        for item in SysUtils.split_symbol(symbol):
+            info = GDB_Engine.get_info_about_symbol(item)
+            self.textBrowser_AddressInfo.append(info)
 
     def tableWidget_SymbolInfo_context_menu_event(self, event):
         selected_row = self.tableWidget_SymbolInfo.selectionModel().selectedRows()[-1].row()

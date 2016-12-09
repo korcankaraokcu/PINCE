@@ -462,3 +462,25 @@ def aob_to_ascii(list_of_bytes):
 
     # 3f is ascii hex representation of char "?"
     return bytes.fromhex("".join(list_of_bytes).replace("??", "3f")).decode("ascii", "replace")
+
+
+def split_symbol(symbol_string):
+    """Splits symbol part of type_defs.tuple_function_info to max 3 parts
+
+    Args:
+        symbol_string (str): symbol part of type_defs.tuple_function_info
+
+    Returns:
+        list: A list containing parts of the splitted symbol
+
+    Examples:
+        symbol_string-->"func(param)@plt"
+        returned_list-->["func","func(param)","func(param)@plt"]
+    """
+    returned_list = []
+    if "(" in symbol_string:
+        returned_list.append(symbol_string.split("(", maxsplit=1)[0])
+    if "@" in symbol_string:
+        returned_list.append(symbol_string.split("@", maxsplit=1)[0])
+    returned_list.append(symbol_string)
+    return returned_list
