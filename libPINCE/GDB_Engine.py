@@ -535,15 +535,30 @@ def read_multiple_addresses(nested_list):
     return contents_recv
 
 
+def set_single_address(address, value_index, value):
+    """Sets the given value to the given address by using an optimized gdb python script
+
+    If any errors occurs while setting value to the according address, it'll be ignored but the information about
+    error will be printed to the terminal.
+
+    Args:
+        address (str, int): The address that'll be modified
+        value_index (int): Can be a member of type_defs.VALUE_INDEX
+        value (str): The value that'll be written to the given address
+    """
+    nested_list = [[address, value_index]]
+    nested_list.append(value)
+    send_command("pince-set-multiple-addresses", send_with_file=True, file_contents_send=nested_list)
+
+
 def set_multiple_addresses(nested_list, value):
     """Sets the given value to the given addresses by using an optimized gdb python script
 
-    There's no single version of this function yet. Use this even for single addresses
     If any errors occurs while setting values to the according addresses, it'll be ignored but the information about
     error will be printed to the terminal.
 
     Args:
-        nested_list (list): List of the address and value_index parameters of the function read_single_address
+        nested_list (list): List of the address and value_index parameters of the function set_single_address
         Both parameters address and value_index are necessary.
         value (str): The value that'll be written to the given addresses
 
@@ -833,6 +848,7 @@ def read_float_registers():
 
 def set_convenience_variable(variable, value):
     """Sets given convenience variable to given value
+    Can be also used for modifying registers directly
 
     Args:
         variable (str): Any gdb convenience variable(with "$" character removed)
