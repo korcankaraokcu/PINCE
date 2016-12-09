@@ -463,7 +463,7 @@ def aob_to_str(list_of_bytes, encoding="ascii"):
     """
 
     # 3f is ascii hex representation of char "?"
-    return bytes.fromhex("".join(list_of_bytes).replace("??", "3f")).decode(encoding, "replace")
+    return bytes.fromhex("".join(list_of_bytes).replace("??", "3f")).decode(encoding, "surrogateescape")
 
 
 def str_to_aob(string, encoding="ascii"):
@@ -476,7 +476,7 @@ def str_to_aob(string, encoding="ascii"):
     Returns:
         str: AoB equivalent of the given string
     """
-    s = str(binascii.hexlify(string.encode(encoding, "replace")), "ascii")
+    s = str(binascii.hexlify(string.encode(encoding, "surrogateescape")), "ascii")
     return " ".join(s[i:i + 2] for i in range(0, len(s), 2))
 
 

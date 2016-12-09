@@ -456,9 +456,9 @@ def read_single_address_by_expression(expression, value_index, length=None, is_u
             filteredresult = ''.join(filteredresult)
             returned_string = filteredresult.replace(r"\t0x", "")
             if not is_unicode:
-                returned_string = bytes.fromhex(returned_string).decode("ascii", "replace")
+                returned_string = bytes.fromhex(returned_string).decode("ascii", "surrogateescape")
             else:
-                returned_string = bytes.fromhex(returned_string).decode("utf-8", "replace")
+                returned_string = bytes.fromhex(returned_string).decode("utf-8", "surrogateescape")
             if zero_terminate:
                 if returned_string.startswith('\x00'):
                     returned_string = '\x00'

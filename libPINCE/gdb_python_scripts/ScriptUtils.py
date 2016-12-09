@@ -82,9 +82,9 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
     FILE.close()
     if value_type is type_defs.VALUE_INDEX.INDEX_STRING:
         if unicode:
-            returned_string = data_read.decode("utf-8", "replace")
+            returned_string = data_read.decode("utf-8", "surrogateescape")
         else:
-            returned_string = data_read.decode("ascii", "replace")
+            returned_string = data_read.decode("ascii", "surrogateescape")
         if zero_terminate:
             if returned_string.startswith('\x00'):
                 returned_string = '\x00'
@@ -107,7 +107,7 @@ def set_single_address(address, value_index, value):
     if write_data is None:
         return
     if value_index is type_defs.VALUE_INDEX.INDEX_STRING:
-        write_data = bytearray(write_data, "utf-8", "replace")
+        write_data = bytearray(write_data, "utf-8", "surrogateescape")
     elif value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         write_data = bytearray(write_data)
     else:
