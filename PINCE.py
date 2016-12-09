@@ -1771,6 +1771,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         copy_bytes = clipboard_menu.addAction("Copy Bytes")
         copy_opcode = clipboard_menu.addAction("Copy Opcode")
         copy_comment = clipboard_menu.addAction("Copy Comment")
+        copy_all = clipboard_menu.addAction("Copy All")
         font_size = self.tableWidget_Disassemble.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -1805,6 +1806,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             QApplication.clipboard().setText(self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text())
         elif action == copy_comment:
             QApplication.clipboard().setText(self.tableWidget_Disassemble.item(selected_row, DISAS_COMMENT_COL).text())
+        elif action == copy_all:
+            copied_string = ""
+            for column in range(self.tableWidget_Disassemble.columnCount()):
+                copied_string += self.tableWidget_Disassemble.item(selected_row, column).text() + "\t"
+            QApplication.clipboard().setText(copied_string)
         for item in bookmark_action_list:
             if action == item:
                 self.disassemble_expression(SysUtils.extract_address(action.text()), append_to_travel_history=True)
