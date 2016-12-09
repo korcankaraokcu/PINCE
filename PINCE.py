@@ -1100,6 +1100,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.shortcut_execute_till_return.activated.connect(GDB_Engine.execute_till_return)
         self.shortcut_toggle_breakpoint = QShortcut(QKeySequence("F5"), self)
         self.shortcut_toggle_breakpoint.activated.connect(self.toggle_breakpoint)
+        self.shortcut_set_address = QShortcut(QKeySequence("F4"), self)
+        self.shortcut_set_address.activated.connect(self.set_address)
 
     def initialize_debug_context_menu(self):
         self.actionBreak.triggered.connect(GDB_Engine.interrupt_inferior)
@@ -1108,6 +1110,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionStep_Over.triggered.connect(GDB_Engine.step_over_instruction)
         self.actionExecute_Till_Return.triggered.connect(GDB_Engine.execute_till_return)
         self.actionToggle_Breakpoint.triggered.connect(self.toggle_breakpoint)
+        self.actionSet_Address.triggered.connect(self.set_address)
 
     def initialize_view_context_menu(self):
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
@@ -1220,6 +1223,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_view_scroll_bar_timer.timeout.connect(self.check_hex_view_scrollbar)
         self.hex_view_scroll_bar_timer.start()
         self.verticalScrollBar_HexView.mouseReleaseEvent = self.verticalScrollBar_HexView_mouse_release_event
+
+    def set_address(self):
+        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+        GDB_Engine.set_convenience_variable("pc", current_address)
+        self.refresh_disassemble_view()
 
     def toggle_breakpoint(self):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
