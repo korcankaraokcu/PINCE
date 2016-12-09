@@ -20,4 +20,4 @@ class QAsciiModel(QHexModel):
         if self.data_array is None:
             return QVariant()
         return QVariant(
-            SysUtils.aob_to_ascii(self.data_array[QModelIndex.row() * self.column_count + QModelIndex.column()]))
+            SysUtils.aob_to_str(self.data_array[QModelIndex.row() * self.column_count + QModelIndex.column()]))

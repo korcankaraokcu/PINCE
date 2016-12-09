@@ -47,6 +47,7 @@ from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
 from GUI.BreakpointInfoWidget import Ui_TabWidget as BreakpointInfoWidget
 from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
 from GUI.FunctionsInfoWidget import Ui_Form as FunctionsInfoWidget
+from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -1189,6 +1190,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
         self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
         self.tableView_HexView_Ascii.contextMenuEvent = self.widget_HexView_context_menu_event
+        self.tableView_HexView_Hex.doubleClicked.connect(self.exec_hex_view_edit_dialog)
+        self.tableView_HexView_Ascii.doubleClicked.connect(self.exec_hex_view_edit_dialog)
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.tableView_HexView_Hex.keyPressEvent_original = self.tableView_HexView_Hex.keyPressEvent
@@ -1274,6 +1277,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def widget_HexView_context_menu_event(self, event):
         selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
         menu = QMenu()
+        edit = menu.addAction("Edit")
+        menu.addSeparator()
         go_to = menu.addAction("Go to expression[G]")
         disassemble = menu.addAction("Disassemble this address[D]")
         menu.addSeparator()
@@ -1297,7 +1302,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         font_size = self.widget_HexView.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
-        if action == go_to:
+        if action == edit:
+            self.exec_hex_view_edit_dialog()
+        elif action == go_to:
             self.exec_hex_view_go_to_dialog()
         elif action == disassemble:
             self.disassemble_expression(hex(selected_address), append_to_travel_history=True)
@@ -1315,6 +1322,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.add_breakpoint_condition(selected_address)
         elif action == delete_breakpoint:
             self.toggle_watchpoint(selected_address)
+
+    def exec_hex_view_edit_dialog(self):
+        selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
+        HexEditDialogForm(hex(selected_address)).exec_()
+        self.refresh_hex_view()
 
     def exec_hex_view_go_to_dialog(self):
         current_address = hex(self.hex_view_currently_displayed_address)
@@ -2317,6 +2329,45 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
                "\nThere can be more than one of the same function" \
                "\nIt means that the function is overloaded"
         DialogWithButtonsForm(label_text=text, align=Qt.AlignLeft).exec_()
+
+
+class HexEditDialogForm(QDialog, HexEditDialog):
+    def __init__(self, address, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.lineEdit_Address.setText(address)
+        self.lineEdit_Length.setText("20")
+        self.refresh_view()
+        self.lineEdit_HexView.textEdited.connect(self.lineEdit_HexView_text_edited)
+        self.lineEdit_AsciiView.textEdited.connect(self.lineEdit_AsciiView_text_edited)
+        self.pushButton_Refresh.pressed.connect(self.refresh_view)
+        self.lineEdit_Address.textChanged.connect(self.refresh_view)
+        self.lineEdit_Length.textChanged.connect(self.refresh_view)
+
+    def lineEdit_HexView_text_edited(self):
+        aob_string = self.lineEdit_HexView.text()
+        if not SysUtils.parse_string(aob_string, type_defs.VALUE_INDEX.INDEX_AOB):
+            return
+        aob_array = aob_string.split()
+        self.lineEdit_AsciiView.setText(SysUtils.aob_to_str(aob_array, "utf-8"))
+
+    def lineEdit_AsciiView_text_edited(self):
+        ascii_str = self.lineEdit_AsciiView.text()
+        self.lineEdit_HexView.setText(SysUtils.str_to_aob(ascii_str, "utf-8"))
+
+    def refresh_view(self):
+        address = self.lineEdit_Address.text()
+        length = self.lineEdit_Length.text()
+        aob_array = GDB_Engine.hex_dump(address, length)
+        ascii_str = SysUtils.aob_to_str(aob_array, "utf-8")
+        self.lineEdit_AsciiView.setText(ascii_str)
+        self.lineEdit_HexView.setText(" ".join(aob_array))
+
+    def accept(self):
+        address = self.lineEdit_Address.text()
+        value = self.lineEdit_HexView.text()
+        GDB_Engine.set_single_address(address, type_defs.VALUE_INDEX.INDEX_AOB, value)
+        super(HexEditDialogForm, self).accept()
 
 
 if __name__ == "__main__":

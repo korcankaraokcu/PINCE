@@ -28,6 +28,7 @@ except ImportError:
 import os
 import shutil
 import sys
+import binascii
 from . import type_defs
 from re import match, search, IGNORECASE, split
 
@@ -361,7 +362,7 @@ def parse_string(string, value_index):
         list: If the value_index is INDEX_AOB. A list of ints is returned
         float: If the value_index is INDEX_FLOAT or INDEX_DOUBLE
         int: If the value_index is anything else
-        None: If the string is not parseable by using the parameter value_index
+        None: If the string is not parsable by using the parameter value_index
 
     Examples:
         string="42 DE AD BE EF 24",value_index=type_defs.VALUE_INDEX.INDEX_AOB--▼
@@ -450,22 +451,38 @@ def extract_address(string, search_for_location_changing_instructions=False):
             return result.group(0)
 
 
-def aob_to_ascii(list_of_bytes):
-    """Converts given array of hex strings to ascii str
+def aob_to_str(list_of_bytes, encoding="ascii"):
+    """Converts given array of hex strings to str
 
     Args:
         list_of_bytes (list): Must be returned from GDB_Engine.hex_dump()
+        encoding (str): Can be "ascii" or "utf-8"
 
     Returns:
-        str: Ascii equivalent of array
+        str: str equivalent of array
     """
 
     # 3f is ascii hex representation of char "?"
-    return bytes.fromhex("".join(list_of_bytes).replace("??", "3f")).decode("ascii", "replace")
+    return bytes.fromhex("".join(list_of_bytes).replace("??", "3f")).decode(encoding, "replace")
+
+
+def str_to_aob(string, encoding="ascii"):
+    """Converts given string to aob string
+
+    Args:
+        string (str): Any string
+        encoding (str): Can be "ascii" or "utf-8"
+
+    Returns:
+        str: AoB equivalent of the given string
+    """
+    s = str(binascii.hexlify(string.encode(encoding, "replace")), "ascii")
+    return " ".join(s[i:i + 2] for i in range(0, len(s), 2))
 
 
 def split_symbol(symbol_string):
-    """Splits symbol part of type_defs.tuple_function_info to max 3 parts
+    """Splits symbol part of type_defs.tuple_function_info into smaller fractions
+    Fraction count depends on the the symbol_string. See Examples section for demonstration
 
     Args:
         symbol_string (str): symbol part of type_defs.tuple_function_info
@@ -476,6 +493,12 @@ def split_symbol(symbol_string):
     Examples:
         symbol_string-->"func(param)@plt"
         returned_list-->["func","func(param)","func(param)@plt"]
+
+        symbol_string-->"malloc@plt"
+        returned_list-->["malloc", "malloc@plt"]
+
+        symbol_string-->"printf"
+        returned_list-->["printf"]
     """
     returned_list = []
     if "(" in symbol_string:
