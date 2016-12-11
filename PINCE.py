@@ -488,7 +488,11 @@ class MainForm(QMainWindow, MainWindow):
         if current_column is VALUE_COL:
             value = self.tableWidget_addresstable.item(current_row, VALUE_COL).text()
             value_index = GuiUtils.text_to_index(self.tableWidget_addresstable.item(current_row, TYPE_COL).text())
-            dialog = DialogWithButtonsForm(label_text="Enter the new value", hide_line_edit=False,
+            label_text = "Enter the new value"
+            if value_index == type_defs.VALUE_INDEX.INDEX_STRING:
+                label_text += "\nPINCE doesn't automatically insert a null terminated string at the end" \
+                              "\nCopy-paste this character (\0) if you need to insert it at somewhere"
+            dialog = DialogWithButtonsForm(label_text=label_text, hide_line_edit=False,
                                            line_edit_text=value, parse_string=True, value_index=value_index)
             if dialog.exec_():
                 table_contents = []
