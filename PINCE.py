@@ -2338,22 +2338,47 @@ class HexEditDialogForm(QDialog, HexEditDialog):
         self.lineEdit_Address.setText(address)
         self.lineEdit_Length.setText("20")
         self.refresh_view()
+        self.lineEdit_AsciiView.selectionChanged.connect(self.lineEdit_AsciiView_selection_changed)
+
+        # TODO: Implement this
+        # self.lineEdit_HexView.selectionChanged.connect(self.lineEdit_HexView_selection_changed)
         self.lineEdit_HexView.textEdited.connect(self.lineEdit_HexView_text_edited)
         self.lineEdit_AsciiView.textEdited.connect(self.lineEdit_AsciiView_text_edited)
         self.pushButton_Refresh.pressed.connect(self.refresh_view)
         self.lineEdit_Address.textChanged.connect(self.refresh_view)
         self.lineEdit_Length.textChanged.connect(self.refresh_view)
 
+    def lineEdit_AsciiView_selection_changed(self):
+        length = len(SysUtils.str_to_aob(self.lineEdit_AsciiView.selectedText(), "utf-8"))
+        start_index = self.lineEdit_AsciiView.selectionStart()
+        start_index = len(SysUtils.str_to_aob(self.lineEdit_AsciiView.text()[0:start_index], "utf-8"))
+        if start_index > 0:
+            start_index += 1
+        self.lineEdit_HexView.deselect()
+        self.lineEdit_HexView.setSelection(start_index, length)
+
+    def lineEdit_HexView_selection_changed(self):
+        # TODO: Implement this
+        print("TODO: Implement selectionChanged signal of lineEdit_HexView")
+        raise NotImplementedError
+
     def lineEdit_HexView_text_edited(self):
         aob_string = self.lineEdit_HexView.text()
         if not SysUtils.parse_string(aob_string, type_defs.VALUE_INDEX.INDEX_AOB):
+            self.lineEdit_AsciiView.clear()
             return
         aob_array = aob_string.split()
-        self.lineEdit_AsciiView.setText(SysUtils.aob_to_str(aob_array, "utf-8"))
+        try:
+            self.lineEdit_AsciiView.setText(SysUtils.aob_to_str(aob_array, "utf-8"))
+        except ValueError:
+            self.lineEdit_AsciiView.clear()
 
     def lineEdit_AsciiView_text_edited(self):
         ascii_str = self.lineEdit_AsciiView.text()
-        self.lineEdit_HexView.setText(SysUtils.str_to_aob(ascii_str, "utf-8"))
+        try:
+            self.lineEdit_HexView.setText(SysUtils.str_to_aob(ascii_str, "utf-8"))
+        except ValueError:
+            self.lineEdit_HexView.clear()
 
     def refresh_view(self):
         address = self.lineEdit_Address.text()
