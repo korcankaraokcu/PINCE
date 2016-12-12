@@ -1,5 +1,5 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# !/usr/bin/env python3
 """
 Copyright (C) 2016 Korcan Karaokçu <korcankaraokcu@gmail.com>
 Copyright (C) 2016 Çağrı Ulaş <cagriulas@gmail.com>
