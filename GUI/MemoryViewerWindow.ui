@@ -1307,6 +1307,7 @@
      <string>Tools</string>
     </property>
     <addaction name="actionInject_so_file"/>
+    <addaction name="actionCall_Function"/>
    </widget>
    <addaction name="menuView"/>
    <addaction name="menuDebug"/>
@@ -1371,6 +1372,11 @@
   <action name="actionSet_Address">
    <property name="text">
     <string>Set Address[F4]</string>
+   </property>
+  </action>
+  <action name="actionCall_Function">
+   <property name="text">
+    <string>Call Function</string>
    </property>
   </action>
  </widget>

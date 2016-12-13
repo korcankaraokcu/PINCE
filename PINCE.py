@@ -1116,6 +1116,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionExecute_Till_Return.triggered.connect(GDB_Engine.execute_till_return)
         self.actionToggle_Breakpoint.triggered.connect(self.toggle_breakpoint)
         self.actionSet_Address.triggered.connect(self.set_address)
+        self.actionCall_Function.triggered.connect(self.call_function)
 
     def initialize_view_context_menu(self):
         self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
@@ -1230,6 +1231,24 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_view_scroll_bar_timer.timeout.connect(self.check_hex_view_scrollbar)
         self.hex_view_scroll_bar_timer.start()
         self.verticalScrollBar_HexView.mouseReleaseEvent = self.verticalScrollBar_HexView_mouse_release_event
+
+    def call_function(self):
+        label_text = "Enter the expression for the function that'll be called from the inferior" \
+                     "\nYou can view functions list from View->Functions" \
+                     "\n\nFor instance:" \
+                     '\nCalling printf("1234") will yield something like this' \
+                     '\n↓' \
+                     '\n$28 = 4' \
+                     '\n\n$28 is the assigned convenience variable' \
+                     '\n4 is the result' \
+                     '\nYou can use the assigned variable from the GDB Console'
+        call_dialog = DialogWithButtonsForm(label_text=label_text, hide_line_edit=False)
+        if call_dialog.exec_():
+            result = GDB_Engine.call_function_from_inferior(call_dialog.get_values())
+            if result[0]:
+                QMessageBox.information(self, "Success!", result[0] + " = " + result[1])
+            else:
+                QMessageBox.information(self, "Failed", "Failed to call the expression " + call_dialog.get_values())
 
     def set_address(self):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
