@@ -1274,6 +1274,7 @@ def call_function_from_inferior(expression):
 
     Returns:
         tuple: A tuple containing assigned value and result, both as str
+        Returns a tuple of (False, False) if the call fails
 
     Examples:
         call_function_from_inferior("printf('123')") returns ("$26","3")
