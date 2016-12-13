@@ -2388,20 +2388,22 @@ class HexEditDialogForm(QDialog, HexEditDialog):
     def lineEdit_HexView_text_edited(self):
         aob_string = self.lineEdit_HexView.text()
         if not SysUtils.parse_string(aob_string, type_defs.VALUE_INDEX.INDEX_AOB):
-            self.lineEdit_AsciiView.clear()
+            self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: red;}")
             return
         aob_array = aob_string.split()
         try:
             self.lineEdit_AsciiView.setText(SysUtils.aob_to_str(aob_array, "utf-8"))
+            self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: white;}")
         except ValueError:
-            self.lineEdit_AsciiView.clear()
+            self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: red;}")
 
     def lineEdit_AsciiView_text_edited(self):
         ascii_str = self.lineEdit_AsciiView.text()
         try:
             self.lineEdit_HexView.setText(SysUtils.str_to_aob(ascii_str, "utf-8"))
+            self.lineEdit_AsciiView.setStyleSheet("QLineEdit {background-color: white;}")
         except ValueError:
-            self.lineEdit_HexView.clear()
+            self.lineEdit_AsciiView.setStyleSheet("QLineEdit {background-color: red;}")
 
     def refresh_view(self):
         address = self.lineEdit_Address.text()
