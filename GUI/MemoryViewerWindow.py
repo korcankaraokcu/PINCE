@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Fri Dec  9 14:44:25 2016
+# Created: Tue Dec 13 10:19:29 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -686,6 +686,8 @@ class Ui_MainWindow_MemoryView(object):
         self.actionFunctions.setObjectName("actionFunctions")
         self.actionSet_Address = QtWidgets.QAction(MainWindow_MemoryView)
         self.actionSet_Address.setObjectName("actionSet_Address")
+        self.actionCall_Function = QtWidgets.QAction(MainWindow_MemoryView)
+        self.actionCall_Function.setObjectName("actionCall_Function")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
         self.menuView.addAction(self.actionBreakpoints)
@@ -699,6 +701,7 @@ class Ui_MainWindow_MemoryView(object):
         self.menuDebug.addAction(self.actionToggle_Breakpoint)
         self.menuDebug.addAction(self.actionSet_Address)
         self.menuTools.addAction(self.actionInject_so_file)
+        self.menuTools.addAction(self.actionCall_Function)
         self.menubar.addAction(self.menuView.menuAction())
         self.menubar.addAction(self.menuDebug.menuAction())
         self.menubar.addAction(self.menuTools.menuAction())
@@ -802,8 +805,9 @@ class Ui_MainWindow_MemoryView(object):
         self.actionBreakpoints.setText(_translate("MainWindow_MemoryView", "Breakpoints"))
         self.actionFunctions.setText(_translate("MainWindow_MemoryView", "Functions"))
         self.actionSet_Address.setText(_translate("MainWindow_MemoryView", "Set Address[F4]"))
+        self.actionCall_Function.setText(_translate("MainWindow_MemoryView", "Call Function"))
 
-from GUI.CustomTableViews.AsciiView import QAsciiView
 from GUI.CustomLabels.RegisterLabel import QRegisterLabel
-from GUI.CustomTableViews.HexView import QHexView
 from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
+from GUI.CustomTableViews.AsciiView import QAsciiView
+from GUI.CustomTableViews.HexView import QHexView

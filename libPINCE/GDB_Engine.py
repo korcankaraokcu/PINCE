@@ -337,28 +337,13 @@ def inject_with_dlopen_call(library_path):
         bool: Result of the injection
     """
     injectionpath = '"' + library_path + '"'
-    result = send_command("call dlopen(" + injectionpath + ", 1)")
-    filtered_result = search(r"\$\d+\s*=\s*\-*\d+", result)  # $1 = -1633996800
-    if filtered_result:
-        dlopen_return_value = split(" ", filtered_result.group(0))[-1]
-        if dlopen_return_value is "0":
-            result = send_command("call __libc_dlopen_mode(" + injectionpath + ", 1)")
-            filtered_result = search(r"\$\d+\s*=\s*\-*\d+", result)  # $1 = -1633996800
-            if filtered_result:
-                dlopen_return_value = split(" ", filtered_result.group(0))[-1]
-                if dlopen_return_value is "0":
-                    return False
-                return True
+    result = call_function_from_inferior("dlopen(" + injectionpath + ", 1)")[1]
+    if result is "0" or not result:
+        new_result = call_function_from_inferior("__libc_dlopen_mode(" + injectionpath + ", 1)")[1]
+        if new_result is "0" or not new_result:
             return False
         return True
-    result = send_command("call __libc_dlopen_mode(" + injectionpath + ", 1)")
-    filtered_result = search(r"\$\d+\s*=\s*\-*\d+", result)  # $1 = -1633996800
-    if filtered_result:
-        dlopen_return_value = split(" ", filtered_result.group(0))[-1]
-        if dlopen_return_value is "0":
-            return False
-        return True
-    return False
+    return True
 
 
 def value_index_to_gdbcommand(index=int):
@@ -1279,3 +1264,23 @@ def get_track_watchpoint_info(watchpoint_list):
     except:
         output = ""
     return output
+
+
+def call_function_from_inferior(expression):
+    """Calls the given function expression from the inferior
+
+    Args:
+        expression (str): Any gdb expression
+
+    Returns:
+        tuple: A tuple containing assigned value and result, both as str
+
+    Examples:
+        call_function_from_inferior("printf('123')") returns ("$26","3")
+    """
+    result = send_command("call " + expression)
+    filtered_result = search(r'\"\$\d+\s+=\s+.*\"', result)  # "$26 = 3"
+    if filtered_result:
+        filtered_result = filtered_result.group(0).strip('"')
+        return filtered_result.split()[0], filtered_result.split(maxsplit=2)[2]
+    return False, False
