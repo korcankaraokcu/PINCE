@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
-    QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView
+    QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex
 from time import sleep, time
@@ -2349,10 +2349,12 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.info = {}
         self.last_selected_row = 0
         self.stopped = False
+        self.comboBox_ValueType.enterEvent = self.comboBox_ValueType_enter_event
+        self.combobox_change_count = 0
         self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
         self.tableWidget_TrackInfo.itemDoubleClicked.connect(self.tableWidget_TrackInfo_item_double_clicked)
         self.tableWidget_TrackInfo.selectionModel().currentChanged.connect(self.tableWidget_TrackInfo_current_changed)
-        self.comboBox_ValueType.currentIndexChanged.connect(self.update_values)
+        self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.update_timer = QTimer()
         self.update_timer.setInterval(100)
         self.update_timer.timeout.connect(self.update_list)
@@ -2413,6 +2415,31 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.stopped = True
         self.pushButton_Stop.setText("Close")
         self.parent().refresh_disassemble_view()
+
+    def comboBox_ValueType_current_index_changed(self):
+        self.combobox_change_count += 1
+        self.update_values()
+
+    def comboBox_ValueType_enter_event(self, event):
+        if self.combobox_change_count == 0:
+            QToolTip.showText(event.globalPos(), "Change me fam, you won't regret it")
+        elif self.combobox_change_count == 1:
+            QToolTip.showText(event.globalPos(), "Yeah, just like that...")
+        elif self.combobox_change_count == 2:
+            QToolTip.showText(event.globalPos(), "You like it, don't you?")
+        elif self.combobox_change_count == 3:
+            QToolTip.showText(event.globalPos(), "Switch me harder!")
+        elif self.combobox_change_count == 4:
+            QToolTip.showText(event.globalPos(), "Make me reach indexes no combobox has been reached before!")
+        elif self.combobox_change_count > 4:
+            try:
+                self.reach_the_stars()
+            except IndexError:
+                QToolTip.showText(event.globalPos(), str(traceback.format_exc()))
+
+    def reach_the_stars(self):
+        a = [1, 2, 3]
+        a[42] = 0
 
     def closeEvent(self, QCloseEvent):
         GDB_Engine.delete_breakpoint(self.address)
