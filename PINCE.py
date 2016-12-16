@@ -218,10 +218,13 @@ class MainForm(QMainWindow, MainWindow):
         self.update_address_table_thread.start()
         self.shortcut_pause = QShortcut(QKeySequence(pause_hotkey), self)
         self.shortcut_pause.activated.connect(self.pause_hotkey_pressed)
+        self.shortcut_pause.setContext(Qt.ApplicationShortcut)
         self.shortcut_break = QShortcut(QKeySequence(break_hotkey), self)
         self.shortcut_break.activated.connect(self.break_hotkey_pressed)
+        self.shortcut_break.setContext(Qt.ApplicationShortcut)
         self.shortcut_continue = QShortcut(QKeySequence(continue_hotkey), self)
         self.shortcut_continue.activated.connect(self.continue_hotkey_pressed)
+        self.shortcut_continue.setContext(Qt.ApplicationShortcut)
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.tableWidget_addresstable.keyPressEvent_original = self.tableWidget_addresstable.keyPressEvent
@@ -1113,16 +1116,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     address_added = pyqtSignal(object, object, object, object, object, object)
 
     def set_dynamic_debug_hotkeys(self):
-        self.shortcut_break.setKey(QKeySequence(break_hotkey))
-        self.shortcut_run.setKey(QKeySequence(continue_hotkey))
         self.actionBreak.setText("Break[" + break_hotkey + "]")
         self.actionRun.setText("Run[" + continue_hotkey + "]")
 
     def set_debug_menu_shortcuts(self):
-        self.shortcut_break = QShortcut(QKeySequence(break_hotkey), self)
-        self.shortcut_break.activated.connect(GDB_Engine.interrupt_inferior)
-        self.shortcut_run = QShortcut(QKeySequence(continue_hotkey), self)
-        self.shortcut_run.activated.connect(GDB_Engine.continue_inferior)
         self.shortcut_step = QShortcut(QKeySequence("F7"), self)
         self.shortcut_step.activated.connect(GDB_Engine.step_instruction)
         self.shortcut_step_over = QShortcut(QKeySequence("F8"), self)
