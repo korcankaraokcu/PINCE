@@ -59,6 +59,7 @@ selfpid = os.getpid()
 update_table = bool
 table_update_interval = float
 pause_hotkey = str
+break_hotkey = str
 continue_hotkey = str
 code_injection_method = int
 bring_disassemble_to_front = bool
@@ -217,6 +218,8 @@ class MainForm(QMainWindow, MainWindow):
         self.update_address_table_thread.start()
         self.shortcut_pause = QShortcut(QKeySequence(pause_hotkey), self)
         self.shortcut_pause.activated.connect(self.pause_hotkey_pressed)
+        self.shortcut_break = QShortcut(QKeySequence(break_hotkey), self)
+        self.shortcut_break.activated.connect(self.break_hotkey_pressed)
         self.shortcut_continue = QShortcut(QKeySequence(continue_hotkey), self)
         self.shortcut_continue.activated.connect(self.continue_hotkey_pressed)
 
@@ -254,7 +257,8 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("address_table_update_interval", 0.5)
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
-        self.settings.setValue("pause", "F2")
+        self.settings.setValue("pause", "F1")
+        self.settings.setValue("break", "F2")
         self.settings.setValue("continue", "F3")
         self.settings.endGroup()
         self.settings.beginGroup("CodeInjection")
@@ -273,6 +277,7 @@ class MainForm(QMainWindow, MainWindow):
         global update_table
         global table_update_interval
         global pause_hotkey
+        global break_hotkey
         global continue_hotkey
         global code_injection_method
         global bring_disassemble_to_front
@@ -281,9 +286,14 @@ class MainForm(QMainWindow, MainWindow):
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
         table_update_interval = self.settings.value("General/address_table_update_interval", type=float)
         pause_hotkey = self.settings.value("Hotkeys/pause")
+        break_hotkey = self.settings.value("Hotkeys/break")
         continue_hotkey = self.settings.value("Hotkeys/continue")
         try:
             self.shortcut_pause.setKey(QKeySequence(pause_hotkey))
+        except AttributeError:
+            pass
+        try:
+            self.shortcut_break.setKey(QKeySequence(break_hotkey))
         except AttributeError:
             pass
         try:
@@ -300,6 +310,9 @@ class MainForm(QMainWindow, MainWindow):
         gdb_path = self.settings.value("Debug/gdb_path", type=str)
 
     def pause_hotkey_pressed(self):
+        GDB_Engine.interrupt_inferior(type_defs.STOP_REASON.PAUSE)
+
+    def break_hotkey_pressed(self):
         GDB_Engine.interrupt_inferior()
 
     def continue_hotkey_pressed(self):
@@ -931,6 +944,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
         self.settings.setValue("Hotkeys/pause", self.pause_hotkey)
+        self.settings.setValue("Hotkeys/break", self.break_hotkey)
         self.settings.setValue("Hotkeys/continue", self.continue_hotkey)
         if self.radioButton_SimpleDLopenCall.isChecked():
             injection_method = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
@@ -950,6 +964,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.lineEdit_UpdateInterval.setText(
             str(self.settings.value("General/address_table_update_interval", type=float)))
         self.pause_hotkey = self.settings.value("Hotkeys/pause")
+        self.break_hotkey = self.settings.value("Hotkeys/break")
         self.continue_hotkey = self.settings.value("Hotkeys/continue")
         injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
         if injection_method == type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL:
@@ -969,13 +984,17 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if index is 0:
             self.keySequenceEdit.setKeySequence(self.pause_hotkey)
         elif index is 1:
+            self.keySequenceEdit.setKeySequence(self.break_hotkey)
+        elif index is 2:
             self.keySequenceEdit.setKeySequence(self.continue_hotkey)
 
     def keySequenceEdit_key_sequence_changed(self):
         current_index = self.listWidget_Functions.currentIndex().row()
         if current_index is 0:
             self.pause_hotkey = self.keySequenceEdit.keySequence().toString()
-        elif current_index is 1:
+        if current_index is 1:
+            self.break_hotkey = self.keySequenceEdit.keySequence().toString()
+        elif current_index is 2:
             self.continue_hotkey = self.keySequenceEdit.keySequence().toString()
 
     def pushButton_ClearHotkey_clicked(self):
@@ -1094,13 +1113,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     address_added = pyqtSignal(object, object, object, object, object, object)
 
     def set_dynamic_debug_hotkeys(self):
-        self.shortcut_break.setKey(QKeySequence(pause_hotkey))
+        self.shortcut_break.setKey(QKeySequence(break_hotkey))
         self.shortcut_run.setKey(QKeySequence(continue_hotkey))
-        self.actionBreak.setText("Break[" + pause_hotkey + "]")
+        self.actionBreak.setText("Break[" + break_hotkey + "]")
         self.actionRun.setText("Run[" + continue_hotkey + "]")
 
     def set_debug_menu_shortcuts(self):
-        self.shortcut_break = QShortcut(QKeySequence(pause_hotkey), self)
+        self.shortcut_break = QShortcut(QKeySequence(break_hotkey), self)
         self.shortcut_break.activated.connect(GDB_Engine.interrupt_inferior)
         self.shortcut_run = QShortcut(QKeySequence(continue_hotkey), self)
         self.shortcut_run.activated.connect(GDB_Engine.continue_inferior)
@@ -2326,7 +2345,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         if not breakpoint:
             QMessageBox.information(self, "Error", "Unable to track breakpoint at expression " + address)
             return
-        self.label_Info.setText("Pause the process to refresh 'Value' part of the table(" + pause_hotkey + ")")
+        self.label_Info.setText(
+            "Pause the process to refresh 'Value' part of the table(" + pause_hotkey + " or " + break_hotkey + ")")
         self.address = address
         self.breakpoint = breakpoint
         self.info = {}
