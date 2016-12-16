@@ -1464,8 +1464,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def refresh_hex_view(self):
         if self.tableWidget_HexView_Address.rowCount() == 0:
-            entry_point_address = GDB_Engine.convert_symbol_to_address("_start")
-            self.hex_dump_address(int(entry_point_address, 16))
+            entry_point = GDB_Engine.find_entry_point()
+            if not entry_point:
+                # **Shrugs**
+                entry_point = "0x00400000"
+            self.hex_dump_address(int(entry_point, 16))
             self.tableView_HexView_Hex.resize_to_contents()
             self.tableView_HexView_Ascii.resize_to_contents()
         else:
