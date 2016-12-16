@@ -52,6 +52,11 @@ else:
 # Format: {watchpoint_numbers1:watchpoint_dict1, watchpoint_numbers2:track_watchpoint_dict2, ...}
 track_watchpoint_dict = {}
 
+# Format of expression_info_dict: {value1:count1, value2:count2, ...}
+# Format of register_expression_dict: {expression1:expression_info_dict1, expression2:expression_info_dict2, ...}
+# Format: {breakpoint_number1:register_expression_dict1, breakpoint_number2:register_expression_dict2, ...}
+track_breakpoint_dict = {}
+
 
 def receive_from_pince():
     return pickle.load(open(recv_file, "rb"))
@@ -403,8 +408,7 @@ class GetTrackWatchpointInfo(gdb.Command):
             previous_pc_address = hex(current_pc_int)
         global track_watchpoint_dict
         try:
-            count = track_watchpoint_dict[breakpoints][current_pc_int][0]
-            count += 1
+            count = track_watchpoint_dict[breakpoints][current_pc_int][0] + 1
         except KeyError:
             if breakpoints not in track_watchpoint_dict:
                 track_watchpoint_dict[breakpoints] = OrderedDict()
@@ -416,6 +420,33 @@ class GetTrackWatchpointInfo(gdb.Command):
                                                               disas_info]
         track_watchpoint_file = SysUtils.get_track_watchpoint_file(pid, breakpoints)
         pickle.dump(track_watchpoint_dict[breakpoints], open(track_watchpoint_file, "wb"))
+
+
+class GetTrackBreakpointInfo(gdb.Command):
+    def __init__(self):
+        super(GetTrackBreakpointInfo, self).__init__("pince-get-track-breakpoint-info", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        arg_list = arg.split(",")
+        breakpoint_number = arg_list.pop()
+        register_expressions = arg_list
+        global track_breakpoint_dict
+        if not breakpoint_number in track_breakpoint_dict:
+            track_breakpoint_dict[breakpoint_number] = OrderedDict()
+        for register_expression in register_expressions:
+            if not register_expression in track_breakpoint_dict[breakpoint_number]:
+                track_breakpoint_dict[breakpoint_number][register_expression] = OrderedDict()
+            try:
+                address = SysUtils.extract_address(gdb.execute("p/x " + register_expression, from_tty, to_string=True))
+            except:
+                address = None
+            if address:
+                if address not in track_breakpoint_dict[breakpoint_number][register_expression]:
+                    track_breakpoint_dict[breakpoint_number][register_expression][address] = 1
+                else:
+                    track_breakpoint_dict[breakpoint_number][register_expression][address] += 1
+        track_breakpoint_file = SysUtils.get_track_breakpoint_file(pid, breakpoint_number)
+        pickle.dump(track_breakpoint_dict[breakpoint_number], open(track_breakpoint_file, "wb"))
 
 
 IgnoreErrors()
@@ -432,3 +463,4 @@ GetFrameReturnAddresses()
 GetFrameInfo()
 HexDump()
 GetTrackWatchpointInfo()
+GetTrackBreakpointInfo()

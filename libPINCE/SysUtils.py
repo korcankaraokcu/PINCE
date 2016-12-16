@@ -326,6 +326,19 @@ def get_track_watchpoint_file(pid, watchpoint_list):
     return get_PINCE_IPC_directory(pid) + "/" + str(watchpoint_list) + "_track_watchpoint.txt"
 
 
+def get_track_breakpoint_file(pid, breakpoint):
+    """Get the path of track breakpoint file for given pid
+
+    Args:
+        pid (int,str): PID of the process
+        breakpoint (str): breakpoint number
+
+    Returns:
+        str: Path of track breakpoint file
+    """
+    return get_PINCE_IPC_directory(pid) + "/" + breakpoint + "_track_breakpoint.txt"
+
+
 def get_ipc_from_PINCE_file(pid):
     """Get the path of IPC file sent to custom gdb commands from PINCE for given pid
 
