@@ -2375,7 +2375,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
                                                    QTableWidgetItem(str(info[register_expression][address])))
                 self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_ADDR_COL, QTableWidgetItem(address))
                 self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_SOURCE_COL,
-                                                   QTableWidgetItem(register_expression))
+                                                   QTableWidgetItem("[" + register_expression + "]"))
         self.tableWidget_TrackInfo.resizeColumnsToContents()
         self.tableWidget_TrackInfo.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_TrackInfo.selectRow(self.last_selected_row)
