@@ -328,7 +328,11 @@ def create_process(process_path, args=""):
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
     SysUtils.create_PINCE_IPC_PATH(0)
     send_command("file " + process_path)
-    send_command("b _start")
+    entry_point = find_entry_point()
+    if entry_point:
+        send_command("b " + entry_point)
+    else:
+        send_command("b _start")
     send_command("set args " + args)
     send_command("run")
 
@@ -1376,3 +1380,16 @@ def call_function_from_inferior(expression):
         filtered_result = filtered_result.group(0).strip('"')
         return filtered_result.split()[0], filtered_result.split(maxsplit=2)[2]
     return False, False
+
+
+def find_entry_point():
+    """Finds entry point of the inferior
+
+    Returns:
+        str: Entry point as hex str
+        None: If fails to find an entry point
+    """
+    result = send_command("info file")
+    filtered_result = search(r"Entry\s+point:\s+0x[0-9a-fA-F]+", result)
+    if filtered_result:
+        return filtered_result.group(0).split()[2]
