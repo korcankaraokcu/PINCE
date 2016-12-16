@@ -202,6 +202,13 @@ class MainForm(QMainWindow, MainWindow):
             print("An exception occurred while trying to load settings, rolling back to the default configuration\n", e)
             self.settings.clear()
             self.set_default_settings()
+        try:
+            settings_version = self.settings.value("Misc/version", type=str)
+        except TypeError:
+            settings_version = None
+        if settings_version != "0.1.0":
+            self.settings.clear()
+            self.set_default_settings()
         self.memory_view_window = MemoryViewWindowForm()
         self.memory_view_window.address_added.connect(self.add_entry_to_addresstable)
         self.await_exit_thread = AwaitProcessExit()
@@ -273,6 +280,9 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.endGroup()
         self.settings.beginGroup("Debug")
         self.settings.setValue("gdb_path", type_defs.PATHS.GDB_PATH)
+        self.settings.endGroup()
+        self.settings.beginGroup("Misc")
+        self.settings.setValue("version", "0.1.0")
         self.settings.endGroup()
         self.apply_settings()
 
