@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'SettingsDialog.ui'
 #
-# Created: Tue Nov  1 18:50:00 2016
+# Created: Fri Dec 16 04:11:05 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -94,6 +94,8 @@ class Ui_Dialog(object):
         self.verticalLayout_4.addWidget(self.label_3)
         self.listWidget_Functions = QtWidgets.QListWidget(self.page_2)
         self.listWidget_Functions.setObjectName("listWidget_Functions")
+        item = QtWidgets.QListWidgetItem()
+        self.listWidget_Functions.addItem(item)
         item = QtWidgets.QListWidgetItem()
         self.listWidget_Functions.addItem(item)
         item = QtWidgets.QListWidgetItem()
@@ -230,7 +232,7 @@ class Ui_Dialog(object):
         self.gridLayout_2.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
         self.retranslateUi(Dialog)
-        self.stackedWidget.setCurrentIndex(4)
+        self.stackedWidget.setCurrentIndex(1)
         self.listWidget_Functions.setCurrentRow(-1)
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
@@ -262,6 +264,8 @@ class Ui_Dialog(object):
         item = self.listWidget_Functions.item(0)
         item.setText(_translate("Dialog", "Pause the process"))
         item = self.listWidget_Functions.item(1)
+        item.setText(_translate("Dialog", "Break the process"))
+        item = self.listWidget_Functions.item(2)
         item.setText(_translate("Dialog", "Continue the process"))
         self.listWidget_Functions.setSortingEnabled(__sortingEnabled)
         self.label_4.setText(_translate("Dialog", "Hotkey"))
