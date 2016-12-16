@@ -46,6 +46,7 @@ from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
 from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
 from GUI.BreakpointInfoWidget import Ui_TabWidget as BreakpointInfoWidget
 from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
+from GUI.TrackBreakpointWidget import Ui_Form as TrackBreakpointWidget
 from GUI.FunctionsInfoWidget import Ui_Form as FunctionsInfoWidget
 from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
 
@@ -112,6 +113,12 @@ HEX_VIEW_ROW_COUNT = 42  # J-JUST A COINCIDENCE, I SWEAR!
 # represents the index of columns in track watchpoint table(what accesses this address thingy)
 TRACK_WATCHPOINT_COUNT_COL = 0
 TRACK_WATCHPOINT_ADDR_COL = 1
+
+# represents the index of columns in track breakpoint table(which addresses this instruction accesses thingy)
+TRACK_BREAKPOINT_COUNT_COL = 0
+TRACK_BREAKPOINT_ADDR_COL = 1
+TRACK_BREAKPOINT_VALUE_COL = 2
+TRACK_BREAKPOINT_SOURCE_COL = 3
 
 # represents the index of columns in function info table
 FUNCTIONS_INFO_ADDR_COL = 0
@@ -1543,6 +1550,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.item(row, item).setData(Qt.BackgroundColorRole, QColor(colour))
 
     def on_process_stop(self):
+        if GDB_Engine.stop_reason == type_defs.STOP_REASON.PAUSE:
+            return
         time0 = time()
         thread_info = GDB_Engine.get_current_thread_information()
         self.setWindowTitle("Memory Viewer - Currently Debugging Thread " + thread_info)
@@ -1775,6 +1784,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         go_to = menu.addAction("Go to expression[G]")
         back = menu.addAction("Back")
         show_in_hex_view = menu.addAction("Show this address in HexView[H]")
+        menu.addSeparator()
         followable = SysUtils.extract_address(
             self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text(),
             search_for_location_changing_instructions=True)
@@ -1809,6 +1819,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         else:
             add_condition = -1
         menu.addSeparator()
+        track_breakpoint = menu.addAction("Find out which addresses this instruction accesses")
+        menu.addSeparator()
         refresh = menu.addAction("Refresh[R]")
         menu.addSeparator()
         clipboard_menu = menu.addMenu("Copy to Clipboard")
@@ -1841,6 +1853,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.toggle_breakpoint()
         elif action == add_condition:
             self.add_breakpoint_condition(current_address_int)
+        elif action == track_breakpoint:
+            self.exec_track_breakpoint_dialog()
         elif action == refresh:
             self.refresh_disassemble_view()
         elif action == copy_address:
@@ -1859,6 +1873,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         for item in bookmark_action_list:
             if action == item:
                 self.disassemble_expression(SysUtils.extract_address(action.text()), append_to_travel_history=True)
+
+    def exec_track_breakpoint_dialog(self):
+        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+        current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
+        TrackBreakpointWidgetForm(current_address, current_instruction, self).show()
 
     def exec_disassemble_go_to_dialog(self):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
@@ -2274,6 +2295,108 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
 
     def closeEvent(self, QCloseEvent):
         GDB_Engine.delete_breakpoint(self.address)
+
+
+class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
+    def __init__(self, address, instruction, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.setWindowFlags(Qt.Window)
+        GuiUtils.center_to_parent(self)
+        self.setWindowTitle("Addresses accessed by instruction '" + instruction + "'")
+        label_text = "Enter the register expression(s) you want to track" \
+                     "\nRegister names should start with a '$' sign" \
+                     "\nEach expression should be separated with a comma" \
+                     "\n\nFor instance:" \
+                     "\nLet's say the instruction is 'mov [rax+rbx],30'" \
+                     "\nThen you should enter '$rax+$rbx'(without quotes)" \
+                     "\nSo PINCE can track address [rax+rbx]" \
+                     "\n\nAnother example:" \
+                     "\nIf you enter '$rax,$rbx*$rcx+4,$rbp'(without quotes)" \
+                     "\nPINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]"
+        register_expression_dialog = DialogWithButtonsForm(label_text=label_text, hide_line_edit=False)
+        if register_expression_dialog.exec_():
+            register_expressions = register_expression_dialog.get_values()
+        else:
+            return
+        breakpoint = GDB_Engine.track_breakpoint(address, register_expressions)
+        if not breakpoint:
+            QMessageBox.information(self, "Error", "Unable to track breakpoint at expression " + address)
+            return
+        self.label_Info.setText("Pause the process to refresh 'Value' part of the table(" + pause_hotkey + ")")
+        self.address = address
+        self.breakpoint = breakpoint
+        self.info = {}
+        self.last_selected_row = 0
+        self.stopped = False
+        self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
+        self.tableWidget_TrackInfo.itemDoubleClicked.connect(self.tableWidget_TrackInfo_item_double_clicked)
+        self.tableWidget_TrackInfo.selectionModel().currentChanged.connect(self.tableWidget_TrackInfo_current_changed)
+        self.comboBox_ValueType.currentIndexChanged.connect(self.update_values)
+        self.update_timer = QTimer()
+        self.update_timer.setInterval(100)
+        self.update_timer.timeout.connect(self.update_list)
+        self.update_timer.start()
+        self.parent().process_stopped.connect(self.update_values)
+        self.parent().refresh_disassemble_view()
+
+    def update_list(self):
+        info = GDB_Engine.get_track_breakpoint_info(self.breakpoint)
+        if not info:
+            return
+        if info == self.info:
+            return
+        self.info = info
+        self.tableWidget_TrackInfo.setRowCount(0)
+        for register_expression in info:
+            for row, address in enumerate(info[register_expression]):
+                self.tableWidget_TrackInfo.setRowCount(self.tableWidget_TrackInfo.rowCount() + 1)
+                self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_COUNT_COL,
+                                                   QTableWidgetItem(str(info[register_expression][address])))
+                self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_ADDR_COL, QTableWidgetItem(address))
+                self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_SOURCE_COL,
+                                                   QTableWidgetItem(register_expression))
+        self.tableWidget_TrackInfo.resizeColumnsToContents()
+        self.tableWidget_TrackInfo.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_TrackInfo.selectRow(self.last_selected_row)
+
+    def update_values(self):
+        param_list = []
+        value_type = self.comboBox_ValueType.currentIndex()
+        for row in range(self.tableWidget_TrackInfo.rowCount()):
+            address = self.tableWidget_TrackInfo.item(row, TRACK_BREAKPOINT_ADDR_COL).text()
+            param_list.append([address, value_type, 10, True])
+        value_list = GDB_Engine.read_multiple_addresses(param_list)
+        for row, value in enumerate(value_list):
+            self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(str(value)))
+        self.tableWidget_TrackInfo.resizeColumnsToContents()
+        self.tableWidget_TrackInfo.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_TrackInfo.selectRow(self.last_selected_row)
+
+    def tableWidget_TrackInfo_current_changed(self, QModelIndex_current):
+        current_row = QModelIndex_current.row()
+        if current_row >= 0:
+            self.last_selected_row = current_row
+
+    def tableWidget_TrackInfo_item_double_clicked(self, index):
+        address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
+        self.parent().address_added.emit("Changed by address " + self.address, address,
+                                         self.comboBox_ValueType.currentIndex(),
+                                         10, True, True)
+
+    def pushButton_Stop_clicked(self):
+        if self.stopped:
+            self.close()
+        if not GDB_Engine.delete_breakpoint(self.address):
+            QMessageBox.information(self, "Error", "Unable to delete breakpoint at expression " + self.address)
+            return
+        self.stopped = True
+        self.pushButton_Stop.setText("Close")
+        self.parent().refresh_disassemble_view()
+
+    def closeEvent(self, QCloseEvent):
+        GDB_Engine.delete_breakpoint(self.address)
+        self.parent().refresh_disassemble_view()
 
 
 class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):

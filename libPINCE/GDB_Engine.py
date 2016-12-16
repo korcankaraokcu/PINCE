@@ -31,6 +31,7 @@ gdb_initialized = False
 inferior_arch = int
 inferior_status = -1
 currentpid = 0
+stop_reason = int
 
 breakpoint_on_hit_dict = {}  # Format: {address1:on_hit1, address2:on_hit2, ...}
 breakpoint_condition_dict = {}  # Format: {address1:condition1, address2:condition2, ...}
@@ -116,7 +117,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
                 child.sendline("cli-output source " + command_file)
         if not control:
             while gdb_output is "":
-                sleep(0.00001)
+                sleep(type_defs.CONST_TIME.GDB_INPUT_SLEEP)
         if not control:
             if recv_with_file or cli_output:
                 output = pickle.load(open(recv_file, "rb"))
@@ -129,6 +130,66 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         time1 = time()
         print(time1 - time0)
         return output
+
+
+def state_observe_thread():
+    """
+    Observes the state of gdb, uses conditions to inform other functions and threads about gdb's state
+    Also generates output for send_command function
+    Should be called by creating a thread. Usually called in initialization process by attach function
+    """
+    global inferior_status
+    global child
+    global gdb_output
+    global gdb_async_output
+    while True:
+        child.expect_exact("(gdb)")
+        print(child.before)  # debug mode on!
+        matches = findall(r"stopped\-threads=\"all\"|\*running,thread\-id=\"all\"",
+                          child.before)  # stopped-threads="all"  # *running,thread-id="all"
+        if len(matches) > 0:
+            if search(r"stopped", matches[-1]):
+                global stop_reason
+                stop_reason = type_defs.STOP_REASON.DEBUG
+                inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
+            else:
+                inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
+            with status_changed_condition:
+                status_changed_condition.notify_all()
+        try:
+            # The command will always start with the word "source", check send_command function for the cause
+            command_file = escape(SysUtils.get_gdb_command_file(currentpid))
+            gdb_output = split(r"&\".*source\s" + command_file + r"\\n\"", child.before, 1)[1]  # &"command\n"
+        except:
+            with gdb_async_condition:
+                gdb_async_output = child.before
+                gdb_async_condition.notify_all()
+
+
+def execute_with_temporary_interruption(func, *args, **kwargs):
+    """Interrupts the inferior before executing the given function, continues inferior's execution after calling the
+    given function
+
+    !!!WARNING!!! This function is NOT thread-safe. Use it with caution!
+
+    Args:
+        func (function): The function that'll be called between interrupt&continue routine
+        *args (args): Arguments for the function that'll be called
+        **kwargs (kwargs): Keyword arguments for the function that'll be called
+
+    Returns:
+        ???: Result of the given function. Return type depends on the given function
+    """
+    old_status = inferior_status
+    if old_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        interrupt_inferior(type_defs.STOP_REASON.PAUSE)
+    result = func(*args, **kwargs)
+    if old_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        try:
+            continue_inferior()
+        except type_defs.InferiorRunningException:
+            pass
+    return result
 
 
 def can_attach(pid):
@@ -149,41 +210,28 @@ def can_attach(pid):
     return True
 
 
-def state_observe_thread():
+def wait_for_stop(timeout=1):
+    """Block execution till the inferior stops
+
+    Args:
+        timeout (float): Timeout time in seconds
     """
-    Observes the state of gdb, uses conditions to inform other functions and threads about gdb's state
-    Also generates output for send_command function
-    Should be called by creating a thread. Usually called in initialization process by attach function
-    """
-    global inferior_status
-    global child
-    global gdb_output
-    global gdb_async_output
-    while True:
-        child.expect_exact("(gdb)")
-        print(child.before)  # debug mode on!
-        matches = findall(r"stopped\-threads=\"all\"|\*running,thread\-id=\"all\"",
-                          child.before)  # stopped-threads="all"  # *running,thread-id="all"
-        if len(matches) > 0:
-            if search(r"stopped", matches[-1]):
-                inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
-            else:
-                inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
-            with status_changed_condition:
-                status_changed_condition.notify_all()
-        try:
-            # The command will always start with the word "source", check send_command function for the cause
-            command_file = escape(SysUtils.get_gdb_command_file(currentpid))
-            gdb_output = split(r"&\".*source\s" + command_file + r"\\n\"", child.before, 1)[1]  # &"command\n"
-        except:
-            with gdb_async_condition:
-                gdb_async_output = child.before
-                gdb_async_condition.notify_all()
+    remaining_time = timeout
+    while inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING or remaining_time <= 0:
+        sleep(type_defs.CONST_TIME.GDB_INPUT_SLEEP)
+        remaining_time -= type_defs.CONST_TIME.GDB_INPUT_SLEEP
 
 
-def interrupt_inferior():
-    """Interrupt the inferior"""
+def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
+    """Interrupt the inferior
+
+    Args:
+        interrupt_reason (int): Just changes the global variable stop_reason. Can be a member of type_defs.STOP_REASON
+    """
+    global stop_reason
     send_command("c", control=True)
+    wait_for_stop()
+    stop_reason = interrupt_reason
 
 
 def continue_inferior():
@@ -285,8 +333,7 @@ def create_process(process_path, args=""):
     send_command("run")
 
     # We have to wait till breakpoint hits
-    while inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-        sleep(0.00001)
+    wait_for_stop()
     send_command("delete")
     pid = get_inferior_pid()
     currentpid = int(pid)
@@ -1044,36 +1091,32 @@ def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWAR
         on_hit (int): Can be a member of type_defs.BREAKPOINT_ON_HIT
 
     Returns:
-        bool: True if the breakpoint has been set successfully, False otherwise
+        str: Number of the breakpoint set
+        None: If setting breakpoint fails
     """
-    breakpoint_set = False
+    output = ""
     str_address = convert_symbol_to_address(expression)
     if str_address == None:
         print("expression for breakpoint is not valid")
-        return False
+        return
     if check_address_in_breakpoints(str_address):
         print("breakpoint/watchpoint for address " + str_address + " is already set")
-        return False
+        return
     if breakpoint_type == type_defs.BREAKPOINT_TYPE.HARDWARE_BP:
         if hardware_breakpoint_available():
             output = send_command("hbreak *" + str_address)
-            if search(r"breakpoint-created", output):
-                breakpoint_set = True
         else:
             print("All hardware breakpoint slots are being used, using a software breakpoint instead")
             output = send_command("break *" + str_address)
-            if search(r"breakpoint-created", output):
-                breakpoint_set = True
     elif breakpoint_type == type_defs.BREAKPOINT_TYPE.SOFTWARE_BP:
         output = send_command("break *" + str_address)
-        if search(r"breakpoint-created", output):
-            breakpoint_set = True
-    if breakpoint_set:
+    if search(r"breakpoint-created", output):
         global breakpoint_on_hit_dict
         breakpoint_on_hit_dict[int(str_address, 16)] = on_hit
-        return True
+        breakpoint_number = search(r"\d+", search(r"number=\"\d+\"", output).group(0)).group(0)
+        return breakpoint_number
     else:
-        return False
+        return
 
 
 def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TYPE.BOTH,
@@ -1221,6 +1264,7 @@ def delete_breakpoint(expression):
 
 def track_watchpoint(expression, length, watchpoint_type):
     """Starts tracking a value by setting a watchpoint at the address holding it
+    Use get_track_watchpoint_info() to get info about the watchpoint you set
 
     Args:
         expression (str): Any gdb expression
@@ -1229,6 +1273,7 @@ def track_watchpoint(expression, length, watchpoint_type):
 
     Returns:
         list: Numbers of the successfully set breakpoints as strings
+        None: If fails to set any watchpoint
     """
     breakpoints = add_watchpoint(expression, length, watchpoint_type, type_defs.BREAKPOINT_ON_HIT.FIND_CODE)
     if not breakpoints:
@@ -1261,6 +1306,52 @@ def get_track_watchpoint_info(watchpoint_list):
     track_watchpoint_file = SysUtils.get_track_watchpoint_file(currentpid, watchpoint_list)
     try:
         output = pickle.load(open(track_watchpoint_file, "rb"))
+    except:
+        output = ""
+    return output
+
+
+def track_breakpoint(expression, register_expressions):
+    """Starts tracking a value by setting a breakpoint at the address holding it
+    Use get_track_breakpoint_info() to get info about the breakpoint you set
+
+    Args:
+        expression (str): Any gdb expression
+        register_expressions (str): Register expressions, separated by a comma. Registers should start with "$"
+        PINCE will gather info about values presented by register expressions every time the breakpoint is reached
+        For instance, passing "$rax,$rcx+5,$rbp+$r12" will make PINCE track values rax, rcx+5 and rbp+r12
+
+    Returns:
+        str: Number of the breakpoint set
+        None: If fails to set any breakpoint
+    """
+    breakpoint = add_breakpoint(expression, on_hit=type_defs.BREAKPOINT_ON_HIT.FIND_ADDR)
+    if not breakpoint:
+        return
+    send_command("commands " + breakpoint \
+                 + "\npince-get-track-breakpoint-info " + register_expressions.replace(" ", "") + "," + breakpoint
+                 + "\nc" \
+                 + "\nend")
+    return breakpoint
+
+
+def get_track_breakpoint_info(breakpoint):
+    """Gathers the information for the tracked breakpoint
+
+    Args:
+        breakpoint (str): breakpoint number, must be returned from track_breakpoint()
+
+    Returns:
+        dict: Holds the register expressions as keys and their info as values
+        Format of dict--> {expression1:expression_info_dict1, expression2:expression_info_dict2, ...}
+        expression-->(str) The register expression
+        Format of expression_info_dict--> {value1:count1, value2:count2, ...}
+        value-->(str) Value calculated by given register expression as hex str
+        count-->(int) How many times this expression has been reached
+    """
+    track_breakpoint_file = SysUtils.get_track_breakpoint_file(currentpid, breakpoint)
+    try:
+        output = pickle.load(open(track_breakpoint_file, "rb"))
     except:
         output = ""
     return output

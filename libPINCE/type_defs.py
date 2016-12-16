@@ -21,6 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import collections
 
 
+class CONST_TIME:
+    GDB_INPUT_SLEEP = 0.0000001
+
+
 class PATHS:
     PINCE_IPC_PATH = "/tmp/PINCE-connection/"
     IPC_FROM_PINCE_PATH = "/from_PINCE_file"
@@ -58,6 +62,11 @@ class BREAKPOINT_ON_HIT:
     BREAK = 1
     FIND_CODE = 2
     FIND_ADDR = 3
+
+
+class STOP_REASON:
+    PAUSE = 1
+    DEBUG = 2
 
 
 # represents the indexes of value types
