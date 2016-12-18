@@ -26,27 +26,15 @@ cd libPINCE
 mkdir -p gdb_pince
 cd gdb_pince
 
-# clean the directory if another installation happened
-rm -rf gdb-7.11.1
-
-if [ ! -e gdb-7.11.1.tar.gz ] ; then
-    wget "http://ftp.gnu.org/gnu/gdb/gdb-7.11.1.tar.gz"
+if [ -e gdb-7.11.1 ] ; then
+    echo "GDB has been already compiled&installed, recompile&install? (y/n)"
+    read answer
+    if echo "$answer" | grep -iq "^[Yy]" ;then
+        sudo sh ../../install_gdb.sh
+    fi
+else
+    sudo sh ../../install_gdb.sh
 fi
-tar -zxvf gdb-7.11.1.tar.gz
-cd gdb-7.11.1
-
-# Dependencies required for compiling gdb
-sudo apt-get install python3-dev
-sudo apt-get install gcc
-
-CC=gcc ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
-if [ ! -e bin/gdb ] ; then
-    echo "Failed to install gdb, restart the installation process"
-    exit
-fi
-
-# In case of python part of gdb installation fails
-sudo cp -R gdb/data-directory/* share/gdb/
 
 # Creating .gdbinit in $HOME
 cd

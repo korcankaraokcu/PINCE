@@ -1,5 +1,7 @@
-Just run "sudo sh install.sh" in this directory. This automated script currently supports Ubuntu and Debian. If you encounter a problem while installing, check Installing Manually part of README.
+Just run "sudo sh install.sh" in this directory. This automated script currently supports Ubuntu and Debian. If you encounter a problem while installing, check Installing Manually part of README
+
+If you like to install only gdb itself, run "sudo sh install_gdb.sh". "install.sh" automatically runs this script if there's no gdb installed locally. Otherwise, it'll ask you if you would like to recompile&install gdb
 
 To run PINCE after installation, run "sh PINCE.sh"
 
-If you like to uninstall PINCE, just delete this folder. Everything is installed locally, including gdb.
+If you like to uninstall PINCE, just delete this folder. Everything is installed locally, including gdb
