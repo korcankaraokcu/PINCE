@@ -449,6 +449,24 @@ class GetTrackBreakpointInfo(gdb.Command):
         pickle.dump(track_breakpoint_dict[breakpoint_number], open(track_breakpoint_file, "wb"))
 
 
+class PhaseOut(gdb.Command):
+    def __init__(self):
+        super(PhaseOut, self).__init__("phase-out", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        gdb.execute("detach")
+        gdb.execute("echo Successfully detached from the target pid: " + str(pid))
+
+
+class PhaseIn(gdb.Command):
+    def __init__(self):
+        super(PhaseIn, self).__init__("phase-in", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        gdb.execute("attach " + str(pid))
+        gdb.execute("echo Successfully attached back to the target pid: " + str(pid))
+
+
 IgnoreErrors()
 CLIOutput()
 ReadMultipleAddresses()
@@ -464,3 +482,5 @@ GetFrameInfo()
 HexDump()
 GetTrackWatchpointInfo()
 GetTrackBreakpointInfo()
+PhaseOut()
+PhaseIn()
