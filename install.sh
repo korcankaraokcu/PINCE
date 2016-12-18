@@ -22,18 +22,14 @@ sudo apt-get install python3-pyqt5
 sudo pip3 install psutil
 sudo pip3 install pexpect
 
-cd libPINCE
-mkdir -p gdb_pince
-cd gdb_pince
-
-if [ -e gdb-7.11.1 ] ; then
+if [ -e libPINCE/gdb_pince/gdb-7.11.1/bin/gdb ] ; then
     echo "GDB has been already compiled&installed, recompile&install? (y/n)"
     read answer
     if echo "$answer" | grep -iq "^[Yy]" ;then
-        sudo sh ../../install_gdb.sh
+        sudo sh install_gdb.sh
     fi
 else
-    sudo sh ../../install_gdb.sh
+    sudo sh install_gdb.sh
 fi
 
 # Creating .gdbinit in $HOME
