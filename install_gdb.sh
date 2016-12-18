@@ -16,6 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
 
+cd libPINCE
+mkdir -p gdb_pince
+cd gdb_pince
+
 # clean the directory if another installation happened
 rm -rf gdb-7.11.1
 
