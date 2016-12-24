@@ -1361,6 +1361,60 @@ def get_track_breakpoint_info(breakpoint):
     return output
 
 
+def trace_instructions(expression, max_trace_count=1000, stop_condition="", step_mode=type_defs.STEP_MODE.SINGLE_STEP,
+                       collect_general_registers=True, collect_flag_registers=True,
+                       collect_segment_registers=True, collect_float_registers=True):
+    """Starts tracing instructions at the address evaluated by the given expression
+    There can be only one tracing process at a time, calling this function without waiting the first tracing process
+    meet an end may cause bizarre behaviour
+    Use get_trace_instructions_info() to get info about the breakpoint you set
+
+    Args:
+        expression (str): Any gdb expression
+        max_trace_count (int): Maximum number of steps will be taken while tracing
+        stop_condition (str): Optional, any gdb expression. Tracing will stop if the condition met
+        step_mode (int): Can be a member of type_defs.STEP_MODE
+        collect_general_registers (bool): Collect general registers while stepping
+        collect_flag_registers (bool): Collect flag registers while stepping
+        collect_segment_registers (bool): Collect segment registers while stepping
+        collect_float_registers (bool): Collect float registers while stepping
+
+    Returns:
+        str: Number of the breakpoint set
+        None: If fails to set any breakpoint
+    """
+    breakpoint = add_breakpoint(expression, on_hit=type_defs.BREAKPOINT_ON_HIT.TRACE)
+    if not breakpoint:
+        return
+    param_str = (
+        breakpoint, max_trace_count, stop_condition, step_mode, collect_general_registers, collect_flag_registers,
+        collect_segment_registers, collect_float_registers)
+    send_command("commands " + breakpoint \
+                 + "\npince-trace-instructions " + str(param_str)
+                 + "\nend")
+    return breakpoint
+
+
+def get_trace_instructions_info(breakpoint):
+    """Gathers the information of the tracing process for the given breakpoint
+
+    Args:
+        breakpoint (str): breakpoint number, must be returned from trace_instructions()
+
+    Returns:
+        type_defs.TraceInstructionsTree: A tree based on instructions encountered while stepping
+
+        Any "call" instruction creates a node in SINGLE_STEP mode
+        Any "ret" instruction creates a parent regardless of the mode
+    """
+    trace_instructions_file = SysUtils.get_trace_instructions_file(currentpid, breakpoint)
+    try:
+        output = pickle.load(open(trace_instructions_file, "rb"))
+    except:
+        output = ""
+    return output
+
+
 def call_function_from_inferior(expression):
     """Calls the given function expression from the inferior
 
