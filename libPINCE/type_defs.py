@@ -62,6 +62,12 @@ class BREAKPOINT_ON_HIT:
     BREAK = 1
     FIND_CODE = 2
     FIND_ADDR = 3
+    TRACE = 4
+
+
+class STEP_MODE:
+    SINGLE_STEP = 1
+    STEP_OVER = 2
 
 
 class STOP_REASON:
@@ -85,7 +91,8 @@ class VALUE_INDEX:
 on_hit_to_text_dict = {
     BREAKPOINT_ON_HIT.BREAK: "Break",
     BREAKPOINT_ON_HIT.FIND_CODE: "Find Code",
-    BREAKPOINT_ON_HIT.FIND_ADDR: "Find Address"
+    BREAKPOINT_ON_HIT.FIND_ADDR: "Find Address",
+    BREAKPOINT_ON_HIT.TRACE: "Trace"
 }
 
 # Represents the texts at indexes in combobox
@@ -164,3 +171,28 @@ class InferiorRunningException(Exception):
 class GDBInitializeException(Exception):
     def __init__(self, message="GDB not initialized"):
         super(GDBInitializeException, self).__init__(message)
+
+
+class TraceInstructionsTree:
+    def __init__(self, line_info=None, collected_dict=None):
+        self.line_info = line_info
+        self.collected_dict = collected_dict
+        self.children = []
+        self.parent = None
+
+    def add_child(self, child):
+        child.set_parent(self)
+        self.children.append(child)
+
+    def set_parent(self, parent):
+        self.parent = parent
+
+    def get_root(self):
+        root = self
+        while root is not None:
+            previous_root = root
+            root = root.parent
+        return previous_root
+
+    def __str__(self):
+        return self.line_info

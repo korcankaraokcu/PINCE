@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import gdb
 import struct
 import sys
+import re
+from collections import OrderedDict
 
 # This is some retarded hack
 gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
@@ -30,6 +32,16 @@ from libPINCE import type_defs
 inferior = gdb.selected_inferior()
 pid = inferior.pid
 mem_file = "/proc/" + str(pid) + "/mem"
+
+REGISTERS_32 = ["eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp", "eip"]
+REGISTERS_64 = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip", "r8", "r9", "r10", "r11", "r12",
+                "r13", "r14", "r15"]
+REGISTERS_SEGMENT = ["cs", "ss", "ds", "es", "fs", "gs"]
+
+if str(gdb.parse_and_eval("$rax")) == "void":
+    current_arch = type_defs.INFERIOR_ARCH.ARCH_32
+else:
+    current_arch = type_defs.INFERIOR_ARCH.ARCH_64
 
 
 # This function is used to avoid errors in gdb scripts, because gdb scripts stop working when encountered an error
@@ -119,3 +131,66 @@ def set_single_address(address, value_index, value):
     FILE.seek(address)
     FILE.write(write_data)
     FILE.close()
+
+
+def get_general_registers():
+    contents_send = OrderedDict()
+    if current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+        general_register_list = REGISTERS_64
+    else:
+        general_register_list = REGISTERS_32
+    regex_hex = re.compile(r"0x[0-9a-fA-F]+")  # $6 = 0x7f0bc0b6bb40
+    for item in general_register_list:
+        result = gdb.execute("p/x $" + item, to_string=True)
+        parsed_result = regex_hex.search(result).group(0)
+        contents_send[item] = parsed_result
+    return contents_send
+
+
+def get_flag_registers():
+    contents_send = OrderedDict()
+    result = gdb.execute("p/t $eflags", to_string=True)
+    parsed_result = re.search(r"=\s+\d+", result).group(0).split()[-1]  # $8 = 1010010011
+    reversed_parsed_result = "".join(reversed(parsed_result))
+    contents_send["cf"], contents_send["pf"], contents_send["af"], contents_send["zf"], contents_send["sf"], \
+    contents_send["tf"], contents_send["if"], contents_send["df"], contents_send["of"] = ["0"] * 9
+    try:
+        contents_send["cf"] = reversed_parsed_result[0]
+        contents_send["pf"] = reversed_parsed_result[2]
+        contents_send["af"] = reversed_parsed_result[4]
+        contents_send["zf"] = reversed_parsed_result[6]
+        contents_send["sf"] = reversed_parsed_result[7]
+        contents_send["tf"] = reversed_parsed_result[8]
+        contents_send["if"] = reversed_parsed_result[9]
+        contents_send["df"] = reversed_parsed_result[10]
+        contents_send["of"] = reversed_parsed_result[11]
+    except IndexError:
+        pass
+    return contents_send
+
+
+def get_segment_registers():
+    contents_send = OrderedDict()
+    regex_hex = re.compile(r"0x[0-9a-fA-F]+")  # $6 = 0x7f0bc0b6bb40
+    for item in REGISTERS_SEGMENT:
+        result = gdb.execute("p/x $" + item, to_string=True)
+        parsed_result = regex_hex.search(result).group(0)
+        contents_send[item] = parsed_result
+    return contents_send
+
+
+def get_float_registers():
+    contents_send = OrderedDict()
+
+    # st0-7
+    for index in range(8):
+        current_register = "st" + str(index)
+        value = gdb.parse_and_eval("$" + current_register)
+        contents_send[current_register] = str(value)
+
+    # xmm0-7
+    for index in range(8):
+        current_register = "xmm" + str(index)
+        value = gdb.parse_and_eval("$" + current_register + ".v4_float")
+        contents_send[current_register] = str(value)
+    return contents_send

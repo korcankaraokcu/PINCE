@@ -32,15 +32,11 @@ from libPINCE.gdb_python_scripts import ScriptUtils
 from libPINCE import SysUtils
 from libPINCE import type_defs
 
-REGISTERS_32 = ["eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp", "eip"]
-REGISTERS_64 = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip", "r8", "r9", "r10", "r11", "r12",
-                "r13", "r14", "r15"]
-REGISTERS_SEGMENT = ["cs", "ss", "ds", "es", "fs", "gs"]
-
 inferior = gdb.selected_inferior()
 pid = inferior.pid
 recv_file = SysUtils.get_ipc_from_PINCE_file(pid)
 send_file = SysUtils.get_ipc_to_PINCE_file(pid)
+
 if str(gdb.parse_and_eval("$rax")) == "void":
     current_arch = type_defs.INFERIOR_ARCH.ARCH_32
 else:
@@ -184,41 +180,10 @@ class ReadRegisters(gdb.Command):
         super(ReadRegisters, self).__init__("pince-read-registers", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        contents_send = OrderedDict()
-        if current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
-            general_register_list = REGISTERS_64
-        else:
-            general_register_list = REGISTERS_32
-        regex_hex = re.compile(r"0x[0-9a-fA-F]+")  # $6 = 0x7f0bc0b6bb40
-        for item in general_register_list:
-            result = gdb.execute("p/x $" + item, from_tty, to_string=True)
-            parsed_result = regex_hex.search(result).group(0)
-            contents_send[item] = parsed_result
-        result = gdb.execute("p/t $eflags", from_tty, to_string=True)
-        parsed_result = re.search(r"=\s+\d+", result).group(0).split()[-1]  # $8 = 1010010011
-        reversed_parsed_result = "".join(reversed(parsed_result))
-        contents_send["cf"], contents_send["pf"], contents_send["af"], contents_send["zf"], contents_send["sf"], \
-        contents_send["tf"], contents_send["if"], contents_send["df"], contents_send["of"] = ["0"] * 9
-        try:
-            contents_send["cf"] = reversed_parsed_result[0]
-            contents_send["pf"] = reversed_parsed_result[2]
-            contents_send["af"] = reversed_parsed_result[4]
-            contents_send["zf"] = reversed_parsed_result[6]
-            contents_send["sf"] = reversed_parsed_result[7]
-            contents_send["tf"] = reversed_parsed_result[8]
-            contents_send["if"] = reversed_parsed_result[9]
-            contents_send["df"] = reversed_parsed_result[10]
-            contents_send["of"] = reversed_parsed_result[11]
-        except IndexError:
-            pass
-        for item in REGISTERS_SEGMENT:
-            result = gdb.execute("p/x $" + item, from_tty, to_string=True)
-            parsed_result = regex_hex.search(result).group(0)
-            contents_send[item] = parsed_result
-        if arg == "print":
-            print(contents_send)
-        else:
-            send_to_pince(contents_send)
+        contents_send = ScriptUtils.get_general_registers()
+        contents_send.update(ScriptUtils.get_flag_registers())
+        contents_send.update(ScriptUtils.get_segment_registers())
+        send_to_pince(contents_send)
 
 
 class ReadFloatRegisters(gdb.Command):
@@ -226,23 +191,8 @@ class ReadFloatRegisters(gdb.Command):
         super(ReadFloatRegisters, self).__init__("pince-read-float-registers", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        contents_send = {}
-
-        # st0-7
-        for index in range(8):
-            current_register = "st" + str(index)
-            value = gdb.parse_and_eval("$" + current_register)
-            contents_send[current_register] = str(value)
-
-        # xmm0-7
-        for index in range(8):
-            current_register = "xmm" + str(index)
-            value = gdb.parse_and_eval("$" + current_register + ".v4_float")
-            contents_send[current_register] = str(value)
-        if arg == "print":
-            print(contents_send)
-        else:
-            send_to_pince(contents_send)
+        contents_send = ScriptUtils.get_float_registers()
+        send_to_pince(contents_send)
 
 
 class GetStackTraceInfo(gdb.Command):
@@ -399,7 +349,7 @@ class GetTrackWatchpointInfo(gdb.Command):
         breakpoints = arg
         current_pc_int = int(SysUtils.extract_address(str(gdb.parse_and_eval("$pc"))), 16)
         try:
-            disas_output = gdb.execute("disas $pc-30,$pc", from_tty, to_string=True)
+            disas_output = gdb.execute("disas $pc-30,$pc", to_string=True)
 
             # Just before the line "End of assembler dump"
             last_instruction = disas_output.splitlines()[-2]
@@ -413,9 +363,11 @@ class GetTrackWatchpointInfo(gdb.Command):
             if breakpoints not in track_watchpoint_dict:
                 track_watchpoint_dict[breakpoints] = OrderedDict()
             count = 1
-        register_info = eval(gdb.execute("pince-read-registers print", from_tty, to_string=True))
-        float_info = eval(gdb.execute("pince-read-float-registers print", from_tty, to_string=True))
-        disas_info = gdb.execute("disas " + previous_pc_address + ",+40", from_tty, to_string=True).replace("=>", "  ")
+        register_info = ScriptUtils.get_general_registers()
+        register_info.update(ScriptUtils.get_flag_registers())
+        register_info.update(ScriptUtils.get_segment_registers())
+        float_info = ScriptUtils.get_float_registers()
+        disas_info = gdb.execute("disas " + previous_pc_address + ",+40", to_string=True).replace("=>", "  ")
         track_watchpoint_dict[breakpoints][current_pc_int] = [count, previous_pc_address, register_info, float_info,
                                                               disas_info]
         track_watchpoint_file = SysUtils.get_track_watchpoint_file(pid, breakpoints)
@@ -434,6 +386,8 @@ class GetTrackBreakpointInfo(gdb.Command):
         if not breakpoint_number in track_breakpoint_dict:
             track_breakpoint_dict[breakpoint_number] = OrderedDict()
         for register_expression in register_expressions:
+            if not register_expression:
+                continue
             if not register_expression in track_breakpoint_dict[breakpoint_number]:
                 track_breakpoint_dict[breakpoint_number][register_expression] = OrderedDict()
             try:
@@ -467,6 +421,51 @@ class PhaseIn(gdb.Command):
         gdb.execute("echo Successfully attached back to the target pid: " + str(pid))
 
 
+class TraceInstructions(gdb.Command):
+    def __init__(self):
+        super(TraceInstructions, self).__init__("pince-trace-instructions", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        breakpoint, max_trace_count, stop_condition, step_mode, collect_general_registers, collect_flag_registers, \
+        collect_segment_registers, collect_float_registers = eval(arg)
+        gdb.execute("delete " + breakpoint)
+        regex_ret = re.compile(r":\s+ret")  # 0x7f71a4dc5ff8 <poll+72>:	ret
+        regex_call = re.compile(r":\s+call")  # 0x7f71a4dc5fe4 <poll+52>:	call   0x7f71a4de1100
+        contents_send = type_defs.TraceInstructionsTree()
+        for x in range(max_trace_count):
+            line_info = gdb.execute("x/i $pc", to_string=True)
+            collect_dict = OrderedDict()
+            if collect_general_registers:
+                collect_dict.update(ScriptUtils.get_general_registers())
+            if collect_flag_registers:
+                collect_dict.update(ScriptUtils.get_flag_registers())
+            if collect_segment_registers:
+                collect_dict.update(ScriptUtils.get_segment_registers())
+            if collect_float_registers:
+                collect_dict.update(ScriptUtils.get_float_registers())
+            contents_send.add_child(type_defs.TraceInstructionsTree(line_info, collect_dict))
+            if regex_ret.search(line_info):
+                if contents_send.parent is None:
+                    contents_send.set_parent(type_defs.TraceInstructionsTree())
+                contents_send = contents_send.parent
+            elif step_mode == type_defs.STEP_MODE.SINGLE_STEP:
+                if regex_call.search(line_info):
+                    contents_send = contents_send.children[-1]
+            if stop_condition:
+                try:
+                    if str(gdb.parse_and_eval(stop_condition)) == "1":
+                        break
+                except:
+                    pass
+            if step_mode == type_defs.STEP_MODE.SINGLE_STEP:
+                gdb.execute("stepi", to_string=True)
+            elif step_mode == type_defs.STEP_MODE.SINGLE_STEP:
+                gdb.execute("nexti", to_string=True)
+        trace_instructions_file = SysUtils.get_trace_instructions_file(pid, breakpoint)
+        pickle.dump(contents_send.get_root(), open(trace_instructions_file, "wb"))
+        gdb.execute("c")
+
+
 IgnoreErrors()
 CLIOutput()
 ReadMultipleAddresses()
@@ -484,3 +483,4 @@ GetTrackWatchpointInfo()
 GetTrackBreakpointInfo()
 PhaseOut()
 PhaseIn()
+TraceInstructions()
