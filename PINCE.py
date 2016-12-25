@@ -1910,7 +1910,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
-        self.trace_instructions_window = TraceInstructionsWindowForm(current_address)
+        self.trace_instructions_window = TraceInstructionsWindowForm(current_address, parent=self)
         self.trace_instructions_window.showMaximized()
 
     def exec_track_breakpoint_dialog(self):
@@ -2546,6 +2546,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         GuiUtils.center(self)
         self.address = address
         self.treeWidget_InstructionInfo.currentItemChanged.connect(self.display_collected_data)
+        self.treeWidget_InstructionInfo.itemDoubleClicked.connect(self.treeWidget_InstructionInfo_item_double_clicked)
         self.treeWidget_InstructionInfo.contextMenuEvent = self.treeWidget_InstructionInfo_context_menu_event
         self.actionOpen.triggered.connect(self.load_file)
         self.actionSave.triggered.connect(self.save_file)
@@ -2623,6 +2624,13 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             self.treeWidget_InstructionInfo.expandAll()
         elif action == collapse_all:
             self.treeWidget_InstructionInfo.collapseAll()
+
+    def treeWidget_InstructionInfo_item_double_clicked(self, index):
+        try:
+            address = SysUtils.extract_address(self.treeWidget_InstructionInfo.currentItem().trace_data.line_info)
+        except:
+            return
+        self.parent().disassemble_expression(address, append_to_travel_history=True)
 
 
 class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
