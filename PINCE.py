@@ -2333,7 +2333,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.pushButton_Stop.setText("Close")
 
     def closeEvent(self, QCloseEvent):
-        GDB_Engine.delete_breakpoint(self.address)
+        GDB_Engine.execute_with_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
 
 
 class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
@@ -2462,7 +2462,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         a[42] = 0
 
     def closeEvent(self, QCloseEvent):
-        GDB_Engine.delete_breakpoint(self.address)
+        GDB_Engine.execute_with_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
         self.parent().refresh_disassemble_view()
 
 
