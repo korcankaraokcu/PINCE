@@ -70,6 +70,12 @@ class STEP_MODE:
     STEP_OVER = 2
 
 
+class TRACE_STATUS:
+    STATUS_IDLE = 1
+    STATUS_TRACING = 2
+    STATUS_FINISHED = 3
+
+
 class STOP_REASON:
     PAUSE = 1
     DEBUG = 2
@@ -174,7 +180,7 @@ class GDBInitializeException(Exception):
 
 
 class TraceInstructionsTree:
-    def __init__(self, line_info=None, collected_dict=None):
+    def __init__(self, line_info="", collected_dict=None):
         self.line_info = line_info
         self.collected_dict = collected_dict
         self.children = []
@@ -194,5 +200,15 @@ class TraceInstructionsTree:
             root = root.parent
         return previous_root
 
-    def __str__(self):
-        return self.line_info
+    def parent_count(self):
+        root = self
+        root_count = 0
+        while root is not None:
+            root = root.parent
+            root_count += 1
+        return root_count - 1
+
+    def print_tree(self):
+        print("-" * self.parent_count() + self.line_info)
+        for item in self.children:
+            item.print_tree()

@@ -1362,7 +1362,7 @@ def get_track_breakpoint_info(breakpoint):
 
 
 def trace_instructions(expression, max_trace_count=1000, stop_condition="", step_mode=type_defs.STEP_MODE.SINGLE_STEP,
-                       collect_general_registers=True, collect_flag_registers=True,
+                       stop_after_trace=False, collect_general_registers=True, collect_flag_registers=True,
                        collect_segment_registers=True, collect_float_registers=True):
     """Starts tracing instructions at the address evaluated by the given expression
     There can be only one tracing process at a time, calling this function without waiting the first tracing process
@@ -1371,9 +1371,10 @@ def trace_instructions(expression, max_trace_count=1000, stop_condition="", step
 
     Args:
         expression (str): Any gdb expression
-        max_trace_count (int): Maximum number of steps will be taken while tracing
+        max_trace_count (int): Maximum number of steps will be taken while tracing. Must be between 1-10000
         stop_condition (str): Optional, any gdb expression. Tracing will stop if the condition met
         step_mode (int): Can be a member of type_defs.STEP_MODE
+        stop_after_trace (bool): Inferior won't be continuing after the tracing process
         collect_general_registers (bool): Collect general registers while stepping
         collect_flag_registers (bool): Collect flag registers while stepping
         collect_segment_registers (bool): Collect segment registers while stepping
@@ -1381,14 +1382,20 @@ def trace_instructions(expression, max_trace_count=1000, stop_condition="", step
 
     Returns:
         str: Number of the breakpoint set
-        None: If fails to set any breakpoint
+        None: If fails to set any breakpoint or if max_trace_count is not valid
     """
     breakpoint = add_breakpoint(expression, on_hit=type_defs.BREAKPOINT_ON_HIT.TRACE)
     if not breakpoint:
         return
+    if not (1<=max_trace_count<=10000):
+        print("max_trace_count must be between 1 and 10000")
+        return
+    contents_send=(type_defs.TRACE_STATUS.STATUS_IDLE,"Waiting for breakpoint to trigger")
+    trace_status_file=SysUtils.get_trace_instructions_status_file(currentpid,breakpoint)
+    pickle.dump(contents_send, open(trace_status_file, "wb"))
     param_str = (
-        breakpoint, max_trace_count, stop_condition, step_mode, collect_general_registers, collect_flag_registers,
-        collect_segment_registers, collect_float_registers)
+        breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers,
+        collect_flag_registers, collect_segment_registers, collect_float_registers)
     send_command("commands " + breakpoint \
                  + "\npince-trace-instructions " + str(param_str)
                  + "\nend")
@@ -1414,6 +1421,24 @@ def get_trace_instructions_info(breakpoint):
         output = ""
     return output
 
+def get_trace_instructions_status(breakpoint):
+    """Returns the current state of tracing process for given breakpoint
+
+    Args:
+        breakpoint (str): breakpoint number, must be returned from trace_instructions()
+
+    Returns:
+        tuple:(status_id, status_str)
+
+        status_id-->(int) A member of type_defs.TRACE_STATUS
+        status_str-->(str) Status string
+    """
+    trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)
+    try:
+        output = pickle.load(open(trace_status_file, "rb"))
+    except:
+        output = ""
+    return output
 
 def call_function_from_inferior(expression):
     """Calls the given function expression from the inferior
