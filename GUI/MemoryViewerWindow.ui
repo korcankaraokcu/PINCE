@@ -1309,6 +1309,13 @@
     <addaction name="actionInject_so_file"/>
     <addaction name="actionCall_Function"/>
    </widget>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionLoad_Trace"/>
+   </widget>
+   <addaction name="menuFile"/>
    <addaction name="menuView"/>
    <addaction name="menuDebug"/>
    <addaction name="menuTools"/>
@@ -1377,6 +1384,11 @@
   <action name="actionCall_Function">
    <property name="text">
     <string>Call Function</string>
+   </property>
+  </action>
+  <action name="actionLoad_Trace">
+   <property name="text">
+    <string>Load Trace</string>
    </property>
   </action>
  </widget>

@@ -29,6 +29,7 @@ import os
 import shutil
 import sys
 import binascii
+import pickle
 from . import type_defs
 from re import match, search, IGNORECASE, split
 
@@ -314,7 +315,7 @@ def get_gdb_command_file(pid):
 
 
 def get_track_watchpoint_file(pid, watchpoint_list):
-    """Get the path of track watchpoint file for given pid
+    """Get the path of track watchpoint file for given pid and watchpoint
 
     Args:
         pid (int,str): PID of the process
@@ -327,7 +328,7 @@ def get_track_watchpoint_file(pid, watchpoint_list):
 
 
 def get_track_breakpoint_file(pid, breakpoint):
-    """Get the path of track breakpoint file for given pid
+    """Get the path of track breakpoint file for given pid and breakpoint
 
     Args:
         pid (int,str): PID of the process
@@ -340,7 +341,7 @@ def get_track_breakpoint_file(pid, breakpoint):
 
 
 def get_trace_instructions_file(pid, breakpoint):
-    """Get the path of trace instructions file for given pid
+    """Get the path of trace instructions file for given pid and breakpoint
 
     Args:
         pid (int,str): PID of the process
@@ -350,6 +351,50 @@ def get_trace_instructions_file(pid, breakpoint):
         str: Path of trace instructions file
     """
     return get_PINCE_IPC_directory(pid) + "/" + breakpoint + "_trace.txt"
+
+
+def save_trace_instructions_file(pid, breakpoint, file_path):
+    """Saves the trace instructions file for given pid and breakpoint to the given file path
+
+    Args:
+        pid (int,str): PID of the process
+        breakpoint (str): breakpoint number
+        file_path (str): Path of the save file
+    """
+    trace_instructions_file = get_trace_instructions_file(pid, breakpoint)
+    shutil.copy2(trace_instructions_file, file_path)
+
+
+def load_trace_instructions_file(file_path):
+    """Loads the trace instructions file from the given file path
+
+    Args:
+        file_path (str): Path of the trace instructions file
+
+    Returns:
+        type_defs.TraceInstructionsTree: A tree based on instructions encountered while stepping
+
+        Any "call" instruction creates a node in SINGLE_STEP mode
+        Any "ret" instruction creates a parent regardless of the mode
+    """
+    try:
+        output = pickle.load(open(file_path, "rb"))
+    except:
+        output = ""
+    return output
+
+
+def get_trace_instructions_status_file(pid, breakpoint):
+    """Get the path of trace instructions status file for given pid and breakpoint
+
+    Args:
+        pid (int,str): PID of the process
+        breakpoint (str): breakpoint number
+
+    Returns:
+        str: Path of trace instructions status file
+    """
+    return get_PINCE_IPC_directory(pid) + "/" + breakpoint + "_trace_status.txt"
 
 
 def get_ipc_from_PINCE_file(pid):

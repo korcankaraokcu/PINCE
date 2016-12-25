@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
-    QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip
+    QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip, QTreeWidgetItem
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex
 from time import sleep, time
@@ -47,6 +47,9 @@ from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
 from GUI.BreakpointInfoWidget import Ui_TabWidget as BreakpointInfoWidget
 from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
 from GUI.TrackBreakpointWidget import Ui_Form as TrackBreakpointWidget
+from GUI.TraceInstructionsPromptDialog import Ui_Dialog as TraceInstructionsPromptDialog
+from GUI.TraceInstructionsWaitWidget import Ui_Form as TraceInstructionsWaitWidget
+from GUI.TraceInstructionsWindow import Ui_MainWindow as TraceInstructionsWindow
 from GUI.FunctionsInfoWidget import Ui_Form as FunctionsInfoWidget
 from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
 
@@ -836,25 +839,11 @@ class LoadingDialogForm(QDialog, LoadingDialog):
         self.background_thread = self.BackgroundThread()
         self.background_thread.output_ready.connect(self.accept)
         pince_directory = SysUtils.get_current_script_directory()
-        self.image_list = os.listdir(pince_directory + "/media/LoadingDialog")
-        self.image_list.sort()
-        self.current_image_index = 0
-        self.change_loading_picture()
-        self.image_timer = QTimer()
-        self.image_timer.setInterval(3000)
-        self.image_timer.timeout.connect(self.change_loading_picture)
-        self.image_timer.start()
-
-    def change_loading_picture(self):
-        pince_directory = SysUtils.get_current_script_directory()
-        image_name = self.image_list[self.current_image_index]
-        self.movie = QMovie(pince_directory + "/media/LoadingDialog/" + image_name, QByteArray())
+        self.movie = QMovie(pince_directory + "/media/LoadingDialog/ajax-loader.gif", QByteArray())
         self.label_Animated.setMovie(self.movie)
-        self.movie.setScaledSize(QSize(50, 50))
+        self.movie.setScaledSize(QSize(25, 25))
         self.movie.setCacheMode(QMovie.CacheAll)
         self.movie.setSpeed(100)
-        self.current_image_index += 1
-        self.current_image_index %= len(self.image_list)
         self.movie.start()
 
     def exec_(self):
@@ -1144,6 +1133,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.shortcut_set_address = QShortcut(QKeySequence("F4"), self)
         self.shortcut_set_address.activated.connect(self.set_address)
 
+    def initialize_file_context_menu(self):
+        self.actionLoad_Trace.triggered.connect(self.show_trace_window)
+
     def initialize_debug_context_menu(self):
         self.actionBreak.triggered.connect(GDB_Engine.interrupt_inferior)
         self.actionRun.triggered.connect(GDB_Engine.continue_inferior)
@@ -1171,6 +1163,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.process_running.connect(self.on_process_running)
         self.set_debug_menu_shortcuts()
         self.set_dynamic_debug_hotkeys()
+        self.initialize_file_context_menu()
         self.initialize_view_context_menu()
         self.initialize_debug_context_menu()
         self.initialize_tools_context_menu()
@@ -1267,6 +1260,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_view_scroll_bar_timer.timeout.connect(self.check_hex_view_scrollbar)
         self.hex_view_scroll_bar_timer.start()
         self.verticalScrollBar_HexView.mouseReleaseEvent = self.verticalScrollBar_HexView_mouse_release_event
+
+    def show_trace_window(self):
+        self.trace_instructions_window = TraceInstructionsWindowForm(prompt_dialog=False)
+        self.trace_instructions_window.showMaximized()
 
     def call_function(self):
         label_text = "Enter the expression for the function that'll be called from the inferior" \
@@ -1852,6 +1849,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             add_condition = -1
         menu.addSeparator()
         track_breakpoint = menu.addAction("Find out which addresses this instruction accesses")
+        trace_instructions = menu.addAction("Break and trace instructions")
         menu.addSeparator()
         refresh = menu.addAction("Refresh[R]")
         menu.addSeparator()
@@ -1887,6 +1885,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.add_breakpoint_condition(current_address_int)
         elif action == track_breakpoint:
             self.exec_track_breakpoint_dialog()
+        elif action == trace_instructions:
+            self.exec_trace_instructions_dialog()
         elif action == refresh:
             self.refresh_disassemble_view()
         elif action == copy_address:
@@ -1905,6 +1905,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         for item in bookmark_action_list:
             if action == item:
                 self.disassemble_expression(SysUtils.extract_address(action.text()), append_to_travel_history=True)
+
+    def exec_trace_instructions_dialog(self):
+        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+        self.trace_instructions_window = TraceInstructionsWindowForm(current_address)
+        self.trace_instructions_window.showMaximized()
 
     def exec_track_breakpoint_dialog(self):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
@@ -2457,6 +2464,147 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
     def closeEvent(self, QCloseEvent):
         GDB_Engine.delete_breakpoint(self.address)
         self.parent().refresh_disassemble_view()
+
+
+class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+
+    def get_values(self):
+        max_trace_count = int(self.lineEdit_MaxTraceCount.text())
+        stop_condition = self.lineEdit_StopCondition.text()
+        if self.checkBox_StepOver.isChecked():
+            step_mode = type_defs.STEP_MODE.STEP_OVER
+        else:
+            step_mode = type_defs.STEP_MODE.SINGLE_STEP
+        stop_after_trace = self.checkBox_StopAfterTrace.isChecked()
+        collect_general_registers = self.checkBox_GeneralRegisters.isChecked()
+        collect_flag_registers = self.checkBox_FlagRegisters.isChecked()
+        collect_segment_registers = self.checkBox_SegmentRegisters.isChecked()
+        collect_float_registers = self.checkBox_FloatRegisters.isChecked()
+        return max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers, \
+               collect_flag_registers, collect_segment_registers, collect_float_registers
+
+    def accept(self):
+        if 1 <= int(self.lineEdit_MaxTraceCount.text()) <= 10000:
+            super(TraceInstructionsPromptDialogForm, self).accept()
+        else:
+            QMessageBox.information(self, "Error", "Max trace count must be between 1 and 10000")
+
+
+class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
+    widget_closed = pyqtSignal()
+
+    def __init__(self, address, breakpoint, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.setWindowFlags(self.windowFlags() | Qt.Window | Qt.FramelessWindowHint)
+        GuiUtils.center(self)
+        self.address = address
+        self.breakpoint = breakpoint
+        pince_directory = SysUtils.get_current_script_directory()
+        self.movie = QMovie(pince_directory + "/media/TraceInstructionsWaitWidget/ajax-loader.gif", QByteArray())
+        self.label_Animated.setMovie(self.movie)
+        self.movie.setScaledSize(QSize(200, 100))
+        self.movie.setCacheMode(QMovie.CacheAll)
+        self.movie.setSpeed(100)
+        self.movie.start()
+        self.pushButton_Cancel.clicked.connect(self.close)
+        self.status_timer = QTimer()
+        self.status_timer.setInterval(30)
+        self.status_timer.timeout.connect(self.change_status)
+        self.status_timer.start()
+
+    def change_status(self):
+        status_info = GDB_Engine.get_trace_instructions_status(self.breakpoint)
+        if status_info:
+            if status_info[0] == type_defs.TRACE_STATUS.STATUS_FINISHED:
+                self.close()
+                return
+            if status_info[0] == type_defs.TRACE_STATUS.STATUS_TRACING:
+                if self.pushButton_Cancel.isVisible():
+                    self.pushButton_Cancel.hide()
+            self.label_StatusText.setText(status_info[1])
+            self.adjustSize()
+            QApplication.processEvents()
+
+    def closeEvent(self, QCloseEvent):
+        self.status_timer.stop()
+        try:
+            GDB_Engine.delete_breakpoint(self.address)
+        except type_defs.InferiorRunningException:
+            pass
+        self.widget_closed.emit()
+
+
+class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
+    def __init__(self, address="", prompt_dialog=True, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center(self)
+        self.address = address
+        self.treeWidget_InstructionInfo.currentItemChanged.connect(self.display_collected_data)
+        self.actionOpen.triggered.connect(self.load_file)
+        self.actionSave.triggered.connect(self.save_file)
+        self.splitter.setStretchFactor(0, 1)
+        if not prompt_dialog:
+            return
+        prompt_dialog = TraceInstructionsPromptDialogForm()
+        if prompt_dialog.exec_():
+            params = (address,) + prompt_dialog.get_values()
+            breakpoint = GDB_Engine.trace_instructions(*params)
+            if not breakpoint:
+                QMessageBox.information(self, "Error", "Failed to set breakpoint at address " + address)
+                return
+            self.breakpoint = breakpoint
+            self.wait_dialog = TraceInstructionsWaitWidgetForm(address, breakpoint, self)
+            self.wait_dialog.widget_closed.connect(self.show_trace_info)
+            self.wait_dialog.show()
+
+    def display_collected_data(self):
+        self.textBrowser_RegisterInfo.clear()
+        current_dict = self.treeWidget_InstructionInfo.currentItem().trace_data.collected_dict
+        for key in current_dict:
+            self.textBrowser_RegisterInfo.append(str(key) + " = " + str(current_dict[key]))
+        self.textBrowser_RegisterInfo.verticalScrollBar().setValue(
+            self.textBrowser_RegisterInfo.verticalScrollBar().minimum())
+
+    def show_trace_info(self, trace_data=""):
+        self.treeWidget_InstructionInfo.setStyleSheet("QTreeWidget::item{ height: 16px; }")
+        parent = QTreeWidgetItem(self.treeWidget_InstructionInfo)
+        if trace_data:
+            trace_parent = trace_data
+        else:
+            trace_parent = GDB_Engine.get_trace_instructions_info(self.breakpoint)
+        while trace_parent:
+            try:
+                current_item = trace_parent.children[0]
+                del trace_parent.children[0]
+            except IndexError:
+                trace_parent = trace_parent.parent
+                parent = parent.parent()
+                continue
+            child = QTreeWidgetItem(parent)
+            child.trace_data = current_item
+            child.setText(0, current_item.line_info)
+            if current_item.children:
+                trace_parent = current_item
+                parent = parent.child(parent.childCount() - 1)
+
+    def save_file(self):
+        home_path = SysUtils.get_home_directory()
+        file_path = QFileDialog.getSaveFileName(self, "Save trace file", home_path)[0]
+        if file_path:
+            SysUtils.save_trace_instructions_file(GDB_Engine.currentpid, self.breakpoint, file_path)
+
+    def load_file(self):
+        home_path = SysUtils.get_home_directory()
+        file_path = QFileDialog.getOpenFileName(self, "Open trace file", home_path)[0]
+        if file_path:
+            self.treeWidget_InstructionInfo.clear()
+            trace_data = SysUtils.load_trace_instructions_file(file_path)
+            self.show_trace_info(trace_data)
 
 
 class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
