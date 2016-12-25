@@ -2546,6 +2546,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         GuiUtils.center(self)
         self.address = address
         self.treeWidget_InstructionInfo.currentItemChanged.connect(self.display_collected_data)
+        self.treeWidget_InstructionInfo.contextMenuEvent = self.treeWidget_InstructionInfo_context_menu_event
         self.actionOpen.triggered.connect(self.load_file)
         self.actionSave.triggered.connect(self.save_file)
         self.splitter.setStretchFactor(0, 1)
@@ -2565,11 +2566,15 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
 
     def display_collected_data(self):
         self.textBrowser_RegisterInfo.clear()
-        current_dict = self.treeWidget_InstructionInfo.currentItem().trace_data.collected_dict
-        for key in current_dict:
-            self.textBrowser_RegisterInfo.append(str(key) + " = " + str(current_dict[key]))
-        self.textBrowser_RegisterInfo.verticalScrollBar().setValue(
-            self.textBrowser_RegisterInfo.verticalScrollBar().minimum())
+        try:
+            current_dict = self.treeWidget_InstructionInfo.currentItem().trace_data.collected_dict
+        except:
+            return
+        if current_dict:
+            for key in current_dict:
+                self.textBrowser_RegisterInfo.append(str(key) + " = " + str(current_dict[key]))
+            self.textBrowser_RegisterInfo.verticalScrollBar().setValue(
+                self.textBrowser_RegisterInfo.verticalScrollBar().minimum())
 
     def show_trace_info(self, trace_data=""):
         self.treeWidget_InstructionInfo.setStyleSheet("QTreeWidget::item{ height: 16px; }")
@@ -2606,6 +2611,18 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             self.treeWidget_InstructionInfo.clear()
             trace_data = SysUtils.load_trace_instructions_file(file_path)
             self.show_trace_info(trace_data)
+
+    def treeWidget_InstructionInfo_context_menu_event(self, event):
+        menu = QMenu()
+        expand_all = menu.addAction("Expand All")
+        collapse_all = menu.addAction("Collapse All")
+        font_size = self.treeWidget_InstructionInfo.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == expand_all:
+            self.treeWidget_InstructionInfo.expandAll()
+        elif action == collapse_all:
+            self.treeWidget_InstructionInfo.collapseAll()
 
 
 class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
