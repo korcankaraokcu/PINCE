@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # IMPORTANT: Any constant involving only PINCE.py should be declared in PINCE.py
 
 import collections
+import os
 
 
 class CONST_TIME:
@@ -30,6 +31,11 @@ class PATHS:
     IPC_FROM_PINCE_PATH = "/from_PINCE_file"
     IPC_TO_PINCE_PATH = "/to_PINCE_file"
     GDB_PATH = "./gdb_pince/gdb-7.11.1/bin/gdb"
+
+
+class USER_PATHS:
+    HOME_PATH = os.path.expanduser("~")
+    TRACE_INSTRUCTIONS_PATH = HOME_PATH + "/MyPINCEStuff/TraceInstructions/"
 
 
 class INFERIOR_STATUS:
