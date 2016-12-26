@@ -17,7 +17,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string/>
+   <string>Add Address Manually</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_5">
    <item>
