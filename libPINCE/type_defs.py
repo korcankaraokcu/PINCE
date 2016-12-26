@@ -35,7 +35,7 @@ class PATHS:
 
 class USER_PATHS:
     HOME_PATH = os.path.expanduser("~")
-    TRACE_INSTRUCTIONS_PATH = HOME_PATH + "/MyPINCEStuff/TraceInstructions/"
+    TRACE_INSTRUCTIONS_PATH = HOME_PATH + "/PINCE_USER_FILES/TraceInstructions/"
 
 
 class INFERIOR_STATUS:
