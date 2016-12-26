@@ -2601,14 +2601,16 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.treeWidget_InstructionInfo.expandAll()
 
     def save_file(self):
-        home_path = SysUtils.get_home_directory()
-        file_path = QFileDialog.getSaveFileName(self, "Save trace file", home_path)[0]
+        trace_file_path = type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH
+        SysUtils.is_path_valid(trace_file_path, "create")
+        file_path = QFileDialog.getSaveFileName(self, "Save trace file", trace_file_path)[0]
         if file_path:
             SysUtils.save_trace_instructions_file(GDB_Engine.currentpid, self.breakpoint, file_path)
 
     def load_file(self):
-        home_path = SysUtils.get_home_directory()
-        file_path = QFileDialog.getOpenFileName(self, "Open trace file", home_path)[0]
+        trace_file_path = type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH
+        SysUtils.is_path_valid(trace_file_path, "create")
+        file_path = QFileDialog.getOpenFileName(self, "Open trace file", trace_file_path)[0]
         if file_path:
             self.treeWidget_InstructionInfo.clear()
             trace_data = SysUtils.load_trace_instructions_file(file_path)
