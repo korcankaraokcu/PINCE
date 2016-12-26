@@ -2598,6 +2598,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             if current_item.children:
                 trace_parent = current_item
                 parent = parent.child(parent.childCount() - 1)
+        self.treeWidget_InstructionInfo.expandAll()
 
     def save_file(self):
         home_path = SysUtils.get_home_directory()
