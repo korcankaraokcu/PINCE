@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'AddAddressManuallyDialog.ui'
 #
-# Created: Sat Oct  8 22:33:09 2016
+# Created: Mon Dec 26 20:22:30 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -14,7 +14,6 @@ class Ui_Dialog(object):
         Dialog.setObjectName("Dialog")
         Dialog.resize(374, 222)
         Dialog.setMaximumSize(QtCore.QSize(374, 222))
-        Dialog.setWindowTitle("")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
@@ -117,6 +116,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
+        Dialog.setWindowTitle(_translate("Dialog", "Add Address Manually"))
         self.label.setText(_translate("Dialog", "Address:"))
         self.label_2.setText(_translate("Dialog", "="))
         self.label_valueofaddress.setText(_translate("Dialog", "??"))
