@@ -1,7 +1,7 @@
 #PINCE  
 PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB), focused on games. But it can be used for any reverse-engineering related stuff. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine. PINCE is in development right now, read features part of the project to see what is planned and what is done for now. Also, please read [Wiki Page](https://github.com/korcankaraokcu/PINCE/wiki) of the project to understand how PINCE works.  
   
-*Disclaimer: Github is the only official website for PINCE right now. Do not trust to any source that claims to have the source code or package for PINCE and remember to report them* <em>**immediately**</em>  
+*Disclaimer: Do not trust to any source other than [Trusted Sources](#trusted-sources) that claims to have the source code or package for PINCE and remember to report them* <em>**immediately**</em>  
   
 Pre-release screenshots:  
 ![](screenshots/pince.png)
@@ -119,12 +119,13 @@ GPLv3+. See COPYING file for details
 #Contact Information
 Korcan Karaokçu <korcankaraokcu@gmail.com>  
 Çağrı Ulaş <cagriulas@gmail.com>  
+Jakob <jakob@memeware.net>  
 
 #Supported platforms
 - **Platforms tested so far:**
   * Kubuntu 14.04 & 16.04(Also tested on x86 variants)
   * Debian 8.5
-  * Archlinux(contact with [Çağrı Ulaş](https://github.com/cagriulas))
+  * Archlinux(contact with [Çağrı Ulaş](https://github.com/cagriulas) or [Jakob](https://github.com/TsarFox))
 - **Games&Applications tested so far:**
   * KMines
   * Torchlight 2
@@ -135,3 +136,7 @@ Korcan Karaokçu <korcankaraokcu@gmail.com>
     * FTL
     * Undertale
     * Hearthstone(It interrupts itself with SIGUSR1 whenever continued, implementing signal passing on PINCE might be very useful in future)
+
+#Trusted Sources
+  * This page and other github forks
+  * [AUR package for Archlinux](https://aur.archlinux.org/packages/pince-git/)
