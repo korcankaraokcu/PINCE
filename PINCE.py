@@ -2487,10 +2487,10 @@ class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
                collect_flag_registers, collect_segment_registers, collect_float_registers
 
     def accept(self):
-        if 1 <= int(self.lineEdit_MaxTraceCount.text()) <= 10000:
+        if int(self.lineEdit_MaxTraceCount.text()) >= 1:
             super(TraceInstructionsPromptDialogForm, self).accept()
         else:
-            QMessageBox.information(self, "Error", "Max trace count must be between 1 and 10000")
+            QMessageBox.information(self, "Error", "Max trace count must be equal or greater than 1")
 
 
 class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):

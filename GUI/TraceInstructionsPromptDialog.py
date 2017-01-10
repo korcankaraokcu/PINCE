@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'TraceInstructionsPromptDialog.ui'
 #
-# Created: Sat Dec 24 16:21:31 2016
+# Created: Tue Jan 10 14:06:28 2017
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -66,7 +66,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Parameters for tracing"))
-        self.label.setText(_translate("Dialog", "Max trace count(1 to 10000):"))
+        self.label.setText(_translate("Dialog", "Max trace count(1 or greater):"))
         self.lineEdit_MaxTraceCount.setText(_translate("Dialog", "1000"))
         self.label_2.setText(_translate("Dialog", "Stop condition(Optional, gdb expression):"))
         self.checkBox_StepOver.setText(_translate("Dialog", "Step over instead of single step"))

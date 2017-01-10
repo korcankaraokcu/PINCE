@@ -1371,7 +1371,7 @@ def trace_instructions(expression, max_trace_count=1000, stop_condition="", step
 
     Args:
         expression (str): Any gdb expression
-        max_trace_count (int): Maximum number of steps will be taken while tracing. Must be between 1-10000
+        max_trace_count (int): Maximum number of steps will be taken while tracing. Must be equal or greater than 1
         stop_condition (str): Optional, any gdb expression. Tracing will stop if the condition met
         step_mode (int): Can be a member of type_defs.STEP_MODE
         stop_after_trace (bool): Inferior won't be continuing after the tracing process
@@ -1387,8 +1387,11 @@ def trace_instructions(expression, max_trace_count=1000, stop_condition="", step
     breakpoint = add_breakpoint(expression, on_hit=type_defs.BREAKPOINT_ON_HIT.TRACE)
     if not breakpoint:
         return
-    if not (1 <= max_trace_count <= 10000):
-        print("max_trace_count must be between 1 and 10000")
+    if max_trace_count < 1:
+        print("max_trace_count must be equal or greater than 1")
+        return
+    if type(max_trace_count) != int:
+        print("max_trace_count must be an integer")
         return
     contents_send = (type_defs.TRACE_STATUS.STATUS_IDLE, "Waiting for breakpoint to trigger")
     trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)

@@ -19,7 +19,7 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>Max trace count(1 to 10000):</string>
+        <string>Max trace count(1 or greater):</string>
        </property>
       </widget>
      </item>
