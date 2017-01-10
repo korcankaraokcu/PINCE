@@ -2519,19 +2519,20 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
 
     def change_status(self):
         status_info = GDB_Engine.get_trace_instructions_status(self.breakpoint)
-        if status_info:
-            if status_info[0] == type_defs.TRACE_STATUS.STATUS_FINISHED:
-                self.close()
-                return
-            if status_info[0] == type_defs.TRACE_STATUS.STATUS_TRACING:
-                if self.pushButton_Cancel.isVisible():
-                    self.pushButton_Cancel.hide()
-            self.label_StatusText.setText(status_info[1])
-            self.adjustSize()
-            QApplication.processEvents()
+        if status_info[0] == type_defs.TRACE_STATUS.STATUS_FINISHED:
+            self.close()
+            return
+        self.label_StatusText.setText(status_info[1])
+        QApplication.processEvents()
 
     def closeEvent(self, QCloseEvent):
         self.status_timer.stop()
+        status_info = GDB_Engine.get_trace_instructions_status(self.breakpoint)
+        if status_info[0] == type_defs.TRACE_STATUS.STATUS_TRACING:
+            GDB_Engine.cancel_trace_instructions(self.breakpoint)
+            while GDB_Engine.get_trace_instructions_status(self.breakpoint)[0] \
+                    != type_defs.TRACE_STATUS.STATUS_FINISHED:
+                sleep(type_defs.CONST_TIME.GDB_INPUT_SLEEP)
         try:
             GDB_Engine.delete_breakpoint(self.address)
         except type_defs.InferiorRunningException:
