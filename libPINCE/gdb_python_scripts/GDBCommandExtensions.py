@@ -451,8 +451,8 @@ class TraceInstructions(gdb.Command):
             if collect_float_registers:
                 collect_dict.update(ScriptUtils.get_float_registers())
             contents_send.add_child(type_defs.TraceInstructionsTree(line_info, collect_dict))
-            status_info = (
-            type_defs.TRACE_STATUS.STATUS_TRACING, line_info + " (" + str(x + 1) + "/" + str(max_trace_count) + ")")
+            status_info = (type_defs.TRACE_STATUS.STATUS_TRACING,
+                           line_info + " (" + str(x + 1) + "/" + str(max_trace_count) + ")")
             trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
             pickle.dump(status_info, open(trace_status_file, "wb"))
             if regex_ret.search(line_info):
@@ -474,10 +474,12 @@ class TraceInstructions(gdb.Command):
                 gdb.execute("stepi", to_string=True)
             elif step_mode == type_defs.STEP_MODE.STEP_OVER:
                 gdb.execute("nexti", to_string=True)
+        trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
+        status_info = (type_defs.TRACE_STATUS.STATUS_PROCESSING, "Processing the collected data")
+        pickle.dump(status_info, open(trace_status_file, "wb"))
         trace_instructions_file = SysUtils.get_trace_instructions_file(pid, breakpoint)
         pickle.dump(contents_send.get_root(), open(trace_instructions_file, "wb"))
         status_info = (type_defs.TRACE_STATUS.STATUS_FINISHED, "Tracing has been completed")
-        trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
         pickle.dump(status_info, open(trace_status_file, "wb"))
         if not stop_after_trace:
             gdb.execute("c")
