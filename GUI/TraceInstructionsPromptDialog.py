@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'TraceInstructionsPromptDialog.ui'
 #
-# Created: Tue Jan 10 14:06:28 2017
+# Created: Tue Jan 10 18:45:42 2017
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(291, 327)
+        Dialog.resize(306, 381)
         self.gridLayout = QtWidgets.QGridLayout(Dialog)
         self.gridLayout.setObjectName("gridLayout")
         self.verticalLayout = QtWidgets.QVBoxLayout()
@@ -23,6 +23,12 @@ class Ui_Dialog(object):
         self.lineEdit_MaxTraceCount = QtWidgets.QLineEdit(Dialog)
         self.lineEdit_MaxTraceCount.setObjectName("lineEdit_MaxTraceCount")
         self.verticalLayout.addWidget(self.lineEdit_MaxTraceCount)
+        self.label_3 = QtWidgets.QLabel(Dialog)
+        self.label_3.setObjectName("label_3")
+        self.verticalLayout.addWidget(self.label_3)
+        self.lineEdit_TriggerCondition = QtWidgets.QLineEdit(Dialog)
+        self.lineEdit_TriggerCondition.setObjectName("lineEdit_TriggerCondition")
+        self.verticalLayout.addWidget(self.lineEdit_TriggerCondition)
         self.label_2 = QtWidgets.QLabel(Dialog)
         self.label_2.setObjectName("label_2")
         self.verticalLayout.addWidget(self.label_2)
@@ -66,8 +72,12 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Parameters for tracing"))
+        self.label.setToolTip(_translate("Dialog", "Number of the instructions that\'ll be traced"))
         self.label.setText(_translate("Dialog", "Max trace count(1 or greater):"))
         self.lineEdit_MaxTraceCount.setText(_translate("Dialog", "1000"))
+        self.label_3.setToolTip(_translate("Dialog", "Tracing will start if this condition is met"))
+        self.label_3.setText(_translate("Dialog", "Trigger condition(Optional, gdb expression):"))
+        self.label_2.setToolTip(_translate("Dialog", "Tracing will stop whenever this condition is met"))
         self.label_2.setText(_translate("Dialog", "Stop condition(Optional, gdb expression):"))
         self.checkBox_StepOver.setText(_translate("Dialog", "Step over instead of single step"))
         self.checkBox_StopAfterTrace.setText(_translate("Dialog", "Stop when tracing ends"))

@@ -1361,7 +1361,8 @@ def get_track_breakpoint_info(breakpoint):
     return output
 
 
-def trace_instructions(expression, max_trace_count=1000, stop_condition="", step_mode=type_defs.STEP_MODE.SINGLE_STEP,
+def trace_instructions(expression, max_trace_count=1000, trigger_condition="", stop_condition="",
+                       step_mode=type_defs.STEP_MODE.SINGLE_STEP,
                        stop_after_trace=False, collect_general_registers=True, collect_flag_registers=True,
                        collect_segment_registers=True, collect_float_registers=True):
     """Starts tracing instructions at the address evaluated by the given expression
@@ -1372,7 +1373,8 @@ def trace_instructions(expression, max_trace_count=1000, stop_condition="", step
     Args:
         expression (str): Any gdb expression
         max_trace_count (int): Maximum number of steps will be taken while tracing. Must be greater than or equal to 1
-        stop_condition (str): Optional, any gdb expression. Tracing will stop if the condition met
+        trigger_condition (str): Optional, any gdb expression. Tracing will start if the condition is met
+        stop_condition (str): Optional, any gdb expression. Tracing will stop whenever the condition is met
         step_mode (int): Can be a member of type_defs.STEP_MODE
         stop_after_trace (bool): Inferior won't be continuing after the tracing process
         collect_general_registers (bool): Collect general registers while stepping
@@ -1384,15 +1386,16 @@ def trace_instructions(expression, max_trace_count=1000, stop_condition="", step
         str: Number of the breakpoint set
         None: If fails to set any breakpoint or if max_trace_count is not valid
     """
-    breakpoint = add_breakpoint(expression, on_hit=type_defs.BREAKPOINT_ON_HIT.TRACE)
-    if not breakpoint:
-        return
     if max_trace_count < 1:
         print("max_trace_count must be greater than or equal to 1")
         return
     if type(max_trace_count) != int:
         print("max_trace_count must be an integer")
         return
+    breakpoint = add_breakpoint(expression, on_hit=type_defs.BREAKPOINT_ON_HIT.TRACE)
+    if not breakpoint:
+        return
+    add_breakpoint_condition(expression, trigger_condition)
     contents_send = (type_defs.TRACE_STATUS.STATUS_IDLE, "Waiting for breakpoint to trigger")
     trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)
     pickle.dump(contents_send, open(trace_status_file, "wb"))
