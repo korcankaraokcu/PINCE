@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>291</width>
-    <height>327</height>
+    <width>306</width>
+    <height>381</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,6 +18,9 @@
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <widget class="QLabel" name="label">
+       <property name="toolTip">
+        <string>Number of the instructions that'll be traced</string>
+       </property>
        <property name="text">
         <string>Max trace count(1 or greater):</string>
        </property>
@@ -31,7 +34,23 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="label_3">
+       <property name="toolTip">
+        <string>Tracing will start if this condition is met</string>
+       </property>
+       <property name="text">
+        <string>Trigger condition(Optional, gdb expression):</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lineEdit_TriggerCondition"/>
+     </item>
+     <item>
       <widget class="QLabel" name="label_2">
+       <property name="toolTip">
+        <string>Tracing will stop whenever this condition is met</string>
+       </property>
        <property name="text">
         <string>Stop condition(Optional, gdb expression):</string>
        </property>

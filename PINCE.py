@@ -2473,6 +2473,7 @@ class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
 
     def get_values(self):
         max_trace_count = int(self.lineEdit_MaxTraceCount.text())
+        trigger_condition = self.lineEdit_TriggerCondition.text()
         stop_condition = self.lineEdit_StopCondition.text()
         if self.checkBox_StepOver.isChecked():
             step_mode = type_defs.STEP_MODE.STEP_OVER
@@ -2483,8 +2484,8 @@ class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
         collect_flag_registers = self.checkBox_FlagRegisters.isChecked()
         collect_segment_registers = self.checkBox_SegmentRegisters.isChecked()
         collect_float_registers = self.checkBox_FloatRegisters.isChecked()
-        return max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers, \
-               collect_flag_registers, collect_segment_registers, collect_float_registers
+        return max_trace_count, trigger_condition, stop_condition, step_mode, stop_after_trace, \
+               collect_general_registers, collect_flag_registers, collect_segment_registers, collect_float_registers
 
     def accept(self):
         if int(self.lineEdit_MaxTraceCount.text()) >= 1:
