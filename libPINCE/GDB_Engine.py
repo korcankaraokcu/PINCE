@@ -1387,11 +1387,11 @@ def trace_instructions(expression, max_trace_count=1000, stop_condition="", step
     breakpoint = add_breakpoint(expression, on_hit=type_defs.BREAKPOINT_ON_HIT.TRACE)
     if not breakpoint:
         return
-    if not (1<=max_trace_count<=10000):
+    if not (1 <= max_trace_count <= 10000):
         print("max_trace_count must be between 1 and 10000")
         return
-    contents_send=(type_defs.TRACE_STATUS.STATUS_IDLE,"Waiting for breakpoint to trigger")
-    trace_status_file=SysUtils.get_trace_instructions_status_file(currentpid,breakpoint)
+    contents_send = (type_defs.TRACE_STATUS.STATUS_IDLE, "Waiting for breakpoint to trigger")
+    trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)
     pickle.dump(contents_send, open(trace_status_file, "wb"))
     param_str = (
         breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers,
@@ -1421,6 +1421,7 @@ def get_trace_instructions_info(breakpoint):
         output = ""
     return output
 
+
 def get_trace_instructions_status(breakpoint):
     """Returns the current state of tracing process for given breakpoint
 
@@ -1432,13 +1433,27 @@ def get_trace_instructions_status(breakpoint):
 
         status_id-->(int) A member of type_defs.TRACE_STATUS
         status_str-->(str) Status string
+
+        Returns a tuple of (False, "") if fails to gather info
     """
     trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)
     try:
         output = pickle.load(open(trace_status_file, "rb"))
     except:
-        output = ""
+        output = False, ""
     return output
+
+
+def cancel_trace_instructions(breakpoint):
+    """Finishes the trace instruction process early on for the given breakpoint
+
+    Args:
+        breakpoint (str): breakpoint number, must be returned from trace_instructions()
+    """
+    status_info = (type_defs.TRACE_STATUS.STATUS_CANCELED, "Tracing has been canceled")
+    trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)
+    pickle.dump(status_info, open(trace_status_file, "wb"))
+
 
 def call_function_from_inferior(expression):
     """Calls the given function expression from the inferior

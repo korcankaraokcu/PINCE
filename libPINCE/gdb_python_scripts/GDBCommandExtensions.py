@@ -426,13 +426,20 @@ class TraceInstructions(gdb.Command):
         super(TraceInstructions, self).__init__("pince-trace-instructions", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace,collect_general_registers,\
+        breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers, \
         collect_flag_registers, collect_segment_registers, collect_float_registers = eval(arg)
         gdb.execute("delete " + breakpoint)
         regex_ret = re.compile(r":\s+ret")  # 0x7f71a4dc5ff8 <poll+72>:	ret
         regex_call = re.compile(r":\s+call")  # 0x7f71a4dc5fe4 <poll+52>:	call   0x7f71a4de1100
         contents_send = type_defs.TraceInstructionsTree()
         for x in range(max_trace_count):
+            trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
+            try:
+                output = pickle.load(open(trace_status_file, "rb"))
+                if output[0] == type_defs.TRACE_STATUS.STATUS_CANCELED:
+                    break
+            except:
+                pass
             line_info = gdb.execute("x/i $pc", to_string=True).split(maxsplit=1)[1]
             collect_dict = OrderedDict()
             if collect_general_registers:
@@ -444,12 +451,13 @@ class TraceInstructions(gdb.Command):
             if collect_float_registers:
                 collect_dict.update(ScriptUtils.get_float_registers())
             contents_send.add_child(type_defs.TraceInstructionsTree(line_info, collect_dict))
-            status_info = (type_defs.TRACE_STATUS.STATUS_TRACING, line_info+" ("+str(x+1)+"/"+str(max_trace_count)+")")
+            status_info = (
+            type_defs.TRACE_STATUS.STATUS_TRACING, line_info + " (" + str(x + 1) + "/" + str(max_trace_count) + ")")
             trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
             pickle.dump(status_info, open(trace_status_file, "wb"))
             if regex_ret.search(line_info):
                 if contents_send.parent is None:
-                    new_parent=type_defs.TraceInstructionsTree()
+                    new_parent = type_defs.TraceInstructionsTree()
                     contents_send.set_parent(new_parent)
                     new_parent.add_child(contents_send)
                 contents_send = contents_send.parent
@@ -468,7 +476,7 @@ class TraceInstructions(gdb.Command):
                 gdb.execute("nexti", to_string=True)
         trace_instructions_file = SysUtils.get_trace_instructions_file(pid, breakpoint)
         pickle.dump(contents_send.get_root(), open(trace_instructions_file, "wb"))
-        status_info = (type_defs.TRACE_STATUS.STATUS_FINISHED,"Tracing has been completed")
+        status_info = (type_defs.TRACE_STATUS.STATUS_FINISHED, "Tracing has been completed")
         trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
         pickle.dump(status_info, open(trace_status_file, "wb"))
         if not stop_after_trace:
