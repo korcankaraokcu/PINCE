@@ -2490,7 +2490,7 @@ class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
         if int(self.lineEdit_MaxTraceCount.text()) >= 1:
             super(TraceInstructionsPromptDialogForm, self).accept()
         else:
-            QMessageBox.information(self, "Error", "Max trace count must be equal or greater than 1")
+            QMessageBox.information(self, "Error", "Max trace count must be greater than or equal to 1")
 
 
 class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
