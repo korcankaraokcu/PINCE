@@ -1371,7 +1371,7 @@ def trace_instructions(expression, max_trace_count=1000, stop_condition="", step
 
     Args:
         expression (str): Any gdb expression
-        max_trace_count (int): Maximum number of steps will be taken while tracing. Must be equal or greater than 1
+        max_trace_count (int): Maximum number of steps will be taken while tracing. Must be greater than or equal to 1
         stop_condition (str): Optional, any gdb expression. Tracing will stop if the condition met
         step_mode (int): Can be a member of type_defs.STEP_MODE
         stop_after_trace (bool): Inferior won't be continuing after the tracing process
@@ -1388,7 +1388,7 @@ def trace_instructions(expression, max_trace_count=1000, stop_condition="", step
     if not breakpoint:
         return
     if max_trace_count < 1:
-        print("max_trace_count must be equal or greater than 1")
+        print("max_trace_count must be greater than or equal to 1")
         return
     if type(max_trace_count) != int:
         print("max_trace_count must be an integer")
