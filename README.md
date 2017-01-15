@@ -125,6 +125,7 @@ Jakob <jakob@memeware.net>
 - **Platforms tested so far:**
   * Kubuntu 14.04 & 16.04(Also tested on x86 variants)
   * Debian 8.5
+  * Linux Mint 18.1(install the package "python3-psutil" if you encounter ImportError or NameError, thanks [Gibus]( lilac66.dev@gmail.com))
   * Archlinux(contact with [Çağrı Ulaş](https://github.com/cagriulas) or [Jakob](https://github.com/TsarFox))
 - **Games&Applications tested so far:**
   * KMines
