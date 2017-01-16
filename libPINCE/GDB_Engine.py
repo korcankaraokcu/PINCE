@@ -49,8 +49,6 @@ status_changed_condition = Condition()
 gdb_output = ""
 gdb_async_output = ""
 
-index_to_gdbcommand_dict = type_defs.index_to_gdbcommand_dict
-
 
 # The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
 
@@ -406,7 +404,7 @@ def value_index_to_gdbcommand(index=int):
     Returns:
         str: The str corresponding to the index in type_defs.index_to_gdbcommand_dict
     """
-    return index_to_gdbcommand_dict.get(index, "out of bounds")
+    return type_defs.index_to_gdbcommand_dict.get(index, "out of bounds")
 
 
 def check_for_restricted_gdb_symbols(string):
