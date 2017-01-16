@@ -215,9 +215,11 @@ def wait_for_stop(timeout=1):
         timeout (float): Timeout time in seconds
     """
     remaining_time = timeout
-    while inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING or remaining_time <= 0:
+    while inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
         sleep(type_defs.CONST_TIME.GDB_INPUT_SLEEP)
         remaining_time -= type_defs.CONST_TIME.GDB_INPUT_SLEEP
+        if remaining_time < 0:
+            break
 
 
 def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
@@ -253,13 +255,21 @@ def execute_till_return():
 
 
 def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
-    """Spawns gdb and initializes some of the global variables
+    """Spawns gdb and initializes/resets some of the global variables
 
     Args:
         gdb_path (str): Path of the gdb binary
     """
     global child
     global gdb_initialized
+    global breakpoint_on_hit_dict
+    global breakpoint_condition_dict
+    global chained_breakpoints
+
+    breakpoint_on_hit_dict.clear()
+    breakpoint_condition_dict.clear()
+    chained_breakpoints.clear()
+
     libpince_dir = SysUtils.get_libpince_directory()
     child = pexpect.spawn('sudo LC_NUMERIC=C ' + gdb_path + ' --interpreter=mi', cwd=libpince_dir,
                           encoding="utf-8")
@@ -299,8 +309,7 @@ def attach(pid):
     Args:
         pid (int,str): PID of the process that'll be attached to
     """
-    if not gdb_initialized:
-        init_gdb()
+    init_gdb()
     global currentpid
     global inferior_arch
     currentpid = int(pid)
@@ -318,8 +327,7 @@ def create_process(process_path, args=""):
         process_path (str): Absolute path of the target binary
         args (str): Arguments of the inferior, optional
     """
-    if not gdb_initialized:
-        init_gdb()
+    init_gdb()
     global currentpid
     global inferior_arch
 
@@ -328,7 +336,7 @@ def create_process(process_path, args=""):
     send_command("file " + process_path)
     entry_point = find_entry_point()
     if entry_point:
-        send_command("b " + entry_point)
+        send_command("b *" + entry_point)
     else:
         send_command("b _start")
     send_command("set args " + args)
