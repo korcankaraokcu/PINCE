@@ -21,6 +21,9 @@
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="QTreeWidget" name="treeWidget_InstructionInfo">
+       <property name="editTriggers">
+        <set>QAbstractItemView::NoEditTriggers</set>
+       </property>
        <attribute name="headerVisible">
         <bool>false</bool>
        </attribute>

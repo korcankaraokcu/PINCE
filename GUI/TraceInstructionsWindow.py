@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'TraceInstructionsWindow.ui'
 #
-# Created: Mon Dec 26 00:05:32 2016
+# Created: Mon Jan 16 19:23:48 2017
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -21,6 +21,7 @@ class Ui_MainWindow(object):
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
         self.treeWidget_InstructionInfo = QtWidgets.QTreeWidget(self.splitter)
+        self.treeWidget_InstructionInfo.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.treeWidget_InstructionInfo.setObjectName("treeWidget_InstructionInfo")
         self.treeWidget_InstructionInfo.headerItem().setText(0, "1")
         self.treeWidget_InstructionInfo.header().setVisible(False)
