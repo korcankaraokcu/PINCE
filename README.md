@@ -120,11 +120,13 @@ GPLv3+. See COPYING file for details
 Korcan Karaokçu <korcankaraokcu@gmail.com>  
 Çağrı Ulaş <cagriulas@gmail.com>  
 Jakob <jakob@memeware.net>  
+Gibus <lilac66.dev@gmail.com>  
 
 #Supported platforms
 - **Platforms tested so far:**
   * Kubuntu 14.04 & 16.04(Also tested on x86 variants)
   * Debian 8.5
+  * Linux Mint 18.1(install the package "python3-psutil" if you encounter ImportError or NameError, thanks Gibus)
   * Archlinux(contact with [Çağrı Ulaş](https://github.com/cagriulas) or [Jakob](https://github.com/TsarFox))
 - **Games&Applications tested so far:**
   * KMines
