@@ -226,7 +226,10 @@ class GetStackTraceInfo(gdb.Command):
             return_address = re.search(r"saved.*=\s+0x[0-9a-fA-F]+", result)
             if return_address:
                 return_address = return_address.group(0).split()[-1]
-                result = gdb.execute("x/b " + return_address, from_tty, to_string=True)
+                try:
+                    result = gdb.execute("x/b " + return_address, from_tty, to_string=True)
+                except:
+                    break
 
                 # 0x40c431 <_start>:--->0x40c431 <_start>
                 return_address_with_info = re.search(r"0x[0-9a-fA-F]+.*:", result).group(0).split(":")[0]
