@@ -1315,10 +1315,17 @@
     </property>
     <addaction name="actionLoad_Trace"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionLibPINCE"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
    <addaction name="menuDebug"/>
    <addaction name="menuTools"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionBookmarks">
@@ -1389,6 +1396,11 @@
   <action name="actionLoad_Trace">
    <property name="text">
     <string>Load Trace</string>
+   </property>
+  </action>
+  <action name="actionLibPINCE">
+   <property name="text">
+    <string>libPINCE</string>
    </property>
   </action>
  </widget>

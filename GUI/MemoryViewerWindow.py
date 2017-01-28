@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Sun Dec 25 22:30:06 2016
+# Created: Fri Jan 20 00:33:16 2017
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -660,6 +660,8 @@ class Ui_MainWindow_MemoryView(object):
         self.menuTools.setObjectName("menuTools")
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
+        self.menuHelp = QtWidgets.QMenu(self.menubar)
+        self.menuHelp.setObjectName("menuHelp")
         MainWindow_MemoryView.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow_MemoryView)
         self.statusbar.setObjectName("statusbar")
@@ -692,6 +694,8 @@ class Ui_MainWindow_MemoryView(object):
         self.actionCall_Function.setObjectName("actionCall_Function")
         self.actionLoad_Trace = QtWidgets.QAction(MainWindow_MemoryView)
         self.actionLoad_Trace.setObjectName("actionLoad_Trace")
+        self.actionLibPINCE = QtWidgets.QAction(MainWindow_MemoryView)
+        self.actionLibPINCE.setObjectName("actionLibPINCE")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
         self.menuView.addAction(self.actionBreakpoints)
@@ -707,10 +711,12 @@ class Ui_MainWindow_MemoryView(object):
         self.menuTools.addAction(self.actionInject_so_file)
         self.menuTools.addAction(self.actionCall_Function)
         self.menuFile.addAction(self.actionLoad_Trace)
+        self.menuHelp.addAction(self.actionLibPINCE)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuView.menuAction())
         self.menubar.addAction(self.menuDebug.menuAction())
         self.menubar.addAction(self.menuTools.menuAction())
+        self.menubar.addAction(self.menuHelp.menuAction())
 
         self.retranslateUi(MainWindow_MemoryView)
         self.stackedWidget.setCurrentIndex(0)
@@ -800,6 +806,7 @@ class Ui_MainWindow_MemoryView(object):
         self.menuDebug.setTitle(_translate("MainWindow_MemoryView", "Debug"))
         self.menuTools.setTitle(_translate("MainWindow_MemoryView", "Tools"))
         self.menuFile.setTitle(_translate("MainWindow_MemoryView", "File"))
+        self.menuHelp.setTitle(_translate("MainWindow_MemoryView", "Help"))
         self.actionBookmarks.setText(_translate("MainWindow_MemoryView", "Bookmarks"))
         self.actionStackTrace_Info.setText(_translate("MainWindow_MemoryView", "StackTrace Info"))
         self.actionInject_so_file.setText(_translate("MainWindow_MemoryView", "Inject .so file"))
@@ -814,8 +821,9 @@ class Ui_MainWindow_MemoryView(object):
         self.actionSet_Address.setText(_translate("MainWindow_MemoryView", "Set Address[F4]"))
         self.actionCall_Function.setText(_translate("MainWindow_MemoryView", "Call Function"))
         self.actionLoad_Trace.setText(_translate("MainWindow_MemoryView", "Load Trace"))
+        self.actionLibPINCE.setText(_translate("MainWindow_MemoryView", "libPINCE"))
 
-from GUI.CustomLabels.RegisterLabel import QRegisterLabel
-from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
-from GUI.CustomTableViews.HexView import QHexView
 from GUI.CustomTableViews.AsciiView import QAsciiView
+from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
+from GUI.CustomLabels.RegisterLabel import QRegisterLabel
+from GUI.CustomTableViews.HexView import QHexView

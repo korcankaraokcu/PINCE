@@ -17,14 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor
+from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip, QTreeWidgetItem
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex
 from time import sleep, time
 import os
-import pexpect
 import sys
 import traceback
 
@@ -52,6 +51,7 @@ from GUI.TraceInstructionsWaitWidget import Ui_Form as TraceInstructionsWaitWidg
 from GUI.TraceInstructionsWindow import Ui_MainWindow as TraceInstructionsWindow
 from GUI.FunctionsInfoWidget import Ui_Form as FunctionsInfoWidget
 from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
+from GUI.LibPINCEReferenceWidget import Ui_Form as LibPINCEReferenceWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -127,6 +127,10 @@ TRACK_BREAKPOINT_SOURCE_COL = 3
 # represents the index of columns in function info table
 FUNCTIONS_INFO_ADDR_COL = 0
 FUNCTIONS_INFO_SYMBOL_COL = 1
+
+# represents the index of columns in libPINCE reference resources table
+LIBPINCE_REFERENCE_ITEM_COL = 0
+LIBPINCE_REFERENCE_VALUE_COL = 1
 
 # From version 5.5 and onwards, PyQT calls qFatal() when an exception has been encountered
 # So, we must override sys.excepthook to avoid calling of qFatal()
@@ -252,7 +256,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
         self.tableWidget_addresstable.itemDoubleClicked.connect(self.on_address_table_double_click)
-        icons_directory = SysUtils.get_current_script_directory() + "/media/icons"
+        icons_directory = GuiUtils.get_icons_directory()
         self.processbutton.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
         self.pushButton_Save.setIcon(QIcon(QPixmap(icons_directory + "/disk.png")))
@@ -427,9 +431,7 @@ class MainForm(QMainWindow, MainWindow):
         self.memory_view_window.activateWindow()
 
     def wikibutton_onclick(self):
-        output = pexpect.run("who").decode("utf-8")
-        user_name = output.split()[0]
-        pexpect.run('sudo -u ' + user_name + ' python3 -m webbrowser "https://github.com/korcankaraokcu/PINCE/wiki"')
+        SysUtils.execute_shell_command_as_user('python3 -m webbrowser "https://github.com/korcankaraokcu/PINCE/wiki"')
 
     def aboutbutton_onclick(self):
         self.about_widget = AboutWidgetForm()
@@ -905,7 +907,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.keySequenceEdit = QKeySequenceEdit()
         self.verticalLayout_Hotkey.addWidget(self.keySequenceEdit)
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
-        icons_directory = SysUtils.get_current_script_directory() + "/media/icons"
+        icons_directory = GuiUtils.get_icons_directory()
         self.pushButton_GDBPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
         self.listWidget_Functions.currentRowChanged.connect(self.listWidget_Functions_current_row_changed)
         self.keySequenceEdit.keySequenceChanged.connect(self.keySequenceEdit_key_sequence_changed)
@@ -1155,6 +1157,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def initialize_tools_context_menu(self):
         self.actionInject_so_file.triggered.connect(self.on_inject_so_file_triggered)
 
+    def initialize_help_context_menu(self):
+        self.actionLibPINCE.triggered.connect(self.on_libPINCE_triggered)
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -1167,6 +1172,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.initialize_view_context_menu()
         self.initialize_debug_context_menu()
         self.initialize_tools_context_menu()
+        self.initialize_help_context_menu()
         self.initialize_disassemble_view()
         self.initialize_register_view()
         self.initialize_stack_view()
@@ -1984,6 +1990,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             else:
                 QMessageBox.information(self, "Error", "Failed to inject the .so file")
 
+    def on_libPINCE_triggered(self):
+        self.libPINCE_widget = LibPINCEReferenceWidgetForm(is_window=True)
+        self.libPINCE_widget.showMaximized()
+
     def on_show_float_registers_button_clicked(self):
         self.float_registers_widget = FloatRegisterWidgetForm()
         self.float_registers_widget.show()
@@ -2658,7 +2668,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.tableWidget_SymbolInfo.selectionModel().currentChanged.connect(self.tableWidget_SymbolInfo_current_changed)
         self.tableWidget_SymbolInfo.itemDoubleClicked.connect(self.tableWidget_SymbolInfo_item_double_clicked)
         self.tableWidget_SymbolInfo.contextMenuEvent = self.tableWidget_SymbolInfo_context_menu_event
-        icons_directory = SysUtils.get_current_script_directory() + "/media/icons"
+        icons_directory = GuiUtils.get_icons_directory()
         self.pushButton_Help.setIcon(QIcon(QPixmap(icons_directory + "/help.png")))
         self.pushButton_Help.clicked.connect(self.pushButton_Help_clicked)
 
@@ -2787,6 +2797,152 @@ class HexEditDialogForm(QDialog, HexEditDialog):
         value = self.lineEdit_HexView.text()
         GDB_Engine.set_single_address(address, type_defs.VALUE_INDEX.INDEX_AOB, value)
         super(HexEditDialogForm, self).accept()
+
+
+class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
+    def __init__(self, is_window=False, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.found_count = 0
+        self.current_found = 0
+        if is_window:
+            GuiUtils.center(self)
+            self.setWindowFlags(Qt.Window)
+        self.show_type_defs()
+        libPINCE_directory = SysUtils.get_libpince_directory()
+        self.textBrowser_TypeDefs.setText(open(libPINCE_directory + "/type_defs.py").read())
+        source_files = ["GDB_Engine", "SysUtils", "GuiUtils"]
+        self.comboBox_SourceFile.addItems(source_files)
+        self.comboBox_SourceFile.setCurrentIndex(0)
+        self.fill_resource_table()
+        icons_directory = GuiUtils.get_icons_directory()
+        self.pushButton_TextUp.setIcon(QIcon(QPixmap(icons_directory + "/bullet_arrow_up.png")))
+        self.pushButton_TextDown.setIcon(QIcon(QPixmap(icons_directory + "/bullet_arrow_down.png")))
+        self.comboBox_SourceFile.currentIndexChanged.connect(self.fill_resource_table)
+        self.pushButton_ShowTypeDefs.clicked.connect(self.toggle_type_defs)
+        self.lineEdit_SearchText.textChanged.connect(self.highlight_text)
+        self.pushButton_TextDown.clicked.connect(self.pushButton_TextDown_clicked)
+        self.pushButton_TextUp.clicked.connect(self.pushButton_TextUp_clicked)
+        self.lineEdit_Search.textChanged.connect(self.fill_resource_table)
+        self.tableWidget_ResourceTable.contextMenuEvent = self.tableWidget_ResourceTable_context_menu_event
+
+    def tableWidget_ResourceTable_context_menu_event(self, event):
+        selected_row = self.tableWidget_ResourceTable.selectionModel().selectedRows()[-1].row()
+
+        menu = QMenu()
+        refresh = menu.addAction("Refresh")
+        copy_item = menu.addAction("Copy Item")
+        copy_value = menu.addAction("Copy Value")
+        font_size = self.tableWidget_ResourceTable.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == refresh:
+            self.fill_resource_table()
+        elif action == copy_item:
+            QApplication.clipboard().setText(
+                self.tableWidget_ResourceTable.item(selected_row, LIBPINCE_REFERENCE_ITEM_COL).text())
+        elif action == copy_value:
+            QApplication.clipboard().setText(
+                self.tableWidget_ResourceTable.item(selected_row, LIBPINCE_REFERENCE_VALUE_COL).text())
+
+    def fill_resource_table(self):
+        self.tableWidget_ResourceTable.setRowCount(0)
+        element_dict = eval(self.comboBox_SourceFile.currentText() + ".__dict__")
+        row_count = 0
+        for item in element_dict:
+            if item.find(self.lineEdit_Search.text()) == -1:
+                continue
+            row_count += 1
+            row = row_count - 1
+            self.tableWidget_ResourceTable.setRowCount(row_count)
+            element = element_dict.get(item)
+            table_widget_item = QTableWidgetItem(item)
+            table_widget_item.setToolTip(element.__doc__)
+            self.tableWidget_ResourceTable.setItem(row, LIBPINCE_REFERENCE_ITEM_COL, table_widget_item)
+            table_widget_item = QTableWidgetItem(str(element))
+            table_widget_item.setToolTip(element.__doc__)
+            self.tableWidget_ResourceTable.setItem(row, LIBPINCE_REFERENCE_VALUE_COL, table_widget_item)
+        self.tableWidget_ResourceTable.sortByColumn(LIBPINCE_REFERENCE_VALUE_COL, Qt.DescendingOrder)
+        self.tableWidget_ResourceTable.resizeColumnsToContents()
+        self.tableWidget_ResourceTable.horizontalHeader().setStretchLastSection(True)
+
+    def pushButton_TextDown_clicked(self):
+        if self.found_count == 0:
+            return
+        cursor = self.textBrowser_TypeDefs.textCursor()
+        cursor.clearSelection()
+        cursor.movePosition(QTextCursor.Start)
+        self.textBrowser_TypeDefs.setTextCursor(cursor)
+        if self.current_found == self.found_count:
+            self.current_found = 1
+        else:
+            self.current_found += 1
+        pattern = self.lineEdit_SearchText.text()
+        for x in range(self.current_found):
+            self.textBrowser_TypeDefs.find(pattern)
+        self.label_FoundCount.setText(str(self.current_found) + "/" + str(self.found_count))
+
+    def pushButton_TextUp_clicked(self):
+        if self.found_count == 0:
+            return
+        cursor = self.textBrowser_TypeDefs.textCursor()
+        cursor.clearSelection()
+        cursor.movePosition(QTextCursor.Start)
+        self.textBrowser_TypeDefs.setTextCursor(cursor)
+        if self.current_found == 1:
+            self.current_found = self.found_count
+        else:
+            self.current_found -= 1
+        pattern = self.lineEdit_SearchText.text()
+        for x in range(self.current_found):
+            self.textBrowser_TypeDefs.find(pattern)
+        self.label_FoundCount.setText(str(self.current_found) + "/" + str(self.found_count))
+
+    def highlight_text(self):
+        self.textBrowser_TypeDefs.selectAll()
+        self.textBrowser_TypeDefs.setTextBackgroundColor(QColor("white"))
+        cursor = self.textBrowser_TypeDefs.textCursor()
+        cursor.clearSelection()
+        cursor.movePosition(QTextCursor.Start)
+        self.textBrowser_TypeDefs.setTextCursor(cursor)
+
+        highlight_format = QTextCharFormat()
+        highlight_format.setBackground(QBrush(QColor("red")))
+        pattern = self.lineEdit_SearchText.text()
+        found_count = 0
+        while True:
+            if not self.textBrowser_TypeDefs.find(pattern):
+                break
+            cursor = self.textBrowser_TypeDefs.textCursor()
+            cursor.mergeCharFormat(highlight_format)
+            found_count += 1
+        self.found_count = found_count
+        if found_count == 0:
+            self.label_FoundCount.setText("0/0")
+            return
+        cursor = self.textBrowser_TypeDefs.textCursor()
+        cursor.clearSelection()
+        cursor.movePosition(QTextCursor.Start)
+        self.textBrowser_TypeDefs.setTextCursor(cursor)
+        self.textBrowser_TypeDefs.find(pattern)
+        self.current_found = 1
+        self.label_FoundCount.setText("1/" + str(found_count))
+
+    def toggle_type_defs(self):
+        if self.type_defs_shown:
+            self.hide_type_defs()
+        else:
+            self.show_type_defs()
+
+    def hide_type_defs(self):
+        self.type_defs_shown = False
+        self.widget_TypeDefs.hide()
+        self.pushButton_ShowTypeDefs.setText("Show type_defs")
+
+    def show_type_defs(self):
+        self.type_defs_shown = True
+        self.widget_TypeDefs.show()
+        self.pushButton_ShowTypeDefs.setText("Hide type_defs")
 
 
 if __name__ == "__main__":

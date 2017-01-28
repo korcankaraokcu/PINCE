@@ -18,6 +18,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt5.QtWidgets import QDesktopWidget
 from re import search, sub
 from . import type_defs
+from . import SysUtils
+
+
+def get_icons_directory():
+    """Gets the directory of the icons
+
+    Returns:
+        str: Path to the icons directory
+    """
+    return SysUtils.get_current_script_directory() + "/media/icons"
 
 
 def center(window):
