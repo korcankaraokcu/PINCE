@@ -30,6 +30,7 @@ import shutil
 import sys
 import binascii
 import pickle
+import pexpect
 from . import type_defs
 from re import match, search, IGNORECASE, split
 
@@ -578,3 +579,14 @@ def split_symbol(symbol_string):
         returned_list.append(symbol_string.split("@", maxsplit=1)[0])
     returned_list.append(symbol_string)
     return returned_list
+
+
+def execute_shell_command_as_user(command):
+    """Executes given command as user
+
+    Args:
+        command (str): Command that'll be invoked from the shell
+    """
+    output = pexpect.run("who").decode("utf-8")
+    user_name = output.split()[0]
+    pexpect.run('sudo -u ' + user_name + ' ' + command)
