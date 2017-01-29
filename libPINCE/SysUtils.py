@@ -593,6 +593,7 @@ def execute_shell_command_as_user(command):
 
 
 def init_gdbinit_file():
+    """Initializes required .gdbinit file in $HOME"""
     file_path = get_home_directory() + "/.gdbinit"
     if not is_path_valid(file_path):
         gdbinit_file = open(file_path, "w+")
