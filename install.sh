@@ -32,17 +32,5 @@ else
     sudo sh install_gdb.sh
 fi
 
-# Creating .gdbinit in $HOME
-cd
-auto_load_command="set auto-load safe-path /"
-if [ ! -e .gdbinit ] ; then
-    touch .gdbinit
-fi
-if grep "$auto_load_command" .gdbinit
-then
-  echo "auto_load already satisfied"
-else
-  echo "\n"$auto_load_command >> .gdbinit
-fi
 echo "PINCE has been installed successfully!"
 echo "Now, just run 'sh PINCE.sh' from terminal"

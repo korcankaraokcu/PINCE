@@ -590,3 +590,16 @@ def execute_shell_command_as_user(command):
     output = pexpect.run("who").decode("utf-8")
     user_name = output.split()[0]
     pexpect.run('sudo -u ' + user_name + ' ' + command)
+
+
+def init_gdbinit_file():
+    file_path = get_home_directory() + "/.gdbinit"
+    if not is_path_valid(file_path):
+        gdbinit_file = open(file_path, "w+")
+    else:
+        gdbinit_file = open(file_path, "r+")
+    auto_load_string = "set auto-load safe-path /"
+    if gdbinit_file.read().find(auto_load_string) == -1:
+        gdbinit_file.seek(0, 2)
+        gdbinit_file.write("\n" + auto_load_string)
+    gdbinit_file.close()
