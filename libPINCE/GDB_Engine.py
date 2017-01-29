@@ -265,7 +265,7 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     global breakpoint_on_hit_dict
     global breakpoint_condition_dict
     global chained_breakpoints
-
+    SysUtils.init_gdbinit_file()
     breakpoint_on_hit_dict.clear()
     breakpoint_condition_dict.clear()
     chained_breakpoints.clear()
