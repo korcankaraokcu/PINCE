@@ -124,7 +124,7 @@
        <item>
         <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>Resources</string>
+          <string>Resources(Mouse-over items to see docstrings)</string>
          </property>
         </widget>
        </item>

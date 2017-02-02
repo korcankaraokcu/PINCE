@@ -27,26 +27,67 @@ from . import type_defs
 
 libc = ctypes.CDLL('libc.so.6')
 
+#:doc:gdb_initialized
+# A boolean value. True if gdb is attached to or has created a process, False if not
 gdb_initialized = False
+
+#:doc:inferior_arch
+# An integer. Can be a member of type_defs.INFERIOR_ARCH
 inferior_arch = int
+
+#:doc:inferior_status
+# An integer. Can be a member of type_defs.INFERIOR_STATUS
 inferior_status = -1
+
+#:doc:currentpid
+# An integer. PID of the current attached/created process
 currentpid = 0
+
+#:doc:stop_reason
+# An integer. Can be a member of type_defs.STOP_REASON
 stop_reason = int
 
-breakpoint_on_hit_dict = {}  # Format: {address1:on_hit1, address2:on_hit2, ...}
-breakpoint_condition_dict = {}  # Format: {address1:condition1, address2:condition2, ...}
+#:doc:breakpoint_on_hit_dict
+# A dictionary. Holds breakpoint addresses and what to do on hit
+# Format: {address1:on_hit1, address2:on_hit2, ...}
+breakpoint_on_hit_dict = {}
 
+#:doc:breakpoint_condition_dict
+# A dictionary. Holds breakpoint addresses and their conditions
+# Format: {address1:condition1, address2:condition2, ...}
+breakpoint_condition_dict = {}
+
+#:doc:chained_breakpoints
 # If an action such as deletion or condition modification happens in one of the breakpoints in a list, others in the
 # same list will get affected as well
-chained_breakpoints = []  # Format: [[[address1, size1], [address2, size2], ...], [[address1, size1], ...], ...]
+# Format: [[[address1, size1], [address2, size2], ...], [[address1, size1], ...], ...]
+chained_breakpoints = []
 
 child = object  # this object will be used with pexpect operations
 
+#:doc:lock_send_command
+# This Lock is used by the function send_command to ensure synchronous execution
 lock_send_command = Lock()
+
+#:doc:gdb_async_condition
+# This condition is notified whenever GDB recieves an async event such as breakpoint modification
+# Use the variable gdb_async_output to read async data
+# See PINCE's AwaitAsyncOutput class for an example
 gdb_async_condition = Condition()
+
+#:doc:status_changed_condition
+# This condition is notified whenever status of the inferior changes
+# Use the variable inferior_status to get information about inferior's status
+# See PINCE's CheckInferiorStatus class for an example
 status_changed_condition = Condition()
 
+#:doc:gdb_output
+# A string. Stores the output of the last command
 gdb_output = ""
+
+#:doc:gdb_async_output
+# A string. Modified whenever GDB recieves an async event such as breakpoint modification
+# See gdb_async_condition's docstrings
 gdb_async_output = ""
 
 
