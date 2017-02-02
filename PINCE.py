@@ -2849,6 +2849,7 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
         self.tableWidget_ResourceTable.setRowCount(0)
         element_dict = eval(self.comboBox_SourceFile.currentText() + ".__dict__")
         row_count = 0
+        variable_comment_dict = SysUtils.get_comments_of_variables(SysUtils.get_libpince_directory() + "/GDB_Engine.py")
         for item in element_dict:
             if item.find(self.lineEdit_Search.text()) == -1:
                 continue
@@ -2857,11 +2858,15 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
             self.tableWidget_ResourceTable.setRowCount(row_count)
             element = element_dict.get(item)
             table_widget_item = QTableWidgetItem(item)
-            table_widget_item.setToolTip(element.__doc__)
+            table_widget_item_value = QTableWidgetItem(str(element))
+            if item not in variable_comment_dict:
+                table_widget_item.setToolTip(element.__doc__)
+                table_widget_item_value.setToolTip(element.__doc__)
+            else:
+                table_widget_item.setToolTip(variable_comment_dict[item])
+                table_widget_item_value.setToolTip(variable_comment_dict[item])
             self.tableWidget_ResourceTable.setItem(row, LIBPINCE_REFERENCE_ITEM_COL, table_widget_item)
-            table_widget_item = QTableWidgetItem(str(element))
-            table_widget_item.setToolTip(element.__doc__)
-            self.tableWidget_ResourceTable.setItem(row, LIBPINCE_REFERENCE_VALUE_COL, table_widget_item)
+            self.tableWidget_ResourceTable.setItem(row, LIBPINCE_REFERENCE_VALUE_COL, table_widget_item_value)
         self.tableWidget_ResourceTable.sortByColumn(LIBPINCE_REFERENCE_VALUE_COL, Qt.DescendingOrder)
         self.tableWidget_ResourceTable.resizeColumnsToContents()
         self.tableWidget_ResourceTable.horizontalHeader().setStretchLastSection(True)

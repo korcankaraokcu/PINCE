@@ -32,7 +32,7 @@ import binascii
 import pickle
 import pexpect
 from . import type_defs
-from re import match, search, IGNORECASE, split
+from re import match, search, IGNORECASE, split, sub
 
 
 def get_process_list():
@@ -604,3 +604,76 @@ def init_gdbinit_file():
         gdbinit_file.seek(0, 2)
         gdbinit_file.write("\n" + auto_load_string)
     gdbinit_file.close()
+
+
+def get_comments_of_variables(source_file_path, single_comment="#", multi_start='"""', multi_end='"""'):
+    """Gathers comments from a source file of any language
+    Python normally doesn't allow modifying __doc__ variable of the variables
+    This function is designed to bring a solution to this problem
+    The documentation must be PINCE style. It must start like this--> "comment_char:doc:variable_name"
+    See examples for more details
+
+    Args:
+        source_file_path (str): Path of the source file
+        single_comment (str): Characters for single line comments
+        multi_start (str): Characters for multi line comments. Indicates the start of the comment
+        multi_end (str): Characters for multi line comments. Indicates the end of the comment
+
+    Returns:
+        dict: A dict containing docstrings for documented variables
+        Format-->{variable1:docstring1, variable2:docstring2, ...}
+
+    Example for Python:
+        Code--▼
+            #:doc:some_variable
+            #Documentation for the variable
+            some_variable = blablabla
+        Call--▼
+            get_comments_of_variables(code_path)
+        Returns--▼
+            {"some_variable","Documentation for the variable"}
+
+    Example for C:
+        Code--▼
+            //:doc:some_variable
+            /*Some Header
+            Documentation for the variable
+            Some Ending Word*/
+            some_variable = blablabla
+        Call--▼
+            get_comments_of_variables(code_path, single_comment="//", multi_start="/*", multi_end="*/")
+        Returns--▼
+            {"some_variable","Some Header\nDocumentation for the variable\nSome Ending Word"}
+    """
+    comment_dict = {}
+    source_file = open(source_file_path, "r")
+    lines = source_file.readlines()
+    for row, line in enumerate(lines):
+        stripped_line = sub(r"\s+", "", line)
+        if stripped_line.startswith(single_comment + ":doc:"):
+            variable = stripped_line.replace(single_comment + ":doc:", "", 1)
+            docstring_list = []
+            while True:
+                row += 1
+                current_line = lines[row].strip()
+                if current_line.startswith(single_comment):
+                    docstring_list.append(current_line.replace(single_comment, "", 1))
+                elif current_line.startswith(multi_start):
+                    current_line = current_line.replace(multi_start, "", 1)
+                    if current_line.endswith(multi_end):
+                        current_line = current_line.replace(multi_end, "")
+                        docstring_list.append(current_line)
+                        continue
+                    docstring_list.append(current_line)
+                    while True:
+                        row += 1
+                        current_line = lines[row].strip()
+                        if current_line.endswith(multi_end):
+                            current_line = current_line.replace(multi_end, "")
+                            docstring_list.append(current_line)
+                            break
+                        docstring_list.append(current_line)
+                else:
+                    break
+            comment_dict[variable] = "\n".join(docstring_list)
+    return comment_dict

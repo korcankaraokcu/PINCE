@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'LibPINCEReferenceWidget.ui'
 #
-# Created: Sat Jan 28 19:45:12 2017
+# Created: Thu Feb  2 23:39:23 2017
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -112,7 +112,7 @@ class Ui_Form(object):
         self.label.setText(_translate("Form", "Source File"))
         self.pushButton_ShowTypeDefs.setText(_translate("Form", "Hide type_defs"))
         self.label_4.setText(_translate("Form", "Search"))
-        self.label_2.setText(_translate("Form", "Resources"))
+        self.label_2.setText(_translate("Form", "Resources(Mouse-over items to see docstrings)"))
         self.tableWidget_ResourceTable.setSortingEnabled(True)
         item = self.tableWidget_ResourceTable.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Item Name"))
