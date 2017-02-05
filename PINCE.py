@@ -1049,7 +1049,20 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.textBrowser.append("/clear: Clear the console                                |")
         self.textBrowser.append("phase-out: Detach from the current process               |")
         self.textBrowser.append("phase-in: Attach back to the previously detached process |")
-        self.textBrowser.append("----------------------------------------------------------")
+        self.textBrowser.append(
+            "---------------------------------------------------------------------------------------------------")
+        self.textBrowser.append(
+            "pince-init-so-file so_file_path: Initializes 'lib' variable                                       |")
+        self.textBrowser.append(
+            "pince-get-so-file-information: Get information about current lib                                  |")
+        self.textBrowser.append(
+            "pince-execute-from-so-file lib.func(params): Execute a function from lib                          |")
+        self.textBrowser.append(
+            "# Check https://github.com/korcankaraokcu/PINCE/wiki#extending-pince-with-so-files for an example |")
+        self.textBrowser.append(
+            "# CLI output mode doesn't work very well with .so extensions, use MI output mode instead          |")
+        self.textBrowser.append(
+            "---------------------------------------------------------------------------------------------------")
         self.textBrowser.append("You can change the output mode from bottom right")
         self.textBrowser.append("Note: Changing output mode only affects commands sent. Any other " +
                                 "output coming from external sources(e.g async output) will be shown in MI format")
