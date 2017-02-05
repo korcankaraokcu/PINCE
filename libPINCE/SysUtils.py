@@ -631,7 +631,7 @@ def get_comments_of_variables(source_file_path, single_comment="#", multi_start=
         Call--▼
             get_comments_of_variables(code_path)
         Returns--▼
-            {"some_variable","Documentation for the variable"}
+            {"some_variable":"Documentation for the variable"}
 
     Example for C:
         Code--▼
@@ -643,7 +643,7 @@ def get_comments_of_variables(source_file_path, single_comment="#", multi_start=
         Call--▼
             get_comments_of_variables(code_path, single_comment="//", multi_start="/*", multi_end="*/")
         Returns--▼
-            {"some_variable","Some Header\nDocumentation for the variable\nSome Ending Word"}
+            {"some_variable":"Some Header\nDocumentation for the variable\nSome Ending Word"}
     """
     comment_dict = {}
     source_file = open(source_file_path, "r")
