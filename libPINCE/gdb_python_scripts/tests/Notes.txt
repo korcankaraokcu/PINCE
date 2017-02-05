@@ -1,0 +1,1 @@
+You can create a .so file from example.c by executing "gcc -shared -o example.so -fPIC example.c" in terminal

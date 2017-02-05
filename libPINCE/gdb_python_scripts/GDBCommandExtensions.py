@@ -21,6 +21,8 @@ import sys
 import re
 import struct
 import io
+import ctypes
+import os
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -41,6 +43,8 @@ if str(gdb.parse_and_eval("$rax")) == "void":
     current_arch = type_defs.INFERIOR_ARCH.ARCH_32
 else:
     current_arch = type_defs.INFERIOR_ARCH.ARCH_64
+
+lib = None
 
 # Format of info_list: [count, previous_pc_address, register_info, float_info, disas_info]
 # Format of watchpoint_dict: {address1:info_list1, address2:info_list2, ...}
@@ -488,6 +492,40 @@ class TraceInstructions(gdb.Command):
             gdb.execute("c")
 
 
+class InitSoFile(gdb.Command):
+    """Usage: pince-init-so-file so_file_path"""
+
+    def __init__(self):
+        super(InitSoFile, self).__init__("pince-init-so-file", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        global lib
+        lib = ctypes.CDLL(arg)
+        print("Successfully loaded so file from " + arg)
+
+
+class GetSoFileInformation(gdb.Command):
+    def __init__(self):
+        super(GetSoFileInformation, self).__init__("pince-get-so-file-information", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        if not lib:
+            print("so file isn't initialized, use the command pince-init-so-file")
+            return
+        print("Loaded so file:\n" + str(lib) + "\n")
+        print("Available resources:")
+        print(os.system("nm -D --defined-only " + lib._name))
+
+
+class ExecuteFromSoFile(gdb.Command):
+    def __init__(self):
+        super(ExecuteFromSoFile, self).__init__("pince-execute-from-so-file", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        global lib
+        gdb.execute("p " + str(eval(arg.strip())))
+
+
 IgnoreErrors()
 CLIOutput()
 ReadMultipleAddresses()
@@ -506,3 +544,6 @@ GetTrackBreakpointInfo()
 PhaseOut()
 PhaseIn()
 TraceInstructions()
+InitSoFile()
+GetSoFileInformation()
+ExecuteFromSoFile()
