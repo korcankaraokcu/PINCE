@@ -445,7 +445,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def consolebutton_onclick(self):
         self.console_widget = ConsoleWidgetForm()
-        self.console_widget.show()
+        self.console_widget.showMaximized()
 
     def newfirstscan_onclick(self):
         print("Exception test")
