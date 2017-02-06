@@ -1030,6 +1030,8 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center(self)
+        self.input_history = [""]
+        self.current_history_index = -1
         self.await_async_output_thread = AwaitAsyncOutput()
         self.await_async_output_thread.async_output_ready.connect(self.on_async_output)
         self.await_async_output_thread.start()
@@ -1039,6 +1041,10 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.shortcut_send.activated.connect(self.communicate)
         self.shortcut_send_ctrl = QShortcut(QKeySequence("Ctrl+C"), self)
         self.shortcut_send_ctrl.activated.connect(lambda: self.communicate(control=True))
+
+        # Saving the original function because super() doesn't work when we override functions like this
+        self.lineEdit.keyPressEvent_original = self.lineEdit.keyPressEvent
+        self.lineEdit.keyPressEvent = self.lineEdit_keyPressEvent
         self.textBrowser.append("Hotkeys:")
         self.textBrowser.append("--------------------")
         self.textBrowser.append("Send=Enter         |")
@@ -1072,6 +1078,8 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             console_input = "/Ctrl+C"
         else:
             console_input = self.lineEdit.text()
+            self.input_history.append(console_input)
+            self.current_history_index = -1
         if console_input.lower() == "/clear":
             self.textBrowser.clear()
             console_output = "Cleared"
@@ -1101,6 +1109,23 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
     def on_async_output(self):
         self.textBrowser.append(GDB_Engine.gdb_async_output)
         self.textBrowser.verticalScrollBar().setValue(self.textBrowser.verticalScrollBar().maximum())
+
+    def lineEdit_keyPressEvent(self, e):
+        if e.key() == Qt.Key_Up:
+            if self.current_history_index == -1:
+                self.input_history[-1] = self.lineEdit.text()
+            try:
+                self.lineEdit.setText(self.input_history[self.current_history_index - 1])
+                self.current_history_index += -1
+            except IndexError:
+                pass
+        elif e.key() == Qt.Key_Down:
+            if self.current_history_index == -1:
+                return
+            self.lineEdit.setText(self.input_history[self.current_history_index + 1])
+            self.current_history_index += 1
+        else:
+            self.lineEdit.keyPressEvent_original(e)
 
 
 class AboutWidgetForm(QTabWidget, AboutWidget):
