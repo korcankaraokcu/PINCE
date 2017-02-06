@@ -518,6 +518,8 @@ class GetSoFileInformation(gdb.Command):
 
 
 class ExecuteFromSoFile(gdb.Command):
+    """Usage: pince-execute-from-so-file lib.func(params)"""
+
     def __init__(self):
         super(ExecuteFromSoFile, self).__init__("pince-execute-from-so-file", gdb.COMMAND_USER)
 
