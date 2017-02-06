@@ -28,12 +28,12 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="lineEdit_searchprocess"/>
+       <widget class="QLineEdit" name="lineEdit_SearchProcess"/>
       </item>
      </layout>
     </item>
     <item>
-     <widget class="QTableWidget" name="processtable">
+     <widget class="QTableWidget" name="tableWidget_ProcessTable">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>0</horstretch>

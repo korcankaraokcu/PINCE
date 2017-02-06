@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Mon Feb  6 16:19:54 2017
+# Created: Mon Feb  6 16:43:04 2017
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -32,15 +32,15 @@ class Ui_MainWindow(object):
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.processbutton = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_AttachProcess = QtWidgets.QPushButton(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.processbutton.sizePolicy().hasHeightForWidth())
-        self.processbutton.setSizePolicy(sizePolicy)
-        self.processbutton.setText("")
-        self.processbutton.setObjectName("processbutton")
-        self.horizontalLayout_5.addWidget(self.processbutton)
+        sizePolicy.setHeightForWidth(self.pushButton_AttachProcess.sizePolicy().hasHeightForWidth())
+        self.pushButton_AttachProcess.setSizePolicy(sizePolicy)
+        self.pushButton_AttachProcess.setText("")
+        self.pushButton_AttachProcess.setObjectName("pushButton_AttachProcess")
+        self.horizontalLayout_5.addWidget(self.pushButton_AttachProcess)
         self.pushButton_Open = QtWidgets.QPushButton(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
@@ -303,7 +303,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "PINCE"))
-        self.processbutton.setToolTip(_translate("MainWindow", "Create or attach to a process"))
+        self.pushButton_AttachProcess.setToolTip(_translate("MainWindow", "Create or attach to a process"))
         self.pushButton_Open.setToolTip(_translate("MainWindow", "Open a file, script or a cheat table"))
         self.pushButton_Save.setToolTip(_translate("MainWindow", "Save current tables to a file"))
         self.pushButton_Wiki.setToolTip(_translate("MainWindow", "Wiki"))
