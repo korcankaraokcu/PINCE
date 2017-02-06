@@ -244,20 +244,20 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_AddressTable.keyPressEvent_original = self.tableWidget_AddressTable.keyPressEvent
         self.tableWidget_AddressTable.keyPressEvent = self.tableWidget_AddressTable_keyPressEvent
         self.tableWidget_AddressTable.contextMenuEvent = self.tableWidget_AddressTable_context_menu_event
-        self.processbutton.clicked.connect(self.processbutton_onclick)
-        self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
-        self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
-        self.pushButton_Settings.clicked.connect(self.settingsbutton_onclick)
-        self.pushButton_Console.clicked.connect(self.consolebutton_onclick)
-        self.pushButton_Wiki.clicked.connect(self.wikibutton_onclick)
-        self.pushButton_About.clicked.connect(self.aboutbutton_onclick)
-        self.pushButton_AddAddressManually.clicked.connect(self.addaddressmanually_onclick)
-        self.pushButton_MemoryView.clicked.connect(self.memoryview_onlick)
+        self.pushButton_AttachProcess.clicked.connect(self.pushButton_AttachProcess_clicked)
+        self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
+        self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
+        self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
+        self.pushButton_Console.clicked.connect(self.pushButton_Console_clicked)
+        self.pushButton_Wiki.clicked.connect(self.pushButton_Wiki_clicked)
+        self.pushButton_About.clicked.connect(self.pushButton_About_clicked)
+        self.pushButton_AddAddressManually.clicked.connect(self.pushButton_AddAddressManually_clicked)
+        self.pushButton_MemoryView.clicked.connect(self.pushButton_MemoryView_clicked)
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
-        self.tableWidget_AddressTable.itemDoubleClicked.connect(self.on_address_table_double_click)
+        self.tableWidget_AddressTable.itemDoubleClicked.connect(self.tableWidget_AddressTable_item_double_clicked)
         icons_directory = GuiUtils.get_icons_directory()
-        self.processbutton.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
+        self.pushButton_AttachProcess.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
         self.pushButton_Save.setIcon(QIcon(QPixmap(icons_directory + "/disk.png")))
         self.pushButton_Settings.setIcon(QIcon(QPixmap(icons_directory + "/wrench.png")))
@@ -418,7 +418,7 @@ class MainForm(QMainWindow, MainWindow):
             self.tableWidget_AddressTable.setItem(row, VALUE_COL, QTableWidgetItem(str(item)))
 
     # gets the information from the dialog then adds it to addresstable
-    def addaddressmanually_onclick(self):
+    def pushButton_AddAddressManually_clicked(self):
         manual_address_dialog = ManualAddressDialogForm()
         if manual_address_dialog.exec_():
             description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
@@ -426,28 +426,28 @@ class MainForm(QMainWindow, MainWindow):
                                            length=length, unicode=unicode,
                                            zero_terminate=zero_terminate)
 
-    def memoryview_onlick(self):
+    def pushButton_MemoryView_clicked(self):
         self.memory_view_window.showMaximized()
         self.memory_view_window.activateWindow()
 
-    def wikibutton_onclick(self):
+    def pushButton_Wiki_clicked(self):
         SysUtils.execute_shell_command_as_user('python3 -m webbrowser "https://github.com/korcankaraokcu/PINCE/wiki"')
 
-    def aboutbutton_onclick(self):
+    def pushButton_About_clicked(self):
         self.about_widget = AboutWidgetForm()
         self.about_widget.show()
 
-    def settingsbutton_onclick(self):
+    def pushButton_Settings_clicked(self):
         settings_dialog = SettingsDialogForm()
         settings_dialog.reset_settings.connect(self.set_default_settings)
         if settings_dialog.exec_():
             self.apply_settings()
 
-    def consolebutton_onclick(self):
+    def pushButton_Console_clicked(self):
         self.console_widget = ConsoleWidgetForm()
         self.console_widget.showMaximized()
 
-    def newfirstscan_onclick(self):
+    def pushButton_NewFirstScan_clicked(self):
         print("Exception test")
         x = 0 / 0
         if self.pushButton_NewFirstScan.text() == "First Scan":
@@ -460,7 +460,7 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_UndoScan.setEnabled(False)
             self.pushButton_NewFirstScan.setText("First Scan")
 
-    def nextscan_onclick(self):
+    def pushButton_NextScan_clicked(self):
         # GDB_Engine.send_command('interrupt\nx _start\nc &')  # test
         GDB_Engine.send_command("x/100x _start")
         # t = Thread(target=GDB_Engine.test)  # test
@@ -471,7 +471,7 @@ class MainForm(QMainWindow, MainWindow):
             return
 
     # shows the process select window
-    def processbutton_onclick(self):
+    def pushButton_AttachProcess_clicked(self):
         self.processwindow = ProcessForm(self)
         self.processwindow.show()
 
@@ -520,7 +520,7 @@ class MainForm(QMainWindow, MainWindow):
         self.show()  # In case of getting called from elsewhere
         self.activateWindow()
 
-    def on_address_table_double_click(self, index):
+    def tableWidget_AddressTable_item_double_clicked(self, index):
         current_row = index.row()
         current_column = index.column()
         if current_column is VALUE_COL:
@@ -602,18 +602,18 @@ class ProcessForm(QMainWindow, ProcessWindow):
         self.setupUi(self)
         GuiUtils.center_to_parent(self)
         processlist = SysUtils.get_process_list()
-        self.refresh_process_table(self.processtable, processlist)
-        self.pushButton_Close.clicked.connect(self.pushbutton_close_onclick)
-        self.pushButton_Open.clicked.connect(self.pushbutton_open_onclick)
-        self.pushButton_CreateProcess.clicked.connect(self.pushbutton_createprocess_onclick)
-        self.lineEdit_searchprocess.textChanged.connect(self.generate_new_list)
-        self.processtable.itemDoubleClicked.connect(self.pushbutton_open_onclick)
+        self.refresh_process_table(self.tableWidget_ProcessTable, processlist)
+        self.pushButton_Close.clicked.connect(self.pushButton_Close_clicked)
+        self.pushButton_Open.clicked.connect(self.pushButton_Open_clicked)
+        self.pushButton_CreateProcess.clicked.connect(self.pushButton_CreateProcess_clicked)
+        self.lineEdit_SearchProcess.textChanged.connect(self.generate_new_list)
+        self.tableWidget_ProcessTable.itemDoubleClicked.connect(self.pushButton_Open_clicked)
 
     # refreshes process list
     def generate_new_list(self):
-        text = self.lineEdit_searchprocess.text()
+        text = self.lineEdit_SearchProcess.text()
         processlist = SysUtils.search_in_processes_by_name(text)
-        self.refresh_process_table(self.processtable, processlist)
+        self.refresh_process_table(self.tableWidget_ProcessTable, processlist)
 
     # closes the window whenever ESC key is pressed
     def keyPressEvent(self, e):
@@ -630,12 +630,12 @@ class ProcessForm(QMainWindow, ProcessWindow):
             tablewidget.setItem(i, 2, QTableWidgetItem(row.name()))
 
     # self-explanatory
-    def pushbutton_close_onclick(self):
+    def pushButton_Close_clicked(self):
         self.close()
 
     # gets the pid out of the selection to attach
-    def pushbutton_open_onclick(self):
-        currentitem = self.processtable.item(self.processtable.currentIndex().row(), 0)
+    def pushButton_Open_clicked(self):
+        currentitem = self.tableWidget_ProcessTable.item(self.tableWidget_ProcessTable.currentIndex().row(), 0)
         if currentitem is None:
             QMessageBox.information(self, "Error", "Please select a process first")
         else:
@@ -675,7 +675,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             print("done")
             self.close()
 
-    def pushbutton_createprocess_onclick(self):
+    def pushButton_CreateProcess_clicked(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the target binary")[0]
         if file_path:
             if not GDB_Engine.currentpid == 0:
@@ -737,7 +737,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_length.hide()
             self.checkBox_Unicode.hide()
             self.checkBox_zeroterminate.hide()
-        self.comboBox_ValueType.currentIndexChanged.connect(self.valuetype_on_current_index_change)
+        self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.lineEdit_length.textChanged.connect(self.update_value_of_address)
         self.checkBox_Unicode.stateChanged.connect(self.update_value_of_address)
         self.checkBox_zeroterminate.stateChanged.connect(self.update_value_of_address)
@@ -772,7 +772,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.label_valueofaddress.setText(
                 GDB_Engine.read_single_address_by_expression(address, address_type))
 
-    def valuetype_on_current_index_change(self):
+    def comboBox_ValueType_current_index_changed(self):
         if self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_STRING:
             self.label_length.show()
             self.lineEdit_length.show()
