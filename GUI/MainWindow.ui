@@ -596,7 +596,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QTableWidget" name="tableWidget_addresstable">
+     <widget class="QTableWidget" name="tableWidget_AddressTable">
       <property name="editTriggers">
        <set>QAbstractItemView::NoEditTriggers</set>
       </property>
