@@ -193,10 +193,10 @@ class MainForm(QMainWindow, MainWindow):
         super().__init__()
         self.setupUi(self)
         GuiUtils.center(self)
-        self.tableWidget_addresstable.setColumnWidth(FROZEN_COL, 25)
-        self.tableWidget_addresstable.setColumnWidth(DESC_COL, 150)
-        self.tableWidget_addresstable.setColumnWidth(ADDR_COL, 150)
-        self.tableWidget_addresstable.setColumnWidth(TYPE_COL, 120)
+        self.tableWidget_AddressTable.setColumnWidth(FROZEN_COL, 25)
+        self.tableWidget_AddressTable.setColumnWidth(DESC_COL, 150)
+        self.tableWidget_AddressTable.setColumnWidth(ADDR_COL, 150)
+        self.tableWidget_AddressTable.setColumnWidth(TYPE_COL, 120)
         QCoreApplication.setOrganizationName("PINCE")
         QCoreApplication.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
         QCoreApplication.setApplicationName("PINCE")
@@ -241,9 +241,9 @@ class MainForm(QMainWindow, MainWindow):
         self.shortcut_continue.setContext(Qt.ApplicationShortcut)
 
         # Saving the original function because super() doesn't work when we override functions like this
-        self.tableWidget_addresstable.keyPressEvent_original = self.tableWidget_addresstable.keyPressEvent
-        self.tableWidget_addresstable.keyPressEvent = self.tableWidget_addresstable_keyPressEvent
-        self.tableWidget_addresstable.contextMenuEvent = self.tableWidget_addresstable_context_menu_event
+        self.tableWidget_AddressTable.keyPressEvent_original = self.tableWidget_AddressTable.keyPressEvent
+        self.tableWidget_AddressTable.keyPressEvent = self.tableWidget_AddressTable_keyPressEvent
+        self.tableWidget_AddressTable.contextMenuEvent = self.tableWidget_AddressTable_context_menu_event
         self.processbutton.clicked.connect(self.processbutton_onclick)
         self.pushButton_NewFirstScan.clicked.connect(self.newfirstscan_onclick)
         self.pushButton_NextScan.clicked.connect(self.nextscan_onclick)
@@ -255,7 +255,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_MemoryView.clicked.connect(self.memoryview_onlick)
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
-        self.tableWidget_addresstable.itemDoubleClicked.connect(self.on_address_table_double_click)
+        self.tableWidget_AddressTable.itemDoubleClicked.connect(self.on_address_table_double_click)
         icons_directory = GuiUtils.get_icons_directory()
         self.processbutton.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
@@ -338,7 +338,7 @@ class MainForm(QMainWindow, MainWindow):
     def continue_hotkey_pressed(self):
         GDB_Engine.continue_inferior()
 
-    def tableWidget_addresstable_context_menu_event(self, event):
+    def tableWidget_AddressTable_context_menu_event(self, event):
         menu = QMenu()
         browse_region = menu.addAction("Browse this memory region[B]")
         disassemble = menu.addAction("Disassemble this address[D]")
@@ -348,7 +348,7 @@ class MainForm(QMainWindow, MainWindow):
         what_writes = menu.addAction("Find out what writes to this address")
         what_reads = menu.addAction("Find out what reads this address")
         what_accesses = menu.addAction("Find out what accesses this address")
-        font_size = self.tableWidget_addresstable.font().pointSize()
+        font_size = self.tableWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         if action == browse_region:
@@ -365,35 +365,35 @@ class MainForm(QMainWindow, MainWindow):
             self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.BOTH)
 
     def exec_track_watchpoint_widget(self, watchpoint_type):
-        last_selected_row = self.tableWidget_addresstable.selectionModel().selectedRows()[-1].row()
-        address = self.tableWidget_addresstable.item(last_selected_row, ADDR_COL).text()
-        length = GuiUtils.text_to_valuetype(self.tableWidget_addresstable.item(last_selected_row, TYPE_COL).text())[1]
+        last_selected_row = self.tableWidget_AddressTable.selectionModel().selectedRows()[-1].row()
+        address = self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text()
+        length = GuiUtils.text_to_valuetype(self.tableWidget_AddressTable.item(last_selected_row, TYPE_COL).text())[1]
         track_watchpoint_widget = TrackWatchpointWidgetForm(address, length, watchpoint_type, self)
         track_watchpoint_widget.show()
 
     def browse_region_for_selected_row(self):
-        last_selected_row = self.tableWidget_addresstable.selectionModel().selectedRows()[-1].row()
+        last_selected_row = self.tableWidget_AddressTable.selectionModel().selectedRows()[-1].row()
         self.memory_view_window.hex_dump_address(
-            int(self.tableWidget_addresstable.item(last_selected_row, ADDR_COL).text(), 16))
+            int(self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text(), 16))
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
     def disassemble_selected_row(self):
-        last_selected_row = self.tableWidget_addresstable.selectionModel().selectedRows()[-1].row()
+        last_selected_row = self.tableWidget_AddressTable.selectionModel().selectedRows()[-1].row()
         self.memory_view_window.disassemble_expression(
-            self.tableWidget_addresstable.item(last_selected_row, ADDR_COL).text(), append_to_travel_history=True)
+            self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text(), append_to_travel_history=True)
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
     def delete_selected_records(self):
-        selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
+        selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
         while selected_rows:
-            selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
+            selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
             if selected_rows:
                 first_selected_row = selected_rows[0].row()
-                self.tableWidget_addresstable.removeRow(first_selected_row)
+                self.tableWidget_AddressTable.removeRow(first_selected_row)
 
-    def tableWidget_addresstable_keyPressEvent(self, e):
+    def tableWidget_AddressTable_keyPressEvent(self, e):
         if e.key() == Qt.Key_Delete:
             self.delete_selected_records()
         elif e.key() == Qt.Key_B:
@@ -403,19 +403,19 @@ class MainForm(QMainWindow, MainWindow):
         elif e.key() == Qt.Key_R:
             self.update_address_table_manually()
         else:
-            self.tableWidget_addresstable.keyPressEvent_original(e)
+            self.tableWidget_AddressTable.keyPressEvent_original(e)
 
     def update_address_table_manually(self):
         table_contents = []
-        row_count = self.tableWidget_addresstable.rowCount()
+        row_count = self.tableWidget_AddressTable.rowCount()
         for row in range(row_count):
-            address = self.tableWidget_addresstable.item(row, ADDR_COL).text()
+            address = self.tableWidget_AddressTable.item(row, ADDR_COL).text()
             index, length, unicode, zero_terminate = GuiUtils.text_to_valuetype(
-                self.tableWidget_addresstable.item(row, TYPE_COL).text())
+                self.tableWidget_AddressTable.item(row, TYPE_COL).text())
             table_contents.append([address, index, length, unicode, zero_terminate])
         new_table_contents = GDB_Engine.read_multiple_addresses(table_contents)
         for row, item in enumerate(new_table_contents):
-            self.tableWidget_addresstable.setItem(row, VALUE_COL, QTableWidgetItem(str(item)))
+            self.tableWidget_AddressTable.setItem(row, VALUE_COL, QTableWidgetItem(str(item)))
 
     # gets the information from the dialog then adds it to addresstable
     def addaddressmanually_onclick(self):
@@ -478,7 +478,7 @@ class MainForm(QMainWindow, MainWindow):
     def delete_address_table_contents(self):
         confirm_dialog = DialogWithButtonsForm(label_text="This will clear the contents of address table\nProceed?")
         if confirm_dialog.exec_():
-            self.tableWidget_addresstable.setRowCount(0)
+            self.tableWidget_AddressTable.setRowCount(0)
 
     def on_inferior_exit(self):
         self.on_status_running()
@@ -511,10 +511,10 @@ class MainForm(QMainWindow, MainWindow):
         address_text = GDB_Engine.convert_symbol_to_address(address)
         if address_text:
             address = address_text
-        self.tableWidget_addresstable.setRowCount(self.tableWidget_addresstable.rowCount() + 1)
-        currentrow = self.tableWidget_addresstable.rowCount() - 1
+        self.tableWidget_AddressTable.setRowCount(self.tableWidget_AddressTable.rowCount() + 1)
+        currentrow = self.tableWidget_AddressTable.rowCount() - 1
         value = GDB_Engine.read_single_address(address, typeofaddress, length, unicode, zero_terminate)
-        self.tableWidget_addresstable.setCellWidget(currentrow, FROZEN_COL, frozen_checkbox)
+        self.tableWidget_AddressTable.setCellWidget(currentrow, FROZEN_COL, frozen_checkbox)
         self.change_address_table_entries(row=currentrow, description=description, address=address,
                                           typeofaddress=typeofaddress_text, value=str(value))
         self.show()  # In case of getting called from elsewhere
@@ -524,8 +524,8 @@ class MainForm(QMainWindow, MainWindow):
         current_row = index.row()
         current_column = index.column()
         if current_column is VALUE_COL:
-            value = self.tableWidget_addresstable.item(current_row, VALUE_COL).text()
-            value_index = GuiUtils.text_to_index(self.tableWidget_addresstable.item(current_row, TYPE_COL).text())
+            value = self.tableWidget_AddressTable.item(current_row, VALUE_COL).text()
+            value_index = GuiUtils.text_to_index(self.tableWidget_AddressTable.item(current_row, TYPE_COL).text())
             label_text = "Enter the new value"
             if value_index == type_defs.VALUE_INDEX.INDEX_STRING:
                 label_text += "\nPINCE doesn't automatically insert a null terminated string at the end" \
@@ -535,31 +535,31 @@ class MainForm(QMainWindow, MainWindow):
             if dialog.exec_():
                 table_contents = []
                 value_text = dialog.get_values()
-                selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
+                selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
                 for item in selected_rows:
                     row = item.row()
-                    address = self.tableWidget_addresstable.item(row, ADDR_COL).text()
-                    value_type = self.tableWidget_addresstable.item(row, TYPE_COL).text()
+                    address = self.tableWidget_AddressTable.item(row, ADDR_COL).text()
+                    value_type = self.tableWidget_AddressTable.item(row, TYPE_COL).text()
                     value_index = GuiUtils.text_to_index(value_type)
                     if value_index == type_defs.VALUE_INDEX.INDEX_STRING or value_index == type_defs.VALUE_INDEX.INDEX_AOB:
                         unknown_type = SysUtils.parse_string(value_text, value_index)
                         if unknown_type is not None:
                             length = len(unknown_type)
-                            self.tableWidget_addresstable.setItem(row, TYPE_COL, QTableWidgetItem(
+                            self.tableWidget_AddressTable.setItem(row, TYPE_COL, QTableWidgetItem(
                                 GuiUtils.change_text_length(value_type, length)))
                     table_contents.append([address, value_index])
                 GDB_Engine.set_multiple_addresses(table_contents, value_text)
                 self.update_address_table_manually()
 
         elif current_column is DESC_COL:
-            description = self.tableWidget_addresstable.item(current_row, DESC_COL).text()
+            description = self.tableWidget_AddressTable.item(current_row, DESC_COL).text()
             dialog = DialogWithButtonsForm(label_text="Enter the new description", hide_line_edit=False,
                                            line_edit_text=description)
             if dialog.exec_():
                 description_text = dialog.get_values()
-                selected_rows = self.tableWidget_addresstable.selectionModel().selectedRows()
+                selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
                 for item in selected_rows:
-                    self.tableWidget_addresstable.setItem(item.row(), DESC_COL, QTableWidgetItem(description_text))
+                    self.tableWidget_AddressTable.setItem(item.row(), DESC_COL, QTableWidgetItem(description_text))
         elif current_column is ADDR_COL or current_column is TYPE_COL:
             description, address, value_type = self.read_address_table_entries(row=current_row)
             index, length, unicode, zero_terminate = GuiUtils.text_to_valuetype(value_type)
@@ -582,16 +582,16 @@ class MainForm(QMainWindow, MainWindow):
 
     # Changes the column values of the given row
     def change_address_table_entries(self, row, description="", address="", typeofaddress="", value=""):
-        self.tableWidget_addresstable.setItem(row, DESC_COL, QTableWidgetItem(description))
-        self.tableWidget_addresstable.setItem(row, ADDR_COL, QTableWidgetItem(address))
-        self.tableWidget_addresstable.setItem(row, TYPE_COL, QTableWidgetItem(typeofaddress))
-        self.tableWidget_addresstable.setItem(row, VALUE_COL, QTableWidgetItem(value))
+        self.tableWidget_AddressTable.setItem(row, DESC_COL, QTableWidgetItem(description))
+        self.tableWidget_AddressTable.setItem(row, ADDR_COL, QTableWidgetItem(address))
+        self.tableWidget_AddressTable.setItem(row, TYPE_COL, QTableWidgetItem(typeofaddress))
+        self.tableWidget_AddressTable.setItem(row, VALUE_COL, QTableWidgetItem(value))
 
     # Returns the column values of the given row
     def read_address_table_entries(self, row):
-        description = self.tableWidget_addresstable.item(row, DESC_COL).text()
-        address = self.tableWidget_addresstable.item(row, ADDR_COL).text()
-        value_type = self.tableWidget_addresstable.item(row, TYPE_COL).text()
+        description = self.tableWidget_AddressTable.item(row, DESC_COL).text()
+        address = self.tableWidget_AddressTable.item(row, ADDR_COL).text()
+        value_type = self.tableWidget_AddressTable.item(row, TYPE_COL).text()
         return description, address, value_type
 
 
