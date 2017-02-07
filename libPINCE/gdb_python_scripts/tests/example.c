@@ -5,8 +5,8 @@ int hello_world(int count);
 int hello_world(int count)
 {
   int a;
-  for(a=1;a<count+1;a=a+1){
-    printf("Hello World! for %d times\n", a);
+  for(a=42;a<count+42;a++){
+    printf("Hello World! for %d times\n", a-41);
   }
-  return a;
+  return a-41;
 }
