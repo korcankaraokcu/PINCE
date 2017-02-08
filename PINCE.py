@@ -626,7 +626,12 @@ class ProcessForm(QMainWindow, ProcessWindow):
         tablewidget.setRowCount(len(processlist))
         for i, row in enumerate(processlist):
             tablewidget.setItem(i, 0, QTableWidgetItem(str(row.pid)))
-            tablewidget.setItem(i, 1, QTableWidgetItem(row.username()))
+
+            # For psutil compatibility with different versions
+            try:
+                tablewidget.setItem(i, 1, QTableWidgetItem(row.username()))
+            except TypeError:
+                tablewidget.setItem(i, 1, QTableWidgetItem(row.username))
             tablewidget.setItem(i, 2, QTableWidgetItem(row.name()))
 
     # self-explanatory
