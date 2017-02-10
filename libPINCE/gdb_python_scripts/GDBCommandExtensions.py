@@ -260,8 +260,7 @@ class GetStackInfo(gdb.Command):
             stack_register = "esp"
             result = gdb.execute("p/x $esp", from_tty, to_string=True)
         stack_address = int(re.search(r"0x[0-9a-fA-F]+", result).group(0), 16)  # $6 = 0x7f0bc0b6bb40
-        mem_file = "/proc/" + str(pid) + "/mem"
-        with open(mem_file, "rb") as FILE:
+        with open(ScriptUtils.mem_file, "rb") as FILE:
             FILE.seek(stack_address)
             for index in range(int(4096 / chunk_size)):
                 current_offset = chunk_size * index
@@ -335,8 +334,7 @@ class HexDump(gdb.Command):
         contents_send = []
         address = contents_recv[0]
         offset = contents_recv[1]
-        mem_file = "/proc/" + str(pid) + "/mem"
-        with open(mem_file, "rb") as FILE:
+        with open(ScriptUtils.mem_file, "rb") as FILE:
             FILE.seek(address)
             for item in range(offset):
                 try:
