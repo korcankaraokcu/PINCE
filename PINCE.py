@@ -1160,6 +1160,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     process_running = pyqtSignal()
 
     # TODO: Change this nonsense when the huge refactorization happens
+    # Number of parameters from function MainForm.add_entry_to_addresstable()
     address_added = pyqtSignal(object, object, object, object, object, object)
 
     def set_dynamic_debug_hotkeys(self):
