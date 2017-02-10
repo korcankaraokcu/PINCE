@@ -1192,16 +1192,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionCall_Function.triggered.connect(self.call_function)
 
     def initialize_view_context_menu(self):
-        self.actionBookmarks.triggered.connect(self.on_ViewBookmarks_triggered)
-        self.actionStackTrace_Info.triggered.connect(self.on_ViewStacktrace_Info_triggered)
-        self.actionBreakpoints.triggered.connect(self.on_ViewBreakpoints_triggered)
-        self.actionFunctions.triggered.connect(self.on_ViewFunctions_triggered)
+        self.actionBookmarks.triggered.connect(self.actionBookmarks_triggered)
+        self.actionStackTrace_Info.triggered.connect(self.actionStackTrace_Info_triggered)
+        self.actionBreakpoints.triggered.connect(self.actionBreakpoints_triggered)
+        self.actionFunctions.triggered.connect(self.actionFunctions_triggered)
 
     def initialize_tools_context_menu(self):
-        self.actionInject_so_file.triggered.connect(self.on_inject_so_file_triggered)
+        self.actionInject_so_file.triggered.connect(self.actionInject_so_file_triggered)
 
     def initialize_help_context_menu(self):
-        self.actionLibPINCE.triggered.connect(self.on_libPINCE_triggered)
+        self.actionLibPINCE.triggered.connect(self.actionLibPINCE_triggered)
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -1228,7 +1228,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.widget_Registers.resize(330, self.widget_Registers.height())
 
     def initialize_register_view(self):
-        self.pushButton_ShowFloatRegisters.clicked.connect(self.on_show_float_registers_button_clicked)
+        self.pushButton_ShowFloatRegisters.clicked.connect(self.pushButton_ShowFloatRegisters_clicked)
 
     def initialize_stack_view(self):
         self.tableWidget_StackTrace.setColumnWidth(STACKTRACE_RETURN_ADDRESS_COL, 350)
@@ -1264,8 +1264,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
         self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
 
-        self.tableWidget_Disassemble.itemDoubleClicked.connect(self.on_disassemble_double_click)
-        self.tableWidget_Disassemble.itemSelectionChanged.connect(self.on_disassemble_item_selection_changed)
+        self.tableWidget_Disassemble.itemDoubleClicked.connect(self.tableWidget_Disassemble_item_double_clicked)
+        self.tableWidget_Disassemble.itemSelectionChanged.connect(self.tableWidget_Disassemble_item_selection_changed)
 
     def initialize_hex_view(self):
         self.hex_view_last_selected_address_int = 0
@@ -1824,7 +1824,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         else:
             self.tableWidget_Disassemble.keyPressEvent_original(event)
 
-    def on_disassemble_double_click(self, index):
+    def tableWidget_Disassemble_item_double_clicked(self, index):
         if index.column() == DISAS_COMMENT_COL:
             selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
             current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -1834,7 +1834,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             else:
                 self.bookmark_address(current_address)
 
-    def on_disassemble_item_selection_changed(self):
+    def tableWidget_Disassemble_item_selection_changed(self):
         try:
             selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
             selected_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -2009,23 +2009,23 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             del self.tableWidget_Disassemble.bookmarks[int_address]
             self.refresh_disassemble_view()
 
-    def on_ViewBookmarks_triggered(self):
+    def actionBookmarks_triggered(self):
         self.bookmark_widget = BookmarkWidgetForm(self)
         self.bookmark_widget.show()
 
-    def on_ViewStacktrace_Info_triggered(self):
+    def actionStackTrace_Info_triggered(self):
         self.stacktrace_info_widget = StackTraceInfoWidgetForm()
         self.stacktrace_info_widget.show()
 
-    def on_ViewBreakpoints_triggered(self):
+    def actionBreakpoints_triggered(self):
         self.breakpoint_widget = BreakpointInfoWidgetForm(self)
         self.breakpoint_widget.show()
 
-    def on_ViewFunctions_triggered(self):
+    def actionFunctions_triggered(self):
         functions_info_widget = FunctionsInfoWidgetForm(self)
         functions_info_widget.show()
 
-    def on_inject_so_file_triggered(self):
+    def actionInject_so_file_triggered(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the .so file", "", "Shared object library (*.so)")[0]
         if file_path:
             if GDB_Engine.inject_with_dlopen_call(file_path):
@@ -2033,11 +2033,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             else:
                 QMessageBox.information(self, "Error", "Failed to inject the .so file")
 
-    def on_libPINCE_triggered(self):
+    def actionLibPINCE_triggered(self):
         self.libPINCE_widget = LibPINCEReferenceWidgetForm(is_window=True)
         self.libPINCE_widget.showMaximized()
 
-    def on_show_float_registers_button_clicked(self):
+    def pushButton_ShowFloatRegisters_clicked(self):
         self.float_registers_widget = FloatRegisterWidgetForm()
         self.float_registers_widget.show()
         GuiUtils.center_to_window(self.float_registers_widget, self.widget_Registers)
@@ -2051,7 +2051,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.setWindowFlags(Qt.Window)
         self.listWidget.contextMenuEvent = self.listWidget_context_menu_event
         self.listWidget.currentRowChanged.connect(self.change_display)
-        self.listWidget.itemDoubleClicked.connect(self.on_item_double_clicked)
+        self.listWidget.itemDoubleClicked.connect(self.listWidget_item_double_clicked)
         self.shortcut_delete = QShortcut(QKeySequence("Del"), self)
         self.shortcut_delete.activated.connect(self.delete_record)
         self.shortcut_refresh = QShortcut(QKeySequence("R"), self)
@@ -2079,7 +2079,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.lineEdit_Info.setText(GDB_Engine.get_info_about_address(current_address))
         self.lineEdit_Comment.setText(self.parent().tableWidget_Disassemble.bookmarks[int(current_address, 16)])
 
-    def on_item_double_clicked(self, item):
+    def listWidget_item_double_clicked(self, item):
         self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
 
     def listWidget_context_menu_event(self, event):
