@@ -88,12 +88,6 @@ Move the contents of gdb/data-directory to share/gdb in case of python part of g
 ```  
 sudo cp -R gdb/data-directory/* share/gdb/
 ```  
-Finally, create .gdbinit file in home directory and add the line ```set auto-load safe-path /```  into it:
-```  
-cd
-touch .gdbinit
-echo "\n"$auto_load_command >> .gdbinit
-```  
 #Running PINCE  
 Just run ```sh PINCE.sh``` in the PINCE directory
 
