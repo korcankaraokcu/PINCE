@@ -1288,6 +1288,7 @@
     <addaction name="actionStackTrace_Info"/>
     <addaction name="actionBreakpoints"/>
     <addaction name="actionFunctions"/>
+    <addaction name="actionGDB_Log_File"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -1401,6 +1402,11 @@
   <action name="actionLibPINCE">
    <property name="text">
     <string>libPINCE</string>
+   </property>
+  </action>
+  <action name="actionGDB_Log_File">
+   <property name="text">
+    <string>GDB Log File</string>
    </property>
   </action>
  </widget>
