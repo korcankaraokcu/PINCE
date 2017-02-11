@@ -2393,6 +2393,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.pushButton_Stop.setText("Close")
 
     def closeEvent(self, QCloseEvent):
+        self.update_timer.stop()
         GDB_Engine.execute_with_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
 
 
@@ -2522,6 +2523,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         a[42] = 0
 
     def closeEvent(self, QCloseEvent):
+        self.update_timer.stop()
         GDB_Engine.execute_with_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
         self.parent().refresh_disassemble_view()
 
@@ -3030,6 +3032,9 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
             self.textBrowser_LogContent.setTextCursor(cursor)
             self.textBrowser_LogContent.ensureCursorVisible()
         log_file.close()
+
+    def closeEvent(self, QCloseEvent):
+        self.refresh_timer.stop()
 
 
 if __name__ == "__main__":
