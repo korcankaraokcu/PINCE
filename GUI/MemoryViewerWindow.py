@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Fri Jan 20 00:33:16 2017
+# Created: Sat Feb 11 01:09:25 2017
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -696,10 +696,13 @@ class Ui_MainWindow_MemoryView(object):
         self.actionLoad_Trace.setObjectName("actionLoad_Trace")
         self.actionLibPINCE = QtWidgets.QAction(MainWindow_MemoryView)
         self.actionLibPINCE.setObjectName("actionLibPINCE")
+        self.actionGDB_Log_File = QtWidgets.QAction(MainWindow_MemoryView)
+        self.actionGDB_Log_File.setObjectName("actionGDB_Log_File")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
         self.menuView.addAction(self.actionBreakpoints)
         self.menuView.addAction(self.actionFunctions)
+        self.menuView.addAction(self.actionGDB_Log_File)
         self.menuDebug.addAction(self.actionRun)
         self.menuDebug.addAction(self.actionBreak)
         self.menuDebug.addSeparator()
@@ -822,8 +825,9 @@ class Ui_MainWindow_MemoryView(object):
         self.actionCall_Function.setText(_translate("MainWindow_MemoryView", "Call Function"))
         self.actionLoad_Trace.setText(_translate("MainWindow_MemoryView", "Load Trace"))
         self.actionLibPINCE.setText(_translate("MainWindow_MemoryView", "libPINCE"))
+        self.actionGDB_Log_File.setText(_translate("MainWindow_MemoryView", "GDB Log File"))
 
-from GUI.CustomTableViews.AsciiView import QAsciiView
-from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
-from GUI.CustomLabels.RegisterLabel import QRegisterLabel
 from GUI.CustomTableViews.HexView import QHexView
+from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
+from GUI.CustomTableViews.AsciiView import QAsciiView
+from GUI.CustomLabels.RegisterLabel import QRegisterLabel

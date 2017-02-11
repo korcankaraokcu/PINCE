@@ -52,6 +52,7 @@ from GUI.TraceInstructionsWindow import Ui_MainWindow as TraceInstructionsWindow
 from GUI.FunctionsInfoWidget import Ui_Form as FunctionsInfoWidget
 from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
 from GUI.LibPINCEReferenceWidget import Ui_Form as LibPINCEReferenceWidget
+from GUI.LogFileWidget import Ui_Form as LogFileWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -1197,6 +1198,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionStackTrace_Info.triggered.connect(self.actionStackTrace_Info_triggered)
         self.actionBreakpoints.triggered.connect(self.actionBreakpoints_triggered)
         self.actionFunctions.triggered.connect(self.actionFunctions_triggered)
+        self.actionGDB_Log_File.triggered.connect(self.actionGDB_Log_File_triggered)
 
     def initialize_tools_context_menu(self):
         self.actionInject_so_file.triggered.connect(self.actionInject_so_file_triggered)
@@ -2025,6 +2027,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionFunctions_triggered(self):
         functions_info_widget = FunctionsInfoWidgetForm(self)
         functions_info_widget.show()
+
+    def actionGDB_Log_File_triggered(self):
+        self.log_file_widget = LogFileWidgetForm()
+        self.log_file_widget.showMaximized()
 
     def actionInject_so_file_triggered(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the .so file", "", "Shared object library (*.so)")[0]
@@ -2992,6 +2998,38 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
         self.type_defs_shown = True
         self.widget_TypeDefs.show()
         self.pushButton_ShowTypeDefs.setText("Hide type_defs")
+
+
+class LogFileWidgetForm(QWidget, LogFileWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center(self)
+        self.setWindowFlags(Qt.Window)
+        self.log_path = SysUtils.get_gdb_log_file(GDB_Engine.currentpid)
+        self.setWindowTitle("Log File of PID " + str(GDB_Engine.currentpid))
+        self.label_FilePath.setText("Contents of " + self.log_path)
+        self.contents = ""
+        self.refresh_contents()
+        self.refresh_timer = QTimer()
+        self.refresh_timer.setInterval(500)
+        self.refresh_timer.timeout.connect(self.refresh_contents)
+        self.refresh_timer.start()
+
+    def refresh_contents(self):
+        log_file = open(self.log_path)
+        contents = log_file.read()
+        if contents != self.contents:
+            self.contents = contents
+            self.textBrowser_LogContent.clear()
+            self.textBrowser_LogContent.setPlainText(contents)
+
+            # Scrolling to bottom
+            cursor = self.textBrowser_LogContent.textCursor()
+            cursor.movePosition(QTextCursor.End)
+            self.textBrowser_LogContent.setTextCursor(cursor)
+            self.textBrowser_LogContent.ensureCursorVisible()
+        log_file.close()
 
 
 if __name__ == "__main__":

@@ -330,7 +330,7 @@ def create_gdb_log_file(pid):
     Args:
         pid (int,str): PID of the current process
     """
-    send_command("set logging file " + SysUtils.get_gdb_async_file(pid))
+    send_command("set logging file " + SysUtils.get_gdb_log_file(pid))
     send_command("set logging on")
 
 

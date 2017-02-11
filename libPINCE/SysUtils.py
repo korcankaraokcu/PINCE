@@ -291,7 +291,7 @@ def get_PINCE_IPC_directory(pid):
     return type_defs.PATHS.PINCE_IPC_PATH + str(pid)
 
 
-def get_gdb_async_file(pid):
+def get_gdb_log_file(pid):
     """Get the path of gdb logfile of given pid
 
     Args:
@@ -300,7 +300,7 @@ def get_gdb_async_file(pid):
     Returns:
         str: Path of gdb logfile
     """
-    return get_PINCE_IPC_directory(pid) + "/gdb_async_output.txt"
+    return get_PINCE_IPC_directory(pid) + "/gdb_log.txt"
 
 
 def get_gdb_command_file(pid):
