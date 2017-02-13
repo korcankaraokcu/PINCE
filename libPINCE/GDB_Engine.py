@@ -672,7 +672,7 @@ def disassemble(expression, offset_or_address):
     output = send_command("disas /r " + expression + "," + offset_or_address)
     filtered_output = disas_regex.findall(output)
     for item in filtered_output:
-        returned_list.append(list(filter(None, split(r"\\t|\\n", item))))
+        returned_list.append(item[:-2].split("\\t"))  # Get rid of "\n" then split by "\t"
     return returned_list
 
 
