@@ -1110,11 +1110,17 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
                     console_output = ""
         self.textBrowser.append("-->" + console_input)
         self.textBrowser.append(console_output)
-        self.textBrowser.verticalScrollBar().setValue(self.textBrowser.verticalScrollBar().maximum())
+        self.scroll_to_bottom()
+
+    def scroll_to_bottom(self):
+        cursor = self.textBrowser.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        self.textBrowser.setTextCursor(cursor)
+        self.textBrowser.ensureCursorVisible()
 
     def on_async_output(self):
         self.textBrowser.append(GDB_Engine.gdb_async_output)
-        self.textBrowser.verticalScrollBar().setValue(self.textBrowser.verticalScrollBar().maximum())
+        self.scroll_to_bottom()
 
     def lineEdit_keyPressEvent(self, e):
         if e.key() == Qt.Key_Up:
