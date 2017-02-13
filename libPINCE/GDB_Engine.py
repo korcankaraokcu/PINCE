@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from re import search, split, findall, escape
+from re import search, split, findall, escape, compile
 from threading import Lock, Thread, Condition
 from time import sleep, time
 import pexpect
@@ -666,9 +666,11 @@ def disassemble(expression, offset_or_address):
         list: A list of str values in this format-->[[address1,bytes1,opcodes1],[address2, ...], ...]
     """
     returned_list = []
+
+    # 0x00007fd81d4c7400 <__printf+0>:\t48 81 ec d8 00 00 00\tsub    rsp,0xd8\n
+    disas_regex = compile(r"0x[0-9a-fA-F]+.*\\t.+\\t.+\\n")
     output = send_command("disas /r " + expression + "," + offset_or_address)
-    filtered_output = findall(r"0x[0-9a-fA-F]+.*\\t.+\\t.+\\n",
-                              output)  # 0x00007fd81d4c7400 <__printf+0>:\t48 81 ec d8 00 00 00\tsub    rsp,0xd8\n
+    filtered_output = disas_regex.findall(output)
     for item in filtered_output:
         returned_list.append(list(filter(None, split(r"\\t|\\n", item))))
     return returned_list
