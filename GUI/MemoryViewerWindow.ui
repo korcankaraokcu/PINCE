@@ -1309,6 +1309,7 @@
     </property>
     <addaction name="actionInject_so_file"/>
     <addaction name="actionCall_Function"/>
+    <addaction name="actionSearch_Opcode"/>
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
@@ -1407,6 +1408,11 @@
   <action name="actionGDB_Log_File">
    <property name="text">
     <string>GDB Log File</string>
+   </property>
+  </action>
+  <action name="actionSearch_Opcode">
+   <property name="text">
+    <string>Search Opcode</string>
    </property>
   </action>
  </widget>
