@@ -3063,7 +3063,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         self.setWindowFlags(Qt.Window)
         self.lineEdit_Start.setText(start)
         self.lineEdit_End.setText(end)
-        self.tableWidget_Opcodes.setColumnWidth(SEARCH_OPCODE_ADDR_COL, 100)
+        self.tableWidget_Opcodes.setColumnWidth(SEARCH_OPCODE_ADDR_COL, 250)
         icons_directory = GuiUtils.get_icons_directory()
         self.pushButton_Help.setIcon(QIcon(QPixmap(icons_directory + "/help.png")))
         self.pushButton_Help.clicked.connect(self.pushButton_Help_clicked)
