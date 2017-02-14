@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Mon Feb  6 16:43:04 2017
+# Created: Tue Feb 14 21:25:22 2017
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -278,6 +278,8 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_AddressTable.setHorizontalHeaderItem(4, item)
         self.tableWidget_AddressTable.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_AddressTable.verticalHeader().setDefaultSectionSize(20)
+        self.tableWidget_AddressTable.verticalHeader().setMinimumSectionSize(20)
         self.verticalLayout_6.addWidget(self.tableWidget_AddressTable)
         self.horizontalLayout_10 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_10.setObjectName("horizontalLayout_10")
