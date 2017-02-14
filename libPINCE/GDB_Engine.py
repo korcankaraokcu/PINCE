@@ -1542,3 +1542,37 @@ def find_entry_point():
     filtered_result = search(r"Entry\s+point:\s+0x[0-9a-fA-F]+", result)
     if filtered_result:
         return filtered_result.group(0).split()[2]
+
+
+def search_opcode(regex, starting_address, ending_address_or_offset):
+    """Searches for specified regex in the disassembled output
+
+    Args:
+        regex (str): A python regex to search opcodes
+        starting_address (str): Any gdb expression
+        ending_address_or_offset (str): If you pass this parameter as an offset, you should add "+" in front of it
+        (e.g "+42" or "+0x42"). If you pass this parameter as an hex address, the address range between the expression
+        and the secondary address is disassembled.
+        If the second parameter is an address. it always should be bigger than the first address.
+
+    Returns:
+        list: A list of str values in this format-->[[address1,opcodes1],[address2, ...], ...]
+        None: If given regex isn't valid
+    """
+    try:
+        opcode_regex = compile(regex)
+    except Exception as e:
+        print("An exception occurred while trying to compile the given regex\n", str(e))
+        return
+    returned_list = []
+
+    # 0x00007fd81d4c7400 <__printf+0>:\tsub    rsp,0xd8\n
+    disas_regex = compile(r"0x[0-9a-fA-F]+.*:\\t.+\\n")
+    output = send_command("disas " + starting_address + "," + ending_address_or_offset)
+    filtered_output = disas_regex.findall(output)
+    for item in filtered_output:
+        disas_list = item[:-2].split("\\t")  # Get rid of "\n" then split by "\t"
+        address, opcode = disas_list
+        if opcode_regex.search(opcode):
+            returned_list.append(disas_list)
+    return returned_list

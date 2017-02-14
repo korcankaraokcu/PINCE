@@ -53,6 +53,7 @@ from GUI.FunctionsInfoWidget import Ui_Form as FunctionsInfoWidget
 from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
 from GUI.LibPINCEReferenceWidget import Ui_Form as LibPINCEReferenceWidget
 from GUI.LogFileWidget import Ui_Form as LogFileWidget
+from GUI.SearchOpcodeWidget import Ui_Form as SearchOpcodeWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -132,6 +133,10 @@ FUNCTIONS_INFO_SYMBOL_COL = 1
 # represents the index of columns in libPINCE reference resources table
 LIBPINCE_REFERENCE_ITEM_COL = 0
 LIBPINCE_REFERENCE_VALUE_COL = 1
+
+# represents the index of columns in search opcode table
+SEARCH_OPCODE_ADDR_COL = 0
+SEARCH_OPCODE_OPCODES_COL = 1
 
 # From version 5.5 and onwards, PyQT calls qFatal() when an exception has been encountered
 # So, we must override sys.excepthook to avoid calling of qFatal()
@@ -1197,7 +1202,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionExecute_Till_Return.triggered.connect(GDB_Engine.execute_till_return)
         self.actionToggle_Breakpoint.triggered.connect(self.toggle_breakpoint)
         self.actionSet_Address.triggered.connect(self.set_address)
-        self.actionCall_Function.triggered.connect(self.call_function)
 
     def initialize_view_context_menu(self):
         self.actionBookmarks.triggered.connect(self.actionBookmarks_triggered)
@@ -1208,6 +1212,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def initialize_tools_context_menu(self):
         self.actionInject_so_file.triggered.connect(self.actionInject_so_file_triggered)
+        self.actionCall_Function.triggered.connect(self.actionCall_Function_triggered)
+        self.actionSearch_Opcode.triggered.connect(self.actionSearch_Opcode_triggered)
 
     def initialize_help_context_menu(self):
         self.actionLibPINCE.triggered.connect(self.actionLibPINCE_triggered)
@@ -1322,24 +1328,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def show_trace_window(self):
         self.trace_instructions_window = TraceInstructionsWindowForm(prompt_dialog=False)
         self.trace_instructions_window.showMaximized()
-
-    def call_function(self):
-        label_text = "Enter the expression for the function that'll be called from the inferior" \
-                     "\nYou can view functions list from View->Functions" \
-                     "\n\nFor instance:" \
-                     '\nCalling printf("1234") will yield something like this' \
-                     '\n↓' \
-                     '\n$28 = 4' \
-                     '\n\n$28 is the assigned convenience variable' \
-                     '\n4 is the result' \
-                     '\nYou can use the assigned variable from the GDB Console'
-        call_dialog = DialogWithButtonsForm(label_text=label_text, hide_line_edit=False)
-        if call_dialog.exec_():
-            result = GDB_Engine.call_function_from_inferior(call_dialog.get_values())
-            if result[0]:
-                QMessageBox.information(self, "Success!", result[0] + " = " + result[1])
-            else:
-                QMessageBox.information(self, "Failed", "Failed to call the expression " + call_dialog.get_values())
 
     def set_address(self):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
@@ -2045,6 +2033,30 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 QMessageBox.information(self, "Success!", "The file has been injected")
             else:
                 QMessageBox.information(self, "Error", "Failed to inject the .so file")
+
+    def actionCall_Function_triggered(self):
+        label_text = "Enter the expression for the function that'll be called from the inferior" \
+                     "\nYou can view functions list from View->Functions" \
+                     "\n\nFor instance:" \
+                     '\nCalling printf("1234") will yield something like this' \
+                     '\n↓' \
+                     '\n$28 = 4' \
+                     '\n\n$28 is the assigned convenience variable' \
+                     '\n4 is the result' \
+                     '\nYou can use the assigned variable from the GDB Console'
+        call_dialog = DialogWithButtonsForm(label_text=label_text, hide_line_edit=False)
+        if call_dialog.exec_():
+            result = GDB_Engine.call_function_from_inferior(call_dialog.get_values())
+            if result[0]:
+                QMessageBox.information(self, "Success!", result[0] + " = " + result[1])
+            else:
+                QMessageBox.information(self, "Failed", "Failed to call the expression " + call_dialog.get_values())
+
+    def actionSearch_Opcode_triggered(self):
+        start_address = int(self.disassemble_currently_displayed_address, 16)
+        end_address = start_address + 0x30000
+        self.search_opcode_widget = SearchOpcodeWidgetForm(hex(start_address), hex(end_address), self)
+        self.search_opcode_widget.show()
 
     def actionLibPINCE_triggered(self):
         self.libPINCE_widget = LibPINCEReferenceWidgetForm(is_window=True)
@@ -3041,6 +3053,78 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
 
     def closeEvent(self, QCloseEvent):
         self.refresh_timer.stop()
+
+
+class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
+    def __init__(self, start="", end="", parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center(self)
+        self.setWindowFlags(Qt.Window)
+        self.lineEdit_Start.setText(start)
+        self.lineEdit_End.setText(end)
+        self.tableWidget_Opcodes.setColumnWidth(SEARCH_OPCODE_ADDR_COL, 100)
+        icons_directory = GuiUtils.get_icons_directory()
+        self.pushButton_Help.setIcon(QIcon(QPixmap(icons_directory + "/help.png")))
+        self.pushButton_Help.clicked.connect(self.pushButton_Help_clicked)
+        self.pushButton_Search.clicked.connect(self.refresh_table)
+        self.shortcut_search = QShortcut(QKeySequence("Return"), self)
+        self.shortcut_search.activated.connect(self.refresh_table)
+        self.tableWidget_Opcodes.itemDoubleClicked.connect(self.tableWidget_Opcodes_item_double_clicked)
+        self.tableWidget_Opcodes.contextMenuEvent = self.tableWidget_Opcodes_context_menu_event
+
+    def refresh_table(self):
+        start_address = self.lineEdit_Start.text()
+        end_address = self.lineEdit_End.text()
+        regex = self.lineEdit_Regex.text()
+        self.loading_dialog = LoadingDialogForm(self)
+        self.background_thread = self.loading_dialog.background_thread
+        self.background_thread.overrided_func = lambda: self.process_data(regex=regex, start_address=start_address,
+                                                                          end_address=end_address)
+        self.background_thread.output_ready.connect(self.apply_data)
+        self.loading_dialog.exec_()
+
+    def process_data(self, regex, start_address, end_address):
+        return GDB_Engine.search_opcode(regex, start_address, end_address)
+
+    def apply_data(self, disas_data):
+        if disas_data is None:
+            QMessageBox.information(self, "Error", "Given regex isn't valid, check terminal to see the error")
+            return
+        self.tableWidget_Opcodes.setRowCount(0)
+        self.tableWidget_Opcodes.setRowCount(len(disas_data))
+        for row, item in enumerate(disas_data):
+            self.tableWidget_Opcodes.setItem(row, SEARCH_OPCODE_ADDR_COL, QTableWidgetItem(item[0]))
+            self.tableWidget_Opcodes.setItem(row, SEARCH_OPCODE_OPCODES_COL, QTableWidgetItem(item[1]))
+
+    def pushButton_Help_clicked(self):
+        text = "\tHere's some useful regex examples:" \
+               "\n'call|rax' searches for opcodes that contain 'call' or 'rax'" \
+               "\n'[re]cx' searches for both 'rcx' and 'ecx'" \
+               "\nUse the char '\\' to escape special chars such as '['" \
+               "\n'\[rsp\]' searches for opcodes that contain '[rsp]'"
+        DialogWithButtonsForm(label_text=text, align=Qt.AlignLeft).exec_()
+
+    def tableWidget_Opcodes_item_double_clicked(self, index):
+        row = index.row()
+        address = self.tableWidget_Opcodes.item(row, SEARCH_OPCODE_ADDR_COL).text()
+        self.parent().disassemble_expression(SysUtils.extract_address(address), append_to_travel_history=True)
+
+    def tableWidget_Opcodes_context_menu_event(self, event):
+        selected_row = self.tableWidget_Opcodes.selectionModel().selectedRows()[-1].row()
+
+        menu = QMenu()
+        copy_address = menu.addAction("Copy Address")
+        copy_opcode = menu.addAction("Copy Opcode")
+        font_size = self.tableWidget_Opcodes.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == copy_address:
+            QApplication.clipboard().setText(
+                self.tableWidget_Opcodes.item(selected_row, SEARCH_OPCODE_ADDR_COL).text())
+        elif action == copy_opcode:
+            QApplication.clipboard().setText(
+                self.tableWidget_Opcodes.item(selected_row, SEARCH_OPCODE_OPCODES_COL).text())
 
 
 if __name__ == "__main__":
