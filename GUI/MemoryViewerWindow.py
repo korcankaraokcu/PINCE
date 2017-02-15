@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created: Tue Feb 14 18:00:33 2017
+# Created: Wed Feb 15 17:57:59 2017
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -700,11 +700,14 @@ class Ui_MainWindow_MemoryView(object):
         self.actionGDB_Log_File.setObjectName("actionGDB_Log_File")
         self.actionSearch_Opcode = QtWidgets.QAction(MainWindow_MemoryView)
         self.actionSearch_Opcode.setObjectName("actionSearch_Opcode")
+        self.actionMemory_Regions = QtWidgets.QAction(MainWindow_MemoryView)
+        self.actionMemory_Regions.setObjectName("actionMemory_Regions")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
         self.menuView.addAction(self.actionBreakpoints)
         self.menuView.addAction(self.actionFunctions)
         self.menuView.addAction(self.actionGDB_Log_File)
+        self.menuView.addAction(self.actionMemory_Regions)
         self.menuDebug.addAction(self.actionRun)
         self.menuDebug.addAction(self.actionBreak)
         self.menuDebug.addSeparator()
@@ -830,8 +833,9 @@ class Ui_MainWindow_MemoryView(object):
         self.actionLibPINCE.setText(_translate("MainWindow_MemoryView", "libPINCE"))
         self.actionGDB_Log_File.setText(_translate("MainWindow_MemoryView", "GDB Log File"))
         self.actionSearch_Opcode.setText(_translate("MainWindow_MemoryView", "Search Opcode"))
+        self.actionMemory_Regions.setText(_translate("MainWindow_MemoryView", "Memory Regions"))
 
-from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
 from GUI.CustomTableViews.AsciiView import QAsciiView
-from GUI.CustomLabels.RegisterLabel import QRegisterLabel
 from GUI.CustomTableViews.HexView import QHexView
+from GUI.CustomLabels.RegisterLabel import QRegisterLabel
+from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
