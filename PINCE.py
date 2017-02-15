@@ -54,6 +54,7 @@ from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
 from GUI.LibPINCEReferenceWidget import Ui_Form as LibPINCEReferenceWidget
 from GUI.LogFileWidget import Ui_Form as LogFileWidget
 from GUI.SearchOpcodeWidget import Ui_Form as SearchOpcodeWidget
+from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -137,6 +138,21 @@ LIBPINCE_REFERENCE_VALUE_COL = 1
 # represents the index of columns in search opcode table
 SEARCH_OPCODE_ADDR_COL = 0
 SEARCH_OPCODE_OPCODES_COL = 1
+
+# represents the index of columns in memory regions table
+MEMORY_REGIONS_ADDR_COL = 0
+MEMORY_REGIONS_PERM_COL = 1
+MEMORY_REGIONS_SIZE_COL = 2
+MEMORY_REGIONS_PATH_COL = 3
+MEMORY_REGIONS_RSS_COL = 4
+MEMORY_REGIONS_PSS_COL = 5
+MEMORY_REGIONS_SHRCLN_COL = 6
+MEMORY_REGIONS_SHRDRTY_COL = 7
+MEMORY_REGIONS_PRIVCLN_COL = 8
+MEMORY_REGIONS_PRIVDRTY_COL = 9
+MEMORY_REGIONS_REF_COL = 10
+MEMORY_REGIONS_ANON_COL = 11
+MEMORY_REGIONS_SWAP_COL = 12
 
 # From version 5.5 and onwards, PyQT calls qFatal() when an exception has been encountered
 # So, we must override sys.excepthook to avoid calling of qFatal()
@@ -1202,6 +1218,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionBreakpoints.triggered.connect(self.actionBreakpoints_triggered)
         self.actionFunctions.triggered.connect(self.actionFunctions_triggered)
         self.actionGDB_Log_File.triggered.connect(self.actionGDB_Log_File_triggered)
+        self.actionMemory_Regions.triggered.connect(self.actionMemory_Regions_triggered)
 
     def initialize_tools_context_menu(self):
         self.actionInject_so_file.triggered.connect(self.actionInject_so_file_triggered)
@@ -2018,6 +2035,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionGDB_Log_File_triggered(self):
         self.log_file_widget = LogFileWidgetForm()
         self.log_file_widget.showMaximized()
+
+    def actionMemory_Regions_triggered(self):
+        self.memory_regions_widget = MemoryRegionsWidgetForm(self)
+        self.memory_regions_widget.show()
 
     def actionInject_so_file_triggered(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the .so file", "", "Shared object library (*.so)")[0]
@@ -3118,6 +3139,76 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         elif action == copy_opcode:
             QApplication.clipboard().setText(
                 self.tableWidget_Opcodes.item(selected_row, SEARCH_OPCODE_OPCODES_COL).text())
+
+
+class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center(self)
+        self.setWindowFlags(Qt.Window)
+        self.refresh_table()
+        self.tableWidget_MemoryRegions.contextMenuEvent = self.tableWidget_MemoryRegions_context_menu_event
+        self.tableWidget_MemoryRegions.itemDoubleClicked.connect(self.tableWidget_MemoryRegions_item_double_clicked)
+        self.shortcut_refresh = QShortcut(QKeySequence("R"), self)
+        self.shortcut_refresh.activated.connect(self.refresh_table)
+
+    def refresh_table(self):
+        memory_regions = SysUtils.get_memory_regions(GDB_Engine.currentpid)
+        self.tableWidget_MemoryRegions.setRowCount(0)
+        self.tableWidget_MemoryRegions.setRowCount(len(memory_regions))
+        for row, region in enumerate(memory_regions):
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_ADDR_COL, QTableWidgetItem(region.addr))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PERM_COL, QTableWidgetItem(region.perms))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_SIZE_COL, QTableWidgetItem(hex(region.size)))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PATH_COL, QTableWidgetItem(region.path))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_RSS_COL, QTableWidgetItem(hex(region.rss)))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PSS_COL, QTableWidgetItem(hex(region.pss)))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_SHRCLN_COL,
+                                                   QTableWidgetItem(hex(region.shared_clean)))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_SHRDRTY_COL,
+                                                   QTableWidgetItem(hex(region.shared_dirty)))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PRIVCLN_COL,
+                                                   QTableWidgetItem(hex(region.private_clean)))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PRIVDRTY_COL,
+                                                   QTableWidgetItem(hex(region.private_dirty)))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_REF_COL,
+                                                   QTableWidgetItem(hex(region.referenced)))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_ANON_COL,
+                                                   QTableWidgetItem(hex(region.anonymous)))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_SWAP_COL, QTableWidgetItem(hex(region.swap)))
+        self.tableWidget_MemoryRegions.resizeColumnsToContents()
+        self.tableWidget_MemoryRegions.horizontalHeader().setStretchLastSection(True)
+
+    def tableWidget_MemoryRegions_context_menu_event(self, event):
+        selected_row = self.tableWidget_MemoryRegions.selectionModel().selectedRows()[-1].row()
+
+        menu = QMenu()
+        refresh = menu.addAction("Refresh[R]")
+        menu.addSeparator()
+        copy_addresses = menu.addAction("Copy Addresses")
+        copy_size = menu.addAction("Copy Size")
+        copy_path = menu.addAction("Copy Path")
+        font_size = self.tableWidget_MemoryRegions.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == refresh:
+            self.refresh_table()
+        elif action == copy_addresses:
+            QApplication.clipboard().setText(
+                self.tableWidget_MemoryRegions.item(selected_row, MEMORY_REGIONS_ADDR_COL).text())
+        elif action == copy_size:
+            QApplication.clipboard().setText(
+                self.tableWidget_MemoryRegions.item(selected_row, MEMORY_REGIONS_SIZE_COL).text())
+        elif action == copy_path:
+            QApplication.clipboard().setText(
+                self.tableWidget_MemoryRegions.item(selected_row, MEMORY_REGIONS_PATH_COL).text())
+
+    def tableWidget_MemoryRegions_item_double_clicked(self, index):
+        row = index.row()
+        address = self.tableWidget_MemoryRegions.item(row, MEMORY_REGIONS_ADDR_COL).text()
+        address_int = int(address.split("-")[0], 16)
+        self.parent().hex_dump_address(address_int)
 
 
 if __name__ == "__main__":

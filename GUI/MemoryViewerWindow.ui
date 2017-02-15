@@ -1289,6 +1289,7 @@
     <addaction name="actionBreakpoints"/>
     <addaction name="actionFunctions"/>
     <addaction name="actionGDB_Log_File"/>
+    <addaction name="actionMemory_Regions"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -1413,6 +1414,11 @@
   <action name="actionSearch_Opcode">
    <property name="text">
     <string>Search Opcode</string>
+   </property>
+  </action>
+  <action name="actionMemory_Regions">
+   <property name="text">
+    <string>Memory Regions</string>
    </property>
   </action>
  </widget>
