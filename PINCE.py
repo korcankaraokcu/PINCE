@@ -665,11 +665,11 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 QMessageBox.information(self, "Error",
                                         "That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
-            self.setCursor(QCursor(Qt.WaitCursor))
             result = GDB_Engine.can_attach(pid)
             if not result:
                 QMessageBox.information(self, "Error", "Permission denied, could not attach to the process")
                 return
+            self.setCursor(QCursor(Qt.WaitCursor))
             if not GDB_Engine.currentpid == 0:
                 GDB_Engine.detach()
             GDB_Engine.init_gdb(gdb_path)
