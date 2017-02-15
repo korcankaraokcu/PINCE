@@ -666,10 +666,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
                                         "That process is already being traced by " + tracedby + ", could not attach to the process")
                 return
             self.setCursor(QCursor(Qt.WaitCursor))
-            print("processing")
             result = GDB_Engine.can_attach(pid)
             if not result:
-                print("done")
                 QMessageBox.information(self, "Error", "Permission denied, could not attach to the process")
                 return
             if not GDB_Engine.currentpid == 0:
@@ -679,11 +677,6 @@ class ProcessForm(QMainWindow, ProcessWindow):
             p = SysUtils.get_process_information(GDB_Engine.currentpid)
             self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
             self.enable_scan_gui()
-            readable_only, writeable, executable, readable = SysUtils.get_memory_regions_by_perms(
-                GDB_Engine.currentpid)  # test
-            SysUtils.exclude_system_memory_regions(readable)
-            print(len(readable))
-            print("done")
             self.close()
 
     def pushButton_CreateProcess_clicked(self):
