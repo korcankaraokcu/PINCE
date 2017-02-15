@@ -86,11 +86,8 @@ def get_memory_regions(pid):
     Returns:
         list: List of pmmap_ext objects corresponding to the given pid
     """
-    maplist = []
     p = psutil.Process(pid)
-    for m in p.memory_maps(grouped=False):
-        maplist.append(m)
-    return maplist
+    return p.memory_maps(grouped=False)
 
 
 def get_region_info(pid, address):
