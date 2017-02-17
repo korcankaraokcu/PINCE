@@ -41,7 +41,7 @@ inferior_status = -1
 
 #:doc:currentpid
 # An integer. PID of the current attached/created process
-currentpid = 0
+currentpid = -1
 
 #:doc:stop_reason
 # An integer. Can be a member of type_defs.STOP_REASON
@@ -389,7 +389,7 @@ def create_process(process_path, args=""):
     global inferior_arch
 
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
-    SysUtils.create_PINCE_IPC_PATH(0)
+    SysUtils.create_PINCE_IPC_PATH(-1)
     send_command("file " + process_path)
     entry_point = find_entry_point()
     if entry_point:
@@ -412,14 +412,15 @@ def create_process(process_path, args=""):
 
 def detach():
     """See you, space cowboy"""
-    global child
-    global currentpid
-    global inferior_status
     global gdb_initialized
-    currentpid = 0
-    inferior_status = -1
-    gdb_initialized = False
-    child.close()
+    if gdb_initialized:
+        global child
+        global currentpid
+        global inferior_status
+        currentpid = -1
+        inferior_status = -1
+        gdb_initialized = False
+        child.close()
 
 
 def inject_with_advanced_injection(library_path):
