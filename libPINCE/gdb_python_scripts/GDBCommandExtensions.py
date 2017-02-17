@@ -57,6 +57,16 @@ track_watchpoint_dict = {}
 # Format: {breakpoint_number1:register_expression_dict1, breakpoint_number2:register_expression_dict2, ...}
 track_breakpoint_dict = {}
 
+# Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
+referenced_strings_dict = {}
+
+# Format of referenced_by_dict: {address1:opcode1, address2:opcode2, ...}
+# Format: {referenced_address1:referenced_by_dict1, referenced_address2:referenced_by_dict2, ...}
+referenced_jumps_dict = {}
+
+# Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
+referenced_calls_dict = {}
+
 
 def receive_from_pince():
     return pickle.load(open(recv_file, "rb"))
@@ -526,6 +536,76 @@ class ExecuteFromSoFile(gdb.Command):
         gdb.execute("p " + str(eval(arg.strip())))
 
 
+class DissectCode(gdb.Command):
+    def __init__(self):
+        super(DissectCode, self).__init__("pince-dissect-code", gdb.COMMAND_USER)
+
+    def is_memory_valid(self, int_address):
+        try:
+            self.memory.seek(int_address)
+        except ValueError:
+            try:  # I really don't know how but gdb actually manages to read addresses bigger than sys.maxsize
+                gdb.execute("x/b " + hex(int_address))
+            except:
+                return False
+        try:
+            self.memory.read(1)
+        except IOError:
+            return False
+        return True
+
+    def invoke(self, arg, from_tty):
+        global referenced_jumps_dict
+        global referenced_calls_dict
+        global referenced_strings_dict
+        regex_valid_address = re.compile(r"(\s+|\[|,)0x[0-9a-fA-F]+(\s+|\]|,|$)")
+        regex_hex = re.compile(r"0x[0-9a-fA-F]+")
+        regex_instruction = re.compile(r"\w+")
+        region_list = receive_from_pince()
+        self.memory = open(ScriptUtils.mem_file, "rb")
+        for region in region_list:
+            start_addr, end_addr = region.addr.split("-")
+            start_addr = "0x" + start_addr
+            end_addr = "0x" + end_addr
+            disas_data = gdb.execute("disas " + start_addr + "," + end_addr, to_string=True)
+            lines = disas_data.splitlines()
+            del lines[0], lines[-1]  # Get rid of "End of assembler dump" and "Dump of assembler code..." texts
+            for line in lines:
+                referrer_address, opcode = line.split(":", maxsplit=1)
+                opcode = opcode.strip()
+                opcode = ScriptUtils.remove_disas_comment(opcode)
+                if opcode.startswith("j"):
+                    found = regex_valid_address.search(opcode)
+                    if found:
+                        referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
+                        if self.is_memory_valid(referenced_int_address):
+                            instruction = regex_instruction.search(opcode).group(0)
+                            referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
+                            if not referenced_int_address in referenced_jumps_dict:
+                                referenced_jumps_dict[referenced_int_address] = {}
+                            referenced_jumps_dict[referenced_int_address][referrer_int_address] = instruction
+                if opcode.startswith("call"):
+                    found = regex_valid_address.search(opcode)
+                    if found:
+                        referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
+                        if self.is_memory_valid(referenced_int_address):
+                            referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
+                            if not referenced_int_address in referenced_calls_dict:
+                                referenced_calls_dict[referenced_int_address] = set()
+                            referenced_calls_dict[referenced_int_address].add(referrer_int_address)
+                else:
+                    found = regex_valid_address.search(opcode)
+                    if found:
+                        referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
+                        if self.is_memory_valid(referenced_int_address):
+                            referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
+                            if not referenced_int_address in referenced_strings_dict:
+                                referenced_strings_dict[referenced_int_address] = set()
+                            referenced_strings_dict[referenced_int_address].add(referrer_int_address)
+        self.memory.close()
+        send_to_pince((referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict))
+
+
 IgnoreErrors()
 CLIOutput()
 ReadMultipleAddresses()
@@ -547,3 +627,4 @@ TraceInstructions()
 InitSoFile()
 GetSoFileInformation()
 ExecuteFromSoFile()
+DissectCode()

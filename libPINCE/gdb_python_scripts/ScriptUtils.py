@@ -194,3 +194,11 @@ def get_float_registers():
         value = gdb.parse_and_eval("$" + current_register + ".v4_float")
         contents_send[current_register] = str(value)
     return contents_send
+
+
+def remove_disas_comment(disas_str):
+    index = disas_str.rfind("#")
+    if index == -1:
+        return disas_str
+    else:
+        return disas_str[:index]

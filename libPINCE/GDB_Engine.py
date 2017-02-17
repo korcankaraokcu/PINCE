@@ -57,6 +57,22 @@ breakpoint_on_hit_dict = {}
 # Format: {address1:condition1, address2:condition2, ...}
 breakpoint_condition_dict = {}
 
+#:doc:referenced_strings_dict
+# A dictionary. Holds referenced string addresses
+# Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
+referenced_strings_dict = {}
+
+#:doc:referenced_jumps_dict
+# A dictionary. Holds referenced jump addresses
+# Format of referenced_by_dict: {address1:opcode1, address2:opcode2, ...}
+# Format: {referenced_address1:referenced_by_dict1, referenced_address2:referenced_by_dict2, ...}
+referenced_jumps_dict = {}
+
+#:doc:referenced_calls_dict
+# A dictionary. Holds referenced call addresses
+# Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
+referenced_calls_dict = {}
+
 #:doc:chained_breakpoints
 # If an action such as deletion or condition modification happens in one of the breakpoints in a list, others in the
 # same list will get affected as well
@@ -1576,3 +1592,18 @@ def search_opcode(regex, starting_address, ending_address_or_offset):
         if opcode_regex.search(opcode):
             returned_list.append(disas_list)
     return returned_list
+
+
+def dissect_code(region_list):
+    """Searches given regions for jumps, calls and string references
+    Use global variables referenced_strings_dict, referenced_jumps_dict and referenced_calls_dict to see the results
+
+    Args:
+        region_list (list): A list of pmmap_ext objects
+        Can be returned from functions like SysUtils.get_memory_regions_by_perms
+    """
+    global referenced_jumps_dict
+    global referenced_calls_dict
+    global referenced_strings_dict
+    recv = send_command("pince-dissect-code", send_with_file=True, file_contents_send=region_list, recv_with_file=True)
+    referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict = recv
