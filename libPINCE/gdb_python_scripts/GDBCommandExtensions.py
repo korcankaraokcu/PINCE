@@ -81,7 +81,7 @@ class ReadMultipleAddresses(gdb.Command):
         super(ReadMultipleAddresses, self).__init__("pince-read-multiple-addresses", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        contents_send = []
+        data_read_list = []
         contents_recv = receive_from_pince()
 
         # contents_recv format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
@@ -101,8 +101,8 @@ class ReadMultipleAddresses(gdb.Command):
             except IndexError:
                 zero_terminate = True
             data_read = ScriptUtils.read_single_address(address, index, length, unicode, zero_terminate)
-            contents_send.append(data_read)
-        send_to_pince(contents_send)
+            data_read_list.append(data_read)
+        send_to_pince(data_read_list)
 
 
 class SetMultipleAddresses(gdb.Command):
@@ -144,8 +144,8 @@ class ReadSingleAddress(gdb.Command):
         length = contents_recv[2]
         is_unicode = contents_recv[3]
         zero_terminate = contents_recv[4]
-        contents_send = ScriptUtils.read_single_address(address, value_index, length, is_unicode, zero_terminate)
-        send_to_pince(contents_send)
+        data_read = ScriptUtils.read_single_address(address, value_index, length, is_unicode, zero_terminate)
+        send_to_pince(data_read)
 
 
 class IgnoreErrors(gdb.Command):
@@ -177,16 +177,16 @@ class ParseConvenienceVariables(gdb.Command):
         super(ParseConvenienceVariables, self).__init__("pince-parse-convenience-variables", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        contents_send = []
-        contents_recv = receive_from_pince()
-        for item in contents_recv:
+        parsed_value_list = []
+        variables = receive_from_pince()
+        for item in variables:
             try:
                 value = gdb.parse_and_eval(item)
                 parsed_value = str(value)
             except:
                 parsed_value = None
-            contents_send.append(parsed_value)
-        send_to_pince(contents_send)
+            parsed_value_list.append(parsed_value)
+        send_to_pince(parsed_value_list)
 
 
 class ReadRegisters(gdb.Command):
@@ -194,10 +194,10 @@ class ReadRegisters(gdb.Command):
         super(ReadRegisters, self).__init__("pince-read-registers", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        contents_send = ScriptUtils.get_general_registers()
-        contents_send.update(ScriptUtils.get_flag_registers())
-        contents_send.update(ScriptUtils.get_segment_registers())
-        send_to_pince(contents_send)
+        registers = ScriptUtils.get_general_registers()
+        registers.update(ScriptUtils.get_flag_registers())
+        registers.update(ScriptUtils.get_segment_registers())
+        send_to_pince(registers)
 
 
 class ReadFloatRegisters(gdb.Command):
@@ -205,8 +205,8 @@ class ReadFloatRegisters(gdb.Command):
         super(ReadFloatRegisters, self).__init__("pince-read-float-registers", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        contents_send = ScriptUtils.get_float_registers()
-        send_to_pince(contents_send)
+        float_registers = ScriptUtils.get_float_registers()
+        send_to_pince(float_registers)
 
 
 class GetStackTraceInfo(gdb.Command):
@@ -214,7 +214,7 @@ class GetStackTraceInfo(gdb.Command):
         super(GetStackTraceInfo, self).__init__("pince-get-stack-trace-info", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        contents_send = []
+        stacktrace_info_list = []
         if current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             sp_register = "rsp"
             result = gdb.execute("p/x $rsp", from_tty, to_string=True)
@@ -249,8 +249,8 @@ class GetStackTraceInfo(gdb.Command):
                 return_address_with_info = re.search(r"0x[0-9a-fA-F]+.*:", result).group(0).split(":")[0]
             else:
                 return_address_with_info = "<unavailable>"
-            contents_send.append([return_address_with_info, frame_address_with_difference])
-        send_to_pince(contents_send)
+            stacktrace_info_list.append([return_address_with_info, frame_address_with_difference])
+        send_to_pince(stacktrace_info_list)
 
 
 class GetStackInfo(gdb.Command):
@@ -258,7 +258,7 @@ class GetStackInfo(gdb.Command):
         super(GetStackInfo, self).__init__("pince-get-stack-info", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        contents_send = []
+        stack_info_list = []
         if current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             chunk_size = 8
             float_format = "d"
@@ -284,8 +284,8 @@ class GetStackInfo(gdb.Command):
                 hex_data = "0x" + "".join(format(n, '02x') for n in reversed(read))
                 int_data = str(int(hex_data, 16))
                 float_data = str(struct.unpack_from(float_format, read)[0])
-                contents_send.append([stack_indicator, hex_data, int_data, float_data])
-        send_to_pince(contents_send)
+                stack_info_list.append([stack_indicator, hex_data, int_data, float_data])
+        send_to_pince(stack_info_list)
 
 
 class GetFrameReturnAddresses(gdb.Command):
@@ -293,7 +293,7 @@ class GetFrameReturnAddresses(gdb.Command):
         super(GetFrameReturnAddresses, self).__init__("pince-get-frame-return-addresses", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        contents_send = []
+        return_address_list = []
         result = gdb.execute("bt", from_tty, to_string=True)
 
         # Example: #10 0x000000000040c45a in--->#10--->10
@@ -313,8 +313,8 @@ class GetFrameReturnAddresses(gdb.Command):
                 return_address_with_info = re.search(r"0x[0-9a-fA-F]+.*:", result).group(0).split(":")[0]
             else:
                 return_address_with_info = "<unavailable>"
-            contents_send.append(return_address_with_info)
-        send_to_pince(contents_send)
+            return_address_list.append(return_address_with_info)
+        send_to_pince(return_address_list)
 
 
 class GetFrameInfo(gdb.Command):
@@ -322,17 +322,17 @@ class GetFrameInfo(gdb.Command):
         super(GetFrameInfo, self).__init__("pince-get-frame-info", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        contents_recv = receive_from_pince()
+        frame_number = receive_from_pince()
         result = gdb.execute("bt", from_tty, to_string=True)
 
         # Example: #10 0x000000000040c45a in--->#10--->10
         max_frame = re.findall(r"#\d+\s+0x[0-9a-fA-F]+\s+in", result)[-1].split()[0].replace("#", "")
-        if 0 <= int(contents_recv) <= int(max_frame):
-            contents_send = gdb.execute("info frame " + contents_recv, from_tty, to_string=True)
+        if 0 <= int(frame_number) <= int(max_frame):
+            frame_info = gdb.execute("info frame " + frame_number, from_tty, to_string=True)
         else:
-            print("Frame " + contents_recv + " doesn't exist")
-            contents_send = None
-        send_to_pince(contents_send)
+            print("Frame " + frame_number + " doesn't exist")
+            frame_info = None
+        send_to_pince(frame_info)
 
 
 class HexDump(gdb.Command):
@@ -341,7 +341,7 @@ class HexDump(gdb.Command):
 
     def invoke(self, arg, from_tty):
         contents_recv = receive_from_pince()
-        contents_send = []
+        hex_byte_list = []
         address = contents_recv[0]
         offset = contents_recv[1]
         with open(ScriptUtils.mem_file, "rb") as FILE:
@@ -352,8 +352,8 @@ class HexDump(gdb.Command):
                 except IOError:
                     current_item = "??"
                     FILE.seek(1, io.SEEK_CUR)  # Necessary since read() failed to execute
-                contents_send.append(current_item)
-        send_to_pince(contents_send)
+                hex_byte_list.append(current_item)
+        send_to_pince(hex_byte_list)
 
 
 class GetTrackWatchpointInfo(gdb.Command):
@@ -446,7 +446,7 @@ class TraceInstructions(gdb.Command):
         gdb.execute("delete " + breakpoint)
         regex_ret = re.compile(r":\s+ret")  # 0x7f71a4dc5ff8 <poll+72>:	ret
         regex_call = re.compile(r":\s+call")  # 0x7f71a4dc5fe4 <poll+52>:	call   0x7f71a4de1100
-        contents_send = type_defs.TraceInstructionsTree()
+        returned_tree = type_defs.TraceInstructionsTree()
         for x in range(max_trace_count):
             trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
             try:
@@ -465,20 +465,20 @@ class TraceInstructions(gdb.Command):
                 collect_dict.update(ScriptUtils.get_segment_registers())
             if collect_float_registers:
                 collect_dict.update(ScriptUtils.get_float_registers())
-            contents_send.add_child(type_defs.TraceInstructionsTree(line_info, collect_dict))
+            returned_tree.add_child(type_defs.TraceInstructionsTree(line_info, collect_dict))
             status_info = (type_defs.TRACE_STATUS.STATUS_TRACING,
                            line_info + " (" + str(x + 1) + "/" + str(max_trace_count) + ")")
             trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
             pickle.dump(status_info, open(trace_status_file, "wb"))
             if regex_ret.search(line_info):
-                if contents_send.parent is None:
+                if returned_tree.parent is None:
                     new_parent = type_defs.TraceInstructionsTree()
-                    contents_send.set_parent(new_parent)
-                    new_parent.add_child(contents_send)
-                contents_send = contents_send.parent
+                    returned_tree.set_parent(new_parent)
+                    new_parent.add_child(returned_tree)
+                returned_tree = returned_tree.parent
             elif step_mode == type_defs.STEP_MODE.SINGLE_STEP:
                 if regex_call.search(line_info):
-                    contents_send = contents_send.children[-1]
+                    returned_tree = returned_tree.children[-1]
             if stop_condition:
                 try:
                     if str(gdb.parse_and_eval(stop_condition)) == "1":
@@ -493,7 +493,7 @@ class TraceInstructions(gdb.Command):
         status_info = (type_defs.TRACE_STATUS.STATUS_PROCESSING, "Processing the collected data")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         trace_instructions_file = SysUtils.get_trace_instructions_file(pid, breakpoint)
-        pickle.dump(contents_send.get_root(), open(trace_instructions_file, "wb"))
+        pickle.dump(returned_tree.get_root(), open(trace_instructions_file, "wb"))
         status_info = (type_defs.TRACE_STATUS.STATUS_FINISHED, "Tracing has been completed")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         if not stop_after_trace:
