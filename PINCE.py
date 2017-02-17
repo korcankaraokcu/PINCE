@@ -165,7 +165,7 @@ class AwaitProcessExit(QThread):
 
     def run(self):
         while True:
-            if GDB_Engine.currentpid is 0 or SysUtils.is_process_valid(GDB_Engine.currentpid):
+            if GDB_Engine.currentpid is -1 or SysUtils.is_process_valid(GDB_Engine.currentpid):
                 pass
             else:
                 self.process_exited.emit()
@@ -519,7 +519,7 @@ class MainForm(QMainWindow, MainWindow):
 
     # closes all windows on exit
     def closeEvent(self, event):
-        if not GDB_Engine.currentpid == 0:
+        if not GDB_Engine.currentpid == -1:
             GDB_Engine.detach()
         application = QApplication.instance()
         application.closeAllWindows()
@@ -686,7 +686,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 QMessageBox.information(self, "Error", "Permission denied, could not attach to the process")
                 return
             self.setCursor(QCursor(Qt.WaitCursor))
-            if not GDB_Engine.currentpid == 0:
+            if not GDB_Engine.currentpid == -1:
                 GDB_Engine.detach()
             GDB_Engine.init_gdb(gdb_path)
             GDB_Engine.attach(pid)
@@ -698,7 +698,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
     def pushButton_CreateProcess_clicked(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the target binary")[0]
         if file_path:
-            if not GDB_Engine.currentpid == 0:
+            if not GDB_Engine.currentpid == -1:
                 GDB_Engine.detach()
             arg_dialog = DialogWithButtonsForm(label_text="Enter the optional arguments", hide_line_edit=False)
             if arg_dialog.exec_():
