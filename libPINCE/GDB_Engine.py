@@ -195,6 +195,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
 def await_process_exit():
     """
     Checks if the current inferior is alive, uses conditions to inform other functions and threads about inferiors state
+    Detaches if the current inferior dies while attached
     Should be called by creating a thread. Usually called in initialization process by attach function
     """
     while True:
@@ -204,6 +205,7 @@ def await_process_exit():
             with process_exited_condition:
                 print("Process terminated (PID:" + str(currentpid) + ")")
                 process_exited_condition.notify_all()
+                detach()
                 break
 
 
