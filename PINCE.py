@@ -665,49 +665,38 @@ class ProcessForm(QMainWindow, ProcessWindow):
             QMessageBox.information(self, "Error", "Please select a process first")
         else:
             pid = int(currentitem.text())
-            if not SysUtils.is_process_valid(pid):
-                QMessageBox.information(self, "Error", "Selected process is not valid")
-                return
             if pid == selfpid:
                 QMessageBox.information(self, "Error", "What the fuck are you trying to do?")  # planned easter egg
                 return
-            if pid == GDB_Engine.currentpid:
-                QMessageBox.information(self, "Error", "You're debugging this process already")
-                return
-            tracedby = SysUtils.is_traced(pid)
-            if tracedby:
-                QMessageBox.information(self, "Error",
-                                        "That process is already being traced by " + tracedby + ", could not attach to the process")
-                return
-            result = GDB_Engine.can_attach(pid)
-            if not result:
-                QMessageBox.information(self, "Error", "Permission denied, could not attach to the process")
-                return
             self.setCursor(QCursor(Qt.WaitCursor))
-            GDB_Engine.detach()
-            GDB_Engine.init_gdb(gdb_path)
-            GDB_Engine.attach(pid)
-            p = SysUtils.get_process_information(GDB_Engine.currentpid)
-            self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
-            self.enable_scan_gui()
-            self.close()
+            attach_result = GDB_Engine.attach(pid, gdb_path)
+            if attach_result[0] == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
+                p = SysUtils.get_process_information(GDB_Engine.currentpid)
+                self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
+                self.enable_scan_gui()
+                self.close()
+            else:
+                QMessageBox.information(self, "Error", attach_result[1])
+            self.setCursor(QCursor(Qt.ArrowCursor))
 
     def pushButton_CreateProcess_clicked(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the target binary")[0]
         if file_path:
-            GDB_Engine.detach()
             arg_dialog = DialogWithButtonsForm(label_text="Enter the optional arguments", hide_line_edit=False)
             if arg_dialog.exec_():
                 args = arg_dialog.get_values()
             else:
                 args = ""
             self.setCursor(QCursor(Qt.WaitCursor))
-            GDB_Engine.init_gdb(gdb_path)
-            GDB_Engine.create_process(file_path, args)
-            p = SysUtils.get_process_information(GDB_Engine.currentpid)
-            self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
-            self.enable_scan_gui()
-            self.close()
+            if GDB_Engine.create_process(file_path, args, gdb_path):
+                p = SysUtils.get_process_information(GDB_Engine.currentpid)
+                self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
+                self.enable_scan_gui()
+                self.close()
+            else:
+                QMessageBox.information(self, "Error", "An error occurred while trying to create process")
+                self.parent().on_inferior_exit()
+            self.setCursor(QCursor(Qt.ArrowCursor))
 
     def enable_scan_gui(self):
         self.parent().QWidget_Toolbox.setEnabled(True)

@@ -195,7 +195,6 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
 def await_process_exit():
     """
     Checks if the current inferior is alive, uses conditions to inform other functions and threads about inferiors state
-    Detaches if the current inferior dies while attached
     Should be called by creating a thread. Usually called in initialization process by attach function
     """
     while True:
@@ -205,7 +204,6 @@ def await_process_exit():
             with process_exited_condition:
                 print("Process terminated (PID:" + str(currentpid) + ")")
                 process_exited_condition.notify_all()
-                detach()
                 break
 
 
@@ -382,16 +380,38 @@ def set_pince_path():
     send_command("source gdb_python_scripts/GDBCommandExtensions.py")
 
 
-def attach(pid):
+def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
     """Attaches gdb to the target and initializes some of the global variables
 
     Args:
         pid (int,str): PID of the process that'll be attached to
+
+    Returns:
+        tuple: (A member of type_defs.ATTACH_RESULT, error_message)
     """
-    init_gdb()
     global currentpid
+    pid = int(pid)
+    if not SysUtils.is_process_valid(pid):
+        error_message = "Selected process is not valid"
+        print(error_message)
+        return type_defs.ATTACH_RESULT.PROCESS_NOT_VALID, error_message
+    if pid == currentpid:
+        error_message = "You're debugging this process already"
+        print(error_message)
+        return type_defs.ATTACH_RESULT.ALREADY_DEBUGGING, error_message
+    tracedby = SysUtils.is_traced(pid)
+    if tracedby:
+        error_message = "That process is already being traced by " + tracedby + ", could not attach to the process"
+        print(error_message)
+        return type_defs.ATTACH_RESULT.ALREADY_TRACED, error_message
+    if not can_attach(pid):
+        error_message = "Permission denied, could not attach to the process"
+        print(error_message)
+        return type_defs.ATTACH_RESULT.PERM_DENIED, error_message
+    detach()
+    init_gdb(gdb_path)
     global inferior_arch
-    currentpid = int(pid)
+    currentpid = pid
     SysUtils.create_PINCE_IPC_PATH(pid)
     create_gdb_log_file(pid)
     send_command("attach " + str(pid))
@@ -400,22 +420,35 @@ def attach(pid):
     await_exit_thread = Thread(target=await_process_exit)
     await_exit_thread.daemon = True
     await_exit_thread.start()
+    result_message = "Successfully attached to the process with PID " + str(currentpid)
+    print(result_message)
+    return type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL, result_message
 
 
-def create_process(process_path, args=""):
+def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH):
     """Creates a new process for debugging and initializes some of the global variables
+    Current process will be detached even if the create_process call fails
+    Make sure to save your data before calling this monstrosity
 
     Args:
         process_path (str): Absolute path of the target binary
         args (str): Arguments of the inferior, optional
+
+    Returns:
+        bool: True if the process has been created successfully, False otherwise
     """
-    init_gdb()
+    detach()
+    init_gdb(gdb_path)
     global currentpid
     global inferior_arch
 
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
     SysUtils.create_PINCE_IPC_PATH(-1)
-    send_command("file " + process_path)
+    output = send_command("file " + process_path)
+    if search(r"\^error", output):
+        print("An error occurred while trying to create process from the file at " + process_path)
+        detach()
+        return False
     entry_point = find_entry_point()
     if entry_point:
         send_command("b *" + entry_point)
@@ -436,6 +469,7 @@ def create_process(process_path, args=""):
     await_exit_thread = Thread(target=await_process_exit)
     await_exit_thread.daemon = True
     await_exit_thread.start()
+    return True
 
 
 def detach():

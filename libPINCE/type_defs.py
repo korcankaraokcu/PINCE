@@ -89,6 +89,14 @@ class STOP_REASON:
     DEBUG = 2
 
 
+class ATTACH_RESULT:
+    ATTACH_SUCCESSFUL = 1
+    PROCESS_NOT_VALID = 2
+    ALREADY_DEBUGGING = 3
+    ALREADY_TRACED = 4
+    PERM_DENIED = 5
+
+
 # represents the indexes of value types
 # Also used in PINCE's value comboboxes
 class VALUE_INDEX:
