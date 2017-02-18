@@ -546,6 +546,7 @@ class DissectCode(gdb.Command):
         except ValueError:
             try:  # I really don't know how but gdb actually manages to read addresses bigger than sys.maxsize
                 gdb.execute("x/b " + hex(int_address))
+                return True
             except:
                 return False
         try:
