@@ -485,8 +485,7 @@ def detach():
         inferior_status = -1
         gdb_initialized = False
         child.close()
-    else:
-        print("Already detached from the process")
+    print("Detached from the process with PID:" + str(currentpid))
 
 
 def inject_with_advanced_injection(library_path):
