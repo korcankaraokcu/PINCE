@@ -97,6 +97,11 @@ gdb_async_condition = Condition()
 # See PINCE's CheckInferiorStatus class for an example
 status_changed_condition = Condition()
 
+#:doc:process_exited_condition
+# This condition is notified if the current inferior gets terminated
+# See PINCE's AwaitProcessExit class for an example
+process_exited_condition = Condition()
+
 #:doc:gdb_output
 # A string. Stores the output of the last command
 gdb_output = ""
@@ -185,6 +190,23 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         time1 = time()
         print(time1 - time0)
         return output
+
+
+def await_process_exit():
+    """
+    Checks if the current inferior is alive, uses conditions to inform other functions and threads about inferiors state
+    Detaches if the current inferior dies while attached
+    Should be called by creating a thread. Usually called in initialization process by attach function
+    """
+    while True:
+        if currentpid is -1 or SysUtils.is_process_valid(currentpid):
+            sleep(0.1)
+        else:
+            with process_exited_condition:
+                print("Process terminated (PID:" + str(currentpid) + ")")
+                process_exited_condition.notify_all()
+                detach()
+                break
 
 
 def state_observe_thread():
@@ -375,6 +397,9 @@ def attach(pid):
     send_command("attach " + str(pid))
     set_pince_path()
     inferior_arch = get_inferior_arch()
+    await_exit_thread = Thread(target=await_process_exit)
+    await_exit_thread.daemon = True
+    await_exit_thread.start()
 
 
 def create_process(process_path, args=""):
@@ -408,6 +433,9 @@ def create_process(process_path, args=""):
     create_gdb_log_file(pid)
     set_pince_path()
     inferior_arch = get_inferior_arch()
+    await_exit_thread = Thread(target=await_process_exit)
+    await_exit_thread.daemon = True
+    await_exit_thread.start()
 
 
 def detach():
@@ -421,6 +449,8 @@ def detach():
         inferior_status = -1
         gdb_initialized = False
         child.close()
+    else:
+        print("Already detached from the process")
 
 
 def inject_with_advanced_injection(library_path):
