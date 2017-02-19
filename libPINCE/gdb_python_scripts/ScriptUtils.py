@@ -60,11 +60,12 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
     except:
         print(str(value_type) + " is not a valid value index")
         return ""
-    try:
-        address = int(address, 16)
-    except:
-        print(str(address) + " is not a valid address")
-        return ""
+    if not type(address) == int:
+        try:
+            address = int(address, 16)
+        except:
+            print(str(address) + " is not a valid address")
+            return ""
     packed_data = type_defs.index_to_valuetype_dict.get(value_type, -1)
     if value_type is type_defs.VALUE_INDEX.INDEX_STRING:
         try:
@@ -110,11 +111,12 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
 
 
 def set_single_address(address, value_index, value):
-    try:
-        address = int(address, 16)
-    except:
-        print(str(address) + " is not a valid address")
-        return
+    if not type(address) == int:
+        try:
+            address = int(address, 16)
+        except:
+            print(str(address) + " is not a valid address")
+            return
     write_data = SysUtils.parse_string(value, value_index)
     if write_data is None:
         return

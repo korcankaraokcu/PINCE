@@ -651,7 +651,7 @@ def read_single_address(address, value_index, length=None, is_unicode=False, zer
     this function instead(custom script), you'll get the result "6.968143721100816e+38" instead
 
     Args:
-        address (str): Can be a hex string.
+        address (str, int): Can be a hex string or an integer.
         value_index (int): Determines the type of data read. Can be a member of type_defs.VALUE_INDEX
         length (int): Length of the data that'll be read. Only used when the value_index is INDEX_STRING or INDEX_AOB.
         Ignored otherwise.
@@ -707,7 +707,7 @@ def set_single_address(address, value_index, value):
     error will be printed to the terminal.
 
     Args:
-        address (str, int): The address that'll be modified
+        address (str, int): Can be a hex string or an integer
         value_index (int): Can be a member of type_defs.VALUE_INDEX
         value (str): The value that'll be written to the given address
     """
