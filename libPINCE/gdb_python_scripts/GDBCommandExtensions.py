@@ -128,7 +128,7 @@ class SetMultipleAddresses(gdb.Command):
             '''
             try:
                 ScriptUtils.set_single_address(address, index, value)
-            except IOError:
+            except (IOError, ValueError):
                 print("Can't access the address " + address if type(address) == str else hex(address))
                 pass
 

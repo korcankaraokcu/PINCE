@@ -87,7 +87,7 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
     try:
         FILE.seek(address)
         data_read = FILE.read(expected_length)
-    except IOError:
+    except (IOError, ValueError):
         FILE.close()
         print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return ""
