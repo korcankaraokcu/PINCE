@@ -344,10 +344,18 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     global breakpoint_on_hit_dict
     global breakpoint_condition_dict
     global chained_breakpoints
+    global referenced_strings_dict
+    global referenced_jumps_dict
+    global referenced_calls_dict
+    global gdb_output
     SysUtils.init_gdbinit_file()
     breakpoint_on_hit_dict.clear()
     breakpoint_condition_dict.clear()
     chained_breakpoints.clear()
+    referenced_strings_dict.clear()
+    referenced_jumps_dict.clear()
+    referenced_calls_dict.clear()
+    gdb_output = ""
 
     libpince_dir = SysUtils.get_libpince_directory()
     child = pexpect.spawn('sudo LC_NUMERIC=C ' + gdb_path + ' --interpreter=mi', cwd=libpince_dir,
