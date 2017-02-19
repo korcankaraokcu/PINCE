@@ -573,7 +573,7 @@ def check_for_restricted_gdb_symbols(string):
 def read_single_address_by_expression(expression, value_index, length=None, is_unicode=False, zero_terminate=True,
                                       check=True):
     """Reads value from the given address or expression by using "x" command of gdb then converts it to the given
-    value type
+    value type. Unlike the other read_single_address variations, this function can read the contents of [vsyscall]
 
     The expression can also be a function name such as "_start", "malloc", "printf" and "scanf"
 
