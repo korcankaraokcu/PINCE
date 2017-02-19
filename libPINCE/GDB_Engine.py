@@ -477,15 +477,16 @@ def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH):
 def detach():
     """See you, space cowboy"""
     global gdb_initialized
+    global currentpid
+    old_pid = currentpid
     if gdb_initialized:
         global child
-        global currentpid
         global inferior_status
         currentpid = -1
         inferior_status = -1
         gdb_initialized = False
         child.close()
-    print("Detached from the process with PID:" + str(currentpid))
+    print("Detached from the process with PID:" + str(old_pid))
 
 
 def inject_with_advanced_injection(library_path):
