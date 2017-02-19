@@ -891,7 +891,7 @@ def find_address_of_closest_instruction(address, how_many_instructions_to_look_f
     """Finds address of the closest instruction next to the given address, assuming that the given address is valid
 
     Args:
-        address (str): Hex address
+        address (str): Hex address or any gdb expression that can be used in disas command
         how_many_instructions_to_look_for (int): Number of the instructions that'll be lo- OH COME ON NOW! That one is
         obvious!
         instruction_location (str): If it's "next", instructions coming after the address is searched. If it's anything
