@@ -76,6 +76,9 @@ def send_to_pince(contents_send):
     pickle.dump(contents_send, open(send_file, "wb"))
 
 
+ScriptUtils.gdbinit()
+
+
 class ReadMultipleAddresses(gdb.Command):
     def __init__(self):
         super(ReadMultipleAddresses, self).__init__("pince-read-multiple-addresses", gdb.COMMAND_USER)
