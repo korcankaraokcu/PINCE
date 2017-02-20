@@ -44,6 +44,12 @@ else:
     current_arch = type_defs.INFERIOR_ARCH.ARCH_64
 
 
+# Use this function instead of the .gdbinit file
+# If you have to load a .gdbinit file, just load it in this function with command "source"
+def gdbinit():
+    gdb.execute("set disassembly-flavor intel")
+
+
 # This function is used to avoid errors in gdb scripts, because gdb scripts stop working when encountered an error
 def issue_command(command, error_message=""):
     try:

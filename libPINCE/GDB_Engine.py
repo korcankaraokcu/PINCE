@@ -353,7 +353,6 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
     SysUtils.create_PINCE_IPC_PATH(currentpid)
 
-    SysUtils.init_gdbinit_file()
     breakpoint_on_hit_dict.clear()
     breakpoint_condition_dict.clear()
     chained_breakpoints.clear()
