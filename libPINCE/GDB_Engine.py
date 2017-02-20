@@ -348,6 +348,11 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     global referenced_jumps_dict
     global referenced_calls_dict
     global gdb_output
+    detach()
+
+    # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
+    SysUtils.create_PINCE_IPC_PATH(currentpid)
+
     SysUtils.init_gdbinit_file()
     breakpoint_on_hit_dict.clear()
     breakpoint_condition_dict.clear()
@@ -418,7 +423,6 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
         error_message = "Permission denied, could not attach to the process"
         print(error_message)
         return type_defs.ATTACH_RESULT.PERM_DENIED, error_message
-    detach()
     init_gdb(gdb_path)
     global inferior_arch
     currentpid = pid
@@ -447,13 +451,9 @@ def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH):
     Returns:
         bool: True if the process has been created successfully, False otherwise
     """
-    detach()
     init_gdb(gdb_path)
     global currentpid
     global inferior_arch
-
-    # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
-    SysUtils.create_PINCE_IPC_PATH(-1)
     output = send_command("file " + process_path)
     if search(r"\^error", output):
         print("An error occurred while trying to create process from the file at " + process_path)
