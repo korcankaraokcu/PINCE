@@ -39,11 +39,6 @@ pid = inferior.pid
 recv_file = SysUtils.get_ipc_from_PINCE_file(pid)
 send_file = SysUtils.get_ipc_to_PINCE_file(pid)
 
-if str(gdb.parse_and_eval("$rax")) == "void":
-    current_arch = type_defs.INFERIOR_ARCH.ARCH_32
-else:
-    current_arch = type_defs.INFERIOR_ARCH.ARCH_64
-
 lib = None
 
 # Format of info_list: [count, previous_pc_address, register_info, float_info, disas_info]
@@ -218,7 +213,7 @@ class GetStackTraceInfo(gdb.Command):
 
     def invoke(self, arg, from_tty):
         stacktrace_info_list = []
-        if current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+        if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             sp_register = "rsp"
             result = gdb.execute("p/x $rsp", from_tty, to_string=True)
         else:
@@ -262,7 +257,7 @@ class GetStackInfo(gdb.Command):
 
     def invoke(self, arg, from_tty):
         stack_info_list = []
-        if current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+        if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             chunk_size = 8
             float_format = "d"
             stack_register = "rsp"
