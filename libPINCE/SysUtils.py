@@ -451,9 +451,7 @@ def parse_string(string, value_index):
     string = string.strip()
     if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         try:
-            string = str(string)
-            stripped_string = string.strip()
-            string_list = split(r"\s+", stripped_string)
+            string_list = split(r"\s+", string)
             for item in string_list:
                 if len(item) > 2:
                     print(string + " can't be parsed as array of bytes")
