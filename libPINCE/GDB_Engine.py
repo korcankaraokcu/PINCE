@@ -302,7 +302,7 @@ def wait_for_stop(timeout=1):
 
 
 def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
-    """Interrupt the inferior
+    """Interrupt the inferior, can be also used to cancel the current gdb command
 
     Args:
         interrupt_reason (int): Just changes the global variable stop_reason. Can be a member of type_defs.STOP_REASON
