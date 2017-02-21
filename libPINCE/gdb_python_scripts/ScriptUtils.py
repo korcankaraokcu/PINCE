@@ -60,7 +60,7 @@ def issue_command(command, error_message=""):
             gdb.execute('echo ' + error_message + '\n')
 
 
-def read_single_address(address, value_type, length=0, unicode=False, zero_terminate=True):
+def read_single_address(address, value_type, length=0, unicode=False, zero_terminate=True, only_bytes=False):
     try:
         value_type = int(value_type)
     except:
@@ -99,6 +99,8 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
         print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return ""
     FILE.close()
+    if only_bytes:
+        return data_read
     if value_type is type_defs.VALUE_INDEX.INDEX_STRING:
         if unicode:
             returned_string = data_read.decode("utf-8", "surrogateescape")
