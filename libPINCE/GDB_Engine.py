@@ -111,8 +111,20 @@ gdb_output = ""
 # See gdb_async_condition's docstrings
 gdb_async_output = ""
 
+#:doc:cancel_send_command
+# A boolean value. Used to cancel the last gdb command sent
+# Use the function cancel_last_command to make use of this variable
+# Return value of the current send_command call will be an empty string
+cancel_send_command = False
+
 
 # The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
+
+def cancel_last_command():
+    """Cancels the last gdb command sent"""
+    global cancel_send_command
+    cancel_send_command = True
+
 
 def send_command(command, control=False, cli_output=False, send_with_file=False, file_contents_send=None,
                  recv_with_file=False):
@@ -147,6 +159,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
     """
     global child
     global gdb_output
+    global cancel_send_command
     with lock_send_command:
         time0 = time()
         if not gdb_initialized:
@@ -178,11 +191,17 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         if not control:
             while gdb_output is "":
                 sleep(type_defs.CONST_TIME.GDB_INPUT_SLEEP)
-        if not control:
-            if recv_with_file or cli_output:
-                output = pickle.load(open(recv_file, "rb"))
+                if cancel_send_command:
+                    break
+            if not cancel_send_command:
+                if recv_with_file or cli_output:
+                    output = pickle.load(open(recv_file, "rb"))
+                else:
+                    output = gdb_output
             else:
-                output = gdb_output
+                output = ""
+                child.sendcontrol("c")
+                cancel_send_command = False
         else:
             output = ""
         if type(output) == str:
@@ -302,7 +321,7 @@ def wait_for_stop(timeout=1):
 
 
 def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
-    """Interrupt the inferior, can be also used to cancel the current gdb command
+    """Interrupt the inferior
 
     Args:
         interrupt_reason (int): Just changes the global variable stop_reason. Can be a member of type_defs.STOP_REASON
@@ -348,6 +367,7 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     global referenced_jumps_dict
     global referenced_calls_dict
     global gdb_output
+    global cancel_send_command
     detach()
 
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
@@ -360,6 +380,7 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     referenced_jumps_dict.clear()
     referenced_calls_dict.clear()
     gdb_output = ""
+    cancel_send_command = False
 
     libpince_dir = SysUtils.get_libpince_directory()
     child = pexpect.spawn('sudo LC_NUMERIC=C ' + gdb_path + ' --interpreter=mi', cwd=libpince_dir,
