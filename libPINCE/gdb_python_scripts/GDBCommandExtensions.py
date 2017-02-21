@@ -549,7 +549,7 @@ class DissectCode(gdb.Command):
             self.memory.seek(int_address)
         except ValueError:
             try:  # I really don't know how but gdb actually manages to read addresses bigger than sys.maxsize
-                gdb.execute("x/xb " + hex(int_address))
+                gdb.execute("x/1xb " + hex(int_address))
                 return True
             except:
                 return False
