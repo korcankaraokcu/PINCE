@@ -98,7 +98,11 @@ class ReadMultipleAddresses(gdb.Command):
                 zero_terminate = item[4]
             except IndexError:
                 zero_terminate = True
-            data_read = ScriptUtils.read_single_address(address, index, length, unicode, zero_terminate)
+            try:
+                only_bytes = item[5]
+            except IndexError:
+                only_bytes = False
+            data_read = ScriptUtils.read_single_address(address, index, length, unicode, zero_terminate, only_bytes)
             data_read_list.append(data_read)
         send_to_pince(data_read_list)
 
@@ -142,7 +146,9 @@ class ReadSingleAddress(gdb.Command):
         length = contents_recv[2]
         is_unicode = contents_recv[3]
         zero_terminate = contents_recv[4]
-        data_read = ScriptUtils.read_single_address(address, value_index, length, is_unicode, zero_terminate)
+        only_bytes = contents_recv[5]
+        data_read = ScriptUtils.read_single_address(address, value_index, length, is_unicode, zero_terminate,
+                                                    only_bytes)
         send_to_pince(data_read)
 
 
