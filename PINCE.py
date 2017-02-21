@@ -845,6 +845,7 @@ class LoadingDialogForm(QDialog, LoadingDialog):
         # Check refresh_table method of FunctionsInfoWidgetForm for exemplary usage
         self.background_thread = self.BackgroundThread()
         self.background_thread.output_ready.connect(self.accept)
+        self.pushButton_Cancel.clicked.connect(self.cancel_thread)
         pince_directory = SysUtils.get_current_script_directory()
         self.movie = QMovie(pince_directory + "/media/LoadingDialog/ajax-loader.gif", QByteArray())
         self.label_Animated.setMovie(self.movie)
@@ -852,6 +853,11 @@ class LoadingDialogForm(QDialog, LoadingDialog):
         self.movie.setCacheMode(QMovie.CacheAll)
         self.movie.setSpeed(100)
         self.movie.start()
+
+    # This function only cancels the last command sent
+    # Override this if you want to do dangerous stuff like, God forbid, background_thread.terminate()
+    def cancel_thread(self):
+        GDB_Engine.cancel_last_command()
 
     def exec_(self):
         self.background_thread.start()
