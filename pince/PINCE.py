@@ -846,7 +846,7 @@ class LoadingDialogForm(QDialog, LoadingDialog):
         self.background_thread.output_ready.connect(self.accept)
         self.pushButton_Cancel.clicked.connect(self.cancel_thread)
         pince_directory = SysUtils.get_current_script_directory()
-        self.movie = QMovie(pince_directory + "/../media/LoadingDialog/ajax-loader.gif", QByteArray())
+        self.movie = QMovie(pince_directory + "/../share/pince/media/LoadingDialog/ajax-loader.gif", QByteArray())
         self.label_Animated.setMovie(self.movie)
         self.movie.setScaledSize(QSize(25, 25))
         self.movie.setCacheMode(QMovie.CacheAll)
@@ -2589,7 +2589,7 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         self.address = address
         self.breakpoint = breakpoint
         pince_directory = SysUtils.get_current_script_directory()
-        self.movie = QMovie(pince_directory + "/../media/TraceInstructionsWaitWidget/ajax-loader.gif", QByteArray())
+        self.movie = QMovie(pince_directory + "/../share/pince/media/TraceInstructionsWaitWidget/ajax-loader.gif", QByteArray())
         self.label_Animated.setMovie(self.movie)
         self.movie.setScaledSize(QSize(215, 100))
         self.setAttribute(Qt.WA_TranslucentBackground)
