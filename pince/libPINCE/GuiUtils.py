@@ -27,7 +27,7 @@ def get_icons_directory():
     Returns:
         str: Path to the icons directory
     """
-    return SysUtils.get_current_script_directory() + "/media/icons"
+    return SysUtils.get_current_script_directory() + "/../media/icons"
 
 
 def center(window):
