@@ -15,11 +15,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
+export PYTHONPATH=`cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
 
 # Change this bullcrap when polkit is implemented
 OS=$(lsb_release -si)
 if [ $OS = "Debian" ]; then
-  gksudo python3 PINCE.py
+  gksudo python3 bin/pince-gui.py
 else
-  sudo python3 PINCE.py
+  sudo python3 bin/pince-gui.py
 fi
