@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryRegionsWidget.ui'
 #
-# Created: Wed Feb 15 17:56:42 2017
+# Created: Fri Feb 24 20:41:26 2017
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -62,7 +62,7 @@ class Ui_Form(object):
         Form.setWindowTitle(_translate("Form", "Memory Regions"))
         self.tableWidget_MemoryRegions.setSortingEnabled(True)
         item = self.tableWidget_MemoryRegions.horizontalHeaderItem(0)
-        item.setText(_translate("Form", "Address"))
+        item.setText(_translate("Form", "Regions"))
         item = self.tableWidget_MemoryRegions.horizontalHeaderItem(1)
         item.setText(_translate("Form", "Perms"))
         item = self.tableWidget_MemoryRegions.horizontalHeaderItem(2)
