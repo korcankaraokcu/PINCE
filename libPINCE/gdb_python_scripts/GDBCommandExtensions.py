@@ -448,11 +448,11 @@ class TraceInstructions(gdb.Command):
         breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers, \
         collect_flag_registers, collect_segment_registers, collect_float_registers = eval(arg)
         gdb.execute("delete " + breakpoint)
+        trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
         regex_ret = re.compile(r":\s+ret")  # 0x7f71a4dc5ff8 <poll+72>:	ret
         regex_call = re.compile(r":\s+call")  # 0x7f71a4dc5fe4 <poll+52>:	call   0x7f71a4de1100
         returned_tree = type_defs.TraceInstructionsTree()
         for x in range(max_trace_count):
-            trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
             try:
                 output = pickle.load(open(trace_status_file, "rb"))
                 if output[0] == type_defs.TRACE_STATUS.STATUS_CANCELED:
@@ -472,7 +472,6 @@ class TraceInstructions(gdb.Command):
             returned_tree.add_child(type_defs.TraceInstructionsTree(line_info, collect_dict))
             status_info = (type_defs.TRACE_STATUS.STATUS_TRACING,
                            line_info + " (" + str(x + 1) + "/" + str(max_trace_count) + ")")
-            trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
             pickle.dump(status_info, open(trace_status_file, "wb"))
             if regex_ret.search(line_info):
                 if returned_tree.parent is None:
@@ -493,7 +492,6 @@ class TraceInstructions(gdb.Command):
                 gdb.execute("stepi", to_string=True)
             elif step_mode == type_defs.STEP_MODE.STEP_OVER:
                 gdb.execute("nexti", to_string=True)
-        trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
         status_info = (type_defs.TRACE_STATUS.STATUS_PROCESSING, "Processing the collected data")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         trace_instructions_file = SysUtils.get_trace_instructions_file(pid, breakpoint)
