@@ -395,6 +395,18 @@ def get_trace_instructions_status_file(pid, breakpoint):
     return get_PINCE_IPC_directory(pid) + "/" + breakpoint + "_trace_status.txt"
 
 
+def get_dissect_code_status_file(pid):
+    """Get the path of dissect code status file for given pid
+
+    Args:
+        pid (int,str): PID of the process
+
+    Returns:
+        str: Path of dissect code status file
+    """
+    return get_PINCE_IPC_directory(pid) + "/dissect_code_status.txt"
+
+
 def get_ipc_from_PINCE_file(pid):
     """Get the path of IPC file sent to custom gdb commands from PINCE for given pid
 

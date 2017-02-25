@@ -55,6 +55,7 @@ from GUI.LibPINCEReferenceWidget import Ui_Form as LibPINCEReferenceWidget
 from GUI.LogFileWidget import Ui_Form as LogFileWidget
 from GUI.SearchOpcodeWidget import Ui_Form as SearchOpcodeWidget
 from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
+from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -153,6 +154,10 @@ MEMORY_REGIONS_PRIVDRTY_COL = 9
 MEMORY_REGIONS_REF_COL = 10
 MEMORY_REGIONS_ANON_COL = 11
 MEMORY_REGIONS_SWAP_COL = 12
+
+# represents the index of columns in dissect code table
+DISSECT_CODE_ADDR_COL = 0
+DISSECT_CODE_PATH_COL = 1
 
 # From version 5.5 and onwards, PyQT calls qFatal() when an exception has been encountered
 # So, we must override sys.excepthook to avoid calling of qFatal()
@@ -1215,6 +1220,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionInject_so_file.triggered.connect(self.actionInject_so_file_triggered)
         self.actionCall_Function.triggered.connect(self.actionCall_Function_triggered)
         self.actionSearch_Opcode.triggered.connect(self.actionSearch_Opcode_triggered)
+        self.actionDissect_Code.triggered.connect(self.actionDissect_Code_triggered)
 
     def initialize_help_context_menu(self):
         self.actionLibPINCE.triggered.connect(self.actionLibPINCE_triggered)
@@ -2062,6 +2068,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         end_address = start_address + 0x30000
         self.search_opcode_widget = SearchOpcodeWidgetForm(hex(start_address), hex(end_address), self)
         self.search_opcode_widget.show()
+
+    def actionDissect_Code_triggered(self):
+        self.dissect_code_dialog = DissectCodeDialogForm()
+        self.dissect_code_dialog.exec_()
 
     def actionLibPINCE_triggered(self):
         self.libPINCE_widget = LibPINCEReferenceWidgetForm(is_window=True)
@@ -3200,6 +3210,108 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         address = self.tableWidget_MemoryRegions.item(row, MEMORY_REGIONS_ADDR_COL).text()
         address_int = int(address.split("-")[0], 16)
         self.parent().hex_dump_address(address_int)
+
+
+class DissectCodeDialogForm(QDialog, DissectCodeDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.init_pre_scan_gui()
+        self.update_dissect_results()
+        self.show_memory_regions()
+        self.splitter.setStretchFactor(0, 1)
+        self.checkBox_IncludeSystemRegions.stateChanged.connect(self.show_memory_regions)
+        self.pushButton_StartCancel.clicked.connect(self.pushButton_StartCancel_clicked)
+        self.refresh_timer = QTimer()
+        self.refresh_timer.setInterval(100)
+        self.refresh_timer.timeout.connect(self.refresh_dissect_status)
+
+    class BackgroundThread(QThread):
+        output_ready = pyqtSignal()
+        is_canceled = False
+
+        def __init__(self, region_list):
+            super().__init__()
+            self.region_list = region_list
+
+        def run(self):
+            GDB_Engine.dissect_code(self.region_list)
+            if not self.is_canceled:
+                self.output_ready.emit()
+
+    def init_pre_scan_gui(self):
+        self.is_scanning = False
+        self.is_canceled = False
+        self.pushButton_StartCancel.setText("Start")
+
+    def init_after_scan_gui(self):
+        self.is_scanning = True
+        self.label_ScanInfo.setText("Currently scanning region:")
+        self.pushButton_StartCancel.setText("Cancel")
+
+    def refresh_dissect_status(self):
+        current_region, region_count, string_count, jump_count, call_count = GDB_Engine.get_dissect_code_status()
+        self.label_RegionInfo.setText(current_region)
+        self.label_RegionCountInfo.setText(region_count)
+        self.label_StringReferenceCount.setText(str(string_count))
+        self.label_JumpReferenceCount.setText(str(jump_count))
+        self.label_CallReferenceCount.setText(str(call_count))
+
+    def update_dissect_results(self):
+        GDB_Engine.refresh_dissect_code_data()
+        self.label_StringReferenceCount.setText(str(len(GDB_Engine.referenced_strings_dict)))
+        self.label_JumpReferenceCount.setText(str(len(GDB_Engine.referenced_jumps_dict)))
+        self.label_CallReferenceCount.setText(str(len(GDB_Engine.referenced_calls_dict)))
+
+    def show_memory_regions(self):
+        executable_regions = SysUtils.get_memory_regions_by_perms(GDB_Engine.currentpid)[2]
+        if not self.checkBox_IncludeSystemRegions.isChecked():
+            executable_regions = SysUtils.exclude_system_memory_regions(executable_regions)
+        self.region_list = executable_regions
+        self.tableWidget_ExecutableMemoryRegions.setRowCount(0)
+        self.tableWidget_ExecutableMemoryRegions.setRowCount(len(executable_regions))
+        for row, region in enumerate(executable_regions):
+            self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_ADDR_COL, QTableWidgetItem(region.addr))
+            self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_PATH_COL, QTableWidgetItem(region.path))
+        self.tableWidget_ExecutableMemoryRegions.resizeColumnsToContents()
+        self.tableWidget_ExecutableMemoryRegions.horizontalHeader().setStretchLastSection(True)
+
+    def scan_finished(self):
+        self.init_pre_scan_gui()
+        if not self.is_canceled:
+            self.label_ScanInfo.setText("Scan finished")
+        self.is_canceled = False
+        self.refresh_timer.stop()
+        self.update_dissect_results()
+
+    def pushButton_StartCancel_clicked(self):
+        if self.is_scanning:
+            self.is_canceled = True
+            self.background_thread.is_canceled = True
+            GDB_Engine.cancel_dissect_code()
+            self.refresh_timer.stop()
+            self.update_dissect_results()
+            self.label_ScanInfo.setText("Scan was canceled")
+            self.init_pre_scan_gui()
+        else:
+            if not GDB_Engine.inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+                QMessageBox.information(self, "Error", "Please stop the process first")
+                return
+            selected_rows = self.tableWidget_ExecutableMemoryRegions.selectionModel().selectedRows()
+            if not selected_rows:
+                QMessageBox.information(self, "Error", "Select at least one region")
+                return
+            selected_indexes = [selected_row.row() for selected_row in selected_rows]
+            selected_regions = [self.region_list[selected_index] for selected_index in selected_indexes]
+            self.background_thread = self.BackgroundThread(selected_regions)
+            self.background_thread.output_ready.connect(self.scan_finished)
+            self.init_after_scan_gui()
+            self.refresh_timer.start()
+            self.background_thread.start()
+
+    def closeEvent(self, QCloseEvent):
+        GDB_Engine.cancel_dissect_code()
+        self.refresh_timer.stop()
 
 
 if __name__ == "__main__":
