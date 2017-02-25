@@ -1311,6 +1311,7 @@
     <addaction name="actionInject_so_file"/>
     <addaction name="actionCall_Function"/>
     <addaction name="actionSearch_Opcode"/>
+    <addaction name="actionDissect_Code"/>
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
@@ -1419,6 +1420,11 @@
   <action name="actionMemory_Regions">
    <property name="text">
     <string>Memory Regions</string>
+   </property>
+  </action>
+  <action name="actionDissect_Code">
+   <property name="text">
+    <string>Dissect Code</string>
    </property>
   </action>
  </widget>

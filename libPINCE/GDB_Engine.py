@@ -117,6 +117,10 @@ gdb_async_output = ""
 # Return value of the current send_command call will be an empty string
 cancel_send_command = False
 
+#:doc:last_gdb_command
+# A string. Holds the last command sent to gdb
+last_gdb_command = ""
+
 
 # The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
 
@@ -160,6 +164,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
     global child
     global gdb_output
     global cancel_send_command
+    global last_gdb_command
     with lock_send_command:
         time0 = time()
         if not gdb_initialized:
@@ -176,7 +181,8 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             # Truncating the recv_file because we wouldn't like to see output of previous command in case of errors
             open(recv_file, "w").close()
         command = str(command)
-        print("Last command: " + (command if not control else "Ctrl+" + command))
+        last_gdb_command = command if not control else "Ctrl+" + command
+        print("Last command: " + last_gdb_command)
         if control:
             child.sendcontrol(command)
         else:
@@ -368,6 +374,7 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     global referenced_calls_dict
     global gdb_output
     global cancel_send_command
+    global last_gdb_command
     detach()
 
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
@@ -381,6 +388,7 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     referenced_calls_dict.clear()
     gdb_output = ""
     cancel_send_command = False
+    last_gdb_command = ""
 
     libpince_dir = SysUtils.get_libpince_directory()
     child = pexpect.spawn('sudo LC_NUMERIC=C ' + gdb_path + ' --interpreter=mi', cwd=libpince_dir,
@@ -1700,8 +1708,51 @@ def dissect_code(region_list):
         region_list (list): A list of pmmap_ext objects
         Can be returned from functions like SysUtils.get_memory_regions_by_perms
     """
+    try:
+        send_command("pince-dissect-code", send_with_file=True, file_contents_send=region_list)
+    except:
+        pass
+    # TODO: Fix this magic sleep duration
+    sleep(0.5)
+    refresh_dissect_code_data()
+
+
+def get_dissect_code_status():
+    """Returns the current state of dissect code process
+
+    Returns:
+        tuple:(current_region, current_region_count, referenced_strings_count,
+                               referenced_jumps_count, referenced_calls_count)
+
+        current_region-->(str) Currently scanned memory region
+        current_region_count-->(str) "Region x of y"
+        referenced_strings_count-->(int) Count of referenced strings
+        referenced_jumps_count-->(int) Count of referenced jumps
+        referenced_calls_count-->(int) Count of referenced calls
+
+        Returns a tuple of ("", "", 0, 0, 0) if fails to gather info
+    """
+    dissect_code_status_file = SysUtils.get_dissect_code_status_file(currentpid)
+    try:
+        output = pickle.load(open(dissect_code_status_file, "rb"))
+    except:
+        output = "", "", 0, 0, 0
+    return output
+
+
+def cancel_dissect_code():
+    """Finishes the current dissect code process early on"""
+    if last_gdb_command.find("pince-dissect-code") != -1:
+        cancel_last_command()
+        # TODO: Fix this magic sleep duration
+        sleep(0.5)
+        refresh_dissect_code_data()
+
+
+def refresh_dissect_code_data():
+    """Refreshes the global variables referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict"""
     global referenced_jumps_dict
     global referenced_calls_dict
     global referenced_strings_dict
-    recv = send_command("pince-dissect-code", send_with_file=True, file_contents_send=region_list, recv_with_file=True)
+    recv = send_command("pince-get-dissect-code-data", recv_with_file=True)
     referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict = recv

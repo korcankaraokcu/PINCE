@@ -547,7 +547,7 @@ class DissectCode(gdb.Command):
             self.memory.seek(int_address)
         except ValueError:
             try:  # I really don't know how but gdb actually manages to read addresses bigger than sys.maxsize
-                gdb.execute("x/1xb " + hex(int_address))
+                gdb.execute("x/1xb " + hex(int_address), to_string=True)
                 return True
             except:
                 return False
@@ -565,8 +565,13 @@ class DissectCode(gdb.Command):
         regex_hex = re.compile(r"0x[0-9a-fA-F]+")
         regex_instruction = re.compile(r"\w+")
         region_list = receive_from_pince()
+        dissect_code_status_file = SysUtils.get_dissect_code_status_file(pid)
+        region_count = len(region_list)
         self.memory = open(ScriptUtils.mem_file, "rb")
-        for region in region_list:
+        for region_index, region in enumerate(region_list):
+            status_info = region.addr, "Region " + str(region_index + 1) + " of " + str(region_count), \
+                          len(referenced_strings_dict), len(referenced_jumps_dict), len(referenced_calls_dict)
+            pickle.dump(status_info, open(dissect_code_status_file, "wb"))
             start_addr, end_addr = region.addr.split("-")
             start_addr = "0x" + start_addr
             end_addr = "0x" + end_addr
@@ -606,6 +611,13 @@ class DissectCode(gdb.Command):
                                 referenced_strings_dict[referenced_int_address] = set()
                             referenced_strings_dict[referenced_int_address].add(referrer_int_address)
         self.memory.close()
+
+
+class GetDissectCodeData(gdb.Command):
+    def __init__(self):
+        super(GetDissectCodeData, self).__init__("pince-get-dissect-code-data", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
         send_to_pince((referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict))
 
 
@@ -631,3 +643,4 @@ InitSoFile()
 GetSoFileInformation()
 ExecuteFromSoFile()
 DissectCode()
+GetDissectCodeData()
