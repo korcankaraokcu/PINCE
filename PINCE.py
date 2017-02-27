@@ -1260,6 +1260,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_StackTrace.itemDoubleClicked.connect(self.tableWidget_StackTrace_double_click)
 
     def initialize_disassemble_view(self):
+        self.tableWidget_Disassemble.setColumnWidth(DISAS_ADDR_COL, 300)
+        self.tableWidget_Disassemble.setColumnWidth(DISAS_BYTES_COL, 150)
+        self.tableWidget_Disassemble.setColumnWidth(DISAS_OPCODES_COL, 400)
+
         self.disassemble_last_selected_address_int = 0
         self.disassemble_currently_displayed_address = "0"
         self.widget_Disassemble.wheelEvent = self.widget_Disassemble_wheel_event
@@ -1603,7 +1607,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, QTableWidgetItem(item[2]))
             self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, QTableWidgetItem(comment))
         self.handle_colours(row_of_pc, rows_of_encountered_bookmarks_list, rows_of_encountered_breakpoints_list)
-        self.tableWidget_Disassemble.resizeColumnsToContents()
         self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
 
         # We append the old record to travel history as last action because we wouldn't like to see unnecessary
