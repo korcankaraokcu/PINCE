@@ -102,6 +102,11 @@ status_changed_condition = Condition()
 # See PINCE's AwaitProcessExit class for an example
 process_exited_condition = Condition()
 
+#:doc:gdb_waiting_for_prompt_condition
+# This condition is notified if gdb starts to wait for the prompt output
+# See function send_command for an example
+gdb_waiting_for_prompt_condition = Condition()
+
 #:doc:gdb_output
 # A string. Stores the output of the last command
 gdb_output = ""
@@ -207,13 +212,15 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             else:
                 output = ""
                 child.sendcontrol("c")
-                cancel_send_command = False
+                with gdb_waiting_for_prompt_condition:
+                    gdb_waiting_for_prompt_condition.wait()
         else:
             output = ""
         if type(output) == str:
             output = output.strip()
         time1 = time()
         print(time1 - time0)
+        cancel_send_command = False
         return output
 
 
@@ -245,6 +252,8 @@ def state_observe_thread():
     global gdb_output
     global gdb_async_output
     while True:
+        with gdb_waiting_for_prompt_condition:
+            gdb_waiting_for_prompt_condition.notify_all()
         child.expect_exact("(gdb)")
         print(child.before)  # debug mode on!
         matches = findall(r"stopped\-threads=\"all\"|\*running,thread\-id=\"all\"",
@@ -1712,8 +1721,6 @@ def dissect_code(region_list):
         send_command("pince-dissect-code", send_with_file=True, file_contents_send=region_list)
     except:
         pass
-    # TODO: Fix this magic sleep duration
-    sleep(0.5)
     refresh_dissect_code_data()
 
 
@@ -1744,8 +1751,6 @@ def cancel_dissect_code():
     """Finishes the current dissect code process early on"""
     if last_gdb_command.find("pince-dissect-code") != -1:
         cancel_last_command()
-        # TODO: Fix this magic sleep duration
-        sleep(0.5)
         refresh_dissect_code_data()
 
 
