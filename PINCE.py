@@ -473,6 +473,9 @@ class MainForm(QMainWindow, MainWindow):
         self.console_widget.showMaximized()
 
     def pushButton_NewFirstScan_clicked(self):
+        QMessageBox.information(self, "Error", "Memory searching isn't implemented yet" +
+                                "\nUse GameConqueror for now" +
+                                "\nUse GDB Console to detach&attach PINCE(at top right)")
         print("Exception test")
         x = 0 / 0
         if self.pushButton_NewFirstScan.text() == "First Scan":
