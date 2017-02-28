@@ -582,7 +582,7 @@ class DissectCode(gdb.Command):
                 referrer_address, opcode = line.split(":", maxsplit=1)
                 opcode = opcode.strip()
                 opcode = ScriptUtils.remove_disas_comment(opcode)
-                if opcode.startswith("j"):
+                if opcode.startswith("j") or opcode.startswith("loop"):
                     found = regex_valid_address.search(opcode)
                     if found:
                         referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
