@@ -568,48 +568,60 @@ class DissectCode(gdb.Command):
         dissect_code_status_file = SysUtils.get_dissect_code_status_file(pid)
         region_count = len(region_list)
         self.memory = open(ScriptUtils.mem_file, "rb")
+        buffer = 0x10000
         for region_index, region in enumerate(region_list):
             status_info = region.addr, "Region " + str(region_index + 1) + " of " + str(region_count), \
                           len(referenced_strings_dict), len(referenced_jumps_dict), len(referenced_calls_dict)
             pickle.dump(status_info, open(dissect_code_status_file, "wb"))
             start_addr, end_addr = region.addr.split("-")
-            start_addr = "0x" + start_addr
-            end_addr = "0x" + end_addr
-            disas_data = gdb.execute("disas " + start_addr + "," + end_addr, to_string=True)
-            lines = disas_data.splitlines()
-            del lines[0], lines[-1]  # Get rid of "End of assembler dump" and "Dump of assembler code..." texts
-            for line in lines:
-                referrer_address, opcode = line.split(":", maxsplit=1)
-                opcode = opcode.strip()
-                opcode = ScriptUtils.remove_disas_comment(opcode)
-                if opcode.startswith("j") or opcode.startswith("loop"):
-                    found = regex_valid_address.search(opcode)
-                    if found:
-                        referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
-                        if self.is_memory_valid(referenced_int_address):
-                            instruction = regex_instruction.search(opcode).group(0)
-                            referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
-                            if not referenced_int_address in referenced_jumps_dict:
-                                referenced_jumps_dict[referenced_int_address] = {}
-                            referenced_jumps_dict[referenced_int_address][referrer_int_address] = instruction
-                if opcode.startswith("call"):
-                    found = regex_valid_address.search(opcode)
-                    if found:
-                        referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
-                        if self.is_memory_valid(referenced_int_address):
-                            referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
-                            if not referenced_int_address in referenced_calls_dict:
-                                referenced_calls_dict[referenced_int_address] = set()
-                            referenced_calls_dict[referenced_int_address].add(referrer_int_address)
+            start_addr = int(start_addr, 16)
+            end_addr = int(end_addr, 16)
+            remaining_space = end_addr - start_addr
+            while remaining_space > 0:
+                if remaining_space < buffer:
+                    offset = start_addr + remaining_space
                 else:
-                    found = regex_valid_address.search(opcode)
-                    if found:
-                        referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
-                        if self.is_memory_valid(referenced_int_address):
-                            referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
-                            if not referenced_int_address in referenced_strings_dict:
-                                referenced_strings_dict[referenced_int_address] = set()
-                            referenced_strings_dict[referenced_int_address].add(referrer_int_address)
+                    offset = start_addr + buffer
+                disas_data = gdb.execute("disas " + hex(start_addr) + "," + hex(offset), to_string=True)
+                start_addr = offset
+                remaining_space -= buffer
+                lines = disas_data.splitlines()
+                del lines[0], lines[-1]  # Get rid of "End of assembler dump" and "Dump of assembler code..." texts
+                for line in lines:
+                    referrer_address, opcode = line.split(":", maxsplit=1)
+                    opcode = opcode.strip()
+                    opcode = ScriptUtils.remove_disas_comment(opcode)
+                    if opcode.startswith("j") or opcode.startswith("loop"):
+                        found = regex_valid_address.search(opcode)
+                        if found:
+                            referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
+                            if self.is_memory_valid(referenced_int_address):
+                                instruction = regex_instruction.search(opcode).group(0)
+                                referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
+                                try:
+                                    referenced_jumps_dict[referenced_int_address][referrer_int_address] = instruction
+                                except KeyError:
+                                    referenced_jumps_dict[referenced_int_address] = {}
+                    if opcode.startswith("call"):
+                        found = regex_valid_address.search(opcode)
+                        if found:
+                            referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
+                            if self.is_memory_valid(referenced_int_address):
+                                referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
+                                try:
+                                    referenced_calls_dict[referenced_int_address].add(referrer_int_address)
+                                except KeyError:
+                                    referenced_calls_dict[referenced_int_address] = set()
+                    else:
+                        found = regex_valid_address.search(opcode)
+                        if found:
+                            referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
+                            if self.is_memory_valid(referenced_int_address):
+                                referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
+                                try:
+                                    referenced_strings_dict[referenced_int_address].add(referrer_int_address)
+                                except KeyError:
+                                    referenced_strings_dict[referenced_int_address] = set()
         self.memory.close()
 
 
