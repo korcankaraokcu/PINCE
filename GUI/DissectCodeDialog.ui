@@ -108,7 +108,7 @@
          <item>
           <widget class="QLabel" name="label_4">
            <property name="text">
-            <string>Currently scanned range:</string>
+            <string>Currently scanning range:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
