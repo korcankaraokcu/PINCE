@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'DissectCodeDialog.ui'
 #
-# Created: Wed Mar  1 14:00:40 2017
+# Created: Wed Mar  1 18:00:14 2017
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -133,7 +133,7 @@ class Ui_Dialog(object):
         self.label_ScanInfo.setText(_translate("Dialog", "Selected regions will be scanned"))
         self.label_RegionInfo.setText(_translate("Dialog", "-"))
         self.label_RegionCountInfo.setText(_translate("Dialog", "-"))
-        self.label_4.setText(_translate("Dialog", "Currently scanned range:"))
+        self.label_4.setText(_translate("Dialog", "Currently scanning range:"))
         self.label_CurrentRange.setText(_translate("Dialog", "-"))
         self.label.setText(_translate("Dialog", "String references found:"))
         self.label_2.setText(_translate("Dialog", "Jumps found:"))
