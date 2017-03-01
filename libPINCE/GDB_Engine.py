@@ -1733,17 +1733,18 @@ def get_dissect_code_status():
 
         current_region-->(str) Currently scanned memory region
         current_region_count-->(str) "Region x of y"
+        current_range-->(str) Currently scanned memory range(current buffer)
         referenced_strings_count-->(int) Count of referenced strings
         referenced_jumps_count-->(int) Count of referenced jumps
         referenced_calls_count-->(int) Count of referenced calls
 
-        Returns a tuple of ("", "", 0, 0, 0) if fails to gather info
+        Returns a tuple of ("", "", "", 0, 0, 0) if fails to gather info
     """
     dissect_code_status_file = SysUtils.get_dissect_code_status_file(currentpid)
     try:
         output = pickle.load(open(dissect_code_status_file, "rb"))
     except:
-        output = "", "", 0, 0, 0
+        output = "", "", "", 0, 0, 0
     return output
 
 

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'DissectCodeDialog.ui'
 #
-# Created: Sat Feb 25 21:18:54 2017
+# Created: Wed Mar  1 14:00:40 2017
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -54,17 +54,23 @@ class Ui_Dialog(object):
         self.label_ScanInfo.setObjectName("label_ScanInfo")
         self.verticalLayout.addWidget(self.label_ScanInfo)
         self.label_RegionInfo = QtWidgets.QLabel(self.layoutWidget1)
-        self.label_RegionInfo.setText("")
         self.label_RegionInfo.setAlignment(QtCore.Qt.AlignCenter)
         self.label_RegionInfo.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
         self.label_RegionInfo.setObjectName("label_RegionInfo")
         self.verticalLayout.addWidget(self.label_RegionInfo)
         self.label_RegionCountInfo = QtWidgets.QLabel(self.layoutWidget1)
-        self.label_RegionCountInfo.setText("")
         self.label_RegionCountInfo.setAlignment(QtCore.Qt.AlignCenter)
         self.label_RegionCountInfo.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
         self.label_RegionCountInfo.setObjectName("label_RegionCountInfo")
         self.verticalLayout.addWidget(self.label_RegionCountInfo)
+        self.label_4 = QtWidgets.QLabel(self.layoutWidget1)
+        self.label_4.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_4.setObjectName("label_4")
+        self.verticalLayout.addWidget(self.label_4)
+        self.label_CurrentRange = QtWidgets.QLabel(self.layoutWidget1)
+        self.label_CurrentRange.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_CurrentRange.setObjectName("label_CurrentRange")
+        self.verticalLayout.addWidget(self.label_CurrentRange)
         self.verticalLayout_2.addLayout(self.verticalLayout)
         self.line = QtWidgets.QFrame(self.layoutWidget1)
         self.line.setFrameShape(QtWidgets.QFrame.HLine)
@@ -125,6 +131,10 @@ class Ui_Dialog(object):
         item = self.tableWidget_ExecutableMemoryRegions.horizontalHeaderItem(1)
         item.setText(_translate("Dialog", "Path"))
         self.label_ScanInfo.setText(_translate("Dialog", "Selected regions will be scanned"))
+        self.label_RegionInfo.setText(_translate("Dialog", "-"))
+        self.label_RegionCountInfo.setText(_translate("Dialog", "-"))
+        self.label_4.setText(_translate("Dialog", "Currently scanned range:"))
+        self.label_CurrentRange.setText(_translate("Dialog", "-"))
         self.label.setText(_translate("Dialog", "String references found:"))
         self.label_2.setText(_translate("Dialog", "Jumps found:"))
         self.label_3.setText(_translate("Dialog", "Calls found:"))
