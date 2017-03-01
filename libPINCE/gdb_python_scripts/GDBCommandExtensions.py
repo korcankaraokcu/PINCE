@@ -598,34 +598,37 @@ class DissectCode(gdb.Command):
                     if opcode.startswith("j") or opcode.startswith("loop"):
                         found = regex_valid_address.search(opcode)
                         if found:
-                            referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
-                            if self.is_memory_valid(referenced_int_address):
+                            referenced_address_str = regex_hex.search(found.group(0)).group(0)
+                            referenced_address_int = int(referenced_address_str, 16)
+                            if self.is_memory_valid(referenced_address_int):
                                 instruction = regex_instruction.search(opcode).group(0)
-                                referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
+                                referrer_address = regex_hex.search(referrer_address).group(0)
                                 try:
-                                    referenced_jumps_dict[referenced_int_address][referrer_int_address] = instruction
+                                    referenced_jumps_dict[referenced_address_str][referrer_address] = instruction
                                 except KeyError:
-                                    referenced_jumps_dict[referenced_int_address] = {}
+                                    referenced_jumps_dict[referenced_address_str] = {}
                     if opcode.startswith("call"):
                         found = regex_valid_address.search(opcode)
                         if found:
-                            referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
-                            if self.is_memory_valid(referenced_int_address):
-                                referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
+                            referenced_address_str = regex_hex.search(found.group(0)).group(0)
+                            referenced_address_int = int(referenced_address_str, 16)
+                            if self.is_memory_valid(referenced_address_int):
+                                referrer_address = regex_hex.search(referrer_address).group(0)
                                 try:
-                                    referenced_calls_dict[referenced_int_address].add(referrer_int_address)
+                                    referenced_calls_dict[referenced_address_str].add(referrer_address)
                                 except KeyError:
-                                    referenced_calls_dict[referenced_int_address] = set()
+                                    referenced_calls_dict[referenced_address_str] = set()
                     else:
                         found = regex_valid_address.search(opcode)
                         if found:
-                            referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
-                            if self.is_memory_valid(referenced_int_address):
-                                referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
+                            referenced_address_str = regex_hex.search(found.group(0)).group(0)
+                            referenced_address_int = int(referenced_address_str, 16)
+                            if self.is_memory_valid(referenced_address_int):
+                                referrer_address = regex_hex.search(referrer_address).group(0)
                                 try:
-                                    referenced_strings_dict[referenced_int_address].add(referrer_int_address)
+                                    referenced_strings_dict[referenced_address_str].add(referrer_address)
                                 except KeyError:
-                                    referenced_strings_dict[referenced_int_address] = set()
+                                    referenced_strings_dict[referenced_address_str] = set()
         self.memory.close()
 
 
