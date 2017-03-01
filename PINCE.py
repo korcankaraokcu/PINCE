@@ -3256,9 +3256,11 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         self.pushButton_StartCancel.setText("Cancel")
 
     def refresh_dissect_status(self):
-        current_region, region_count, string_count, jump_count, call_count = GDB_Engine.get_dissect_code_status()
+        current_region, region_count, current_range, \
+        string_count, jump_count, call_count = GDB_Engine.get_dissect_code_status()
         self.label_RegionInfo.setText(current_region)
         self.label_RegionCountInfo.setText(region_count)
+        self.label_CurrentRange.setText(current_range)
         self.label_StringReferenceCount.setText(str(string_count))
         self.label_JumpReferenceCount.setText(str(jump_count))
         self.label_CallReferenceCount.setText(str(call_count))

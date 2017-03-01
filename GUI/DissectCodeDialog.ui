@@ -82,7 +82,7 @@
          <item>
           <widget class="QLabel" name="label_RegionInfo">
            <property name="text">
-            <string/>
+            <string>-</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -95,13 +95,33 @@
          <item>
           <widget class="QLabel" name="label_RegionCountInfo">
            <property name="text">
-            <string/>
+            <string>-</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
            </property>
            <property name="textInteractionFlags">
             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Currently scanned range:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_CurrentRange">
+           <property name="text">
+            <string>-</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>

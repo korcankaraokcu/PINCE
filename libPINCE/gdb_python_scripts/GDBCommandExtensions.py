@@ -570,9 +570,7 @@ class DissectCode(gdb.Command):
         self.memory = open(ScriptUtils.mem_file, "rb")
         buffer = 0x10000
         for region_index, region in enumerate(region_list):
-            status_info = region.addr, "Region " + str(region_index + 1) + " of " + str(region_count), \
-                          len(referenced_strings_dict), len(referenced_jumps_dict), len(referenced_calls_dict)
-            pickle.dump(status_info, open(dissect_code_status_file, "wb"))
+            region_info = region.addr, "Region " + str(region_index + 1) + " of " + str(region_count)
             start_addr, end_addr = region.addr.split("-")
             start_addr = int(start_addr, 16)
             end_addr = int(end_addr, 16)
@@ -582,7 +580,13 @@ class DissectCode(gdb.Command):
                     offset = start_addr + remaining_space
                 else:
                     offset = start_addr + buffer
-                disas_data = gdb.execute("disas " + hex(start_addr) + "," + hex(offset), to_string=True)
+                start_addr_str = hex(start_addr)
+                offset_str = hex(offset)
+                status_info = region_info + (start_addr_str + "-" + offset_str,
+                                             len(referenced_strings_dict), len(referenced_jumps_dict),
+                                             len(referenced_calls_dict))
+                pickle.dump(status_info, open(dissect_code_status_file, "wb"))
+                disas_data = gdb.execute("disas " + start_addr_str + "," + offset_str, to_string=True)
                 start_addr = offset
                 remaining_space -= buffer
                 lines = disas_data.splitlines()
