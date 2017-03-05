@@ -129,6 +129,7 @@ Gibus <lilac66.dev@gmail.com>
   * KMines
   * Torchlight 2
   * Skullgirls
+  * Amnesia: The Dark Descent
   * Steam
   * Firefox
   * WINE Games
