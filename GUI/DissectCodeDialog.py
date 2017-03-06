@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'DissectCodeDialog.ui'
 #
-# Created: Wed Mar  1 18:00:14 2017
-#      by: PyQt5 UI code generator 5.2.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -21,7 +20,6 @@ class Ui_Dialog(object):
         self.layoutWidget = QtWidgets.QWidget(self.splitter)
         self.layoutWidget.setObjectName("layoutWidget")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.layoutWidget)
-        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.checkBox_IncludeSystemRegions = QtWidgets.QCheckBox(self.layoutWidget)
         self.checkBox_IncludeSystemRegions.setObjectName("checkBox_IncludeSystemRegions")
@@ -44,7 +42,6 @@ class Ui_Dialog(object):
         self.layoutWidget1 = QtWidgets.QWidget(self.splitter)
         self.layoutWidget1.setObjectName("layoutWidget1")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.layoutWidget1)
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
@@ -65,10 +62,12 @@ class Ui_Dialog(object):
         self.verticalLayout.addWidget(self.label_RegionCountInfo)
         self.label_4 = QtWidgets.QLabel(self.layoutWidget1)
         self.label_4.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_4.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
         self.label_4.setObjectName("label_4")
         self.verticalLayout.addWidget(self.label_4)
         self.label_CurrentRange = QtWidgets.QLabel(self.layoutWidget1)
         self.label_CurrentRange.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_CurrentRange.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
         self.label_CurrentRange.setObjectName("label_CurrentRange")
         self.verticalLayout.addWidget(self.label_CurrentRange)
         self.verticalLayout_2.addLayout(self.verticalLayout)
