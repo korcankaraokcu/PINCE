@@ -23,6 +23,7 @@ import struct
 import io
 import ctypes
 import os
+import shelve
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -51,16 +52,6 @@ track_watchpoint_dict = {}
 # Format of register_expression_dict: {expression1:expression_info_dict1, expression2:expression_info_dict2, ...}
 # Format: {breakpoint_number1:register_expression_dict1, breakpoint_number2:register_expression_dict2, ...}
 track_breakpoint_dict = {}
-
-# Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
-referenced_strings_dict = {}
-
-# Format of referenced_by_dict: {address1:opcode1, address2:opcode2, ...}
-# Format: {referenced_address1:referenced_by_dict1, referenced_address2:referenced_by_dict2, ...}
-referenced_jumps_dict = {}
-
-# Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
-referenced_calls_dict = {}
 
 
 def receive_from_pince():
@@ -558,9 +549,9 @@ class DissectCode(gdb.Command):
         return True
 
     def invoke(self, arg, from_tty):
-        global referenced_jumps_dict
-        global referenced_calls_dict
-        global referenced_strings_dict
+        referenced_strings_dict=shelve.open(SysUtils.get_referenced_strings_file(pid), writeback=True)
+        referenced_jumps_dict=shelve.open(SysUtils.get_referenced_jumps_file(pid), writeback=True)
+        referenced_calls_dict=shelve.open(SysUtils.get_referenced_calls_file(pid), writeback=True)
         regex_valid_address = re.compile(r"(\s+|\[|,)0x[0-9a-fA-F]+(\s+|\]|,|$)")
         regex_hex = re.compile(r"0x[0-9a-fA-F]+")
         regex_instruction = re.compile(r"\w+")
@@ -631,15 +622,6 @@ class DissectCode(gdb.Command):
                                     referenced_strings_dict[referenced_address_str] = set()
         self.memory.close()
 
-
-class GetDissectCodeData(gdb.Command):
-    def __init__(self):
-        super(GetDissectCodeData, self).__init__("pince-get-dissect-code-data", gdb.COMMAND_USER)
-
-    def invoke(self, arg, from_tty):
-        send_to_pince((referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict))
-
-
 IgnoreErrors()
 CLIOutput()
 ReadMultipleAddresses()
@@ -662,4 +644,3 @@ InitSoFile()
 GetSoFileInformation()
 ExecuteFromSoFile()
 DissectCode()
-GetDissectCodeData()

@@ -3258,6 +3258,8 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
     def refresh_dissect_status(self):
         current_region, region_count, current_range, \
         string_count, jump_count, call_count = GDB_Engine.get_dissect_code_status()
+        if not current_region:
+            return
         self.label_RegionInfo.setText(current_region)
         self.label_RegionCountInfo.setText(region_count)
         self.label_CurrentRange.setText(current_range)
@@ -3266,10 +3268,13 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         self.label_CallReferenceCount.setText(str(call_count))
 
     def update_dissect_results(self):
-        GDB_Engine.refresh_dissect_code_data()
-        self.label_StringReferenceCount.setText(str(len(GDB_Engine.referenced_strings_dict)))
-        self.label_JumpReferenceCount.setText(str(len(GDB_Engine.referenced_jumps_dict)))
-        self.label_CallReferenceCount.setText(str(len(GDB_Engine.referenced_calls_dict)))
+        try:
+            referenced_strings, referenced_jumps, referenced_calls = GDB_Engine.get_dissect_code_data()
+        except:
+            return
+        self.label_StringReferenceCount.setText(str(len(referenced_strings)))
+        self.label_JumpReferenceCount.setText(str(len(referenced_jumps)))
+        self.label_CallReferenceCount.setText(str(len(referenced_calls)))
 
     def show_memory_regions(self):
         executable_regions = SysUtils.get_memory_regions_by_perms(GDB_Engine.currentpid)[2]

@@ -22,6 +22,7 @@ import pexpect
 import os
 import ctypes
 import pickle
+import shelve
 from . import SysUtils
 from . import type_defs
 
@@ -56,22 +57,6 @@ breakpoint_on_hit_dict = {}
 # A dictionary. Holds breakpoint addresses and their conditions
 # Format: {address1:condition1, address2:condition2, ...}
 breakpoint_condition_dict = {}
-
-#:doc:referenced_strings_dict
-# A dictionary. Holds referenced string addresses
-# Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
-referenced_strings_dict = {}
-
-#:doc:referenced_jumps_dict
-# A dictionary. Holds referenced jump addresses
-# Format of referenced_by_dict: {address1:opcode1, address2:opcode2, ...}
-# Format: {referenced_address1:referenced_by_dict1, referenced_address2:referenced_by_dict2, ...}
-referenced_jumps_dict = {}
-
-#:doc:referenced_calls_dict
-# A dictionary. Holds referenced call addresses
-# Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
-referenced_calls_dict = {}
 
 #:doc:chained_breakpoints
 # If an action such as deletion or condition modification happens in one of the breakpoints in a list, others in the
@@ -378,9 +363,6 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     global breakpoint_on_hit_dict
     global breakpoint_condition_dict
     global chained_breakpoints
-    global referenced_strings_dict
-    global referenced_jumps_dict
-    global referenced_calls_dict
     global gdb_output
     global cancel_send_command
     global last_gdb_command
@@ -392,9 +374,6 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     breakpoint_on_hit_dict.clear()
     breakpoint_condition_dict.clear()
     chained_breakpoints.clear()
-    referenced_strings_dict.clear()
-    referenced_jumps_dict.clear()
-    referenced_calls_dict.clear()
     gdb_output = ""
     cancel_send_command = False
     last_gdb_command = ""
@@ -432,6 +411,17 @@ def set_pince_path():
     send_command("source gdb_python_scripts/GDBCommandExtensions.py")
 
 
+def init_referenced_dicts(pid):
+    """Initializes referenced dict shelve databases
+
+    Args:
+        pid (int,str): PID of the attached process
+    """
+    shelve.open(SysUtils.get_referenced_strings_file(pid), "c")
+    shelve.open(SysUtils.get_referenced_jumps_file(pid), "c")
+    shelve.open(SysUtils.get_referenced_calls_file(pid), "c")
+
+
 def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
     """Attaches gdb to the target and initializes some of the global variables
 
@@ -467,6 +457,7 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
     create_gdb_log_file(pid)
     send_command("attach " + str(pid))
     set_pince_path()
+    init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
     await_exit_thread = Thread(target=await_process_exit)
     await_exit_thread.daemon = True
@@ -512,6 +503,7 @@ def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH):
     SysUtils.create_PINCE_IPC_PATH(pid)
     create_gdb_log_file(pid)
     set_pince_path()
+    init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
     await_exit_thread = Thread(target=await_process_exit)
     await_exit_thread.daemon = True
@@ -1711,17 +1703,13 @@ def search_opcode(regex, starting_address, ending_address_or_offset):
 
 def dissect_code(region_list):
     """Searches given regions for jumps, calls and string references
-    Use global variables referenced_strings_dict, referenced_jumps_dict and referenced_calls_dict to see the results
+    Use function get_dissect_code_data() to gather the results
 
     Args:
         region_list (list): A list of pmmap_ext objects
         Can be returned from functions like SysUtils.get_memory_regions_by_perms
     """
-    try:
-        send_command("pince-dissect-code", send_with_file=True, file_contents_send=region_list)
-    except:
-        pass
-    refresh_dissect_code_data()
+    send_command("pince-dissect-code", send_with_file=True, file_contents_send=region_list)
 
 
 def get_dissect_code_status():
@@ -1752,13 +1740,40 @@ def cancel_dissect_code():
     """Finishes the current dissect code process early on"""
     if last_gdb_command.find("pince-dissect-code") != -1:
         cancel_last_command()
-        refresh_dissect_code_data()
 
 
-def refresh_dissect_code_data():
-    """Refreshes the global variables referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict"""
-    global referenced_jumps_dict
-    global referenced_calls_dict
-    global referenced_strings_dict
-    recv = send_command("pince-get-dissect-code-data", recv_with_file=True)
-    referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict = recv
+def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, referenced_calls=True):
+    """Returns shelve.DbfilenameShelf objects of referenced dicts
+
+    Args:
+        referenced_strings (bool): If True, include referenced strings in the returned list
+        referenced_jumps (bool): If True, include referenced jumps in the returned list
+        referenced_calls (bool): If True, include referenced calls in the returned list
+
+    Returns:
+        list: A list of shelve.DbfilenameShelf objects. Can be used as dicts, they are backwards compatible
+
+        For instance, if you call this function with default params, you'll get this--▼
+        [referenced_strings_dict,referenced_jumps_dict,referenced_calls_dict]
+
+        And if you, let's say, pass referenced_jumps as False, you'll get this instead--▼
+        [referenced_strings_dict,referenced_calls_dict]
+
+        referenced_strings_dict-->(shelve.DbfilenameShelf object) Holds referenced string addresses
+        Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
+
+        referenced_jumps_dict-->(shelve.DbfilenameShelf object) Holds referenced jump addresses
+        Format: {referenced_address1:referenced_by_dict1, referenced_address2:referenced_by_dict2, ...}
+        Format of referenced_by_dict: {address1:opcode1, address2:opcode2, ...}
+
+        referenced_calls_dict-->(shelve.DbfilenameShelf object) Holds referenced call addresses
+        Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
+    """
+    dict_list = []
+    if referenced_strings:
+        dict_list.append(shelve.open(SysUtils.get_referenced_strings_file(currentpid), "r"))
+    if referenced_jumps:
+        dict_list.append(shelve.open(SysUtils.get_referenced_jumps_file(currentpid), "r"))
+    if referenced_calls:
+        dict_list.append(shelve.open(SysUtils.get_referenced_calls_file(currentpid), "r"))
+    return dict_list
