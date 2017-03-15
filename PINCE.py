@@ -3236,12 +3236,13 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         output_ready = pyqtSignal()
         is_canceled = False
 
-        def __init__(self, region_list):
+        def __init__(self, region_list, discard_invalid_strings):
             super().__init__()
             self.region_list = region_list
+            self.discard_invalid_strings = discard_invalid_strings
 
         def run(self):
-            GDB_Engine.dissect_code(self.region_list)
+            GDB_Engine.dissect_code(self.region_list, self.discard_invalid_strings)
             if not self.is_canceled:
                 self.output_ready.emit()
 
@@ -3316,7 +3317,8 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
                 return
             selected_indexes = [selected_row.row() for selected_row in selected_rows]
             selected_regions = [self.region_list[selected_index] for selected_index in selected_indexes]
-            self.background_thread = self.BackgroundThread(selected_regions)
+            self.background_thread = self.BackgroundThread(selected_regions,
+                                                           self.checkBox_DiscardInvalidStrings.isChecked())
             self.background_thread.output_ready.connect(self.scan_finished)
             self.init_after_scan_gui()
             self.refresh_timer.start()

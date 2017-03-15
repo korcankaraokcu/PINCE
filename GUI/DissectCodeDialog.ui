@@ -201,6 +201,26 @@
         </widget>
        </item>
        <item>
+        <widget class="Line" name="line_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBox_DiscardInvalidStrings">
+         <property name="toolTip">
+          <string>Entries that can't be decoded as utf-8 won't be included in referenced strings</string>
+         </property>
+         <property name="text">
+          <string>Discard invalid strings</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
           <spacer name="horizontalSpacer_2">

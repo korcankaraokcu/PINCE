@@ -1701,15 +1701,16 @@ def search_opcode(regex, starting_address, ending_address_or_offset):
     return returned_list
 
 
-def dissect_code(region_list):
+def dissect_code(region_list, discard_invalid_strings=True):
     """Searches given regions for jumps, calls and string references
     Use function get_dissect_code_data() to gather the results
 
     Args:
         region_list (list): A list of pmmap_ext objects
         Can be returned from functions like SysUtils.get_memory_regions_by_perms
+        discard_invalid_strings (bool): Entries that can't be decoded as utf-8 won't be included in referenced strings
     """
-    send_command("pince-dissect-code", send_with_file=True, file_contents_send=region_list)
+    send_command("pince-dissect-code", send_with_file=True, file_contents_send=(region_list, discard_invalid_strings))
 
 
 def get_dissect_code_status():
