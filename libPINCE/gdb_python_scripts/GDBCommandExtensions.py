@@ -549,9 +549,9 @@ class DissectCode(gdb.Command):
         return True
 
     def invoke(self, arg, from_tty):
-        referenced_strings_dict=shelve.open(SysUtils.get_referenced_strings_file(pid), writeback=True)
-        referenced_jumps_dict=shelve.open(SysUtils.get_referenced_jumps_file(pid), writeback=True)
-        referenced_calls_dict=shelve.open(SysUtils.get_referenced_calls_file(pid), writeback=True)
+        referenced_strings_dict = shelve.open(SysUtils.get_referenced_strings_file(pid), writeback=True)
+        referenced_jumps_dict = shelve.open(SysUtils.get_referenced_jumps_file(pid), writeback=True)
+        referenced_calls_dict = shelve.open(SysUtils.get_referenced_calls_file(pid), writeback=True)
         regex_valid_address = re.compile(r"(\s+|\[|,)0x[0-9a-fA-F]+(\s+|\]|,|$)")
         regex_hex = re.compile(r"0x[0-9a-fA-F]+")
         regex_instruction = re.compile(r"\w+")
@@ -563,23 +563,23 @@ class DissectCode(gdb.Command):
         for region_index, region in enumerate(region_list):
             region_info = region.addr, "Region " + str(region_index + 1) + " of " + str(region_count)
             start_addr, end_addr = region.addr.split("-")
-            start_addr = int(start_addr, 16)
+            referrer_address_int = int(start_addr, 16)  # Address of the last disassembled instruction
             end_addr = int(end_addr, 16)
-            remaining_space = end_addr - start_addr
-            while remaining_space > 0:
+            region_finished = False
+            while not region_finished:
+                remaining_space = end_addr - referrer_address_int
                 if remaining_space < buffer:
-                    offset = start_addr + remaining_space
+                    offset = end_addr
+                    region_finished = True
                 else:
-                    offset = start_addr + buffer
-                start_addr_str = hex(start_addr)
+                    offset = referrer_address_int + buffer
+                referrer_address_str = hex(referrer_address_int)
                 offset_str = hex(offset)
-                status_info = region_info + (start_addr_str + "-" + offset_str,
+                status_info = region_info + (referrer_address_str + "-" + offset_str,
                                              len(referenced_strings_dict), len(referenced_jumps_dict),
                                              len(referenced_calls_dict))
                 pickle.dump(status_info, open(dissect_code_status_file, "wb"))
-                disas_data = gdb.execute("disas " + start_addr_str + "," + offset_str, to_string=True)
-                start_addr = offset
-                remaining_space -= buffer
+                disas_data = gdb.execute("disas " + referrer_address_str + "," + offset_str, to_string=True)
                 lines = disas_data.splitlines()
                 del lines[0], lines[-1]  # Get rid of "End of assembler dump" and "Dump of assembler code..." texts
                 for line in lines:
@@ -620,7 +620,10 @@ class DissectCode(gdb.Command):
                                     referenced_strings_dict[referenced_address_str].add(referrer_address)
                                 except KeyError:
                                     referenced_strings_dict[referenced_address_str] = set()
+                referrer_address = regex_hex.search(referrer_address).group(0)
+                referrer_address_int = int(referrer_address, 16)
         self.memory.close()
+
 
 IgnoreErrors()
 CLIOutput()
