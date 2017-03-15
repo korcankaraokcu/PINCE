@@ -533,7 +533,7 @@ class DissectCode(gdb.Command):
     def __init__(self):
         super(DissectCode, self).__init__("pince-dissect-code", gdb.COMMAND_USER)
 
-    def is_memory_valid(self, int_address):
+    def is_memory_valid(self, int_address, discard_invalid_strings=False):
         try:
             self.memory.seek(int_address)
         except ValueError:
@@ -543,8 +543,15 @@ class DissectCode(gdb.Command):
             except:
                 return False
         try:
-            self.memory.read(1)
-        except IOError:
+            if discard_invalid_strings:
+                data_read = self.memory.read(100)
+                if data_read.startswith(b"\0"):
+                    return False
+                data_read = data_read.split(b"\0")[0]
+                data_read.decode("utf-8")
+            else:
+                self.memory.read(1)
+        except:
             return False
         return True
 
@@ -555,7 +562,7 @@ class DissectCode(gdb.Command):
         regex_valid_address = re.compile(r"(\s+|\[|,)0x[0-9a-fA-F]+(\s+|\]|,|$)")
         regex_hex = re.compile(r"0x[0-9a-fA-F]+")
         regex_instruction = re.compile(r"\w+")
-        region_list = receive_from_pince()
+        region_list, discard_invalid_strings = receive_from_pince()
         dissect_code_status_file = SysUtils.get_dissect_code_status_file(pid)
         region_count = len(region_list)
         self.memory = open(ScriptUtils.mem_file, "rb")
@@ -598,7 +605,7 @@ class DissectCode(gdb.Command):
                                     referenced_jumps_dict[referenced_address_str][referrer_address] = instruction
                                 except KeyError:
                                     referenced_jumps_dict[referenced_address_str] = {}
-                    if opcode.startswith("call"):
+                    elif opcode.startswith("call"):
                         found = regex_valid_address.search(opcode)
                         if found:
                             referenced_address_str = regex_hex.search(found.group(0)).group(0)
@@ -614,7 +621,7 @@ class DissectCode(gdb.Command):
                         if found:
                             referenced_address_str = regex_hex.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
-                            if self.is_memory_valid(referenced_address_int):
+                            if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
                                 referrer_address = regex_hex.search(referrer_address).group(0)
                                 try:
                                     referenced_strings_dict[referenced_address_str].add(referrer_address)
