@@ -24,6 +24,7 @@ import io
 import ctypes
 import os
 import shelve
+import distorm3
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -537,6 +538,8 @@ class DissectCode(gdb.Command):
         try:
             self.memory.seek(int_address)
         except ValueError:
+            if discard_invalid_strings:
+                return False  # vsyscall only contains code, not string data
             try:  # I really don't know how but gdb actually manages to read addresses bigger than sys.maxsize
                 gdb.execute("x/1xb " + hex(int_address), to_string=True)
                 return True
@@ -556,6 +559,10 @@ class DissectCode(gdb.Command):
         return True
 
     def invoke(self, arg, from_tty):
+        if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+            disas_option = distorm3.Decode64Bits
+        else:
+            disas_option = distorm3.Decode32Bits
         referenced_strings_dict = shelve.open(SysUtils.get_referenced_strings_file(pid), writeback=True)
         referenced_jumps_dict = shelve.open(SysUtils.get_referenced_jumps_file(pid), writeback=True)
         referenced_calls_dict = shelve.open(SysUtils.get_referenced_calls_file(pid), writeback=True)
@@ -570,48 +577,46 @@ class DissectCode(gdb.Command):
         for region_index, region in enumerate(region_list):
             region_info = region.addr, "Region " + str(region_index + 1) + " of " + str(region_count)
             start_addr, end_addr = region.addr.split("-")
-            referrer_address_int = int(start_addr, 16)  # Address of the last disassembled instruction
+            start_addr = int(start_addr, 16)  # Becomes address of the last disassembled instruction later on
             end_addr = int(end_addr, 16)
             region_finished = False
             while not region_finished:
-                remaining_space = end_addr - referrer_address_int
+                remaining_space = end_addr - start_addr
                 if remaining_space < buffer:
-                    offset = end_addr
+                    offset = remaining_space
                     region_finished = True
                 else:
-                    offset = referrer_address_int + buffer
-                referrer_address_str = hex(referrer_address_int)
-                offset_str = hex(offset)
-                status_info = region_info + (referrer_address_str + "-" + offset_str,
+                    offset = buffer
+                status_info = region_info + (hex(start_addr) + "-" + hex(start_addr + offset),
                                              len(referenced_strings_dict), len(referenced_jumps_dict),
                                              len(referenced_calls_dict))
                 pickle.dump(status_info, open(dissect_code_status_file, "wb"))
-                disas_data = gdb.execute("disas " + referrer_address_str + "," + offset_str, to_string=True)
-                lines = disas_data.splitlines()
-                del lines[0], lines[-1]  # Get rid of "End of assembler dump" and "Dump of assembler code..." texts
-                for line in lines:
-                    referrer_address, opcode = line.split(":", maxsplit=1)
-                    opcode = opcode.strip()
-                    opcode = ScriptUtils.remove_disas_comment(opcode)
-                    if opcode.startswith("j") or opcode.startswith("loop"):
+                self.memory.seek(start_addr)
+                code = self.memory.read(offset)
+                disas_data = distorm3.Decode(start_addr, code, disas_option)
+                if not region_finished:
+                    for index in range(5):
+                        del disas_data[-1]  # Get rid of last 5 instructions to ensure correct bytecode translation
+                for (instruction_offset, size, instruction, hexdump) in disas_data:
+                    referrer_address = instruction_offset
+                    opcode = instruction.decode()
+                    if opcode.startswith("J") or opcode.startswith("LOOP"):
                         found = regex_valid_address.search(opcode)
                         if found:
                             referenced_address_str = regex_hex.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int):
-                                instruction = regex_instruction.search(opcode).group(0)
-                                referrer_address = regex_hex.search(referrer_address).group(0)
+                                instruction_only = regex_instruction.search(opcode).group(0).casefold()
                                 try:
-                                    referenced_jumps_dict[referenced_address_str][referrer_address] = instruction
+                                    referenced_jumps_dict[referenced_address_str][referrer_address] = instruction_only
                                 except KeyError:
                                     referenced_jumps_dict[referenced_address_str] = {}
-                    elif opcode.startswith("call"):
+                    elif opcode.startswith("CALL"):
                         found = regex_valid_address.search(opcode)
                         if found:
                             referenced_address_str = regex_hex.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int):
-                                referrer_address = regex_hex.search(referrer_address).group(0)
                                 try:
                                     referenced_calls_dict[referenced_address_str].add(referrer_address)
                                 except KeyError:
@@ -622,13 +627,11 @@ class DissectCode(gdb.Command):
                             referenced_address_str = regex_hex.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
-                                referrer_address = regex_hex.search(referrer_address).group(0)
                                 try:
                                     referenced_strings_dict[referenced_address_str].add(referrer_address)
                                 except KeyError:
                                     referenced_strings_dict[referenced_address_str] = set()
-                referrer_address = regex_hex.search(referrer_address).group(0)
-                referrer_address_int = int(referrer_address, 16)
+                start_addr = referrer_address
         self.memory.close()
 
 

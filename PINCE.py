@@ -3296,6 +3296,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
             self.label_ScanInfo.setText("Scan finished")
         self.is_canceled = False
         self.refresh_timer.stop()
+        self.refresh_dissect_status()
         self.update_dissect_results()
 
     def pushButton_StartCancel_clicked(self):
