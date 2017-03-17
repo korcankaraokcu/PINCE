@@ -21,6 +21,7 @@ sudo apt-get install python3-pip
 sudo apt-get install python3-pyqt5
 sudo pip3 install psutil
 sudo pip3 install pexpect
+sudo pip3 install distorm3
 
 if [ -e libPINCE/gdb_pince/gdb-7.11.1/bin/gdb ] ; then
     echo "GDB has been already compiled&installed, recompile&install? (y/n)"
