@@ -574,6 +574,9 @@ class DissectCode(gdb.Command):
         region_count = len(region_list)
         self.memory = open(ScriptUtils.mem_file, "rb")
         buffer = 0x10000
+        ref_str_count = 0
+        ref_jmp_count = 0
+        ref_call_count = 0
         for region_index, region in enumerate(region_list):
             region_info = region.addr, "Region " + str(region_index + 1) + " of " + str(region_count)
             start_addr, end_addr = region.addr.split("-")
@@ -588,8 +591,7 @@ class DissectCode(gdb.Command):
                 else:
                     offset = buffer
                 status_info = region_info + (hex(start_addr) + "-" + hex(start_addr + offset),
-                                             len(referenced_strings_dict), len(referenced_jumps_dict),
-                                             len(referenced_calls_dict))
+                                             ref_str_count, ref_jmp_count, ref_call_count)
                 pickle.dump(status_info, open(dissect_code_status_file, "wb"))
                 self.memory.seek(start_addr)
                 code = self.memory.read(offset)
@@ -611,6 +613,7 @@ class DissectCode(gdb.Command):
                                     referenced_jumps_dict[referenced_address_str][referrer_address] = instruction_only
                                 except KeyError:
                                     referenced_jumps_dict[referenced_address_str] = {}
+                                    ref_jmp_count += 1
                     elif opcode.startswith("CALL"):
                         found = regex_valid_address.search(opcode)
                         if found:
@@ -621,6 +624,7 @@ class DissectCode(gdb.Command):
                                     referenced_calls_dict[referenced_address_str].add(referrer_address)
                                 except KeyError:
                                     referenced_calls_dict[referenced_address_str] = set()
+                                    ref_call_count += 1
                     else:
                         found = regex_valid_address.search(opcode)
                         if found:
@@ -631,6 +635,7 @@ class DissectCode(gdb.Command):
                                     referenced_strings_dict[referenced_address_str].add(referrer_address)
                                 except KeyError:
                                     referenced_strings_dict[referenced_address_str] = set()
+                                    ref_str_count += 1
                 start_addr = referrer_address
         self.memory.close()
 
