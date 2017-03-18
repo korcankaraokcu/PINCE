@@ -49,7 +49,7 @@ setup(
 
     packages=find_packages(),
 
-    install_requires=['pexpect', 'psutil', 'pyqt5'],
+    install_requires=['pexpect', 'psutil', 'pyqt5', 'distorm3'],
 
     data_files=[("share/" + program_name + media_data[i].replace('.', ''),
                 [icons for icons in glob.glob(media_data[i] + '/*')]) for i in range(1, 4)],
