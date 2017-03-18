@@ -42,7 +42,7 @@
      </attribute>
      <column>
       <property name="text">
-       <string>Address</string>
+       <string>Regions</string>
       </property>
      </column>
      <column>

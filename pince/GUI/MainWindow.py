@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.8
+# Created: Tue Feb 28 00:04:48 2017
+#      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -280,17 +281,6 @@ class Ui_MainWindow(object):
         self.tableWidget_AddressTable.verticalHeader().setDefaultSectionSize(20)
         self.tableWidget_AddressTable.verticalHeader().setMinimumSectionSize(20)
         self.verticalLayout_6.addWidget(self.tableWidget_AddressTable)
-        self.horizontalLayout_10 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_10.setObjectName("horizontalLayout_10")
-        self.pushButton_AdvancedOptions = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_AdvancedOptions.setObjectName("pushButton_AdvancedOptions")
-        self.horizontalLayout_10.addWidget(self.pushButton_AdvancedOptions)
-        spacerItem8 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_10.addItem(spacerItem8)
-        self.pushButton_TableExtras = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_TableExtras.setObjectName("pushButton_TableExtras")
-        self.horizontalLayout_10.addWidget(self.pushButton_TableExtras)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_10)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 751, 22))
@@ -357,6 +347,4 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Type"))
         item = self.tableWidget_AddressTable.horizontalHeaderItem(4)
         item.setText(_translate("MainWindow", "Value"))
-        self.pushButton_AdvancedOptions.setText(_translate("MainWindow", "Advanced Options"))
-        self.pushButton_TableExtras.setText(_translate("MainWindow", "Table Extras"))
 

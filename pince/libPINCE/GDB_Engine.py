@@ -22,6 +22,7 @@ import pexpect
 import os
 import ctypes
 import pickle
+import shelve
 from . import SysUtils
 from . import type_defs
 
@@ -57,22 +58,6 @@ breakpoint_on_hit_dict = {}
 # Format: {address1:condition1, address2:condition2, ...}
 breakpoint_condition_dict = {}
 
-#:doc:referenced_strings_dict
-# A dictionary. Holds referenced string addresses
-# Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
-referenced_strings_dict = {}
-
-#:doc:referenced_jumps_dict
-# A dictionary. Holds referenced jump addresses
-# Format of referenced_by_dict: {address1:opcode1, address2:opcode2, ...}
-# Format: {referenced_address1:referenced_by_dict1, referenced_address2:referenced_by_dict2, ...}
-referenced_jumps_dict = {}
-
-#:doc:referenced_calls_dict
-# A dictionary. Holds referenced call addresses
-# Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
-referenced_calls_dict = {}
-
 #:doc:chained_breakpoints
 # If an action such as deletion or condition modification happens in one of the breakpoints in a list, others in the
 # same list will get affected as well
@@ -102,6 +87,11 @@ status_changed_condition = Condition()
 # See PINCE's AwaitProcessExit class for an example
 process_exited_condition = Condition()
 
+#:doc:gdb_waiting_for_prompt_condition
+# This condition is notified if gdb starts to wait for the prompt output
+# See function send_command for an example
+gdb_waiting_for_prompt_condition = Condition()
+
 #:doc:gdb_output
 # A string. Stores the output of the last command
 gdb_output = ""
@@ -116,6 +106,10 @@ gdb_async_output = ""
 # Use the function cancel_last_command to make use of this variable
 # Return value of the current send_command call will be an empty string
 cancel_send_command = False
+
+#:doc:last_gdb_command
+# A string. Holds the last command sent to gdb
+last_gdb_command = ""
 
 
 # The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
@@ -160,6 +154,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
     global child
     global gdb_output
     global cancel_send_command
+    global last_gdb_command
     with lock_send_command:
         time0 = time()
         if not gdb_initialized:
@@ -176,7 +171,8 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             # Truncating the recv_file because we wouldn't like to see output of previous command in case of errors
             open(recv_file, "w").close()
         command = str(command)
-        print("Last command: " + (command if not control else "Ctrl+" + command))
+        last_gdb_command = command if not control else "Ctrl+" + command
+        print("Last command: " + last_gdb_command)
         if control:
             child.sendcontrol(command)
         else:
@@ -201,13 +197,15 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             else:
                 output = ""
                 child.sendcontrol("c")
-                cancel_send_command = False
+                with gdb_waiting_for_prompt_condition:
+                    gdb_waiting_for_prompt_condition.wait()
         else:
             output = ""
         if type(output) == str:
             output = output.strip()
         time1 = time()
         print(time1 - time0)
+        cancel_send_command = False
         return output
 
 
@@ -239,6 +237,8 @@ def state_observe_thread():
     global gdb_output
     global gdb_async_output
     while True:
+        with gdb_waiting_for_prompt_condition:
+            gdb_waiting_for_prompt_condition.notify_all()
         child.expect_exact("(gdb)")
         print(child.before)  # debug mode on!
         matches = findall(r"stopped\-threads=\"all\"|\*running,thread\-id=\"all\"",
@@ -363,11 +363,9 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     global breakpoint_on_hit_dict
     global breakpoint_condition_dict
     global chained_breakpoints
-    global referenced_strings_dict
-    global referenced_jumps_dict
-    global referenced_calls_dict
     global gdb_output
     global cancel_send_command
+    global last_gdb_command
     detach()
 
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
@@ -376,11 +374,9 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     breakpoint_on_hit_dict.clear()
     breakpoint_condition_dict.clear()
     chained_breakpoints.clear()
-    referenced_strings_dict.clear()
-    referenced_jumps_dict.clear()
-    referenced_calls_dict.clear()
     gdb_output = ""
     cancel_send_command = False
+    last_gdb_command = ""
 
     libpince_dir = SysUtils.get_libpince_directory()
     child = pexpect.spawn('sudo LC_NUMERIC=C ' + gdb_path + ' --interpreter=mi', cwd=libpince_dir,
@@ -413,6 +409,17 @@ def set_pince_path():
     pince_dir = os.path.dirname(libpince_dir)
     send_command('set $PINCE_PATH=' + '"' + pince_dir + '"')
     send_command("source gdb_python_scripts/GDBCommandExtensions.py")
+
+
+def init_referenced_dicts(pid):
+    """Initializes referenced dict shelve databases
+
+    Args:
+        pid (int,str): PID of the attached process
+    """
+    shelve.open(SysUtils.get_referenced_strings_file(pid), "c")
+    shelve.open(SysUtils.get_referenced_jumps_file(pid), "c")
+    shelve.open(SysUtils.get_referenced_calls_file(pid), "c")
 
 
 def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
@@ -450,6 +457,7 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
     create_gdb_log_file(pid)
     send_command("attach " + str(pid))
     set_pince_path()
+    init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
     await_exit_thread = Thread(target=await_process_exit)
     await_exit_thread.daemon = True
@@ -495,6 +503,7 @@ def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH):
     SysUtils.create_PINCE_IPC_PATH(pid)
     create_gdb_log_file(pid)
     set_pince_path()
+    init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
     await_exit_thread = Thread(target=await_process_exit)
     await_exit_thread.daemon = True
@@ -1692,16 +1701,80 @@ def search_opcode(regex, starting_address, ending_address_or_offset):
     return returned_list
 
 
-def dissect_code(region_list):
+def dissect_code(region_list, discard_invalid_strings=True):
     """Searches given regions for jumps, calls and string references
-    Use global variables referenced_strings_dict, referenced_jumps_dict and referenced_calls_dict to see the results
+    Use function get_dissect_code_data() to gather the results
 
     Args:
         region_list (list): A list of pmmap_ext objects
         Can be returned from functions like SysUtils.get_memory_regions_by_perms
+        discard_invalid_strings (bool): Entries that can't be decoded as utf-8 won't be included in referenced strings
     """
-    global referenced_jumps_dict
-    global referenced_calls_dict
-    global referenced_strings_dict
-    recv = send_command("pince-dissect-code", send_with_file=True, file_contents_send=region_list, recv_with_file=True)
-    referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict = recv
+    send_command("pince-dissect-code", send_with_file=True, file_contents_send=(region_list, discard_invalid_strings))
+
+
+def get_dissect_code_status():
+    """Returns the current state of dissect code process
+
+    Returns:
+        tuple:(current_region, current_region_count, referenced_strings_count,
+                               referenced_jumps_count, referenced_calls_count)
+
+        current_region-->(str) Currently scanned memory region
+        current_region_count-->(str) "Region x of y"
+        current_range-->(str) Currently scanned memory range(current buffer)
+        referenced_strings_count-->(int) Count of referenced strings
+        referenced_jumps_count-->(int) Count of referenced jumps
+        referenced_calls_count-->(int) Count of referenced calls
+
+        Returns a tuple of ("", "", "", 0, 0, 0) if fails to gather info
+    """
+    dissect_code_status_file = SysUtils.get_dissect_code_status_file(currentpid)
+    try:
+        output = pickle.load(open(dissect_code_status_file, "rb"))
+    except:
+        output = "", "", "", 0, 0, 0
+    return output
+
+
+def cancel_dissect_code():
+    """Finishes the current dissect code process early on"""
+    if last_gdb_command.find("pince-dissect-code") != -1:
+        cancel_last_command()
+
+
+def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, referenced_calls=True):
+    """Returns shelve.DbfilenameShelf objects of referenced dicts
+
+    Args:
+        referenced_strings (bool): If True, include referenced strings in the returned list
+        referenced_jumps (bool): If True, include referenced jumps in the returned list
+        referenced_calls (bool): If True, include referenced calls in the returned list
+
+    Returns:
+        list: A list of shelve.DbfilenameShelf objects. Can be used as dicts, they are backwards compatible
+
+        For instance, if you call this function with default params, you'll get this--▼
+        [referenced_strings_dict,referenced_jumps_dict,referenced_calls_dict]
+
+        And if you, let's say, pass referenced_jumps as False, you'll get this instead--▼
+        [referenced_strings_dict,referenced_calls_dict]
+
+        referenced_strings_dict-->(shelve.DbfilenameShelf object) Holds referenced string addresses
+        Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
+
+        referenced_jumps_dict-->(shelve.DbfilenameShelf object) Holds referenced jump addresses
+        Format: {referenced_address1:referenced_by_dict1, referenced_address2:referenced_by_dict2, ...}
+        Format of referenced_by_dict: {address1:opcode1, address2:opcode2, ...}
+
+        referenced_calls_dict-->(shelve.DbfilenameShelf object) Holds referenced call addresses
+        Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
+    """
+    dict_list = []
+    if referenced_strings:
+        dict_list.append(shelve.open(SysUtils.get_referenced_strings_file(currentpid), "r"))
+    if referenced_jumps:
+        dict_list.append(shelve.open(SysUtils.get_referenced_jumps_file(currentpid), "r"))
+    if referenced_calls:
+        dict_list.append(shelve.open(SysUtils.get_referenced_calls_file(currentpid), "r"))
+    return dict_list

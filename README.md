@@ -62,6 +62,7 @@ sudo apt-get install python3-pip
 sudo apt-get install python3-pyqt5  
 sudo pip3 install psutil  
 sudo pip3 install pexpect  
+sudo pip3 install distorm3
 ```  
 ###**Compiling gdb with python support**  
 Install the packages required for compiling gdb:
@@ -129,6 +130,7 @@ Gibus <lilac66.dev@gmail.com>
   * KMines
   * Torchlight 2
   * Skullgirls
+  * Amnesia: The Dark Descent
   * Steam
   * Firefox
   * WINE Games

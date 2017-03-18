@@ -1,6 +1,9 @@
 __pycache__/
 .idea/*
-.directory
+*.directory
 *.py[cod]
 *$py.class
 gdb_pince/*
+build/
+dist/
+pince.egg-info/

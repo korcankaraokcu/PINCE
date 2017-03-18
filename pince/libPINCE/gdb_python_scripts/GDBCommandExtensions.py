@@ -23,6 +23,8 @@ import struct
 import io
 import ctypes
 import os
+import shelve
+import distorm3
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -51,16 +53,6 @@ track_watchpoint_dict = {}
 # Format of register_expression_dict: {expression1:expression_info_dict1, expression2:expression_info_dict2, ...}
 # Format: {breakpoint_number1:register_expression_dict1, breakpoint_number2:register_expression_dict2, ...}
 track_breakpoint_dict = {}
-
-# Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
-referenced_strings_dict = {}
-
-# Format of referenced_by_dict: {address1:opcode1, address2:opcode2, ...}
-# Format: {referenced_address1:referenced_by_dict1, referenced_address2:referenced_by_dict2, ...}
-referenced_jumps_dict = {}
-
-# Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
-referenced_calls_dict = {}
 
 
 def receive_from_pince():
@@ -448,11 +440,11 @@ class TraceInstructions(gdb.Command):
         breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers, \
         collect_flag_registers, collect_segment_registers, collect_float_registers = eval(arg)
         gdb.execute("delete " + breakpoint)
+        trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
         regex_ret = re.compile(r":\s+ret")  # 0x7f71a4dc5ff8 <poll+72>:	ret
         regex_call = re.compile(r":\s+call")  # 0x7f71a4dc5fe4 <poll+52>:	call   0x7f71a4de1100
         returned_tree = type_defs.TraceInstructionsTree()
         for x in range(max_trace_count):
-            trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
             try:
                 output = pickle.load(open(trace_status_file, "rb"))
                 if output[0] == type_defs.TRACE_STATUS.STATUS_CANCELED:
@@ -472,7 +464,6 @@ class TraceInstructions(gdb.Command):
             returned_tree.add_child(type_defs.TraceInstructionsTree(line_info, collect_dict))
             status_info = (type_defs.TRACE_STATUS.STATUS_TRACING,
                            line_info + " (" + str(x + 1) + "/" + str(max_trace_count) + ")")
-            trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
             pickle.dump(status_info, open(trace_status_file, "wb"))
             if regex_ret.search(line_info):
                 if returned_tree.parent is None:
@@ -493,7 +484,6 @@ class TraceInstructions(gdb.Command):
                 gdb.execute("stepi", to_string=True)
             elif step_mode == type_defs.STEP_MODE.STEP_OVER:
                 gdb.execute("nexti", to_string=True)
-        trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
         status_info = (type_defs.TRACE_STATUS.STATUS_PROCESSING, "Processing the collected data")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         trace_instructions_file = SysUtils.get_trace_instructions_file(pid, breakpoint)
@@ -544,71 +534,105 @@ class DissectCode(gdb.Command):
     def __init__(self):
         super(DissectCode, self).__init__("pince-dissect-code", gdb.COMMAND_USER)
 
-    def is_memory_valid(self, int_address):
+    def is_memory_valid(self, int_address, discard_invalid_strings=False):
         try:
             self.memory.seek(int_address)
         except ValueError:
+            if discard_invalid_strings:
+                return False  # vsyscall only contains code, not string data
             try:  # I really don't know how but gdb actually manages to read addresses bigger than sys.maxsize
-                gdb.execute("x/1xb " + hex(int_address))
+                gdb.execute("x/1xb " + hex(int_address), to_string=True)
                 return True
             except:
                 return False
         try:
-            self.memory.read(1)
-        except IOError:
+            if discard_invalid_strings:
+                data_read = self.memory.read(100)
+                if data_read.startswith(b"\0"):
+                    return False
+                data_read = data_read.split(b"\0")[0]
+                data_read.decode("utf-8")
+            else:
+                self.memory.read(1)
+        except:
             return False
         return True
 
     def invoke(self, arg, from_tty):
-        global referenced_jumps_dict
-        global referenced_calls_dict
-        global referenced_strings_dict
+        if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+            disas_option = distorm3.Decode64Bits
+        else:
+            disas_option = distorm3.Decode32Bits
+        referenced_strings_dict = shelve.open(SysUtils.get_referenced_strings_file(pid), writeback=True)
+        referenced_jumps_dict = shelve.open(SysUtils.get_referenced_jumps_file(pid), writeback=True)
+        referenced_calls_dict = shelve.open(SysUtils.get_referenced_calls_file(pid), writeback=True)
         regex_valid_address = re.compile(r"(\s+|\[|,)0x[0-9a-fA-F]+(\s+|\]|,|$)")
         regex_hex = re.compile(r"0x[0-9a-fA-F]+")
         regex_instruction = re.compile(r"\w+")
-        region_list = receive_from_pince()
+        region_list, discard_invalid_strings = receive_from_pince()
+        dissect_code_status_file = SysUtils.get_dissect_code_status_file(pid)
+        region_count = len(region_list)
         self.memory = open(ScriptUtils.mem_file, "rb")
-        for region in region_list:
+        buffer = 0x10000
+        for region_index, region in enumerate(region_list):
+            region_info = region.addr, "Region " + str(region_index + 1) + " of " + str(region_count)
             start_addr, end_addr = region.addr.split("-")
-            start_addr = "0x" + start_addr
-            end_addr = "0x" + end_addr
-            disas_data = gdb.execute("disas " + start_addr + "," + end_addr, to_string=True)
-            lines = disas_data.splitlines()
-            del lines[0], lines[-1]  # Get rid of "End of assembler dump" and "Dump of assembler code..." texts
-            for line in lines:
-                referrer_address, opcode = line.split(":", maxsplit=1)
-                opcode = opcode.strip()
-                opcode = ScriptUtils.remove_disas_comment(opcode)
-                if opcode.startswith("j"):
-                    found = regex_valid_address.search(opcode)
-                    if found:
-                        referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
-                        if self.is_memory_valid(referenced_int_address):
-                            instruction = regex_instruction.search(opcode).group(0)
-                            referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
-                            if not referenced_int_address in referenced_jumps_dict:
-                                referenced_jumps_dict[referenced_int_address] = {}
-                            referenced_jumps_dict[referenced_int_address][referrer_int_address] = instruction
-                if opcode.startswith("call"):
-                    found = regex_valid_address.search(opcode)
-                    if found:
-                        referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
-                        if self.is_memory_valid(referenced_int_address):
-                            referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
-                            if not referenced_int_address in referenced_calls_dict:
-                                referenced_calls_dict[referenced_int_address] = set()
-                            referenced_calls_dict[referenced_int_address].add(referrer_int_address)
+            start_addr = int(start_addr, 16)  # Becomes address of the last disassembled instruction later on
+            end_addr = int(end_addr, 16)
+            region_finished = False
+            while not region_finished:
+                remaining_space = end_addr - start_addr
+                if remaining_space < buffer:
+                    offset = remaining_space
+                    region_finished = True
                 else:
-                    found = regex_valid_address.search(opcode)
-                    if found:
-                        referenced_int_address = int(regex_hex.search(found.group(0)).group(0), 16)
-                        if self.is_memory_valid(referenced_int_address):
-                            referrer_int_address = int(regex_hex.search(referrer_address).group(0), 16)
-                            if not referenced_int_address in referenced_strings_dict:
-                                referenced_strings_dict[referenced_int_address] = set()
-                            referenced_strings_dict[referenced_int_address].add(referrer_int_address)
+                    offset = buffer
+                status_info = region_info + (hex(start_addr) + "-" + hex(start_addr + offset),
+                                             len(referenced_strings_dict), len(referenced_jumps_dict),
+                                             len(referenced_calls_dict))
+                pickle.dump(status_info, open(dissect_code_status_file, "wb"))
+                self.memory.seek(start_addr)
+                code = self.memory.read(offset)
+                disas_data = distorm3.Decode(start_addr, code, disas_option)
+                if not region_finished:
+                    for index in range(5):
+                        del disas_data[-1]  # Get rid of last 5 instructions to ensure correct bytecode translation
+                for (instruction_offset, size, instruction, hexdump) in disas_data:
+                    referrer_address = instruction_offset
+                    opcode = instruction.decode()
+                    if opcode.startswith("J") or opcode.startswith("LOOP"):
+                        found = regex_valid_address.search(opcode)
+                        if found:
+                            referenced_address_str = regex_hex.search(found.group(0)).group(0)
+                            referenced_address_int = int(referenced_address_str, 16)
+                            if self.is_memory_valid(referenced_address_int):
+                                instruction_only = regex_instruction.search(opcode).group(0).casefold()
+                                try:
+                                    referenced_jumps_dict[referenced_address_str][referrer_address] = instruction_only
+                                except KeyError:
+                                    referenced_jumps_dict[referenced_address_str] = {}
+                    elif opcode.startswith("CALL"):
+                        found = regex_valid_address.search(opcode)
+                        if found:
+                            referenced_address_str = regex_hex.search(found.group(0)).group(0)
+                            referenced_address_int = int(referenced_address_str, 16)
+                            if self.is_memory_valid(referenced_address_int):
+                                try:
+                                    referenced_calls_dict[referenced_address_str].add(referrer_address)
+                                except KeyError:
+                                    referenced_calls_dict[referenced_address_str] = set()
+                    else:
+                        found = regex_valid_address.search(opcode)
+                        if found:
+                            referenced_address_str = regex_hex.search(found.group(0)).group(0)
+                            referenced_address_int = int(referenced_address_str, 16)
+                            if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
+                                try:
+                                    referenced_strings_dict[referenced_address_str].add(referrer_address)
+                                except KeyError:
+                                    referenced_strings_dict[referenced_address_str] = set()
+                start_addr = referrer_address
         self.memory.close()
-        send_to_pince((referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict))
 
 
 IgnoreErrors()

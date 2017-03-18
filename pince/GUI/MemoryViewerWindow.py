@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.8
+# Created: Fri Feb 24 21:13:01 2017
+#      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -709,6 +710,8 @@ class Ui_MainWindow_MemoryView(object):
         self.actionSearch_Opcode.setObjectName("actionSearch_Opcode")
         self.actionMemory_Regions = QtWidgets.QAction(MainWindow_MemoryView)
         self.actionMemory_Regions.setObjectName("actionMemory_Regions")
+        self.actionDissect_Code = QtWidgets.QAction(MainWindow_MemoryView)
+        self.actionDissect_Code.setObjectName("actionDissect_Code")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
         self.menuView.addAction(self.actionBreakpoints)
@@ -726,6 +729,7 @@ class Ui_MainWindow_MemoryView(object):
         self.menuTools.addAction(self.actionInject_so_file)
         self.menuTools.addAction(self.actionCall_Function)
         self.menuTools.addAction(self.actionSearch_Opcode)
+        self.menuTools.addAction(self.actionDissect_Code)
         self.menuFile.addAction(self.actionLoad_Trace)
         self.menuHelp.addAction(self.actionLibPINCE)
         self.menubar.addAction(self.menuFile.menuAction())
@@ -841,8 +845,10 @@ class Ui_MainWindow_MemoryView(object):
         self.actionGDB_Log_File.setText(_translate("MainWindow_MemoryView", "GDB Log File"))
         self.actionSearch_Opcode.setText(_translate("MainWindow_MemoryView", "Search Opcode"))
         self.actionMemory_Regions.setText(_translate("MainWindow_MemoryView", "Memory Regions"))
+        self.actionDissect_Code.setText(_translate("MainWindow_MemoryView", "Dissect Code"))
 
 from pince.GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
 from pince.GUI.CustomLabels.RegisterLabel import QRegisterLabel
 from pince.GUI.CustomTableViews.AsciiView import QAsciiView
 from pince.GUI.CustomTableViews.HexView import QHexView
+
