@@ -1568,7 +1568,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         program_counter = GDB_Engine.convert_symbol_to_address("$pc", check=False)
         program_counter_int = int(program_counter, 16)
-        row_of_pc = False
+        row_of_pc = -1
         rows_of_encountered_bookmarks_list = []
         breakpoint_list = []
         rows_of_encountered_breakpoints_list = []
@@ -1623,7 +1623,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     # Set colour of a row if a specific address is encountered(e.g $pc, a bookmarked address etc.)
     def handle_colours(self, row_of_pc, encountered_bookmark_list, encountered_breakpoints_list):
-        if row_of_pc:
+        if row_of_pc != -1:
             self.set_row_colour(row_of_pc, PC_COLOUR)
         if encountered_bookmark_list:
             for encountered_row in encountered_bookmark_list:
