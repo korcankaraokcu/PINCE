@@ -1,4 +1,4 @@
-#PINCE  
+# PINCE  
 PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB), focused on games. But it can be used for any reverse-engineering related stuff. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine. PINCE is in development right now, read features part of the project to see what is planned and what is done for now. Also, please read [Wiki Page](https://github.com/korcankaraokcu/PINCE/wiki) of the project to understand how PINCE works.  
   
 *Disclaimer: Do not trust to any source other than [Trusted Sources](#trusted-sources) that claims to have the source code or package for PINCE and remember to report them* <em>**immediately**</em>  
@@ -11,7 +11,7 @@ Pre-release screenshots:
 ![](screenshots/pince4.png)
 ![](screenshots/pince5.png)
 ![](screenshots/pince6.png)
-#Features  
+# Features  
 - **Memory searching** **[Planned]**  (The plan is to use libscanmem by wrapping it with a gdb python script)
 - **Variable Inspection&Modification** **[Done/Basic]**
   * **CheatEngine-like value type support:** Byte to 8 Bytes, Float, Double, Strings(including utf-8 and zero-terminate strings), Array of Bytes **[Done]**
@@ -51,7 +51,7 @@ Pre-release screenshots:
 - **Automatic Trainer Generation:** **[Planned]**  
   * PINCE provides a trainer auto-generated from current address table on demand by using libPINCE and PyQT5 together
 
-#Installing Automatically
+# Installing Automatically
 Just run ```sudo sh install.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. For Archlinux, use the [AUR package](https://aur.archlinux.org/packages/pince-git/) instead. See below if the automatic installation fails.
 #Installing Manually  
 To install PINCE, run this command chain then compile gdb:  
@@ -64,7 +64,7 @@ sudo pip3 install psutil
 sudo pip3 install pexpect  
 sudo pip3 install distorm3
 ```  
-###**Compiling gdb with python support**  
+### **Compiling gdb with python support**  
 Install the packages required for compiling gdb:
 ```
 sudo apt-get install python3-dev  
@@ -90,16 +90,16 @@ Move the contents of gdb/data-directory to share/gdb in case of python part of g
 ```  
 sudo cp -R gdb/data-directory/* share/gdb/
 ```  
-#Running PINCE  
+# Running PINCE  
 Just run ```sh PINCE.sh``` in the PINCE directory
 
-###For developers:  
+### For developers:  
 ```
 sudo apt-get install qttools5-dev-tools (qt5 form designer)
 sudo apt-get install pyqt5-dev-tools (pyuic5)
 ```
   
-#History
+# History
 - A few weeks till 17/01/2016 : Learned GDB, process of analysis
 - 17/01/2016-22/01/2016 : Basic design, grasping of Python3 and Pyqt5, proof-testing
 - 22/01/2016 : First commit
@@ -111,16 +111,16 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - 24/08/2016 : PINCE no more uses linux-inject because of stability issues(a fix for the [race conditions in the inferior](https://github.com/gaffe23/linux-inject/issues/7) would be nice)
 - 26/12/2016 : Debugging is finished
 
-#License
+# License
 GPLv3+. See COPYING file for details
 
-#Contact Information
+# Contact Information
 Korcan Karaokçu <korcankaraokcu@gmail.com>  
 Çağrı Ulaş <cagriulas@gmail.com>  
 Jakob <jakob@memeware.net>  
 Gibus <lilac66.dev@gmail.com>  
 
-#Supported platforms
+# Supported platforms
 - **Platforms tested so far:**
   * Kubuntu 14.04 & 16.04(Also tested on x86 variants)
   * Debian 8.5
@@ -138,6 +138,6 @@ Gibus <lilac66.dev@gmail.com>
     * Undertale
     * Hearthstone(It interrupts itself with SIGUSR1 whenever continued, implementing signal passing on PINCE might be very useful in future)
 
-#Trusted Sources
+# Trusted Sources
   * This page and other github forks
   * [AUR package for Archlinux](https://aur.archlinux.org/packages/pince-git/)
