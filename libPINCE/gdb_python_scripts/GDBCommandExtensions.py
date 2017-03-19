@@ -573,7 +573,7 @@ class DissectCode(gdb.Command):
         dissect_code_status_file = SysUtils.get_dissect_code_status_file(pid)
         region_count = len(region_list)
         self.memory = open(ScriptUtils.mem_file, "rb")
-        buffer = 0x10000
+        buffer = 0x130000  # Has the best avg of 164secs, tested on Torchlight2
         ref_str_count = 0
         ref_jmp_count = 0
         ref_call_count = 0
@@ -597,10 +597,12 @@ class DissectCode(gdb.Command):
                 code = self.memory.read(offset)
                 disas_data = distorm3.Decode(start_addr, code, disas_option)
                 if not region_finished:
+                    last_disas_addr = disas_data[-4][0]
                     for index in range(5):
                         del disas_data[-1]  # Get rid of last 5 instructions to ensure correct bytecode translation
+                else:
+                    last_disas_addr = 0
                 for (instruction_offset, size, instruction, hexdump) in disas_data:
-                    referrer_address = instruction_offset
                     opcode = instruction.decode()
                     if opcode.startswith("J") or opcode.startswith("LOOP"):
                         found = regex_valid_address.search(opcode)
@@ -610,9 +612,11 @@ class DissectCode(gdb.Command):
                             if self.is_memory_valid(referenced_address_int):
                                 instruction_only = regex_instruction.search(opcode).group(0).casefold()
                                 try:
-                                    referenced_jumps_dict[referenced_address_str][referrer_address] = instruction_only
+                                    referenced_jumps_dict[referenced_address_str].append(
+                                        (instruction_offset, instruction_only))
                                 except KeyError:
-                                    referenced_jumps_dict[referenced_address_str] = {}
+                                    referenced_jumps_dict[referenced_address_str] = [
+                                        (instruction_offset, instruction_only)]
                                     ref_jmp_count += 1
                     elif opcode.startswith("CALL"):
                         found = regex_valid_address.search(opcode)
@@ -621,9 +625,9 @@ class DissectCode(gdb.Command):
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int):
                                 try:
-                                    referenced_calls_dict[referenced_address_str].add(referrer_address)
+                                    referenced_calls_dict[referenced_address_str].append(instruction_offset)
                                 except KeyError:
-                                    referenced_calls_dict[referenced_address_str] = set()
+                                    referenced_calls_dict[referenced_address_str] = [instruction_offset]
                                     ref_call_count += 1
                     else:
                         found = regex_valid_address.search(opcode)
@@ -632,11 +636,11 @@ class DissectCode(gdb.Command):
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
                                 try:
-                                    referenced_strings_dict[referenced_address_str].add(referrer_address)
+                                    referenced_strings_dict[referenced_address_str].append(instruction_offset)
                                 except KeyError:
-                                    referenced_strings_dict[referenced_address_str] = set()
+                                    referenced_strings_dict[referenced_address_str] = [instruction_offset]
                                     ref_str_count += 1
-                start_addr = referrer_address
+                start_addr = last_disas_addr
         self.memory.close()
 
 
