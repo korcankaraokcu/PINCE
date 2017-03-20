@@ -538,13 +538,7 @@ class DissectCode(gdb.Command):
         try:
             self.memory.seek(int_address)
         except ValueError:
-            if discard_invalid_strings:
-                return False  # vsyscall only contains code, not string data
-            try:  # I really don't know how but gdb actually manages to read addresses bigger than sys.maxsize
-                gdb.execute("x/1xb " + hex(int_address), to_string=True)
-                return True
-            except:
-                return False
+            return False  # vsyscall is ignored if vDSO is present, so we can safely ignore vsyscall
         try:
             if discard_invalid_strings:
                 data_read = self.memory.read(100)
@@ -573,10 +567,10 @@ class DissectCode(gdb.Command):
         dissect_code_status_file = SysUtils.get_dissect_code_status_file(pid)
         region_count = len(region_list)
         self.memory = open(ScriptUtils.mem_file, "rb")
-        buffer = 0x130000  # Has the best avg of 164secs, tested on Torchlight2
-        ref_str_count = 0
-        ref_jmp_count = 0
-        ref_call_count = 0
+        buffer = 0x130000  # Has the best record of 141secs. Tested on Torchlight2 with 5400 RPM hard drive and 8GB RAM
+        ref_str_count = len(referenced_strings_dict)
+        ref_jmp_count = len(referenced_jumps_dict)
+        ref_call_count = len(referenced_calls_dict)
         for region_index, region in enumerate(region_list):
             region_info = region.addr, "Region " + str(region_index + 1) + " of " + str(region_count)
             start_addr, end_addr = region.addr.split("-")
@@ -598,8 +592,8 @@ class DissectCode(gdb.Command):
                 disas_data = distorm3.Decode(start_addr, code, disas_option)
                 if not region_finished:
                     last_disas_addr = disas_data[-4][0]
-                    for index in range(5):
-                        del disas_data[-1]  # Get rid of last 5 instructions to ensure correct bytecode translation
+                    for index in range(4):
+                        del disas_data[-1]  # Get rid of last 4 instructions to ensure correct bytecode translation
                 else:
                     last_disas_addr = 0
                 for (instruction_offset, size, instruction, hexdump) in disas_data:
