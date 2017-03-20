@@ -1765,7 +1765,7 @@ def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, refere
 
         referenced_jumps_dict-->(shelve.DbfilenameShelf object) Holds referenced jump addresses
         Format: {referenced_address1:referenced_by_list1, referenced_address2:referenced_by_list2, ...}
-        Format of referenced_by_dict: [(address1,opcode1), (address2,opcode2), ...]
+        Format of referenced_by_list: [(address1,opcode1), (address2,opcode2), ...]
 
         referenced_calls_dict-->(shelve.DbfilenameShelf object) Holds referenced call addresses
         Format: {referenced_address1:referrer_address_list1, referenced_address2:referrer_address_list2, ...}
