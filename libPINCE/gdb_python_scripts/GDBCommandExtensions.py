@@ -597,14 +597,14 @@ class DissectCode(gdb.Command):
                 else:
                     last_disas_addr = 0
                 for (instruction_offset, size, instruction, hexdump) in disas_data:
-                    opcode = instruction.decode()
-                    if opcode.startswith("J") or opcode.startswith("LOOP"):
-                        found = regex_valid_address.search(opcode)
+                    instruction = instruction.decode()
+                    if instruction.startswith("J") or instruction.startswith("LOOP"):
+                        found = regex_valid_address.search(instruction)
                         if found:
                             referenced_address_str = regex_hex.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int):
-                                instruction_only = regex_instruction.search(opcode).group(0).casefold()
+                                instruction_only = regex_instruction.search(instruction).group(0).casefold()
                                 try:
                                     referenced_jumps_dict[referenced_address_str].append(
                                         (instruction_offset, instruction_only))
@@ -612,8 +612,8 @@ class DissectCode(gdb.Command):
                                     referenced_jumps_dict[referenced_address_str] = [
                                         (instruction_offset, instruction_only)]
                                     ref_jmp_count += 1
-                    elif opcode.startswith("CALL"):
-                        found = regex_valid_address.search(opcode)
+                    elif instruction.startswith("CALL"):
+                        found = regex_valid_address.search(instruction)
                         if found:
                             referenced_address_str = regex_hex.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
@@ -624,7 +624,7 @@ class DissectCode(gdb.Command):
                                     referenced_calls_dict[referenced_address_str] = [instruction_offset]
                                     ref_call_count += 1
                     else:
-                        found = regex_valid_address.search(opcode)
+                        found = regex_valid_address.search(instruction)
                         if found:
                             referenced_address_str = regex_hex.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
