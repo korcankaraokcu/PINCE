@@ -606,11 +606,10 @@ class DissectCode(gdb.Command):
                             if self.is_memory_valid(referenced_address_int):
                                 instruction_only = regex_instruction.search(instruction).group(0).casefold()
                                 try:
-                                    referenced_jumps_dict[referenced_address_str].append(
-                                        (instruction_offset, instruction_only))
+                                    referenced_jumps_dict[referenced_address_str][instruction_offset] = instruction_only
                                 except KeyError:
-                                    referenced_jumps_dict[referenced_address_str] = [
-                                        (instruction_offset, instruction_only)]
+                                    referenced_jumps_dict[referenced_address_str] = {}
+                                    referenced_jumps_dict[referenced_address_str][instruction_offset] = instruction_only
                                     ref_jmp_count += 1
                     elif instruction.startswith("CALL"):
                         found = regex_valid_address.search(instruction)
@@ -619,9 +618,10 @@ class DissectCode(gdb.Command):
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int):
                                 try:
-                                    referenced_calls_dict[referenced_address_str].append(instruction_offset)
+                                    referenced_calls_dict[referenced_address_str].add(instruction_offset)
                                 except KeyError:
-                                    referenced_calls_dict[referenced_address_str] = [instruction_offset]
+                                    referenced_calls_dict[referenced_address_str] = set()
+                                    referenced_calls_dict[referenced_address_str].add(instruction_offset)
                                     ref_call_count += 1
                     else:
                         found = regex_valid_address.search(instruction)
@@ -630,9 +630,10 @@ class DissectCode(gdb.Command):
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
                                 try:
-                                    referenced_strings_dict[referenced_address_str].append(instruction_offset)
+                                    referenced_strings_dict[referenced_address_str].add(instruction_offset)
                                 except KeyError:
-                                    referenced_strings_dict[referenced_address_str] = [instruction_offset]
+                                    referenced_strings_dict[referenced_address_str] = set()
+                                    referenced_strings_dict[referenced_address_str].add(instruction_offset)
                                     ref_str_count += 1
                 start_addr = last_disas_addr
         self.memory.close()
