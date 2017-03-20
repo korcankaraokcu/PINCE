@@ -74,7 +74,7 @@ class ReadMultipleAddresses(gdb.Command):
         data_read_list = []
         contents_recv = receive_from_pince()
 
-        # contents_recv format: [[address1, index1, length1, unicode1, zero_terminate1],[address2, ...], ...]
+        # contents_recv format: [[address1, index1, length1, unicode1, zero_terminate1, only_bytes], ...]
         for item in contents_recv:
             address = item[0]
             index = item[1]
