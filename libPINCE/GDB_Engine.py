@@ -576,29 +576,6 @@ def value_index_to_gdbcommand(index=int):
     return type_defs.index_to_gdbcommand_dict.get(index, "out of bounds")
 
 
-def check_for_restricted_gdb_symbols(string):
-    """Checks for characters that cause unexpected behaviour
-    "$" makes gdb show it's value history(e.g $4=4th value) and it's convenience variables(such as $pc, $g_thread)
-    Also whitespaces(or simply inputting nothing) makes gdb show the last shown value
-    If you don't like the user to see these, use this function to check the input
-
-    Args:
-        string (str): The str that'll be checked for specific characters
-
-    Returns:
-        bool: True if one of the characters are encountered, False otherwise
-    """
-    string = str(string)
-    string = string.strip()
-    if string is "":
-        return True
-    if search(r"\".*\"", string) or search(r"\{.*\}", string):  # For string and array expressions
-        return False
-    if search(r'\$', string):  # These characters make gdb show it's value history, so they should be avoided
-        return True
-    return False
-
-
 def read_single_address_by_expression(expression, value_index, length=None, is_unicode=False, zero_terminate=True,
                                       check=True):
     """Reads value from the given address or expression by using "x" command of gdb then converts it to the given
@@ -617,14 +594,14 @@ def read_single_address_by_expression(expression, value_index, length=None, is_u
         INDEX_STRING. Ignored otherwise.
         zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
         value_index is INDEX_STRING. Ignored otherwise.
-        check (bool): If True, the parameter expression will be checked by check_for_restricted_gdb_symbols function. If
+        check (bool): If True, the parameter expression will be checked by SysUtils.check_for_restricted_gdb_symbols. If
         any specific character is found, this function will return "??"
 
     Returns:
         str: The value of address read as str. If the expression/address is not valid, returns the string "??"
     """
     if check:
-        if check_for_restricted_gdb_symbols(expression):
+        if SysUtils.check_for_restricted_gdb_symbols(expression):
             return "??"
     if length is "":
         return "??"
@@ -811,23 +788,44 @@ def convert_address_to_symbol(expression, include_address=False, check=True):
         str: Symbol of corresponding address(such as printf, scanf, _start etc.). If no symbols are found, address as
         str returned instead. If include_address is passed as True, returned str looks like this-->0x40c435 <_start+4>
         If the parameter "check" is True, returns the expression itself untouched if any restricted characters are found
-        None: If the address is unreachable
+        If the address is unreachable, a null string returned instead
     """
-    if check:
-        if check_for_restricted_gdb_symbols(expression):
-            return expression
-    result = send_command("x/b " + expression)
-    if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
-        return
-    filteredresult = search(r"0x[0-9a-fA-F]+\s+<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
-    if filteredresult:
-        if include_address:
-            return split(":", filteredresult.group(0))[0]
-        return split(">:", filteredresult.group(0))[0].split("<")[1]
-    else:
-        filteredresult = search(r"0x[0-9a-fA-F]+:\\t", result)  # 0x1f58010:\t0x00647361\n
-        if filteredresult:
-            return split(":", filteredresult.group(0))[0]
+    contents_send = [[expression, include_address, check]]
+    contents_recv = send_command("pince-multiple-addresses-to-symbols", send_with_file=True,
+                                 file_contents_send=contents_send,
+                                 recv_with_file=True)
+    if not contents_recv:
+        print("an error occurred while reading address")
+        contents_recv = ""
+        return contents_recv
+    return contents_recv[0]
+
+
+def convert_multiple_addresses_to_symbols(nested_list):
+    """Optimized version of convert_address_to_symbol for multiple inputs
+
+    Args:
+        nested_list (list): List of *args of the function convert_address_to_symbol. You don't have to pass all of the
+        parameters for each list in the nested_list, only the parameter expression is obligatory. Defaults of the other
+        parameters are the same with the function convert_address_to_symbol.
+
+    Examples:
+        All parameters are passed-->[[expression1, include_address1, check1], ...]
+        Parameters are partially passed-->[[expression1],[expression2, include_address2], ...]
+
+    Returns:
+        list: A list of the symbols read.
+        If any errors occurs while reading symbols, it's ignored and the belonging symbol is returned as null string
+        For instance; If 4 symbols has been read and 3rd one is problematic, the returned list will be
+        [returned_symbol1,returned_symbol2,"",returned_symbol4]
+    """
+    contents_send = nested_list
+    contents_recv = send_command("pince-multiple-addresses-to-symbols", send_with_file=True,
+                                 file_contents_send=contents_send, recv_with_file=True)
+    if not contents_recv:
+        print("an error occurred while reading addresses")
+        contents_recv = []
+    return contents_recv
 
 
 def convert_symbol_to_address(expression, check=True):
@@ -840,14 +838,14 @@ def convert_symbol_to_address(expression, check=True):
     Returns:
         str: Address of corresponding symbol
         If the parameter "check" is True, returns the expression itself untouched if any restricted characters are found
-        None: If the address is unreachable
+        If the address is unreachable, a null string returned instead
     """
     if check:
-        if check_for_restricted_gdb_symbols(expression):
+        if SysUtils.check_for_restricted_gdb_symbols(expression):
             return expression
     result = send_command("x/b " + expression)
     if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
-        return
+        return ""
     filteredresult = search(r"0x[0-9a-fA-F]+\s+<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
     if filteredresult:
         return split(" ", filteredresult.group(0))[0]

@@ -639,6 +639,30 @@ class DissectCode(gdb.Command):
         self.memory.close()
 
 
+class MultipleAddressesToSymbols(gdb.Command):
+    def __init__(self):
+        super(MultipleAddressesToSymbols, self).__init__("pince-multiple-addresses-to-symbols", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        data_read_list = []
+        contents_recv = receive_from_pince()
+
+        # contents_recv format: [[expression1, include_address1, check1], ...]
+        for item in contents_recv:
+            expression = item[0]
+            try:
+                include_address = item[1]
+            except IndexError:
+                include_address = False
+            try:
+                check = item[2]
+            except IndexError:
+                check = True
+            data_read = ScriptUtils.convert_address_to_symbol(expression, include_address, check)
+            data_read_list.append(data_read)
+        send_to_pince(data_read_list)
+
+
 IgnoreErrors()
 CLIOutput()
 ReadMultipleAddresses()
@@ -661,3 +685,4 @@ InitSoFile()
 GetSoFileInformation()
 ExecuteFromSoFile()
 DissectCode()
+MultipleAddressesToSymbols()

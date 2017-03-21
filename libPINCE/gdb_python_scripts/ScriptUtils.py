@@ -212,3 +212,21 @@ def remove_disas_comment(disas_str):
         return disas_str
     else:
         return disas_str[:index]
+
+
+def convert_address_to_symbol(expression, include_address=False, check=True):
+    if check:
+        if SysUtils.check_for_restricted_gdb_symbols(expression):
+            return expression
+    result = gdb.execute("x/b " + expression, to_string=True)
+    if re.search(r"Cannot\s*access\s*memory\s*at\s*address", result):
+        return ""
+    filteredresult = re.search(r"0x[0-9a-fA-F]+\s+<.+>:", result)  # 0x4125d0 <_start>:	0x31
+    if filteredresult:
+        if include_address:
+            return filteredresult.group(0).rsplit(":")[0]
+        return filteredresult.group(0).split("<")[0].strip()
+    else:
+        filteredresult = re.search(r"0x[0-9a-fA-F]+:", result)  # 0x400000:	0x7f
+        if filteredresult:
+            return filteredresult.group(0).rsplit(":")[0]

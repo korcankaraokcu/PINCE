@@ -56,6 +56,7 @@ from GUI.LogFileWidget import Ui_Form as LogFileWidget
 from GUI.SearchOpcodeWidget import Ui_Form as SearchOpcodeWidget
 from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
 from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
+from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -158,6 +159,11 @@ MEMORY_REGIONS_SWAP_COL = 12
 # represents the index of columns in dissect code table
 DISSECT_CODE_ADDR_COL = 0
 DISSECT_CODE_PATH_COL = 1
+
+# represents the index of columns in referenced strings table
+REF_STR_ADDR_COL = 0
+REF_STR_COUNT_COL = 1
+REF_STR_VAL_COL = 2
 
 # From version 5.5 and onwards, PyQT calls qFatal() when an exception has been encountered
 # So, we must override sys.excepthook to avoid calling of qFatal()
@@ -437,7 +443,7 @@ class MainForm(QMainWindow, MainWindow):
             address = self.tableWidget_AddressTable.item(row, ADDR_COL).text()
             index, length, unicode, zero_terminate = GuiUtils.text_to_valuetype(
                 self.tableWidget_AddressTable.item(row, TYPE_COL).text())
-            table_contents.append([address, index, length, unicode, zero_terminate])
+            table_contents.append((address, index, length, unicode, zero_terminate))
         new_table_contents = GDB_Engine.read_multiple_addresses(table_contents)
         for row, item in enumerate(new_table_contents):
             self.tableWidget_AddressTable.setItem(row, VALUE_COL, QTableWidgetItem(str(item)))
@@ -1218,6 +1224,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionFunctions.triggered.connect(self.actionFunctions_triggered)
         self.actionGDB_Log_File.triggered.connect(self.actionGDB_Log_File_triggered)
         self.actionMemory_Regions.triggered.connect(self.actionMemory_Regions_triggered)
+        self.actionReferenced_Strings.triggered.connect(self.actionReferenced_Strings_triggered)
 
     def initialize_tools_context_menu(self):
         self.actionInject_so_file.triggered.connect(self.actionInject_so_file_triggered)
@@ -1451,7 +1458,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if go_to_dialog.exec_():
             expression = go_to_dialog.get_values()
             dest_address = GDB_Engine.convert_symbol_to_address(expression)
-            if dest_address is None:
+            if dest_address is "":
                 QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
                 return
             self.hex_dump_address(int(dest_address, 16))
@@ -1891,14 +1898,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             change_comment = menu.addAction("Change comment")
         go_to_bookmark = menu.addMenu("Go to bookmarked address")
         bookmark_action_list = []
+        nested_list = []
         for item in self.tableWidget_Disassemble.bookmarks.keys():
-
-            # FIXME: Implement and use optimized version of convert_address_to_symbol if performance issues occur
-            current_text = GDB_Engine.convert_address_to_symbol(hex(item), include_address=True)
-            if current_text is None:
-                text_append = hex(item) + "(Unreachable)"
+            item_str = hex(item)
+            nested_list.append((item_str, True))
+        for index, item in enumerate(GDB_Engine.convert_multiple_addresses_to_symbols(nested_list)):
+            if item is "":
+                text_append = nested_list[index][0] + "(Unreachable)"
             else:
-                text_append = current_text
+                text_append = item
             bookmark_action_list.append(go_to_bookmark.addAction(text_append))
         menu.addSeparator()
         toggle_breakpoint = menu.addAction("Toggle Breakpoint[F5]")
@@ -2043,6 +2051,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.memory_regions_widget = MemoryRegionsWidgetForm(self)
         self.memory_regions_widget.show()
 
+    def actionReferenced_Strings_triggered(self):
+        self.ref_str_widget = ReferencedStringsWidgetForm(self)
+        self.ref_str_widget.showMaximized()
+
     def actionInject_so_file_triggered(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the .so file", "", "Shared object library (*.so)")[0]
         if file_path:
@@ -2106,14 +2118,15 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
 
     def refresh_table(self):
         self.listWidget.clear()
+        nested_list = []
         for item in self.parent().tableWidget_Disassemble.bookmarks.keys():
-
-            # FIXME: Implement and use optimized version of convert_address_to_symbol if performance issues occur
-            current_text = GDB_Engine.convert_address_to_symbol(hex(item), include_address=True)
-            if current_text is None:
-                text_append = hex(item) + "(Unreachable)"
+            item_str = hex(item)
+            nested_list.append((item_str, True))
+        for index, item in enumerate(GDB_Engine.convert_multiple_addresses_to_symbols(nested_list)):
+            if item is "":
+                text_append = nested_list[index][0] + "(Unreachable)"
             else:
-                text_append = current_text
+                text_append = item
             self.listWidget.addItem(text_append)
 
     def change_display(self):
@@ -2158,7 +2171,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
             if entry_dialog.exec_():
                 text = entry_dialog.get_values()
                 address = GDB_Engine.convert_symbol_to_address(text)
-                if address is None:
+                if address is "":
                     QMessageBox.information(self, "Error", "Invalid expression or address")
                     return
                 self.parent().bookmark_address(int(address, 16))
@@ -2507,7 +2520,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         value_type = self.comboBox_ValueType.currentIndex()
         for row in range(self.tableWidget_TrackInfo.rowCount()):
             address = self.tableWidget_TrackInfo.item(row, TRACK_BREAKPOINT_ADDR_COL).text()
-            param_list.append([address, value_type, 10, True])
+            param_list.append((address, value_type, 10, True))
         value_list = GDB_Engine.read_multiple_addresses(param_list)
         for row, value in enumerate(value_list):
             self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(str(value)))
@@ -3219,6 +3232,8 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
 
 
 class DissectCodeDialogForm(QDialog, DissectCodeDialog):
+    scan_finished_signal = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -3298,6 +3313,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         self.refresh_timer.stop()
         self.refresh_dissect_status()
         self.update_dissect_results()
+        self.scan_finished_signal.emit()
 
     def pushButton_StartCancel_clicked(self):
         if self.is_scanning:
@@ -3328,6 +3344,63 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
     def closeEvent(self, QCloseEvent):
         GDB_Engine.cancel_dissect_code()
         self.refresh_timer.stop()
+
+
+class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center_to_parent(self)
+        self.setWindowFlags(Qt.Window)
+        self.splitter.setStretchFactor(0, 1)
+        self.listWidget_Referrers.resize(500, self.listWidget_Referrers.height())
+        str_dict, jmp_dict, call_dict = GDB_Engine.get_dissect_code_data()
+        if len(str_dict) == 0 and len(jmp_dict) == 0 and len(call_dict) == 0:
+            confirm_dialog = DialogWithButtonsForm(label_text="You need to dissect code first\nProceed?")
+            if confirm_dialog.exec_():
+                dissect_code_dialog = DissectCodeDialogForm()
+                dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
+                dissect_code_dialog.exec_()
+        str_dict.close()
+        jmp_dict.close()
+        call_dict.close()
+        self.refresh_table()
+        self.tableWidget_References.sortByColumn(REF_STR_ADDR_COL, Qt.AscendingOrder)
+        self.tableWidget_References.selectionModel().currentChanged.connect(self.tableWidget_References_current_changed)
+
+    def refresh_table(self):
+        str_dict = GDB_Engine.get_dissect_code_data(True, False, False)[0]
+        self.tableWidget_References.setRowCount(0)
+        self.tableWidget_References.setRowCount(len(str_dict))
+        nested_list = []
+        for row, item in enumerate(str_dict):
+            item_int = int(item, 16)
+            nested_list.append((item_int, type_defs.VALUE_INDEX.INDEX_STRING, 100, True))
+            table_widget_item = QTableWidgetItem()
+
+            # TODO: Wrong display, should be hex str, not int
+            # TODO: Fix the sorting problem
+            table_widget_item.setData(Qt.EditRole, item_int)
+            self.tableWidget_References.setItem(row, REF_STR_ADDR_COL, table_widget_item)
+            table_widget_item = QTableWidgetItem()
+            table_widget_item.setData(Qt.EditRole, len(str_dict[item]))
+            self.tableWidget_References.setItem(row, REF_STR_COUNT_COL, table_widget_item)
+        str_list = GDB_Engine.read_multiple_addresses(nested_list)
+        for row, item in enumerate(str_list):
+            self.tableWidget_References.setItem(row, REF_STR_VAL_COL, QTableWidgetItem(item))
+        str_dict.close()
+
+    def tableWidget_References_current_changed(self, QModelIndex_current):
+        self.listWidget_Referrers.clear()
+        str_dict = GDB_Engine.get_dissect_code_data(True, False, False)[0]
+        addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_STR_ADDR_COL).text()
+        referrers = str_dict[addr]
+        nested_list = []
+        for item in referrers:
+            nested_list.append((hex(item), True))
+        for item in GDB_Engine.convert_multiple_addresses_to_symbols(nested_list):
+            self.listWidget_Referrers.addItem(item)
+        str_dict.close()
 
 
 if __name__ == "__main__":

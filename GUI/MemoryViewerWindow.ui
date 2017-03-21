@@ -127,8 +127,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>358</width>
-              <height>455</height>
+              <width>336</width>
+              <height>457</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_8">
@@ -1061,8 +1061,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>493</width>
-              <height>181</height>
+              <width>510</width>
+              <height>176</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_11">
@@ -1277,7 +1277,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">
@@ -1290,10 +1290,12 @@
     <addaction name="actionFunctions"/>
     <addaction name="actionGDB_Log_File"/>
     <addaction name="actionMemory_Regions"/>
+    <addaction name="separator"/>
+    <addaction name="actionReferenced_Strings"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
-     <string>Debug</string>
+     <string>&amp;Debug</string>
     </property>
     <addaction name="actionRun"/>
     <addaction name="actionBreak"/>
@@ -1306,7 +1308,7 @@
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
-     <string>Tools</string>
+     <string>&amp;Tools</string>
     </property>
     <addaction name="actionInject_so_file"/>
     <addaction name="actionCall_Function"/>
@@ -1315,7 +1317,7 @@
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>Fi&amp;le</string>
     </property>
     <addaction name="actionLoad_Trace"/>
    </widget>
@@ -1334,97 +1336,102 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionBookmarks">
    <property name="text">
-    <string>Bookmarks</string>
+    <string>&amp;Bookmarks</string>
    </property>
   </action>
   <action name="actionStackTrace_Info">
    <property name="text">
-    <string>StackTrace Info</string>
+    <string>&amp;StackTrace Info</string>
    </property>
   </action>
   <action name="actionInject_so_file">
    <property name="text">
-    <string>Inject .so file</string>
+    <string>&amp;Inject .so file</string>
    </property>
   </action>
   <action name="actionRun">
    <property name="text">
-    <string>Break</string>
+    <string>&amp;Break</string>
    </property>
   </action>
   <action name="actionBreak">
    <property name="text">
-    <string>Run</string>
+    <string>&amp;Run</string>
    </property>
   </action>
   <action name="actionStep">
    <property name="text">
-    <string>Step[F7]</string>
+    <string>&amp;Step[F7]</string>
    </property>
   </action>
   <action name="actionStep_Over">
    <property name="text">
-    <string>Step Over[F8]</string>
+    <string>Step &amp;Over[F8]</string>
    </property>
   </action>
   <action name="actionExecute_Till_Return">
    <property name="text">
-    <string>Execute Till Return[Shift+F8]</string>
+    <string>&amp;Execute Till Return[Shift+F8]</string>
    </property>
   </action>
   <action name="actionToggle_Breakpoint">
    <property name="text">
-    <string>Toggle Breakpoint[F5]</string>
+    <string>&amp;Toggle Breakpoint[F5]</string>
    </property>
   </action>
   <action name="actionBreakpoints">
    <property name="text">
-    <string>Breakpoints</string>
+    <string>B&amp;reakpoints</string>
    </property>
   </action>
   <action name="actionFunctions">
    <property name="text">
-    <string>Functions</string>
+    <string>&amp;Functions</string>
    </property>
   </action>
   <action name="actionSet_Address">
    <property name="text">
-    <string>Set Address[F4]</string>
+    <string>Set Address[&amp;F4]</string>
    </property>
   </action>
   <action name="actionCall_Function">
    <property name="text">
-    <string>Call Function</string>
+    <string>&amp;Call Function</string>
    </property>
   </action>
   <action name="actionLoad_Trace">
    <property name="text">
-    <string>Load Trace</string>
+    <string>&amp;Load Trace</string>
    </property>
   </action>
   <action name="actionLibPINCE">
    <property name="text">
-    <string>libPINCE</string>
+    <string>&amp;libPINCE</string>
    </property>
   </action>
   <action name="actionGDB_Log_File">
    <property name="text">
-    <string>GDB Log File</string>
+    <string>&amp;GDB Log File</string>
    </property>
   </action>
   <action name="actionSearch_Opcode">
    <property name="text">
-    <string>Search Opcode</string>
+    <string>&amp;Search Opcode</string>
    </property>
   </action>
   <action name="actionMemory_Regions">
    <property name="text">
-    <string>Memory Regions</string>
+    <string>&amp;Memory Regions</string>
    </property>
   </action>
   <action name="actionDissect_Code">
    <property name="text">
-    <string>Dissect Code</string>
+    <string>&amp;Dissect Code</string>
+   </property>
+  </action>
+  <action name="actionReferenced_Strings">
+   <property name="text">
+    <string>R&amp;eferenced Strings</string>
    </property>
   </action>
  </widget>
