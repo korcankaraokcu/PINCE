@@ -115,9 +115,10 @@ last_gdb_command = ""
 # The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
 
 def cancel_last_command():
-    """Cancels the last gdb command sent"""
-    global cancel_send_command
-    cancel_send_command = True
+    """Cancels the last gdb command sent if it's still present"""
+    if lock_send_command.locked():
+        global cancel_send_command
+        cancel_send_command = True
 
 
 def send_command(command, control=False, cli_output=False, send_with_file=False, file_contents_send=None,
