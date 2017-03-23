@@ -85,9 +85,10 @@ BREAK_COND_COL = 5
 
 # row colours for disassemble qtablewidget
 PC_COLOUR = Qt.blue
-BOOKMARK_COLOUR = Qt.yellow
+BOOKMARK_COLOUR = Qt.cyan
 DEFAULT_COLOUR = Qt.white
 BREAKPOINT_COLOUR = Qt.red
+REF_COLOUR = Qt.lightGray
 
 # represents the index of columns in address table
 FROZEN_COL = 0  # Frozen
@@ -1585,6 +1586,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         rows_of_encountered_bookmarks_list = []
         breakpoint_list = []
         rows_of_encountered_breakpoints_list = []
+        rows_of_encountered_references_list = []
         breakpoint_info = GDB_Engine.get_breakpoint_info()
         for item in breakpoint_info:
             breakpoint_list.append(int(item.address, 16))
@@ -1599,9 +1601,48 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
+        jmp_dict, call_dict = GDB_Engine.get_dissect_code_data(False, True, True)
         for row, item in enumerate(disas_data):
             comment = ""
             current_address = int(SysUtils.extract_address(item[0]), 16)
+            current_address_str = hex(current_address)
+            jmp_ref_exists = False
+            call_ref_exists = False
+            try:
+                jmp_referrers = jmp_dict[current_address_str]
+                jmp_ref_exists = True
+            except KeyError:
+                pass
+            try:
+                call_referrers = call_dict[current_address_str]
+                call_ref_exists = True
+            except KeyError:
+                pass
+            if jmp_ref_exists or call_ref_exists:
+                tooltip_text = "Referenced by:\n"
+                ref_count = 0
+                if jmp_ref_exists:
+                    for referrer in jmp_referrers:
+                        if ref_count > 30:
+                            break
+                        tooltip_text += "\n" + hex(referrer) + "(" + jmp_referrers[referrer] + ")"
+                        ref_count += 1
+                if call_ref_exists:
+                    for referrer in call_referrers:
+                        if ref_count > 30:
+                            break
+                        tooltip_text += "\n" + hex(referrer) + "(call)"
+                        ref_count += 1
+                if ref_count > 30:
+                    tooltip_text += "\n..."
+                tooltip_text += "\n\nPress 'E' to see a detailed list of referrers"
+                rows_of_encountered_references_list.append(row)
+                real_ref_count = 0
+                if jmp_ref_exists:
+                    real_ref_count += len(jmp_referrers)
+                if call_ref_exists:
+                    real_ref_count += len(call_referrers)
+                item[0] = "{" + str(real_ref_count) + "}" + item[0]
             if current_address == program_counter_int:
                 item[0] = ">>>" + item[0]
                 row_of_pc = row
@@ -1618,11 +1659,23 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     break
             if current_address == self.disassemble_last_selected_address_int:
                 self.tableWidget_Disassemble.selectRow(row)
-            self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, QTableWidgetItem(item[0]))
-            self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, QTableWidgetItem(item[1]))
-            self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, QTableWidgetItem(item[2]))
-            self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, QTableWidgetItem(comment))
-        self.handle_colours(row_of_pc, rows_of_encountered_bookmarks_list, rows_of_encountered_breakpoints_list)
+            addr_item = QTableWidgetItem(item[0])
+            bytes_item = QTableWidgetItem(item[1])
+            opcodes_item = QTableWidgetItem(item[2])
+            comment_item = QTableWidgetItem(comment)
+            if jmp_ref_exists or call_ref_exists:
+                addr_item.setToolTip(tooltip_text)
+                bytes_item.setToolTip(tooltip_text)
+                opcodes_item.setToolTip(tooltip_text)
+                comment_item.setToolTip(tooltip_text)
+            self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, addr_item)
+            self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, bytes_item)
+            self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, opcodes_item)
+            self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, comment_item)
+        jmp_dict.close()
+        call_dict.close()
+        self.handle_colours(row_of_pc, rows_of_encountered_bookmarks_list, rows_of_encountered_breakpoints_list,
+                            rows_of_encountered_references_list)
         self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
 
         # We append the old record to travel history as last action because we wouldn't like to see unnecessary
@@ -1635,15 +1688,19 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.disassemble_expression(self.disassemble_currently_displayed_address)
 
     # Set colour of a row if a specific address is encountered(e.g $pc, a bookmarked address etc.)
-    def handle_colours(self, row_of_pc, encountered_bookmark_list, encountered_breakpoints_list):
-        if row_of_pc != -1:
-            self.set_row_colour(row_of_pc, PC_COLOUR)
+    def handle_colours(self, row_of_pc, encountered_bookmark_list, encountered_breakpoints_list,
+                       encountered_references_list):
+        if encountered_references_list:
+            for encountered_row in encountered_references_list:
+                self.set_row_colour(encountered_row, REF_COLOUR)
         if encountered_bookmark_list:
             for encountered_row in encountered_bookmark_list:
                 self.set_row_colour(encountered_row, BOOKMARK_COLOUR)
         if encountered_breakpoints_list:
             for encountered_row in encountered_breakpoints_list:
                 self.set_row_colour(encountered_row, BREAKPOINT_COLOUR)
+        if row_of_pc != -1:
+            self.set_row_colour(row_of_pc, PC_COLOUR)
 
     # color parameter should be Qt.colour
     def set_row_colour(self, row, colour):
@@ -2100,6 +2157,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionDissect_Code_triggered(self):
         self.dissect_code_dialog = DissectCodeDialogForm()
         self.dissect_code_dialog.exec_()
+        self.refresh_disassemble_view()
 
     def actionLibPINCE_triggered(self):
         self.libPINCE_widget = LibPINCEReferenceWidgetForm(is_window=True)
