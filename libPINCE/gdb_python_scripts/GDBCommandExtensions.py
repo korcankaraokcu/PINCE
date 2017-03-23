@@ -639,6 +639,42 @@ class DissectCode(gdb.Command):
         self.memory.close()
 
 
+class SearchReferencedCalls(gdb.Command):
+    def __init__(self):
+        super(SearchReferencedCalls, self).__init__("pince-search-referenced-calls", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        searched_str, ignore_case, enable_regex = eval(arg)
+        if enable_regex:
+            try:
+                if ignore_case:
+                    regex = re.compile(searched_str, re.IGNORECASE)
+                else:
+                    regex = re.compile(searched_str)
+            except Exception as e:
+                print("An exception occurred while trying to compile the given regex\n", str(e))
+                return
+        str_dict = shelve.open(SysUtils.get_referenced_calls_file(pid), "r")
+        returned_list = []
+        for index, item in enumerate(str_dict):
+            symbol = ScriptUtils.convert_address_to_symbol(item, include_address=True)
+            if symbol is None:
+                continue
+            if enable_regex:
+                if not regex.search(symbol):
+                    continue
+            else:
+                if ignore_case:
+                    if symbol.lower().find(searched_str.lower()) == -1:
+                        continue
+                else:
+                    if symbol.find(searched_str) == -1:
+                        continue
+            returned_list.append((symbol, len(str_dict[item])))
+        str_dict.close()
+        send_to_pince(returned_list)
+
+
 class MultipleAddressesToSymbols(gdb.Command):
     def __init__(self):
         super(MultipleAddressesToSymbols, self).__init__("pince-multiple-addresses-to-symbols", gdb.COMMAND_USER)
@@ -685,4 +721,5 @@ InitSoFile()
 GetSoFileInformation()
 ExecuteFromSoFile()
 DissectCode()
+SearchReferencedCalls()
 MultipleAddressesToSymbols()

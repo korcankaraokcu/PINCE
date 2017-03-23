@@ -1828,6 +1828,8 @@ def search_referenced_strings(searched_str, ignore_case=True, enable_regex=False
         referenced_list.append(item)
     str_list = read_multiple_addresses(nested_list)
     for index, item in enumerate(str_list):
+        if item is "":
+            continue
         if enable_regex:
             if not regex.search(item):
                 continue
@@ -1842,3 +1844,19 @@ def search_referenced_strings(searched_str, ignore_case=True, enable_regex=False
         returned_list.append((ref_addr, len(str_dict[ref_addr]), item))
     str_dict.close()
     return returned_list
+
+
+def search_referenced_calls(searched_str, ignore_case=True, enable_regex=False):
+    """Searches for given str in the referenced calls
+
+    Args:
+        searched_str (str): String that will be searched
+        ignore_case (bool): If True, search will be case insensitive
+        enable_regex (bool): If True, searched_str will be treated as a regex expression
+
+    Returns:
+        list: [[referenced_address1, found_string1], ...]
+        None: If enable_regex is True and searched_str isn't a valid regex expression
+    """
+    param_str = (searched_str, ignore_case, enable_regex)
+    return send_command("pince-search-referenced-calls " + str(param_str), recv_with_file=True)
