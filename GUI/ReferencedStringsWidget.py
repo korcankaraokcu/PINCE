@@ -12,6 +12,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(1025, 530)
+        Form.setToolTip("")
         self.gridLayout = QtWidgets.QGridLayout(Form)
         self.gridLayout.setObjectName("gridLayout")
         self.splitter = QtWidgets.QSplitter(Form)
@@ -66,7 +67,6 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Referenced Strings"))
-        Form.setToolTip(_translate("Form", "Your string will be treated as a regex if checked"))
         self.lineEdit_Regex.setPlaceholderText(_translate("Form", "Enter a string or a python-style regex"))
         self.checkBox_IgnoreCase.setToolTip(_translate("Form", "Ignore case if checked"))
         self.checkBox_IgnoreCase.setText(_translate("Form", "Ignore case"))

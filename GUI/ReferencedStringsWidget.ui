@@ -14,7 +14,7 @@
    <string>Referenced Strings</string>
   </property>
   <property name="toolTip">
-   <string>Your string will be treated as a regex if checked</string>
+   <string/>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
