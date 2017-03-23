@@ -48,6 +48,7 @@ else:
 # If you have to load a .gdbinit file, just load it in this function with command "source"
 def gdbinit():
     gdb.execute("set disassembly-flavor intel")
+    gdb.execute("set case-sensitive auto")
 
 
 # This function is used to avoid errors in gdb scripts, because gdb scripts stop working when encountered an error
