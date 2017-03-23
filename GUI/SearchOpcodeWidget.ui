@@ -26,7 +26,30 @@
      <item>
       <widget class="QLineEdit" name="lineEdit_Regex">
        <property name="placeholderText">
-        <string>Enter a python-style regular expression</string>
+        <string>Enter a string or a python-style regex</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBox_IgnoreCase">
+       <property name="toolTip">
+        <string>Ignore case if checked</string>
+       </property>
+       <property name="text">
+        <string>Ignore case</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBox_Regex">
+       <property name="toolTip">
+        <string>Your string will be treated as a regex if checked</string>
+       </property>
+       <property name="text">
+        <string>Regex</string>
        </property>
       </widget>
      </item>
@@ -80,6 +103,9 @@
      </property>
      <property name="selectionBehavior">
       <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+     <property name="sortingEnabled">
+      <bool>true</bool>
      </property>
      <attribute name="horizontalHeaderStretchLastSection">
       <bool>true</bool>
