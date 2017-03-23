@@ -57,6 +57,7 @@ from GUI.SearchOpcodeWidget import Ui_Form as SearchOpcodeWidget
 from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
 from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
 from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
+from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -164,6 +165,10 @@ DISSECT_CODE_PATH_COL = 1
 REF_STR_ADDR_COL = 0
 REF_STR_COUNT_COL = 1
 REF_STR_VAL_COL = 2
+
+# represents the index of columns in referenced calls table
+REF_CALL_ADDR_COL = 0
+REF_CALL_COUNT_COL = 1
 
 # From version 5.5 and onwards, PyQT calls qFatal() when an exception has been encountered
 # So, we must override sys.excepthook to avoid calling of qFatal()
@@ -1225,6 +1230,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionGDB_Log_File.triggered.connect(self.actionGDB_Log_File_triggered)
         self.actionMemory_Regions.triggered.connect(self.actionMemory_Regions_triggered)
         self.actionReferenced_Strings.triggered.connect(self.actionReferenced_Strings_triggered)
+        self.actionReferenced_Calls.triggered.connect(self.actionReferenced_Calls_triggered)
 
     def initialize_tools_context_menu(self):
         self.actionInject_so_file.triggered.connect(self.actionInject_so_file_triggered)
@@ -2054,6 +2060,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionReferenced_Strings_triggered(self):
         self.ref_str_widget = ReferencedStringsWidgetForm(self)
         self.ref_str_widget.show()
+
+    def actionReferenced_Calls_triggered(self):
+        self.ref_call_widget = ReferencedCallsWidgetForm(self)
+        self.ref_call_widget.show()
 
     def actionInject_so_file_triggered(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the .so file", "", "Shared object library (*.so)")[0]
@@ -3452,6 +3462,111 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         elif action == copy_value:
             QApplication.clipboard().setText(
                 self.tableWidget_References.item(selected_row, REF_STR_VAL_COL).text())
+
+    def listWidget_Referrers_context_menu_event(self, event):
+        selected_row = self.listWidget_Referrers.selectionModel().selectedRows()[-1].row()
+
+        menu = QMenu()
+        copy_address = menu.addAction("Copy Address")
+        font_size = self.listWidget_Referrers.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == copy_address:
+            QApplication.clipboard().setText(
+                self.listWidget_Referrers.item(selected_row).text())
+
+
+class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center_to_parent(self)
+        self.setWindowFlags(Qt.Window)
+        self.tableWidget_References.setColumnWidth(REF_CALL_ADDR_COL, 480)
+        self.splitter.setStretchFactor(0, 1)
+        self.listWidget_Referrers.resize(400, self.listWidget_Referrers.height())
+        self.hex_len = 16 if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64 else 8
+        str_dict, jmp_dict, call_dict = GDB_Engine.get_dissect_code_data()
+        if len(str_dict) == 0 and len(jmp_dict) == 0 and len(call_dict) == 0:
+            confirm_dialog = DialogWithButtonsForm(label_text="You need to dissect code first\nProceed?")
+            if confirm_dialog.exec_():
+                dissect_code_dialog = DissectCodeDialogForm()
+                dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
+                dissect_code_dialog.exec_()
+        str_dict.close()
+        jmp_dict.close()
+        call_dict.close()
+        self.refresh_table()
+        self.tableWidget_References.sortByColumn(REF_CALL_ADDR_COL, Qt.AscendingOrder)
+        self.tableWidget_References.selectionModel().currentChanged.connect(self.tableWidget_References_current_changed)
+        self.listWidget_Referrers.itemDoubleClicked.connect(self.listWidget_Referrers_item_double_clicked)
+        self.tableWidget_References.itemDoubleClicked.connect(self.tableWidget_References_item_double_clicked)
+        self.tableWidget_References.contextMenuEvent = self.tableWidget_References_context_menu_event
+        self.listWidget_Referrers.contextMenuEvent = self.listWidget_Referrers_context_menu_event
+        self.pushButton_Search.clicked.connect(self.refresh_table)
+        self.shortcut_search = QShortcut(QKeySequence("Return"), self)
+        self.shortcut_search.activated.connect(self.refresh_table)
+
+    def pad_hex(self, hex_str):
+        index = hex_str.find(" ")
+        if index == -1:
+            self_len = 0
+        else:
+            self_len = len(hex_str) - index
+        return '0x' + hex_str[2:].zfill(self.hex_len + self_len)
+
+    def refresh_table(self):
+        item_list = GDB_Engine.search_referenced_calls(self.lineEdit_Regex.text(),
+                                                       self.checkBox_IgnoreCase.isChecked(),
+                                                       self.checkBox_Regex.isChecked())
+        if item_list is None:
+            QMessageBox.information(self, "Error",
+                                    "An exception occurred while trying to compile the given regex\n")
+            return
+        self.tableWidget_References.setSortingEnabled(False)
+        self.tableWidget_References.setRowCount(0)
+        self.tableWidget_References.setRowCount(len(item_list))
+        for row, item in enumerate(item_list):
+            self.tableWidget_References.setItem(row, REF_CALL_ADDR_COL, QTableWidgetItem(self.pad_hex(item[0])))
+            table_widget_item = QTableWidgetItem()
+            table_widget_item.setData(Qt.EditRole, item[1])
+            self.tableWidget_References.setItem(row, REF_CALL_COUNT_COL, table_widget_item)
+        self.tableWidget_References.setSortingEnabled(True)
+
+    def tableWidget_References_current_changed(self, QModelIndex_current):
+        if QModelIndex_current.row() < 0:
+            return
+        self.listWidget_Referrers.clear()
+        str_dict = GDB_Engine.get_dissect_code_data(False, False, True)[0]
+        addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_CALL_ADDR_COL).text()
+        referrers = str_dict[hex(int(SysUtils.extract_address(addr), 16))]
+        nested_list = []
+        for item in referrers:
+            nested_list.append((hex(item), True))
+        for item in GDB_Engine.convert_multiple_addresses_to_symbols(nested_list):
+            self.listWidget_Referrers.addItem(self.pad_hex(item))
+        self.listWidget_Referrers.sortItems(Qt.AscendingOrder)
+        str_dict.close()
+
+    def tableWidget_References_item_double_clicked(self, index):
+        row = index.row()
+        address = self.tableWidget_References.item(row, REF_CALL_ADDR_COL).text()
+        self.parent().disassemble_expression(SysUtils.extract_address(address), append_to_travel_history=True)
+
+    def listWidget_Referrers_item_double_clicked(self, item):
+        self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
+
+    def tableWidget_References_context_menu_event(self, event):
+        selected_row = self.tableWidget_References.selectionModel().selectedRows()[-1].row()
+
+        menu = QMenu()
+        copy_address = menu.addAction("Copy Address")
+        font_size = self.tableWidget_References.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == copy_address:
+            QApplication.clipboard().setText(
+                self.tableWidget_References.item(selected_row, REF_CALL_ADDR_COL).text())
 
     def listWidget_Referrers_context_menu_event(self, event):
         selected_row = self.listWidget_Referrers.selectionModel().selectedRows()[-1].row()

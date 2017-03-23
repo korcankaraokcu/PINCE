@@ -1292,6 +1292,7 @@
     <addaction name="actionMemory_Regions"/>
     <addaction name="separator"/>
     <addaction name="actionReferenced_Strings"/>
+    <addaction name="actionReferenced_Calls"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -1432,6 +1433,11 @@
   <action name="actionReferenced_Strings">
    <property name="text">
     <string>R&amp;eferenced Strings</string>
+   </property>
+  </action>
+  <action name="actionReferenced_Calls">
+   <property name="text">
+    <string>Referenced Calls</string>
    </property>
   </action>
  </widget>

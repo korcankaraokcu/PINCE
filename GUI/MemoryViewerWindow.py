@@ -703,6 +703,8 @@ class Ui_MainWindow_MemoryView(object):
         self.actionDissect_Code.setObjectName("actionDissect_Code")
         self.actionReferenced_Strings = QtWidgets.QAction(MainWindow_MemoryView)
         self.actionReferenced_Strings.setObjectName("actionReferenced_Strings")
+        self.actionReferenced_Calls = QtWidgets.QAction(MainWindow_MemoryView)
+        self.actionReferenced_Calls.setObjectName("actionReferenced_Calls")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
         self.menuView.addAction(self.actionBreakpoints)
@@ -711,6 +713,7 @@ class Ui_MainWindow_MemoryView(object):
         self.menuView.addAction(self.actionMemory_Regions)
         self.menuView.addSeparator()
         self.menuView.addAction(self.actionReferenced_Strings)
+        self.menuView.addAction(self.actionReferenced_Calls)
         self.menuDebug.addAction(self.actionRun)
         self.menuDebug.addAction(self.actionBreak)
         self.menuDebug.addSeparator()
@@ -840,6 +843,7 @@ class Ui_MainWindow_MemoryView(object):
         self.actionMemory_Regions.setText(_translate("MainWindow_MemoryView", "&Memory Regions"))
         self.actionDissect_Code.setText(_translate("MainWindow_MemoryView", "&Dissect Code"))
         self.actionReferenced_Strings.setText(_translate("MainWindow_MemoryView", "R&eferenced Strings"))
+        self.actionReferenced_Calls.setText(_translate("MainWindow_MemoryView", "Referenced Calls"))
 
 from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
 from GUI.CustomLabels.RegisterLabel import QRegisterLabel
