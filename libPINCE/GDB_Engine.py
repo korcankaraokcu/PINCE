@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from re import search, split, findall, escape, compile
+from re import search, split, findall, escape, compile, IGNORECASE
 from threading import Lock, Thread, Condition
 from time import sleep, time
 import pexpect
@@ -1777,3 +1777,49 @@ def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, refere
     if referenced_calls:
         dict_list.append(shelve.open(SysUtils.get_referenced_calls_file(currentpid), "r"))
     return dict_list
+
+
+def search_referenced_strings(searched_str, ignore_case=True, enable_regex=False):
+    """Searches for given str in the referenced strings
+
+    Args:
+        searched_str (str): String that will be searched
+        ignore_case (bool): If True, case will be ignored in the search process
+        enable_regex (bool): If True, searched_str will be treated as a regex expression
+
+    Returns:
+        list: [[referenced_address1, reference_count1, found_string1], ...]
+        None: If enable_regex is True and searched_str isn't a valid regex expression
+    """
+    if enable_regex:
+        try:
+            if ignore_case:
+                regex = compile(searched_str, IGNORECASE)
+            else:
+                regex = compile(searched_str)
+        except Exception as e:
+            print("An exception occurred while trying to compile the given regex\n", str(e))
+            return
+    str_dict = get_dissect_code_data(True, False, False)[0]
+    nested_list = []
+    referenced_list = []
+    returned_list = []
+    for item in str_dict:
+        nested_list.append((int(item, 16), type_defs.VALUE_INDEX.INDEX_STRING, 100, True))
+        referenced_list.append(item)
+    str_list = read_multiple_addresses(nested_list)
+    for index, item in enumerate(str_list):
+        if enable_regex:
+            if not regex.search(item):
+                continue
+        else:
+            if ignore_case:
+                if item.lower().find(searched_str.lower()) == -1:
+                    continue
+            else:
+                if item.find(searched_str) == -1:
+                    continue
+        ref_addr = referenced_list[index]
+        returned_list.append((ref_addr, len(str_dict[ref_addr]), item))
+    str_dict.close()
+    return returned_list
