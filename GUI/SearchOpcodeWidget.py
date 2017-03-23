@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'SearchOpcodeWidget.ui'
 #
-# Created: Tue Feb 14 17:34:28 2017
-#      by: PyQt5 UI code generator 5.2.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -23,6 +22,13 @@ class Ui_Form(object):
         self.lineEdit_Regex = QtWidgets.QLineEdit(Form)
         self.lineEdit_Regex.setObjectName("lineEdit_Regex")
         self.horizontalLayout_2.addWidget(self.lineEdit_Regex)
+        self.checkBox_IgnoreCase = QtWidgets.QCheckBox(Form)
+        self.checkBox_IgnoreCase.setChecked(True)
+        self.checkBox_IgnoreCase.setObjectName("checkBox_IgnoreCase")
+        self.horizontalLayout_2.addWidget(self.checkBox_IgnoreCase)
+        self.checkBox_Regex = QtWidgets.QCheckBox(Form)
+        self.checkBox_Regex.setObjectName("checkBox_Regex")
+        self.horizontalLayout_2.addWidget(self.checkBox_Regex)
         self.pushButton_Search = QtWidgets.QPushButton(Form)
         self.pushButton_Search.setObjectName("pushButton_Search")
         self.horizontalLayout_2.addWidget(self.pushButton_Search)
@@ -70,10 +76,15 @@ class Ui_Form(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Search for Opcodes"))
         self.label_3.setText(_translate("Form", "Regex"))
-        self.lineEdit_Regex.setPlaceholderText(_translate("Form", "Enter a python-style regular expression"))
+        self.lineEdit_Regex.setPlaceholderText(_translate("Form", "Enter a string or a python-style regex"))
+        self.checkBox_IgnoreCase.setToolTip(_translate("Form", "Ignore case if checked"))
+        self.checkBox_IgnoreCase.setText(_translate("Form", "Ignore case"))
+        self.checkBox_Regex.setToolTip(_translate("Form", "Your string will be treated as a regex if checked"))
+        self.checkBox_Regex.setText(_translate("Form", "Regex"))
         self.pushButton_Search.setText(_translate("Form", "Search(Enter)"))
         self.label.setText(_translate("Form", "Start"))
         self.label_2.setText(_translate("Form", "End"))
+        self.tableWidget_Opcodes.setSortingEnabled(True)
         item = self.tableWidget_Opcodes.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Address"))
         item = self.tableWidget_Opcodes.horizontalHeaderItem(1)

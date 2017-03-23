@@ -3111,25 +3111,31 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         start_address = self.lineEdit_Start.text()
         end_address = self.lineEdit_End.text()
         regex = self.lineEdit_Regex.text()
+        ignore_case = self.checkBox_IgnoreCase.isChecked()
+        enable_regex = self.checkBox_Regex.isChecked()
         self.loading_dialog = LoadingDialogForm(self)
         self.background_thread = self.loading_dialog.background_thread
         self.background_thread.overrided_func = lambda: self.process_data(regex=regex, start_address=start_address,
-                                                                          end_address=end_address)
+                                                                          end_address=end_address,
+                                                                          ignore_case=ignore_case,
+                                                                          enable_regex=enable_regex)
         self.background_thread.output_ready.connect(self.apply_data)
         self.loading_dialog.exec_()
 
-    def process_data(self, regex, start_address, end_address):
-        return GDB_Engine.search_opcode(regex, start_address, end_address)
+    def process_data(self, regex, start_address, end_address, ignore_case, enable_regex):
+        return GDB_Engine.search_opcode(regex, start_address, end_address, ignore_case, enable_regex)
 
     def apply_data(self, disas_data):
         if disas_data is None:
             QMessageBox.information(self, "Error", "Given regex isn't valid, check terminal to see the error")
             return
+        self.tableWidget_Opcodes.setSortingEnabled(False)
         self.tableWidget_Opcodes.setRowCount(0)
         self.tableWidget_Opcodes.setRowCount(len(disas_data))
         for row, item in enumerate(disas_data):
             self.tableWidget_Opcodes.setItem(row, SEARCH_OPCODE_ADDR_COL, QTableWidgetItem(item[0]))
             self.tableWidget_Opcodes.setItem(row, SEARCH_OPCODE_OPCODES_COL, QTableWidgetItem(item[1]))
+        self.tableWidget_Opcodes.setSortingEnabled(True)
 
     def pushButton_Help_clicked(self):
         text = "\tHere's some useful regex examples:" \
@@ -3387,7 +3393,6 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         return '0x' + hex_str[2:].zfill(self.hex_len + self_len)
 
     def refresh_table(self):
-        self.tableWidget_References.setSortingEnabled(False)
         item_list = GDB_Engine.search_referenced_strings(self.lineEdit_Regex.text(),
                                                          self.checkBox_IgnoreCase.isChecked(),
                                                          self.checkBox_Regex.isChecked())
@@ -3395,6 +3400,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
             QMessageBox.information(self, "Error",
                                     "An exception occurred while trying to compile the given regex\n")
             return
+        self.tableWidget_References.setSortingEnabled(False)
         self.tableWidget_References.setRowCount(0)
         self.tableWidget_References.setRowCount(len(item_list))
         for row, item in enumerate(item_list):

@@ -1666,26 +1666,32 @@ def find_entry_point():
         return filtered_result.group(0).split()[2]
 
 
-def search_opcode(regex, starting_address, ending_address_or_offset):
-    """Searches for specified regex in the disassembled output
+def search_opcode(searched_str, starting_address, ending_address_or_offset, ignore_case=True, enable_regex=False):
+    """Searches for the given str in the disassembled output
 
     Args:
-        regex (str): A python regex to search opcodes
+        searched_str (str): String that will be searched
         starting_address (str): Any gdb expression
         ending_address_or_offset (str): If you pass this parameter as an offset, you should add "+" in front of it
         (e.g "+42" or "+0x42"). If you pass this parameter as an hex address, the address range between the expression
         and the secondary address is disassembled.
         If the second parameter is an address. it always should be bigger than the first address.
+        ignore_case (bool): If True, case will be ignored in the search process
+        enable_regex (bool): If True, searched_str will be treated as a regex expression
 
     Returns:
         list: A list of str values in this format-->[[address1,opcodes1],[address2, ...], ...]
-        None: If given regex isn't valid
+        None: If enable_regex is True and given regex isn't valid
     """
-    try:
-        opcode_regex = compile(regex)
-    except Exception as e:
-        print("An exception occurred while trying to compile the given regex\n", str(e))
-        return
+    if enable_regex:
+        try:
+            if ignore_case:
+                regex = compile(searched_str, IGNORECASE)
+            else:
+                regex = compile(searched_str)
+        except Exception as e:
+            print("An exception occurred while trying to compile the given regex\n", str(e))
+            return
     returned_list = []
 
     # 0x00007fd81d4c7400 <__printf+0>:\tsub    rsp,0xd8\n
@@ -1695,8 +1701,17 @@ def search_opcode(regex, starting_address, ending_address_or_offset):
     for item in filtered_output:
         disas_list = item[:-2].split("\\t")  # Get rid of "\n" then split by "\t"
         address, opcode = disas_list
-        if opcode_regex.search(opcode):
-            returned_list.append(disas_list)
+        if enable_regex:
+            if not regex.search(opcode):
+                continue
+        else:
+            if ignore_case:
+                if opcode.lower().find(searched_str.lower()) == -1:
+                    continue
+            else:
+                if opcode.find(searched_str) == -1:
+                    continue
+        returned_list.append(disas_list)
     return returned_list
 
 
