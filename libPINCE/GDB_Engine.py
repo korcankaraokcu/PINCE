@@ -963,7 +963,7 @@ def find_address_of_closest_instruction(address, how_many_instructions_to_look_f
                 return SysUtils.get_region_info(currentpid, address).start
 
 
-def get_info_about_address(expression):
+def get_address_info(expression):
     """Runs the gdb command "info symbol" for given expression and returns the result of it
 
     Args:
@@ -975,7 +975,7 @@ def get_info_about_address(expression):
     return send_command("info symbol " + expression, cli_output=True)
 
 
-def get_info_about_symbol(expression):
+def get_symbol_info(expression):
     """Runs the gdb command "info address" for given expression and returns the result of it
 
     Args:

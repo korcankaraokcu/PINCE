@@ -2135,7 +2135,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         except AttributeError:
             return
         current_address = SysUtils.extract_address(current_item)
-        self.lineEdit_Info.setText(GDB_Engine.get_info_about_address(current_address))
+        self.lineEdit_Info.setText(GDB_Engine.get_address_info(current_address))
         self.lineEdit_Comment.setText(self.parent().tableWidget_Disassemble.bookmarks[int(current_address, 16)])
 
     def listWidget_item_double_clicked(self, item):
@@ -2803,7 +2803,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         symbol = self.tableWidget_SymbolInfo.item(QModelIndex_current.row(), FUNCTIONS_INFO_SYMBOL_COL).text()
         self.textBrowser_AddressInfo.clear()
         for item in SysUtils.split_symbol(symbol):
-            info = GDB_Engine.get_info_about_symbol(item)
+            info = GDB_Engine.get_symbol_info(item)
             self.textBrowser_AddressInfo.append(info)
 
     def tableWidget_SymbolInfo_context_menu_event(self, event):
