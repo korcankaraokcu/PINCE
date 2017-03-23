@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'FunctionsInfoWidget.ui'
 #
-# Created: Fri Dec  9 14:18:45 2016
-#      by: PyQt5 UI code generator 5.2.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -36,6 +35,10 @@ class Ui_Form(object):
         self.lineEdit_SearchInput = QtWidgets.QLineEdit(Form)
         self.lineEdit_SearchInput.setObjectName("lineEdit_SearchInput")
         self.horizontalLayout.addWidget(self.lineEdit_SearchInput)
+        self.checkBox_IgnoreCase = QtWidgets.QCheckBox(Form)
+        self.checkBox_IgnoreCase.setChecked(True)
+        self.checkBox_IgnoreCase.setObjectName("checkBox_IgnoreCase")
+        self.horizontalLayout.addWidget(self.checkBox_IgnoreCase)
         self.pushButton_Search = QtWidgets.QPushButton(Form)
         self.pushButton_Search.setObjectName("pushButton_Search")
         self.horizontalLayout.addWidget(self.pushButton_Search)
@@ -54,10 +57,13 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Functions"))
+        self.tableWidget_SymbolInfo.setSortingEnabled(True)
         item = self.tableWidget_SymbolInfo.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Address"))
         item = self.tableWidget_SymbolInfo.horizontalHeaderItem(1)
         item.setText(_translate("Form", "Symbol"))
         self.lineEdit_SearchInput.setPlaceholderText(_translate("Form", "Enter the regex. Leave blank to see all functions"))
+        self.checkBox_IgnoreCase.setToolTip(_translate("Form", "Ignore case if checked"))
+        self.checkBox_IgnoreCase.setText(_translate("Form", "Ignore case"))
         self.pushButton_Search.setText(_translate("Form", "Search(Enter)"))
 

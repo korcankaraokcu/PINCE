@@ -2778,16 +2778,18 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
 
     def refresh_table(self):
         input_text = self.lineEdit_SearchInput.text()
+        ignore_case = self.checkBox_IgnoreCase.isChecked()
         self.loading_dialog = LoadingDialogForm(self)
         self.background_thread = self.loading_dialog.background_thread
-        self.background_thread.overrided_func = lambda: self.process_data(gdb_input=input_text)
+        self.background_thread.overrided_func = lambda: self.process_data(gdb_input=input_text, ignore_case=ignore_case)
         self.background_thread.output_ready.connect(self.apply_data)
         self.loading_dialog.exec_()
 
-    def process_data(self, gdb_input):
-        return GDB_Engine.get_info_about_functions(gdb_input)
+    def process_data(self, gdb_input, ignore_case):
+        return GDB_Engine.search_functions(gdb_input, ignore_case)
 
     def apply_data(self, output):
+        self.tableWidget_SymbolInfo.setSortingEnabled(False)
         self.tableWidget_SymbolInfo.setRowCount(0)
         self.tableWidget_SymbolInfo.setRowCount(len(output))
         for row, item in enumerate(output):
@@ -2795,6 +2797,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
             self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_SYMBOL_COL, QTableWidgetItem(item.symbol))
         self.tableWidget_SymbolInfo.resizeColumnsToContents()
         self.tableWidget_SymbolInfo.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_SymbolInfo.setSortingEnabled(True)
 
     def tableWidget_SymbolInfo_current_changed(self, QModelIndex_current):
         symbol = self.tableWidget_SymbolInfo.item(QModelIndex_current.row(), FUNCTIONS_INFO_SYMBOL_COL).text()

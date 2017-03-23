@@ -987,16 +987,20 @@ def get_info_about_symbol(expression):
     return send_command("info address " + expression, cli_output=True)
 
 
-def get_info_about_functions(expression):
+def search_functions(expression, ignore_case=True):
     """Runs the gdb command "info functions" for given expression and returns the result of it
 
     Args:
         expression (str): Any gdb expression
+        ignore_case (bool): If True, search will be case insensitive
 
     Returns:
         list: A list of type_defs.tuple_function_info
     """
+    if ignore_case:
+        send_command("set case-sensitive off")
     output = send_command("info functions " + expression, cli_output=True)
+    send_command("set case-sensitive auto")
     parsed_info = findall(r"0x[0-9a-fA-F]+\s+.*", output)
     returned_list = []
     for item in parsed_info:
@@ -1676,7 +1680,7 @@ def search_opcode(searched_str, starting_address, ending_address_or_offset, igno
         (e.g "+42" or "+0x42"). If you pass this parameter as an hex address, the address range between the expression
         and the secondary address is disassembled.
         If the second parameter is an address. it always should be bigger than the first address.
-        ignore_case (bool): If True, case will be ignored in the search process
+        ignore_case (bool): If True, search will be case insensitive
         enable_regex (bool): If True, searched_str will be treated as a regex expression
 
     Returns:
@@ -1799,7 +1803,7 @@ def search_referenced_strings(searched_str, ignore_case=True, enable_regex=False
 
     Args:
         searched_str (str): String that will be searched
-        ignore_case (bool): If True, case will be ignored in the search process
+        ignore_case (bool): If True, search will be case insensitive
         enable_regex (bool): If True, searched_str will be treated as a regex expression
 
     Returns:

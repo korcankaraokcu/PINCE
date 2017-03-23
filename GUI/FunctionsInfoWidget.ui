@@ -25,6 +25,9 @@
      <property name="selectionBehavior">
       <enum>QAbstractItemView::SelectRows</enum>
      </property>
+     <property name="sortingEnabled">
+      <bool>true</bool>
+     </property>
      <attribute name="horizontalHeaderStretchLastSection">
       <bool>true</bool>
      </attribute>
@@ -55,6 +58,19 @@
       <widget class="QLineEdit" name="lineEdit_SearchInput">
        <property name="placeholderText">
         <string>Enter the regex. Leave blank to see all functions</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBox_IgnoreCase">
+       <property name="toolTip">
+        <string>Ignore case if checked</string>
+       </property>
+       <property name="text">
+        <string>Ignore case</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
