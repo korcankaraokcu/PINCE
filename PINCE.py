@@ -3537,16 +3537,16 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         if QModelIndex_current.row() < 0:
             return
         self.listWidget_Referrers.clear()
-        str_dict = GDB_Engine.get_dissect_code_data(False, False, True)[0]
+        call_dict = GDB_Engine.get_dissect_code_data(False, False, True)[0]
         addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_CALL_ADDR_COL).text()
-        referrers = str_dict[hex(int(SysUtils.extract_address(addr), 16))]
+        referrers = call_dict[hex(int(SysUtils.extract_address(addr), 16))]
         nested_list = []
         for item in referrers:
             nested_list.append((hex(item), True))
         for item in GDB_Engine.convert_multiple_addresses_to_symbols(nested_list):
             self.listWidget_Referrers.addItem(self.pad_hex(item))
         self.listWidget_Referrers.sortItems(Qt.AscendingOrder)
-        str_dict.close()
+        call_dict.close()
 
     def tableWidget_References_item_double_clicked(self, index):
         row = index.row()
