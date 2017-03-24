@@ -26,6 +26,7 @@ from time import sleep, time
 import os
 import sys
 import traceback
+import signal
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 
@@ -174,6 +175,13 @@ REF_CALL_COUNT_COL = 1
 # From version 5.5 and onwards, PyQT calls qFatal() when an exception has been encountered
 # So, we must override sys.excepthook to avoid calling of qFatal()
 sys.excepthook = traceback.print_exception
+
+
+def signal_handler(signal, frame):
+    GDB_Engine.cancel_last_command()
+    raise KeyboardInterrupt
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 # Checks if the inferior has been terminated
