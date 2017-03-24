@@ -1236,7 +1236,10 @@
                 <bool>false</bool>
                </attribute>
                <attribute name="verticalHeaderDefaultSectionSize">
-                <number>15</number>
+                <number>16</number>
+               </attribute>
+               <attribute name="verticalHeaderMinimumSectionSize">
+                <number>16</number>
                </attribute>
                <column>
                 <property name="text">
@@ -1250,12 +1253,7 @@
                </column>
                <column>
                 <property name="text">
-                 <string>Int Repr</string>
-                </property>
-               </column>
-               <column>
-                <property name="text">
-                 <string>Float Repr</string>
+                 <string>Points to</string>
                 </property>
                </column>
               </widget>
@@ -1437,7 +1435,7 @@
   </action>
   <action name="actionReferenced_Calls">
    <property name="text">
-    <string>Referenced Calls</string>
+    <string>Referenced &amp;Calls</string>
    </property>
   </action>
  </widget>

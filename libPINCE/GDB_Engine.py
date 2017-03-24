@@ -1105,12 +1105,14 @@ def get_stack_info():
 
     Returns:
         list: A list of str values in this format--▼
-        [[stack_pointer_info1,hex_value1,int_representation1,float_representation1],[stack_pointer_info2, ...], ...]
+        [[stack_pointer_info1,hex_value1,pointer_info1],[stack_pointer_info2, ...], ...]
 
         stack_pointer_info looks like this-->Hex address+distance from stack pointer-->0x7ffd0d232f88(rsp+0xff8)
-        hex_value looks like this-->Value holden by corresponding address-->0x00302e322d63726b
-        int_representation looks like this-->integer representation of the hex_value-->13561591926846059
-        float_representation looks like this-->float representation of the hex_value--->9.000675827832922e-308
+        hex_value looks like this-->Value hold by corresponding address-->0x1bfda20
+        pointer_info shows the value hold by hex_value address. It looks like this--▼
+        if points to a string-->(str)Some String
+        if points to a symbol-->(ptr)<function_name>
+        pointer_info becomes a null string if pointer isn't valid
     """
     contents_recv = send_command("pince-get-stack-info", recv_with_file=True)
     if contents_recv is None:

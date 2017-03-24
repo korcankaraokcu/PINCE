@@ -115,8 +115,7 @@ STACKTRACE_FRAME_ADDRESS_COL = 1
 # represents the index of columns in stack table
 STACK_POINTER_ADDRESS_COL = 0
 STACK_VALUE_COL = 1
-STACK_INT_REPRESENTATION_COL = 2
-STACK_FLOAT_REPRESENTATION_COL = 3
+STACK_POINTS_TO_COL = 2
 
 # represents row and column counts of Hex table
 HEX_VIEW_COL_COUNT = 16
@@ -180,6 +179,7 @@ sys.excepthook = traceback.print_exception
 def signal_handler(signal, frame):
     GDB_Engine.cancel_last_command()
     raise KeyboardInterrupt
+
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -1282,7 +1282,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.tableWidget_Stack.contextMenuEvent = self.tableWidget_Stack_context_menu_event
         self.tableWidget_StackTrace.contextMenuEvent = self.tableWidget_StackTrace_context_menu_event
+        self.tableWidget_Stack.itemDoubleClicked.connect(self.tableWidget_Stack_double_click)
         self.tableWidget_StackTrace.itemDoubleClicked.connect(self.tableWidget_StackTrace_double_click)
+
+        # Saving the original function because super() doesn't work when we override functions like this
+        self.tableWidget_Stack.keyPressEvent_original = self.tableWidget_Stack.keyPressEvent
+        self.tableWidget_Stack.keyPressEvent = self.tableWidget_Stack_key_press_event
+
+        # Saving the original function because super() doesn't work when we override functions like this
+        self.tableWidget_StackTrace.keyPressEvent_original = self.tableWidget_StackTrace.keyPressEvent
+        self.tableWidget_StackTrace.keyPressEvent = self.tableWidget_StackTrace_key_press_event
 
     def initialize_disassemble_view(self):
         self.tableWidget_Disassemble.setColumnWidth(DISAS_ADDR_COL, 300)
@@ -1841,14 +1850,29 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_StackTrace.setItem(row, STACKTRACE_FRAME_ADDRESS_COL, QTableWidgetItem(item[1]))
 
     def tableWidget_StackTrace_context_menu_event(self, event):
+        selected_row = self.tableWidget_StackTrace.selectionModel().selectedRows()[-1].row()
+
         menu = QMenu()
         switch_to_stack = menu.addAction("Full Stack")
+        menu.addSeparator()
+        clipboard_menu = menu.addMenu("Copy to Clipboard")
+        copy_return = clipboard_menu.addAction("Copy Return Address")
+        copy_frame = clipboard_menu.addAction("Copy Frame Address")
+        refresh = menu.addAction("Refresh[R]")
         font_size = self.tableWidget_StackTrace.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         if action == switch_to_stack:
             self.stackedWidget_StackScreens.setCurrentWidget(self.Stack)
             self.update_stack()
+        elif action == copy_return:
+            QApplication.clipboard().setText(
+                self.tableWidget_StackTrace.item(selected_row, STACKTRACE_RETURN_ADDRESS_COL).text())
+        elif action == copy_frame:
+            QApplication.clipboard().setText(
+                self.tableWidget_StackTrace.item(selected_row, STACKTRACE_FRAME_ADDRESS_COL).text())
+        elif action == refresh:
+            self.update_stacktrace()
 
     def update_stack(self):
         stack_info = GDB_Engine.get_stack_info()
@@ -1857,26 +1881,76 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         for row, item in enumerate(stack_info):
             self.tableWidget_Stack.setItem(row, STACK_POINTER_ADDRESS_COL, QTableWidgetItem(item[0]))
             self.tableWidget_Stack.setItem(row, STACK_VALUE_COL, QTableWidgetItem(item[1]))
-            self.tableWidget_Stack.setItem(row, STACK_INT_REPRESENTATION_COL, QTableWidgetItem(item[2]))
-            self.tableWidget_Stack.setItem(row, STACK_FLOAT_REPRESENTATION_COL, QTableWidgetItem(item[3]))
-        self.tableWidget_Stack.resizeColumnsToContents()
+            self.tableWidget_Stack.setItem(row, STACK_POINTS_TO_COL, QTableWidgetItem(item[2]))
+        self.tableWidget_Stack.resizeColumnToContents(STACK_POINTER_ADDRESS_COL)
+        self.tableWidget_Stack.resizeColumnToContents(STACK_VALUE_COL)
+
+    def tableWidget_Stack_key_press_event(self, event):
+        if event.key() == Qt.Key_R:
+            self.update_stack()
+        else:
+            self.tableWidget_Stack.keyPressEvent_original(event)
 
     def tableWidget_Stack_context_menu_event(self, event):
+        selected_row = self.tableWidget_StackTrace.selectionModel().selectedRows()[-1].row()
+
         menu = QMenu()
         switch_to_stacktrace = menu.addAction("Stacktrace")
+        menu.addSeparator()
+        clipboard_menu = menu.addMenu("Copy to Clipboard")
+        copy_address = clipboard_menu.addAction("Copy Address")
+        copy_value = clipboard_menu.addAction("Copy Value")
+        copy_points_to = clipboard_menu.addAction("Copy Points to")
+        refresh = menu.addAction("Refresh[R]")
         font_size = self.tableWidget_Stack.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         if action == switch_to_stacktrace:
             self.stackedWidget_StackScreens.setCurrentWidget(self.StackTrace)
             self.update_stacktrace()
+        elif action == copy_address:
+            QApplication.clipboard().setText(
+                self.tableWidget_Stack.item(selected_row, STACK_POINTER_ADDRESS_COL).text())
+        elif action == copy_value:
+            QApplication.clipboard().setText(
+                self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text())
+        elif action == copy_points_to:
+            QApplication.clipboard().setText(
+                self.tableWidget_Stack.item(selected_row, STACK_POINTS_TO_COL).text())
+        elif action == refresh:
+            self.update_stack()
+
+    def tableWidget_Stack_double_click(self, index):
+        selected_row = self.tableWidget_Stack.selectionModel().selectedRows()[-1].row()
+        if index.column() == STACK_POINTER_ADDRESS_COL:
+            current_address_text = self.tableWidget_Stack.item(selected_row, STACK_POINTER_ADDRESS_COL).text()
+            current_address = SysUtils.extract_address(current_address_text)
+            self.hex_dump_address(int(current_address, 16))
+        else:
+            points_to_text = self.tableWidget_Stack.item(selected_row, STACK_POINTS_TO_COL).text()
+            current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
+            current_address = SysUtils.extract_address(current_address_text)
+            if points_to_text.startswith("(str)"):
+                self.hex_dump_address(int(current_address, 16))
+            else:
+                self.disassemble_expression(current_address, append_to_travel_history=True)
 
     def tableWidget_StackTrace_double_click(self, index):
+        selected_row = self.tableWidget_StackTrace.selectionModel().selectedRows()[-1].row()
         if index.column() == STACKTRACE_RETURN_ADDRESS_COL:
-            selected_row = self.tableWidget_StackTrace.selectionModel().selectedRows()[-1].row()
             current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_RETURN_ADDRESS_COL).text()
             current_address = SysUtils.extract_address(current_address_text)
             self.disassemble_expression(current_address, append_to_travel_history=True)
+        if index.column() == STACKTRACE_FRAME_ADDRESS_COL:
+            current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_FRAME_ADDRESS_COL).text()
+            current_address = SysUtils.extract_address(current_address_text)
+            self.hex_dump_address(int(current_address, 16))
+
+    def tableWidget_StackTrace_key_press_event(self, event):
+        if event.key() == Qt.Key_R:
+            self.update_stacktrace()
+        else:
+            self.tableWidget_StackTrace.keyPressEvent_original(event)
 
     def widget_Disassemble_wheel_event(self, event):
         steps = event.angleDelta()
