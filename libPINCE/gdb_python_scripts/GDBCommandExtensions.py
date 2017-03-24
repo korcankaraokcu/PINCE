@@ -255,32 +255,46 @@ class GetStackInfo(gdb.Command):
 
     def invoke(self, arg, from_tty):
         stack_info_list = []
+        symbol_regex = re.compile("<.*>")
         if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             chunk_size = 8
-            float_format = "d"
+            int_format = "Q"
             stack_register = "rsp"
             result = gdb.execute("p/x $rsp", from_tty, to_string=True)
         else:
             chunk_size = 4
-            float_format = "f"
+            int_format = "I"
             stack_register = "esp"
             result = gdb.execute("p/x $esp", from_tty, to_string=True)
         stack_address = int(re.search(r"0x[0-9a-fA-F]+", result).group(0), 16)  # $6 = 0x7f0bc0b6bb40
         with open(ScriptUtils.mem_file, "rb") as FILE:
-            FILE.seek(stack_address)
+            old_position = FILE.seek(stack_address)
             for index in range(int(4096 / chunk_size)):
                 current_offset = chunk_size * index
                 stack_indicator = hex(stack_address + current_offset) + "(" + stack_register + "+" + hex(
                     current_offset) + ")"
+                FILE.seek(old_position)
                 try:
                     read = FILE.read(chunk_size)
                 except:
                     print("Can't access the stack after address " + stack_indicator)
                     break
-                hex_data = "0x" + "".join(format(n, '02x') for n in reversed(read))
-                int_data = str(int(hex_data, 16))
-                float_data = str(struct.unpack_from(float_format, read)[0])
-                stack_info_list.append([stack_indicator, hex_data, int_data, float_data])
+                old_position = FILE.tell()
+                int_addr = struct.unpack_from(int_format, read)[0]
+                hex_repr = hex(int_addr)
+                try:
+                    FILE.seek(int_addr)
+                    read_pointer = FILE.read(20)
+                except:
+                    pointer_data = ""
+                else:
+                    result = gdb.execute("x/b " + hex_repr, to_string=True)
+                    result = symbol_regex.search(result)
+                    if not result:
+                        pointer_data = "(str)" + read_pointer.decode("utf-8", "ignore")
+                    else:
+                        pointer_data = "(ptr)" + result.group(0)
+                stack_info_list.append([stack_indicator, hex_repr, pointer_data])
         send_to_pince(stack_info_list)
 
 
