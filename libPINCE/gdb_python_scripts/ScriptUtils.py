@@ -226,7 +226,7 @@ def convert_address_to_symbol(expression, include_address=False, check=True):
     if filteredresult:
         if include_address:
             return filteredresult.group(0).rsplit(":")[0]
-        return filteredresult.group(0).split("<")[0].strip()
+        return filteredresult.group(0).split(maxsplit=1)[1][:-1]
     else:
         filteredresult = re.search(r"0x[0-9a-fA-F]+:", result)  # 0x400000:	0x7f
         if filteredresult:
