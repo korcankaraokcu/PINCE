@@ -1582,11 +1582,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         program_counter = GDB_Engine.convert_symbol_to_address("$pc", check=False)
         program_counter_int = int(program_counter, 16)
-        row_of_pc = -1
-        rows_of_encountered_bookmarks_list = []
+        row_colour = {}
         breakpoint_list = []
-        rows_of_encountered_breakpoints_list = []
-        rows_of_encountered_references_list = []
         breakpoint_info = GDB_Engine.get_breakpoint_info()
         for item in breakpoint_info:
             breakpoint_list.append(int(item.address, 16))
@@ -1636,7 +1633,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 if ref_count > 30:
                     tooltip_text += "\n..."
                 tooltip_text += "\n\nPress 'E' to see a detailed list of referrers"
-                rows_of_encountered_references_list.append(row)
+                try:
+                    row_colour[row].append(REF_COLOUR)
+                except KeyError:
+                    row_colour[row] = [REF_COLOUR]
                 real_ref_count = 0
                 if jmp_ref_exists:
                     real_ref_count += len(jmp_referrers)
@@ -1645,16 +1645,25 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 item[0] = "{" + str(real_ref_count) + "}" + item[0]
             if current_address == program_counter_int:
                 item[0] = ">>>" + item[0]
-                row_of_pc = row
+                try:
+                    row_colour[row].append(PC_COLOUR)
+                except KeyError:
+                    row_colour[row] = [PC_COLOUR]
             for bookmark_item in self.tableWidget_Disassemble.bookmarks.keys():
                 if current_address == bookmark_item:
-                    rows_of_encountered_bookmarks_list.append(row)
+                    try:
+                        row_colour[row].append(BOOKMARK_COLOUR)
+                    except KeyError:
+                        row_colour[row] = [BOOKMARK_COLOUR]
                     item[0] = "(M)" + item[0]
                     comment = self.tableWidget_Disassemble.bookmarks[bookmark_item]
                     break
             for breakpoint in breakpoint_list:
                 if current_address == breakpoint:
-                    rows_of_encountered_breakpoints_list.append(row)
+                    try:
+                        row_colour[row].append(BREAKPOINT_COLOUR)
+                    except KeyError:
+                        row_colour[row] = [BREAKPOINT_COLOUR]
                     item[0] = "(B)" + item[0]
                     break
             if current_address == self.disassemble_last_selected_address_int:
@@ -1674,8 +1683,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, comment_item)
         jmp_dict.close()
         call_dict.close()
-        self.handle_colours(row_of_pc, rows_of_encountered_bookmarks_list, rows_of_encountered_breakpoints_list,
-                            rows_of_encountered_references_list)
+        self.handle_colours(row_colour)
         self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
 
         # We append the old record to travel history as last action because we wouldn't like to see unnecessary
@@ -1688,24 +1696,35 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.disassemble_expression(self.disassemble_currently_displayed_address)
 
     # Set colour of a row if a specific address is encountered(e.g $pc, a bookmarked address etc.)
-    def handle_colours(self, row_of_pc, encountered_bookmark_list, encountered_breakpoints_list,
-                       encountered_references_list):
-        if encountered_references_list:
-            for encountered_row in encountered_references_list:
-                self.set_row_colour(encountered_row, REF_COLOUR)
-        if encountered_bookmark_list:
-            for encountered_row in encountered_bookmark_list:
-                self.set_row_colour(encountered_row, BOOKMARK_COLOUR)
-        if encountered_breakpoints_list:
-            for encountered_row in encountered_breakpoints_list:
-                self.set_row_colour(encountered_row, BREAKPOINT_COLOUR)
-        if row_of_pc != -1:
-            self.set_row_colour(row_of_pc, PC_COLOUR)
+    def handle_colours(self, row_colour):
+        for row in row_colour:
+            current_row = row_colour[row]
+            if PC_COLOUR in current_row:
+                if BREAKPOINT_COLOUR in current_row:
+                    colour = Qt.green
+                elif BOOKMARK_COLOUR in current_row:
+                    colour = Qt.yellow
+                else:
+                    colour = PC_COLOUR
+                self.set_row_colour(row, colour)
+                continue
+            if BREAKPOINT_COLOUR in current_row:
+                if BOOKMARK_COLOUR in current_row:
+                    colour = Qt.magenta
+                else:
+                    colour = BREAKPOINT_COLOUR
+                self.set_row_colour(row, colour)
+                continue
+            if BOOKMARK_COLOUR in current_row:
+                self.set_row_colour(row, BOOKMARK_COLOUR)
+                continue
+            if REF_COLOUR in current_row:
+                self.set_row_colour(row, REF_COLOUR)
 
     # color parameter should be Qt.colour
     def set_row_colour(self, row, colour):
-        for item in range(self.tableWidget_Disassemble.columnCount()):
-            self.tableWidget_Disassemble.item(row, item).setData(Qt.BackgroundColorRole, QColor(colour))
+        for col in range(self.tableWidget_Disassemble.columnCount()):
+            self.tableWidget_Disassemble.item(row, col).setData(Qt.BackgroundColorRole, QColor(colour))
 
     def on_process_stop(self):
         if GDB_Engine.stop_reason == type_defs.STOP_REASON.PAUSE:
