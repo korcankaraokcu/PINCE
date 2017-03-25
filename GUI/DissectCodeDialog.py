@@ -109,7 +109,6 @@ class Ui_Dialog(object):
         self.line_2.setObjectName("line_2")
         self.verticalLayout_2.addWidget(self.line_2)
         self.checkBox_DiscardInvalidStrings = QtWidgets.QCheckBox(self.layoutWidget1)
-        self.checkBox_DiscardInvalidStrings.setChecked(True)
         self.checkBox_DiscardInvalidStrings.setObjectName("checkBox_DiscardInvalidStrings")
         self.verticalLayout_2.addWidget(self.checkBox_DiscardInvalidStrings)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
