@@ -597,7 +597,7 @@ class MainForm(QMainWindow, MainWindow):
                             length = len(unknown_type)
                             self.tableWidget_AddressTable.setItem(row, TYPE_COL, QTableWidgetItem(
                                 GuiUtils.change_text_length(value_type, length)))
-                    table_contents.append([address, value_index])
+                    table_contents.append((address, value_index))
                 GDB_Engine.set_multiple_addresses(table_contents, value_text)
                 self.update_address_table_manually()
 
