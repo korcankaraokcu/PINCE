@@ -27,6 +27,7 @@ import os
 import sys
 import traceback
 import signal
+import re
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 
@@ -59,6 +60,7 @@ from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
 from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
 from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
+from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -2013,6 +2015,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         if event.key() == Qt.Key_Space:
             self.follow_instruction(selected_row)
+        elif event.key() == Qt.Key_E:
+            self.exec_examine_referrers_widget(current_address_text)
         elif event.key() == Qt.Key_G:
             self.exec_disassemble_go_to_dialog()
         elif event.key() == Qt.Key_H:
@@ -2072,6 +2076,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             follow = menu.addAction("Follow[Space]")
         else:
             follow = -1
+        if GuiUtils.contains_reference_mark(current_address_text):
+            examine_referrers = menu.addAction("Examine Referrers[E]")
+        else:
+            examine_referrers = -1
         is_bookmarked = current_address_int in self.tableWidget_Disassemble.bookmarks
         if not is_bookmarked:
             bookmark = menu.addAction("Bookmark this address[B]")
@@ -2126,6 +2134,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.hex_dump_address(current_address_int)
         elif action == follow:
             self.follow_instruction(selected_row)
+        elif action == examine_referrers:
+            self.exec_examine_referrers_widget(current_address_text)
         elif action == bookmark:
             self.bookmark_address(current_address_int)
         elif action == delete_bookmark:
@@ -2169,6 +2179,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
         dissect_code_dialog.exec_()
         self.refresh_disassemble_view()
+
+    def exec_examine_referrers_widget(self, current_address_text):
+        if not GuiUtils.contains_reference_mark(current_address_text):
+            return
+        current_address = SysUtils.extract_address(current_address_text)
+        current_address_int = int(current_address, 16)
+        self.examine_referrers_widget = ExamineReferrersWidgetForm(current_address_int, self)
+        self.examine_referrers_widget.show()
 
     def exec_trace_instructions_dialog(self):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
@@ -3776,6 +3794,116 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         if action == copy_address:
             QApplication.clipboard().setText(
                 self.tableWidget_References.item(selected_row, REF_CALL_ADDR_COL).text())
+
+    def listWidget_Referrers_context_menu_event(self, event):
+        selected_row = self.listWidget_Referrers.selectionModel().selectedRows()[-1].row()
+
+        menu = QMenu()
+        copy_address = menu.addAction("Copy Address")
+        font_size = self.listWidget_Referrers.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        if action == copy_address:
+            QApplication.clipboard().setText(
+                self.listWidget_Referrers.item(selected_row).text())
+
+
+class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
+    def __init__(self, int_address, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        GuiUtils.center_to_parent(self)
+        self.setWindowFlags(Qt.Window)
+        self.splitter.setStretchFactor(0, 1)
+        self.textBrowser_DisasInfo.resize(600, self.textBrowser_DisasInfo.height())
+        self.referenced_hex = hex(int_address)
+        self.hex_len = 16 if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64 else 8
+        self.collect_referrer_data()
+        self.refresh_table()
+        self.listWidget_Referrers.sortItems(Qt.AscendingOrder)
+        self.listWidget_Referrers.selectionModel().currentChanged.connect(self.listWidget_Referrers_current_changed)
+        self.listWidget_Referrers.itemDoubleClicked.connect(self.listWidget_Referrers_item_double_clicked)
+        self.listWidget_Referrers.contextMenuEvent = self.listWidget_Referrers_context_menu_event
+        self.pushButton_Search.clicked.connect(self.refresh_table)
+        self.shortcut_search = QShortcut(QKeySequence("Return"), self)
+        self.shortcut_search.activated.connect(self.refresh_table)
+
+    def pad_hex(self, hex_str):
+        index = hex_str.find(" ")
+        if index == -1:
+            self_len = 0
+        else:
+            self_len = len(hex_str) - index
+        return '0x' + hex_str[2:].zfill(self.hex_len + self_len)
+
+    def collect_referrer_data(self):
+        jmp_dict, call_dict = GDB_Engine.get_dissect_code_data(False, True, True)
+        self.referrer_data = []
+        try:
+            jmp_referrers = jmp_dict[self.referenced_hex]
+        except KeyError:
+            pass
+        else:
+            jmp_referrers = [(hex(item), True) for item in jmp_referrers]
+            self.referrer_data.extend(
+                [item for item in GDB_Engine.convert_multiple_addresses_to_symbols(jmp_referrers)])
+        try:
+            call_referrers = call_dict[self.referenced_hex]
+        except KeyError:
+            pass
+        else:
+            call_referrers = [(hex(item), True) for item in call_referrers]
+            self.referrer_data.extend(
+                [item for item in GDB_Engine.convert_multiple_addresses_to_symbols(call_referrers)])
+        jmp_dict.close()
+        call_dict.close()
+
+    def refresh_table(self):
+        searched_str = self.lineEdit_Regex.text()
+        ignore_case = self.checkBox_IgnoreCase.isChecked()
+        enable_regex = self.checkBox_Regex.isChecked()
+        if enable_regex:
+            try:
+                if ignore_case:
+                    regex = re.compile(searched_str, re.IGNORECASE)
+                else:
+                    regex = re.compile(searched_str)
+            except:
+                QMessageBox.information(self, "Error",
+                                        "An exception occurred while trying to compile the given regex\n")
+                return
+        self.listWidget_Referrers.setSortingEnabled(False)
+        self.listWidget_Referrers.clear()
+        for row, item in enumerate(self.referrer_data):
+            if enable_regex:
+                if not regex.search(item):
+                    continue
+            else:
+                if ignore_case:
+                    if item.lower().find(searched_str.lower()) == -1:
+                        continue
+                else:
+                    if item.find(searched_str) == -1:
+                        continue
+            self.listWidget_Referrers.addItem(item)
+        self.listWidget_Referrers.setSortingEnabled(True)
+        self.listWidget_Referrers.sortItems(Qt.AscendingOrder)
+
+    def listWidget_Referrers_current_changed(self, QModelIndex_current):
+        if QModelIndex_current.row() < 0:
+            return
+        self.textBrowser_DisasInfo.clear()
+        disas_data = GDB_Engine.disassemble(
+            SysUtils.extract_address(self.listWidget_Referrers.item(QModelIndex_current.row()).text()), "+200")
+        for item in disas_data:
+            self.textBrowser_DisasInfo.append(item[0] + item[2])
+        cursor = self.textBrowser_DisasInfo.textCursor()
+        cursor.movePosition(QTextCursor.Start)
+        self.textBrowser_DisasInfo.setTextCursor(cursor)
+        self.textBrowser_DisasInfo.ensureCursorVisible()
+
+    def listWidget_Referrers_item_double_clicked(self, item):
+        self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
 
     def listWidget_Referrers_context_menu_event(self, event):
         selected_row = self.listWidget_Referrers.selectionModel().selectedRows()[-1].row()
