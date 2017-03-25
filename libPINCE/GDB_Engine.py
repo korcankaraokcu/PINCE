@@ -1800,16 +1800,18 @@ def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, refere
     return dict_list
 
 
-def search_referenced_strings(searched_str, ignore_case=True, enable_regex=False):
+def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.INDEX_STRING, ignore_case=True,
+                              enable_regex=False):
     """Searches for given str in the referenced strings
 
     Args:
         searched_str (str): String that will be searched
+        value_index (int): Can be a member of type_defs.VALUE_INDEX
         ignore_case (bool): If True, search will be case insensitive
         enable_regex (bool): If True, searched_str will be treated as a regex expression
 
     Returns:
-        list: [[referenced_address1, reference_count1, found_string1], ...]
+        list: [[referenced_address1, reference_count1, found_value1], ...]
         None: If enable_regex is True and searched_str isn't a valid regex expression
     """
     if enable_regex:
@@ -1826,21 +1828,22 @@ def search_referenced_strings(searched_str, ignore_case=True, enable_regex=False
     referenced_list = []
     returned_list = []
     for item in str_dict:
-        nested_list.append((int(item, 16), type_defs.VALUE_INDEX.INDEX_STRING, 100, True))
+        nested_list.append((int(item, 16), value_index, 100, True))
         referenced_list.append(item)
-    str_list = read_multiple_addresses(nested_list)
-    for index, item in enumerate(str_list):
-        if item is "":
+    value_list = read_multiple_addresses(nested_list)
+    for index, item in enumerate(value_list):
+        item_str = str(item)
+        if item_str is "":
             continue
         if enable_regex:
-            if not regex.search(item):
+            if not regex.search(item_str):
                 continue
         else:
             if ignore_case:
-                if item.lower().find(searched_str.lower()) == -1:
+                if item_str.lower().find(searched_str.lower()) == -1:
                     continue
             else:
-                if item.find(searched_str) == -1:
+                if item_str.find(searched_str) == -1:
                     continue
         ref_addr = referenced_list[index]
         returned_list.append((ref_addr, len(str_dict[ref_addr]), item))
