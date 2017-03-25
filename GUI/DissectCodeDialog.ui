@@ -210,10 +210,14 @@
        <item>
         <widget class="QCheckBox" name="checkBox_DiscardInvalidStrings">
          <property name="toolTip">
-          <string>Entries that can't be decoded as utf-8 won't be included in referenced strings</string>
+          <string>Entries that can't be decoded as utf-8 won't be included in referenced strings
+Unchecking it makes ReferencedStringsWidget load slower but allows you to examine non-string pointers on it</string>
          </property>
          <property name="text">
           <string>Discard invalid strings</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
