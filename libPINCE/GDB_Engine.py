@@ -777,7 +777,7 @@ def disassemble(expression, offset_or_address):
     return returned_list
 
 
-def convert_address_to_symbol(expression, include_address=False, check=True):
+def convert_address_to_symbol(expression, include_address=True, check=True):
     """Converts the address evaluated by the given expression to symbol if any symbol exists for it
 
     Args:

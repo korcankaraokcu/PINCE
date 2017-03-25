@@ -215,7 +215,7 @@ def remove_disas_comment(disas_str):
         return disas_str[:index]
 
 
-def convert_address_to_symbol(expression, include_address=False, check=True):
+def convert_address_to_symbol(expression, include_address=True, check=True):
     if check:
         if SysUtils.check_for_restricted_gdb_symbols(expression):
             return expression
@@ -225,7 +225,7 @@ def convert_address_to_symbol(expression, include_address=False, check=True):
     filteredresult = re.search(r"0x[0-9a-fA-F]+\s+<.+>:", result)  # 0x4125d0 <_start>:	0x31
     if filteredresult:
         if include_address:
-            return filteredresult.group(0).rsplit(":")[0]
+            return filteredresult.group(0)[:-1]
         return filteredresult.group(0).split(maxsplit=1)[1][:-1]
     else:
         filteredresult = re.search(r"0x[0-9a-fA-F]+:", result)  # 0x400000:	0x7f
