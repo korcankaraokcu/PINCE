@@ -2094,7 +2094,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         nested_list = []
         for item in self.tableWidget_Disassemble.bookmarks.keys():
             item_str = hex(item)
-            nested_list.append((item_str, True))
+            nested_list.append((item_str,))
         for index, item in enumerate(GDB_Engine.convert_multiple_addresses_to_symbols(nested_list)):
             if item is "":
                 text_append = nested_list[index][0] + "(Unreachable)"
@@ -2341,7 +2341,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         nested_list = []
         for item in self.parent().tableWidget_Disassemble.bookmarks.keys():
             item_str = hex(item)
-            nested_list.append((item_str, True))
+            nested_list.append((item_str,))
         for index, item in enumerate(GDB_Engine.convert_multiple_addresses_to_symbols(nested_list)):
             if item is "":
                 text_append = nested_list[index][0] + "(Unreachable)"
@@ -3660,7 +3660,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         referrers = str_dict[hex(int(addr, 16))]
         nested_list = []
         for item in referrers:
-            nested_list.append((hex(item), True))
+            nested_list.append((hex(item),))
         for item in GDB_Engine.convert_multiple_addresses_to_symbols(nested_list):
             self.listWidget_Referrers.addItem(self.pad_hex(item))
         self.listWidget_Referrers.sortItems(Qt.AscendingOrder)
@@ -3769,7 +3769,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         referrers = call_dict[hex(int(SysUtils.extract_address(addr), 16))]
         nested_list = []
         for item in referrers:
-            nested_list.append((hex(item), True))
+            nested_list.append((hex(item),))
         for item in GDB_Engine.convert_multiple_addresses_to_symbols(nested_list):
             self.listWidget_Referrers.addItem(self.pad_hex(item))
         self.listWidget_Referrers.sortItems(Qt.AscendingOrder)
@@ -3844,7 +3844,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         except KeyError:
             pass
         else:
-            jmp_referrers = [(hex(item), True) for item in jmp_referrers]
+            jmp_referrers = [(hex(item),) for item in jmp_referrers]
             self.referrer_data.extend(
                 [item for item in GDB_Engine.convert_multiple_addresses_to_symbols(jmp_referrers)])
         try:
@@ -3852,7 +3852,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         except KeyError:
             pass
         else:
-            call_referrers = [(hex(item), True) for item in call_referrers]
+            call_referrers = [(hex(item),) for item in call_referrers]
             self.referrer_data.extend(
                 [item for item in GDB_Engine.convert_multiple_addresses_to_symbols(call_referrers)])
         jmp_dict.close()

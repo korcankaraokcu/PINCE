@@ -671,7 +671,7 @@ class SearchReferencedCalls(gdb.Command):
         str_dict = shelve.open(SysUtils.get_referenced_calls_file(pid), "r")
         returned_list = []
         for index, item in enumerate(str_dict):
-            symbol = ScriptUtils.convert_address_to_symbol(item, include_address=True)
+            symbol = ScriptUtils.convert_address_to_symbol(item)
             if symbol is None:
                 continue
             if enable_regex:
@@ -703,7 +703,7 @@ class MultipleAddressesToSymbols(gdb.Command):
             try:
                 include_address = item[1]
             except IndexError:
-                include_address = False
+                include_address = True
             try:
                 check = item[2]
             except IndexError:
