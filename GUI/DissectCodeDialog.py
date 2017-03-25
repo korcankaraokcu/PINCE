@@ -109,6 +109,7 @@ class Ui_Dialog(object):
         self.line_2.setObjectName("line_2")
         self.verticalLayout_2.addWidget(self.line_2)
         self.checkBox_DiscardInvalidStrings = QtWidgets.QCheckBox(self.layoutWidget1)
+        self.checkBox_DiscardInvalidStrings.setChecked(True)
         self.checkBox_DiscardInvalidStrings.setObjectName("checkBox_DiscardInvalidStrings")
         self.verticalLayout_2.addWidget(self.checkBox_DiscardInvalidStrings)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -145,6 +146,7 @@ class Ui_Dialog(object):
         self.label.setText(_translate("Dialog", "String references found:"))
         self.label_2.setText(_translate("Dialog", "Jumps found:"))
         self.label_3.setText(_translate("Dialog", "Calls found:"))
-        self.checkBox_DiscardInvalidStrings.setToolTip(_translate("Dialog", "Entries that can\'t be decoded as utf-8 won\'t be included in referenced strings"))
+        self.checkBox_DiscardInvalidStrings.setToolTip(_translate("Dialog", "Entries that can\'t be decoded as utf-8 won\'t be included in referenced strings\n"
+"Unchecking it makes ReferencedStringsWidget load slower but allows you to examine non-string pointers on it"))
         self.checkBox_DiscardInvalidStrings.setText(_translate("Dialog", "Discard invalid strings"))
 
