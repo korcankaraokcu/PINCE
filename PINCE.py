@@ -1209,11 +1209,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def set_debug_menu_shortcuts(self):
         self.shortcut_step = QShortcut(QKeySequence("F7"), self)
-        self.shortcut_step.activated.connect(GDB_Engine.step_instruction)
+        self.shortcut_step.activated.connect(self.step_instruction)
         self.shortcut_step_over = QShortcut(QKeySequence("F8"), self)
-        self.shortcut_step_over.activated.connect(GDB_Engine.step_over_instruction)
+        self.shortcut_step_over.activated.connect(self.step_over_instruction)
         self.shortcut_execute_till_return = QShortcut(QKeySequence("Shift+F8"), self)
-        self.shortcut_execute_till_return.activated.connect(GDB_Engine.execute_till_return)
+        self.shortcut_execute_till_return.activated.connect(self.execute_till_return)
         self.shortcut_toggle_breakpoint = QShortcut(QKeySequence("F5"), self)
         self.shortcut_toggle_breakpoint.activated.connect(self.toggle_breakpoint)
         self.shortcut_set_address = QShortcut(QKeySequence("F4"), self)
@@ -1225,9 +1225,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def initialize_debug_context_menu(self):
         self.actionBreak.triggered.connect(GDB_Engine.interrupt_inferior)
         self.actionRun.triggered.connect(GDB_Engine.continue_inferior)
-        self.actionStep.triggered.connect(GDB_Engine.step_instruction)
-        self.actionStep_Over.triggered.connect(GDB_Engine.step_over_instruction)
-        self.actionExecute_Till_Return.triggered.connect(GDB_Engine.execute_till_return)
+        self.actionStep.triggered.connect(self.step_instruction)
+        self.actionStep_Over.triggered.connect(self.step_over_instruction)
+        self.actionExecute_Till_Return.triggered.connect(self.execute_till_return)
         self.actionToggle_Breakpoint.triggered.connect(self.toggle_breakpoint)
         self.actionSet_Address.triggered.connect(self.set_address)
 
@@ -1254,6 +1254,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center(self)
+        self.updating_memoryview = False
         self.process_stopped.connect(self.on_process_stop)
         self.process_running.connect(self.on_process_running)
         self.set_debug_menu_shortcuts()
@@ -1373,6 +1374,21 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def show_trace_window(self):
         self.trace_instructions_window = TraceInstructionsWindowForm(prompt_dialog=False)
         self.trace_instructions_window.showMaximized()
+
+    def step_instruction(self):
+        if self.updating_memoryview:
+            return
+        GDB_Engine.step_instruction()
+
+    def step_over_instruction(self):
+        if self.updating_memoryview:
+            return
+        GDB_Engine.step_over_instruction()
+
+    def execute_till_return(self):
+        if self.updating_memoryview:
+            return
+        GDB_Engine.execute_till_return()
 
     def set_address(self):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
@@ -1744,6 +1760,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.item(row, col).setData(Qt.BackgroundColorRole, QColor(colour))
 
     def on_process_stop(self):
+        self.updating_memoryview = True
         if GDB_Engine.stop_reason == type_defs.STOP_REASON.PAUSE:
             return
         time0 = time()
@@ -1769,8 +1786,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.float_registers_widget.update_registers()
         except AttributeError:
             pass
+        QApplication.processEvents()
         time1 = time()
         print("UPDATED MEMORYVIEW IN:" + str(time1 - time0))
+        self.updating_memoryview = False
 
     def on_process_running(self):
         self.setWindowTitle("Memory Viewer - Running")
