@@ -215,9 +215,6 @@
          <property name="text">
           <string>Discard invalid strings</string>
          </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
         </widget>
        </item>
        <item>
