@@ -2019,6 +2019,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.hex_dump_address(current_address_int)
         elif event.key() == Qt.Key_B:
             self.bookmark_address(current_address_int)
+        elif event.key() == Qt.Key_D:
+            self.dissect_current_region()
         elif event.key() == Qt.Key_R:
             self.refresh_disassemble_view()
         else:
@@ -2100,6 +2102,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         menu.addSeparator()
         track_breakpoint = menu.addAction("Find out which addresses this instruction accesses")
         trace_instructions = menu.addAction("Break and trace instructions")
+        dissect_region = menu.addAction("Dissect this region[D]")
         menu.addSeparator()
         refresh = menu.addAction("Refresh[R]")
         menu.addSeparator()
@@ -2137,6 +2140,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.exec_track_breakpoint_dialog()
         elif action == trace_instructions:
             self.exec_trace_instructions_dialog()
+        elif action == dissect_region:
+            self.dissect_current_region()
         elif action == refresh:
             self.refresh_disassemble_view()
         elif action == copy_address:
@@ -2155,6 +2160,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         for item in bookmark_action_list:
             if action == item:
                 self.disassemble_expression(SysUtils.extract_address(action.text()), append_to_travel_history=True)
+
+    def dissect_current_region(self):
+        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+        dissect_code_dialog = DissectCodeDialogForm(int_address=int(current_address, 16))
+        dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
+        dissect_code_dialog.exec_()
+        self.refresh_disassemble_view()
 
     def exec_trace_instructions_dialog(self):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
@@ -3431,7 +3445,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
 class DissectCodeDialogForm(QDialog, DissectCodeDialog):
     scan_finished_signal = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, int_address=-1):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.init_pre_scan_gui()
@@ -3443,6 +3457,19 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         self.refresh_timer = QTimer()
         self.refresh_timer.setInterval(100)
         self.refresh_timer.timeout.connect(self.refresh_dissect_status)
+        if int_address != -1:
+            self.checkBox_IncludeSystemRegions.setChecked(True)
+            self.show_memory_regions()
+            for row in range(self.tableWidget_ExecutableMemoryRegions.rowCount()):
+                item = self.tableWidget_ExecutableMemoryRegions.item(row, DISSECT_CODE_ADDR_COL).text()
+                start_addr, end_addr = item.split("-")
+                if int(start_addr, 16) <= int_address <= int(end_addr, 16):
+                    self.tableWidget_ExecutableMemoryRegions.clearSelection()
+                    self.tableWidget_ExecutableMemoryRegions.selectRow(row)
+                    self.pushButton_StartCancel_clicked()
+                    break
+            else:
+                QMessageBox.information(self, "Error", hex(int_address) + " isn't in a valid region range")
 
     class BackgroundThread(QThread):
         output_ready = pyqtSignal()
