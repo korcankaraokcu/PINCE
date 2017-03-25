@@ -3572,6 +3572,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         self.tableWidget_References.contextMenuEvent = self.tableWidget_References_context_menu_event
         self.listWidget_Referrers.contextMenuEvent = self.listWidget_Referrers_context_menu_event
         self.pushButton_Search.clicked.connect(self.refresh_table)
+        self.comboBox_ValueType.currentIndexChanged.connect(self.refresh_table)
         self.shortcut_search = QShortcut(QKeySequence("Return"), self)
         self.shortcut_search.activated.connect(self.refresh_table)
 
@@ -3585,6 +3586,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
 
     def refresh_table(self):
         item_list = GDB_Engine.search_referenced_strings(self.lineEdit_Regex.text(),
+                                                         self.comboBox_ValueType.currentIndex(),
                                                          self.checkBox_IgnoreCase.isChecked(),
                                                          self.checkBox_Regex.isChecked())
         if item_list is None:
@@ -3599,7 +3601,9 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
             table_widget_item = QTableWidgetItem()
             table_widget_item.setData(Qt.EditRole, item[1])
             self.tableWidget_References.setItem(row, REF_STR_COUNT_COL, table_widget_item)
-            self.tableWidget_References.setItem(row, REF_STR_VAL_COL, QTableWidgetItem(item[2]))
+            table_widget_item = QTableWidgetItem()
+            table_widget_item.setData(Qt.EditRole, item[2])
+            self.tableWidget_References.setItem(row, REF_STR_VAL_COL, table_widget_item)
         self.tableWidget_References.setSortingEnabled(True)
 
     def tableWidget_References_current_changed(self, QModelIndex_current):
