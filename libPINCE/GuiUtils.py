@@ -221,3 +221,15 @@ def remove_bookmark_mark(string):
         str: Remaining str after the cleansing
     """
     return sub(r"\(M\)", "", string, count=1)
+
+
+def contains_reference_mark(string):
+    """Checks if given string contains the reference mark
+
+    Args:
+        string (str): String that'll be checked for the reference mark
+
+    Returns:
+        bool: True if given string contains the reference mark, False otherwise
+    """
+    return True if search(r"\{\d*\}", string) else False
