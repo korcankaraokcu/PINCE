@@ -1621,7 +1621,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if not disas_data:
             QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
             return
-        program_counter = GDB_Engine.convert_symbol_to_address("$pc", check=False)
+        program_counter = GDB_Engine.convert_symbol_to_address("$pc")
         program_counter_int = int(program_counter, 16)
         row_colour = {}
         breakpoint_list = []

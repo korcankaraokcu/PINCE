@@ -215,10 +215,10 @@ def remove_disas_comment(disas_str):
         return disas_str[:index]
 
 
-def convert_address_to_symbol(expression, include_address=True, check=True):
-    if check:
-        if SysUtils.check_for_restricted_gdb_symbols(expression):
-            return expression
+def convert_address_to_symbol(expression, include_address=True):
+    expression = expression.strip()
+    if expression is "":
+        return ""
     result = gdb.execute("x/b " + expression, to_string=True)
     if re.search(r"Cannot\s*access\s*memory\s*at\s*address", result):
         return ""

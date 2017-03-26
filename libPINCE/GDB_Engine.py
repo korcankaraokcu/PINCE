@@ -577,17 +577,14 @@ def value_index_to_gdbcommand(index=int):
     return type_defs.index_to_gdbcommand_dict.get(index, "out of bounds")
 
 
-def read_single_address_by_expression(expression, value_index, length=None, is_unicode=False, zero_terminate=True,
-                                      check=True):
+def read_single_address_by_expression(expression, value_index, length=None, is_unicode=False, zero_terminate=True):
     """Reads value from the given address or expression by using "x" command of gdb then converts it to the given
     value type. Unlike the other read_single_address variations, this function can read the contents of [vsyscall]
 
     The expression can also be a function name such as "_start", "malloc", "printf" and "scanf"
 
     Args:
-        expression (str): Can be a hex string or an expression. By default, expressions using the character "$" are not
-        permitted. The character "$" is useful when displaying convenience variables, but it's also confusing because it
-        makes gdb show it's value history. To include "$" in the permitted characters, pass the parameter check as True
+        expression (str): Can be a hex string or an expression.
         value_index (int): Determines the type of data read. Can be a member of type_defs.VALUE_INDEX
         length (int): Length of the data that'll be read. Only used when the value_index is INDEX_STRING or INDEX_AOB.
         Ignored otherwise.
@@ -595,15 +592,13 @@ def read_single_address_by_expression(expression, value_index, length=None, is_u
         INDEX_STRING. Ignored otherwise.
         zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
         value_index is INDEX_STRING. Ignored otherwise.
-        check (bool): If True, the parameter expression will be checked by SysUtils.check_for_restricted_gdb_symbols. If
-        any specific character is found, this function will return "??"
 
     Returns:
         str: The value of address read as str. If the expression/address is not valid, returns the string "??"
     """
-    if check:
-        if SysUtils.check_for_restricted_gdb_symbols(expression):
-            return "??"
+    expression = expression.strip()
+    if expression is "":
+        return "??"
     if length is "":
         return "??"
     if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
@@ -777,21 +772,19 @@ def disassemble(expression, offset_or_address):
     return returned_list
 
 
-def convert_address_to_symbol(expression, include_address=True, check=True):
+def convert_address_to_symbol(expression, include_address=True):
     """Converts the address evaluated by the given expression to symbol if any symbol exists for it
 
     Args:
         expression (str): Any gdb expression
         include_address (bool): If true, returned string includes address
-        check (bool): If your string contains one of the restricted characters($ etc.) pass the check parameter as False
 
     Returns:
         str: Symbol of corresponding address(such as printf, scanf, _start etc.). If no symbols are found, address as
         str returned instead. If include_address is passed as True, returned str looks like this-->0x40c435 <_start+4>
-        If the parameter "check" is True, returns the expression itself untouched if any restricted characters are found
         If the address is unreachable, a null string returned instead
     """
-    contents_send = [[expression, include_address, check]]
+    contents_send = [(expression, include_address)]
     contents_recv = send_command("pince-multiple-addresses-to-symbols", send_with_file=True,
                                  file_contents_send=contents_send,
                                  recv_with_file=True)
@@ -811,7 +804,7 @@ def convert_multiple_addresses_to_symbols(nested_list):
         parameters are the same with the function convert_address_to_symbol.
 
     Examples:
-        All parameters are passed-->[[expression1, include_address1, check1], ...]
+        All parameters are passed-->[[expression1, include_address1], ...]
         Parameters are partially passed-->[[expression1],[expression2, include_address2], ...]
 
     Returns:
@@ -829,21 +822,19 @@ def convert_multiple_addresses_to_symbols(nested_list):
     return contents_recv
 
 
-def convert_symbol_to_address(expression, check=True):
+def convert_symbol_to_address(expression):
     """Converts the symbol evaluated by the given expression to address
 
     Args:
         expression (str): Any gdb expression
-        check (bool): If your string contains one of the restricted symbols(such as $) pass the check parameter as False
 
     Returns:
         str: Address of corresponding symbol
-        If the parameter "check" is True, returns the expression itself untouched if any restricted characters are found
         If the address is unreachable, a null string returned instead
     """
-    if check:
-        if SysUtils.check_for_restricted_gdb_symbols(expression):
-            return expression
+    expression = expression.strip()
+    if expression is "":
+        return ""
     result = send_command("x/b " + expression)
     if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
         return ""
@@ -856,17 +847,16 @@ def convert_symbol_to_address(expression, check=True):
             return split(":", filteredresult.group(0))[0]
 
 
-def validate_memory_address(expression, check=True):
+def validate_memory_address(expression):
     """Check if the address evaluated by the given expression is valid
 
     Args:
         expression (str): Any gdb expression
-        check (bool): If your string contains one of the restricted symbols(such as $) pass the check parameter as False
 
     Returns:
         bool: True if address is reachable, False if not
     """
-    if convert_symbol_to_address(expression=expression, check=check) == None:
+    if convert_symbol_to_address(expression) == None:
         return False
     return True
 

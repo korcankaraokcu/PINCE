@@ -697,18 +697,14 @@ class MultipleAddressesToSymbols(gdb.Command):
         data_read_list = []
         contents_recv = receive_from_pince()
 
-        # contents_recv format: [[expression1, include_address1, check1], ...]
+        # contents_recv format: [[expression1, include_address1], ...]
         for item in contents_recv:
             expression = item[0]
             try:
                 include_address = item[1]
             except IndexError:
                 include_address = True
-            try:
-                check = item[2]
-            except IndexError:
-                check = True
-            data_read = ScriptUtils.convert_address_to_symbol(expression, include_address, check)
+            data_read = ScriptUtils.convert_address_to_symbol(expression, include_address)
             data_read_list.append(data_read)
         send_to_pince(data_read_list)
 

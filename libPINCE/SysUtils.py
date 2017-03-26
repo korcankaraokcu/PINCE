@@ -723,26 +723,3 @@ def get_comments_of_variables(source_file_path, single_comment="#", multi_start=
                     break
             comment_dict[variable] = "\n".join(docstring_list)
     return comment_dict
-
-
-def check_for_restricted_gdb_symbols(string):
-    """Checks for characters that cause unexpected behaviour
-    "$" makes gdb show it's value history(e.g $4=4th value) and it's convenience variables(such as $pc, $g_thread)
-    Also whitespaces(or simply inputting nothing) makes gdb show the last shown value
-    If you don't like the user to see these, use this function to check the input
-
-    Args:
-        string (str): The str that'll be checked for specific characters
-
-    Returns:
-        bool: True if one of the characters are encountered, False otherwise
-    """
-    string = str(string)
-    string = string.strip()
-    if string is "":
-        return True
-    if search(r"\".*\"", string) or search(r"\{.*\}", string):  # For string and array expressions
-        return False
-    if search(r'\$', string):  # These characters make gdb show it's value history, so they should be avoided
-        return True
-    return False
