@@ -236,6 +236,8 @@ class UpdateAddressTableThread(QThread):
 
 # the mainwindow
 class MainForm(QMainWindow, MainWindow):
+    instances = []  # Holds temporary instances that will be deleted later on
+
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -416,6 +418,7 @@ class MainForm(QMainWindow, MainWindow):
         address = self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text()
         length = GuiUtils.text_to_valuetype(self.tableWidget_AddressTable.item(last_selected_row, TYPE_COL).text())[1]
         track_watchpoint_widget = TrackWatchpointWidgetForm(address, length, watchpoint_type, self)
+        self.instances.append(track_watchpoint_widget)
         track_watchpoint_widget.show()
 
     def browse_region_for_selected_row(self):
@@ -648,8 +651,9 @@ class MainForm(QMainWindow, MainWindow):
 # process select window
 class ProcessForm(QMainWindow, ProcessWindow):
     def __init__(self, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         GuiUtils.center_to_parent(self)
         processlist = SysUtils.get_process_list()
         self.refresh_process_table(self.tableWidget_ProcessTable, processlist)
@@ -1198,6 +1202,8 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
 
 
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
+    instances = []  # Holds temporary instances that will be deleted later on
+
     process_stopped = pyqtSignal()
     process_running = pyqtSignal()
 
@@ -2200,7 +2206,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
-        TrackBreakpointWidgetForm(current_address, current_instruction, self).show()
+        track_widget = TrackBreakpointWidgetForm(current_address, current_instruction, self)
+        self.instances.append(track_widget)
+        track_widget.show()
 
     def exec_disassemble_go_to_dialog(self):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
@@ -2323,8 +2331,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
 class BookmarkWidgetForm(QWidget, BookmarkWidget):
     def __init__(self, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
         self.listWidget.contextMenuEvent = self.listWidget_context_menu_event
@@ -2477,8 +2486,9 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
 
 class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
     def __init__(self, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
         self.tableWidget_BreakpointInfo.contextMenuEvent = self.tableWidget_BreakpointInfo_context_menu_event
@@ -2579,8 +2589,9 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
 
 class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
     def __init__(self, address, length, watchpoint_type, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
         if watchpoint_type == type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
@@ -2665,14 +2676,19 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.pushButton_Stop.setText("Close")
 
     def closeEvent(self, QCloseEvent):
-        self.update_timer.stop()
+        try:
+            self.update_timer.stop()
+        except AttributeError:
+            pass
+        self.parent().instances.remove(self)
         GDB_Engine.execute_with_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
 
 
 class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
     def __init__(self, address, instruction, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         self.setWindowFlags(Qt.Window)
         GuiUtils.center_to_parent(self)
         self.setWindowTitle("Addresses accessed by instruction '" + instruction + "'")
@@ -2796,6 +2812,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
 
     def closeEvent(self, QCloseEvent):
         self.update_timer.stop()
+        self.parent().instances.remove(self)
         GDB_Engine.execute_with_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
         self.parent().refresh_disassemble_view()
 
@@ -2884,8 +2901,9 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
 
 class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
     def __init__(self, address="", prompt_dialog=True, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         GuiUtils.center(self)
         self.address = address
         self.treeWidget_InstructionInfo.currentItemChanged.connect(self.display_collected_data)
@@ -2981,8 +2999,9 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
 
 class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
     def __init__(self, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
         self.textBrowser_AddressInfo.setFixedHeight(100)
@@ -3314,8 +3333,9 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
 
 class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
     def __init__(self, start="", end="", parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
         self.lineEdit_Start.setText(start)
@@ -3392,8 +3412,9 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
 
 class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
     def __init__(self, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
         self.refresh_table()
@@ -3590,8 +3611,9 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
 
 class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
     def __init__(self, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         GuiUtils.center_to_parent(self)
         self.setWindowFlags(Qt.Window)
         self.tableWidget_References.setColumnWidth(REF_STR_ADDR_COL, 150)
@@ -3705,8 +3727,9 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
 
 class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
     def __init__(self, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         GuiUtils.center_to_parent(self)
         self.setWindowFlags(Qt.Window)
         self.tableWidget_References.setColumnWidth(REF_CALL_ADDR_COL, 480)
@@ -3810,8 +3833,9 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
 
 class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
     def __init__(self, int_address, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         GuiUtils.center_to_parent(self)
         self.setWindowFlags(Qt.Window)
         self.splitter.setStretchFactor(0, 1)
