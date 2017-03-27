@@ -10,3 +10,25 @@ Code Relocations:
 	/media/ contains all the images, icons n' stuff
 	/pince-non-stop-files/ contains old codes that made the non-stop mode alive. It'll be re-implemented when the project finishes at basic level, this folder is just a... museum(?) for now
 **Don't touch anything in GUI folder, it contains auto-generated codes created by pyuic
+
+27/3/2017 - All GUI classes that will be instanced multiple times must contain these code blocks to prevent getting removed by garbage collector:
+
+    global instances
+    instances.append(self)
+
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
+
+If you need to only create one instance of a GUI class, use this instead to create the instance:
+
+    try:
+        self.window.show()
+    except AttributeError:
+        self.window = WindowForm(self)  # self parameter is optional
+        self.window.show()
+    self.window.activateWindow()
+
+If you need to pass self as a parameter, please don't use 'super().__init__(parent=parent)' in the child class, it makes Qt hide the child window. Use this in the child instead:
+    super().__init__()
+    self.parent = lambda: parent  # A quick hack to make other functions see the correct parent(). But Qt won't see it, so there'll be no bugs

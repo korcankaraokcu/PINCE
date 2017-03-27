@@ -66,6 +66,7 @@ from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
 
 selfpid = os.getpid()
+instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
 update_table = bool
@@ -236,8 +237,6 @@ class UpdateAddressTableThread(QThread):
 
 # the mainwindow
 class MainForm(QMainWindow, MainWindow):
-    instances = []  # Holds temporary instances that will be deleted later on
-
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -267,6 +266,7 @@ class MainForm(QMainWindow, MainWindow):
             self.set_default_settings()
         self.memory_view_window = MemoryViewWindowForm()
         self.memory_view_window.address_added.connect(self.add_entry_to_addresstable)
+        self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
@@ -417,9 +417,7 @@ class MainForm(QMainWindow, MainWindow):
         last_selected_row = self.tableWidget_AddressTable.selectionModel().selectedRows()[-1].row()
         address = self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text()
         length = GuiUtils.text_to_valuetype(self.tableWidget_AddressTable.item(last_selected_row, TYPE_COL).text())[1]
-        track_watchpoint_widget = TrackWatchpointWidgetForm(address, length, watchpoint_type, self)
-        self.instances.append(track_watchpoint_widget)
-        track_watchpoint_widget.show()
+        TrackWatchpointWidgetForm(address, length, watchpoint_type, self).show()
 
     def browse_region_for_selected_row(self):
         last_selected_row = self.tableWidget_AddressTable.selectionModel().selectedRows()[-1].row()
@@ -484,8 +482,8 @@ class MainForm(QMainWindow, MainWindow):
         SysUtils.execute_shell_command_as_user('python3 -m webbrowser "https://github.com/korcankaraokcu/PINCE/wiki"')
 
     def pushButton_About_clicked(self):
-        self.about_widget = AboutWidgetForm()
         self.about_widget.show()
+        self.about_widget.activateWindow()
 
     def pushButton_Settings_clicked(self):
         settings_dialog = SettingsDialogForm()
@@ -494,8 +492,8 @@ class MainForm(QMainWindow, MainWindow):
             self.apply_settings()
 
     def pushButton_Console_clicked(self):
-        self.console_widget = ConsoleWidgetForm()
-        self.console_widget.showMaximized()
+        console_widget = ConsoleWidgetForm()
+        console_widget.showMaximized()
 
     def pushButton_NewFirstScan_clicked(self):
         QMessageBox.information(self, "Error", "Memory searching isn't implemented yet" +
@@ -651,9 +649,8 @@ class MainForm(QMainWindow, MainWindow):
 # process select window
 class ProcessForm(QMainWindow, ProcessWindow):
     def __init__(self, parent=None):
-        super().__init__()
+        super().__init__(parent=parent)
         self.setupUi(self)
-        self.parent = lambda: parent
         GuiUtils.center_to_parent(self)
         processlist = SysUtils.get_process_list()
         self.refresh_process_table(self.tableWidget_ProcessTable, processlist)
@@ -1072,8 +1069,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
 class ConsoleWidgetForm(QWidget, ConsoleWidget):
     def __init__(self, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        global instances
+        instances.append(self)
         GuiUtils.center(self)
         self.input_history = [""]
         self.current_history_index = -1
@@ -1178,6 +1177,10 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         else:
             self.lineEdit.keyPressEvent_original(e)
 
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
+
 
 class AboutWidgetForm(QTabWidget, AboutWidget):
     def __init__(self, parent=None):
@@ -1202,8 +1205,6 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
 
 
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
-    instances = []  # Holds temporary instances that will be deleted later on
-
     process_stopped = pyqtSignal()
     process_running = pyqtSignal()
 
@@ -1380,8 +1381,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.verticalScrollBar_HexView.mouseReleaseEvent = self.verticalScrollBar_HexView_mouse_release_event
 
     def show_trace_window(self):
-        self.trace_instructions_window = TraceInstructionsWindowForm(prompt_dialog=False)
-        self.trace_instructions_window.showMaximized()
+        trace_instructions_window = TraceInstructionsWindowForm(prompt_dialog=False)
+        trace_instructions_window.showMaximized()
 
     def step_instruction(self):
         if self.updating_memoryview:
@@ -2191,24 +2192,23 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
-        self.examine_referrers_widget = ExamineReferrersWidgetForm(current_address_int, self)
-        self.examine_referrers_widget.show()
+        examine_referrers_widget = ExamineReferrersWidgetForm(current_address_int, self)
+        examine_referrers_widget.show()
 
     def exec_trace_instructions_dialog(self):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
-        self.trace_instructions_window = TraceInstructionsWindowForm(current_address, parent=self)
-        self.trace_instructions_window.showMaximized()
+        trace_instructions_window = TraceInstructionsWindowForm(current_address, parent=self)
+        trace_instructions_window.showMaximized()
 
     def exec_track_breakpoint_dialog(self):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
-        track_widget = TrackBreakpointWidgetForm(current_address, current_instruction, self)
-        self.instances.append(track_widget)
-        track_widget.show()
+        track_breakpoint_widget = TrackBreakpointWidgetForm(current_address, current_instruction, self)
+        track_breakpoint_widget.show()
 
     def exec_disassemble_go_to_dialog(self):
         selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
@@ -2251,36 +2251,44 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.refresh_disassemble_view()
 
     def actionBookmarks_triggered(self):
-        self.bookmark_widget = BookmarkWidgetForm(self)
-        self.bookmark_widget.show()
+        try:
+            self.bookmark_widget.show()
+        except AttributeError:
+            self.bookmark_widget = BookmarkWidgetForm(self)
+            self.bookmark_widget.show()
+        self.bookmark_widget.activateWindow()
 
     def actionStackTrace_Info_triggered(self):
         self.stacktrace_info_widget = StackTraceInfoWidgetForm()
         self.stacktrace_info_widget.show()
 
     def actionBreakpoints_triggered(self):
-        self.breakpoint_widget = BreakpointInfoWidgetForm(self)
-        self.breakpoint_widget.show()
+        try:
+            self.breakpoint_widget.show()
+        except AttributeError:
+            self.breakpoint_widget = BreakpointInfoWidgetForm(self)
+            self.breakpoint_widget.show()
+        self.breakpoint_widget.activateWindow()
 
     def actionFunctions_triggered(self):
         functions_info_widget = FunctionsInfoWidgetForm(self)
         functions_info_widget.show()
 
     def actionGDB_Log_File_triggered(self):
-        self.log_file_widget = LogFileWidgetForm()
-        self.log_file_widget.showMaximized()
+        log_file_widget = LogFileWidgetForm()
+        log_file_widget.showMaximized()
 
     def actionMemory_Regions_triggered(self):
-        self.memory_regions_widget = MemoryRegionsWidgetForm(self)
-        self.memory_regions_widget.show()
+        memory_regions_widget = MemoryRegionsWidgetForm(self)
+        memory_regions_widget.show()
 
     def actionReferenced_Strings_triggered(self):
-        self.ref_str_widget = ReferencedStringsWidgetForm(self)
-        self.ref_str_widget.show()
+        ref_str_widget = ReferencedStringsWidgetForm(self)
+        ref_str_widget.show()
 
     def actionReferenced_Calls_triggered(self):
-        self.ref_call_widget = ReferencedCallsWidgetForm(self)
-        self.ref_call_widget.show()
+        ref_call_widget = ReferencedCallsWidgetForm(self)
+        ref_call_widget.show()
 
     def actionInject_so_file_triggered(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the .so file", "", "Shared object library (*.so)")[0]
@@ -2311,8 +2319,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionSearch_Opcode_triggered(self):
         start_address = int(self.disassemble_currently_displayed_address, 16)
         end_address = start_address + 0x30000
-        self.search_opcode_widget = SearchOpcodeWidgetForm(hex(start_address), hex(end_address), self)
-        self.search_opcode_widget.show()
+        search_opcode_widget = SearchOpcodeWidgetForm(hex(start_address), hex(end_address), self)
+        search_opcode_widget.show()
 
     def actionDissect_Code_triggered(self):
         self.dissect_code_dialog = DissectCodeDialogForm()
@@ -2320,8 +2328,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.refresh_disassemble_view()
 
     def actionLibPINCE_triggered(self):
-        self.libPINCE_widget = LibPINCEReferenceWidgetForm(is_window=True)
-        self.libPINCE_widget.showMaximized()
+        libPINCE_widget = LibPINCEReferenceWidgetForm(is_window=True)
+        libPINCE_widget.showMaximized()
 
     def pushButton_ShowFloatRegisters_clicked(self):
         self.float_registers_widget = FloatRegisterWidgetForm()
@@ -2592,6 +2600,8 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
+        global instances
+        instances.append(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
         if watchpoint_type == type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
@@ -2680,7 +2690,8 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
             self.update_timer.stop()
         except AttributeError:
             pass
-        self.parent().instances.remove(self)
+        global instances
+        instances.remove(self)
         GDB_Engine.execute_with_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
 
 
@@ -2689,6 +2700,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
+        global instances
+        instances.append(self)
         self.setWindowFlags(Qt.Window)
         GuiUtils.center_to_parent(self)
         self.setWindowTitle("Addresses accessed by instruction '" + instruction + "'")
@@ -2812,7 +2825,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
 
     def closeEvent(self, QCloseEvent):
         self.update_timer.stop()
-        self.parent().instances.remove(self)
+        global instances
+        instances.remove(self)
         GDB_Engine.execute_with_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
         self.parent().refresh_disassemble_view()
 
@@ -2904,6 +2918,8 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
+        global instances
+        instances.append(self)
         GuiUtils.center(self)
         self.address = address
         self.treeWidget_InstructionInfo.currentItemChanged.connect(self.display_collected_data)
@@ -2996,12 +3012,18 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             return
         self.parent().disassemble_expression(address, append_to_travel_history=True)
 
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
+
 
 class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
+        global instances
+        instances.append(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
         self.textBrowser_AddressInfo.setFixedHeight(100)
@@ -3078,6 +3100,10 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
                "\nIt means that the function is overloaded"
         DialogWithButtonsForm(label_text=text, align=Qt.AlignLeft).exec_()
 
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
+
 
 class HexEditDialogForm(QDialog, HexEditDialog):
     def __init__(self, address, parent=None):
@@ -3151,6 +3177,8 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
         self.setupUi(self)
         self.found_count = 0
         self.current_found = 0
+        global instances
+        instances.append(self)
         if is_window:
             GuiUtils.center(self)
             self.setWindowFlags(Qt.Window)
@@ -3295,12 +3323,18 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
         self.widget_TypeDefs.show()
         self.pushButton_ShowTypeDefs.setText("Hide type_defs")
 
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
+
 
 class LogFileWidgetForm(QWidget, LogFileWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center(self)
+        global instances
+        instances.append(self)
         self.setWindowFlags(Qt.Window)
         self.log_path = SysUtils.get_gdb_log_file(GDB_Engine.currentpid)
         self.setWindowTitle("Log File of PID " + str(GDB_Engine.currentpid))
@@ -3328,6 +3362,8 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         log_file.close()
 
     def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
         self.refresh_timer.stop()
 
 
@@ -3336,6 +3372,8 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
+        global instances
+        instances.append(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
         self.lineEdit_Start.setText(start)
@@ -3409,12 +3447,18 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
             QApplication.clipboard().setText(
                 self.tableWidget_Opcodes.item(selected_row, SEARCH_OPCODE_OPCODES_COL).text())
 
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
+
 
 class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
+        global instances
+        instances.append(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
         self.refresh_table()
@@ -3479,6 +3523,10 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         address = self.tableWidget_MemoryRegions.item(row, MEMORY_REGIONS_ADDR_COL).text()
         address_int = int(address.split("-")[0], 16)
         self.parent().hex_dump_address(address_int)
+
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
 
 
 class DissectCodeDialogForm(QDialog, DissectCodeDialog):
@@ -3614,6 +3662,8 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
+        global instances
+        instances.append(self)
         GuiUtils.center_to_parent(self)
         self.setWindowFlags(Qt.Window)
         self.tableWidget_References.setColumnWidth(REF_STR_ADDR_COL, 150)
@@ -3724,12 +3774,18 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
             QApplication.clipboard().setText(
                 self.listWidget_Referrers.item(selected_row).text())
 
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
+
 
 class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
+        global instances
+        instances.append(self)
         GuiUtils.center_to_parent(self)
         self.setWindowFlags(Qt.Window)
         self.tableWidget_References.setColumnWidth(REF_CALL_ADDR_COL, 480)
@@ -3830,12 +3886,18 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
             QApplication.clipboard().setText(
                 self.listWidget_Referrers.item(selected_row).text())
 
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
+
 
 class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
     def __init__(self, int_address, parent=None):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
+        global instances
+        instances.append(self)
         GuiUtils.center_to_parent(self)
         self.setWindowFlags(Qt.Window)
         self.splitter.setStretchFactor(0, 1)
@@ -3940,6 +4002,10 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         if action == copy_address:
             QApplication.clipboard().setText(
                 self.listWidget_Referrers.item(selected_row).text())
+
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
 
 
 if __name__ == "__main__":
