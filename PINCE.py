@@ -1069,7 +1069,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
 class ConsoleWidgetForm(QWidget, ConsoleWidget):
     def __init__(self, parent=None):
-        super().__init__()
+        super().__init__(parent=parent)
         self.setupUi(self)
         global instances
         instances.append(self)
