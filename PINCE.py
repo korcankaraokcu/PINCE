@@ -1769,9 +1769,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.item(row, col).setData(Qt.BackgroundColorRole, QColor(colour))
 
     def on_process_stop(self):
-        self.updating_memoryview = True
         if GDB_Engine.stop_reason == type_defs.STOP_REASON.PAUSE:
             return
+        self.updating_memoryview = True
         time0 = time()
         thread_info = GDB_Engine.get_current_thread_information()
         self.setWindowTitle("Memory Viewer - Currently Debugging Thread " + thread_info)
