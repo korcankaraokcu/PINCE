@@ -264,8 +264,7 @@ class MainForm(QMainWindow, MainWindow):
         if settings_version != "0.1.0":
             self.settings.clear()
             self.set_default_settings()
-        self.memory_view_window = MemoryViewWindowForm()
-        self.memory_view_window.address_added.connect(self.add_entry_to_addresstable)
+        self.memory_view_window = MemoryViewWindowForm(self)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
@@ -1208,10 +1207,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     process_stopped = pyqtSignal()
     process_running = pyqtSignal()
 
-    # TODO: Change this nonsense when the huge refactorization happens
-    # Number of parameters from function MainForm.add_entry_to_addresstable()
-    address_added = pyqtSignal(object, object, object, object, object, object)
-
     def set_dynamic_debug_hotkeys(self):
         self.actionBreak.setText("Break[" + break_hotkey + "]")
         self.actionRun.setText("Run[" + continue_hotkey + "]")
@@ -1260,8 +1255,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionLibPINCE.triggered.connect(self.actionLibPINCE_triggered)
 
     def __init__(self, parent=None):
-        super().__init__(parent=parent)
+        super().__init__()
         self.setupUi(self)
+        self.parent = lambda: parent
         GuiUtils.center(self)
         self.updating_memoryview = False
         self.process_stopped.connect(self.on_process_stop)
@@ -1518,7 +1514,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                                                         index=type_defs.VALUE_INDEX.INDEX_AOB)
         if manual_address_dialog.exec_():
             description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
-            self.address_added.emit(description, address, typeofaddress, length, unicode, zero_terminate)
+            self.parent().add_entry_to_addresstable(description, address, typeofaddress, length, unicode,
+                                                    zero_terminate)
 
     def verticalScrollBar_HexView_mouse_release_event(self, event):
         GuiUtils.center_scroll_bar(self.verticalScrollBar_HexView)
@@ -2787,9 +2784,9 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
 
     def tableWidget_TrackInfo_item_double_clicked(self, index):
         address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
-        self.parent().address_added.emit("Changed by address " + self.address, address,
-                                         self.comboBox_ValueType.currentIndex(),
-                                         10, True, True)
+        self.parent().parent().add_entry_to_addresstable("Changed by address " + self.address, address,
+                                                         self.comboBox_ValueType.currentIndex(),
+                                                         10, True, True)
 
     def pushButton_Stop_clicked(self):
         if self.stopped:
