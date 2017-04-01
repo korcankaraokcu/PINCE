@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import gdb
 import pickle
-import json
 import sys
 import re
 import struct
@@ -57,11 +56,11 @@ track_breakpoint_dict = {}
 
 
 def receive_from_pince():
-    return json.load(open(recv_file, "r"))
+    return pickle.load(open(recv_file, "rb"))
 
 
 def send_to_pince(contents_send):
-    json.dump(contents_send, open(send_file, "w"))
+    pickle.dump(contents_send, open(send_file, "wb"))
 
 
 ScriptUtils.gdbinit()
