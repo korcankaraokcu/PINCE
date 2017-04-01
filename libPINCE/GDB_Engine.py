@@ -22,6 +22,7 @@ import pexpect
 import os
 import ctypes
 import pickle
+import json
 import shelve
 from . import SysUtils
 from . import type_defs
@@ -131,7 +132,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         cli_output (bool): If True, returns the readable parsed cli output instead of gdb/mi garbage
         send_with_file (bool): Custom commands declared in GDBCommandExtensions.py requires file communication. If
         called command has any parameters, pass this as True
-        file_contents_send (any type that pickle.dump supports): Arguments for the called custom gdb command
+        file_contents_send (any type that json.dump supports): Arguments for the called custom gdb command
         recv_with_file (bool): Pass this as True if the called custom gdb command returns something
 
     Examples:
@@ -165,7 +166,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         gdb_output = ""
         if send_with_file:
             send_file = SysUtils.get_ipc_from_PINCE_file(currentpid)
-            pickle.dump(file_contents_send, open(send_file, "wb"))
+            json.dump(file_contents_send, open(send_file, "w"))
         if recv_with_file or cli_output:
             recv_file = SysUtils.get_ipc_to_PINCE_file(currentpid)
 
@@ -192,7 +193,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
                     break
             if not cancel_send_command:
                 if recv_with_file or cli_output:
-                    output = pickle.load(open(recv_file, "rb"))
+                    output = json.load(open(recv_file, "r"))
                 else:
                     output = gdb_output
             else:
