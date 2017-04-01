@@ -558,7 +558,7 @@ class DissectCode(gdb.Command):
                 data_read = self.memory.read(100)
                 if data_read.startswith(b"\0"):
                     return False
-                data_read = data_read.split(b"\0")[0]
+                data_read = data_read.split(b"\0", maxsplit=1)[0]
                 data_read.decode("utf-8")
             else:
                 self.memory.read(1)
