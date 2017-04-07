@@ -2945,7 +2945,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
     def display_collected_data(self):
         self.textBrowser_RegisterInfo.clear()
         try:
-            current_dict = self.treeWidget_InstructionInfo.currentItem().trace_data.collected_dict
+            current_dict = self.treeWidget_InstructionInfo.currentItem().trace_data[1]
         except:
             return
         if current_dict:
@@ -2958,22 +2958,22 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.treeWidget_InstructionInfo.setStyleSheet("QTreeWidget::item{ height: 16px; }")
         parent = QTreeWidgetItem(self.treeWidget_InstructionInfo)
         if trace_data:
-            trace_parent = trace_data
+            trace_current = trace_data
         else:
-            trace_parent = GDB_Engine.get_trace_instructions_info(self.breakpoint)
-        while trace_parent:
+            trace_current = GDB_Engine.get_trace_instructions_info(self.breakpoint)
+        while trace_current:
             try:
-                current_item = trace_parent.children[0]
-                del trace_parent.children[0]
+                current_item = trace_current[2][0]
+                del trace_current[2][0]
             except IndexError:
-                trace_parent = trace_parent.parent
+                trace_current = trace_current[1]
                 parent = parent.parent()
                 continue
             child = QTreeWidgetItem(parent)
-            child.trace_data = current_item
-            child.setText(0, current_item.line_info)
-            if current_item.children:
-                trace_parent = current_item
+            child.trace_data = current_item[0]
+            child.setText(0, current_item[0][0])
+            if current_item[2]:
+                trace_current = current_item
                 parent = parent.child(parent.childCount() - 1)
         self.treeWidget_InstructionInfo.expandAll()
 

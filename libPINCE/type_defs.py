@@ -193,38 +193,3 @@ class InferiorRunningException(Exception):
 class GDBInitializeException(Exception):
     def __init__(self, message="GDB not initialized"):
         super(GDBInitializeException, self).__init__(message)
-
-
-class TraceInstructionsTree:
-    def __init__(self, line_info="", collected_dict=None):
-        self.line_info = line_info
-        self.collected_dict = collected_dict
-        self.children = []
-        self.parent = None
-
-    def add_child(self, child):
-        child.set_parent(self)
-        self.children.append(child)
-
-    def set_parent(self, parent):
-        self.parent = parent
-
-    def get_root(self):
-        root = self
-        while root is not None:
-            previous_root = root
-            root = root.parent
-        return previous_root
-
-    def parent_count(self):
-        root = self
-        root_count = 0
-        while root is not None:
-            root = root.parent
-            root_count += 1
-        return root_count - 1
-
-    def print_tree(self):
-        print("-" * self.parent_count() + self.line_info)
-        for item in self.children:
-            item.print_tree()

@@ -457,7 +457,7 @@ class TraceInstructions(gdb.Command):
         trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
         regex_ret = re.compile(r":\s+ret")  # 0x7f71a4dc5ff8 <poll+72>:	ret
         regex_call = re.compile(r":\s+call")  # 0x7f71a4dc5fe4 <poll+52>:	call   0x7f71a4de1100
-        returned_tree = type_defs.TraceInstructionsTree()
+        tree_root = last_node = current_node = [("", None), None, []]
         for x in range(max_trace_count):
             try:
                 output = pickle.load(open(trace_status_file, "rb"))
@@ -475,19 +475,18 @@ class TraceInstructions(gdb.Command):
                 collect_dict.update(ScriptUtils.get_segment_registers())
             if collect_float_registers:
                 collect_dict.update(ScriptUtils.get_float_registers())
-            returned_tree.add_child(type_defs.TraceInstructionsTree(line_info, collect_dict))
+            current_node[2].append(((line_info, collect_dict), current_node, []))
             status_info = (type_defs.TRACE_STATUS.STATUS_TRACING,
                            line_info + " (" + str(x + 1) + "/" + str(max_trace_count) + ")")
             pickle.dump(status_info, open(trace_status_file, "wb"))
             if regex_ret.search(line_info):
-                if returned_tree.parent is None:
-                    new_parent = type_defs.TraceInstructionsTree()
-                    returned_tree.set_parent(new_parent)
-                    new_parent.add_child(returned_tree)
-                returned_tree = returned_tree.parent
+                if current_node == tree_root:
+                    tree_root = (("", None), [], [tree_root])
+                current_node = last_node
             elif step_mode == type_defs.STEP_MODE.SINGLE_STEP:
                 if regex_call.search(line_info):
-                    returned_tree = returned_tree.children[-1]
+                    last_node = current_node
+                    current_node = current_node[2][-1]
             if stop_condition:
                 try:
                     if str(gdb.parse_and_eval(stop_condition)) == "1":
@@ -501,7 +500,7 @@ class TraceInstructions(gdb.Command):
         status_info = (type_defs.TRACE_STATUS.STATUS_PROCESSING, "Processing the collected data")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         trace_instructions_file = SysUtils.get_trace_instructions_file(pid, breakpoint)
-        pickle.dump(returned_tree.get_root(), open(trace_instructions_file, "wb"))
+        pickle.dump(tree_root, open(trace_instructions_file, "wb"))
         status_info = (type_defs.TRACE_STATUS.STATUS_FINISHED, "Tracing has been completed")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         if not stop_after_trace:
