@@ -30,7 +30,6 @@ import shutil
 import sys
 import binascii
 import pickle
-import pexpect
 from . import type_defs
 from re import match, search, IGNORECASE, split, sub
 
@@ -630,26 +629,8 @@ def execute_shell_command_as_user(command):
     Args:
         command (str): Command that'll be invoked from the shell
     """
-    output = pexpect.run("who").decode("utf-8")
-    user_name = output.split()[0]
-    pexpect.run('sudo -u ' + user_name + ' ' + command)
-
-
-def init_gdbinit_file():
-    """
-    Initializes the required .gdbinit file in $HOME
-    Very useful if you need to automatically execute a .gdbinit file and don't have the required .gdbinit file in $HOME
-    """
-    file_path = get_home_directory() + "/.gdbinit"
-    if not is_path_valid(file_path):
-        gdbinit_file = open(file_path, "w+")
-    else:
-        gdbinit_file = open(file_path, "r+")
-    auto_load_string = "set auto-load safe-path /"
-    if gdbinit_file.read().find(auto_load_string) == -1:
-        gdbinit_file.seek(0, 2)
-        gdbinit_file.write("\n" + auto_load_string)
-    gdbinit_file.close()
+    user_name = os.getlogin()
+    os.system('sudo -u ' + user_name + ' ' + command)
 
 
 def get_comments_of_variables(source_file_path, single_comment="#", multi_start='"""', multi_end='"""'):
@@ -723,3 +704,17 @@ def get_comments_of_variables(source_file_path, single_comment="#", multi_start=
                     break
             comment_dict[variable] = "\n".join(docstring_list)
     return comment_dict
+
+
+def init_user_files():
+    is_path_valid(type_defs.USER_PATHS.ROOT_PATH, "create")
+    is_path_valid(type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH, "create")
+    try:
+        open(type_defs.USER_PATHS.GDBINIT_PATH).close()
+    except FileNotFoundError:
+        open(type_defs.USER_PATHS.GDBINIT_PATH, "w").close()
+    user_name = os.getlogin()
+    os.system("sudo chown -R " + user_name + ":" + user_name + " " + type_defs.USER_PATHS.ROOT_PATH)
+
+
+init_user_files()
