@@ -369,15 +369,17 @@ def load_trace_instructions_file(file_path):
         file_path (str): Path of the trace instructions file
 
     Returns:
-        type_defs.TraceInstructionsTree: A tree based on instructions encountered while stepping
+        list: A list of nodes that looks like this-->[(line_info, register_dict), parent, child_list]
+        If an error occurs while reading, an empty list returned instead
 
+        Check PINCE.TraceInstructionsWindowForm.show_trace_info() to see how to traverse the tree
         Any "call" instruction creates a node in SINGLE_STEP mode
         Any "ret" instruction creates a parent regardless of the mode
     """
     try:
         output = pickle.load(open(file_path, "rb"))
     except:
-        output = ""
+        output = []
     return output
 
 
