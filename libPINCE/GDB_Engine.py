@@ -1582,8 +1582,10 @@ def get_trace_instructions_info(breakpoint):
         breakpoint (str): breakpoint number, must be returned from trace_instructions()
 
     Returns:
-        type_defs.TraceInstructionsTree: A tree based on instructions encountered while stepping
+        list: A list of nodes that looks like this-->[(line_info, register_dict), parent, child_list]
+        If an error occurs while reading, an empty list returned instead
 
+        Check PINCE.TraceInstructionsWindowForm.show_trace_info() to see how to traverse the tree
         Any "call" instruction creates a node in SINGLE_STEP mode
         Any "ret" instruction creates a parent regardless of the mode
     """
@@ -1591,7 +1593,7 @@ def get_trace_instructions_info(breakpoint):
     try:
         output = pickle.load(open(trace_instructions_file, "rb"))
     except:
-        output = ""
+        output = []
     return output
 
 

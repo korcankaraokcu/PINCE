@@ -2954,7 +2954,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             self.textBrowser_RegisterInfo.verticalScrollBar().setValue(
                 self.textBrowser_RegisterInfo.verticalScrollBar().minimum())
 
-    def show_trace_info(self, trace_data=""):
+    def show_trace_info(self, trace_data=None):
         self.treeWidget_InstructionInfo.setStyleSheet("QTreeWidget::item{ height: 16px; }")
         parent = QTreeWidgetItem(self.treeWidget_InstructionInfo)
         if trace_data:
