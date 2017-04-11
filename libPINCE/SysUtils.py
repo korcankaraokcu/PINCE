@@ -382,7 +382,7 @@ def load_trace_instructions_file(file_path):
     try:
         output = json.load(open(file_path, "r"), object_pairs_hook=OrderedDict)
     except:
-        output = ()
+        output = []
     return output
 
 
