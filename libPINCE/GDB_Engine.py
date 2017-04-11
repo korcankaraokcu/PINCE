@@ -18,10 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from re import search, split, findall, escape, compile, IGNORECASE
 from threading import Lock, Thread, Condition
 from time import sleep, time
+from collections import OrderedDict
 import pexpect
 import os
 import ctypes
 import pickle
+import json
 import shelve
 from . import SysUtils
 from . import type_defs
@@ -1582,18 +1584,20 @@ def get_trace_instructions_info(breakpoint):
         breakpoint (str): breakpoint number, must be returned from trace_instructions()
 
     Returns:
-        list: A list of nodes that looks like this-->[(line_info, register_dict), parent, child_list]
+        list: [node1, node2, node3, ...]
+        node-->[(line_info, register_dict), parent_index, child_index_list]
         If an error occurs while reading, an empty list returned instead
 
         Check PINCE.TraceInstructionsWindowForm.show_trace_info() to see how to traverse the tree
+        If you just want to search something in the trace data, you can enumerate the tree instead of traversing
         Any "call" instruction creates a node in SINGLE_STEP mode
         Any "ret" instruction creates a parent regardless of the mode
     """
     trace_instructions_file = SysUtils.get_trace_instructions_file(currentpid, breakpoint)
     try:
-        output = pickle.load(open(trace_instructions_file, "rb"))
+        output = json.load(open(trace_instructions_file, "r"), object_pairs_hook=OrderedDict)
     except:
-        output = []
+        output = ()
     return output
 
 

@@ -2958,22 +2958,27 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.treeWidget_InstructionInfo.setStyleSheet("QTreeWidget::item{ height: 16px; }")
         parent = QTreeWidgetItem(self.treeWidget_InstructionInfo)
         if trace_data:
-            trace_current = trace_data
+            trace_tree, current_root_index = trace_data
         else:
-            trace_current = GDB_Engine.get_trace_instructions_info(self.breakpoint)
-        while trace_current:
+            trace_data = GDB_Engine.get_trace_instructions_info(self.breakpoint)
+            if trace_data:
+                trace_tree, current_root_index = trace_data
+            else:
+                return
+        while current_root_index != None:
             try:
-                current_item = trace_current[2][0]
-                del trace_current[2][0]
-            except IndexError:
-                trace_current = trace_current[1]
+                current_index = trace_tree[current_root_index][2][0]  # Get the first child
+                current_item = trace_tree[current_index][0]
+                del trace_tree[current_root_index][2][0]  # Delete it
+            except IndexError:  # We've depleted the children
+                current_root_index = trace_tree[current_root_index][1]  # traverse upwards
                 parent = parent.parent()
                 continue
             child = QTreeWidgetItem(parent)
-            child.trace_data = current_item[0]
-            child.setText(0, current_item[0][0])
-            if current_item[2]:
-                trace_current = current_item
+            child.trace_data = current_item
+            child.setText(0, current_item[0])
+            if trace_tree[current_index][2]:  # If current item has children, traverse them
+                current_root_index = current_index  # traverse downwards
                 parent = parent.child(parent.childCount() - 1)
         self.treeWidget_InstructionInfo.expandAll()
 
@@ -3005,7 +3010,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
 
     def treeWidget_InstructionInfo_item_double_clicked(self, index):
         try:
-            address = SysUtils.extract_address(self.treeWidget_InstructionInfo.currentItem().trace_data.line_info)
+            address = SysUtils.extract_address(self.treeWidget_InstructionInfo.currentItem().trace_data[0])
         except:
             return
         self.parent().disassemble_expression(address, append_to_travel_history=True)
