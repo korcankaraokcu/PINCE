@@ -1597,7 +1597,7 @@ def get_trace_instructions_info(breakpoint):
     try:
         output = json.load(open(trace_instructions_file, "r"), object_pairs_hook=OrderedDict)
     except:
-        output = ()
+        output = []
     return output
 
 
