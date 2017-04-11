@@ -29,9 +29,10 @@ import os
 import shutil
 import sys
 import binascii
-import pickle
+import json
 from . import type_defs
 from re import match, search, IGNORECASE, split, sub
+from collections import OrderedDict
 
 
 def get_process_list():
@@ -369,17 +370,19 @@ def load_trace_instructions_file(file_path):
         file_path (str): Path of the trace instructions file
 
     Returns:
-        list: A list of nodes that looks like this-->[(line_info, register_dict), parent, child_list]
+        list: [node1, node2, node3, ...]
+        node-->[(line_info, register_dict), parent_index, child_index_list]
         If an error occurs while reading, an empty list returned instead
 
         Check PINCE.TraceInstructionsWindowForm.show_trace_info() to see how to traverse the tree
+        If you just want to search something in the trace data, you can enumerate the tree instead of traversing
         Any "call" instruction creates a node in SINGLE_STEP mode
         Any "ret" instruction creates a parent regardless of the mode
     """
     try:
-        output = pickle.load(open(file_path, "rb"))
+        output = json.load(open(file_path, "r"), object_pairs_hook=OrderedDict)
     except:
-        output = []
+        output = ()
     return output
 
 

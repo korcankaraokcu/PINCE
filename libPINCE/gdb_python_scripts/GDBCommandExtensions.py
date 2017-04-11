@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import gdb
 import pickle
+import json
 import sys
 import re
 import struct
@@ -459,7 +460,13 @@ class TraceInstructions(gdb.Command):
         regex_call = re.compile(r":\s+call")  # 0x7f71a4dc5fe4 <poll+52>:	call   0x7f71a4de1100
 
         # The reason we don't use a tree class is to make the tree json-compatible
-        current_node = [("", None), None, []]  # Initial tree-->[(line_info, register_dict), parent, child_list]
+        # tree format-->[node1, node2, node3, ...]
+        # node-->[(line_info, register_dict), parent_index, child_index_list]
+        tree = []
+        current_index = 0  # Avoid calling len()
+        current_root_index = 0
+        root_index = 0
+        tree.append([("", None), None, []])
         for x in range(max_trace_count):
             try:
                 output = pickle.load(open(trace_status_file, "rb"))
@@ -477,19 +484,24 @@ class TraceInstructions(gdb.Command):
                 collect_dict.update(ScriptUtils.get_segment_registers())
             if collect_float_registers:
                 collect_dict.update(ScriptUtils.get_float_registers())
-            current_node[2].append([(line_info, collect_dict), current_node, []])  # Add a child
+            current_index += 1
+            tree.append([(line_info, collect_dict), current_root_index, []])
+            tree[current_root_index][2].append(current_index)  # Add a child
             status_info = (type_defs.TRACE_STATUS.STATUS_TRACING,
                            line_info + " (" + str(x + 1) + "/" + str(max_trace_count) + ")")
             pickle.dump(status_info, open(trace_status_file, "wb"))
             if regex_ret.search(line_info):
-                if current_node[1] is None:
-                    new_parent = [("", None), None, []]
-                    current_node[1] = new_parent  # Set new parent
-                    new_parent[2].append(current_node)  # Add a child
-                current_node = current_node[1]  # current_node=current_node.parent
+                if tree[current_root_index][1] is None:  # If no parents exist
+                    current_index += 1
+                    tree.append([("", None), None, [current_root_index]])
+                    tree[current_root_index][1] = current_index  # Set new parent
+                    current_root_index = current_index  # current_node=current_node.parent
+                    root_index = current_root_index  # set new root
+                else:
+                    current_root_index = tree[current_root_index][1]  # current_node=current_node.parent
             elif step_mode == type_defs.STEP_MODE.SINGLE_STEP:
                 if regex_call.search(line_info):
-                    current_node = current_node[2][-1]
+                    current_root_index = current_index
             if stop_condition:
                 try:
                     if str(gdb.parse_and_eval(stop_condition)) == "1":
@@ -503,10 +515,7 @@ class TraceInstructions(gdb.Command):
         status_info = (type_defs.TRACE_STATUS.STATUS_PROCESSING, "Processing the collected data")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         trace_instructions_file = SysUtils.get_trace_instructions_file(pid, breakpoint)
-        while current_node:
-            tree_root = current_node
-            current_node = current_node[1]
-        pickle.dump(tree_root, open(trace_instructions_file, "wb"))
+        json.dump((tree, root_index), open(trace_instructions_file, "w"))
         status_info = (type_defs.TRACE_STATUS.STATUS_FINISHED, "Tracing has been completed")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         if not stop_after_trace:
