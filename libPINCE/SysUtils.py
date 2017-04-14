@@ -29,6 +29,7 @@ import os
 import shutil
 import sys
 import binascii
+import pickle
 import json
 from . import type_defs
 from re import match, search, IGNORECASE, split, sub
@@ -351,38 +352,67 @@ def get_trace_instructions_file(pid, breakpoint):
     return get_PINCE_IPC_directory(pid) + "/" + breakpoint + "_trace.txt"
 
 
-def save_trace_instructions_file(pid, breakpoint, file_path):
-    """Saves the trace instructions file for given pid and breakpoint to the given file path
+def save_file(data, file_path=type_defs.USER_PATHS.HOME_PATH, save_method="json"):
+    """Saves the specified data to given path
 
     Args:
-        pid (int,str): PID of the process
-        breakpoint (str): breakpoint number
-        file_path (str): Path of the save file
-    """
-    trace_instructions_file = get_trace_instructions_file(pid, breakpoint)
-    shutil.copy2(trace_instructions_file, file_path)
-
-
-def load_trace_instructions_file(file_path):
-    """Loads the trace instructions file from the given file path
-
-    Args:
-        file_path (str): Path of the trace instructions file
+        data (??): Saved data, can be anything, but must be supported by save_method
+        file_path (str): Path of the saved file
+        save_method (str): Can be "json" or "pickle"
 
     Returns:
-        list: [node1, node2, node3, ...]
-        node-->[(line_info, register_dict), parent_index, child_index_list]
-        If an error occurs while reading, an empty list returned instead
-
-        Check PINCE.TraceInstructionsWindowForm.show_trace_info() to see how to traverse the tree
-        If you just want to search something in the trace data, you can enumerate the tree instead of traversing
-        Any "call" instruction creates a node in SINGLE_STEP mode
-        Any "ret" instruction creates a parent regardless of the mode
+        bool: True if saved successfully, False if not
     """
-    try:
-        output = json.load(open(file_path, "r"), object_pairs_hook=OrderedDict)
-    except:
-        output = []
+    if save_method == "json":
+        try:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            json.dump(data, open(file_path, "w"))
+            chown_to_user(file_path, recursive=False)
+            return True
+        except Exception as e:
+            print(e, "Encountered an exception while dumping the data")
+            return False
+    elif save_method == "pickle":
+        try:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            pickle.dump(data, open(file_path, "wb"))
+            chown_to_user(file_path, recursive=False)
+            return True
+        except Exception as e:
+            print(e, "Encountered an exception while dumping the data")
+            return False
+    else:
+        print("Unsupported save_method, bailing out...")
+        return False
+
+
+def load_file(file_path, load_method="json", return_on_fail=None):
+    """Loads data from the given path
+
+    Args:
+        file_path (str): Path of the saved file
+        load_method (str): Can be "json" or "pickle"
+        return_on_fail (??): Return this object if loading fails, None is the default
+
+    Returns:
+        ??: file_path is like a box of chocolates, you never know what you're gonna get
+        Returns return_on_fail if loading fails, None is the default
+    """
+    if load_method == "json":
+        try:
+            output = json.load(open(file_path, "r"), object_pairs_hook=OrderedDict)
+        except Exception as e:
+            print(e, "Encountered an exception while loading the data")
+            return return_on_fail
+    elif load_method == "pickle":
+        try:
+            output = pickle.load(open(file_path, "rb"))
+        except Exception as e:
+            print(e, "Encountered an exception while loading the data")
+            return return_on_fail
+    else:
+        print("Unsupported load_method, bailing out...")
+        return return_on_fail
     return output
 
 
@@ -712,14 +742,25 @@ def get_comments_of_variables(source_file_path, single_comment="#", multi_start=
 
 
 def init_user_files():
+    """Initializes user files"""
     is_path_valid(type_defs.USER_PATHS.ROOT_PATH, "create")
     is_path_valid(type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH, "create")
     try:
         open(type_defs.USER_PATHS.GDBINIT_PATH).close()
     except FileNotFoundError:
         open(type_defs.USER_PATHS.GDBINIT_PATH, "w").close()
+    chown_to_user(type_defs.USER_PATHS.ROOT_PATH)
+
+
+def chown_to_user(file_path, recursive=True):
+    """Gives ownership of given path to user
+
+    Args:
+        file_path (str): Self-explanatory
+        recursive (bool): If True, applies chown recursively
+    """
     user_name = os.getlogin()
-    os.system("sudo chown -R " + user_name + ":" + user_name + " " + type_defs.USER_PATHS.ROOT_PATH)
+    os.system("sudo chown " + ("-R " if recursive else "") + user_name + ":" + user_name + " " + file_path)
 
 
 init_user_files()

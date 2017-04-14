@@ -28,6 +28,7 @@ import sys
 import traceback
 import signal
 import re
+import copy
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 
@@ -2922,6 +2923,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         instances.append(self)
         GuiUtils.center(self)
         self.address = address
+        self.trace_data = None
         self.treeWidget_InstructionInfo.currentItemChanged.connect(self.display_collected_data)
         self.treeWidget_InstructionInfo.itemDoubleClicked.connect(self.treeWidget_InstructionInfo_item_double_clicked)
         self.treeWidget_InstructionInfo.contextMenuEvent = self.treeWidget_InstructionInfo_context_menu_event
@@ -2965,6 +2967,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
                 trace_tree, current_root_index = trace_data
             else:
                 return
+        self.trace_data = copy.deepcopy(trace_data)
         while current_root_index != None:
             try:
                 current_index = trace_tree[current_root_index][2][0]  # Get the first child
@@ -2984,16 +2987,21 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
 
     def save_file(self):
         trace_file_path = type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH
-        file_path = QFileDialog.getSaveFileName(self, "Save trace file", trace_file_path)[0]
+        file_path = \
+            QFileDialog.getSaveFileName(self, "Save trace file", trace_file_path,
+                                        "Trace File (*.trace);;All Files (*)")[0]
         if file_path:
-            SysUtils.save_trace_instructions_file(GDB_Engine.currentpid, self.breakpoint, file_path)
+            if not SysUtils.save_file(self.trace_data, file_path + ".trace"):
+                QMessageBox.information(self, "Error", "Couldn't save the file, check terminal for details")
 
     def load_file(self):
         trace_file_path = type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH
-        file_path = QFileDialog.getOpenFileName(self, "Open trace file", trace_file_path)[0]
+        file_path = \
+            QFileDialog.getOpenFileName(self, "Open trace file", trace_file_path,
+                                        "Trace File (*.trace);;All Files (*)")[0]
         if file_path:
             self.treeWidget_InstructionInfo.clear()
-            trace_data = SysUtils.load_trace_instructions_file(file_path)
+            trace_data = SysUtils.load_file(file_path, return_on_fail=[])
             self.show_trace_info(trace_data)
 
     def treeWidget_InstructionInfo_context_menu_event(self, event):
