@@ -2033,6 +2033,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.bookmark_address(current_address_int)
         elif event.key() == Qt.Key_D:
             self.dissect_current_region()
+        elif event.key() == Qt.Key_T:
+            self.exec_trace_instructions_dialog()
         elif event.key() == Qt.Key_R:
             self.refresh_disassemble_view()
         else:
@@ -2117,7 +2119,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             add_condition = -1
         menu.addSeparator()
         track_breakpoint = menu.addAction("Find out which addresses this instruction accesses")
-        trace_instructions = menu.addAction("Break and trace instructions")
+        trace_instructions = menu.addAction("Break and trace instructions[T]")
         dissect_region = menu.addAction("Dissect this region[D]")
         menu.addSeparator()
         refresh = menu.addAction("Refresh[R]")
