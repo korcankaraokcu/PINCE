@@ -362,6 +362,9 @@ def save_file(data, file_path, save_method="json"):
 
     Returns:
         bool: True if saved successfully, False if not
+
+    Known extensions(name, ext, type):
+        Trace File, .trace, json
     """
     if save_method == "json":
         try:
@@ -397,6 +400,9 @@ def load_file(file_path, load_method="json", return_on_fail=None):
     Returns:
         ??: file_path is like a box of chocolates, you never know what you're gonna get
         Returns return_on_fail if loading fails, None is the default
+
+    Known extensions(name, ext, type):
+        Trace File, .trace, json
     """
     if load_method == "json":
         try:
