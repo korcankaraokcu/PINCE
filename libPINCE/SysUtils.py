@@ -352,7 +352,7 @@ def get_trace_instructions_file(pid, breakpoint):
     return get_PINCE_IPC_directory(pid) + "/" + breakpoint + "_trace.txt"
 
 
-def save_file(data, file_path=type_defs.USER_PATHS.HOME_PATH, save_method="json"):
+def save_file(data, file_path, save_method="json"):
     """Saves the specified data to given path
 
     Args:
@@ -367,7 +367,7 @@ def save_file(data, file_path=type_defs.USER_PATHS.HOME_PATH, save_method="json"
         try:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             json.dump(data, open(file_path, "w"))
-            chown_to_user(file_path, recursive=False)
+            chown_to_user(file_path)
             return True
         except Exception as e:
             print(e, "Encountered an exception while dumping the data")
@@ -376,7 +376,7 @@ def save_file(data, file_path=type_defs.USER_PATHS.HOME_PATH, save_method="json"
         try:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             pickle.dump(data, open(file_path, "wb"))
-            chown_to_user(file_path, recursive=False)
+            chown_to_user(file_path)
             return True
         except Exception as e:
             print(e, "Encountered an exception while dumping the data")
@@ -749,10 +749,10 @@ def init_user_files():
         open(type_defs.USER_PATHS.GDBINIT_PATH).close()
     except FileNotFoundError:
         open(type_defs.USER_PATHS.GDBINIT_PATH, "w").close()
-    chown_to_user(type_defs.USER_PATHS.ROOT_PATH)
+    chown_to_user(type_defs.USER_PATHS.ROOT_PATH, recursive=True)
 
 
-def chown_to_user(file_path, recursive=True):
+def chown_to_user(file_path, recursive=False):
     """Gives ownership of given path to user
 
     Args:
