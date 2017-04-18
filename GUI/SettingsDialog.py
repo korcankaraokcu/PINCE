@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'SettingsDialog.ui'
 #
-# Created: Fri Dec 16 04:11:05 2016
-#      by: PyQt5 UI code generator 5.2.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(658, 555)
+        Dialog.resize(658, 558)
         self.gridLayout_2 = QtWidgets.QGridLayout(Dialog)
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.verticalLayout = QtWidgets.QVBoxLayout()
@@ -61,7 +60,6 @@ class Ui_Dialog(object):
         self.QWidget_UpdateInterval = QtWidgets.QWidget(self.page)
         self.QWidget_UpdateInterval.setObjectName("QWidget_UpdateInterval")
         self.horizontalLayout_UpdateInterval = QtWidgets.QHBoxLayout(self.QWidget_UpdateInterval)
-        self.horizontalLayout_UpdateInterval.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_UpdateInterval.setObjectName("horizontalLayout_UpdateInterval")
         self.label = QtWidgets.QLabel(self.QWidget_UpdateInterval)
         self.label.setObjectName("label")
@@ -77,6 +75,10 @@ class Ui_Dialog(object):
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_7.addItem(spacerItem)
         self.verticalLayout_5.addLayout(self.horizontalLayout_7)
+        self.checkBox_ShowMessageBox = QtWidgets.QCheckBox(self.page)
+        self.checkBox_ShowMessageBox.setChecked(True)
+        self.checkBox_ShowMessageBox.setObjectName("checkBox_ShowMessageBox")
+        self.verticalLayout_5.addWidget(self.checkBox_ShowMessageBox)
         spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_5.addItem(spacerItem1)
         self.gridLayout.addLayout(self.verticalLayout_5, 0, 0, 1, 1)
@@ -232,7 +234,7 @@ class Ui_Dialog(object):
         self.gridLayout_2.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
         self.retranslateUi(Dialog)
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(0)
         self.listWidget_Functions.setCurrentRow(-1)
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
@@ -258,6 +260,7 @@ class Ui_Dialog(object):
         self.label.setText(_translate("Dialog", "Update interval"))
         self.lineEdit_UpdateInterval.setText(_translate("Dialog", "0.5"))
         self.label_2.setText(_translate("Dialog", "sec"))
+        self.checkBox_ShowMessageBox.setText(_translate("Dialog", "Show a MessageBox on InferiorRunning and GDBInitialize exceptions"))
         self.label_3.setText(_translate("Dialog", "Functions"))
         __sortingEnabled = self.listWidget_Functions.isSortingEnabled()
         self.listWidget_Functions.setSortingEnabled(False)
@@ -271,8 +274,8 @@ class Ui_Dialog(object):
         self.label_4.setText(_translate("Dialog", "Hotkey"))
         self.pushButton_ClearHotkey.setText(_translate("Dialog", "Clear"))
         self.label_5.setText(_translate("Dialog", "Code injection method:"))
-        self.radioButton_SimpleDLopenCall.setText(_translate("Dialog", "Simple dlopen call"))
-        self.radioButton_AdvancedInjection.setText(_translate("Dialog", "Advanced Injection"))
+        self.radioButton_SimpleDLopenCall.setText(_translate("Dialog", "Simp&le dlopen call"))
+        self.radioButton_AdvancedInjection.setText(_translate("Dialog", "Advanced In&jection"))
         self.checkBox_BringDisassembleToFront.setText(_translate("Dialog", "Bring disassemble screen to front when the inferior is stopped"))
         self.label_6.setText(_translate("Dialog", "Instructions shown per scroll"))
         self.label_7.setText(_translate("Dialog", "GDB Path"))

@@ -72,6 +72,7 @@ instances = []  # Holds temporary instances that will be deleted later on
 # settings
 update_table = bool
 table_update_interval = float
+show_messagebox_on_exception = bool
 pause_hotkey = str
 break_hotkey = str
 continue_hotkey = str
@@ -177,14 +178,15 @@ REF_CALL_COUNT_COL = 1
 
 
 def except_hook(exception_type, value, tb):
-    focused_widget = QApplication.focusWidget()
-    if focused_widget:
-        if exception_type == type_defs.GDBInitializeException:
-            QMessageBox.information(focused_widget, "Error", "GDB isn't initialized yet" +
-                                    "\nCreate or attach to a process to initialize")
-        elif exception_type == type_defs.InferiorRunningException:
-            QMessageBox.information(focused_widget, "Error", "Process is running" +
-                                    "\nPress " + break_hotkey + " to stop process")
+    if show_messagebox_on_exception:
+        focused_widget = QApplication.focusWidget()
+        if focused_widget:
+            if exception_type == type_defs.GDBInitializeException:
+                QMessageBox.information(focused_widget, "Error", "GDB isn't initialized yet" +
+                                        "\nCreate or attach to a process to initialize")
+            elif exception_type == type_defs.InferiorRunningException:
+                QMessageBox.information(focused_widget, "Error", "Process is running" +
+                                        "\nPress " + break_hotkey + " to stop process")
     traceback.print_exception(exception_type, value, tb)
 
 
@@ -275,7 +277,9 @@ class MainForm(QMainWindow, MainWindow):
             settings_version = self.settings.value("Misc/version", type=str)
         except TypeError:
             settings_version = None
-        if settings_version != "0.1.0":
+
+        # Increase version by one if you change settings
+        if settings_version != "master-2":  # Format: branch_name-version
             self.settings.clear()
             self.set_default_settings()
         self.memory_view_window = MemoryViewWindowForm(self)
@@ -334,6 +338,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.beginGroup("General")
         self.settings.setValue("auto_update_address_table", False)
         self.settings.setValue("address_table_update_interval", 0.5)
+        self.settings.setValue("show_messagebox_on_exception", True)
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
         self.settings.setValue("pause", "F1")
@@ -351,13 +356,14 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("gdb_path", type_defs.PATHS.GDB_PATH)
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
-        self.settings.setValue("version", "0.1.0")
+        self.settings.setValue("version", "master-2")
         self.settings.endGroup()
         self.apply_settings()
 
     def apply_settings(self):
         global update_table
         global table_update_interval
+        global show_messagebox_on_exception
         global pause_hotkey
         global break_hotkey
         global continue_hotkey
@@ -367,6 +373,7 @@ class MainForm(QMainWindow, MainWindow):
         global gdb_path
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
         table_update_interval = self.settings.value("General/address_table_update_interval", type=float)
+        show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
         pause_hotkey = self.settings.value("Hotkeys/pause")
         break_hotkey = self.settings.value("Hotkeys/break")
         continue_hotkey = self.settings.value("Hotkeys/continue")
@@ -1002,6 +1009,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 return
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
+        self.settings.setValue("General/show_messagebox_on_exception", self.checkBox_ShowMessageBox.isChecked())
         self.settings.setValue("Hotkeys/pause", self.pause_hotkey)
         self.settings.setValue("Hotkeys/break", self.break_hotkey)
         self.settings.setValue("Hotkeys/continue", self.continue_hotkey)
@@ -1022,6 +1030,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.settings.value("General/auto_update_address_table", type=bool))
         self.lineEdit_UpdateInterval.setText(
             str(self.settings.value("General/address_table_update_interval", type=float)))
+        self.checkBox_ShowMessageBox.setChecked(self.settings.value("General/show_messagebox_on_exception", type=bool))
         self.pause_hotkey = self.settings.value("Hotkeys/pause")
         self.break_hotkey = self.settings.value("Hotkeys/break")
         self.continue_hotkey = self.settings.value("Hotkeys/continue")

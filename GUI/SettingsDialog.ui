@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>658</width>
-    <height>555</height>
+    <height>558</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -68,7 +68,7 @@
           </size>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="page">
           <layout class="QGridLayout" name="gridLayout">
@@ -135,6 +135,16 @@
                 </spacer>
                </item>
               </layout>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="checkBox_ShowMessageBox">
+               <property name="text">
+                <string>Show a MessageBox on InferiorRunning and GDBInitialize exceptions</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
              <item>
               <spacer name="verticalSpacer_2">
@@ -281,7 +291,7 @@
                      <item>
                       <widget class="QRadioButton" name="radioButton_SimpleDLopenCall">
                        <property name="text">
-                        <string>Simple dlopen call</string>
+                        <string>Simp&amp;le dlopen call</string>
                        </property>
                        <property name="checked">
                         <bool>true</bool>
@@ -294,7 +304,7 @@
                         <bool>false</bool>
                        </property>
                        <property name="text">
-                        <string>Advanced Injection</string>
+                        <string>Advanced In&amp;jection</string>
                        </property>
                       </widget>
                      </item>
