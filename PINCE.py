@@ -176,6 +176,23 @@ REF_CALL_ADDR_COL = 0
 REF_CALL_COUNT_COL = 1
 
 
+def except_hook(exception_type, value, tb):
+    focused_widget = QApplication.focusWidget()
+    if focused_widget:
+        if exception_type == type_defs.GDBInitializeException:
+            QMessageBox.information(focused_widget, "Error", "GDB isn't initialized yet" +
+                                    "\nCreate or attach to a process to initialize")
+        elif exception_type == type_defs.InferiorRunningException:
+            QMessageBox.information(focused_widget, "Error", "Process is running" +
+                                    "\nPress " + break_hotkey + " to stop process")
+    traceback.print_exception(exception_type, value, tb)
+
+
+# From version 5.5 and onwards, PyQT calls qFatal() when an exception has been encountered
+# So, we must override sys.excepthook to avoid calling of qFatal()
+sys.excepthook = except_hook
+
+
 def signal_handler(signal, frame):
     GDB_Engine.cancel_last_command()
     raise KeyboardInterrupt
@@ -234,26 +251,10 @@ class UpdateAddressTableThread(QThread):
 
 # the mainwindow
 class MainForm(QMainWindow, MainWindow):
-    def except_hook(self, exception_type, value, tb):
-        focused_widget = QApplication.focusWidget()
-        if focused_widget:
-            if exception_type == type_defs.GDBInitializeException:
-                QMessageBox.information(focused_widget, "Error", "GDB isn't initialized yet" +
-                                        "\nCreate or attach to a process to initialize")
-            elif exception_type == type_defs.InferiorRunningException:
-                QMessageBox.information(focused_widget, "Error", "Process is running" +
-                                        "\nPress " + break_hotkey + " to stop process")
-        traceback.print_exception(exception_type, value, tb)
-
     def __init__(self):
         super().__init__()
         self.setupUi(self)
         GuiUtils.center(self)
-
-        # From version 5.5 and onwards, PyQT calls qFatal() when an exception has been encountered
-        # So, we must override sys.excepthook to avoid calling of qFatal()
-        sys.excepthook = self.except_hook
-
         self.tableWidget_AddressTable.setColumnWidth(FROZEN_COL, 25)
         self.tableWidget_AddressTable.setColumnWidth(DESC_COL, 150)
         self.tableWidget_AddressTable.setColumnWidth(ADDR_COL, 150)
