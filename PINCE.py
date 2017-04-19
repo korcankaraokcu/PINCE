@@ -357,6 +357,8 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("gdb_path", type_defs.PATHS.GDB_PATH)
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
+
+        # Increase version by one if you change settings
         self.settings.setValue("version", "master-2")
         self.settings.endGroup()
         self.apply_settings()
