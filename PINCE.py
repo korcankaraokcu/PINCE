@@ -282,6 +282,7 @@ class MainForm(QMainWindow, MainWindow):
         if settings_version != "master-2":  # Format: branch_name-version
             self.settings.clear()
             self.set_default_settings()
+        GDB_Engine.init_gdb(gdb_path)
         self.memory_view_window = MemoryViewWindowForm(self)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
