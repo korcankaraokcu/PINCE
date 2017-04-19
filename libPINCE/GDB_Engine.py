@@ -432,7 +432,7 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
         pid (int,str): PID of the process that'll be attached to
 
     Returns:
-        tuple: (A member of type_defs.ATTACH_RESULT, error_message)
+        tuple: (A member of type_defs.ATTACH_RESULT, result_message)
     """
     global currentpid
     pid = int(pid)
