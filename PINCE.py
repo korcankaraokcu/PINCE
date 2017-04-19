@@ -2856,7 +2856,10 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         if GDB_Engine.inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
             QCloseEvent.ignore()
             raise type_defs.InferiorRunningException
-        self.update_timer.stop()
+        try:
+            self.update_timer.stop()
+        except AttributeError:
+            pass
         global instances
         instances.remove(self)
         GDB_Engine.execute_with_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
