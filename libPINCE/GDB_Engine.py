@@ -360,6 +360,9 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
 
     Args:
         gdb_path (str): Path of the gdb binary
+
+    Note:
+        Calling init_gdb() will reset the current session
     """
     global child
     global gdb_initialized
@@ -453,7 +456,8 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
         error_message = "Permission denied, could not attach to the process"
         print(error_message)
         return type_defs.ATTACH_RESULT.PERM_DENIED, error_message
-    init_gdb(gdb_path)
+    if currentpid != -1 or not gdb_initialized:
+        init_gdb(gdb_path)
     global inferior_arch
     currentpid = pid
     SysUtils.create_PINCE_IPC_PATH(pid)
@@ -482,9 +486,10 @@ def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH):
     Returns:
         bool: True if the process has been created successfully, False otherwise
     """
-    init_gdb(gdb_path)
     global currentpid
     global inferior_arch
+    if currentpid != -1 or not gdb_initialized:
+        init_gdb(gdb_path)
     output = send_command("file " + process_path)
     if search(r"\^error", output):
         print("An error occurred while trying to create process from the file at " + process_path)
