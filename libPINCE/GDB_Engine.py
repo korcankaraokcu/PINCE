@@ -433,6 +433,7 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
 
     Args:
         pid (int,str): PID of the process that'll be attached to
+        gdb_path (str): Path of the gdb binary
 
     Returns:
         tuple: (A member of type_defs.ATTACH_RESULT, result_message)
@@ -482,6 +483,7 @@ def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH):
     Args:
         process_path (str): Absolute path of the target binary
         args (str): Arguments of the inferior, optional
+        gdb_path (str): Path of the gdb binary
 
     Returns:
         bool: True if the process has been created successfully, False otherwise
