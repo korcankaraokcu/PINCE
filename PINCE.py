@@ -723,7 +723,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 QMessageBox.information(self, "Error", "What the fuck are you trying to do?")  # planned easter egg
                 return
             self.setCursor(QCursor(Qt.WaitCursor))
-            attach_result = GDB_Engine.attach(pid, gdb_path)
+            attach_result = GDB_Engine.attach(pid, gdb_path=gdb_path)
             if attach_result[0] == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
                 p = SysUtils.get_process_information(GDB_Engine.currentpid)
                 self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
@@ -741,8 +741,13 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 args = arg_dialog.get_values()
             else:
                 args = ""
+            ld_preload_dialog = DialogWithButtonsForm(label_text="LD_PRELOAD .so path (optional)", hide_line_edit=False)
+            if ld_preload_dialog.exec_():
+                ld_preload_path = ld_preload_dialog.get_values()
+            else:
+                ld_preload_path = ""
             self.setCursor(QCursor(Qt.WaitCursor))
-            if GDB_Engine.create_process(file_path, args, gdb_path):
+            if GDB_Engine.create_process(file_path, args, ld_preload_path, gdb_path):
                 p = SysUtils.get_process_information(GDB_Engine.currentpid)
                 self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
                 self.enable_scan_gui()
