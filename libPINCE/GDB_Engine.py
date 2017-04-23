@@ -396,9 +396,9 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     status_thread = Thread(target=state_observe_thread)
     status_thread.daemon = True
     status_thread.start()
+    gdb_initialized = True
     if additional_commands:
         send_command(additional_commands)
-    gdb_initialized = True
 
 
 def create_gdb_log_file(pid):
@@ -432,15 +432,15 @@ def init_referenced_dicts(pid):
     shelve.open(SysUtils.get_referenced_calls_file(pid), "c")
 
 
-def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
+def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     """Attaches gdb to the target and initializes some of the global variables
 
     Args:
         pid (int,str): PID of the process that'll be attached to
-        gdb_path (str): Path of the gdb binary
         additional_commands (str): Commands that'll be executed at the gdb initialization process. Commands should be
         separated with "\n". For instance: "command1\ncommand2\ncommand3". You can also call init_gdb before attach,
         instead of using this parameter.
+        gdb_path (str): Path of the gdb binary
 
     Returns:
         tuple: (A member of type_defs.ATTACH_RESULT, result_message)
@@ -482,7 +482,8 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     return type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL, result_message
 
 
-def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
+def create_process(process_path, args="", ld_preload_path="", additional_commands="",
+                   gdb_path=type_defs.PATHS.GDB_PATH):
     """Creates a new process for debugging and initializes some of the global variables
     Current process will be detached even if the create_process call fails
     Make sure to save your data before calling this monstrosity
@@ -490,10 +491,11 @@ def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH, add
     Args:
         process_path (str): Absolute path of the target binary
         args (str): Arguments of the inferior, optional
-        gdb_path (str): Path of the gdb binary
+        ld_preload_path (str): Path of the preloaded .so file, optional
         additional_commands (str): Commands that'll be executed at the gdb initialization process. Commands should be
         separated with "\n". For instance: "command1\ncommand2\ncommand3". You can also call init_gdb before
         create_process, instead of using this parameter.
+        gdb_path (str): Path of the gdb binary
 
     Returns:
         bool: True if the process has been created successfully, False otherwise
@@ -513,6 +515,8 @@ def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH, add
     else:
         send_command("b _start")
     send_command("set args " + args)
+    if ld_preload_path:
+        send_command("set exec-wrapper env 'LD_PRELOAD=" + ld_preload_path + "'")
     send_command("run")
 
     # We have to wait till breakpoint hits
