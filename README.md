@@ -138,7 +138,7 @@ Gibus <lilac66.dev@gmail.com>
   * WINE Games
     * FTL
     * Undertale
-    * Hearthstone(It interrupts itself with SIGUSR1 whenever continued, implementing signal passing on PINCE might be very useful in future)
+    * Hearthstone(~~It interrupts itself with SIGUSR1 whenever continued, implementing signal passing on PINCE might be very useful in future~~)[Update-23/04/2017 : Fixed, please check [here](https://github.com/korcankaraokcu/PINCE/wiki/Gdbinit-file) for instructions]
 
 # Trusted Sources
   * This page and other github forks
