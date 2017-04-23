@@ -48,7 +48,7 @@ else:
 # If you have to load a .gdbinit file, just load it in this function with command "source"
 def gdbinit():
     try:
-        gdb.execute("source " + type_defs.USER_PATHS.GDBINIT_PATH)
+        gdb.execute("source " + type_defs.USER_PATHS.GDBINIT_AA_PATH)
     except:
         pass
     gdb.execute("set disassembly-flavor intel")

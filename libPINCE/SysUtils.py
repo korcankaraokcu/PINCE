@@ -755,6 +755,10 @@ def init_user_files():
         open(type_defs.USER_PATHS.GDBINIT_PATH).close()
     except FileNotFoundError:
         open(type_defs.USER_PATHS.GDBINIT_PATH, "w").close()
+    try:
+        open(type_defs.USER_PATHS.GDBINIT_AA_PATH).close()
+    except FileNotFoundError:
+        open(type_defs.USER_PATHS.GDBINIT_AA_PATH, "w").close()
     chown_to_user(type_defs.USER_PATHS.ROOT_PATH, recursive=True)
 
 
