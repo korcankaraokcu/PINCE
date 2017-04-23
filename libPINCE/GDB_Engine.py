@@ -397,6 +397,7 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     status_thread.daemon = True
     status_thread.start()
     gdb_initialized = True
+    send_command("source " + type_defs.USER_PATHS.GDBINIT_PATH)
     if additional_commands:
         send_command(additional_commands)
 
