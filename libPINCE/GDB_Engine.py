@@ -355,11 +355,13 @@ def execute_till_return():
     send_command("finish")
 
 
-def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
+def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     """Spawns gdb and initializes/resets some of the global variables
 
     Args:
         gdb_path (str): Path of the gdb binary
+        additional_commands (str): Commands that'll be executed at the gdb initialization process. Commands should be
+        separated with "\n". For instance: "command1\ncommand2\ncommand3"
 
     Note:
         Calling init_gdb() will reset the current session
@@ -394,6 +396,8 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     status_thread = Thread(target=state_observe_thread)
     status_thread.daemon = True
     status_thread.start()
+    if additional_commands:
+        send_command(additional_commands)
     gdb_initialized = True
 
 
@@ -428,12 +432,15 @@ def init_referenced_dicts(pid):
     shelve.open(SysUtils.get_referenced_calls_file(pid), "c")
 
 
-def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
+def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     """Attaches gdb to the target and initializes some of the global variables
 
     Args:
         pid (int,str): PID of the process that'll be attached to
         gdb_path (str): Path of the gdb binary
+        additional_commands (str): Commands that'll be executed at the gdb initialization process. Commands should be
+        separated with "\n". For instance: "command1\ncommand2\ncommand3". You can also call init_gdb before attach,
+        instead of using this parameter.
 
     Returns:
         tuple: (A member of type_defs.ATTACH_RESULT, result_message)
@@ -458,7 +465,7 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
         print(error_message)
         return type_defs.ATTACH_RESULT.PERM_DENIED, error_message
     if currentpid != -1 or not gdb_initialized:
-        init_gdb(gdb_path)
+        init_gdb(gdb_path, additional_commands)
     global inferior_arch
     currentpid = pid
     SysUtils.create_PINCE_IPC_PATH(pid)
@@ -475,7 +482,7 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
     return type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL, result_message
 
 
-def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH):
+def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     """Creates a new process for debugging and initializes some of the global variables
     Current process will be detached even if the create_process call fails
     Make sure to save your data before calling this monstrosity
@@ -484,6 +491,9 @@ def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH):
         process_path (str): Absolute path of the target binary
         args (str): Arguments of the inferior, optional
         gdb_path (str): Path of the gdb binary
+        additional_commands (str): Commands that'll be executed at the gdb initialization process. Commands should be
+        separated with "\n". For instance: "command1\ncommand2\ncommand3". You can also call init_gdb before
+        create_process, instead of using this parameter.
 
     Returns:
         bool: True if the process has been created successfully, False otherwise
@@ -491,7 +501,7 @@ def create_process(process_path, args="", gdb_path=type_defs.PATHS.GDB_PATH):
     global currentpid
     global inferior_arch
     if currentpid != -1 or not gdb_initialized:
-        init_gdb(gdb_path)
+        init_gdb(gdb_path, additional_commands)
     output = send_command("file " + process_path)
     if search(r"\^error", output):
         print("An error occurred while trying to create process from the file at " + process_path)
