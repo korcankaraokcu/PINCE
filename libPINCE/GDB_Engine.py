@@ -445,6 +445,9 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
 
     Returns:
         tuple: (A member of type_defs.ATTACH_RESULT, result_message)
+
+    Note:
+        If gdb is already initialized, parameters gdb_path and additional_commands will be ignored
     """
     global currentpid
     pid = int(pid)
@@ -500,6 +503,9 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
 
     Returns:
         bool: True if the process has been created successfully, False otherwise
+
+    Note:
+        If gdb is already initialized, parameters gdb_path and additional_commands will be ignored
     """
     global currentpid
     global inferior_arch
