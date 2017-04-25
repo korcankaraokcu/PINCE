@@ -1303,6 +1303,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.label_HexView_Information.contextMenuEvent = self.label_HexView_Information_context_menu_event
 
         self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
+        self.splitter_MainMiddle.setStretchFactor(1, 1)
         self.widget_StackView.resize(420, self.widget_StackView.height())  # blaze it
         self.widget_Registers.resize(330, self.widget_Registers.height())
 
