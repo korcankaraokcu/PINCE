@@ -19,12 +19,7 @@ from re import search, split, findall, escape, compile, IGNORECASE
 from threading import Lock, Thread, Condition
 from time import sleep, time
 from collections import OrderedDict
-import pexpect
-import os
-import ctypes
-import pickle
-import json
-import shelve
+import pexpect, os, ctypes, pickle, json, shelve
 from . import SysUtils
 from . import type_defs
 
