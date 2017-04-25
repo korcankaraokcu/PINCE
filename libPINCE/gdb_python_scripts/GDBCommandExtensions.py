@@ -15,17 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import gdb
-import pickle
-import json
-import sys
-import re
-import struct
-import io
-import ctypes
-import os
-import shelve
-import distorm3
+import gdb, pickle, json, sys, re, struct, io, ctypes, os, shelve, distorm3
 from collections import OrderedDict
 
 # This is some retarded hack

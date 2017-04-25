@@ -25,12 +25,7 @@ try:
 except ImportError:
     print("WARNING: GDB couldn't locate the package psutil, psutil based user-defined functions won't work\n" +
           "If you are getting this message without invoking GDB, it means that installation has failed, well, sort of")
-import os
-import shutil
-import sys
-import binascii
-import pickle
-import json
+import os, shutil, sys, binascii, pickle, json
 from . import type_defs
 from re import match, search, IGNORECASE, split, sub
 from collections import OrderedDict
