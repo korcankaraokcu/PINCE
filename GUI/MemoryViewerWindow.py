@@ -76,7 +76,7 @@ class Ui_MainWindow_MemoryView(object):
         self.scrollArea_Registers.setWidgetResizable(True)
         self.scrollArea_Registers.setObjectName("scrollArea_Registers")
         self.scrollAreaWidgetContents_Registers = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 332, 348))
+        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 332, 336))
         self.scrollAreaWidgetContents_Registers.setObjectName("scrollAreaWidgetContents_Registers")
         self.gridLayout_8 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_Registers)
         self.gridLayout_8.setContentsMargins(0, 0, 0, 0)
@@ -576,7 +576,7 @@ class Ui_MainWindow_MemoryView(object):
         self.scrollArea_Hex.setWidgetResizable(True)
         self.scrollArea_Hex.setObjectName("scrollArea_Hex")
         self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 547, 181))
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 547, 193))
         self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
         self.gridLayout_11 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -789,7 +789,7 @@ class Ui_MainWindow_MemoryView(object):
 
         self.retranslateUi(MainWindow_MemoryView)
         self.stackedWidget.setCurrentIndex(1)
-        self.stackedWidget_StackScreens.setCurrentIndex(1)
+        self.stackedWidget_StackScreens.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow_MemoryView)
 
     def retranslateUi(self, MainWindow_MemoryView):

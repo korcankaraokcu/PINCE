@@ -1311,6 +1311,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.pushButton_ShowFloatRegisters.clicked.connect(self.pushButton_ShowFloatRegisters_clicked)
 
     def initialize_stack_view(self):
+        self.stackedWidget_StackScreens.setCurrentWidget(self.StackTrace)
         self.tableWidget_StackTrace.setColumnWidth(STACKTRACE_RETURN_ADDRESS_COL, 350)
 
         self.tableWidget_Stack.contextMenuEvent = self.tableWidget_Stack_context_menu_event
@@ -1947,7 +1948,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Stack.keyPressEvent_original(event)
 
     def tableWidget_Stack_context_menu_event(self, event):
-        selected_row = self.tableWidget_StackTrace.selectionModel().selectedRows()[-1].row()
+        selected_row = self.tableWidget_Stack.selectionModel().selectedRows()[-1].row()
 
         menu = QMenu()
         switch_to_stacktrace = menu.addAction("Stacktrace")
