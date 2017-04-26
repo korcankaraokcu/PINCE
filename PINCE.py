@@ -1942,13 +1942,23 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Stack.resizeColumnToContents(STACK_VALUE_COL)
 
     def tableWidget_Stack_key_press_event(self, event):
+        selected_row = self.tableWidget_Stack.selectionModel().selectedRows()[-1].row()
+        current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+
         if event.key() == Qt.Key_R:
             self.update_stack()
+        elif event.key() == Qt.Key_D:
+            self.disassemble_expression(current_address, append_to_travel_history=True)
+        elif event.key() == Qt.Key_H:
+            self.hex_dump_address(int(current_address, 16))
         else:
             self.tableWidget_Stack.keyPressEvent_original(event)
 
     def tableWidget_Stack_context_menu_event(self, event):
         selected_row = self.tableWidget_Stack.selectionModel().selectedRows()[-1].row()
+        current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
 
         menu = QMenu()
         switch_to_stacktrace = menu.addAction("Stacktrace")
@@ -1958,6 +1968,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         copy_value = clipboard_menu.addAction("Copy Value")
         copy_points_to = clipboard_menu.addAction("Copy Points to")
         refresh = menu.addAction("Refresh[R]")
+        menu.addSeparator()
+        show_in_disas = menu.addAction("Disassemble 'value' pointer address[D]")
+        show_in_hex = menu.addAction("Show 'value' pointer in HexView[H]")
         font_size = self.tableWidget_Stack.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -1975,6 +1988,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.tableWidget_Stack.item(selected_row, STACK_POINTS_TO_COL).text())
         elif action == refresh:
             self.update_stack()
+        elif action == show_in_disas:
+            self.disassemble_expression(current_address, append_to_travel_history=True)
+        elif action == show_in_hex:
+            self.hex_dump_address(int(current_address, 16))
 
     def tableWidget_Stack_double_click(self, index):
         selected_row = self.tableWidget_Stack.selectionModel().selectedRows()[-1].row()
