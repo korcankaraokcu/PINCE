@@ -764,8 +764,9 @@ def chown_to_user(file_path, recursive=False):
         file_path (str): Self-explanatory
         recursive (bool): If True, applies chown recursively
     """
-    user_name = os.getlogin()
-    os.system("sudo chown " + ("-R " if recursive else "") + user_name + ":" + user_name + " " + file_path)
+    uid = os.getuid()
+    gid = os.getgid()
+    os.system("sudo chown " + ("-R " if recursive else "") + uid + ":" + gid + " " + file_path)
 
 
 init_user_files()
