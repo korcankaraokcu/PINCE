@@ -1,5 +1,5 @@
 # PINCE  
-PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB), focused on games. But it can be used for any reverse-engineering related stuff. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine. PINCE is in development right now, read features part of the project to see what is planned and what is done for now. Also, please read [Wiki Page](https://github.com/korcankaraokcu/PINCE/wiki) of the project to understand how PINCE works.  
+PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB), focused on games. But it can be used for any reverse-engineering related stuff. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE's GUI is heavily "inspired(;D)" by Cheat Engine. PINCE is in development right now, read [Features](#features) part of the project to see what is done and [Roadmap](#current-roadmap) part to see what is planned for now. Also, please read [Wiki Page](https://github.com/korcankaraokcu/PINCE/wiki) of the project to understand how PINCE works.  
   
 *Disclaimer: Do not trust to any source other than [Trusted Sources](#trusted-sources) that claims to have the source code or package for PINCE and remember to report them* <em>**immediately**</em>  
   
@@ -32,7 +32,7 @@ Pre-release screenshots:
   * **Bookmarking:** Bookmark menu is dynamically created when right clicked in the disassemble screen. So unlike Cheat Engine, PINCE lets you set unlimited number of bookmarks. List of bookmarks can also be viewed from View->Bookmarks in the MemoryView window. Commenting on an address automatically bookmarks it. **[Done]**
   * **Modify on the fly:** PINCE lets you modify registers on the fly. Unlike CE, you can also change XMM and FPU registers. Check [GDB expressions in the Wiki page](https://github.com/korcankaraokcu/PINCE/wiki/About-GDB-Expressions) for additional information **[Done]**
   * **Opcode Search:** You can search opcodes with python-style regular expressions. To use this feature, click Tools->Search Opcode in the MemoryView window. **[Done]**  
-- **Debugging** **[Done]**
+- **Debugging** **[Done/Basic]**
   * Has basic debugging features such as stepping, stepping over, execute till return, break, continue. Also has breakpoints, watchpoints and breakpoint conditions. Has advanced debugging utilities such as Watchpoint/Breakpoint Tracking and Tracing
   * **Chained Breakpoints:** Just like CE, PINCE allows you to set multiple, connected breakpoints at once. If an event(such as condition modification or deletion) happens in one of the breakpoints, other connected breakpoints will get affected as well **[Done]**
   * **Watchpoint Tracking:** Allows you to see which instructions have been accessing to the specified address, just like "What accesses/writes to this address" feature in CE **[Done]**
@@ -111,7 +111,27 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - 21/06/2016 : Variable Inspection&Modification is finished(At basic level)  
 - 21/08/2016 : Memory View is finished(At basic level)
 - 24/08/2016 : PINCE no more uses linux-inject because of stability issues(a fix for the [race conditions in the inferior](https://github.com/gaffe23/linux-inject/issues/7) would be nice)
-- 26/12/2016 : Debugging is finished
+- 26/12/2016 : Debugging is finished(At basic level)  
+
+# Current Roadmap
+- Support more string types(UTF16 and UTF32)
+- Refactorize memory write/read functions
+- Extend search_referenced_strings with relative search
+- Implement libPINCE engine
+- Implement inject_with_advanced_injection
+- Implement single-line code injection
+- Implement multi-line code injection
+- Break on/Catch signals and syscalls
+- Flowcharts based on disassembled output
+- Automatic function bypassing(make it return the desired value, hook specific parts etc.)
+- Implement speedhack
+- Implement unrandomizer
+- Implement non-stope Continuous Address Table Update feature
+- Implement memory search(with scanmem)
+- Implement pointer-scan
+- Write examples for every function in libPINCE
+- Embedded tutorial videos
+- Super-Uber-Rad credits roll with chiptune tunes
 
 # License
 GPLv3+. See COPYING file for details
