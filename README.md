@@ -126,7 +126,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - Automatic function bypassing(make it return the desired value, hook specific parts etc.)
 - Implement speedhack
 - Implement unrandomizer
-- Implement non-stope Continuous Address Table Update feature
+- Implement non-stop Continuous Address Table Update feature
 - Implement memory search(with scanmem)
 - Implement pointer-scan
 - Write examples for every function in libPINCE
