@@ -665,8 +665,8 @@ def execute_shell_command_as_user(command):
     Args:
         command (str): Command that'll be invoked from the shell
     """
-    user_name = os.getlogin()
-    os.system('sudo -u ' + user_name + ' ' + command)
+    uid, gid = get_user_ids()
+    os.system("sudo -u '#" + uid + "' " + command)
 
 
 def get_comments_of_variables(source_file_path, single_comment="#", multi_start='"""', multi_end='"""'):
@@ -764,9 +764,19 @@ def chown_to_user(file_path, recursive=False):
         file_path (str): Self-explanatory
         recursive (bool): If True, applies chown recursively
     """
+    uid, gid = get_user_ids()
+    os.system("sudo chown " + ("-R " if recursive else "") + uid + ":" + gid + " " + file_path)
+
+
+def get_user_ids():
+    """Gets uid and gid of the current user
+
+    Returns:
+        tuple: (str, str)-->uid and gid of the current user
+    """
     uid = os.getenv("SUDO_UID") or str(os.getuid())
     gid = os.getenv("SUDO_GID") or str(os.getgid())
-    os.system("sudo chown " + ("-R " if recursive else "") + uid + ":" + gid + " " + file_path)
+    return uid, gid
 
 
 init_user_files()
