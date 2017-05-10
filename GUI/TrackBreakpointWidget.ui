@@ -42,51 +42,11 @@
         <string/>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>-1</number>
        </property>
        <property name="sizeAdjustPolicy">
         <enum>QComboBox::AdjustToContents</enum>
        </property>
-       <item>
-        <property name="text">
-         <string>Byte</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>2 Bytes</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>4 Bytes</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>8 Bytes</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Float</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Double</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>String</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Array of bytes</string>
-        </property>
-       </item>
       </widget>
      </item>
     </layout>

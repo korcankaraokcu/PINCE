@@ -108,8 +108,24 @@ class VALUE_INDEX:
     INDEX_8BYTES = 3
     INDEX_FLOAT = 4
     INDEX_DOUBLE = 5
-    INDEX_STRING = 6
-    INDEX_AOB = 7  # Array of Bytes
+
+    # Beginning of the string indexes, new string indexes should be added between 6 and 9
+    INDEX_STRING_ASCII = 6
+    INDEX_STRING_UTF8 = 7
+    INDEX_STRING_UTF16 = 8
+    INDEX_STRING_UTF32 = 9
+    # Ending of the string indexes, 69... not on purpose tho
+
+    INDEX_AOB = 10  # Array of Bytes
+
+    @staticmethod
+    def is_string(value_index):
+        return VALUE_INDEX.INDEX_STRING_ASCII <= value_index <= VALUE_INDEX.INDEX_STRING_UTF32
+
+    @staticmethod
+    def has_length(value_index):
+        return VALUE_INDEX.INDEX_STRING_ASCII <= value_index <= VALUE_INDEX.INDEX_STRING_UTF32 or \
+               value_index == VALUE_INDEX.INDEX_AOB
 
 
 on_hit_to_text_dict = {
@@ -127,17 +143,28 @@ index_to_text_dict = {
     VALUE_INDEX.INDEX_8BYTES: "8 Bytes",
     VALUE_INDEX.INDEX_FLOAT: "Float",
     VALUE_INDEX.INDEX_DOUBLE: "Double",
-    VALUE_INDEX.INDEX_STRING: "String",
+    VALUE_INDEX.INDEX_STRING_ASCII: "String_ASCII",
+    VALUE_INDEX.INDEX_STRING_UTF8: "String_UTF8",
+    VALUE_INDEX.INDEX_STRING_UTF16: "String_UTF16",
+    VALUE_INDEX.INDEX_STRING_UTF32: "String_UTF32",
     VALUE_INDEX.INDEX_AOB: "AoB"
 }
 
-text_to_index_dict = {
-    "Byte": VALUE_INDEX.INDEX_BYTE,
-    "2 Bytes": VALUE_INDEX.INDEX_2BYTES,
-    "4 Bytes": VALUE_INDEX.INDEX_4BYTES,
-    "8 Bytes": VALUE_INDEX.INDEX_8BYTES,
-    "Float": VALUE_INDEX.INDEX_FLOAT,
-    "Double": VALUE_INDEX.INDEX_DOUBLE
+text_to_index_dict = {}
+for key in index_to_text_dict:
+    text_to_index_dict[index_to_text_dict[key]] = key
+
+string_index_to_encoding_dict = {
+    VALUE_INDEX.INDEX_STRING_UTF8: ["utf-8", "surrogateescape"],
+    VALUE_INDEX.INDEX_STRING_UTF16: ["utf-16", "replace"],
+    VALUE_INDEX.INDEX_STRING_UTF32: ["utf-32", "replace"],
+    VALUE_INDEX.INDEX_STRING_ASCII: ["ascii", "surrogateescape"],
+}
+
+string_index_to_multiplier_dict = {
+    VALUE_INDEX.INDEX_STRING_UTF8: 2,
+    VALUE_INDEX.INDEX_STRING_UTF16: 4,
+    VALUE_INDEX.INDEX_STRING_UTF32: 8,
 }
 
 # A dictionary used to convert value_combobox index to gdb/mi x command
@@ -149,7 +176,10 @@ index_to_gdbcommand_dict = {
     VALUE_INDEX.INDEX_8BYTES: "dg",
     VALUE_INDEX.INDEX_FLOAT: "fw",
     VALUE_INDEX.INDEX_DOUBLE: "fg",
-    VALUE_INDEX.INDEX_STRING: "xb",
+    VALUE_INDEX.INDEX_STRING_ASCII: "xb",
+    VALUE_INDEX.INDEX_STRING_UTF8: "xb",
+    VALUE_INDEX.INDEX_STRING_UTF16: "xb",
+    VALUE_INDEX.INDEX_STRING_UTF32: "xb",
     VALUE_INDEX.INDEX_AOB: "xb"
 }
 
@@ -162,7 +192,10 @@ index_to_valuetype_dict = {
     VALUE_INDEX.INDEX_8BYTES: [8, "q"],
     VALUE_INDEX.INDEX_FLOAT: [4, "f"],
     VALUE_INDEX.INDEX_DOUBLE: [8, "d"],
-    VALUE_INDEX.INDEX_STRING: [None, None],
+    VALUE_INDEX.INDEX_STRING_ASCII: [None, None],
+    VALUE_INDEX.INDEX_STRING_UTF8: [None, None],
+    VALUE_INDEX.INDEX_STRING_UTF16: [None, None],
+    VALUE_INDEX.INDEX_STRING_UTF32: [None, None],
     VALUE_INDEX.INDEX_AOB: [None, None]
 }
 

@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'TrackBreakpointWidget.ui'
 #
-# Created: Fri Dec 16 02:40:23 2016
-#      by: PyQt5 UI code generator 5.2.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,14 +25,6 @@ class Ui_Form(object):
         self.comboBox_ValueType.setToolTip("")
         self.comboBox_ValueType.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
         self.comboBox_ValueType.setObjectName("comboBox_ValueType")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
         self.horizontalLayout.addWidget(self.comboBox_ValueType)
         self.gridLayout.addLayout(self.horizontalLayout, 3, 0, 1, 1)
         self.tableWidget_TrackInfo = QtWidgets.QTableWidget(Form)
@@ -67,21 +58,13 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.label_AdditionalInfo, 2, 0, 1, 1)
 
         self.retranslateUi(Form)
-        self.comboBox_ValueType.setCurrentIndex(2)
+        self.comboBox_ValueType.setCurrentIndex(-1)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
         self.pushButton_Stop.setText(_translate("Form", "Stop"))
-        self.comboBox_ValueType.setItemText(0, _translate("Form", "Byte"))
-        self.comboBox_ValueType.setItemText(1, _translate("Form", "2 Bytes"))
-        self.comboBox_ValueType.setItemText(2, _translate("Form", "4 Bytes"))
-        self.comboBox_ValueType.setItemText(3, _translate("Form", "8 Bytes"))
-        self.comboBox_ValueType.setItemText(4, _translate("Form", "Float"))
-        self.comboBox_ValueType.setItemText(5, _translate("Form", "Double"))
-        self.comboBox_ValueType.setItemText(6, _translate("Form", "String"))
-        self.comboBox_ValueType.setItemText(7, _translate("Form", "Array of bytes"))
         item = self.tableWidget_TrackInfo.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Count"))
         item = self.tableWidget_TrackInfo.horizontalHeaderItem(1)

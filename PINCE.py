@@ -17,7 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor
+from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
+    QIntValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip, QTreeWidgetItem
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
@@ -255,7 +256,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_AddressTable.setColumnWidth(FROZEN_COL, 25)
         self.tableWidget_AddressTable.setColumnWidth(DESC_COL, 150)
         self.tableWidget_AddressTable.setColumnWidth(ADDR_COL, 150)
-        self.tableWidget_AddressTable.setColumnWidth(TYPE_COL, 120)
+        self.tableWidget_AddressTable.setColumnWidth(TYPE_COL, 150)
         QCoreApplication.setOrganizationName("PINCE")
         QCoreApplication.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
         QCoreApplication.setApplicationName("PINCE")
@@ -434,8 +435,8 @@ class MainForm(QMainWindow, MainWindow):
     def exec_track_watchpoint_widget(self, watchpoint_type):
         last_selected_row = self.tableWidget_AddressTable.selectionModel().selectedRows()[-1].row()
         address = self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text()
-        length = GuiUtils.text_to_valuetype(self.tableWidget_AddressTable.item(last_selected_row, TYPE_COL).text())[1]
-        TrackWatchpointWidgetForm(address, length, watchpoint_type, self).show()
+        byte_len = GuiUtils.text_to_valuetype(self.tableWidget_AddressTable.item(last_selected_row, TYPE_COL).text())[3]
+        TrackWatchpointWidgetForm(address, byte_len, watchpoint_type, self).show()
 
     def browse_region_for_selected_row(self):
         last_selected_row = self.tableWidget_AddressTable.selectionModel().selectedRows()[-1].row()
@@ -476,9 +477,9 @@ class MainForm(QMainWindow, MainWindow):
         row_count = self.tableWidget_AddressTable.rowCount()
         for row in range(row_count):
             address = self.tableWidget_AddressTable.item(row, ADDR_COL).text()
-            index, length, unicode, zero_terminate = GuiUtils.text_to_valuetype(
+            index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(
                 self.tableWidget_AddressTable.item(row, TYPE_COL).text())
-            table_contents.append((address, index, length, unicode, zero_terminate))
+            table_contents.append((address, index, length, zero_terminate))
         new_table_contents = GDB_Engine.read_multiple_addresses(table_contents)
         for row, item in enumerate(new_table_contents):
             self.tableWidget_AddressTable.setItem(row, VALUE_COL, QTableWidgetItem(str(item)))
@@ -487,10 +488,9 @@ class MainForm(QMainWindow, MainWindow):
     def pushButton_AddAddressManually_clicked(self):
         manual_address_dialog = ManualAddressDialogForm()
         if manual_address_dialog.exec_():
-            description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
+            description, address, typeofaddress, length, zero_terminate = manual_address_dialog.get_values()
             self.add_entry_to_addresstable(description=description, address=address, typeofaddress=typeofaddress,
-                                           length=length, unicode=unicode,
-                                           zero_terminate=zero_terminate)
+                                           length=length, zero_terminate=zero_terminate)
 
     def pushButton_MemoryView_clicked(self):
         self.memory_view_window.showMaximized()
@@ -571,10 +571,9 @@ class MainForm(QMainWindow, MainWindow):
         application = QApplication.instance()
         application.closeAllWindows()
 
-    def add_entry_to_addresstable(self, description, address, typeofaddress, length=0, unicode=False,
-                                  zero_terminate=True):
+    def add_entry_to_addresstable(self, description, address, typeofaddress, length=0, zero_terminate=True):
         frozen_checkbox = QCheckBox()
-        typeofaddress_text = GuiUtils.valuetype_to_text(typeofaddress, length, unicode, zero_terminate)
+        typeofaddress_text = GuiUtils.valuetype_to_text(typeofaddress, length, zero_terminate)
 
         # this line lets us take symbols as parameters, pretty rad isn't it?
         address_text = GDB_Engine.convert_symbol_to_address(address)
@@ -582,7 +581,7 @@ class MainForm(QMainWindow, MainWindow):
             address = address_text
         self.tableWidget_AddressTable.setRowCount(self.tableWidget_AddressTable.rowCount() + 1)
         currentrow = self.tableWidget_AddressTable.rowCount() - 1
-        value = GDB_Engine.read_single_address(address, typeofaddress, length, unicode, zero_terminate)
+        value = GDB_Engine.read_single_address(address, typeofaddress, length, zero_terminate)
         self.tableWidget_AddressTable.setCellWidget(currentrow, FROZEN_COL, frozen_checkbox)
         self.change_address_table_entries(row=currentrow, description=description, address=address,
                                           typeofaddress=typeofaddress_text, value=str(value))
@@ -594,9 +593,10 @@ class MainForm(QMainWindow, MainWindow):
         current_column = index.column()
         if current_column is VALUE_COL:
             value = self.tableWidget_AddressTable.item(current_row, VALUE_COL).text()
-            value_index = GuiUtils.text_to_index(self.tableWidget_AddressTable.item(current_row, TYPE_COL).text())
+            value_index = GuiUtils.text_to_valuetype(
+                self.tableWidget_AddressTable.item(current_row, TYPE_COL).text())[0]
             label_text = "Enter the new value"
-            if value_index == type_defs.VALUE_INDEX.INDEX_STRING:
+            if type_defs.VALUE_INDEX.is_string(value_index):
                 label_text += "\nPINCE doesn't automatically insert a null terminated string at the end" \
                               "\nCopy-paste this character (\0) if you need to insert it at somewhere"
             dialog = DialogWithButtonsForm(label_text=label_text, hide_line_edit=False,
@@ -609,8 +609,8 @@ class MainForm(QMainWindow, MainWindow):
                     row = item.row()
                     address = self.tableWidget_AddressTable.item(row, ADDR_COL).text()
                     value_type = self.tableWidget_AddressTable.item(row, TYPE_COL).text()
-                    value_index = GuiUtils.text_to_index(value_type)
-                    if value_index == type_defs.VALUE_INDEX.INDEX_STRING or value_index == type_defs.VALUE_INDEX.INDEX_AOB:
+                    value_index = GuiUtils.text_to_valuetype(value_type)[0]
+                    if type_defs.VALUE_INDEX.is_string(value_index) or value_index == type_defs.VALUE_INDEX.INDEX_AOB:
                         unknown_type = SysUtils.parse_string(value_text, value_index)
                         if unknown_type is not None:
                             length = len(unknown_type)
@@ -631,21 +631,18 @@ class MainForm(QMainWindow, MainWindow):
                     self.tableWidget_AddressTable.setItem(item.row(), DESC_COL, QTableWidgetItem(description_text))
         elif current_column is ADDR_COL or current_column is TYPE_COL:
             description, address, value_type = self.read_address_table_entries(row=current_row)
-            index, length, unicode, zero_terminate = GuiUtils.text_to_valuetype(value_type)
+            index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
             manual_address_dialog = ManualAddressDialogForm(description=description, address=address, index=index,
-                                                            length=length, unicode=unicode,
-                                                            zero_terminate=zero_terminate)
+                                                            length=length, zero_terminate=zero_terminate)
             if manual_address_dialog.exec_():
-                description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
+                description, address, typeofaddress, length, zero_terminate = manual_address_dialog.get_values()
                 typeofaddress_text = GuiUtils.valuetype_to_text(value_index=typeofaddress, length=length,
-                                                                is_unicode=unicode,
                                                                 zero_terminate=zero_terminate)
                 address_text = GDB_Engine.convert_symbol_to_address(address)
                 if address_text:
                     address = address_text
                 value = GDB_Engine.read_single_address(address=address, value_index=typeofaddress,
-                                                       length=length, is_unicode=unicode,
-                                                       zero_terminate=zero_terminate)
+                                                       length=length, zero_terminate=zero_terminate)
                 self.change_address_table_entries(row=current_row, description=description, address=address,
                                                   typeofaddress=typeofaddress_text, value=str(value))
 
@@ -761,15 +758,18 @@ class ProcessForm(QMainWindow, ProcessWindow):
 # Add Address Manually Dialog
 class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def __init__(self, parent=None, description="No Description", address="0x",
-                 index=type_defs.VALUE_INDEX.INDEX_4BYTES, length=10,
-                 unicode=False,
-                 zero_terminate=True):
+                 index=type_defs.VALUE_INDEX.INDEX_4BYTES, length=10, zero_terminate=True):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.adjustSize()
+        self.setMinimumWidth(300)
+        self.setFixedHeight(self.height())
+        self.lineEdit_length.setValidator(QIntValidator(0, 200, self))
+        GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
         self.lineEdit_description.setText(description)
         self.lineEdit_address.setText(address)
         self.comboBox_ValueType.setCurrentIndex(index)
-        if self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_STRING:
+        if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.label_length.show()
             self.lineEdit_length.show()
             try:
@@ -777,8 +777,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             except:
                 length = "10"
             self.lineEdit_length.setText(length)
-            self.checkBox_Unicode.show()
-            self.checkBox_Unicode.setChecked(unicode)
             self.checkBox_zeroterminate.show()
             self.checkBox_zeroterminate.setChecked(zero_terminate)
         elif self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_AOB:
@@ -789,16 +787,13 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             except:
                 length = "10"
             self.lineEdit_length.setText(length)
-            self.checkBox_Unicode.hide()
             self.checkBox_zeroterminate.hide()
         else:
             self.label_length.hide()
             self.lineEdit_length.hide()
-            self.checkBox_Unicode.hide()
             self.checkBox_zeroterminate.hide()
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.lineEdit_length.textChanged.connect(self.update_value_of_address)
-        self.checkBox_Unicode.stateChanged.connect(self.update_value_of_address)
         self.checkBox_zeroterminate.stateChanged.connect(self.update_value_of_address)
         self.lineEdit_address.textChanged.connect(self.update_value_of_address)
         self.label_valueofaddress.contextMenuEvent = self.label_valueofaddress_context_menu_event
@@ -820,32 +815,27 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             length = self.lineEdit_length.text()
             self.label_valueofaddress.setText(
                 GDB_Engine.read_single_address_by_expression(address, address_type, length))
-        elif address_type is type_defs.VALUE_INDEX.INDEX_STRING:
+        elif type_defs.VALUE_INDEX.is_string(address_type):
             length = self.lineEdit_length.text()
-            is_unicode = self.checkBox_Unicode.isChecked()
             is_zeroterminate = self.checkBox_zeroterminate.isChecked()
             self.label_valueofaddress.setText(
-                GDB_Engine.read_single_address_by_expression(address, address_type, length, is_unicode,
-                                                             is_zeroterminate))
+                GDB_Engine.read_single_address_by_expression(address, address_type, length, is_zeroterminate))
         else:
             self.label_valueofaddress.setText(
                 GDB_Engine.read_single_address_by_expression(address, address_type))
 
     def comboBox_ValueType_current_index_changed(self):
-        if self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_STRING:
+        if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.label_length.show()
             self.lineEdit_length.show()
-            self.checkBox_Unicode.show()
             self.checkBox_zeroterminate.show()
         elif self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_AOB:
             self.label_length.show()
             self.lineEdit_length.show()
-            self.checkBox_Unicode.hide()
             self.checkBox_zeroterminate.hide()
         else:
             self.label_length.hide()
             self.lineEdit_length.hide()
-            self.checkBox_Unicode.hide()
             self.checkBox_zeroterminate.hide()
         self.update_value_of_address()
 
@@ -873,14 +863,11 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             length = int(length)
         except:
             length = 0
-        unicode = False
         zero_terminate = False
-        if self.checkBox_Unicode.isChecked():
-            unicode = True
         if self.checkBox_zeroterminate.isChecked():
             zero_terminate = True
         typeofaddress = self.comboBox_ValueType.currentIndex()
-        return description, address, typeofaddress, length, unicode, zero_terminate
+        return description, address, typeofaddress, length, zero_terminate
 
 
 class LoadingDialogForm(QDialog, LoadingDialog):
@@ -1541,9 +1528,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address),
                                                         index=type_defs.VALUE_INDEX.INDEX_AOB)
         if manual_address_dialog.exec_():
-            description, address, typeofaddress, length, unicode, zero_terminate = manual_address_dialog.get_values()
-            self.parent().add_entry_to_addresstable(description, address, typeofaddress, length, unicode,
-                                                    zero_terminate)
+            description, address, typeofaddress, length, zero_terminate = manual_address_dialog.get_values()
+            self.parent().add_entry_to_addresstable(description, address, typeofaddress, length, zero_terminate)
 
     def verticalScrollBar_HexView_mouse_release_event(self, event):
         GuiUtils.center_scroll_bar(self.verticalScrollBar_HexView)
@@ -2781,6 +2767,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.info = {}
         self.last_selected_row = 0
         self.stopped = False
+        GuiUtils.fill_value_combobox(self.comboBox_ValueType)
         self.comboBox_ValueType.enterEvent = self.comboBox_ValueType_enter_event
         self.combobox_change_count = 0
         self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
@@ -2819,7 +2806,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         value_type = self.comboBox_ValueType.currentIndex()
         for row in range(self.tableWidget_TrackInfo.rowCount()):
             address = self.tableWidget_TrackInfo.item(row, TRACK_BREAKPOINT_ADDR_COL).text()
-            param_list.append((address, value_type, 10, True))
+            param_list.append((address, value_type, 10))
         value_list = GDB_Engine.read_multiple_addresses(param_list)
         for row, value in enumerate(value_list):
             self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(str(value)))
@@ -3727,6 +3714,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.setupUi(self)
+        GuiUtils.fill_value_combobox(self.comboBox_ValueType, type_defs.VALUE_INDEX.INDEX_STRING_UTF8)
         self.parent = lambda: parent
         global instances
         instances.append(self)

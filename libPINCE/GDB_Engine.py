@@ -590,7 +590,7 @@ def inject_with_dlopen_call(library_path):
     return True
 
 
-def value_index_to_gdbcommand(index=int):
+def value_index_to_gdbcommand(index):
     """Converts the given value_index to a parameter that'll be used in "x" command of gdb
 
     Args:
@@ -602,7 +602,7 @@ def value_index_to_gdbcommand(index=int):
     return type_defs.index_to_gdbcommand_dict.get(index, "out of bounds")
 
 
-def read_single_address_by_expression(expression, value_index, length=None, is_unicode=False, zero_terminate=True):
+def read_single_address_by_expression(expression, value_index, length=None, zero_terminate=True):
     """Reads value from the given address or expression by using "x" command of gdb then converts it to the given
     value type. Unlike the other read_single_address variations, this function can read the contents of [vsyscall]
 
@@ -613,8 +613,6 @@ def read_single_address_by_expression(expression, value_index, length=None, is_u
         value_index (int): Determines the type of data read. Can be a member of type_defs.VALUE_INDEX
         length (int): Length of the data that'll be read. Only used when the value_index is INDEX_STRING or INDEX_AOB.
         Ignored otherwise.
-        is_unicode (bool): If True, data will be considered as utf-8, ascii otherwise. Only used when value_index is
-        INDEX_STRING. Ignored otherwise.
         zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
         value_index is INDEX_STRING. Ignored otherwise.
 
@@ -629,37 +627,29 @@ def read_single_address_by_expression(expression, value_index, length=None, is_u
     if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         typeofaddress = value_index_to_gdbcommand(value_index)
         try:
-            expectedlength = str(int(length))  # length must be a legit number, so had to do this trick
+            expected_length = str(int(length))  # length must be a legit number, so had to do this trick
         except:
             return "??"
-        result = send_command("x/" + expectedlength + typeofaddress + " " + expression)
+        result = send_command("x/" + expected_length + typeofaddress + " " + expression)
         filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
         if filteredresult:
             returned_string = ''.join(filteredresult)  # combine all the matched results
             return returned_string.replace(r"\t0x", " ")
         return "??"
-    elif value_index is type_defs.VALUE_INDEX.INDEX_STRING:
+    elif type_defs.VALUE_INDEX.is_string(value_index):
         typeofaddress = value_index_to_gdbcommand(value_index)
-        if not is_unicode:
-            try:
-                expectedlength = str(int(length))
-            except:
-                return "??"
-            result = send_command("x/" + expectedlength + typeofaddress + " " + expression)
-        else:
-            try:
-                expectedlength = str(int(length) * 2)
-            except:
-                return "??"
-            result = send_command("x/" + expectedlength + typeofaddress + " " + expression)
+        try:
+            expected_length = int(length)
+        except:
+            return "??"
+        expected_length *= type_defs.string_index_to_multiplier_dict.get(value_index, 1)
+        result = send_command("x/" + str(expected_length) + typeofaddress + " " + expression)
         filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
         if filteredresult:
             filteredresult = ''.join(filteredresult)
             returned_string = filteredresult.replace(r"\t0x", "")
-            if not is_unicode:
-                returned_string = bytes.fromhex(returned_string).decode("ascii", "surrogateescape")
-            else:
-                returned_string = bytes.fromhex(returned_string).decode("utf-8", "surrogateescape")
+            encoding, option = type_defs.string_index_to_encoding_dict[value_index]
+            returned_string = bytes.fromhex(returned_string).decode(encoding, option)
             if zero_terminate:
                 if returned_string.startswith('\x00'):
                     returned_string = '\x00'
@@ -676,7 +666,7 @@ def read_single_address_by_expression(expression, value_index, length=None, is_u
         return "??"
 
 
-def read_single_address(address, value_index, length=None, is_unicode=False, zero_terminate=True, only_bytes=False):
+def read_single_address(address, value_index, length=None, zero_terminate=True, only_bytes=False):
     """Reads value from the given address by using an optimized gdb python script
 
     A variant of the function read_single_address_by_expression. This function is slightly faster and more advanced.
@@ -692,8 +682,6 @@ def read_single_address(address, value_index, length=None, is_unicode=False, zer
         value_index (int): Determines the type of data read. Can be a member of type_defs.VALUE_INDEX
         length (int): Length of the data that'll be read. Only used when the value_index is INDEX_STRING or INDEX_AOB.
         Ignored otherwise.
-        is_unicode (bool): If True, data will be considered as utf-8, ascii otherwise. Only used when value_index is
-        INDEX_STRING. Ignored otherwise.
         zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
         value_index is INDEX_STRING. Ignored otherwise.
         only_bytes (bool): Returns only bytes instead of converting it to the according type of value_index
@@ -705,7 +693,7 @@ def read_single_address(address, value_index, length=None, is_unicode=False, zer
         bytes: If the only_bytes is True
     """
     return send_command("pince-read-single-address", send_with_file=True,
-                        file_contents_send=(address, value_index, length, is_unicode, zero_terminate, only_bytes),
+                        file_contents_send=(address, value_index, length, zero_terminate, only_bytes),
                         recv_with_file=True)
 
 
@@ -721,7 +709,7 @@ def read_multiple_addresses(nested_list):
         of the other parameters are the same with the function read_single_address.
 
     Examples:
-        All parameters are passed-->[[address1, value_index1, length1, unicode1, zero_terminate1, only_bytes], ...]
+        All parameters are passed-->[[address1, value_index1, length1, zero_terminate1, only_bytes], ...]
         Parameters are partially passed--▼
         [[address1, value_index1],[address2, value_index2, length2],[address3, value_index3, length3], ...]
 
@@ -1819,7 +1807,7 @@ def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, refere
     return dict_list
 
 
-def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.INDEX_STRING, ignore_case=True,
+def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.INDEX_STRING_UTF8, ignore_case=True,
                               enable_regex=False):
     """Searches for given str in the referenced strings
 
@@ -1847,7 +1835,7 @@ def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.IN
     referenced_list = []
     returned_list = []
     for item in str_dict:
-        nested_list.append((int(item, 16), value_index, 100, True))
+        nested_list.append((int(item, 16), value_index, 100))
         referenced_list.append(item)
     value_list = read_multiple_addresses(nested_list)
     for index, item in enumerate(value_list):

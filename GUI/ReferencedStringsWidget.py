@@ -63,14 +63,6 @@ class Ui_Form(object):
         self.comboBox_ValueType = QtWidgets.QComboBox(self.layoutWidget)
         self.comboBox_ValueType.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
         self.comboBox_ValueType.setObjectName("comboBox_ValueType")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
-        self.comboBox_ValueType.addItem("")
         self.horizontalLayout.addWidget(self.comboBox_ValueType)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.listWidget_Referrers = QtWidgets.QListWidget(self.splitter)
@@ -79,7 +71,7 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)
 
         self.retranslateUi(Form)
-        self.comboBox_ValueType.setCurrentIndex(6)
+        self.comboBox_ValueType.setCurrentIndex(-1)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -98,12 +90,4 @@ class Ui_Form(object):
         item.setText(_translate("Form", "Refcount"))
         item = self.tableWidget_References.horizontalHeaderItem(2)
         item.setText(_translate("Form", "Value"))
-        self.comboBox_ValueType.setItemText(0, _translate("Form", "Byte"))
-        self.comboBox_ValueType.setItemText(1, _translate("Form", "2 Bytes"))
-        self.comboBox_ValueType.setItemText(2, _translate("Form", "4 Bytes"))
-        self.comboBox_ValueType.setItemText(3, _translate("Form", "8 Bytes"))
-        self.comboBox_ValueType.setItemText(4, _translate("Form", "Float"))
-        self.comboBox_ValueType.setItemText(5, _translate("Form", "Double"))
-        self.comboBox_ValueType.setItemText(6, _translate("Form", "String"))
-        self.comboBox_ValueType.setItemText(7, _translate("Form", "Array of bytes"))
 
