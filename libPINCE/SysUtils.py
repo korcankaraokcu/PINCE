@@ -529,7 +529,7 @@ def parse_string(string, value_index):
     except:
         print(str(value_index) + " can't be converted to int")
         return
-    if value_index is type_defs.VALUE_INDEX.INDEX_STRING:
+    if type_defs.VALUE_INDEX.is_string(value_index):
         return string
     string = string.strip()
     if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
@@ -606,7 +606,7 @@ def aob_to_str(list_of_bytes, encoding="ascii"):
 
     Args:
         list_of_bytes (list): Must be returned from GDB_Engine.hex_dump()
-        encoding (str): Can be "ascii" or "utf-8"
+        encoding (str): See here-->https://docs.python.org/3/library/codecs.html#standard-encodings
 
     Returns:
         str: str equivalent of array
@@ -621,7 +621,7 @@ def str_to_aob(string, encoding="ascii"):
 
     Args:
         string (str): Any string
-        encoding (str): Can be "ascii" or "utf-8"
+        encoding (str): See here-->https://docs.python.org/3/library/codecs.html#standard-encodings
 
     Returns:
         str: AoB equivalent of the given string

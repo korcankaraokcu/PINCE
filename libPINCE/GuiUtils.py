@@ -69,6 +69,21 @@ def center_scroll_bar(QScrollBar):
     QScrollBar.setValue((maximum + minimum) / 2)
 
 
+def fill_value_combobox(QCombobox, current_index=type_defs.VALUE_INDEX.INDEX_4BYTES):
+    """Fills the given QCombobox with value_index strings
+
+    Args:
+        QCombobox (QCombobox): The combobox that'll be filled
+        current_index (int): Can be a member of type_defs.VALUE_INDEX
+    """
+    for key in type_defs.index_to_text_dict:
+        if key == type_defs.VALUE_INDEX.INDEX_AOB:
+            QCombobox.addItem("Array of Bytes")
+        else:
+            QCombobox.addItem(type_defs.index_to_text_dict[key])
+    QCombobox.setCurrentIndex(current_index)
+
+
 def search_parents_by_function(qt_object, func_name):
     """Search for func_name in the parents of given qt_object. Once function is found, parent that possesses func_name
     is returned
@@ -83,14 +98,12 @@ def search_parents_by_function(qt_object, func_name):
             return qt_object
 
 
-def valuetype_to_text(value_index=int, length=0, is_unicode=False, zero_terminate=True):
+def valuetype_to_text(value_index=int, length=0, zero_terminate=True):
     """Returns a str according to given parameters
 
     Args:
         value_index (int): Determines the type of data. Can be a member of type_defs.VALUE_INDEX
         length (int): Length of the data. Only used when the value_index is INDEX_STRING or INDEX_AOB. Ignored otherwise
-        is_unicode (bool): If True, ",U" will be appended to str. Only used when value_index is INDEX_STRING.
-        Ignored otherwise. "U" stands for "Unicode"
         zero_terminate (bool): If False, ",NZT" will be appended to str. Only used when value_index is INDEX_STRING.
         Ignored otherwise. "NZT" stands for "Not Zero Terminate"
 
@@ -99,19 +112,17 @@ def valuetype_to_text(value_index=int, length=0, is_unicode=False, zero_terminat
         str "out of bounds" is returned if the value_index doesn't match the dictionary
 
     Examples:
-        value_index=type_defs.VALUE_INDEX.INDEX_STRING, length=15, is_unicode=True, zero_terminate=False--▼
-        returned str="String[15],U,NZT"
+        value_index=type_defs.VALUE_INDEX.INDEX_STRING_UTF16, length=15, zero_terminate=False--▼
+        returned str="String_UTF16[15],NZT"
         value_index=type_defs.VALUE_INDEX.INDEX_AOB, length=42-->returned str="AoB[42]"
     """
     returned_string = type_defs.index_to_text_dict.get(value_index, "out of bounds")
-    if value_index is type_defs.VALUE_INDEX.INDEX_STRING:
+    if type_defs.VALUE_INDEX.is_string(value_index):
         returned_string = returned_string + "[" + str(length) + "]"
-        if is_unicode:
-            returned_string = returned_string + ",U"
         if not zero_terminate:
-            returned_string = returned_string + ",NZT"
+            returned_string += ",NZT"
     elif value_index is type_defs.VALUE_INDEX.INDEX_AOB:
-        returned_string = returned_string + "[" + str(length) + "]"
+        returned_string += "[" + str(length) + "]"
     return returned_string
 
 
@@ -123,75 +134,31 @@ def text_to_valuetype(string):
 
     Returns:
         tuple: A tuple consisting of parameters of the function valuetype_to_text--▼
-        value_index, length, unicode, zero_terminate
+        value_index, length, zero_terminate, byte_length
 
     Examples:
-        string="String[15],U,NZT"--▼
-        value_index=type_defs.VALUE_INDEX.INDEX_STRING, length=15, is_unicode=True, zero_terminate=False
-        string="AoB[42]"-->value_index=type_defs.VALUE_INDEX.INDEX_AOB, length=42, None, None
+        string="String_UTF8[15],NZT"--▼
+        value_index=type_defs.VALUE_INDEX.INDEX_STRING_UTF8, length=15, zero_terminate=False, byte_length=int (depends)
+        string="AoB[42]"-->value_index=type_defs.VALUE_INDEX.INDEX_AOB, length=42, None, int (depends on the string)
+        string="Double"-->value_index=type_defs.VALUE_INDEX.INDEX_DOUBLE, length=-1, None, 8
     """
-    unicode = zero_terminate = None
-    index = type_defs.text_to_index_dict.get(string, -1)
-    length = type_defs.index_to_valuetype_dict.get(index, [-1])[0]
-    if index is -1:
-        if search(r"String\[\d*\]", string):  # String[10],U,NZT
-            index = type_defs.VALUE_INDEX.INDEX_STRING
-            length = sub("[^0-9]", "", string)
-            length = int(length)
-            if search(r",U", string):  # check if Unicode, literal string
-                unicode = True
-            else:
-                unicode = False
-            if search(r",NZT", string):  # check if not zero terminate, literal string
+    index, length = -1, -1
+    zero_terminate = None
+    for key in type_defs.text_to_index_dict:
+        if string.startswith(key):
+            index = type_defs.text_to_index_dict[key]
+            break
+    byte_len = type_defs.index_to_valuetype_dict.get(index, [-1])[0]
+    if type_defs.VALUE_INDEX.has_length(index):
+        length = search(r"\[\d+\]", string).group(0)[1:-1]
+        length = int(length)
+        byte_len = length * type_defs.string_index_to_multiplier_dict.get(index, 1)
+        if string.startswith("String"):
+            if search(r",NZT", string):
                 zero_terminate = False
             else:
                 zero_terminate = True
-        elif search(r"AoB\[\d*\]", string):  # AoB[10]
-            index = type_defs.VALUE_INDEX.INDEX_AOB
-            length = sub("[^0-9]", "", string)
-            length = int(length)
-    return index, length, unicode, zero_terminate
-
-
-def text_to_index(string):
-    """Converts given str to type_defs.VALUE_INDEX
-
-    Simplified version of the function text_to_valuetype for only extracting value_index
-
-    Args:
-        string (str): String must be generated from the function valuetype_to_text
-
-    Returns:
-        int: A member of type_defs.VALUE_INDEX
-    """
-    index = type_defs.text_to_index_dict.get(string, -1)
-    if index is -1:
-        if search(r"String", string):  # String[10],U,NZT
-            index = type_defs.VALUE_INDEX.INDEX_STRING
-        elif search(r"AoB", string):  # AoB[10]
-            index = type_defs.VALUE_INDEX.INDEX_AOB
-    return index
-
-
-def text_to_length(string):
-    """Converts given str to length
-
-    Simplified version of the function text_to_valuetype for only extracting length
-
-    Args:
-        string (str): String must be generated from the function valuetype_to_text
-
-    Returns:
-        int: Length
-        -1 is returned if the value_index is invalid
-    """
-    index = type_defs.text_to_index_dict.get(string, -1)
-    if index is -1:
-        search(r"\[\d*\]", string)
-        length = sub("[^0-9]", "", string)
-        return int(length)
-    else:
-        return type_defs.index_to_valuetype_dict.get(index, [-1])[0]
+    return index, length, zero_terminate, byte_len
 
 
 def change_text_length(string, length):
@@ -205,9 +172,9 @@ def change_text_length(string, length):
         str: The changed str
         int: -1 is returned if the value_index of the given string isn't INDEX_STRING or INDEX_AOB
     """
-    index = type_defs.text_to_index_dict.get(string, -1)
-    if index is -1:
-        return sub(r"\[\d*\]", "[" + str(length) + "]", string)
+    index = text_to_valuetype(string)[0]
+    if type_defs.VALUE_INDEX.has_length(index):
+        return sub(r"\[\d+\]", "[" + str(length) + "]", string)
     return -1
 
 

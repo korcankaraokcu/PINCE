@@ -62,7 +62,7 @@ def issue_command(command, error_message=""):
             gdb.execute('echo ' + error_message + '\n')
 
 
-def read_single_address(address, value_type, length=0, unicode=False, zero_terminate=True, only_bytes=False):
+def read_single_address(address, value_type, length=0, zero_terminate=True, only_bytes=False):
     try:
         value_type = int(value_type)
     except:
@@ -75,14 +75,13 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
             print(str(address) + " is not a valid address")
             return ""
     packed_data = type_defs.index_to_valuetype_dict.get(value_type, -1)
-    if value_type is type_defs.VALUE_INDEX.INDEX_STRING:
+    if type_defs.VALUE_INDEX.is_string(value_type):
         try:
-            expected_length = int(length)
+            int(length)
         except:
             print(str(length) + " is not a valid length")
             return ""
-        if unicode:
-            expected_length = length * 2
+        expected_length = length * type_defs.string_index_to_multiplier_dict.get(value_type, 1)
     elif value_type is type_defs.VALUE_INDEX.INDEX_AOB:
         try:
             expected_length = int(length)
@@ -103,11 +102,9 @@ def read_single_address(address, value_type, length=0, unicode=False, zero_termi
     FILE.close()
     if only_bytes:
         return data_read
-    if value_type is type_defs.VALUE_INDEX.INDEX_STRING:
-        if unicode:
-            returned_string = data_read.decode("utf-8", "surrogateescape")
-        else:
-            returned_string = data_read.decode("ascii", "surrogateescape")
+    if type_defs.VALUE_INDEX.is_string(value_type):
+        encoding, option = type_defs.string_index_to_encoding_dict[value_type]
+        returned_string = data_read.decode(encoding, option)
         if zero_terminate:
             if returned_string.startswith('\x00'):
                 returned_string = '\x00'
@@ -130,13 +127,15 @@ def set_single_address(address, value_index, value):
     write_data = SysUtils.parse_string(value, value_index)
     if write_data is None:
         return
-    if value_index is type_defs.VALUE_INDEX.INDEX_STRING:
-        write_data = bytearray(write_data, "utf-8", "surrogateescape")
-    elif value_index is type_defs.VALUE_INDEX.INDEX_AOB:
-        write_data = bytearray(write_data)
+    encoding, option = type_defs.string_index_to_encoding_dict.get(value_index, (None, None))
+    if encoding is None:
+        if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
+            write_data = bytearray(write_data)
+        else:
+            data_type = type_defs.index_to_struct_pack_dict.get(value_index, -1)
+            write_data = struct.pack(data_type, write_data)
     else:
-        data_type = type_defs.index_to_struct_pack_dict.get(value_index, -1)
-        write_data = struct.pack(data_type, write_data)
+        write_data = bytearray(write_data, encoding, option)
     FILE = open(mem_file, "rb+")
 
     # Check SetMultipleAddresses class in GDBCommandExtensions.py to see why we moved away the try/except block
