@@ -114,7 +114,6 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - 26/12/2016 : Debugging is finished(At basic level)  
 
 # Current Roadmap
-- Support more string types(UTF16 and UTF32)
 - Refactorize memory write/read functions
 - Extend search_referenced_strings with relative search
 - Implement libPINCE engine
