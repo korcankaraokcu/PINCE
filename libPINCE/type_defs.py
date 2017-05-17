@@ -139,6 +139,18 @@ class VALUE_INDEX:
                value_index == VALUE_INDEX.INDEX_AOB
 
 
+class GDB_OUTPUT_MODE:
+    UNMUTED = 0
+    ASYNC_OUTPUT_ONLY = 1
+    MUTED = 2
+
+
+gdb_output_mode_to_text = {
+    GDB_OUTPUT_MODE.UNMUTED: "Unmuted",
+    GDB_OUTPUT_MODE.ASYNC_OUTPUT_ONLY: "Async output only",
+    GDB_OUTPUT_MODE.MUTED: "Muted",
+}
+
 on_hit_to_text_dict = {
     BREAKPOINT_ON_HIT.BREAK: "Break",
     BREAKPOINT_ON_HIT.FIND_CODE: "Find Code",

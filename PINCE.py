@@ -69,6 +69,7 @@ instances = []  # Holds temporary instances that will be deleted later on
 update_table = bool
 table_update_interval = float
 show_messagebox_on_exception = bool
+gdb_output_mode = int
 pause_hotkey = str
 break_hotkey = str
 continue_hotkey = str
@@ -275,7 +276,7 @@ class MainForm(QMainWindow, MainWindow):
             settings_version = None
 
         # Increase version by one if you change settings
-        if settings_version != "master-2":  # Format: branch_name-version
+        if settings_version != "master-3":  # Format: branch_name-version
             self.settings.clear()
             self.set_default_settings()
         GDB_Engine.init_gdb(gdb_path)
@@ -336,6 +337,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("auto_update_address_table", False)
         self.settings.setValue("address_table_update_interval", 0.5)
         self.settings.setValue("show_messagebox_on_exception", True)
+        self.settings.setValue("gdb_output_mode", type_defs.GDB_OUTPUT_MODE.UNMUTED)
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
         self.settings.setValue("pause", "F1")
@@ -363,6 +365,7 @@ class MainForm(QMainWindow, MainWindow):
         global update_table
         global table_update_interval
         global show_messagebox_on_exception
+        global gdb_output_mode
         global pause_hotkey
         global break_hotkey
         global continue_hotkey
@@ -373,6 +376,8 @@ class MainForm(QMainWindow, MainWindow):
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
         table_update_interval = self.settings.value("General/address_table_update_interval", type=float)
         show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
+        gdb_output_mode = self.settings.value("General/gdb_output_mode", type=int)
+        GDB_Engine.set_gdb_output_mode(gdb_output_mode)
         pause_hotkey = self.settings.value("Hotkeys/pause")
         break_hotkey = self.settings.value("Hotkeys/break")
         continue_hotkey = self.settings.value("Hotkeys/continue")
@@ -958,6 +963,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         # Yet another retarded hack, thanks to pyuic5 not supporting QKeySequenceEdit
         self.keySequenceEdit = QKeySequenceEdit()
         self.verticalLayout_Hotkey.addWidget(self.keySequenceEdit)
+        self.comboBox_GDBOutputMode.addItems(type_defs.gdb_output_mode_to_text.values())
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
         icons_directory = GuiUtils.get_icons_directory()
         self.pushButton_GDBPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
@@ -1000,6 +1006,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
         self.settings.setValue("General/show_messagebox_on_exception", self.checkBox_ShowMessageBox.isChecked())
+        self.settings.setValue("General/gdb_output_mode", self.comboBox_GDBOutputMode.currentIndex())
         self.settings.setValue("Hotkeys/pause", self.pause_hotkey)
         self.settings.setValue("Hotkeys/break", self.break_hotkey)
         self.settings.setValue("Hotkeys/continue", self.continue_hotkey)
@@ -1021,6 +1028,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.lineEdit_UpdateInterval.setText(
             str(self.settings.value("General/address_table_update_interval", type=float)))
         self.checkBox_ShowMessageBox.setChecked(self.settings.value("General/show_messagebox_on_exception", type=bool))
+        self.comboBox_GDBOutputMode.setCurrentIndex(self.settings.value("General/gdb_output_mode", type=int))
         self.pause_hotkey = self.settings.value("Hotkeys/pause")
         self.break_hotkey = self.settings.value("Hotkeys/break")
         self.continue_hotkey = self.settings.value("Hotkeys/continue")
