@@ -391,8 +391,10 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     status_thread = Thread(target=state_observe_thread)
     status_thread.daemon = True
     status_thread.start()
+    SysUtils.init_user_files()
     gdb_initialized = True
     send_command("source " + type_defs.USER_PATHS.GDBINIT_PATH)
+    SysUtils.execute_script(type_defs.USER_PATHS.PINCEINIT_PATH)
     if additional_commands:
         send_command(additional_commands)
 
@@ -478,6 +480,7 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     await_exit_thread.start()
     result_message = "Successfully attached to the process with PID " + str(currentpid)
     print(result_message)
+    SysUtils.execute_script(type_defs.USER_PATHS.PINCEINIT_AA_PATH)
     return type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL, result_message
 
 
@@ -534,6 +537,7 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
     await_exit_thread = Thread(target=await_process_exit)
     await_exit_thread.daemon = True
     await_exit_thread.start()
+    SysUtils.execute_script(type_defs.USER_PATHS.PINCEINIT_AA_PATH)
     return True
 
 
@@ -549,6 +553,7 @@ def detach():
         inferior_status = -1
         gdb_initialized = False
         child.close()
+    SysUtils.chown_to_user(type_defs.USER_PATHS.ROOT_PATH, recursive=True)
     print("Detached from the process with PID:" + str(old_pid))
 
 
