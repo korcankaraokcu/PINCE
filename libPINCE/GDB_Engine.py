@@ -108,7 +108,7 @@ cancel_send_command = False
 # A string. Holds the last command sent to gdb
 last_gdb_command = ""
 
-#:doc:output_mode
+#:doc:gdb_output_mode
 # An integer. Used to adjust gdb output
 gdb_output_mode = type_defs.GDB_OUTPUT_MODE.UNMUTED
 
