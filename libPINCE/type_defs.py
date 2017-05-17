@@ -35,9 +35,20 @@ class PATHS:
 class USER_PATHS:
     HOME_PATH = os.path.expanduser("~")
     ROOT_PATH = HOME_PATH + "/PINCE_USER_FILES/"
+    TRACE_INSTRUCTIONS_PATH = ROOT_PATH + "TraceInstructions/"
     GDBINIT_PATH = ROOT_PATH + "gdbinit"
     GDBINIT_AA_PATH = ROOT_PATH + "gdbinit_after_attach"
-    TRACE_INSTRUCTIONS_PATH = ROOT_PATH + "TraceInstructions/"
+    PINCEINIT_PATH = ROOT_PATH + "pinceinit.py"
+    PINCEINIT_AA_PATH = ROOT_PATH + "pinceinit_after_attach.py"
+
+    @staticmethod
+    def get_init_directories():
+        return USER_PATHS.ROOT_PATH, USER_PATHS.TRACE_INSTRUCTIONS_PATH
+
+    @staticmethod
+    def get_init_files():
+        return USER_PATHS.GDBINIT_PATH, USER_PATHS.GDBINIT_AA_PATH, \
+               USER_PATHS.PINCEINIT_PATH, USER_PATHS.PINCEINIT_AA_PATH
 
 
 class INFERIOR_STATUS:

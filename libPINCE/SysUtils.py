@@ -25,10 +25,11 @@ try:
 except ImportError:
     print("WARNING: GDB couldn't locate the package psutil, psutil based user-defined functions won't work\n" +
           "If you are getting this message without invoking GDB, it means that installation has failed, well, sort of")
-import os, shutil, sys, binascii, pickle, json
+import os, shutil, sys, binascii, pickle, json, traceback
 from . import type_defs
 from re import match, search, IGNORECASE, split, sub
 from collections import OrderedDict
+from importlib.machinery import SourceFileLoader
 
 
 def get_process_list():
@@ -744,16 +745,13 @@ def get_comments_of_variables(source_file_path, single_comment="#", multi_start=
 
 def init_user_files():
     """Initializes user files"""
-    is_path_valid(type_defs.USER_PATHS.ROOT_PATH, "create")
-    is_path_valid(type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH, "create")
-    try:
-        open(type_defs.USER_PATHS.GDBINIT_PATH).close()
-    except FileNotFoundError:
-        open(type_defs.USER_PATHS.GDBINIT_PATH, "w").close()
-    try:
-        open(type_defs.USER_PATHS.GDBINIT_AA_PATH).close()
-    except FileNotFoundError:
-        open(type_defs.USER_PATHS.GDBINIT_AA_PATH, "w").close()
+    for directory in type_defs.USER_PATHS.get_init_directories():
+        is_path_valid(directory, "create")
+    for file in type_defs.USER_PATHS.get_init_files():
+        try:
+            open(file).close()
+        except FileNotFoundError:
+            open(file, "w").close()
     chown_to_user(type_defs.USER_PATHS.ROOT_PATH, recursive=True)
 
 
@@ -779,4 +777,29 @@ def get_user_ids():
     return uid, gid
 
 
-init_user_files()
+def execute_script(file_path):
+    """Loads and executes the script in the given path
+
+    Args:
+        file_path (str): Self-explanatory
+
+    Returns:
+        tuple: (module, exception)
+        module--> Loaded script as module
+        exception--> traceback as str
+
+        Returns (None, exception) if fails to load the script
+        Returns (module, None) if script gets loaded successfully
+    """
+    head, tail = os.path.split(file_path)
+    file_name = tail.split(".", maxsplit=1)[0]
+    try:
+        module = SourceFileLoader(file_name, file_path).load_module()
+    except Exception as e:
+        print("Encountered an exception while loading the script located at " + file_path)
+        tb = traceback.format_exception(None, e, e.__traceback__)
+        tb.insert(0, "------->You can ignore the importlib part if the source file is valid<-------\n")
+        tb = "".join(tb)
+        print(tb)
+        return None, tb
+    return module, None
