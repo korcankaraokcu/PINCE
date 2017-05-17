@@ -108,8 +108,22 @@ cancel_send_command = False
 # A string. Holds the last command sent to gdb
 last_gdb_command = ""
 
+#:doc:output_mode
+# An integer. Used to adjust gdb output
+gdb_output_mode = type_defs.GDB_OUTPUT_MODE.UNMUTED
+
 
 # The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
+
+def set_gdb_output_mode(mode):
+    """Reduces, mutes or unmutes gdb output
+
+    Args:
+        mode (int): Can be a member of type_defs.GDB_OUTPUT_MODE
+    """
+    global gdb_output_mode
+    gdb_output_mode = mode
+
 
 def cancel_last_command():
     """Cancels the last gdb command sent if it's still present"""
@@ -238,7 +252,8 @@ def state_observe_thread():
         with gdb_waiting_for_prompt_condition:
             gdb_waiting_for_prompt_condition.notify_all()
         child.expect_exact("(gdb)")
-        print(child.before)  # debug mode on!
+        if gdb_output_mode is type_defs.GDB_OUTPUT_MODE.UNMUTED:
+            print(child.before)
         matches = findall(r"stopped\-threads=\"all\"|\*running,thread\-id=\"all\"",
                           child.before)  # stopped-threads="all"  # *running,thread-id="all"
         if len(matches) > 0:
@@ -255,6 +270,8 @@ def state_observe_thread():
             command_file = escape(SysUtils.get_gdb_command_file(currentpid))
             gdb_output = split(r"&\".*source\s" + command_file + r"\\n\"", child.before, 1)[1]  # &"command\n"
         except:
+            if gdb_output_mode is type_defs.GDB_OUTPUT_MODE.ASYNC_OUTPUT_ONLY:
+                print(child.before)
             with gdb_async_condition:
                 gdb_async_output = child.before
                 gdb_async_condition.notify_all()
