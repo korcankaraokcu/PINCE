@@ -440,7 +440,12 @@ class MainForm(QMainWindow, MainWindow):
     def exec_track_watchpoint_widget(self, watchpoint_type):
         last_selected_row = self.tableWidget_AddressTable.selectionModel().selectedRows()[-1].row()
         address = self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text()
-        byte_len = GuiUtils.text_to_valuetype(self.tableWidget_AddressTable.item(last_selected_row, TYPE_COL).text())[3]
+        value_type_text = self.tableWidget_AddressTable.item(last_selected_row, TYPE_COL).text()
+        index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type_text)
+        if byte_len == -1:
+            value_text = self.tableWidget_AddressTable.item(last_selected_row, VALUE_COL).text()
+            encoding, option = type_defs.string_index_to_encoding_dict[index]
+            byte_len = len(value_text.encode(encoding, option))
         TrackWatchpointWidgetForm(address, byte_len, watchpoint_type, self).show()
 
     def browse_region_for_selected_row(self):

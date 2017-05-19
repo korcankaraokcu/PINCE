@@ -181,7 +181,7 @@ string_index_to_encoding_dict = {
     VALUE_INDEX.INDEX_STRING_UTF8: ["utf-8", "surrogateescape"],
     VALUE_INDEX.INDEX_STRING_UTF16: ["utf-16", "replace"],
     VALUE_INDEX.INDEX_STRING_UTF32: ["utf-32", "replace"],
-    VALUE_INDEX.INDEX_STRING_ASCII: ["ascii", "surrogateescape"],
+    VALUE_INDEX.INDEX_STRING_ASCII: ["ascii", "replace"],
 }
 
 string_index_to_multiplier_dict = {

@@ -136,10 +136,13 @@ def text_to_valuetype(string):
         tuple: A tuple consisting of parameters of the function valuetype_to_text--▼
         value_index, length, zero_terminate, byte_length
 
+        If value_index doesn't contain length, length will be returned as -1
+        If value_index is INDEX_STRING, byte_length will be returned as -1
+
     Examples:
         string="String_UTF8[15],NZT"--▼
-        value_index=type_defs.VALUE_INDEX.INDEX_STRING_UTF8, length=15, zero_terminate=False, byte_length=int (depends)
-        string="AoB[42]"-->value_index=type_defs.VALUE_INDEX.INDEX_AOB, length=42, None, int (depends on the string)
+        value_index=type_defs.VALUE_INDEX.INDEX_STRING_UTF8, length=15, zero_terminate=False, byte_length=-1
+        string="AoB[42]"-->value_index=type_defs.VALUE_INDEX.INDEX_AOB, length=42, None, 42
         string="Double"-->value_index=type_defs.VALUE_INDEX.INDEX_DOUBLE, length=-1, None, 8
     """
     index, length = -1, -1
@@ -152,8 +155,9 @@ def text_to_valuetype(string):
     if type_defs.VALUE_INDEX.has_length(index):
         length = search(r"\[\d+\]", string).group(0)[1:-1]
         length = int(length)
-        byte_len = length * type_defs.string_index_to_multiplier_dict.get(index, 1)
-        if string.startswith("String"):
+        byte_len = length
+        if type_defs.VALUE_INDEX.is_string(index):
+            byte_len = -1
             if search(r",NZT", string):
                 zero_terminate = False
             else:
