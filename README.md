@@ -114,6 +114,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - 26/12/2016 : Debugging is finished(At basic level)  
 
 # Current Roadmap
+- Implement common_regexes.py for regex reuse
 - Refactorize memory write/read functions
 - Extend search_referenced_strings with relative search
 - Implement libPINCE engine
