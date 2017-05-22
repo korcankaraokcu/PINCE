@@ -122,6 +122,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - Implement single-line code injection
 - Implement multi-line code injection
 - Break on/Catch signals and syscalls
+- Execute custom libPINCE scripts on breakpoint/watchpoint trigger
 - Flowcharts based on disassembled output
 - Automatic function bypassing(make it return the desired value, hook specific parts etc.)
 - Implement speedhack
