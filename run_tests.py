@@ -16,9 +16,15 @@ parser.add_argument("-l", metavar="ld_preload_path", type=str, default="",
 
 args = parser.parse_args()
 if args.a:
-    pid = SysUtils.process_name_to_pid(args.a)
-    if pid == -1:
+    process_list = SysUtils.search_in_processes_by_name(args.a)
+    if not process_list:
         parser.error("There's no process with the name " + args.a)
+    if len(process_list) > 1:
+        for item in process_list:
+            print(item.name())
+        print("There are more than one process with the name " + args.a)
+        exit()
+    pid = process_list[0].pid
     if not GDB_Engine.can_attach(pid):
         parser.error("Failed to attach to the process with pid " + str(pid))
     GDB_Engine.attach(pid)

@@ -74,23 +74,6 @@ def search_in_processes_by_name(process_name):
     return processlist
 
 
-def process_name_to_pid(process_name):
-    """Searches currently running processes and returns the pid of the first found process
-
-    Args:
-        process_name (str): Name of the process that'll be searched for
-
-    Returns:
-        int: PID of the found process. Returns -1 if there's no process with the name process_name
-    """
-    try:
-        process = search_in_processes_by_name(process_name)[0]
-    except IndexError:
-        print("No process exists with the name " + process_name)
-        return -1
-    return process.pid
-
-
 def get_memory_regions(pid):
     """Returns memory regions as a list of pmmap_ext objects
 
