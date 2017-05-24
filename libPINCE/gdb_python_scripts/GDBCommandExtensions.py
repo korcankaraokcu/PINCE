@@ -609,7 +609,8 @@ class DissectCode(gdb.Command):
                 else:
                     last_disas_addr = 0
                 for (instruction_offset, size, instruction, hexdump) in disas_data:
-                    instruction = instruction.decode()
+                    if isinstance(instruction, bytes):
+                        instruction = instruction.decode()
                     if instruction.startswith("J") or instruction.startswith("LOOP"):
                         found = regex_valid_address.search(instruction)
                         if found:
