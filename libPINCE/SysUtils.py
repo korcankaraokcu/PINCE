@@ -202,15 +202,6 @@ def is_process_valid(pid):
     return is_path_valid("/proc/%d" % pid)
 
 
-def get_home_directory():
-    """Get home directory of the current user
-
-    Returns:
-        str: A string pointing to the home directory
-    """
-    return os.path.expanduser("~")
-
-
 def get_current_script_directory():
     """Get current working directory
 
