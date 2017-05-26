@@ -1021,7 +1021,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("Disassemble/bring_disassemble_to_front",
                                self.checkBox_BringDisassembleToFront.isChecked())
         self.settings.setValue("Disassemble/instructions_per_scroll", current_insturctions_shown)
-        self.settings.setValue("Debug/gdb_path", self.lineEdit_GDBPath.text())
+        selected_gdb_path = self.lineEdit_GDBPath.text()
+        current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
+        if selected_gdb_path != current_gdb_path:
+            if DialogWithButtonsForm(label_text="You have changed the GDB path, reset GDB now?").exec_():
+                GDB_Engine.init_gdb(selected_gdb_path)
+        self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         super(SettingsDialogForm, self).accept()
 
     def config_gui(self):
