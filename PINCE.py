@@ -67,6 +67,7 @@ selfpid = os.getpid()
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
+current_settings_version = "master-4"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = float
 show_messagebox_on_exception = bool
@@ -275,9 +276,7 @@ class MainForm(QMainWindow, MainWindow):
             settings_version = self.settings.value("Misc/version", type=str)
         except TypeError:
             settings_version = None
-
-        # Increase version by one if you change settings
-        if settings_version != "master-3":  # Format: branch_name-version
+        if settings_version != current_settings_version:
             self.settings.clear()
             self.set_default_settings()
         GDB_Engine.init_gdb(gdb_path)
@@ -356,9 +355,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("gdb_path", type_defs.PATHS.GDB_PATH)
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
-
-        # Increase version by one if you change settings
-        self.settings.setValue("version", "master-2")
+        self.settings.setValue("version", current_settings_version)
         self.settings.endGroup()
         self.apply_settings()
 
