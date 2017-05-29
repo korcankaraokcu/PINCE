@@ -6,7 +6,7 @@ python:
 before_install:
   - sed -i 's/\.\/gdb_pince\/gdb-7\.11\.1\/bin\/gdb/\/usr\/bin\/gdb/g' libPINCE/type_defs.py
   - sudo apt-get -qq update
-  - sudo apt-get install -y python3-setuptools python3-pip python3-pyqt5 gdb
-  - sudo pip3 install psutil pexpect distorm3
+  - sudo apt-get install -y gdb
+  - sudo pip install psutil pexpect distorm3 PyQt5
 
 script: sudo run_tests.py -c /bin/cat
