@@ -142,7 +142,7 @@ GPLv3+. See COPYING file for details
 # Contact Information
 Korcan Karaokçu <korcankaraokcu@gmail.com>  
 Çağrı Ulaş <cagriulas@gmail.com>  
-Jakob <jakob@memeware.net>  
+Jakob Kreuze <jakob@memeware.net>  
 Gibus <lilac66.dev@gmail.com>  
 
 # Supported platforms
@@ -150,7 +150,7 @@ Gibus <lilac66.dev@gmail.com>
   * Kubuntu 14.04 & 16.04(Also tested on x86 variants)
   * Debian 8.5
   * Linux Mint 18.1(install the package "python3-psutil" if you encounter ImportError or NameError, thanks Gibus)
-  * Archlinux(contact with [Çağrı Ulaş](https://github.com/cagriulas) or [Jakob](https://github.com/TsarFox))
+  * Archlinux(contact with [Çağrı Ulaş](https://github.com/cagriulas) or [Jakob Kreuze](https://github.com/TsarFox))
 - **Games&Applications tested so far:**
   * KMines
   * Torchlight 2
