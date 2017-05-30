@@ -7,6 +7,7 @@ before_install:
   - sed -i 's/\.\/gdb_pince\/gdb-7\.11\.1\/bin\/gdb/\/usr\/bin\/gdb/g' libPINCE/type_defs.py
   - sudo apt-get -qq update
   - sudo apt-get install -y gdb
-  - sudo pip install psutil pexpect distorm3
 
-script: sudo python run_tests.py -c /bin/cat
+install: pip install psutil pexpect distorm3
+
+script: sudo ~/virtualenv/python3.4/bin/python run_tests.py -c /bin/ls
