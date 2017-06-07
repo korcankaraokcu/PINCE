@@ -10,4 +10,4 @@ before_install:
 
 install: pip install psutil pexpect distorm3
 
-script: sudo ~/virtualenv/python3.4/bin/python run_tests.py -c /bin/ls
+script: sudo ~/virtualenv/python3.4/bin/python run_tests.py -c /bin/cat
