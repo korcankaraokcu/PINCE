@@ -15,13 +15,28 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
+OS_NAME="Debian"
+PKG_MGR="apt-get"
+PKG_NAMES_ALL="python3-setuptools python3-pip"
+PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-pyqt5"
+PKG_NAMES_SUSE="$PKG_NAMES_ALL python3-qt5"
+PKG_NAMES="$PKG_NAMES_DEBIAN"
+PKG_NAMES_PIP="psutil pexpect distorm3"
 
-sudo apt-get install python3-setuptools
-sudo apt-get install python3-pip
-sudo apt-get install python3-pyqt5
-sudo pip3 install psutil
-sudo pip3 install pexpect
-sudo pip3 install distorm3
+LSB_RELEASE="`which lsb_release`"
+if [ -n "$LSB_RELEASE" ] ; then
+    OS_NAME="`$LSB_RELEASE -d -s`"
+fi
+
+case "$OS_NAME" in
+*SUSE*)
+    PKG_MGR="zypper"
+    PKG_NAMES="$PKG_NAMES_SUSE"
+    ;;
+esac
+
+sudo $PKG_MGR install $PKG_NAMES
+sudo pip3 install $PKG_NAMES_PIP
 
 if [ -e libPINCE/gdb_pince/gdb-7.11.1/bin/gdb ] ; then
     echo "GDB has been already compiled&installed, recompile&install? (y/n)"
