@@ -1,13 +1,15 @@
-language: python
-sudo: required
-python:
-  - "3.4"
-
 before_install:
-  - sed -i 's/\.\/gdb_pince\/gdb-7\.11\.1\/bin\/gdb/\/usr\/bin\/gdb/g' libPINCE/type_defs.py
-  - sudo apt-get -qq update
-  - sudo apt-get install -y gdb
+  - sed -i '/tests\.GuiUtils_tests/d' run_tests.py
+  - wget https://www.python.org/ftp/python/3.4.6/Python-3.4.6.tgz
+  - tar xfz Python-3.4.6.tgz
+  - cd Python-3.4.6
+  - sh configure --prefix=/usr --enable-shared
+  - make
+  - sudo make install
+  - cd ..
+  - sudo sh install_gdb.sh
+  - wget https://bootstrap.pypa.io/get-pip.py
+  - sudo python3 get-pip.py
+  - sudo pip3 install psutil pexpect distorm3
 
-install: pip install psutil pexpect distorm3
-
-script: sudo ~/virtualenv/python3.4/bin/python run_tests.py -c /bin/cat
+script: sudo python3 run_tests.py -c /bin/ls
