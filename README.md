@@ -118,9 +118,9 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - Implement common_regexes.py for regex reuse
 - Refactorize memory write/read functions
 - Extend search_referenced_strings with relative search
-- Group libPINCE functions with tags
 - Move GUI classes of PINCE.py to their own files
 - Implement libPINCE engine
+- Extend tagging system to PINCE GUI functions
 - Implement inject_with_advanced_injection
 - Implement single-line code injection
 - Implement multi-line code injection
