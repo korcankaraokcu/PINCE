@@ -15,12 +15,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt5.QtWidgets import QDesktopWidget
+# PyQt5 isn't needed to run tests with travis. So, to reduce the testing time and complexity, we ignore the PyQt5 import
+# There'll be no tests for PyQt5 related functions in GuiUtils.py
+try:
+    from PyQt5.QtWidgets import QDesktopWidget
+except ImportError:
+    pass
 from re import search, sub
 from . import type_defs
 from . import SysUtils
 
 
+#:tag:GUI
 def get_icons_directory():
     """Gets the directory of the icons
 
@@ -30,6 +36,7 @@ def get_icons_directory():
     return SysUtils.get_current_script_directory() + "/media/icons"
 
 
+#:tag:GUI
 def center(window):
     """Center the given window to desktop
 
@@ -39,6 +46,7 @@ def center(window):
     window.move(QDesktopWidget().availableGeometry().center() - window.frameGeometry().center())
 
 
+#:tag:GUI
 def center_to_parent(window):
     """Center the given window to it's parent
 
@@ -48,6 +56,7 @@ def center_to_parent(window):
     window.move(window.parent().frameGeometry().center() - window.frameGeometry().center())
 
 
+#:tag:GUI
 def center_to_window(window_secondary, window_main):
     """Center the given window_secondary to window_main
 
@@ -58,6 +67,7 @@ def center_to_window(window_secondary, window_main):
     window_secondary.move(window_main.frameGeometry().center() - window_secondary.frameGeometry().center())
 
 
+#:tag:GUI
 def center_scroll_bar(QScrollBar):
     """Center the given scrollbar
 
@@ -69,6 +79,7 @@ def center_scroll_bar(QScrollBar):
     QScrollBar.setValue((maximum + minimum) / 2)
 
 
+#:tag:GUI
 def fill_value_combobox(QCombobox, current_index=type_defs.VALUE_INDEX.INDEX_4BYTES):
     """Fills the given QCombobox with value_index strings
 
@@ -84,6 +95,7 @@ def fill_value_combobox(QCombobox, current_index=type_defs.VALUE_INDEX.INDEX_4BY
     QCombobox.setCurrentIndex(current_index)
 
 
+#:tag:GUI
 def search_parents_by_function(qt_object, func_name):
     """Search for func_name in the parents of given qt_object. Once function is found, parent that possesses func_name
     is returned
@@ -98,6 +110,7 @@ def search_parents_by_function(qt_object, func_name):
             return qt_object
 
 
+#:tag:ValueType
 def valuetype_to_text(value_index=int, length=0, zero_terminate=True):
     """Returns a str according to given parameters
 
@@ -126,6 +139,7 @@ def valuetype_to_text(value_index=int, length=0, zero_terminate=True):
     return returned_string
 
 
+#:tag:ValueType
 def text_to_valuetype(string):
     """Returns a tuple of parameters of the function valuetype_to_text evaluated according to given str
 
@@ -165,6 +179,7 @@ def text_to_valuetype(string):
     return index, length, zero_terminate, byte_len
 
 
+#:tag:GUI
 def change_text_length(string, length):
     """Changes the length of the given str to the given length
 
@@ -182,6 +197,7 @@ def change_text_length(string, length):
     return -1
 
 
+#:tag:GUI
 def remove_bookmark_mark(string):
     """Removes the bookmark mark from the given string
 
@@ -194,6 +210,7 @@ def remove_bookmark_mark(string):
     return sub(r"\(M\)", "", string, count=1)
 
 
+#:tag:GUI
 def contains_reference_mark(string):
     """Checks if given string contains the reference mark
 

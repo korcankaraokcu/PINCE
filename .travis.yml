@@ -14,7 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 before_install:
-  - sed -i '/from PyQt5\.QtWidgets/d' libPINCE/GuiUtils.py
   - wget https://www.python.org/ftp/python/3.4.6/Python-3.4.6.tgz
   - tar xfz Python-3.4.6.tgz
   - cd Python-3.4.6
