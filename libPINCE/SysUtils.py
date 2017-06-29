@@ -27,11 +27,12 @@ except ImportError:
           "If you are getting this message without invoking GDB, it means that installation has failed, well, sort of")
 import os, shutil, sys, binascii, pickle, json, traceback
 from . import type_defs
-from re import match, search, IGNORECASE, split, sub
+from re import match, search, IGNORECASE, split
 from collections import OrderedDict
 from importlib.machinery import SourceFileLoader
 
 
+#:tag:Processes
 def get_process_list():
     """Returns a list of psutil.Process objects corresponding to currently running processes
 
@@ -44,6 +45,7 @@ def get_process_list():
     return processlist
 
 
+#:tag:Processes
 def get_process_information(pid):
     """Returns a psutil.Process object corresponding to given pid
 
@@ -57,6 +59,7 @@ def get_process_information(pid):
     return p
 
 
+#:tag:Processes
 def search_in_processes_by_name(process_name):
     """Searches currently running processes and returns a list of psutil.Process objects corresponding to processes that
     has the str process_name in them
@@ -74,6 +77,7 @@ def search_in_processes_by_name(process_name):
     return processlist
 
 
+#:tag:Processes
 def get_memory_regions(pid):
     """Returns memory regions as a list of pmmap_ext objects
 
@@ -87,6 +91,7 @@ def get_memory_regions(pid):
     return p.memory_maps(grouped=False)
 
 
+#:tag:Processes
 def get_region_info(pid, address):
     """Finds the closest valid starting/ending address and region to given address, assuming given address is in the
     valid address range
@@ -112,6 +117,7 @@ def get_region_info(pid, address):
             return type_defs.tuple_region_info(hex(start), hex(end), item)
 
 
+#:tag:Processes
 def get_memory_regions_by_perms(pid):
     """Returns a tuple of four lists based on the permissions given to them
 
@@ -139,6 +145,7 @@ def get_memory_regions_by_perms(pid):
     return readable_only, writeable, executable, readable
 
 
+#:tag:Processes
 def exclude_shared_memory_regions(generated_list):
     """Excludes the shared memory regions from the list
 
@@ -155,6 +162,7 @@ def exclude_shared_memory_regions(generated_list):
     return generated_list
 
 
+#:tag:Processes
 def exclude_system_memory_regions(generated_list):
     """Excludes the system-related memory regions from the list
 
@@ -171,6 +179,7 @@ def exclude_system_memory_regions(generated_list):
     return generated_list
 
 
+#:tag:Processes
 def is_traced(pid):
     """Check if the process corresponding to given pid traced by any other process
 
@@ -190,6 +199,7 @@ def is_traced(pid):
                 return psutil.Process(int(tracerpid)).name()
 
 
+#:tag:Processes
 def is_process_valid(pid):
     """Check if the process corresponding to given pid is valid
 
@@ -202,6 +212,7 @@ def is_process_valid(pid):
     return is_path_valid("/proc/%d" % pid)
 
 
+#:tag:Utilities
 def get_current_script_directory():
     """Get current working directory
 
@@ -211,6 +222,7 @@ def get_current_script_directory():
     return sys.path[0]
 
 
+#:tag:Utilities
 def get_libpince_directory():
     """Get libPINCE directory
 
@@ -224,6 +236,7 @@ def get_libpince_directory():
     return os.path.dirname(os.path.realpath(__file__))
 
 
+#:tag:Utilities
 def is_path_valid(dest_path, issue_path=""):
     """Check if the given path is valid
 
@@ -245,6 +258,7 @@ def is_path_valid(dest_path, issue_path=""):
         return False
 
 
+#:tag:GDBCommunication
 def do_cleanups(pid):
     """Deletes the IPC directory of given pid
 
@@ -254,6 +268,7 @@ def do_cleanups(pid):
     is_path_valid(get_PINCE_IPC_directory(pid), "delete")
 
 
+#:tag:GDBCommunication
 def create_PINCE_IPC_PATH(pid):
     """Creates the IPC directory of given pid
 
@@ -264,6 +279,7 @@ def create_PINCE_IPC_PATH(pid):
     is_path_valid(get_PINCE_IPC_directory(pid), "create")
 
 
+#:tag:GDBCommunication
 def get_PINCE_IPC_directory(pid):
     """Get the IPC directory of given pid
 
@@ -276,6 +292,7 @@ def get_PINCE_IPC_directory(pid):
     return type_defs.PATHS.PINCE_IPC_PATH + str(pid)
 
 
+#:tag:GDBCommunication
 def get_gdb_log_file(pid):
     """Get the path of gdb logfile of given pid
 
@@ -288,6 +305,7 @@ def get_gdb_log_file(pid):
     return get_PINCE_IPC_directory(pid) + "/gdb_log.txt"
 
 
+#:tag:GDBCommunication
 def get_gdb_command_file(pid):
     """Get the path of gdb command file of given pid
 
@@ -300,6 +318,7 @@ def get_gdb_command_file(pid):
     return get_PINCE_IPC_directory(pid) + "/gdb_command.txt"
 
 
+#:tag:BreakWatchpoints
 def get_track_watchpoint_file(pid, watchpoint_list):
     """Get the path of track watchpoint file for given pid and watchpoint
 
@@ -313,6 +332,7 @@ def get_track_watchpoint_file(pid, watchpoint_list):
     return get_PINCE_IPC_directory(pid) + "/" + str(watchpoint_list) + "_track_watchpoint.txt"
 
 
+#:tag:BreakWatchpoints
 def get_track_breakpoint_file(pid, breakpoint):
     """Get the path of track breakpoint file for given pid and breakpoint
 
@@ -326,6 +346,7 @@ def get_track_breakpoint_file(pid, breakpoint):
     return get_PINCE_IPC_directory(pid) + "/" + breakpoint + "_track_breakpoint.txt"
 
 
+#:tag:Tools
 def get_trace_instructions_file(pid, breakpoint):
     """Get the path of trace instructions file for given pid and breakpoint
 
@@ -339,6 +360,7 @@ def get_trace_instructions_file(pid, breakpoint):
     return get_PINCE_IPC_directory(pid) + "/" + breakpoint + "_trace.txt"
 
 
+#:tag:Utilities
 def save_file(data, file_path, save_method="json"):
     """Saves the specified data to given path
 
@@ -376,6 +398,7 @@ def save_file(data, file_path, save_method="json"):
         return False
 
 
+#:tag:Utilities
 def load_file(file_path, load_method="json", return_on_fail=None):
     """Loads data from the given path
 
@@ -409,6 +432,7 @@ def load_file(file_path, load_method="json", return_on_fail=None):
     return output
 
 
+#:tag:Tools
 def get_trace_instructions_status_file(pid, breakpoint):
     """Get the path of trace instructions status file for given pid and breakpoint
 
@@ -422,6 +446,7 @@ def get_trace_instructions_status_file(pid, breakpoint):
     return get_PINCE_IPC_directory(pid) + "/" + breakpoint + "_trace_status.txt"
 
 
+#:tag:Tools
 def get_dissect_code_status_file(pid):
     """Get the path of dissect code status file for given pid
 
@@ -434,6 +459,7 @@ def get_dissect_code_status_file(pid):
     return get_PINCE_IPC_directory(pid) + "/dissect_code_status.txt"
 
 
+#:tag:Tools
 def get_referenced_strings_file(pid):
     """Get the path of referenced strings dict file for given pid
 
@@ -446,6 +472,7 @@ def get_referenced_strings_file(pid):
     return get_PINCE_IPC_directory(pid) + "/referenced_strings_dict.txt"
 
 
+#:tag:Tools
 def get_referenced_jumps_file(pid):
     """Get the path of referenced jumps dict file for given pid
 
@@ -458,6 +485,7 @@ def get_referenced_jumps_file(pid):
     return get_PINCE_IPC_directory(pid) + "/referenced_jumps_dict.txt"
 
 
+#:tag:Tools
 def get_referenced_calls_file(pid):
     """Get the path of referenced strings dict file for given pid
 
@@ -470,6 +498,7 @@ def get_referenced_calls_file(pid):
     return get_PINCE_IPC_directory(pid) + "/referenced_calls_dict.txt"
 
 
+#:tag:GDBCommunication
 def get_ipc_from_PINCE_file(pid):
     """Get the path of IPC file sent to custom gdb commands from PINCE for given pid
 
@@ -482,6 +511,7 @@ def get_ipc_from_PINCE_file(pid):
     return get_PINCE_IPC_directory(pid) + type_defs.PATHS.IPC_FROM_PINCE_PATH
 
 
+#:tag:GDBCommunication
 def get_ipc_to_PINCE_file(pid):
     """Get the path of IPC file sent to PINCE from custom gdb commands for given pid
 
@@ -494,6 +524,7 @@ def get_ipc_to_PINCE_file(pid):
     return get_PINCE_IPC_directory(pid) + type_defs.PATHS.IPC_TO_PINCE_PATH
 
 
+#:tag:ValueType
 def parse_string(string, value_index):
     """Parses the string according to the given value_index
 
@@ -569,6 +600,7 @@ def parse_string(string, value_index):
         return string
 
 
+#:tag:Utilities
 def extract_address(string, search_for_location_changing_instructions=False):
     """Extracts hex address from the given string
 
@@ -593,6 +625,7 @@ def extract_address(string, search_for_location_changing_instructions=False):
             return result.group(0)
 
 
+#:tag:ValueType
 def aob_to_str(list_of_bytes, encoding="ascii"):
     """Converts given array of hex strings to str
 
@@ -608,6 +641,7 @@ def aob_to_str(list_of_bytes, encoding="ascii"):
     return bytes.fromhex("".join(list_of_bytes).replace("??", "3f")).decode(encoding, "surrogateescape")
 
 
+#:tag:ValueType
 def str_to_aob(string, encoding="ascii"):
     """Converts given string to aob string
 
@@ -622,6 +656,7 @@ def str_to_aob(string, encoding="ascii"):
     return " ".join(s[i:i + 2] for i in range(0, len(s), 2))
 
 
+#:tag:GDBExpressions
 def split_symbol(symbol_string):
     """Splits symbol part of type_defs.tuple_function_info into smaller fractions
     Fraction count depends on the the symbol_string. See Examples section for demonstration
@@ -651,6 +686,7 @@ def split_symbol(symbol_string):
     return returned_list
 
 
+#:tag:Utilities
 def execute_shell_command_as_user(command):
     """Executes given command as user
 
@@ -661,6 +697,7 @@ def execute_shell_command_as_user(command):
     os.system("sudo -u '#" + uid + "' " + command)
 
 
+#:tag:Utilities
 def get_comments_of_variables(source_file_path, single_comment="#", multi_start='"""', multi_end='"""'):
     """Gathers comments from a source file of any language
     Python normally doesn't allow modifying __doc__ variable of the variables
@@ -704,7 +741,7 @@ def get_comments_of_variables(source_file_path, single_comment="#", multi_start=
     source_file = open(source_file_path, "r")
     lines = source_file.readlines()
     for row, line in enumerate(lines):
-        stripped_line = sub(r"\s+", "", line)
+        stripped_line = line.strip()
         if stripped_line.startswith(single_comment + ":doc:"):
             variable = stripped_line.replace(single_comment + ":doc:", "", 1)
             docstring_list = []
@@ -734,6 +771,62 @@ def get_comments_of_variables(source_file_path, single_comment="#", multi_start=
     return comment_dict
 
 
+#:tag:Utilities
+def get_tag_list(source_file_path):
+    """Gathers tags from a python source file
+    The documentation must be PINCE style. It must start like this--> "#:tag:tag_name"
+    Tag names can be found in type_defs.tag_to_string
+    For now, tagging system only supports variables and functions
+    See examples for more details
+
+    Args:
+        source_file_path (str): Path of the source file
+
+    Returns:
+        dict: A dict containing tag keys for tagged variables
+        Format-->{tag1:variable_list1, tag2:variable_list2, ...}
+
+    Examples:
+        Code--▼
+            #:tag:tag_name
+            #Documentation for the variable
+            some_variable = blablabla
+
+            or
+
+            #:tag:tag_name
+            def func_name(...)
+        Call--▼
+            get_tag_list(code_path)
+        Returns--▼
+            {"tag_name":list of some_variables or func_names that have the tag tag_name}
+    """
+    tag_dict = {}
+    source_file = open(source_file_path, "r")
+    lines = source_file.readlines()
+    for row, line in enumerate(lines):
+        stripped_line = line.strip()
+        if stripped_line.startswith("#:tag:"):
+            tag = stripped_line.replace("#:tag:", "", 1)
+            while True:
+                row += 1
+                current_line = lines[row].strip()
+                stripped_current_line = search(r"def\s+(\w+)|(\w+)\s*=", current_line)
+                if stripped_current_line:
+                    for item in stripped_current_line.groups():
+                        if item:
+                            try:
+                                tag_dict[tag].append(item)
+                            except KeyError:
+                                tag_dict[tag] = [item]
+                            break
+                        else:
+                            continue
+                    break
+    return tag_dict
+
+
+#:tag:Utilities
 def init_user_files():
     """Initializes user files"""
     for directory in type_defs.USER_PATHS.get_init_directories():
@@ -746,6 +839,7 @@ def init_user_files():
     chown_to_user(type_defs.USER_PATHS.ROOT_PATH, recursive=True)
 
 
+#:tag:Utilities
 def chown_to_user(file_path, recursive=False):
     """Gives ownership of given path to user
 
@@ -757,6 +851,7 @@ def chown_to_user(file_path, recursive=False):
     os.system("sudo chown " + ("-R " if recursive else "") + uid + ":" + gid + " " + file_path)
 
 
+#:tag:Utilities
 def get_user_ids():
     """Gets uid and gid of the current user
 
@@ -768,6 +863,7 @@ def get_user_ids():
     return uid, gid
 
 
+#:tag:Tools
 def execute_script(file_path):
     """Loads and executes the script in the given path
 

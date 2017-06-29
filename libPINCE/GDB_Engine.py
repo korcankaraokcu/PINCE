@@ -25,36 +25,44 @@ from . import type_defs
 
 libc = ctypes.CDLL('libc.so.6')
 
+#:tag:GDBInformation
 #:doc:gdb_initialized
 # A boolean value. True if gdb is attached to or has created a process, False if not
 gdb_initialized = False
 
+#:tag:InferiorInformation
 #:doc:inferior_arch
 # An integer. Can be a member of type_defs.INFERIOR_ARCH
 inferior_arch = int
 
+#:tag:InferiorInformation
 #:doc:inferior_status
 # An integer. Can be a member of type_defs.INFERIOR_STATUS
 inferior_status = -1
 
+#:tag:InferiorInformation
 #:doc:currentpid
 # An integer. PID of the current attached/created process
 currentpid = -1
 
+#:tag:GDBInformation
 #:doc:stop_reason
 # An integer. Can be a member of type_defs.STOP_REASON
 stop_reason = int
 
+#:tag:GDBInformation
 #:doc:breakpoint_on_hit_dict
 # A dictionary. Holds breakpoint addresses and what to do on hit
 # Format: {address1:on_hit1, address2:on_hit2, ...}
 breakpoint_on_hit_dict = {}
 
+#:tag:GDBInformation
 #:doc:breakpoint_condition_dict
 # A dictionary. Holds breakpoint addresses and their conditions
 # Format: {address1:condition1, address2:condition2, ...}
 breakpoint_condition_dict = {}
 
+#:tag:GDBInformation
 #:doc:chained_breakpoints
 # If an action such as deletion or condition modification happens in one of the breakpoints in a list, others in the
 # same list will get affected as well
@@ -63,51 +71,61 @@ chained_breakpoints = []
 
 child = object  # this object will be used with pexpect operations
 
+#:tag:ConditionsLocks
 #:doc:lock_send_command
 # This Lock is used by the function send_command to ensure synchronous execution
 lock_send_command = Lock()
 
+#:tag:ConditionsLocks
 #:doc:gdb_async_condition
 # This condition is notified whenever GDB recieves an async event such as breakpoint modification
 # Use the variable gdb_async_output to read async data
 # See PINCE's AwaitAsyncOutput class for an example
 gdb_async_condition = Condition()
 
+#:tag:ConditionsLocks
 #:doc:status_changed_condition
 # This condition is notified whenever status of the inferior changes
 # Use the variable inferior_status to get information about inferior's status
 # See PINCE's CheckInferiorStatus class for an example
 status_changed_condition = Condition()
 
+#:tag:ConditionsLocks
 #:doc:process_exited_condition
 # This condition is notified if the current inferior gets terminated
 # See PINCE's AwaitProcessExit class for an example
 process_exited_condition = Condition()
 
+#:tag:ConditionsLocks
 #:doc:gdb_waiting_for_prompt_condition
 # This condition is notified if gdb starts to wait for the prompt output
 # See function send_command for an example
 gdb_waiting_for_prompt_condition = Condition()
 
+#:tag:GDBInformation
 #:doc:gdb_output
 # A string. Stores the output of the last command
 gdb_output = ""
 
+#:tag:GDBInformation
 #:doc:gdb_async_output
 # A string. Modified whenever GDB recieves an async event such as breakpoint modification
 # See gdb_async_condition's docstrings
 gdb_async_output = ""
 
+#:tag:GDBInformation
 #:doc:cancel_send_command
 # A boolean value. Used to cancel the last gdb command sent
 # Use the function cancel_last_command to make use of this variable
 # Return value of the current send_command call will be an empty string
 cancel_send_command = False
 
+#:tag:GDBInformation
 #:doc:last_gdb_command
 # A string. Holds the last command sent to gdb
 last_gdb_command = ""
 
+#:tag:GDBInformation
 #:doc:gdb_output_mode
 # An integer. Used to adjust gdb output
 gdb_output_mode = type_defs.GDB_OUTPUT_MODE.UNMUTED
@@ -115,6 +133,7 @@ gdb_output_mode = type_defs.GDB_OUTPUT_MODE.UNMUTED
 
 # The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
 
+#:tag:GDBCommunication
 def set_gdb_output_mode(mode):
     """Reduces, mutes or unmutes gdb output
 
@@ -125,6 +144,7 @@ def set_gdb_output_mode(mode):
     gdb_output_mode = mode
 
 
+#:tag:GDBCommunication
 def cancel_last_command():
     """Cancels the last gdb command sent if it's still present"""
     if lock_send_command.locked():
@@ -132,6 +152,7 @@ def cancel_last_command():
         cancel_send_command = True
 
 
+#:tag:GDBCommunication
 def send_command(command, control=False, cli_output=False, send_with_file=False, file_contents_send=None,
                  recv_with_file=False):
     """Issues the command sent, raises an exception if the inferior is running or no inferior has been selected
@@ -277,6 +298,7 @@ def state_observe_thread():
                 gdb_async_condition.notify_all()
 
 
+#:tag:GDBCommunication
 def execute_with_temporary_interruption(func, *args, **kwargs):
     """Interrupts the inferior before executing the given function, continues inferior's execution after calling the
     given function
@@ -303,6 +325,7 @@ def execute_with_temporary_interruption(func, *args, **kwargs):
     return result
 
 
+#:tag:Debug
 def can_attach(pid):
     """Check if we can attach to the target
 
@@ -321,6 +344,7 @@ def can_attach(pid):
     return True
 
 
+#:tag:Debug
 def wait_for_stop(timeout=1):
     """Block execution till the inferior stops
 
@@ -335,6 +359,7 @@ def wait_for_stop(timeout=1):
             break
 
 
+#:tag:Debug
 def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
     """Interrupt the inferior
 
@@ -347,26 +372,31 @@ def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
     stop_reason = interrupt_reason
 
 
+#:tag:Debug
 def continue_inferior():
     """Continue the inferior"""
     send_command("c")
 
 
+#:tag:Debug
 def step_instruction():
     """Step one assembly instruction"""
     send_command("stepi")
 
 
+#:tag:Debug
 def step_over_instruction():
     """Step over one assembly instruction"""
     send_command("nexti")
 
 
+#:tag:Debug
 def execute_till_return():
     """Continues inferior till current stack frame returns"""
     send_command("finish")
 
 
+#:tag:GDBCommunication
 def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     """Spawns gdb and initializes/resets some of the global variables
 
@@ -416,6 +446,7 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
         send_command(additional_commands)
 
 
+#:tag:GDBCommunication
 def create_gdb_log_file(pid):
     """Creates a gdb log file for the current inferior
 
@@ -426,6 +457,7 @@ def create_gdb_log_file(pid):
     send_command("set logging on")
 
 
+#:tag:GDBCommunication
 def set_pince_path():
     """Initializes $PINCE_PATH convenience variable to make commands in GDBCommandExtensions.py work
     GDB scripts needs to know libPINCE directory, unfortunately they don't start from the place where script exists
@@ -447,6 +479,7 @@ def init_referenced_dicts(pid):
     shelve.open(SysUtils.get_referenced_calls_file(pid), "c")
 
 
+#:tag:Debug
 def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     """Attaches gdb to the target and initializes some of the global variables
 
@@ -501,6 +534,7 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     return type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL, result_message
 
 
+#:tag:Debug
 def create_process(process_path, args="", ld_preload_path="", additional_commands="",
                    gdb_path=type_defs.PATHS.GDB_PATH):
     """Creates a new process for debugging and initializes some of the global variables
@@ -558,6 +592,7 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
     return True
 
 
+#:tag:Debug
 def detach():
     """See you, space cowboy"""
     global gdb_initialized
@@ -574,6 +609,7 @@ def detach():
     print("Detached from the process with PID:" + str(old_pid))
 
 
+#:tag:Injection
 def inject_with_advanced_injection(library_path):
     """Injects the given .so file to current process
 
@@ -590,6 +626,7 @@ def inject_with_advanced_injection(library_path):
     raise NotImplementedError
 
 
+#:tag:Injection
 def inject_with_dlopen_call(library_path):
     """Injects the given .so file to current process
     This is a variant of the function inject_with_advanced_injection
@@ -612,6 +649,7 @@ def inject_with_dlopen_call(library_path):
     return True
 
 
+#:tag:ValueType
 def value_index_to_gdbcommand(index):
     """Converts the given value_index to a parameter that'll be used in "x" command of gdb
 
@@ -624,6 +662,7 @@ def value_index_to_gdbcommand(index):
     return type_defs.index_to_gdbcommand_dict.get(index, "out of bounds")
 
 
+#:tag:MemoryRW
 def read_single_address_by_expression(expression, value_index, length=None, zero_terminate=True):
     """Reads value from the given address or expression by using "x" command of gdb then converts it to the given
     value type. Unlike the other read_single_address variations, this function can read the contents of [vsyscall]
@@ -688,6 +727,7 @@ def read_single_address_by_expression(expression, value_index, length=None, zero
         return "??"
 
 
+#:tag:MemoryRW
 def read_single_address(address, value_index, length=None, zero_terminate=True, only_bytes=False):
     """Reads value from the given address by using an optimized gdb python script
 
@@ -719,6 +759,7 @@ def read_single_address(address, value_index, length=None, zero_terminate=True, 
                         recv_with_file=True)
 
 
+#:tag:MemoryRW
 def read_multiple_addresses(nested_list):
     """Reads multiple values from the given addresses by using an optimized gdb python script
 
@@ -749,6 +790,7 @@ def read_multiple_addresses(nested_list):
     return contents_recv
 
 
+#:tag:MemoryRW
 def set_single_address(address, value_index, value):
     """Sets the given value to the given address by using an optimized gdb python script
 
@@ -765,6 +807,7 @@ def set_single_address(address, value_index, value):
     send_command("pince-set-multiple-addresses", send_with_file=True, file_contents_send=nested_list)
 
 
+#:tag:MemoryRW
 def set_multiple_addresses(nested_list, value):
     """Sets the given value to the given addresses by using an optimized gdb python script
 
@@ -783,6 +826,7 @@ def set_multiple_addresses(nested_list, value):
     send_command("pince-set-multiple-addresses", send_with_file=True, file_contents_send=nested_list)
 
 
+#:tag:Assembly
 def disassemble(expression, offset_or_address):
     """Disassembles the address evaluated by the given expression
 
@@ -807,6 +851,7 @@ def disassemble(expression, offset_or_address):
     return returned_list
 
 
+#:tag:GDBExpressions
 def convert_address_to_symbol(expression, include_address=True):
     """Converts the address evaluated by the given expression to symbol if any symbol exists for it
 
@@ -830,6 +875,7 @@ def convert_address_to_symbol(expression, include_address=True):
     return contents_recv[0]
 
 
+#:tag:GDBExpressions
 def convert_multiple_addresses_to_symbols(nested_list):
     """Optimized version of convert_address_to_symbol for multiple inputs
 
@@ -857,6 +903,7 @@ def convert_multiple_addresses_to_symbols(nested_list):
     return contents_recv
 
 
+#:tag:GDBExpressions
 def convert_symbol_to_address(expression):
     """Converts the symbol evaluated by the given expression to address
 
@@ -882,6 +929,7 @@ def convert_symbol_to_address(expression):
             return split(":", filteredresult.group(0))[0]
 
 
+#:tag:MemoryRW
 def validate_memory_address(expression):
     """Check if the address evaluated by the given expression is valid
 
@@ -896,6 +944,7 @@ def validate_memory_address(expression):
     return True
 
 
+#:tag:GDBExpressions
 def parse_convenience_variables(variable_list):
     """Converts the convenience variables to their str equivalents
 
@@ -917,6 +966,7 @@ def parse_convenience_variables(variable_list):
     return contents_recv
 
 
+#:tag:Threads
 def get_current_thread_information():
     """Gather information about the current thread
 
@@ -943,6 +993,7 @@ def get_current_thread_information():
             return search(r"0x[0-9a-fA-F]+", parsed_info.group(0)).group(0)
 
 
+#:tag:Assembly
 def find_address_of_closest_instruction(address, how_many_instructions_to_look_for=1, instruction_location="next"):
     """Finds address of the closest instruction next to the given address, assuming that the given address is valid
 
@@ -988,6 +1039,7 @@ def find_address_of_closest_instruction(address, how_many_instructions_to_look_f
                 return SysUtils.get_region_info(currentpid, address).start
 
 
+#:tag:GDBExpressions
 def get_address_info(expression):
     """Runs the gdb command "info symbol" for given expression and returns the result of it
 
@@ -1000,6 +1052,7 @@ def get_address_info(expression):
     return send_command("info symbol " + expression, cli_output=True)
 
 
+#:tag:GDBExpressions
 def get_symbol_info(expression):
     """Runs the gdb command "info address" for given expression and returns the result of it
 
@@ -1012,6 +1065,7 @@ def get_symbol_info(expression):
     return send_command("info address " + expression, cli_output=True)
 
 
+#:tag:Tools
 def search_functions(expression, ignore_case=True):
     """Runs the gdb command "info functions" for given expression and returns the result of it
 
@@ -1034,6 +1088,7 @@ def search_functions(expression, ignore_case=True):
     return returned_list
 
 
+#:tag:InferiorInformation
 def get_inferior_pid():
     """Get pid of the current inferior
 
@@ -1045,6 +1100,7 @@ def get_inferior_pid():
     return parsed_output.split()[-1]
 
 
+#:tag:InferiorInformation
 def get_inferior_arch():
     """Returns the architecture of the current inferior
 
@@ -1056,6 +1112,7 @@ def get_inferior_arch():
     return type_defs.INFERIOR_ARCH.ARCH_64
 
 
+#:tag:Registers
 def read_registers():
     """Returns the current registers
 
@@ -1069,6 +1126,7 @@ def read_registers():
     return contents_recv
 
 
+#:tag:Registers
 def read_float_registers():
     """Returns the current floating point registers
 
@@ -1082,6 +1140,7 @@ def read_float_registers():
     return contents_recv
 
 
+#:tag:GDBExpressions
 def set_convenience_variable(variable, value):
     """Sets given convenience variable to given value
     Can be also used for modifying registers directly
@@ -1093,6 +1152,7 @@ def set_convenience_variable(variable, value):
     send_command("set $" + variable + "=" + value)
 
 
+#:tag:Registers
 def set_register_flag(flag, value):
     """Sets given register flag to given value
 
@@ -1109,6 +1169,7 @@ def set_register_flag(flag, value):
     set_convenience_variable("eflags", eflags_hex_value)
 
 
+#:tag:Stack
 def get_stacktrace_info():
     """Returns information about current stacktrace
 
@@ -1125,6 +1186,7 @@ def get_stacktrace_info():
     return contents_recv
 
 
+#:tag:Stack
 def get_stack_info():
     """Returns information about current stack
 
@@ -1146,6 +1208,7 @@ def get_stack_info():
     return contents_recv
 
 
+#:tag:Stack
 def get_stack_frame_return_addresses():
     """Returns return addresses of stack frames
 
@@ -1161,6 +1224,7 @@ def get_stack_frame_return_addresses():
     return contents_recv
 
 
+#:tag:Stack
 def get_stack_frame_info(index):
     """Returns information about stack by the given index
 
@@ -1185,6 +1249,7 @@ def get_stack_frame_info(index):
     return contents_recv
 
 
+#:tag:MemoryRW
 def hex_dump(address, offset):
     """Returns hex dump of range (address to address+offset)
 
@@ -1209,6 +1274,7 @@ def hex_dump(address, offset):
     return contents_recv
 
 
+#:tag:BreakWatchpoints
 def get_breakpoint_info():
     """Returns current breakpoint/watchpoint list
 
@@ -1246,6 +1312,7 @@ def get_breakpoint_info():
     return returned_list
 
 
+#:tag:BreakWatchpoints
 def check_address_in_breakpoints(address, range_offset=0):
     """Checks if given address exists in breakpoint list
 
@@ -1269,6 +1336,7 @@ def check_address_in_breakpoints(address, range_offset=0):
             return item
 
 
+#:tag:BreakWatchpoints
 def hardware_breakpoint_available():
     """Checks if there is an available hardware breakpoint slot
 
@@ -1286,6 +1354,7 @@ def hardware_breakpoint_available():
     return hw_bp_total < 4
 
 
+#:tag:BreakWatchpoints
 def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWARE_BP,
                    on_hit=type_defs.BREAKPOINT_ON_HIT.BREAK):
     """Adds a breakpoint at the address evaluated by the given expression. Uses a software breakpoint if all hardware
@@ -1325,6 +1394,7 @@ def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWAR
         return
 
 
+#:tag:BreakWatchpoints
 def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TYPE.BOTH,
                    on_hit=type_defs.BREAKPOINT_ON_HIT.BREAK):
     """Adds a watchpoint at the address evaluated by the given expression
@@ -1385,6 +1455,7 @@ def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TY
     return breakpoints_set
 
 
+#:tag:BreakWatchpoints
 def add_breakpoint_condition(expression, condition):
     """Adds a condition to the breakpoint at the address evaluated by the given expression
 
@@ -1425,6 +1496,7 @@ def add_breakpoint_condition(expression, condition):
     return True
 
 
+#:tag:BreakWatchpoints
 def delete_breakpoint(expression):
     """Deletes a breakpoint at the address evaluated by the given expression
 
@@ -1468,6 +1540,7 @@ def delete_breakpoint(expression):
     return True
 
 
+#:tag:BreakWatchpoints
 def track_watchpoint(expression, length, watchpoint_type):
     """Starts tracking a value by setting a watchpoint at the address holding it
     Use get_track_watchpoint_info() to get info about the watchpoint you set
@@ -1492,6 +1565,7 @@ def track_watchpoint(expression, length, watchpoint_type):
     return breakpoints
 
 
+#:tag:BreakWatchpoints
 def get_track_watchpoint_info(watchpoint_list):
     """Gathers the information for the tracked watchpoint(s)
 
@@ -1517,6 +1591,7 @@ def get_track_watchpoint_info(watchpoint_list):
     return output
 
 
+#:tag:BreakWatchpoints
 def track_breakpoint(expression, register_expressions):
     """Starts tracking a value by setting a breakpoint at the address holding it
     Use get_track_breakpoint_info() to get info about the breakpoint you set
@@ -1541,6 +1616,7 @@ def track_breakpoint(expression, register_expressions):
     return breakpoint
 
 
+#:tag:BreakWatchpoints
 def get_track_breakpoint_info(breakpoint):
     """Gathers the information for the tracked breakpoint
 
@@ -1563,6 +1639,7 @@ def get_track_breakpoint_info(breakpoint):
     return output
 
 
+#:tag:Tools
 def trace_instructions(expression, max_trace_count=1000, trigger_condition="", stop_condition="",
                        step_mode=type_defs.STEP_MODE.SINGLE_STEP,
                        stop_after_trace=False, collect_general_registers=True, collect_flag_registers=True,
@@ -1610,6 +1687,7 @@ def trace_instructions(expression, max_trace_count=1000, trigger_condition="", s
     return breakpoint
 
 
+#:tag:Tools
 def get_trace_instructions_info(breakpoint):
     """Gathers the information of the tracing process for the given breakpoint
 
@@ -1634,6 +1712,7 @@ def get_trace_instructions_info(breakpoint):
     return output
 
 
+#:tag:Tools
 def get_trace_instructions_status(breakpoint):
     """Returns the current state of tracing process for given breakpoint
 
@@ -1656,6 +1735,7 @@ def get_trace_instructions_status(breakpoint):
     return output
 
 
+#:tag:Tools
 def cancel_trace_instructions(breakpoint):
     """Finishes the trace instruction process early on for the given breakpoint
 
@@ -1667,6 +1747,7 @@ def cancel_trace_instructions(breakpoint):
     pickle.dump(status_info, open(trace_status_file, "wb"))
 
 
+#:tag:Tools
 def call_function_from_inferior(expression):
     """Calls the given function expression from the inferior
 
@@ -1688,6 +1769,7 @@ def call_function_from_inferior(expression):
     return False, False
 
 
+#:tag:InferiorInformation
 def find_entry_point():
     """Finds entry point of the inferior
 
@@ -1701,6 +1783,7 @@ def find_entry_point():
         return filtered_result.group(0).split()[2]
 
 
+#:tag:Tools
 def search_opcode(searched_str, starting_address, ending_address_or_offset, ignore_case=True, enable_regex=False):
     """Searches for the given str in the disassembled output
 
@@ -1750,6 +1833,7 @@ def search_opcode(searched_str, starting_address, ending_address_or_offset, igno
     return returned_list
 
 
+#:tag:Tools
 def dissect_code(region_list, discard_invalid_strings=True):
     """Searches given regions for jumps, calls and string references
     Use function get_dissect_code_data() to gather the results
@@ -1762,6 +1846,7 @@ def dissect_code(region_list, discard_invalid_strings=True):
     send_command("pince-dissect-code", send_with_file=True, file_contents_send=(region_list, discard_invalid_strings))
 
 
+#:tag:Tools
 def get_dissect_code_status():
     """Returns the current state of dissect code process
 
@@ -1786,12 +1871,14 @@ def get_dissect_code_status():
     return output
 
 
+#:tag:Tools
 def cancel_dissect_code():
     """Finishes the current dissect code process early on"""
     if last_gdb_command.find("pince-dissect-code") != -1:
         cancel_last_command()
 
 
+#:tag:Tools
 def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, referenced_calls=True):
     """Returns shelve.DbfilenameShelf objects of referenced dicts
 
@@ -1829,6 +1916,7 @@ def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, refere
     return dict_list
 
 
+#:tag:Tools
 def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.INDEX_STRING_UTF8, ignore_case=True,
                               enable_regex=False):
     """Searches for given str in the referenced strings
@@ -1880,6 +1968,7 @@ def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.IN
     return returned_list
 
 
+#:tag:Tools
 def search_referenced_calls(searched_str, ignore_case=True, enable_regex=False):
     """Searches for given str in the referenced calls
 

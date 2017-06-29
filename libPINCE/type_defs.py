@@ -232,6 +232,28 @@ index_to_struct_pack_dict = {
     VALUE_INDEX.INDEX_DOUBLE: "d"
 }
 
+tag_to_string = collections.OrderedDict([
+    ("MemoryRW", "Memory Read/Write"),
+    ("ValueType", "Value Type"),
+    ("Injection", "Injection"),
+    ("Debug", "Debugging"),
+    ("BreakWatchpoints", "Breakpoints&Watchpoints"),
+    ("Threads", "Threads"),
+    ("Registers", "Registers"),
+    ("Stack", "Stack&StackTrace"),
+    ("Assembly", "Disassemble&Assemble"),
+    ("GDBExpressions", "GDB Expressions"),
+    ("GDBCommunication", "GDB Communication"),
+    ("Tools", "Tools"),
+    ("Utilities", "Utilities"),
+    ("Processes", "Processes"),
+    ("GUI", "GUI"),
+    ("ConditionsLocks", "Conditions&Locks"),
+    ("GDBInformation", "GDB Information"),
+    ("InferiorInformation", "Inferior Information"),
+
+])
+
 # number-->str, breakpoint_type-->str, address-->str, size-->int, condition-->str, on_hit-->str
 tuple_breakpoint_info = collections.namedtuple("breakpoint_info",
                                                "number breakpoint_type address size condition on_hit")
