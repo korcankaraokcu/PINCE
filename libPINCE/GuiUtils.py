@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-# PyQt5 isn't needed to run tests with travis. So, to reduce the testing time and complexity, we ignore the PyQt5 import
+# PyQt5 isn't needed to run tests with travis. To reduce the testing time and complexity, we ignore the PyQt5 imports
 # There'll be no tests for PyQt5 related functions in GuiUtils.py
 try:
     from PyQt5.QtWidgets import QDesktopWidget
