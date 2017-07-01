@@ -3252,6 +3252,8 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
             GuiUtils.center(self)
             self.setWindowFlags(Qt.Window)
         self.show_type_defs()
+        self.splitter.setStretchFactor(0, 1)
+        self.widget_Resources.resize(700, self.widget_Resources.height())
         libPINCE_directory = SysUtils.get_libpince_directory()
         self.textBrowser_TypeDefs.setText(open(libPINCE_directory + "/type_defs.py").read())
         source_files = ["GDB_Engine", "SysUtils", "GuiUtils"]
