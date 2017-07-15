@@ -51,9 +51,6 @@ elif args.c:
         parser.error("Couldn't create the process with current args")
 else:
     parser.error("Provide at least one of these arguments: -a or -c")
-import sys
-
-print(sys.argv)
 unittest.main(module="tests.GDB_Engine_tests", exit=False, argv=[""])
 unittest.main(module="tests.SysUtils_tests", exit=False, argv=[""])
 unittest.main(module="tests.GuiUtils_tests", exit=False, argv=[""])
