@@ -26,44 +26,44 @@ from . import type_defs
 libc = ctypes.CDLL('libc.so.6')
 
 #:tag:GDBInformation
-#:doc:gdb_initialized
+#:doc:
 # A boolean value. True if gdb is attached to or has created a process, False if not
 gdb_initialized = False
 
 #:tag:InferiorInformation
-#:doc:inferior_arch
+#:doc:
 # An integer. Can be a member of type_defs.INFERIOR_ARCH
 inferior_arch = int
 
 #:tag:InferiorInformation
-#:doc:inferior_status
+#:doc:
 # An integer. Can be a member of type_defs.INFERIOR_STATUS
 inferior_status = -1
 
 #:tag:InferiorInformation
-#:doc:currentpid
+#:doc:
 # An integer. PID of the current attached/created process
 currentpid = -1
 
 #:tag:GDBInformation
-#:doc:stop_reason
+#:doc:
 # An integer. Can be a member of type_defs.STOP_REASON
 stop_reason = int
 
 #:tag:GDBInformation
-#:doc:breakpoint_on_hit_dict
+#:doc:
 # A dictionary. Holds breakpoint addresses and what to do on hit
 # Format: {address1:on_hit1, address2:on_hit2, ...}
 breakpoint_on_hit_dict = {}
 
 #:tag:GDBInformation
-#:doc:breakpoint_condition_dict
+#:doc:
 # A dictionary. Holds breakpoint addresses and their conditions
 # Format: {address1:condition1, address2:condition2, ...}
 breakpoint_condition_dict = {}
 
 #:tag:GDBInformation
-#:doc:chained_breakpoints
+#:doc:
 # If an action such as deletion or condition modification happens in one of the breakpoints in a list, others in the
 # same list will get affected as well
 # Format: [[[address1, size1], [address2, size2], ...], [[address1, size1], ...], ...]
@@ -72,61 +72,61 @@ chained_breakpoints = []
 child = object  # this object will be used with pexpect operations
 
 #:tag:ConditionsLocks
-#:doc:lock_send_command
+#:doc:
 # This Lock is used by the function send_command to ensure synchronous execution
 lock_send_command = Lock()
 
 #:tag:ConditionsLocks
-#:doc:gdb_async_condition
+#:doc:
 # This condition is notified whenever GDB recieves an async event such as breakpoint modification
 # Use the variable gdb_async_output to read async data
 # See PINCE's AwaitAsyncOutput class for an example
 gdb_async_condition = Condition()
 
 #:tag:ConditionsLocks
-#:doc:status_changed_condition
+#:doc:
 # This condition is notified whenever status of the inferior changes
 # Use the variable inferior_status to get information about inferior's status
 # See PINCE's CheckInferiorStatus class for an example
 status_changed_condition = Condition()
 
 #:tag:ConditionsLocks
-#:doc:process_exited_condition
+#:doc:
 # This condition is notified if the current inferior gets terminated
 # See PINCE's AwaitProcessExit class for an example
 process_exited_condition = Condition()
 
 #:tag:ConditionsLocks
-#:doc:gdb_waiting_for_prompt_condition
+#:doc:
 # This condition is notified if gdb starts to wait for the prompt output
 # See function send_command for an example
 gdb_waiting_for_prompt_condition = Condition()
 
 #:tag:GDBInformation
-#:doc:gdb_output
+#:doc:
 # A string. Stores the output of the last command
 gdb_output = ""
 
 #:tag:GDBInformation
-#:doc:gdb_async_output
+#:doc:
 # A string. Modified whenever GDB recieves an async event such as breakpoint modification
 # See gdb_async_condition's docstrings
 gdb_async_output = ""
 
 #:tag:GDBInformation
-#:doc:cancel_send_command
+#:doc:
 # A boolean value. Used to cancel the last gdb command sent
 # Use the function cancel_last_command to make use of this variable
 # Return value of the current send_command call will be an empty string
 cancel_send_command = False
 
 #:tag:GDBInformation
-#:doc:last_gdb_command
+#:doc:
 # A string. Holds the last command sent to gdb
 last_gdb_command = ""
 
 #:tag:GDBInformation
-#:doc:gdb_output_mode
+#:doc:
 # An integer. Used to adjust gdb output
 gdb_output_mode = type_defs.GDB_OUTPUT_MODE.UNMUTED
 

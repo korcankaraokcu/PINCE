@@ -698,81 +698,116 @@ def execute_shell_command_as_user(command):
 
 
 #:tag:Utilities
-def get_comments_of_variables(source_file_path, single_comment="#", multi_start='"""', multi_end='"""'):
-    """Gathers comments from a source file of any language
+def get_docstrings(modules, search_for=""):
+    """Gathers docstrings from a list of modules
+    For now, this function only supports variables and functions
+    See get_comments_of_variables function to learn documenting variables in PINCE style
+
+    Args:
+        modules (list): A list of modules
+        search_for (str): String that will be searched in variables and functions
+
+    Returns:
+        dict: A dict containing docstrings for documented variables and functions
+        Format-->{variable1:docstring1, variable2:docstring2, ...}
+    """
+    element_dict = {}
+    variable_comment_dict = get_comments_of_variables(modules)
+    for item in modules:
+        for key, value in item.__dict__.items():
+            name_with_module = get_module_name(item) + "." + key
+            if name_with_module in variable_comment_dict:
+                element_dict[name_with_module] = variable_comment_dict[name_with_module]
+            else:
+                element_dict[name_with_module] = value.__doc__
+    for item in list(element_dict):
+        if item.split(".")[-1].find(search_for) == -1:
+            del element_dict[item]
+    return element_dict
+
+
+#:tag:Utilities
+def get_comments_of_variables(modules, search_for=""):
+    """Gathers comments from a list of modules
     Python normally doesn't allow modifying __doc__ variable of the variables
     This function is designed to bring a solution to this problem
-    The documentation must be PINCE style. It must start like this--> "comment_char:doc:variable_name"
+    The documentation must be PINCE style. It must start with this--> "#:doc:"
     See examples for more details
 
     Args:
-        source_file_path (str): Path of the source file
-        single_comment (str): Characters for single line comments
-        multi_start (str): Characters for multi line comments. Indicates the start of the comment
-        multi_end (str): Characters for multi line comments. Indicates the end of the comment
+        modules (list): A list of modules
+        search_for (str): String that will be searched in variables
 
     Returns:
         dict: A dict containing docstrings for documented variables
         Format-->{variable1:docstring1, variable2:docstring2, ...}
 
-    Example for Python:
+    Example for single line comments:
         Code--▼
-            #:doc:some_variable
+            #:doc:
             #Documentation for the variable
             some_variable = blablabla
-        Call--▼
-            get_comments_of_variables(code_path)
         Returns--▼
             {"some_variable":"Documentation for the variable"}
 
-    Example for C:
+    Example for multi line comments:
         Code--▼
-            //:doc:some_variable
-            /*Some Header
+            #:doc:
+            '''Some Header
             Documentation for the variable
-            Some Ending Word*/
+            Some Ending Word'''
             some_variable = blablabla
-        Call--▼
-            get_comments_of_variables(code_path, single_comment="//", multi_start="/*", multi_end="*/")
         Returns--▼
             {"some_variable":"Some Header\nDocumentation for the variable\nSome Ending Word"}
     """
     comment_dict = {}
-    source_file = open(source_file_path, "r")
-    lines = source_file.readlines()
-    for row, line in enumerate(lines):
-        stripped_line = line.strip()
-        if stripped_line.startswith(single_comment + ":doc:"):
-            variable = stripped_line.replace(single_comment + ":doc:", "", 1)
-            docstring_list = []
-            while True:
-                row += 1
-                current_line = lines[row].strip()
-                if current_line.startswith(single_comment):
-                    docstring_list.append(current_line.replace(single_comment, "", 1))
-                elif current_line.startswith(multi_start):
-                    current_line = current_line.replace(multi_start, "", 1)
-                    if current_line.endswith(multi_end):
-                        current_line = current_line.replace(multi_end, "")
-                        docstring_list.append(current_line)
-                        continue
-                    docstring_list.append(current_line)
-                    while True:
-                        row += 1
-                        current_line = lines[row].strip()
-                        if current_line.endswith(multi_end):
-                            current_line = current_line.replace(multi_end, "")
+    source_files = []
+    for module in modules:
+        source_files.append(module.__file__)
+    for index, file_path in enumerate(source_files):
+        source_file = open(file_path, "r")
+        lines = source_file.readlines()
+        for row, line in enumerate(lines):
+            stripped_line = line.strip()
+            if stripped_line.startswith("#:doc:"):
+                docstring_list = []
+                while True:
+                    row += 1
+                    current_line = lines[row].strip()
+                    if current_line.startswith("#"):
+                        docstring_list.append(current_line.replace("#", "", 1))
+                    elif current_line.startswith("'''"):
+                        current_line = current_line.replace("'''", "", 1)
+                        if current_line.endswith("'''"):
+                            current_line = current_line.replace("'''", "")
                             docstring_list.append(current_line)
-                            break
+                            continue
                         docstring_list.append(current_line)
-                else:
-                    break
-            comment_dict[variable] = "\n".join(docstring_list)
+                        while True:
+                            row += 1
+                            current_line = lines[row].strip()
+                            if current_line.endswith("'''"):
+                                current_line = current_line.replace("'''", "")
+                                docstring_list.append(current_line)
+                                break
+                            docstring_list.append(current_line)
+                    else:
+                        while True:
+                            stripped_current_line = search(r"(\w+)\s*=", current_line)
+                            if stripped_current_line:
+                                variable = stripped_current_line.group(1)
+                                break
+                            row += 1
+                            current_line = lines[row].strip()
+                        break
+                if variable.find(search_for) == -1:
+                    continue
+                comment_dict[get_module_name(modules[index]) + "." + variable] = "\n".join(docstring_list)
     return comment_dict
 
 
 #:tag:Utilities
-def get_tag_list(source_file_path):
+def get_tags(modules, search_for=""):
     """Gathers tags from a python source file
     The documentation must be PINCE style. It must start like this--> "#:tag:tag_name"
     Tag names can be found in type_defs.tag_to_string
@@ -780,7 +815,8 @@ def get_tag_list(source_file_path):
     See examples for more details
 
     Args:
-        source_file_path (str): Path of the source file
+        modules (list): A list of modules
+        search_for (str): String that will be searched in tags
 
     Returns:
         dict: A dict containing tag keys for tagged variables
@@ -796,34 +832,51 @@ def get_tag_list(source_file_path):
 
             #:tag:tag_name
             def func_name(...)
-        Call--▼
-            get_tag_list(code_path)
         Returns--▼
             {"tag_name":list of some_variables or func_names that have the tag tag_name}
     """
     tag_dict = {}
-    source_file = open(source_file_path, "r")
-    lines = source_file.readlines()
-    for row, line in enumerate(lines):
-        stripped_line = line.strip()
-        if stripped_line.startswith("#:tag:"):
-            tag = stripped_line.replace("#:tag:", "", 1)
-            while True:
-                row += 1
-                current_line = lines[row].strip()
-                stripped_current_line = search(r"def\s+(\w+)|(\w+)\s*=", current_line)
-                if stripped_current_line:
-                    for item in stripped_current_line.groups():
-                        if item:
-                            try:
-                                tag_dict[tag].append(item)
-                            except KeyError:
-                                tag_dict[tag] = [item]
-                            break
-                        else:
-                            continue
-                    break
+    source_files = []
+    for module in modules:
+        source_files.append(module.__file__)
+    for index, file_path in enumerate(source_files):
+        source_file = open(file_path, "r")
+        lines = source_file.readlines()
+        for row, line in enumerate(lines):
+            stripped_line = line.strip()
+            if stripped_line.startswith("#:tag:"):
+                tag = stripped_line.replace("#:tag:", "", 1)
+                while True:
+                    row += 1
+                    current_line = lines[row].strip()
+                    stripped_current_line = search(r"def\s+(\w+)|(\w+)\s*=", current_line)
+                    if stripped_current_line:
+                        for item in stripped_current_line.groups():
+                            if item:
+                                if item.find(search_for) == -1:
+                                    break
+                                item = get_module_name(modules[index]) + "." + item
+                                try:
+                                    tag_dict[tag].append(item)
+                                except KeyError:
+                                    tag_dict[tag] = [item]
+                                break
+                            else:
+                                continue
+                        break
     return tag_dict
+
+
+def get_module_name(module):
+    """Gets the name of the given module without the package name
+
+    Args:
+        module (module): A module
+
+    Returns:
+        str: Name of the module
+    """
+    return module.__name__.replace(module.__package__ + ".", "", 1)
 
 
 #:tag:Utilities
