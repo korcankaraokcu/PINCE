@@ -3241,6 +3241,9 @@ class HexEditDialogForm(QDialog, HexEditDialog):
 
 
 class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
+    def convert_to_modules(self, module_strings):
+        return [eval(item) for item in module_strings]
+
     def __init__(self, is_window=False, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -3256,20 +3259,25 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
         self.widget_Resources.resize(700, self.widget_Resources.height())
         libPINCE_directory = SysUtils.get_libpince_directory()
         self.textBrowser_TypeDefs.setText(open(libPINCE_directory + "/type_defs.py").read())
-        source_files = ["GDB_Engine", "SysUtils", "GuiUtils"]
-        self.comboBox_SourceFile.addItems(source_files)
+        source_menu_items = ["(Tagged only)", "(All)"]
+        self.libPINCE_source_files = ["GDB_Engine", "SysUtils", "GuiUtils"]
+        source_menu_items.extend(self.libPINCE_source_files)
+        self.comboBox_SourceFile.addItems(source_menu_items)
         self.comboBox_SourceFile.setCurrentIndex(0)
-        self.fill_resource_table()
+        self.fill_resource_tree()
         icons_directory = GuiUtils.get_icons_directory()
         self.pushButton_TextUp.setIcon(QIcon(QPixmap(icons_directory + "/bullet_arrow_up.png")))
         self.pushButton_TextDown.setIcon(QIcon(QPixmap(icons_directory + "/bullet_arrow_down.png")))
-        self.comboBox_SourceFile.currentIndexChanged.connect(self.fill_resource_table)
+        self.comboBox_SourceFile.currentIndexChanged.connect(self.comboBox_SourceFile_current_index_changed)
         self.pushButton_ShowTypeDefs.clicked.connect(self.toggle_type_defs)
         self.lineEdit_SearchText.textChanged.connect(self.highlight_text)
         self.pushButton_TextDown.clicked.connect(self.pushButton_TextDown_clicked)
         self.pushButton_TextUp.clicked.connect(self.pushButton_TextUp_clicked)
-        self.lineEdit_Search.textChanged.connect(self.fill_resource_table)
+        self.lineEdit_Search.textChanged.connect(self.comboBox_SourceFile_current_index_changed)
         self.tableWidget_ResourceTable.contextMenuEvent = self.tableWidget_ResourceTable_context_menu_event
+        self.treeWidget_ResourceTree.contextMenuEvent = self.treeWidget_ResourceTree_context_menu_event
+        self.treeWidget_ResourceTree.expanded.connect(self.resize_resource_tree)
+        self.treeWidget_ResourceTree.collapsed.connect(self.resize_resource_tree)
 
     def tableWidget_ResourceTable_context_menu_event(self, event):
         selected_row = self.tableWidget_ResourceTable.selectionModel().selectedRows()[-1].row()
@@ -3290,29 +3298,95 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
             QApplication.clipboard().setText(
                 self.tableWidget_ResourceTable.item(selected_row, LIBPINCE_REFERENCE_VALUE_COL).text())
 
-    def fill_resource_table(self):
-        self.tableWidget_ResourceTable.setRowCount(0)
-        element_dict = eval(self.comboBox_SourceFile.currentText() + ".__dict__")
-        row_count = 0
-        variable_comment_dict = SysUtils.get_comments_of_variables(SysUtils.get_libpince_directory() + "/GDB_Engine.py")
-        for item in element_dict:
-            if item.find(self.lineEdit_Search.text()) == -1:
-                continue
-            row_count += 1
-            row = row_count - 1
-            self.tableWidget_ResourceTable.setRowCount(row_count)
-            element = element_dict.get(item)
-            table_widget_item = QTableWidgetItem(item)
-            table_widget_item_value = QTableWidgetItem(str(element))
-            if item not in variable_comment_dict:
-                table_widget_item.setToolTip(element.__doc__)
-                table_widget_item_value.setToolTip(element.__doc__)
+    def treeWidget_ResourceTree_context_menu_event(self, event):
+        menu = QMenu()
+        refresh = menu.addAction("Refresh")
+        copy_item = menu.addAction("Copy Item")
+        copy_value = menu.addAction("Copy Value")
+        menu.addSeparator()
+        expand_all = menu.addAction("Expand All")
+        collapse_all = menu.addAction("Collapse All")
+        font_size = self.treeWidget_ResourceTree.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+
+        # Thanks QT, for this unexplainable, mind blowing bug of yours
+        self.treeWidget_ResourceTree.blockSignals(True)
+        if action == refresh:
+            self.fill_resource_tree()
+        elif action == copy_item:
+            QApplication.clipboard().setText(
+                self.treeWidget_ResourceTree.currentItem().text(LIBPINCE_REFERENCE_ITEM_COL))
+        elif action == copy_value:
+            QApplication.clipboard().setText(
+                self.treeWidget_ResourceTree.currentItem().text(LIBPINCE_REFERENCE_VALUE_COL))
+        elif action == expand_all:
+            self.treeWidget_ResourceTree.expandAll()
+            self.resize_resource_tree()
+        elif action == collapse_all:
+            self.treeWidget_ResourceTree.collapseAll()
+            self.resize_resource_tree()
+        self.treeWidget_ResourceTree.blockSignals(False)
+
+    def comboBox_SourceFile_current_index_changed(self):
+        if self.comboBox_SourceFile.currentIndex() == 0:  # (Tagged only)
+            self.fill_resource_tree()
+        else:
+            self.fill_resource_table()
+
+    def resize_resource_tree(self):
+        self.treeWidget_ResourceTree.resizeColumnToContents(LIBPINCE_REFERENCE_ITEM_COL)
+
+    def fill_resource_tree(self):
+        self.treeWidget_ResourceTree.setStyleSheet("QTreeWidget::item{ height: 16px; }")
+        self.stackedWidget_Resources.setCurrentIndex(0)
+        self.treeWidget_ResourceTree.clear()
+        parent = self.treeWidget_ResourceTree
+        checked_source_files = self.convert_to_modules(self.libPINCE_source_files)
+        tag_dict = SysUtils.get_tags(checked_source_files, self.lineEdit_Search.text())
+        docstring_dict = SysUtils.get_docstrings(checked_source_files, self.lineEdit_Search.text())
+        for tag, desc in type_defs.tag_to_string.items():
+            if tag in tag_dict:
+                child = QTreeWidgetItem(parent)
+                child.setText(0, desc)
             else:
-                table_widget_item.setToolTip(variable_comment_dict[item])
-                table_widget_item_value.setToolTip(variable_comment_dict[item])
+                continue
+            for item in tag_dict[tag]:
+                docstring = docstring_dict.get(item)
+                docstr_child = QTreeWidgetItem(child)
+                docstr_child.setText(LIBPINCE_REFERENCE_ITEM_COL, item)
+                docstr_child.setText(LIBPINCE_REFERENCE_VALUE_COL, str(eval(item)))
+                docstr_child.setToolTip(LIBPINCE_REFERENCE_ITEM_COL, docstring)
+                docstr_child.setToolTip(LIBPINCE_REFERENCE_VALUE_COL, docstring)
+
+        # Magic and mystery
+        self.treeWidget_ResourceTree.blockSignals(True)
+        if self.lineEdit_Search.text():
+            self.treeWidget_ResourceTree.expandAll()
+        self.resize_resource_tree()
+        self.treeWidget_ResourceTree.blockSignals(False)
+
+    def fill_resource_table(self):
+        self.stackedWidget_Resources.setCurrentIndex(1)
+        self.tableWidget_ResourceTable.setSortingEnabled(False)
+        self.tableWidget_ResourceTable.setRowCount(0)
+        if self.comboBox_SourceFile.currentIndex() == 1:  # (All)
+            checked_source_files = self.libPINCE_source_files
+        else:
+            checked_source_files = [self.comboBox_SourceFile.currentText()]
+        checked_source_files = self.convert_to_modules(checked_source_files)
+        element_dict = SysUtils.get_docstrings(checked_source_files, self.lineEdit_Search.text())
+        self.tableWidget_ResourceTable.setRowCount(len(element_dict))
+        for row, item in enumerate(element_dict):
+            docstring = element_dict.get(item)
+            table_widget_item = QTableWidgetItem(item)
+            table_widget_item_value = QTableWidgetItem(str(eval(item)))
+            table_widget_item.setToolTip(docstring)
+            table_widget_item_value.setToolTip(docstring)
             self.tableWidget_ResourceTable.setItem(row, LIBPINCE_REFERENCE_ITEM_COL, table_widget_item)
             self.tableWidget_ResourceTable.setItem(row, LIBPINCE_REFERENCE_VALUE_COL, table_widget_item_value)
-        self.tableWidget_ResourceTable.sortByColumn(LIBPINCE_REFERENCE_VALUE_COL, Qt.DescendingOrder)
+        self.tableWidget_ResourceTable.setSortingEnabled(True)
+        self.tableWidget_ResourceTable.sortByColumn(LIBPINCE_REFERENCE_ITEM_COL, Qt.AscendingOrder)
         self.tableWidget_ResourceTable.resizeColumnsToContents()
         self.tableWidget_ResourceTable.horizontalHeader().setStretchLastSection(True)
 
