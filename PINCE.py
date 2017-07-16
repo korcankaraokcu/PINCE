@@ -3017,6 +3017,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
     def show_trace_info(self, trace_data=None):
         self.treeWidget_InstructionInfo.setStyleSheet("QTreeWidget::item{ height: 16px; }")
         parent = QTreeWidgetItem(self.treeWidget_InstructionInfo)
+        self.treeWidget_InstructionInfo.setRootIndex(self.treeWidget_InstructionInfo.indexFromItem(parent))
         if trace_data:
             trace_tree, current_root_index = trace_data
         else:
@@ -3040,7 +3041,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             child.setText(0, current_item[0])
             if trace_tree[current_index][2]:  # If current item has children, traverse them
                 current_root_index = current_index  # traverse downwards
-                parent = parent.child(parent.childCount() - 1)
+                parent = child
         self.treeWidget_InstructionInfo.expandAll()
 
     def save_file(self):
@@ -3079,7 +3080,8 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             address = SysUtils.extract_address(self.treeWidget_InstructionInfo.currentItem().trace_data[0])
         except:
             return
-        self.parent().disassemble_expression(address, append_to_travel_history=True)
+        if address:
+            self.parent().disassemble_expression(address, append_to_travel_history=True)
 
     def closeEvent(self, QCloseEvent):
         global instances
