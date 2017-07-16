@@ -1701,6 +1701,7 @@ def get_trace_instructions_info(breakpoint):
 
         Check PINCE.TraceInstructionsWindowForm.show_trace_info() to see how to traverse the tree
         If you just want to search something in the trace data, you can enumerate the tree instead of traversing
+        Root always be an empty node, it's up to you to use or delete it
         Any "call" instruction creates a node in SINGLE_STEP mode
         Any "ret" instruction creates a parent regardless of the mode
     """

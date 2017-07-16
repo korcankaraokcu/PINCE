@@ -450,6 +450,8 @@ class TraceInstructions(gdb.Command):
         current_index = 0  # Avoid calling len()
         current_root_index = 0
         root_index = 0
+
+        # Root always be an empty node, it's up to you to use or delete it
         tree.append([("", None), None, []])
         for x in range(max_trace_count):
             try:
