@@ -232,6 +232,7 @@ index_to_struct_pack_dict = {
     VALUE_INDEX.INDEX_DOUBLE: "d"
 }
 
+# Format: {tag:tag_description}
 tag_to_string = collections.OrderedDict([
     ("MemoryRW", "Memory Read/Write"),
     ("ValueType", "Value Type"),
