@@ -3347,12 +3347,9 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
         checked_source_files = self.convert_to_modules(self.libPINCE_source_files)
         tag_dict = SysUtils.get_tags(checked_source_files, self.lineEdit_Search.text())
         docstring_dict = SysUtils.get_docstrings(checked_source_files, self.lineEdit_Search.text())
-        for tag, desc in type_defs.tag_to_string.items():
-            if tag in tag_dict:
-                child = QTreeWidgetItem(parent)
-                child.setText(0, desc)
-            else:
-                continue
+        for tag in tag_dict:
+            child = QTreeWidgetItem(parent)
+            child.setText(0, tag)
             for item in tag_dict[tag]:
                 docstring = docstring_dict.get(item)
                 docstr_child = QTreeWidgetItem(child)

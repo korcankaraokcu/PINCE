@@ -807,20 +807,21 @@ def get_comments_of_variables(modules, search_for=""):
 
 
 #:tag:Utilities
-def get_tags(modules, search_for=""):
+def get_tags(modules, search_for="", tag_to_string=type_defs.tag_to_string):
     """Gathers tags from a python source file
     The documentation must be PINCE style. It must start like this--> "#:tag:tag_name"
-    Tag names can be found in type_defs.tag_to_string
     For now, tagging system only supports variables and functions
     See examples for more details
 
     Args:
         modules (list): A list of modules
         search_for (str): String that will be searched in tags
+        tag_to_string (dict): A dictionary that holds tag descriptions in this format-->{tag:tag_description}
+        Defaults to type_defs.tag_to_string. You can implement your own tag_to_string and pass as parameter
 
     Returns:
         dict: A dict containing tag keys for tagged variables
-        Format-->{tag1:variable_list1, tag2:variable_list2, ...}
+        Format-->{tag1_desc:variable_list1, tag2_desc:variable_list2, ...}
 
     Examples:
         Code--▼
@@ -833,7 +834,7 @@ def get_tags(modules, search_for=""):
             #:tag:tag_name
             def func_name(...)
         Returns--▼
-            {"tag_name":list of some_variables or func_names that have the tag tag_name}
+            {tag_to_string["tag_name"]:list of some_variables or func_names that have the tag tag_name}
     """
     tag_dict = {}
     source_files = []
@@ -864,7 +865,13 @@ def get_tags(modules, search_for=""):
                             else:
                                 continue
                         break
-    return tag_dict
+    ordered_tag_dict = OrderedDict()
+    for tag, desc in tag_to_string.items():
+        if tag in tag_dict:
+            ordered_tag_dict[desc] = tag_dict[tag]
+        else:
+            continue
+    return ordered_tag_dict
 
 
 def get_module_name(module):
