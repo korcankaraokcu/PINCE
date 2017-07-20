@@ -807,7 +807,7 @@ def get_comments_of_variables(modules, search_for=""):
 
 
 #:tag:Utilities
-def get_tags(modules, search_for="", tag_to_string=type_defs.tag_to_string):
+def get_tags(modules, tag_to_string, search_for=""):
     """Gathers tags from a python source file
     The documentation must be PINCE style. It must start like this--> "#:tag:tag_name"
     For now, tagging system only supports variables and functions
@@ -815,9 +815,9 @@ def get_tags(modules, search_for="", tag_to_string=type_defs.tag_to_string):
 
     Args:
         modules (list): A list of modules
-        search_for (str): String that will be searched in tags
         tag_to_string (dict): A dictionary that holds tag descriptions in this format-->{tag:tag_description}
-        Defaults to type_defs.tag_to_string. You can implement your own tag_to_string and pass as parameter
+        Check type_defs.tag_to_string for an example
+        search_for (str): String that will be searched in tags
 
     Returns:
         dict: A dict containing tag keys for tagged variables
