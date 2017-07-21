@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex
 from time import sleep, time
-import os, sys, traceback, signal, re, copy
+import os, sys, traceback, signal, re, copy, io
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 
@@ -3482,7 +3482,7 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         self.setWindowFlags(Qt.Window)
         self.log_path = SysUtils.get_gdb_log_file(GDB_Engine.currentpid)
         self.setWindowTitle("Log File of PID " + str(GDB_Engine.currentpid))
-        self.label_FilePath.setText("Contents of " + self.log_path)
+        self.label_FilePath.setText("Contents of " + self.log_path + " (only last 20000 bytes are shown)")
         self.contents = ""
         self.refresh_contents()
         self.refresh_timer = QTimer()
@@ -3492,7 +3492,13 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
 
     def refresh_contents(self):
         log_file = open(self.log_path)
-        contents = log_file.read()
+        log_file.seek(0, io.SEEK_END)
+        end_pos = log_file.tell()
+        if end_pos > 20000:
+            log_file.seek(end_pos - 20000, io.SEEK_SET)
+        else:
+            log_file.seek(0, io.SEEK_SET)
+        contents = log_file.read().split("\n", 1)[-1]
         if contents != self.contents:
             self.contents = contents
             self.textBrowser_LogContent.clear()
