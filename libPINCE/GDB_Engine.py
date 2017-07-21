@@ -1283,6 +1283,9 @@ def get_breakpoint_info():
         the breakpoint type, address is the address of breakpoint, size is the size of breakpoint, condition is the
         condition of breakpoint and the on_hit is the action that'll happen when the breakpoint is reached, all
         represented as strings except size.
+
+    Note:
+        GDB's python API can't detect hardware breakpoints, that's why we are using regexes for this job
     """
     returned_list = []
     raw_info = send_command("info break")
