@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import gdb, struct, sys, re
+import gdb, struct, sys
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -23,8 +23,7 @@ gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
 PINCE_PATH = gdbvalue.string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
-from libPINCE import SysUtils
-from libPINCE import type_defs
+from libPINCE import SysUtils, type_defs, common_regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
@@ -150,10 +149,9 @@ def get_general_registers():
         general_register_list = REGISTERS_64
     else:
         general_register_list = REGISTERS_32
-    regex_hex = re.compile(r"0x[0-9a-fA-F]+")  # $6 = 0x7f0bc0b6bb40
     for item in general_register_list:
         result = gdb.execute("p/x $" + item, to_string=True)
-        parsed_result = regex_hex.search(result).group(0)
+        parsed_result = common_regexes.hex_number.search(result).group(0)  # $6 = 0x7f0bc0b6bb40
         contents_send[item] = parsed_result
     return contents_send
 
@@ -161,7 +159,7 @@ def get_general_registers():
 def get_flag_registers():
     contents_send = OrderedDict()
     result = gdb.execute("p/t $eflags", to_string=True)
-    parsed_result = re.search(r"=\s+\d+", result).group(0).split()[-1]  # $8 = 1010010011
+    parsed_result = common_regexes.convenience_variable.search(result).group(2)  # $8 = 1010010011
     reversed_parsed_result = "".join(reversed(parsed_result))
     contents_send["cf"], contents_send["pf"], contents_send["af"], contents_send["zf"], contents_send["sf"], \
     contents_send["tf"], contents_send["if"], contents_send["df"], contents_send["of"] = ["0"] * 9
@@ -182,10 +180,9 @@ def get_flag_registers():
 
 def get_segment_registers():
     contents_send = OrderedDict()
-    regex_hex = re.compile(r"0x[0-9a-fA-F]+")  # $6 = 0x7f0bc0b6bb40
     for item in REGISTERS_SEGMENT:
         result = gdb.execute("p/x $" + item, to_string=True)
-        parsed_result = regex_hex.search(result).group(0)
+        parsed_result = common_regexes.hex_number.search(result).group(0)  # $6 = 0x7f0bc0b6bb40
         contents_send[item] = parsed_result
     return contents_send
 
@@ -220,14 +217,12 @@ def convert_address_to_symbol(expression, include_address=True):
     if expression is "":
         return ""
     result = gdb.execute("x/b " + expression, to_string=True)
-    if re.search(r"Cannot\s*access\s*memory\s*at\s*address", result):
+    if common_regexes.cannot_access_memory.search(result):
         return ""
-    filteredresult = re.search(r"0x[0-9a-fA-F]+\s+<.+>:", result)  # 0x4125d0 <_start>:	0x31
+    filteredresult = common_regexes.address_with_symbol.search(result)  # 0x4125d0 <_start>:	0x31
     if filteredresult:
-        if include_address:
-            return filteredresult.group(0)[:-1]
-        return filteredresult.group(0).split(maxsplit=1)[1][:-1]
+        return filteredresult.group(1) if include_address else filteredresult.group(3)
     else:
-        filteredresult = re.search(r"0x[0-9a-fA-F]+:", result)  # 0x400000:	0x7f
+        filteredresult = common_regexes.address_without_symbol.search(result)  # 0x400000:	0x7f
         if filteredresult:
-            return filteredresult.group(0).rsplit(":")[0]
+            return filteredresult.group(1)

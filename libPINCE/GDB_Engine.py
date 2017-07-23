@@ -15,13 +15,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from re import search, split, findall, escape, compile, IGNORECASE
 from threading import Lock, Thread, Condition
 from time import sleep, time
 from collections import OrderedDict
-import pexpect, os, ctypes, pickle, json, shelve
-from . import SysUtils
-from . import type_defs
+import pexpect, os, ctypes, pickle, json, shelve, re
+from . import SysUtils, type_defs, common_regexes
 
 libc = ctypes.CDLL('libc.so.6')
 
@@ -130,8 +128,6 @@ last_gdb_command = ""
 # An integer. Used to adjust gdb output
 gdb_output_mode = type_defs.GDB_OUTPUT_MODE.UNMUTED
 
-
-# The comments next to the regular expressions shows the expected gdb output, hope it helps to the future developers
 
 #:tag:GDBCommunication
 def set_gdb_output_mode(mode):
@@ -275,10 +271,9 @@ def state_observe_thread():
         child.expect_exact("(gdb)")
         if gdb_output_mode is type_defs.GDB_OUTPUT_MODE.UNMUTED:
             print(child.before)
-        matches = findall(r"stopped\-threads=\"all\"|\*running,thread\-id=\"all\"",
-                          child.before)  # stopped-threads="all"  # *running,thread-id="all"
+        matches = common_regexes.gdb_state_observe.findall(child.before)
         if len(matches) > 0:
-            if search(r"stopped", matches[-1]):
+            if matches[-1][0]:  # stopped
                 global stop_reason
                 stop_reason = type_defs.STOP_REASON.DEBUG
                 inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
@@ -288,8 +283,8 @@ def state_observe_thread():
                 status_changed_condition.notify_all()
         try:
             # The command will always start with the word "source", check send_command function for the cause
-            command_file = escape(SysUtils.get_gdb_command_file(currentpid))
-            gdb_output = split(r"&\".*source\s" + command_file + r"\\n\"", child.before, 1)[1]  # &"command\n"
+            command_file = re.escape(SysUtils.get_gdb_command_file(currentpid))
+            gdb_output = common_regexes.split_gdb_command(command_file).split(child.before, 1)[1]
         except:
             if gdb_output_mode is type_defs.GDB_OUTPUT_MODE.ASYNC_OUTPUT_ONLY:
                 print(child.before)
@@ -561,7 +556,7 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
     if currentpid != -1 or not gdb_initialized:
         init_gdb(gdb_path, additional_commands)
     output = send_command("file " + process_path)
-    if search(r"\^error", output):
+    if common_regexes.gdb_error.search(output):
         print("An error occurred while trying to create process from the file at " + process_path)
         detach()
         return False
@@ -692,10 +687,9 @@ def read_single_address_by_expression(expression, value_index, length=None, zero
         except:
             return "??"
         result = send_command("x/" + expected_length + typeofaddress + " " + expression)
-        filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
+        filteredresult = common_regexes.memory_read_aob.findall(result)
         if filteredresult:
-            returned_string = ''.join(filteredresult)  # combine all the matched results
-            return returned_string.replace(r"\t0x", " ")
+            return ' '.join(filteredresult)  # combine all the matched results
         return "??"
     elif type_defs.VALUE_INDEX.is_string(value_index):
         typeofaddress = value_index_to_gdbcommand(value_index)
@@ -705,12 +699,11 @@ def read_single_address_by_expression(expression, value_index, length=None, zero
             return "??"
         expected_length *= type_defs.string_index_to_multiplier_dict.get(value_index, 1)
         result = send_command("x/" + str(expected_length) + typeofaddress + " " + expression)
-        filteredresult = findall(r"\\t0x[0-9a-fA-F]+", result)  # 0x40c431:\t0x31\t0xed\t0x49\t...
+        filteredresult = common_regexes.memory_read_aob.findall(result)
         if filteredresult:
             filteredresult = ''.join(filteredresult)
-            returned_string = filteredresult.replace(r"\t0x", "")
             encoding, option = type_defs.string_index_to_encoding_dict[value_index]
-            returned_string = bytes.fromhex(returned_string).decode(encoding, option)
+            returned_string = bytes.fromhex(filteredresult).decode(encoding, option)
             if zero_terminate:
                 if returned_string.startswith('\x00'):
                     returned_string = '\x00'
@@ -721,9 +714,9 @@ def read_single_address_by_expression(expression, value_index, length=None, zero
     else:
         typeofaddress = value_index_to_gdbcommand(value_index)
         result = send_command("x/" + typeofaddress + " " + expression)
-        filteredresult = search(r":\\t[0-9a-fA-F-,]+", result)  # 0x400000:\t1,3961517377359369e-309
+        filteredresult = common_regexes.memory_read_other.search(result)
         if filteredresult:
-            return split("t", filteredresult.group(0))[-1]
+            return filteredresult.group(1)
         return "??"
 
 
@@ -840,15 +833,8 @@ def disassemble(expression, offset_or_address):
     Returns:
         list: A list of str values in this format-->[[address1,bytes1,opcodes1],[address2, ...], ...]
     """
-    returned_list = []
-
-    # 0x00007fd81d4c7400 <__printf+0>:\t48 81 ec d8 00 00 00\tsub    rsp,0xd8\n
-    disas_regex = compile(r"0x[0-9a-fA-F]+.*\\t.+\\t.+\\n")
     output = send_command("disas /r " + expression + "," + offset_or_address)
-    filtered_output = disas_regex.findall(output)
-    for item in filtered_output:
-        returned_list.append(item[:-2].split("\\t"))  # Get rid of "\n" then split by "\t"
-    return returned_list
+    return [list(item) for item in common_regexes.disassemble_output.findall(output)]
 
 
 #:tag:GDBExpressions
@@ -918,15 +904,15 @@ def convert_symbol_to_address(expression):
     if expression is "":
         return ""
     result = send_command("x/b " + expression)
-    if search(r"Cannot\s*access\s*memory\s*at\s*address", result):
+    if common_regexes.cannot_access_memory.search(result):
         return ""
-    filteredresult = search(r"0x[0-9a-fA-F]+\s+<.+>:\\t", result)  # 0x40c435 <_start+4>:\t0x89485ed1\n
+    filteredresult = common_regexes.address_with_symbol.search(result)
     if filteredresult:
-        return split(" ", filteredresult.group(0))[0]
+        return filteredresult.group(2)
     else:
-        filteredresult = search(r"0x[0-9a-fA-F]+:\\t", result)  # 0x1f58010:\t0x00647361\n
+        filteredresult = common_regexes.address_without_symbol.search(result)
         if filteredresult:
-            return split(":", filteredresult.group(0))[0]
+            return filteredresult.group(1)
 
 
 #:tag:MemoryRW
@@ -980,17 +966,13 @@ def get_current_thread_information():
         returned_str-->"0x00007fb29406faba"
     """
     thread_info = send_command("info threads")
-    parsed_info = search(r"\*\s+\d+\s+Thread\s+0x[0-9a-fA-F]+\s+\(LWP\s+\d+\)",
-                         thread_info)  # * 1    Thread 0x7f34730d77c0 (LWP 6189)
+    parsed_info = common_regexes.thread_info_multiple_threads.search(thread_info)
     if parsed_info:
-        return split(r"Thread\s+", parsed_info.group(0))[-1]
+        return parsed_info.group(1)
     else:
-
-        # Output is like this if the inferior has only one thread
-        parsed_info = search(r"\*\s+\d+\s+process.*0x[0-9a-fA-F]+",
-                             thread_info)  # * 1    process 2935 [process name] 0x00007fb29406faba
+        parsed_info = common_regexes.thread_info_single_thread.search(thread_info)
         if parsed_info:
-            return search(r"0x[0-9a-fA-F]+", parsed_info.group(0)).group(0)
+            return parsed_info.group(1)
 
 
 #:tag:Assembly
@@ -1074,18 +1056,13 @@ def search_functions(expression, ignore_case=True):
         ignore_case (bool): If True, search will be case insensitive
 
     Returns:
-        list: A list of type_defs.tuple_function_info
+        list: A list of str-->[(address1, symbol1), (address2, symbol2), ...]
     """
     if ignore_case:
         send_command("set case-sensitive off")
     output = send_command("info functions " + expression, cli_output=True)
     send_command("set case-sensitive auto")
-    parsed_info = findall(r"0x[0-9a-fA-F]+\s+.*", output)
-    returned_list = []
-    for item in parsed_info:
-        address, symbol = item.split(maxsplit=1)
-        returned_list.append(type_defs.tuple_function_info(address, symbol))
-    return returned_list
+    return common_regexes.info_functions_output.findall(output)
 
 
 #:tag:InferiorInformation
@@ -1096,8 +1073,7 @@ def get_inferior_pid():
         str: pid
     """
     output = send_command("info inferior")
-    parsed_output = search(r"process\s+\d+", output).group(0)
-    return parsed_output.split()[-1]
+    return common_regexes.inferior_pid.search(output).group(1)
 
 
 #:tag:InferiorInformation
@@ -1289,20 +1265,14 @@ def get_breakpoint_info():
     """
     returned_list = []
     raw_info = send_command("info break")
-
-    # 7       acc watchpoint  keep y                      *0x00400f00
-    # 13      hw breakpoint   keep y   0x000000000040c435 <_start+4>
-    parsed_info = findall(r"(\d+.*(watchpoint|breakpoint).*0x[0-9a-fA-F]+)", raw_info)
-    for item in parsed_info:
-        number = search(r"\d+", item[0]).group(0)
-        breakpoint_type = search(r"(hw|read|acc)*\s*(watchpoint|breakpoint)", item[0]).group(0)
-        address = search(r"0x[0-9a-fA-F]+", item[0]).group(0)
-        if search(r"breakpoint", item[0]):
+    for item in common_regexes.breakpoint_info.findall(raw_info):
+        number, breakpoint_type_1, breakpoint_type_2, other_info, address = item
+        if breakpoint_type_2 == "breakpoint":
             size = 1
         else:
-            possible_size = search(r"char\[\d+\]", item[0])
+            possible_size = common_regexes.breakpoint_size.search(other_info)
             if possible_size:
-                size = int(search(r"\d+", possible_size.group(0)).group(0))
+                size = int(possible_size.group(1))
             else:
                 size = 4
         try:
@@ -1311,6 +1281,7 @@ def get_breakpoint_info():
             condition = ""
         on_hit_dict_value = breakpoint_on_hit_dict.get(int(address, 16), type_defs.BREAKPOINT_ON_HIT.BREAK)
         on_hit = type_defs.on_hit_to_text_dict.get(on_hit_dict_value, "Unknown")
+        breakpoint_type = breakpoint_type_1 + " " + breakpoint_type_2 if breakpoint_type_1 else breakpoint_type_2
         returned_list.append(type_defs.tuple_breakpoint_info(number, breakpoint_type, address, size, condition, on_hit))
     return returned_list
 
@@ -1351,7 +1322,7 @@ def hardware_breakpoint_available():
         might modify it's own debug registers
     """
     raw_info = send_command("info break")
-    hw_bp_total = len(findall(r"((hw|read|acc)\s*(watchpoint|breakpoint))", raw_info))
+    hw_bp_total = len(common_regexes.hw_breakpoint_count.findall(raw_info))
 
     # Maximum number of hardware breakpoints is limited to 4 in x86 architecture
     return hw_bp_total < 4
@@ -1388,11 +1359,10 @@ def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWAR
             output = send_command("break *" + str_address)
     elif breakpoint_type == type_defs.BREAKPOINT_TYPE.SOFTWARE_BP:
         output = send_command("break *" + str_address)
-    if search(r"breakpoint-created", output):
+    if common_regexes.breakpoint_created.search(output):
         global breakpoint_on_hit_dict
         breakpoint_on_hit_dict[int(str_address, 16)] = on_hit
-        breakpoint_number = search(r"\d+", search(r"number=\"\d+\"", output).group(0)).group(0)
-        return breakpoint_number
+        return common_regexes.breakpoint_number.search(output).group(1)
     else:
         return
 
@@ -1442,12 +1412,12 @@ def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TY
         else:
             breakpoint_length = remaining_length
         output = send_command(watch_command + " * (char[" + str(breakpoint_length) + "] *) " + hex(str_address_int))
-        if search(r"breakpoint-created", output):
+        if common_regexes.breakpoint_created.search(output):
             breakpoint_addresses.append([str_address_int, breakpoint_length])
         else:
             print("Failed to create a watchpoint at address " + hex(str_address_int) + ". Bailing out...")
             break
-        breakpoint_number = search(r"\d+", search(r"number=\"\d+\"", output).group(0)).group(0)
+        breakpoint_number = common_regexes.breakpoint_number.search(output).group(1)
         breakpoints_set.append(breakpoint_number)
         global breakpoint_on_hit_dict
         breakpoint_on_hit_dict[str_address_int] = on_hit
@@ -1493,7 +1463,7 @@ def add_breakpoint_condition(expression, condition):
         else:
             breakpoint_number = found_breakpoint.number
         output = send_command("condition " + breakpoint_number + " " + condition)
-        if search(r"breakpoint-modified", output):
+        if common_regexes.breakpoint_modified.search(output):
             global breakpoint_condition_dict
             breakpoint_condition_dict[int(found_breakpoint.address, 16)] = condition
     return True
@@ -1766,10 +1736,9 @@ def call_function_from_inferior(expression):
         call_function_from_inferior("printf('123')") returns ("$26","3")
     """
     result = send_command("call " + expression)
-    filtered_result = search(r'\"\$\d+\s+=\s+.*\"', result)  # "$26 = 3"
+    filtered_result = common_regexes.convenience_variable.search(result)
     if filtered_result:
-        filtered_result = filtered_result.group(0).strip('"')
-        return filtered_result.split()[0], filtered_result.split(maxsplit=2)[2]
+        return filtered_result.group(1), filtered_result.group(2)
     return False, False
 
 
@@ -1782,9 +1751,9 @@ def find_entry_point():
         None: If fails to find an entry point
     """
     result = send_command("info file")
-    filtered_result = search(r"Entry\s+point:\s+0x[0-9a-fA-F]+", result)
+    filtered_result = common_regexes.entry_point.search(result)
     if filtered_result:
-        return filtered_result.group(0).split()[2]
+        return filtered_result.group(1)
 
 
 #:tag:Tools
@@ -1808,21 +1777,17 @@ def search_opcode(searched_str, starting_address, ending_address_or_offset, igno
     if enable_regex:
         try:
             if ignore_case:
-                regex = compile(searched_str, IGNORECASE)
+                regex = re.compile(searched_str, re.IGNORECASE)
             else:
-                regex = compile(searched_str)
+                regex = re.compile(searched_str)
         except Exception as e:
             print("An exception occurred while trying to compile the given regex\n", str(e))
             return
     returned_list = []
-
-    # 0x00007fd81d4c7400 <__printf+0>:\tsub    rsp,0xd8\n
-    disas_regex = compile(r"0x[0-9a-fA-F]+.*:\\t.+\\n")
-    output = send_command("disas " + starting_address + "," + ending_address_or_offset)
-    filtered_output = disas_regex.findall(output)
-    for item in filtered_output:
-        disas_list = item[:-2].split("\\t")  # Get rid of "\n" then split by "\t"
-        address, opcode = disas_list
+    disas_output = disassemble(starting_address, ending_address_or_offset)
+    for item in disas_output:
+        address = item[0]
+        opcode = item[2]
         if enable_regex:
             if not regex.search(opcode):
                 continue
@@ -1833,7 +1798,7 @@ def search_opcode(searched_str, starting_address, ending_address_or_offset, igno
             else:
                 if opcode.find(searched_str) == -1:
                     continue
-        returned_list.append(disas_list)
+        returned_list.append([address, opcode])
     return returned_list
 
 
@@ -1938,9 +1903,9 @@ def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.IN
     if enable_regex:
         try:
             if ignore_case:
-                regex = compile(searched_str, IGNORECASE)
+                regex = re.compile(searched_str, re.IGNORECASE)
             else:
-                regex = compile(searched_str)
+                regex = re.compile(searched_str)
         except Exception as e:
             print("An exception occurred while trying to compile the given regex\n", str(e))
             return

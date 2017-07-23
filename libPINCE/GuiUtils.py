@@ -21,9 +21,7 @@ try:
     from PyQt5.QtWidgets import QDesktopWidget
 except ImportError:
     pass
-from re import search, sub
-from . import type_defs
-from . import SysUtils
+from . import SysUtils, type_defs, common_regexes
 
 
 #:tag:GUI
@@ -167,12 +165,11 @@ def text_to_valuetype(string):
             break
     byte_len = type_defs.index_to_valuetype_dict.get(index, [-1])[0]
     if type_defs.VALUE_INDEX.has_length(index):
-        length = search(r"\[\d+\]", string).group(0)[1:-1]
-        length = int(length)
+        length = int(common_regexes.valuetype_length.search(string).group(1))
         byte_len = length
         if type_defs.VALUE_INDEX.is_string(index):
             byte_len = -1
-            if search(r",NZT", string):
+            if common_regexes.valuetype_nzt.search(string):
                 zero_terminate = False
             else:
                 zero_terminate = True
@@ -193,7 +190,7 @@ def change_text_length(string, length):
     """
     index = text_to_valuetype(string)[0]
     if type_defs.VALUE_INDEX.has_length(index):
-        return sub(r"\[\d+\]", "[" + str(length) + "]", string)
+        return common_regexes.valuetype_length.sub("[" + str(length) + "]", string)
     return -1
 
 
@@ -207,7 +204,7 @@ def remove_bookmark_mark(string):
     Returns:
         str: Remaining str after the cleansing
     """
-    return sub(r"\(M\)", "", string, count=1)
+    return common_regexes.bookmark_mark.sub("", string, count=1)
 
 
 #:tag:GUI
@@ -220,4 +217,4 @@ def contains_reference_mark(string):
     Returns:
         bool: True if given string contains the reference mark, False otherwise
     """
-    return True if search(r"\{\d*\}", string) else False
+    return True if common_regexes.reference_mark.search(string) else False
