@@ -25,9 +25,8 @@ try:
 except ImportError:
     print("WARNING: GDB couldn't locate the package psutil, psutil based user-defined functions won't work\n" +
           "If you are getting this message without invoking GDB, it means that installation has failed, well, sort of")
-import os, shutil, sys, binascii, pickle, json, traceback
-from . import type_defs
-from re import match, search, IGNORECASE, split
+import os, shutil, sys, binascii, pickle, json, traceback, re
+from . import type_defs, common_regexes
 from collections import OrderedDict
 from importlib.machinery import SourceFileLoader
 
@@ -72,7 +71,7 @@ def search_in_processes_by_name(process_name):
     """
     processlist = []
     for p in psutil.process_iter():
-        if search(process_name, p.name(), IGNORECASE):
+        if re.search(process_name, p.name(), re.IGNORECASE):
             processlist.append(p)
     return processlist
 
@@ -134,13 +133,13 @@ def get_memory_regions_by_perms(pid):
     readable_only, writeable, executable, readable = [], [], [], []
     p = psutil.Process(pid)
     for m in p.memory_maps(grouped=False):
-        if search("r--", m.perms):
+        if common_regexes.memory_regions_read_only.search(m.perms):
             readable_only.append(m)
-        if search("w", m.perms):
+        if common_regexes.memory_regions_write.search(m.perms):
             writeable.append(m)
-        if search("x", m.perms):
+        if common_regexes.memory_regions_execute.search(m.perms):
             executable.append(m)
-        if search("r", m.perms):
+        if common_regexes.memory_regions_read.search(m.perms):
             readable.append(m)
     return readable_only, writeable, executable, readable
 
@@ -157,7 +156,7 @@ def exclude_shared_memory_regions(generated_list):
         list: List of the remaining pmmap_ext objects after exclusion
     """
     for m in generated_list[:]:
-        if search("s", m.perms):
+        if common_regexes.memory_regions_shared.search(m.perms):
             generated_list.remove(m)
     return generated_list
 
@@ -174,7 +173,7 @@ def exclude_system_memory_regions(generated_list):
         list: List of the remaining pmmap_ext objects after exclusion
     """
     for m in generated_list[:]:
-        if match("[7-f]", m.addr):
+        if common_regexes.memory_regions_system.match(m.addr):
             generated_list.remove(m)
     return generated_list
 
@@ -557,7 +556,7 @@ def parse_string(string, value_index):
     string = string.strip()
     if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         try:
-            string_list = split(r"\s+", string)
+            string_list = common_regexes.whitespaces.split(string)
             for item in string_list:
                 if len(item) > 2:
                     print(string + " can't be parsed as array of bytes")
@@ -615,12 +614,11 @@ def extract_address(string, search_for_location_changing_instructions=False):
         search_for_location_changing_instructions is passed as True)
     """
     if search_for_location_changing_instructions:
-        result = search(r"(j|call|loop).*\s+0x[0-9a-fA-F]+", string)
+        result = common_regexes.location_changing_instructions.search(string)
         if result:
-            result = result.group(0).split()[-1]
-            return result
+            return result.group(2)
     else:
-        result = search(r"0x[0-9a-fA-F]+", string)
+        result = common_regexes.hex_number.search(string)
         if result:
             return result.group(0)
 
@@ -793,7 +791,7 @@ def get_comments_of_variables(modules, search_for=""):
                             docstring_list.append(current_line)
                     else:
                         while True:
-                            stripped_current_line = search(r"(\w+)\s*=", current_line)
+                            stripped_current_line = common_regexes.docstring_variable.search(current_line)
                             if stripped_current_line:
                                 variable = stripped_current_line.group(1)
                                 break
@@ -850,7 +848,7 @@ def get_tags(modules, tag_to_string, search_for=""):
                 while True:
                     row += 1
                     current_line = lines[row].strip()
-                    stripped_current_line = search(r"def\s+(\w+)|(\w+)\s*=", current_line)
+                    stripped_current_line = common_regexes.docstring_function_or_variable.search(current_line)
                     if stripped_current_line:
                         for item in stripped_current_line.groups():
                             if item:

@@ -24,8 +24,7 @@ PINCE_PATH = gdbvalue.string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
 from libPINCE.gdb_python_scripts import ScriptUtils
-from libPINCE import SysUtils
-from libPINCE import type_defs
+from libPINCE import SysUtils, type_defs, common_regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
@@ -202,32 +201,23 @@ class GetStackTraceInfo(gdb.Command):
         else:
             sp_register = "esp"
             result = gdb.execute("p/x $esp", from_tty, to_string=True)
-        stack_pointer_int = int(re.search(r"0x[0-9a-fA-F]+", result).group(0), 16)  # $6 = 0x7f0bc0b6bb40
+        stack_pointer_int = int(SysUtils.extract_address(result), 16)  # $6 = 0x7f0bc0b6bb40
         result = gdb.execute("bt", from_tty, to_string=True)
-
-        # Example: #10 0x000000000040c45a in--->#10--->10
-        max_frame = re.findall(r"#\d+\s+0x[0-9a-fA-F]+\s+in", result)[-1].split()[0].replace("#", "")
+        max_frame = common_regexes.max_frame_count.findall(result)[-1]
 
         # +1 because frame numbers start from 0
         for item in range(int(max_frame) + 1):
             result = gdb.execute("info frame " + str(item), from_tty, to_string=True)
-
-            # frame at 0x7ffe1e989950--->0x7ffe1e989950
-            frame_address = re.search(r"frame\s+at\s+0x[0-9a-fA-F]+", result).group(0).split()[-1]
+            frame_address = common_regexes.frame_address.search(result).group(1)
             difference = hex(int(frame_address, 16) - stack_pointer_int)
             frame_address_with_difference = frame_address + "(" + sp_register + "+" + difference + ")"
-
-            # saved rip = 0x7f633a853fe4
-            return_address = re.search(r"saved.*=\s+0x[0-9a-fA-F]+", result)
+            return_address = common_regexes.return_address.search(result)
             if return_address:
-                return_address = return_address.group(0).split()[-1]
                 try:
-                    result = gdb.execute("x/b " + return_address, from_tty, to_string=True)
+                    result = gdb.execute("x/b " + return_address.group(1), from_tty, to_string=True)
                 except:
                     break
-
-                # 0x40c431 <_start>:--->0x40c431 <_start>
-                return_address_with_info = re.search(r"0x[0-9a-fA-F]+.*:", result).group(0).split(":")[0]
+                return_address_with_info = common_regexes.return_address_with_info.search(result).group(1)
             else:
                 return_address_with_info = "<unavailable>"
             stacktrace_info_list.append([return_address_with_info, frame_address_with_difference])
@@ -240,7 +230,6 @@ class GetStackInfo(gdb.Command):
 
     def invoke(self, arg, from_tty):
         stack_info_list = []
-        symbol_regex = re.compile("<.*>")
         if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             chunk_size = 8
             int_format = "Q"
@@ -251,7 +240,7 @@ class GetStackInfo(gdb.Command):
             int_format = "I"
             stack_register = "esp"
             result = gdb.execute("p/x $esp", from_tty, to_string=True)
-        stack_address = int(re.search(r"0x[0-9a-fA-F]+", result).group(0), 16)  # $6 = 0x7f0bc0b6bb40
+        stack_address = int(SysUtils.extract_address(result), 16)  # $6 = 0x7f0bc0b6bb40
         with open(ScriptUtils.mem_file, "rb") as FILE:
             old_position = FILE.seek(stack_address)
             for index in range(int(4096 / chunk_size)):
@@ -274,7 +263,7 @@ class GetStackInfo(gdb.Command):
                     pointer_data = ""
                 else:
                     result = gdb.execute("x/b " + hex_repr, to_string=True)
-                    result = symbol_regex.search(result)
+                    result = common_regexes.plain_symbol.search(result)
                     if not result:
                         pointer_data = "(str)" + read_pointer.decode("utf-8", "ignore")
                     else:
@@ -290,22 +279,15 @@ class GetFrameReturnAddresses(gdb.Command):
     def invoke(self, arg, from_tty):
         return_address_list = []
         result = gdb.execute("bt", from_tty, to_string=True)
-
-        # Example: #10 0x000000000040c45a in--->#10--->10
-        max_frame = re.findall(r"#\d+\s+0x[0-9a-fA-F]+\s+in", result)[-1].split()[0].replace("#", "")
+        max_frame = common_regexes.max_frame_count.findall(result)[-1]
 
         # +1 because frame numbers start from 0
         for item in range(int(max_frame) + 1):
             result = gdb.execute("info frame " + str(item), from_tty, to_string=True)
-
-            # saved rip = 0x7f633a853fe4
-            return_address = re.search(r"saved.*=\s+0x[0-9a-fA-F]+", result)
+            return_address = common_regexes.return_address.search(result)
             if return_address:
-                return_address = return_address.group(0).split()[-1]
-                result = gdb.execute("x/b " + return_address, from_tty, to_string=True)
-
-                # 0x40c431 <_start>:--->0x40c431 <_start>
-                return_address_with_info = re.search(r"0x[0-9a-fA-F]+.*:", result).group(0).split(":")[0]
+                result = gdb.execute("x/b " + return_address.group(1), from_tty, to_string=True)
+                return_address_with_info = common_regexes.return_address_with_info.search(result).group(1)
             else:
                 return_address_with_info = "<unavailable>"
             return_address_list.append(return_address_with_info)
@@ -319,9 +301,7 @@ class GetFrameInfo(gdb.Command):
     def invoke(self, arg, from_tty):
         frame_number = receive_from_pince()
         result = gdb.execute("bt", from_tty, to_string=True)
-
-        # Example: #10 0x000000000040c45a in--->#10--->10
-        max_frame = re.findall(r"#\d+\s+0x[0-9a-fA-F]+\s+in", result)[-1].split()[0].replace("#", "")
+        max_frame = common_regexes.max_frame_count.findall(result)[-1]
         if 0 <= int(frame_number) <= int(max_frame):
             frame_info = gdb.execute("info frame " + frame_number, from_tty, to_string=True)
         else:
@@ -440,8 +420,6 @@ class TraceInstructions(gdb.Command):
         collect_flag_registers, collect_segment_registers, collect_float_registers = eval(arg)
         gdb.execute("delete " + breakpoint)
         trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
-        regex_ret = re.compile(r":\s+ret")  # 0x7f71a4dc5ff8 <poll+72>:	ret
-        regex_call = re.compile(r":\s+call")  # 0x7f71a4dc5fe4 <poll+52>:	call   0x7f71a4de1100
 
         # The reason we don't use a tree class is to make the tree json-compatible
         # tree format-->[node1, node2, node3, ...]
@@ -476,7 +454,7 @@ class TraceInstructions(gdb.Command):
             status_info = (type_defs.TRACE_STATUS.STATUS_TRACING,
                            line_info + " (" + str(x + 1) + "/" + str(max_trace_count) + ")")
             pickle.dump(status_info, open(trace_status_file, "wb"))
-            if regex_ret.search(line_info):
+            if common_regexes.trace_instructions_ret.search(line_info):
                 if tree[current_root_index][1] is None:  # If no parents exist
                     current_index += 1
                     tree.append([("", None), None, [current_root_index]])
@@ -486,7 +464,7 @@ class TraceInstructions(gdb.Command):
                 else:
                     current_root_index = tree[current_root_index][1]  # current_node=current_node.parent
             elif step_mode == type_defs.STEP_MODE.SINGLE_STEP:
-                if regex_call.search(line_info):
+                if common_regexes.trace_instructions_call.search(line_info):
                     current_root_index = current_index
             if stop_condition:
                 try:
@@ -574,9 +552,6 @@ class DissectCode(gdb.Command):
         referenced_strings_dict = shelve.open(SysUtils.get_referenced_strings_file(pid), writeback=True)
         referenced_jumps_dict = shelve.open(SysUtils.get_referenced_jumps_file(pid), writeback=True)
         referenced_calls_dict = shelve.open(SysUtils.get_referenced_calls_file(pid), writeback=True)
-        regex_valid_address = re.compile(r"(\s+|\[|,)0x[0-9a-fA-F]+(\s+|\]|,|$)")
-        regex_hex = re.compile(r"0x[0-9a-fA-F]+")
-        regex_instruction = re.compile(r"\w+")
         region_list, discard_invalid_strings = receive_from_pince()
         dissect_code_status_file = SysUtils.get_dissect_code_status_file(pid)
         region_count = len(region_list)
@@ -614,12 +589,12 @@ class DissectCode(gdb.Command):
                     if isinstance(instruction, bytes):
                         instruction = instruction.decode()
                     if instruction.startswith("J") or instruction.startswith("LOOP"):
-                        found = regex_valid_address.search(instruction)
+                        found = common_regexes.dissect_code_valid_address.search(instruction)
                         if found:
-                            referenced_address_str = regex_hex.search(found.group(0)).group(0)
+                            referenced_address_str = common_regexes.hex_number.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int):
-                                instruction_only = regex_instruction.search(instruction).group(0).casefold()
+                                instruction_only = common_regexes.alphanumerics.search(instruction).group(0).casefold()
                                 try:
                                     referenced_jumps_dict[referenced_address_str][instruction_offset] = instruction_only
                                 except KeyError:
@@ -627,9 +602,9 @@ class DissectCode(gdb.Command):
                                     referenced_jumps_dict[referenced_address_str][instruction_offset] = instruction_only
                                     ref_jmp_count += 1
                     elif instruction.startswith("CALL"):
-                        found = regex_valid_address.search(instruction)
+                        found = common_regexes.dissect_code_valid_address.search(instruction)
                         if found:
-                            referenced_address_str = regex_hex.search(found.group(0)).group(0)
+                            referenced_address_str = common_regexes.hex_number.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int):
                                 try:
@@ -639,9 +614,9 @@ class DissectCode(gdb.Command):
                                     referenced_calls_dict[referenced_address_str].add(instruction_offset)
                                     ref_call_count += 1
                     else:
-                        found = regex_valid_address.search(instruction)
+                        found = common_regexes.dissect_code_valid_address.search(instruction)
                         if found:
-                            referenced_address_str = regex_hex.search(found.group(0)).group(0)
+                            referenced_address_str = common_regexes.hex_number.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
                                 try:

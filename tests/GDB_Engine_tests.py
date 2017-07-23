@@ -15,8 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import unittest
-from libPINCE import GDB_Engine, type_defs
-from tests import common_defs
+from libPINCE import GDB_Engine, type_defs, common_regexes
 
 
 class GDB_Engine_tests(unittest.TestCase):
@@ -26,4 +25,4 @@ class GDB_Engine_tests(unittest.TestCase):
             test_register = "rax"
         else:
             test_register = "eax"
-        self.assertRegex(register_dict[test_register], common_defs.regex_hex)
+        self.assertRegex(register_dict[test_register], common_regexes.hex_number.pattern)
