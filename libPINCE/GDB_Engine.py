@@ -1117,6 +1117,7 @@ def read_float_registers():
 
 
 #:tag:GDBExpressions
+#:tag:Registers
 def set_convenience_variable(variable, value):
     """Sets given convenience variable to given value
     Can be also used for modifying registers directly
