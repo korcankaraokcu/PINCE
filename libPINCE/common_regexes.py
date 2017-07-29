@@ -48,7 +48,8 @@ breakpoint_size = compile(r"char\[(\d+)\]")
 breakpoint_created = compile(r"breakpoint-created")
 breakpoint_number = compile(r"number=\"(\d+)\"")
 breakpoint_modified = compile(r"breakpoint-modified")
-convenience_variable = compile(r'(\$\d+)\s+=\s+(.*)')  # "$26 = 3"
+convenience_variable = compile(r'"(\$\d+)\s+=\s+(.*)"')  # "$26 = 3"
+convenience_variable_cli = compile(r'(\$\d+)\s+=\s+(.*)')  # $26 = 3
 entry_point = compile(r"Entry\s+point:\s+" + hex_number_grouped.pattern)
 split_gdb_command = lambda command_file: compile(r"&\".*source\s" + command_file + r"\\n\"")  # &"command\n"
 # 0x00007fd81d4c7400 <__printf+0>:\t48 81 ec d8 00 00 00\tsub    rsp,0xd8\n
