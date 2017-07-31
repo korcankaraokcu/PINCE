@@ -28,6 +28,8 @@ from libPINCE import SysUtils, type_defs, common_regexes
 inferior = gdb.selected_inferior()
 pid = inferior.pid
 mem_file = "/proc/" + str(pid) + "/mem"
+mem_read_handle = open(mem_file, "rb")  # Should only be used by pure memory read functions for optimization
+mem_read_handle.close = lambda: None  # Avoiding closing of the handle to improve speed
 
 REGISTERS_32 = ["eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp", "eip"]
 REGISTERS_64 = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip", "r8", "r9", "r10", "r11", "r12",
@@ -90,15 +92,12 @@ def read_single_address(address, value_type, length=0, zero_terminate=True, only
     else:
         expected_length = packed_data[0]
         data_type = packed_data[1]
-    FILE = open(mem_file, "rb")
     try:
-        FILE.seek(address)
-        data_read = FILE.read(expected_length)
+        mem_read_handle.seek(address)
+        data_read = mem_read_handle.read(expected_length)
     except (IOError, ValueError):
-        FILE.close()
         print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return ""
-    FILE.close()
     if only_bytes:
         return data_read
     if type_defs.VALUE_INDEX.is_string(value_type):
