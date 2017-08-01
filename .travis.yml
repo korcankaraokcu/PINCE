@@ -25,5 +25,10 @@ before_install:
   - wget https://bootstrap.pypa.io/get-pip.py
   - sudo python3 get-pip.py
   - sudo pip3 install psutil pexpect distorm3
-
 script: sudo python3 run_tests.py -c /bin/ls
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-5
