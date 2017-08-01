@@ -21,13 +21,13 @@ mkdir -p gdb_pince
 cd gdb_pince
 
 # clean the directory if another installation happened
-rm -rf gdb-7.11.1
+rm -rf gdb-8.0
 
-if [ ! -e gdb-7.11.1.tar.gz ] ; then
-    wget "http://ftp.gnu.org/gnu/gdb/gdb-7.11.1.tar.gz"
+if [ ! -e gdb-8.0.tar.gz ] ; then
+    wget "http://ftp.gnu.org/gnu/gdb/gdb-8.0.tar.gz"
 fi
-tar -zxvf gdb-7.11.1.tar.gz
-cd gdb-7.11.1
+tar -zxvf gdb-8.0.tar.gz
+cd gdb-8.0
 
 # Dependencies required for compiling GDB
 sudo apt-get install python3-dev

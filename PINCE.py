@@ -67,7 +67,7 @@ selfpid = os.getpid()
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-4"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-5"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = float
 show_messagebox_on_exception = bool
