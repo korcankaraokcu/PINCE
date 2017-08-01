@@ -31,7 +31,7 @@ cd gdb-8.0
 
 # Dependencies required for compiling GDB
 sudo apt-get install python3-dev
-sudo apt-get install gcc
+sudo apt-get install gcc-5
 
 CC=gcc ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
 if [ ! -e bin/gdb ] ; then
