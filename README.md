@@ -70,7 +70,7 @@ sudo pip3 install distorm3
 Install the packages required for compiling gdb:
 ```
 sudo apt-get install python3-dev  
-sudo apt-get install gcc  
+sudo apt-get install gcc-5
 ```
 Then ```cd``` to the libPINCE folder and make a folder for gdb:  
 ```
@@ -86,7 +86,7 @@ cd gdb-8.0
 ```  
 Then compile&install locally:
 ```  
-CC=gcc ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
+CC=gcc-5 ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
 ```  
 Move the contents of gdb/data-directory to share/gdb in case of python part of gdb installation fails:
 ```  
