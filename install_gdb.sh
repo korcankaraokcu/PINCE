@@ -33,7 +33,7 @@ cd gdb-8.0
 sudo apt-get install python3-dev
 sudo apt-get install gcc-5
 
-CC=gcc ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
+CC=gcc-5 ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
 if [ ! -e bin/gdb ] ; then
     echo "Failed to install GDB, restart the installation process"
     exit
