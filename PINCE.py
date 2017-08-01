@@ -2300,24 +2300,18 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.refresh_disassemble_view()
 
     def actionBookmarks_triggered(self):
-        try:
-            self.bookmark_widget.show()
-        except AttributeError:
-            self.bookmark_widget = BookmarkWidgetForm(self)
-            self.bookmark_widget.show()
-        self.bookmark_widget.activateWindow()
+        bookmark_widget = BookmarkWidgetForm(self)
+        bookmark_widget.show()
+        bookmark_widget.activateWindow()
 
     def actionStackTrace_Info_triggered(self):
         self.stacktrace_info_widget = StackTraceInfoWidgetForm()
         self.stacktrace_info_widget.show()
 
     def actionBreakpoints_triggered(self):
-        try:
-            self.breakpoint_widget.show()
-        except AttributeError:
-            self.breakpoint_widget = BreakpointInfoWidgetForm(self)
-            self.breakpoint_widget.show()
-        self.breakpoint_widget.activateWindow()
+        breakpoint_widget = BreakpointInfoWidgetForm(self)
+        breakpoint_widget.show()
+        breakpoint_widget.activateWindow()
 
     def actionFunctions_triggered(self):
         functions_info_widget = FunctionsInfoWidgetForm(self)
@@ -2391,6 +2385,8 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
+        global instances
+        instances.append(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
         self.listWidget.contextMenuEvent = self.listWidget_context_menu_event
@@ -2476,6 +2472,10 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.parent().delete_bookmark(current_address)
         self.refresh_table()
 
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
+
 
 class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
     def __init__(self, parent=None):
@@ -2546,6 +2546,8 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
+        global instances
+        instances.append(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
         self.tableWidget_BreakpointInfo.contextMenuEvent = self.tableWidget_BreakpointInfo_context_menu_event
@@ -2642,6 +2644,10 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
                 self.parent().disassemble_expression(current_address, append_to_travel_history=True)
             else:
                 self.parent().hex_dump_address(current_address_int)
+
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
 
 
 class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
