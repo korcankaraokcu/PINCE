@@ -63,6 +63,7 @@ class ReadMultipleAddresses(gdb.Command):
     def invoke(self, arg, from_tty):
         data_read_list = []
         contents_recv = receive_from_pince()
+        mem_handle = open(ScriptUtils.mem_file, "rb")
 
         # contents_recv format: [[address1, index1, length1, zero_terminate1, only_bytes], ...]
         for item in contents_recv:
@@ -80,8 +81,9 @@ class ReadMultipleAddresses(gdb.Command):
                 only_bytes = item[4]
             except IndexError:
                 only_bytes = False
-            data_read = ScriptUtils.read_single_address(address, index, length, zero_terminate, only_bytes)
+            data_read = ScriptUtils.read_single_address(address, index, length, zero_terminate, only_bytes, mem_handle)
             data_read_list.append(data_read)
+        mem_handle.close()
         send_to_pince(data_read_list)
 
 
@@ -119,11 +121,13 @@ class ReadSingleAddress(gdb.Command):
     def invoke(self, arg, from_tty):
         contents_recv = receive_from_pince()
         address = contents_recv[0]
-        value_index = contents_recv[1]
+        index = contents_recv[1]
         length = contents_recv[2]
         zero_terminate = contents_recv[3]
         only_bytes = contents_recv[4]
-        data_read = ScriptUtils.read_single_address(address, value_index, length, zero_terminate, only_bytes)
+        mem_handle = open(ScriptUtils.mem_file, "rb")
+        data_read = ScriptUtils.read_single_address(address, index, length, zero_terminate, only_bytes, mem_handle)
+        mem_handle.close()
         send_to_pince(data_read)
 
 
