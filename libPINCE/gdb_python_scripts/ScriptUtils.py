@@ -28,8 +28,6 @@ from libPINCE import SysUtils, type_defs, common_regexes
 inferior = gdb.selected_inferior()
 pid = inferior.pid
 mem_file = "/proc/" + str(pid) + "/mem"
-mem_read_handle = open(mem_file, "rb")  # Should only be used by pure memory read functions for optimization
-mem_read_handle.close = lambda: None  # Avoiding closing of the handle to improve speed
 
 REGISTERS_32 = ["eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp", "eip"]
 REGISTERS_64 = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip", "r8", "r9", "r10", "r11", "r12",
@@ -63,7 +61,8 @@ def issue_command(command, error_message=""):
             gdb.execute('echo ' + error_message + '\n')
 
 
-def read_single_address(address, value_type, length=0, zero_terminate=True, only_bytes=False):
+# mem_handle parameter example-->open(ScriptUtils.mem_file, "rb"), don't forget to close the handle after you're done
+def read_single_address(address, value_type, length=0, zero_terminate=True, only_bytes=False, mem_handle=None):
     try:
         value_type = int(value_type)
     except:
@@ -93,8 +92,8 @@ def read_single_address(address, value_type, length=0, zero_terminate=True, only
         expected_length = packed_data[0]
         data_type = packed_data[1]
     try:
-        mem_read_handle.seek(address)
-        data_read = mem_read_handle.read(expected_length)
+        mem_handle.seek(address)
+        data_read = mem_handle.read(expected_length)
     except (IOError, ValueError):
         print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return ""
@@ -115,6 +114,7 @@ def read_single_address(address, value_type, length=0, zero_terminate=True, only
         return struct.unpack_from(data_type, data_read)[0]
 
 
+# TODO: Implement an mem_handle parameter like in read_single_address function for optimization
 def set_single_address(address, value_index, value):
     if not type(address) == int:
         try:
