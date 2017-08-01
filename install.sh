@@ -38,7 +38,7 @@ esac
 sudo $PKG_MGR install $PKG_NAMES
 sudo pip3 install $PKG_NAMES_PIP
 
-if [ -e libPINCE/gdb_pince/gdb-7.11.1/bin/gdb ] ; then
+if [ -e libPINCE/gdb_pince/gdb-8.0/bin/gdb ] ; then
     echo "GDB has been already compiled&installed, recompile&install? (y/n)"
     read answer
     if echo "$answer" | grep -iq "^[Yy]" ;then
