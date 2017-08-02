@@ -1153,11 +1153,10 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             console_input = self.lineEdit.text()
             self.input_history.append(console_input)
             self.current_history_index = -1
-        stripped_lowered_input = console_input.strip().lower()
         if console_input.lower() == "/clear":
             self.textBrowser.clear()
             console_output = "Cleared"
-        elif stripped_lowered_input in self.quit_commands:
+        elif console_input.strip().lower() in self.quit_commands:
             console_output = "pls don't"
         else:
             if not control:
