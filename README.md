@@ -59,18 +59,13 @@ Just run ```sudo sh install.sh``` in the PINCE directory. Install script current
 To install PINCE, run this command chain then compile gdb:  
   
 ```
-sudo apt-get install python3-setuptools  
-sudo apt-get install python3-pip  
-sudo apt-get install python3-pyqt5  
-sudo pip3 install psutil  
-sudo pip3 install pexpect  
-sudo pip3 install distorm3
+sudo apt-get install python3-setuptools python3-pip python3-pyqt5  
+sudo pip3 install psutil pexpect distorm3  
 ```  
 ### **Compiling gdb with python support**  
 Install the packages required for compiling gdb:
 ```
-sudo apt-get install python3-dev  
-sudo apt-get install gcc-5
+sudo apt-get install python3-dev gcc-5 g++-5  
 ```
 Then ```cd``` to the libPINCE folder and make a folder for gdb:  
 ```
@@ -86,7 +81,7 @@ cd gdb-8.0
 ```  
 Then compile&install locally:
 ```  
-CC=gcc-5 ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
+CC=gcc-5 CXX=g++-5 ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
 ```  
 Move the contents of gdb/data-directory to share/gdb in case of python part of gdb installation fails:
 ```  
