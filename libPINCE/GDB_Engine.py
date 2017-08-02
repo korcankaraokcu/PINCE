@@ -614,6 +614,33 @@ def detach():
 
 
 #:tag:Injection
+def map_library(library_path):
+    """Maps the given .so file into the current inferior's address space.
+
+    Args:
+        library_path (str): Path to the .so file that'll be injected
+
+    Returns:
+        int: Address the library was mapped to.
+
+    Notes:
+        This function is not properly implemented, yet.
+    """
+    payload = [
+        'const char *msg = "Suhh, my dude?\n";',
+        'asm("movq %0, %%rsi;',
+        'movq $1, %%rax;',
+        'movq $1, %%rdi;',
+        'movq $15, %%rdx;',
+        'syscall;"',
+        ':',
+        ': "r" (msg)',
+        ': "rax", "rdi", "rsi", "rdx"'
+    ]
+    send_command("compile " + " ".join(payload))
+
+
+#:tag:Injection
 def inject_with_advanced_injection(library_path):
     """Injects the given .so file to current process
 

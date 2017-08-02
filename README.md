@@ -60,7 +60,7 @@ To install PINCE, run this command chain then compile gdb:
   
 ```
 sudo apt-get install python3-setuptools python3-pip python3-pyqt5  
-sudo pip3 install psutil pexpect distorm3  
+sudo pip3 install psutil pexpect distorm3 pyelftools
 ```  
 ### **Compiling gdb with python support**  
 Install the packages required for compiling gdb:
