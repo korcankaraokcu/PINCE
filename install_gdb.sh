@@ -31,14 +31,14 @@ cd gdb-8.0
 
 # Dependencies required for compiling GDB
 sudo apt-get install python3-dev
-sudo apt-get install gcc-5
+sudo apt-get install gcc-5 g++-5
 if [ $? -gt 0 ]; then
     sudo apt-get install software-properties-common
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
     sudo apt-get update
-    sudo apt-get install gcc-5
+    sudo apt-get install gcc-5 g++-5
     if [ $? -gt 0 ]; then
-        echo "Failed to install gcc-5, aborting..."
+        echo "Failed to install gcc-5 or g++-5, aborting..."
         exit
     fi
 fi
