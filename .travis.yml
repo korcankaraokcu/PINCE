@@ -21,15 +21,10 @@ before_install:
   - make
   - sudo make install
   - cd ..
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo sh install_gdb.sh
   - wget https://bootstrap.pypa.io/get-pip.py
   - sudo python3 get-pip.py
   - sudo pip3 install psutil pexpect distorm3
+
 script: sudo python3 run_tests.py -c /bin/ls
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - gcc-5
-    - g++-5
