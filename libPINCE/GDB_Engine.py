@@ -128,6 +128,15 @@ last_gdb_command = ""
 # An integer. Used to adjust gdb output
 gdb_output_mode = type_defs.GDB_OUTPUT_MODE.UNMUTED
 
+'''
+When PINCE was first launched, it used gdb 7.7.1, which is a very outdated version of gdb
+interpreter-exec mi command of gdb showed some buggy behaviour at that time
+Because of that, PINCE couldn't support gdb/mi commands for a while
+But PINCE now uses gdb 8.0 and interpreter-exec seems to work much better
+So, old parts of codebase still get their required information by parsing gdb console output
+New parts can try to rely on gdb/mi output
+'''
+
 
 #:tag:GDBCommunication
 def set_gdb_output_mode(mode):
@@ -171,14 +180,13 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
     Returns:
         str: Result of the command sent, commands in the form of "ctrl+key" always returns a null string
 
-    Todo:
-        Support GDB/MI commands. In fact, this is something gdb itself should fix. Because gdb python API doesn't
-        support gdb/mi commands and since PINCE uses gdb python API, it can't support gdb/mi commands as well
-
     Note:
         File communication system is used to avoid BEL emitting bug of pexpect. If you send more than a certain amount
         of characters to gdb, the input will be sheared at somewhere and gdb won't be receiving all of the input
         Visit this page for more information-->http://pexpect.readthedocs.io/en/stable/commonissues.html
+
+        You don't have to write interpreter-exec while sending a gdb/mi command. Just pass the gdb/mi command as itself.
+        This function will convert it automatically.
     """
     global child
     global gdb_output
@@ -200,6 +208,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             # Truncating the recv_file because we wouldn't like to see output of previous command in case of errors
             open(recv_file, "w").close()
         command = str(command)
+        command = 'interpreter-exec mi "' + command + '"' if command.startswith("-") else command
         last_gdb_command = command if not control else "Ctrl+" + command
         print("Last command: " + last_gdb_command)
         if control:

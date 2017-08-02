@@ -1102,6 +1102,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         global instances
         instances.append(self)
         GuiUtils.center(self)
+        self.quit_commands = ("q", "quit", "-gdb-exit")
         self.input_history = [""]
         self.current_history_index = -1
         self.await_async_output_thread = AwaitAsyncOutput()
@@ -1152,12 +1153,11 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             console_input = self.lineEdit.text()
             self.input_history.append(console_input)
             self.current_history_index = -1
+        stripped_lowered_input = console_input.strip().lower()
         if console_input.lower() == "/clear":
             self.textBrowser.clear()
             console_output = "Cleared"
-        elif console_input.strip().lower().startswith("-"):
-            console_output = "GDB/MI commands aren't supported yet"
-        elif console_input.strip().lower() == "q" or console_input.strip().lower() == "quit":
+        elif stripped_lowered_input in self.quit_commands:
             console_output = "pls don't"
         else:
             if not control:
