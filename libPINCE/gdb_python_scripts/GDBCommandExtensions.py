@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Copyright (C) 2016-2017 Korcan Karaokçu <korcankaraokcu@gmail.com>
+Copyright (C) 2016-2017 Jakob Kreuze <jakob@memeware.net>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
