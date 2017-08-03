@@ -24,7 +24,7 @@ PINCE_PATH = gdbvalue.string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
 from libPINCE.gdb_python_scripts import ScriptUtils
-from libPINCE import SysUtils, type_defs, common_regexes
+from libPINCE import ElfUtils, SysUtils, type_defs, common_regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
@@ -43,6 +43,9 @@ track_watchpoint_dict = {}
 # Format of register_expression_dict: {expression1:expression_info_dict1, expression2:expression_info_dict2, ...}
 # Format: {breakpoint_number1:register_expression_dict1, breakpoint_number2:register_expression_dict2, ...}
 track_breakpoint_dict = {}
+
+# Format: {name1:offset1, name2:offset2, ...}
+track_library_offsets = {}
 
 
 def receive_from_pince():
@@ -693,7 +696,62 @@ class Load(gdb.Command):
         super(Load, self).__init__("pince-load", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        pass
+        libs = arg.strip().split(" ")
+        if len(libs) == 1 and libs[0] == "":
+            print("No paths specified!")
+            return
+        elif len(libs) > 1:
+            print("Can only load one library at a time!")
+            return
+
+        # TODO: Get base address and add offset.
+        for name, offset in ElfUtils.get_dynamic_symbols(libs[0]):
+            track_library_offsets[name] = offset
+
+        # This is only the x86_64 payload.
+        payload = [
+            'const char *path = "{}";'.format(libs[0].strip()),
+
+            # Touching %rbp seems to cause a premature exit,
+            # so %rcx is used as a temporary base pointer.
+            # This is unfortunate since syscalls typically clobber %rcx,
+            # so we need to push it onto the stack every time we invoke
+            # the kernel.
+            'asm('
+            '"movq %%rsp, %%rcx;"'
+            '"subq $0xb0, %%rsp;"'
+
+            '"pushq %%rcx;"'
+            '"movq $0x02, %%rax;"' # sys_open
+            '"movq %0,    %%rdi;"' # path
+            '"movq $0x00, %%rsi;"' # O_RDONLY
+            '"movq $0x00, %%rdx;"' # No flags.
+            '"syscall;"'
+            '"popq %%rcx;"'
+
+            '"movq %%rax, %%rdi;"' # Save returned fd
+            '"movq %%rax, %%r8;"' # Also for later call to sys_mmap
+
+            '"pushq %%rcx;"'
+            '"movq $0x05, %%rax;"' # sys_fstat
+            '"leaq -0xa0(%%rcx), %%rsi;"' # statbuf
+            '"syscall;"'
+            '"popq %%rcx;"'
+
+            '"movq $0x09, %%rax;"' # sys_mmap
+            '"movq $0x00, %%rdi;"' # NULL
+            '"movq -0x70(%%rcx), %%rsi;"' # statbuf.st_size
+            '"movq $0x05, %%rdx;"' # PROT_READ | PROT_EXEC
+            '"movq $0x01, %%r10;"' # MAP_SHARED
+            # fd is was set after sys_open.
+            '"movq $0x00, %%r9;"'
+            '"syscall;"'
+
+            ': '
+            ': "r" (path)'
+            ': "rsp", "rax", "rcx", "rdi", "rsi", "rdx", "r10", "r8", "r9");'
+        ]
+        gdb.execute("compile " + " ".join(payload), from_tty)
 
 
 class Call(gdb.Command):
@@ -701,7 +759,24 @@ class Call(gdb.Command):
         super(Call, self).__init__("pince-call", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        pass
+        args = arg.strip().split(" ")
+        if len(args) == 1 and args[0] == "":
+            print("No routine specified!")
+            return
+        # TODO: Introspection or explicitly learning the arguments types?
+
+        if args[0] not in track_library_offsets:
+            print("No such routine!")
+            return
+
+        print(track_library_offsets.get(args[0]))
+        return
+
+        payload = [
+            'void (*fp)(void) = {};'.format(track_library_offsets[args[0]]),
+            'fp();'
+        ]
+        gdb.execute("compile " + " ".join(payload), from_tty)
 
 
 IgnoreErrors()
@@ -728,4 +803,5 @@ ExecuteFromSoFile()
 DissectCode()
 SearchReferencedCalls()
 MultipleAddressesToSymbols()
+Load()
 Call()
