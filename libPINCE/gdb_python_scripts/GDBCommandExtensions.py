@@ -704,10 +704,6 @@ class Load(gdb.Command):
             print("Can only load one library at a time!")
             return
 
-        # TODO: Get base address and add offset.
-        for name, offset in ElfUtils.get_dynamic_symbols(libs[0]):
-            track_library_offsets[name] = offset
-
         # This is only the x86_64 payload.
         payload = [
             'const char *path = "{}";'.format(libs[0].strip()),
@@ -752,6 +748,30 @@ class Load(gdb.Command):
             ': "rsp", "rax", "rcx", "rdi", "rsi", "rdx", "r10", "r8", "r9");'
         ]
         gdb.execute("compile " + " ".join(payload), from_tty)
+
+        if os.path.islink(libs[0]):
+            if os.path.exists(os.readlink(libs[0])):
+                realpath = os.readlink(libs[0])
+            else:
+                realpath = os.path.join(os.path.dirname(libs[0]),
+                                        os.readlink(libs[0]))
+        else:
+            realpath = libs[0]
+
+        # FIXME: Communication with GDB compile would probably be
+        # more failsafe than this.
+        for region in SysUtils.get_memory_regions(pid):
+            if region.path == realpath:
+                base_addr = int(common_regexes.memory_regions_base.findall(region.addr)[0], 16)
+                break
+        else:
+            print("Library was not found in address space.")
+            return
+
+        # TODO: Get base address and add offset.
+        for name, offset in ElfUtils.get_dynamic_symbols(libs[0]):
+            track_library_offsets[name] = offset + base_addr
+
 
 
 class Call(gdb.Command):
