@@ -30,6 +30,9 @@ from . import type_defs, common_regexes
 from collections import OrderedDict
 from importlib.machinery import SourceFileLoader
 
+from elftools.elf.elffile import ELFFile
+from elftools.elf.sections import SymbolTableSection
+
 
 #:tag:Processes
 def get_process_list():
@@ -948,3 +951,27 @@ def execute_script(file_path):
         print(tb)
         return None, tb
     return module, None
+
+
+#:tag:Injection
+def get_dynamic_symbols(binary_path):
+    """Collects all of the dynamic symbols in an ELF binary.
+
+    Args:
+        binary_path (str): Path to the binary file to analyze.
+
+    Returns:
+        tuple: (symbol name, offset)
+
+    Notes:
+        The output of this function is only really meaningful for shared objects.
+    """
+    with open(binary_path, "rb") as elf_file:
+        elf = ELFFile(elf_file)
+        syms = elf.get_section_by_name(".dynsym")
+
+        if not isinstance(syms, SymbolTableSection):
+            # TODO: Specialized exception?
+            raise Exception("No dynamic symbols section")
+
+        return [(sym.name, sym["st_value"]) for sym in syms.iter_symbols()]

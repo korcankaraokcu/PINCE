@@ -25,7 +25,7 @@ PINCE_PATH = gdbvalue.string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
 from libPINCE.gdb_python_scripts import ScriptUtils
-from libPINCE import ElfUtils, SysUtils, type_defs, common_regexes
+from libPINCE import SysUtils, type_defs, common_regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
@@ -705,49 +705,52 @@ class Load(gdb.Command):
             print("Can only load one library at a time!")
             return
 
-        # This is only the x86_64 payload.
-        payload = [
-            'const char *path = "{}";'.format(libs[0].strip()),
+        if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+            payload = [
+                'const char *path = "{}";'.format(libs[0].strip()),
 
-            # Touching %rbp seems to cause a premature exit,
-            # so %rcx is used as a temporary base pointer.
-            # This is unfortunate since syscalls typically clobber %rcx,
-            # so we need to push it onto the stack every time we invoke
-            # the kernel.
-            'asm('
-            '"movq %%rsp, %%rcx;"'
-            '"subq $0xb0, %%rsp;"'
+                # Touching %rbp seems to cause a premature exit,
+                # so %rcx is used as a temporary base pointer.
+                # Syscalls typically clobber %rcx, so we need to push it
+                # onto the stack every time we invoke the kernel.
+                'asm('
+                '"movq %%rsp, %%rcx;"'
+                '"subq $0xb0, %%rsp;"'
 
-            '"pushq %%rcx;"'
-            '"movq $0x02, %%rax;"' # sys_open
-            '"movq %0,    %%rdi;"' # path
-            '"movq $0x00, %%rsi;"' # O_RDONLY
-            '"movq $0x00, %%rdx;"' # No flags.
-            '"syscall;"'
-            '"popq %%rcx;"'
+                '"pushq %%rcx;"'
+                '"movq $0x02, %%rax;"' # sys_open
+                '"movq %0,    %%rdi;"' # path
+                '"movq $0x00, %%rsi;"' # O_RDONLY
+                '"movq $0x00, %%rdx;"' # No flags.
+                '"syscall;"'
+                '"popq %%rcx;"'
 
-            '"movq %%rax, %%rdi;"' # Save returned fd
-            '"movq %%rax, %%r8;"' # Also for later call to sys_mmap
+                '"movq %%rax, %%rdi;"' # Save returned fd
+                '"movq %%rax, %%r8;"' # Also for later call to sys_mmap
 
-            '"pushq %%rcx;"'
-            '"movq $0x05, %%rax;"' # sys_fstat
-            '"leaq -0xa0(%%rcx), %%rsi;"' # statbuf
-            '"syscall;"'
-            '"popq %%rcx;"'
+                '"pushq %%rcx;"'
+                '"movq $0x05, %%rax;"' # sys_fstat
+                '"leaq -0xa0(%%rcx), %%rsi;"' # statbuf
+                '"syscall;"'
+                '"popq %%rcx;"'
 
-            '"movq $0x09, %%rax;"' # sys_mmap
-            '"movq $0x00, %%rdi;"' # NULL
-            '"movq -0x70(%%rcx), %%rsi;"' # statbuf.st_size
-            '"movq $0x05, %%rdx;"' # PROT_READ | PROT_EXEC
-            '"movq $0x01, %%r10;"' # MAP_SHARED
-            # fd is was set after sys_open.
-            '"movq $0x00, %%r9;"'
-            '"syscall;"'
+                # fd was set after sys_open.
+                '"movq $0x09, %%rax;"' # sys_mmap
+                '"movq $0x00, %%rdi;"' # NULL
+                '"movq -0x70(%%rcx), %%rsi;"' # statbuf.st_size
+                '"movq $0x05, %%rdx;"' # PROT_READ | PROT_EXEC
+                '"movq $0x01, %%r10;"' # MAP_SHARED
+                '"movq $0x00, %%r9;"'
+                '"syscall;"'
 
-            ': '
-            ': "r" (path)'
-            ': "rsp", "rax", "rcx", "rdi", "rsi", "rdx", "r10", "r8", "r9");'
-        ]
+                ': '
+                ': "r" (path)'
+                ': "rsp", "rax", "rcx", "rdi", "rsi", "rdx", "r10", "r8", "r9");'
+            ]
+        else:
+            payload = [
+                'const char *path = "{}";'.format(libs[0].strip())
+            ]
         gdb.execute("compile " + " ".join(payload), from_tty)
 
         if os.path.islink(libs[0]):
@@ -769,10 +772,8 @@ class Load(gdb.Command):
             print("Library was not found in address space.")
             return
 
-        # TODO: Get base address and add offset.
-        for name, offset in ElfUtils.get_dynamic_symbols(libs[0]):
+        for name, offset in SysUtils.get_dynamic_symbols(libs[0]):
             track_library_offsets[name] = offset + base_addr
-
 
 
 class Call(gdb.Command):
