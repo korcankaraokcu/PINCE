@@ -49,6 +49,8 @@ def gdbinit():
         pass
     gdb.execute("set disassembly-flavor intel")
     gdb.execute("set case-sensitive auto")
+    gdb.execute("set code-cache off")
+    gdb.execute("set stack-cache off")
 
 
 # This function is used to avoid errors in gdb scripts, because gdb scripts stop working when encountered an error
