@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import QLabel, QMessageBox
 from PyQt5.QtGui import QCursor
 from PyQt5.QtCore import Qt
 from libPINCE import GDB_Engine
-from PINCE import DialogWithButtonsForm
+from PINCE import InputDialogForm
 
 
 class QFlagRegisterLabel(QLabel):
@@ -41,8 +41,8 @@ class QFlagRegisterLabel(QLabel):
         registers = GDB_Engine.read_registers()
         current_flag = self.objectName().lower()
         label_text = "Enter the new value of flag " + self.objectName() + "(0 or 1)"
-        register_dialog = DialogWithButtonsForm(label_text=label_text,
-                                                hide_line_edit=False, line_edit_text=registers[current_flag])
+        register_dialog = InputDialogForm(label_text=label_text,
+                                          hide_line_edit=False, line_edit_text=registers[current_flag])
         if register_dialog.exec_():
             result = register_dialog.get_values().strip()
             if result == "0" or result == "1":
