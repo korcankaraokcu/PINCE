@@ -33,7 +33,7 @@ from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
 from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
 from GUI.LoadingDialog import Ui_Dialog as LoadingDialog
-from GUI.DialogWithButtons import Ui_Dialog as DialogWithButtons
+from GUI.InputDialog import Ui_Dialog as InputDialog
 from GUI.SettingsDialog import Ui_Dialog as SettingsDialog
 from GUI.ConsoleWidget import Ui_Form as ConsoleWidget
 from GUI.AboutWidget import Ui_TabWidget as AboutWidget
@@ -927,7 +927,7 @@ class LoadingDialogForm(QDialog, LoadingDialog):
             return 0
 
 
-class InputDialogForm(QDialog, DialogWithButtons):
+class InputDialogForm(QDialog, InputDialog):
     def __init__(self, parent=None, label_text="", hide_line_edit=True, line_edit_text="", parse_string=False,
                  value_index=type_defs.VALUE_INDEX.INDEX_4BYTES, align=Qt.AlignCenter):
         super().__init__(parent=parent)
