@@ -34,6 +34,7 @@ from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
 from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
 from GUI.LoadingDialog import Ui_Dialog as LoadingDialog
 from GUI.InputDialog import Ui_Dialog as InputDialog
+from GUI.TextEditDialog import Ui_Dialog as TextEditDialog
 from GUI.SettingsDialog import Ui_Dialog as SettingsDialog
 from GUI.ConsoleWidget import Ui_Form as ConsoleWidget
 from GUI.AboutWidget import Ui_TabWidget as AboutWidget
@@ -953,6 +954,27 @@ class InputDialogForm(QDialog, InputDialog):
         super(InputDialogForm, self).accept()
 
 
+class TextEditDialogForm(QDialog, TextEditDialog):
+    def __init__(self, parent=None, text=""):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.textEdit.setPlainText(str(text))
+        self.accept_shortcut = QShortcut(QKeySequence("Ctrl+Return"), self)
+        self.accept_shortcut.activated.connect(self.accept)
+
+    def get_values(self):
+        return self.textEdit.toPlainText()
+
+    def keyPressEvent(self, QKeyEvent):
+        if QKeyEvent.key() == Qt.Key_Enter:
+            pass
+        else:
+            super(TextEditDialogForm, self).keyPressEvent(QKeyEvent)
+
+    def accept(self):
+        super(TextEditDialogForm, self).accept()
+
+
 class SettingsDialogForm(QDialog, SettingsDialog):
     reset_settings = pyqtSignal()
 
@@ -1111,15 +1133,18 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.shortcut_send.activated.connect(self.communicate)
         self.shortcut_send_ctrl = QShortcut(QKeySequence("Ctrl+C"), self)
         self.shortcut_send_ctrl.activated.connect(lambda: self.communicate(control=True))
+        self.shortcut_multiline_mode = QShortcut(QKeySequence("Ctrl+Return"), self)
+        self.shortcut_multiline_mode.activated.connect(self.enter_multiline_mode)
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.lineEdit.keyPressEvent_original = self.lineEdit.keyPressEvent
         self.lineEdit.keyPressEvent = self.lineEdit_keyPressEvent
         self.textBrowser.append("Hotkeys:")
-        self.textBrowser.append("--------------------")
-        self.textBrowser.append("Send=Enter         |")
-        self.textBrowser.append("Send ctrl+c=Ctrl+C |")
-        self.textBrowser.append("--------------------")
+        self.textBrowser.append("----------------------------")
+        self.textBrowser.append("Send=Enter                 |")
+        self.textBrowser.append("Send ctrl+c=Ctrl+C         |")
+        self.textBrowser.append("Multi-line mode=Ctrl+Enter |")
+        self.textBrowser.append("----------------------------")
         self.textBrowser.append("Commands:")
         self.textBrowser.append("----------------------------------------------------------")
         self.textBrowser.append("/clear: Clear the console                                |")
@@ -1179,6 +1204,12 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         cursor.movePosition(QTextCursor.End)
         self.textBrowser.setTextCursor(cursor)
         self.textBrowser.ensureCursorVisible()
+
+    def enter_multiline_mode(self):
+        multiline_dialog = TextEditDialogForm(text=self.lineEdit.text())
+        if multiline_dialog.exec_():
+            self.lineEdit.setText(multiline_dialog.get_values())
+            self.communicate()
 
     def on_async_output(self):
         self.textBrowser.append(GDB_Engine.gdb_async_output)
