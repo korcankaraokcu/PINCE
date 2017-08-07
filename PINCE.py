@@ -929,23 +929,20 @@ class LoadingDialogForm(QDialog, LoadingDialog):
 
 class InputDialogForm(QDialog, InputDialog):
     def __init__(self, parent=None, label_text="", hide_line_edit=True, line_edit_text="", parse_string=False,
-                 value_index=type_defs.VALUE_INDEX.INDEX_4BYTES, align=Qt.AlignCenter):
+                 value_index=type_defs.VALUE_INDEX.INDEX_4BYTES, label_alignment=Qt.AlignCenter):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.label.setAlignment(align)
+        self.label.setAlignment(label_alignment)
         self.parse_string = parse_string
         self.value_index = value_index
-        label_text = str(label_text)
-        self.label.setText(label_text)
+        self.label.setText(str(label_text))
         if hide_line_edit:
             self.lineEdit.hide()
         else:
-            line_edit_text = str(line_edit_text)
-            self.lineEdit.setText(line_edit_text)
+            self.lineEdit.setText(str(line_edit_text))
 
     def get_values(self):
-        line_edit_text = self.lineEdit.text()
-        return line_edit_text
+        return self.lineEdit.text()
 
     def accept(self):
         if self.parse_string:
@@ -1843,7 +1840,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         else:
             condition_line_edit_text = ""
         condition_dialog = InputDialogForm(label_text=condition_text, hide_line_edit=False,
-                                           line_edit_text=condition_line_edit_text, align=Qt.AlignLeft)
+                                           line_edit_text=condition_line_edit_text, label_alignment=Qt.AlignLeft)
         if condition_dialog.exec_():
             condition = condition_dialog.get_values()
             if not GDB_Engine.add_breakpoint_condition(hex(int_address), condition):
@@ -3174,7 +3171,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
                "\n@plt means this function is a subroutine for the original one" \
                "\nThere can be more than one of the same function" \
                "\nIt means that the function is overloaded"
-        InputDialogForm(label_text=text, align=Qt.AlignLeft).exec_()
+        InputDialogForm(label_text=text, label_alignment=Qt.AlignLeft).exec_()
 
     def closeEvent(self, QCloseEvent):
         global instances
@@ -3579,7 +3576,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
                "\n'[re]cx' searches for both 'rcx' and 'ecx'" \
                "\nUse the char '\\' to escape special chars such as '['" \
                "\n'\[rsp\]' searches for opcodes that contain '[rsp]'"
-        InputDialogForm(label_text=text, align=Qt.AlignLeft).exec_()
+        InputDialogForm(label_text=text, label_alignment=Qt.AlignLeft).exec_()
 
     def tableWidget_Opcodes_item_double_clicked(self, index):
         row = index.row()
