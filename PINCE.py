@@ -33,7 +33,8 @@ from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
 from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
 from GUI.LoadingDialog import Ui_Dialog as LoadingDialog
-from GUI.DialogWithButtons import Ui_Dialog as DialogWithButtons
+from GUI.InputDialog import Ui_Dialog as InputDialog
+from GUI.TextEditDialog import Ui_Dialog as TextEditDialog
 from GUI.SettingsDialog import Ui_Dialog as SettingsDialog
 from GUI.ConsoleWidget import Ui_Form as ConsoleWidget
 from GUI.AboutWidget import Ui_TabWidget as AboutWidget
@@ -553,7 +554,7 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow.show()
 
     def delete_address_table_contents(self):
-        confirm_dialog = DialogWithButtonsForm(label_text="This will clear the contents of address table\nProceed?")
+        confirm_dialog = InputDialogForm(label_text="This will clear the contents of address table\nProceed?")
         if confirm_dialog.exec_():
             self.tableWidget_AddressTable.setRowCount(0)
 
@@ -607,8 +608,8 @@ class MainForm(QMainWindow, MainWindow):
             if type_defs.VALUE_INDEX.is_string(value_index):
                 label_text += "\nPINCE doesn't automatically insert a null terminated string at the end" \
                               "\nCopy-paste this character (\0) if you need to insert it at somewhere"
-            dialog = DialogWithButtonsForm(label_text=label_text, hide_line_edit=False,
-                                           line_edit_text=value, parse_string=True, value_index=value_index)
+            dialog = InputDialogForm(label_text=label_text, hide_line_edit=False,
+                                     line_edit_text=value, parse_string=True, value_index=value_index)
             if dialog.exec_():
                 table_contents = []
                 value_text = dialog.get_values()
@@ -630,8 +631,8 @@ class MainForm(QMainWindow, MainWindow):
 
         elif current_column is DESC_COL:
             description = self.tableWidget_AddressTable.item(current_row, DESC_COL).text()
-            dialog = DialogWithButtonsForm(label_text="Enter the new description", hide_line_edit=False,
-                                           line_edit_text=description)
+            dialog = InputDialogForm(label_text="Enter the new description", hide_line_edit=False,
+                                     line_edit_text=description)
             if dialog.exec_():
                 description_text = dialog.get_values()
                 selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
@@ -736,12 +737,12 @@ class ProcessForm(QMainWindow, ProcessWindow):
     def pushButton_CreateProcess_clicked(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the target binary")[0]
         if file_path:
-            arg_dialog = DialogWithButtonsForm(label_text="Enter the optional arguments", hide_line_edit=False)
+            arg_dialog = InputDialogForm(label_text="Enter the optional arguments", hide_line_edit=False)
             if arg_dialog.exec_():
                 args = arg_dialog.get_values()
             else:
                 args = ""
-            ld_preload_dialog = DialogWithButtonsForm(label_text="LD_PRELOAD .so path (optional)", hide_line_edit=False)
+            ld_preload_dialog = InputDialogForm(label_text="LD_PRELOAD .so path (optional)", hide_line_edit=False)
             if ld_preload_dialog.exec_():
                 ld_preload_path = ld_preload_dialog.get_values()
             else:
@@ -927,25 +928,22 @@ class LoadingDialogForm(QDialog, LoadingDialog):
             return 0
 
 
-class DialogWithButtonsForm(QDialog, DialogWithButtons):
+class InputDialogForm(QDialog, InputDialog):
     def __init__(self, parent=None, label_text="", hide_line_edit=True, line_edit_text="", parse_string=False,
-                 value_index=type_defs.VALUE_INDEX.INDEX_4BYTES, align=Qt.AlignCenter):
+                 value_index=type_defs.VALUE_INDEX.INDEX_4BYTES, label_alignment=Qt.AlignCenter):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.label.setAlignment(align)
+        self.label.setAlignment(label_alignment)
         self.parse_string = parse_string
         self.value_index = value_index
-        label_text = str(label_text)
-        self.label.setText(label_text)
+        self.label.setText(str(label_text))
         if hide_line_edit:
             self.lineEdit.hide()
         else:
-            line_edit_text = str(line_edit_text)
-            self.lineEdit.setText(line_edit_text)
+            self.lineEdit.setText(str(line_edit_text))
 
     def get_values(self):
-        line_edit_text = self.lineEdit.text()
-        return line_edit_text
+        return self.lineEdit.text()
 
     def accept(self):
         if self.parse_string:
@@ -953,7 +951,28 @@ class DialogWithButtonsForm(QDialog, DialogWithButtons):
             if SysUtils.parse_string(string, self.value_index) is None:
                 QMessageBox.information(self, "Error", "Can't parse the input")
                 return
-        super(DialogWithButtonsForm, self).accept()
+        super(InputDialogForm, self).accept()
+
+
+class TextEditDialogForm(QDialog, TextEditDialog):
+    def __init__(self, parent=None, text=""):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.textEdit.setPlainText(str(text))
+        self.accept_shortcut = QShortcut(QKeySequence("Ctrl+Return"), self)
+        self.accept_shortcut.activated.connect(self.accept)
+
+    def get_values(self):
+        return self.textEdit.toPlainText()
+
+    def keyPressEvent(self, QKeyEvent):
+        if QKeyEvent.key() == Qt.Key_Enter:
+            pass
+        else:
+            super(TextEditDialogForm, self).keyPressEvent(QKeyEvent)
+
+    def accept(self):
+        super(TextEditDialogForm, self).accept()
 
 
 class SettingsDialogForm(QDialog, SettingsDialog):
@@ -999,10 +1018,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         elif current_table_update_interval == 0:
 
             # Easter egg #2
-            if not DialogWithButtonsForm(label_text="You are asking for it, aren't you?").exec_():
+            if not InputDialogForm(label_text="You are asking for it, aren't you?").exec_():
                 return
         elif current_table_update_interval < 0.1:
-            if not DialogWithButtonsForm(label_text="Update interval should be bigger than 0.1 seconds" +
+            if not InputDialogForm(label_text="Update interval should be bigger than 0.1 seconds" +
                     "\nSetting update interval less than 0.1 seconds may cause slowness" +
                     "\n\tProceed?").exec_():
                 return
@@ -1024,7 +1043,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         selected_gdb_path = self.lineEdit_GDBPath.text()
         current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
         if selected_gdb_path != current_gdb_path:
-            if DialogWithButtonsForm(label_text="You have changed the GDB path, reset GDB now?").exec_():
+            if InputDialogForm(label_text="You have changed the GDB path, reset GDB now?").exec_():
                 GDB_Engine.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         super(SettingsDialogForm, self).accept()
@@ -1075,7 +1094,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.keySequenceEdit.clear()
 
     def pushButton_ResetSettings_clicked(self):
-        confirm_dialog = DialogWithButtonsForm(label_text="This will reset to the default settings\nProceed?")
+        confirm_dialog = InputDialogForm(label_text="This will reset to the default settings\nProceed?")
         if confirm_dialog.exec_():
             self.reset_settings.emit()
         else:
@@ -1114,15 +1133,18 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.shortcut_send.activated.connect(self.communicate)
         self.shortcut_send_ctrl = QShortcut(QKeySequence("Ctrl+C"), self)
         self.shortcut_send_ctrl.activated.connect(lambda: self.communicate(control=True))
+        self.shortcut_multiline_mode = QShortcut(QKeySequence("Ctrl+Return"), self)
+        self.shortcut_multiline_mode.activated.connect(self.enter_multiline_mode)
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.lineEdit.keyPressEvent_original = self.lineEdit.keyPressEvent
         self.lineEdit.keyPressEvent = self.lineEdit_keyPressEvent
         self.textBrowser.append("Hotkeys:")
-        self.textBrowser.append("--------------------")
-        self.textBrowser.append("Send=Enter         |")
-        self.textBrowser.append("Send ctrl+c=Ctrl+C |")
-        self.textBrowser.append("--------------------")
+        self.textBrowser.append("----------------------------")
+        self.textBrowser.append("Send=Enter                 |")
+        self.textBrowser.append("Send ctrl+c=Ctrl+C         |")
+        self.textBrowser.append("Multi-line mode=Ctrl+Enter |")
+        self.textBrowser.append("----------------------------")
         self.textBrowser.append("Commands:")
         self.textBrowser.append("----------------------------------------------------------")
         self.textBrowser.append("/clear: Clear the console                                |")
@@ -1182,6 +1204,12 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         cursor.movePosition(QTextCursor.End)
         self.textBrowser.setTextCursor(cursor)
         self.textBrowser.ensureCursorVisible()
+
+    def enter_multiline_mode(self):
+        multiline_dialog = TextEditDialogForm(text=self.lineEdit.text())
+        if multiline_dialog.exec_():
+            self.lineEdit.setText(multiline_dialog.get_values())
+            self.communicate()
 
     def on_async_output(self):
         self.textBrowser.append(GDB_Engine.gdb_async_output)
@@ -1448,8 +1476,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.check_address_in_breakpoints(address):
             GDB_Engine.delete_breakpoint(hex(address))
         else:
-            watchpoint_dialog = DialogWithButtonsForm(label_text="Enter the watchpoint length in size of bytes",
-                                                      hide_line_edit=False)
+            watchpoint_dialog = InputDialogForm(label_text="Enter the watchpoint length in size of bytes",
+                                                hide_line_edit=False)
             if watchpoint_dialog.exec_():
                 user_input = watchpoint_dialog.get_values()
                 user_input_int = SysUtils.parse_string(user_input, type_defs.VALUE_INDEX.INDEX_4BYTES)
@@ -1528,8 +1556,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def exec_hex_view_go_to_dialog(self):
         current_address = hex(self.hex_view_currently_displayed_address)
-        go_to_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False,
-                                             line_edit_text=current_address)
+        go_to_dialog = InputDialogForm(label_text="Enter the expression", hide_line_edit=False,
+                                       line_edit_text=current_address)
         if go_to_dialog.exec_():
             expression = go_to_dialog.get_values()
             dest_address = GDB_Engine.convert_symbol_to_address(expression)
@@ -1842,8 +1870,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             condition_line_edit_text = breakpoint.condition
         else:
             condition_line_edit_text = ""
-        condition_dialog = DialogWithButtonsForm(label_text=condition_text, hide_line_edit=False,
-                                                 line_edit_text=condition_line_edit_text, align=Qt.AlignLeft)
+        condition_dialog = InputDialogForm(label_text=condition_text, hide_line_edit=False,
+                                           line_edit_text=condition_line_edit_text, label_alignment=Qt.AlignLeft)
         if condition_dialog.exec_():
             condition = condition_dialog.get_values()
             if not GDB_Engine.add_breakpoint_condition(hex(int_address), condition):
@@ -2263,8 +2291,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
 
-        go_to_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False,
-                                             line_edit_text=current_address)
+        go_to_dialog = InputDialogForm(label_text="Enter the expression", hide_line_edit=False,
+                                       line_edit_text=current_address)
         if go_to_dialog.exec_():
             traveled_exp = go_to_dialog.get_values()
             self.disassemble_expression(traveled_exp, append_to_travel_history=True)
@@ -2273,8 +2301,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if int_address in self.tableWidget_Disassemble.bookmarks:
             QMessageBox.information(self, "Error", "This address has already been bookmarked")
             return
-        comment_dialog = DialogWithButtonsForm(label_text="Enter the comment for bookmarked address",
-                                               hide_line_edit=False)
+        comment_dialog = InputDialogForm(label_text="Enter the comment for bookmarked address",
+                                         hide_line_edit=False)
         if comment_dialog.exec_():
             comment = comment_dialog.get_values()
         else:
@@ -2284,8 +2312,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def change_bookmark_comment(self, int_address):
         current_comment = self.tableWidget_Disassemble.bookmarks[int_address]
-        comment_dialog = DialogWithButtonsForm(label_text="Enter the comment for bookmarked address",
-                                               hide_line_edit=False, line_edit_text=current_comment)
+        comment_dialog = InputDialogForm(label_text="Enter the comment for bookmarked address",
+                                         hide_line_edit=False, line_edit_text=current_comment)
         if comment_dialog.exec_():
             new_comment = comment_dialog.get_values()
         else:
@@ -2350,7 +2378,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                      '\n\n$28 is the assigned convenience variable' \
                      '\n4 is the result' \
                      '\nYou can use the assigned variable from the GDB Console'
-        call_dialog = DialogWithButtonsForm(label_text=label_text, hide_line_edit=False)
+        call_dialog = InputDialogForm(label_text=label_text, hide_line_edit=False)
         if call_dialog.exec_():
             result = GDB_Engine.call_function_from_inferior(call_dialog.get_values())
             if result[0]:
@@ -2448,7 +2476,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         if action == add_entry:
-            entry_dialog = DialogWithButtonsForm(label_text="Enter the expression", hide_line_edit=False)
+            entry_dialog = InputDialogForm(label_text="Enter the expression", hide_line_edit=False)
             if entry_dialog.exec_():
                 text = entry_dialog.get_values()
                 address = GDB_Engine.convert_symbol_to_address(text)
@@ -2512,8 +2540,8 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         current_register = current_table_widget.item(current_row, FLOAT_REGISTERS_NAME_COL).text()
         current_value = current_table_widget.item(current_row, FLOAT_REGISTERS_VALUE_COL).text()
         label_text = "Enter the new value of register " + current_register.upper()
-        register_dialog = DialogWithButtonsForm(label_text=label_text, hide_line_edit=False,
-                                                line_edit_text=current_value)
+        register_dialog = InputDialogForm(label_text=label_text, hide_line_edit=False,
+                                          line_edit_text=current_value)
         if register_dialog.exec_():
             if self.currentWidget() == self.XMM:
                 current_register += ".v4_float"
@@ -2772,7 +2800,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
                      "\n\nAnother example:" \
                      "\nIf you enter '$rax,$rbx*$rcx+4,$rbp'(without quotes)" \
                      "\nPINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]"
-        register_expression_dialog = DialogWithButtonsForm(label_text=label_text, hide_line_edit=False)
+        register_expression_dialog = InputDialogForm(label_text=label_text, hide_line_edit=False)
         if register_expression_dialog.exec_():
             register_expressions = register_expression_dialog.get_values()
         else:
@@ -3174,7 +3202,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
                "\n@plt means this function is a subroutine for the original one" \
                "\nThere can be more than one of the same function" \
                "\nIt means that the function is overloaded"
-        DialogWithButtonsForm(label_text=text, align=Qt.AlignLeft).exec_()
+        InputDialogForm(label_text=text, label_alignment=Qt.AlignLeft).exec_()
 
     def closeEvent(self, QCloseEvent):
         global instances
@@ -3579,7 +3607,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
                "\n'[re]cx' searches for both 'rcx' and 'ecx'" \
                "\nUse the char '\\' to escape special chars such as '['" \
                "\n'\[rsp\]' searches for opcodes that contain '[rsp]'"
-        DialogWithButtonsForm(label_text=text, align=Qt.AlignLeft).exec_()
+        InputDialogForm(label_text=text, label_alignment=Qt.AlignLeft).exec_()
 
     def tableWidget_Opcodes_item_double_clicked(self, index):
         row = index.row()
@@ -3829,7 +3857,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         self.hex_len = 16 if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64 else 8
         str_dict, jmp_dict, call_dict = GDB_Engine.get_dissect_code_data()
         if len(str_dict) == 0 and len(jmp_dict) == 0 and len(call_dict) == 0:
-            confirm_dialog = DialogWithButtonsForm(label_text="You need to dissect code first\nProceed?")
+            confirm_dialog = InputDialogForm(label_text="You need to dissect code first\nProceed?")
             if confirm_dialog.exec_():
                 dissect_code_dialog = DissectCodeDialogForm()
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
@@ -3950,7 +3978,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         self.hex_len = 16 if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64 else 8
         str_dict, jmp_dict, call_dict = GDB_Engine.get_dissect_code_data()
         if len(str_dict) == 0 and len(jmp_dict) == 0 and len(call_dict) == 0:
-            confirm_dialog = DialogWithButtonsForm(label_text="You need to dissect code first\nProceed?")
+            confirm_dialog = InputDialogForm(label_text="You need to dissect code first\nProceed?")
             if confirm_dialog.exec_():
                 dissect_code_dialog = DissectCodeDialogForm()
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)

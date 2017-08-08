@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'DialogWithButtons.ui'
+# Form implementation generated from reading ui file 'InputDialog.ui'
 #
-# Created: Sat Oct 15 14:22:42 2016
-#      by: PyQt5 UI code generator 5.2.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 

@@ -19,7 +19,7 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtCore import Qt
 from libPINCE import GDB_Engine
 from libPINCE import GuiUtils
-from PINCE import DialogWithButtonsForm
+from PINCE import InputDialogForm
 
 
 class QRegisterLabel(QLabel):
@@ -41,8 +41,8 @@ class QRegisterLabel(QLabel):
     def mouseDoubleClickEvent(self, QMouseEvent):
         registers = GDB_Engine.read_registers()
         current_register = self.objectName().lower()
-        register_dialog = DialogWithButtonsForm(label_text="Enter the new value of register " + self.objectName(),
-                                                hide_line_edit=False, line_edit_text=registers[current_register])
+        register_dialog = InputDialogForm(label_text="Enter the new value of register " + self.objectName(),
+                                          hide_line_edit=False, line_edit_text=registers[current_register])
         if register_dialog.exec_():
             GDB_Engine.set_convenience_variable(current_register, register_dialog.get_values())
             self.set_value(GDB_Engine.read_registers()[current_register])
