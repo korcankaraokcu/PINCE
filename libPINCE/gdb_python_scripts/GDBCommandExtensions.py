@@ -678,7 +678,7 @@ class MultipleAddressesToSymbols(gdb.Command):
 
     def invoke(self, arg, from_tty):
         data_read_list = []
-        contents_recv = receive_from_pince()
+        contents_recv = receive_from_pince() #
 
         # contents_recv format: [[expression1, include_address1], ...]
         for item in contents_recv:
@@ -697,101 +697,117 @@ class Load(gdb.Command):
         super(Load, self).__init__("pince-load", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        libs = arg.strip().split(" ")
-        if len(libs) == 1 and libs[0] == "":
-            print("No paths specified!")
-            return
-        elif len(libs) > 1:
-            print("Can only load one library at a time!")
-            return
+        # contents_recv = receive_from_pince()
 
         if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
-            payload = [
-                'const char *path = "{}";'.format(libs[0].strip()),
-
-                # Touching %rbp seems to cause a premature exit,
-                # so %rcx is used as a temporary base pointer.
-                # Syscalls typically clobber %rcx, so we need to push it
-                # onto the stack every time we invoke the kernel.
-                'asm('
-                '"movq %%rsp, %%rcx;"'
-                '"subq $0xb0, %%rsp;"'
-
-                '"pushq %%rcx;"'
-                '"movq $0x02, %%rax;"' # sys_open
-                '"movq %0,    %%rdi;"' # path
-                '"movq $0x00, %%rsi;"' # O_RDONLY
-                '"movq $0x00, %%rdx;"' # No flags.
-                '"syscall;"'
-                '"popq %%rcx;"'
-
-                '"movq %%rax, %%rdi;"' # Save returned fd
-                '"movq %%rax, %%r8;"' # Also for later call to sys_mmap
-
-                '"pushq %%rcx;"'
-                '"movq $0x05, %%rax;"' # sys_fstat
-                '"leaq -0xa0(%%rcx), %%rsi;"' # statbuf
-                '"syscall;"'
-                '"popq %%rcx;"'
-
-                # fd was set after sys_open.
-                '"movq $0x09, %%rax;"' # sys_mmap
-                '"movq $0x00, %%rdi;"' # NULL
-                '"movq -0x70(%%rcx), %%rsi;"' # statbuf.st_size
-                '"movq $0x05, %%rdx;"' # PROT_READ | PROT_EXEC
-                '"movq $0x01, %%r10;"' # MAP_SHARED
-                '"movq $0x00, %%r9;"'
-                '"syscall;"'
-
-                ': '
-                ': "r" (path)'
-                ': "rsp", "rax", "rcx", "rdi", "rsi", "rdx", "r10", "r8", "r9");'
-            ]
+            # The following is an assembled and encoded version of the following assembly code:
+            #
+            #
+            # ## Set up a temporary stack frame.
+            # ## Touching %rbp seems to cause a premature exit, so %rcx is used as a temporary base pointer.
+            # ## Also, syscalls typically clobber %rcx so we have to push it every time we invoke the kernel.
+            # movq %rsp,  %rcx
+            # subq $0xb0, %rsp
+            #
+            # ## Open the library as a file descriptor for use with mmap(2).
+            # pushq %rcx
+            # movq $0x02, %rax        # sys_open
+            # leaq (%rip), %rdi       # path
+            # addq $msg - ., %rdi
+            # movq $0x00, %rsi        # O_RDONLY
+            # movq $0x00, %rdx        # No flags.
+            # syscall
+            # popq %rcx
+            #
+            # movq %rax, %rdi         # For sys_fstat
+            # movq %rax, %r8          # For sys_mmap
+            #
+            # ## Get the library's size in bytes for use with mmap(2).
+            # pushq %rcx
+            # movq $0x05, %rax        # sys_fstat
+            # leaq -0xa0(%rcx), %rsi  # statbuf
+            # syscall
+            # popq %rcx
+            #
+            # ## Actually map the library as an executable memory page.
+            # movq $0x09, %rax        # sys_mmap
+            # movq $0x00, %rdi        # NULL
+            # movq -0x70(%rcx), %rsi  # statbuf.st_size
+            # movq $0x05, %rdx        # PROT_READ | PROT_EXEC
+            # movq $0x01, %r10        # MAP_SHARED
+            # movq $0x00, %r9         # No offset
+            # syscall
+            #
+            # ## Wake GDB back up, we've got work to do
+            # int3
+            payload = b"\x48\x89\xe1\x48\x81\xec\xb0\x00\x00\x00\x51\x48" + \
+                      b"\xc7\xc0\x02\x00\x00\x00\x48\x8d\x3d\x00\x00\x00" + \
+                      b"\x00\x48\x81\xc7\x59\x00\x00\x00\x48\xc7\xc6\x00" + \
+                      b"\x00\x00\x00\x48\xc7\xc2\x00\x00\x00\x00\x0f\x05" + \
+                      b"\x59\x48\x89\xc7\x49\x89\xc0\x51\x48\xc7\xc0\x05" + \
+                      b"\x00\x00\x00\x48\x8d\xb1\x60\xff\xff\xff\x0f\x05" + \
+                      b"\x59\x48\xc7\xc0\x09\x00\x00\x00\x48\xc7\xc7\x00" + \
+                      b"\x00\x00\x00\x48\x8b\x71\x90\x48\xc7\xc2\x05\x00" + \
+                      b"\x00\x00\x49\xc7\xc2\x01\x00\x00\x00\x49\xc7\xc1" + \
+                      b"\x00\x00\x00\x00\x0f\x05\xcc"
         else:
-            payload = [
-                'const char *path = "{}";'.format(libs[0].strip())
-            ]
-        gdb.execute("compile " + " ".join(payload), from_tty)
+            # The following is an assembled and encoded version of the following assembly code:
+            payload = b""
 
-        if os.path.islink(libs[0]):
-            if os.path.exists(os.readlink(libs[0])):
-                realpath = os.readlink(libs[0])
-            else:
-                realpath = os.path.join(os.path.dirname(libs[0]),
-                                        os.readlink(libs[0]))
-        else:
-            realpath = libs[0]
+        payload += "/usr/lib/libc.so.6".encode() + b"\x00" # Path will be user-defined soon enough.
+        regs = ScriptUtils.get_general_registers()
+        ip = int(regs.get("rip"), 16) # Or "eip?"
 
-        # FIXME: Communication with GDB compile would probably be
-        # more failsafe than this.
-        for region in SysUtils.get_memory_regions(pid):
-            if region.path == realpath:
-                base_addr = int(common_regexes.memory_regions_base.findall(region.addr)[0], 16)
-                break
-        else:
-            print("Library was not found in address space.")
-            return
+        with open(ScriptUtils.mem_file, "rb+") as memory:
+            memory.seek(ip)
+            backup = memory.read(len(payload))
+            memory.seek(ip)
+            memory.write(payload)
+            memory.flush()
+            # TODO: Continue without hitting the SIGTRAP.
+            memory.seek(ip)
+            memory.write(backup)
 
-        for name, offset in SysUtils.get_dynamic_symbols(libs[0]):
-            track_library_offsets[name] = offset + base_addr
+        gdb.execute("set $rip={}".format(ip))
+
+        # if os.path.islink(libs[0]):
+        #     if os.path.exists(os.readlink(libs[0])):
+        #         realpath = os.readlink(libs[0])
+        #     else:
+        #         realpath = os.path.join(os.path.dirname(libs[0]),
+        #                                 os.readlink(libs[0]))
+        # else:
+        #     realpath = libs[0]
+
+        # for region in SysUtils.get_memory_regions(pid):
+        #     if region.path == realpath:
+        #         base_addr = int(common_regexes.memory_regions_base.findall(region.addr)[0], 16)
+        #         break
+        # else:
+        #     print("Library was not found in address space.")
+        #     return
+
+        # for name, offset in SysUtils.get_dynamic_symbols(libs[0]):
+        #     track_library_offsets[name] = offset + base_addr
 
 
 class Call(gdb.Command):
+    """Usage: pince-call routine arguments ..."""
+
     def __init__(self):
         super(Call, self).__init__("pince-call", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
+        # The `arg` interface is temporary, and this may be moved to GDB_Engine
         args = arg.strip().split(" ")
         if len(args) == 1 and args[0] == "":
-            print("No routine specified!")
             return
-        # TODO: Introspection or explicitly learning the arguments types?
 
         if args[0] not in track_library_offsets:
             print("No such routine!")
             return
 
-        print(track_library_offsets.get(args[0]))
+        print("{} is at {}".format(args[0], track_library_offsets.get(args[0])))
         return
 
         payload = [
