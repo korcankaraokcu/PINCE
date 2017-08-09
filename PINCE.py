@@ -1139,6 +1139,41 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         # Saving the original function because super() doesn't work when we override functions like this
         self.lineEdit.keyPressEvent_original = self.lineEdit.keyPressEvent
         self.lineEdit.keyPressEvent = self.lineEdit_keyPressEvent
+        self.reset_console_text()
+
+    def communicate(self, control=False):
+        if control:
+            console_input = "/Ctrl+C"
+        else:
+            console_input = self.lineEdit.text()
+            self.input_history.append(console_input)
+            self.current_history_index = -1
+        if console_input.lower() == "/clear":
+            self.reset_console_text()
+            return
+        elif console_input.strip().lower() in self.quit_commands:
+            console_output = "pls don't"
+        else:
+            if not control:
+                if self.radioButton_CLI.isChecked():
+                    console_output = GDB_Engine.send_command(console_input, cli_output=True)
+                else:
+                    console_output = GDB_Engine.send_command(console_input)
+                if not console_output:
+                    if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+                        console_output = "Inferior is running"
+            else:
+                GDB_Engine.interrupt_inferior()
+                if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+                    console_output = "Inferior is already stopped"
+                else:
+                    console_output = ""
+        self.textBrowser.append("-->" + console_input)
+        self.textBrowser.append(console_output)
+        self.scroll_to_bottom()
+
+    def reset_console_text(self):
+        self.textBrowser.clear()
         self.textBrowser.append("Hotkeys:")
         self.textBrowser.append("----------------------------")
         self.textBrowser.append("Send=Enter                 |")
@@ -1167,37 +1202,6 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.textBrowser.append("You can change the output mode from bottom right")
         self.textBrowser.append("Note: Changing output mode only affects commands sent. Any other " +
                                 "output coming from external sources(e.g async output) will be shown in MI format")
-
-    def communicate(self, control=False):
-        if control:
-            console_input = "/Ctrl+C"
-        else:
-            console_input = self.lineEdit.text()
-            self.input_history.append(console_input)
-            self.current_history_index = -1
-        if console_input.lower() == "/clear":
-            self.textBrowser.clear()
-            console_output = "Cleared"
-        elif console_input.strip().lower() in self.quit_commands:
-            console_output = "pls don't"
-        else:
-            if not control:
-                if self.radioButton_CLI.isChecked():
-                    console_output = GDB_Engine.send_command(console_input, cli_output=True)
-                else:
-                    console_output = GDB_Engine.send_command(console_input)
-                if not console_output:
-                    if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-                        console_output = "Inferior is running"
-            else:
-                GDB_Engine.interrupt_inferior()
-                if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
-                    console_output = "Inferior is already stopped"
-                else:
-                    console_output = ""
-        self.textBrowser.append("-->" + console_input)
-        self.textBrowser.append(console_output)
-        self.scroll_to_bottom()
 
     def scroll_to_bottom(self):
         cursor = self.textBrowser.textCursor()
