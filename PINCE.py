@@ -1146,7 +1146,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             console_input = "/Ctrl+C"
         else:
             console_input = self.lineEdit.text()
-            self.input_history.append(console_input)
+            self.input_history.insert(-1, console_input)
             self.current_history_index = -1
         if console_input.lower() == "/clear":
             self.reset_console_text()
@@ -1170,6 +1170,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
                     console_output = ""
         self.textBrowser.append("-->" + console_input)
         self.textBrowser.append(console_output)
+        self.lineEdit.clear()
         self.scroll_to_bottom()
 
     def reset_console_text(self):
@@ -1221,8 +1222,6 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
 
     def lineEdit_keyPressEvent(self, e):
         if e.key() == Qt.Key_Up:
-            if self.current_history_index == -1:
-                self.input_history[-1] = self.lineEdit.text()
             try:
                 self.lineEdit.setText(self.input_history[self.current_history_index - 1])
                 self.current_history_index += -1
