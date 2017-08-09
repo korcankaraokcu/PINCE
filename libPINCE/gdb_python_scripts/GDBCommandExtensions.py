@@ -703,6 +703,15 @@ class Load(gdb.Command):
             # The following is an assembled and encoded version of the following assembly code:
             #
             #
+            # ## Push all clobbered registers.
+            # ## %rax isn't pushed as it will contain the library's base address.
+            # pushq %rcx
+            # pushq %rdx
+            # pushq %rdi
+            # pushq %rsi
+            # pushq %r8
+            # pushq %r9
+            #
             # ## Set up a temporary stack frame.
             # ## Touching %rbp seems to cause a premature exit, so %rcx is used as a temporary base pointer.
             # ## Also, syscalls typically clobber %rcx so we have to push it every time we invoke the kernel.
@@ -738,25 +747,40 @@ class Load(gdb.Command):
             # movq $0x00, %r9         # No offset
             # syscall
             #
+            # ## Destroy the temporary stack frame.
+            # addq $0xb0, %rsp
+            #
+            # ## Restore clobbered registers
+            # popq %r9
+            # popq %r8
+            # popq %rsi
+            # popq %rdi
+            # popq %rdx
+            # popq %rcx
+            #
             # ## Wake GDB back up, we've got work to do
             # int3
-            payload = b"\x48\x89\xe1\x48\x81\xec\xb0\x00\x00\x00\x51\x48" + \
-                      b"\xc7\xc0\x02\x00\x00\x00\x48\x8d\x3d\x00\x00\x00" + \
-                      b"\x00\x48\x81\xc7\x59\x00\x00\x00\x48\xc7\xc6\x00" + \
-                      b"\x00\x00\x00\x48\xc7\xc2\x00\x00\x00\x00\x0f\x05" + \
-                      b"\x59\x48\x89\xc7\x49\x89\xc0\x51\x48\xc7\xc0\x05" + \
-                      b"\x00\x00\x00\x48\x8d\xb1\x60\xff\xff\xff\x0f\x05" + \
-                      b"\x59\x48\xc7\xc0\x09\x00\x00\x00\x48\xc7\xc7\x00" + \
-                      b"\x00\x00\x00\x48\x8b\x71\x90\x48\xc7\xc2\x05\x00" + \
-                      b"\x00\x00\x49\xc7\xc2\x01\x00\x00\x00\x49\xc7\xc1" + \
-                      b"\x00\x00\x00\x00\x0f\x05\xcc"
+            payload = b"\x51\x52\x57\x56\x41\x50\x41\x51\x48\x89\xe1\x48" + \
+                      b"\x81\xec\xb0\x00\x00\x00\x51\x48\xc7\xc0\x02\x00" + \
+                      b"\x00\x00\x48\x8d\x3d\x00\x00\x00\x00\x48\x81\xc7" + \
+                      b"\x00\x00\x00\x00\x48\xc7\xc6\x00\x00\x00\x00\x48" + \
+                      b"\xc7\xc2\x00\x00\x00\x00\x0f\x05\x59\x48\x89\xc7" + \
+                      b"\x49\x89\xc0\x51\x48\xc7\xc0\x05\x00\x00\x00\x48" + \
+                      b"\x8d\xb1\x60\xff\xff\xff\x0f\x05\x59\x48\xc7\xc0" + \
+                      b"\x09\x00\x00\x00\x48\xc7\xc7\x00\x00\x00\x00\x48" + \
+                      b"\x8b\x71\x90\x48\xc7\xc2\x05\x00\x00\x00\x49\xc7" + \
+                      b"\xc2\x01\x00\x00\x00\x49\xc7\xc1\x00\x00\x00\x00" + \
+                      b"\x0f\x05\x48\x81\xc4\xb0\x00\x00\x00\x41\x59\x41" + \
+                      b"\x58\x5e\x5f\x5a\x59\xcc"
         else:
             # The following is an assembled and encoded version of the following assembly code:
             payload = b""
 
         payload += "/usr/lib/libc.so.6".encode() + b"\x00" # Path will be user-defined soon enough.
         regs = ScriptUtils.get_general_registers()
+        old_rax = regs.get("rax")
         ip = int(regs.get("rip"), 16) # Or "eip?"
+        gdb.execute("handle SIGTRAP ignore", from_tty, to_string=True)
 
         with open(ScriptUtils.mem_file, "rb+") as memory:
             memory.seek(ip)
@@ -764,11 +788,15 @@ class Load(gdb.Command):
             memory.seek(ip)
             memory.write(payload)
             memory.flush()
-            # TODO: Continue without hitting the SIGTRAP.
+            gdb.execute("x/64i $rip")
+            gdb.execute("c", from_tty, to_string=True)
             memory.seek(ip)
             memory.write(backup)
-
-        gdb.execute("set $rip={}".format(ip))
+            memory.flush()
+            gdb.execute("set $rip={}".format(ip))
+            gdb.execute("set $rax={}".format(old_rax))
+            # regs = ScriptUtils.get_general_registers()
+            # print(regs.get("rax"))
 
         # if os.path.islink(libs[0]):
         #     if os.path.exists(os.readlink(libs[0])):
