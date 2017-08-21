@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from threading import Lock, Thread, Condition
 from time import sleep, time
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import pexpect, os, ctypes, pickle, json, shelve, re
 from . import SysUtils, type_defs, common_regexes
 
@@ -1271,28 +1271,43 @@ def get_breakpoint_info():
         represented as strings except size.
 
     Note:
-        GDB's python API can't detect hardware breakpoints, that's why we are using regexes for this job
+        GDB's python API can't detect hardware breakpoints, that's why we are using parser for this job
     """
     returned_list = []
-    raw_info = send_command("info break")
-    for item in common_regexes.breakpoint_info.findall(raw_info):
-        number, breakpoint_type_1, breakpoint_type_2, other_info, address = item
-        if breakpoint_type_2 == "breakpoint":
+    multiple_break_data = OrderedDict()
+    raw_info = send_command("-break-list")
+    for item in SysUtils.parse_response(raw_info)['payload']['BreakpointTable']['body']:
+        item = defaultdict(lambda: "", item)
+        number, breakpoint_type, disp, enabled, address, what, condition, hit_count = item['number'] \
+            , item['type'], item['disp'], item['enabled'], item['addr'], item['what'], item['cond'], item['times']
+        if address == "<MULTIPLE>":
+            multiple_break_data[number] = (breakpoint_type, disp, condition, hit_count)
+            continue
+        if not breakpoint_type:
+            number = number.split(".")[0]
+            breakpoint_type, disp, condition, hit_count = multiple_break_data[number]
+        if what:
+            address = SysUtils.extract_address(what)
+            if not address:
+                address = convert_symbol_to_address(what)
+        try:
+            int_address = int(address, 16)
+        except ValueError:
+            on_hit = type_defs.on_hit_to_text_dict.get(type_defs.BREAKPOINT_ON_HIT.BREAK)
+        else:
+            on_hit_dict_value = breakpoint_on_hit_dict.get(int_address, type_defs.BREAKPOINT_ON_HIT.BREAK)
+            on_hit = type_defs.on_hit_to_text_dict.get(on_hit_dict_value, "Unknown")
+        if breakpoint_type.find("breakpoint") >= 0:
             size = 1
         else:
-            possible_size = common_regexes.breakpoint_size.search(other_info)
+            possible_size = common_regexes.breakpoint_size.search(what)
             if possible_size:
                 size = int(possible_size.group(1))
             else:
-                size = 4
-        try:
-            condition = breakpoint_condition_dict[int(address, 16)]
-        except KeyError:
-            condition = ""
-        on_hit_dict_value = breakpoint_on_hit_dict.get(int(address, 16), type_defs.BREAKPOINT_ON_HIT.BREAK)
-        on_hit = type_defs.on_hit_to_text_dict.get(on_hit_dict_value, "Unknown")
-        breakpoint_type = breakpoint_type_1 + " " + breakpoint_type_2 if breakpoint_type_1 else breakpoint_type_2
-        returned_list.append(type_defs.tuple_breakpoint_info(number, breakpoint_type, address, size, condition, on_hit))
+                size = 1
+        returned_list.append(
+            type_defs.tuple_breakpoint_info(number, breakpoint_type, disp, enabled, address, size, on_hit, hit_count,
+                                            condition))
     return returned_list
 
 
@@ -1331,8 +1346,11 @@ def hardware_breakpoint_available():
         Check debug registers to determine hardware breakpoint state rather than relying on gdb output because inferior
         might modify it's own debug registers
     """
-    raw_info = send_command("info break")
-    hw_bp_total = len(common_regexes.hw_breakpoint_count.findall(raw_info))
+    breakpoint_info = get_breakpoint_info()
+    hw_bp_total = 0
+    for item in breakpoint_info:
+        if common_regexes.hw_breakpoint_count.search(item.breakpoint_type):
+            hw_bp_total += 1
 
     # Maximum number of hardware breakpoints is limited to 4 in x86 architecture
     return hw_bp_total < 4

@@ -51,12 +51,22 @@
       </column>
       <column>
        <property name="text">
-        <string>Address</string>
+        <string>Type</string>
        </property>
       </column>
       <column>
        <property name="text">
-        <string>Type</string>
+        <string>Disp</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Enabled</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Address</string>
        </property>
       </column>
       <column>
@@ -67,6 +77,11 @@
       <column>
        <property name="text">
         <string>On Hit</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Hit Count</string>
        </property>
       </column>
       <column>

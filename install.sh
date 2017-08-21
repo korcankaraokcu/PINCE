@@ -21,7 +21,7 @@ PKG_NAMES_ALL="python3-setuptools python3-pip"
 PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-pyqt5"
 PKG_NAMES_SUSE="$PKG_NAMES_ALL python3-qt5"
 PKG_NAMES="$PKG_NAMES_DEBIAN"
-PKG_NAMES_PIP="psutil pexpect distorm3"
+PKG_NAMES_PIP="psutil pexpect distorm3 pygdbmi"
 
 LSB_RELEASE="`which lsb_release`"
 if [ -n "$LSB_RELEASE" ] ; then

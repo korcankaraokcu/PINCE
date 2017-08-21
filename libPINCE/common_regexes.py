@@ -40,10 +40,7 @@ thread_info_multiple_threads = compile(r"\*\s+\d+\s+Thread\s+(" + hex_number.pat
 thread_info_single_thread = compile(r"\*\s+\d+\s+process.*" + hex_number_grouped.pattern)
 inferior_pid = compile(r"process\s+(\d+)")
 numbers = compile(r"\d+")
-# 7       acc watchpoint  keep y                      *0x00400f00
-# 13      hw breakpoint   keep y   0x000000000040c435 <_start+4>
-breakpoint_info = compile(r"(\d+)\s+(hw|read|acc)?\s+(watchpoint|breakpoint)(.*)" + hex_number_grouped.pattern)
-hw_breakpoint_count = compile(r"(hw|read|acc)\s+(watchpoint|breakpoint)")
+hw_breakpoint_count = compile(r"(hw|read|acc)")
 breakpoint_size = compile(r"char\[(\d+)\]")
 breakpoint_created = compile(r"breakpoint-created")
 breakpoint_number = compile(r"number=\"(\d+)\"")
