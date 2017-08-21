@@ -25,6 +25,6 @@ before_install:
   - sudo sh install_gdb.sh
   - wget https://bootstrap.pypa.io/get-pip.py
   - sudo python3 get-pip.py
-  - sudo pip3 install psutil pexpect distorm3
+  - sudo pip3 install psutil pexpect distorm3 pygdbmi
 
 script: sudo python3 run_tests.py -c /bin/ls
