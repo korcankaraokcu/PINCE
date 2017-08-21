@@ -29,6 +29,7 @@ import os, shutil, sys, binascii, pickle, json, traceback, re
 from . import type_defs, common_regexes
 from collections import OrderedDict
 from importlib.machinery import SourceFileLoader
+from pygdbmi import gdbmiparser
 
 
 #:tag:Processes
@@ -948,3 +949,19 @@ def execute_script(file_path):
         print(tb)
         return None, tb
     return module, None
+
+
+#:tag:Utilities
+def parse_response(response, line_num=0):
+    """Parses the given GDB/MI output. Wraps gdbmiparser.parse_response
+    GDB_Engine.send_command returns an additional "^done" output because of the "source" command
+    This function is used to get rid of that output before parsing
+
+    Args:
+        response (str): GDB/MI response
+        line_num (int): Which line of the response will be parsed
+
+    Returns:
+        dict: Contents of the dict depends on the response
+    """
+    return gdbmiparser.parse_response(response.splitlines()[line_num])

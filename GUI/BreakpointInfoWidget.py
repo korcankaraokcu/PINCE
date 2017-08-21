@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'BreakpointInfoWidget.ui'
 #
-# Created: Fri Dec  2 21:32:09 2016
-#      by: PyQt5 UI code generator 5.2.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -22,7 +21,7 @@ class Ui_TabWidget(object):
         self.tableWidget_BreakpointInfo.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.tableWidget_BreakpointInfo.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidget_BreakpointInfo.setObjectName("tableWidget_BreakpointInfo")
-        self.tableWidget_BreakpointInfo.setColumnCount(6)
+        self.tableWidget_BreakpointInfo.setColumnCount(9)
         self.tableWidget_BreakpointInfo.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_BreakpointInfo.setHorizontalHeaderItem(0, item)
@@ -36,6 +35,12 @@ class Ui_TabWidget(object):
         self.tableWidget_BreakpointInfo.setHorizontalHeaderItem(4, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_BreakpointInfo.setHorizontalHeaderItem(5, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_BreakpointInfo.setHorizontalHeaderItem(6, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_BreakpointInfo.setHorizontalHeaderItem(7, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_BreakpointInfo.setHorizontalHeaderItem(8, item)
         self.tableWidget_BreakpointInfo.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_BreakpointInfo.verticalHeader().setVisible(False)
         self.tableWidget_BreakpointInfo.verticalHeader().setDefaultSectionSize(16)
@@ -61,14 +66,20 @@ class Ui_TabWidget(object):
         item = self.tableWidget_BreakpointInfo.horizontalHeaderItem(0)
         item.setText(_translate("TabWidget", "No"))
         item = self.tableWidget_BreakpointInfo.horizontalHeaderItem(1)
-        item.setText(_translate("TabWidget", "Address"))
-        item = self.tableWidget_BreakpointInfo.horizontalHeaderItem(2)
         item.setText(_translate("TabWidget", "Type"))
+        item = self.tableWidget_BreakpointInfo.horizontalHeaderItem(2)
+        item.setText(_translate("TabWidget", "Disp"))
         item = self.tableWidget_BreakpointInfo.horizontalHeaderItem(3)
-        item.setText(_translate("TabWidget", "Size"))
+        item.setText(_translate("TabWidget", "Enabled"))
         item = self.tableWidget_BreakpointInfo.horizontalHeaderItem(4)
-        item.setText(_translate("TabWidget", "On Hit"))
+        item.setText(_translate("TabWidget", "Address"))
         item = self.tableWidget_BreakpointInfo.horizontalHeaderItem(5)
+        item.setText(_translate("TabWidget", "Size"))
+        item = self.tableWidget_BreakpointInfo.horizontalHeaderItem(6)
+        item.setText(_translate("TabWidget", "On Hit"))
+        item = self.tableWidget_BreakpointInfo.horizontalHeaderItem(7)
+        item.setText(_translate("TabWidget", "Hit Count"))
+        item = self.tableWidget_BreakpointInfo.horizontalHeaderItem(8)
         item.setText(_translate("TabWidget", "Condition"))
         TabWidget.setTabText(TabWidget.indexOf(self.tab_BreakpointInfo), _translate("TabWidget", "Interactive"))
         TabWidget.setTabText(TabWidget.indexOf(self.tab_RawBreakpointInfo), _translate("TabWidget", "Raw"))

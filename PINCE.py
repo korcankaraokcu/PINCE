@@ -83,11 +83,14 @@ gdb_path = str
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
-BREAK_ADDR_COL = 1
-BREAK_TYPE_COL = 2
-BREAK_SIZE_COL = 3
-BREAK_ON_HIT_COL = 4
-BREAK_COND_COL = 5
+BREAK_TYPE_COL = 1
+BREAK_DISP_COL = 2
+BREAK_ENABLED_COL = 3
+BREAK_ADDR_COL = 4
+BREAK_SIZE_COL = 5
+BREAK_ON_HIT_COL = 6
+BREAK_HIT_COUNT_COL = 7
+BREAK_COND_COL = 8
 
 # row colours for disassemble qtablewidget
 PC_COLOUR = Qt.blue
@@ -2594,10 +2597,13 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         self.tableWidget_BreakpointInfo.setRowCount(len(break_info))
         for row, item in enumerate(break_info):
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_NUM_COL, QTableWidgetItem(item.number))
-            self.tableWidget_BreakpointInfo.setItem(row, BREAK_ADDR_COL, QTableWidgetItem(item.address))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_TYPE_COL, QTableWidgetItem(item.breakpoint_type))
+            self.tableWidget_BreakpointInfo.setItem(row, BREAK_DISP_COL, QTableWidgetItem(item.disp))
+            self.tableWidget_BreakpointInfo.setItem(row, BREAK_ENABLED_COL, QTableWidgetItem(item.enabled))
+            self.tableWidget_BreakpointInfo.setItem(row, BREAK_ADDR_COL, QTableWidgetItem(item.address))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_SIZE_COL, QTableWidgetItem(str(item.size)))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_ON_HIT_COL, QTableWidgetItem(item.on_hit))
+            self.tableWidget_BreakpointInfo.setItem(row, BREAK_HIT_COUNT_COL, QTableWidgetItem(item.hit_count))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_COND_COL, QTableWidgetItem(item.condition))
         self.tableWidget_BreakpointInfo.resizeColumnsToContents()
         self.tableWidget_BreakpointInfo.horizontalHeader().setStretchLastSection(True)

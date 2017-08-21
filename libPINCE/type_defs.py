@@ -255,9 +255,10 @@ tag_to_string = collections.OrderedDict([
 
 ])
 
-# number-->str, breakpoint_type-->str, address-->str, size-->int, condition-->str, on_hit-->str
-tuple_breakpoint_info = collections.namedtuple("breakpoint_info",
-                                               "number breakpoint_type address size condition on_hit")
+# number-->str, breakpoint_type-->str, disp-->str, enabled-->str, address-->str, size-->int, condition-->str,
+# on_hit-->str
+tuple_breakpoint_info = collections.namedtuple("breakpoint_info", "number breakpoint_type \
+                                                disp enabled address size on_hit hit_count condition")
 
 # start-->str, end-->str, region-->psutil.Process.memory_maps()[item]
 tuple_region_info = collections.namedtuple("region_info", "start end region")
