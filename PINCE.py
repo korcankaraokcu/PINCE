@@ -1129,7 +1129,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.completer = QCompleter()
         self.completer.setModel(self.completion_model)
         self.completer.setCaseSensitivity(Qt.CaseInsensitive)
-        self.completer.setMaxVisibleItems(50)
+        self.completer.setMaxVisibleItems(8)
         self.lineEdit.setCompleter(self.completer)
         self.quit_commands = ("q", "quit", "-gdb-exit")
         self.input_history = [""]
