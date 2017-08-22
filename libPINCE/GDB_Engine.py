@@ -179,6 +179,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
 
     Returns:
         str: Result of the command sent, commands in the form of "ctrl+key" always returns a null string
+        ???: If recv_with_file is True. Content of the returned thing depends on the command sent
 
     Note:
         File communication system is used to avoid BEL emitting bug of pexpect. If you send more than a certain amount
