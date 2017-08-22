@@ -1981,3 +1981,19 @@ def search_referenced_calls(searched_str, ignore_case=True, enable_regex=False):
     """
     param_str = (searched_str, ignore_case, enable_regex)
     return send_command("pince-search-referenced-calls " + str(param_str), recv_with_file=True)
+
+
+def complete_command(gdb_command):
+    """Tries to complete the given gdb command and returns completion possibilities
+
+    Args:
+        gdb_command (str): The gdb command that'll be completed
+
+    Returns:
+        list: Possible completions as a list of str
+    """
+    returned_list = []
+    for item in send_command("complete " + gdb_command, cli_output=True).splitlines():
+        if not common_regexes.max_completions_reached.search(item):
+            returned_list.append(item)
+    return returned_list

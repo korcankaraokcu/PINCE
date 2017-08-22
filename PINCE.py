@@ -21,9 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
     QIntValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
-    QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip, QTreeWidgetItem
+    QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip, QTreeWidgetItem, \
+    QCompleter
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
-    QItemSelectionModel, QTimer, QModelIndex
+    QItemSelectionModel, QTimer, QModelIndex, QStringListModel
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io
 
@@ -1124,6 +1125,12 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         global instances
         instances.append(self)
         GuiUtils.center(self)
+        self.completion_model = QStringListModel()
+        self.completer = QCompleter()
+        self.completer.setModel(self.completion_model)
+        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.completer.setMaxVisibleItems(50)
+        self.lineEdit.setCompleter(self.completer)
         self.quit_commands = ("q", "quit", "-gdb-exit")
         self.input_history = [""]
         self.current_history_index = -1
@@ -1138,6 +1145,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.shortcut_send_ctrl.activated.connect(lambda: self.communicate(control=True))
         self.shortcut_multiline_mode = QShortcut(QKeySequence("Ctrl+Return"), self)
         self.shortcut_multiline_mode.activated.connect(self.enter_multiline_mode)
+        self.lineEdit.textEdited.connect(self.complete_command)
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.lineEdit.keyPressEvent_original = self.lineEdit.keyPressEvent
@@ -1237,6 +1245,13 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             self.current_history_index += 1
         else:
             self.lineEdit.keyPressEvent_original(e)
+
+    def complete_command(self):
+        if GDB_Engine.gdb_initialized and GDB_Engine.currentpid != -1 and self.lineEdit.text() and \
+                        GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+            self.completion_model.setStringList(GDB_Engine.complete_command(self.lineEdit.text()))
+        else:
+            self.completion_model.setStringList([])
 
     def closeEvent(self, QCloseEvent):
         global instances
