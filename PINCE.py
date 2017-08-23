@@ -1141,11 +1141,13 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.pushButton_SendCtrl.clicked.connect(lambda: self.communicate(control=True))
         self.shortcut_send = QShortcut(QKeySequence("Return"), self)
         self.shortcut_send.activated.connect(self.communicate)
+        self.shortcut_complete_command = QShortcut(QKeySequence("Tab"), self)
+        self.shortcut_complete_command.activated.connect(self.complete_command)
         self.shortcut_send_ctrl = QShortcut(QKeySequence("Ctrl+C"), self)
         self.shortcut_send_ctrl.activated.connect(lambda: self.communicate(control=True))
         self.shortcut_multiline_mode = QShortcut(QKeySequence("Ctrl+Return"), self)
         self.shortcut_multiline_mode.activated.connect(self.enter_multiline_mode)
-        self.lineEdit.textEdited.connect(self.complete_command)
+        self.lineEdit.textEdited.connect(self.finish_completion)
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.lineEdit.keyPressEvent_original = self.lineEdit.keyPressEvent
@@ -1191,6 +1193,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.textBrowser.append("Send=Enter                 |")
         self.textBrowser.append("Send ctrl+c=Ctrl+C         |")
         self.textBrowser.append("Multi-line mode=Ctrl+Enter |")
+        self.textBrowser.append("Complete command=Tab       |")
         self.textBrowser.append("----------------------------")
         self.textBrowser.append("Commands:")
         self.textBrowser.append("----------------------------------------------------------")
@@ -1246,12 +1249,16 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         else:
             self.lineEdit.keyPressEvent_original(e)
 
+    def finish_completion(self):
+        self.completion_model.setStringList([])
+
     def complete_command(self):
         if GDB_Engine.gdb_initialized and GDB_Engine.currentpid != -1 and self.lineEdit.text() and \
                         GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
             self.completion_model.setStringList(GDB_Engine.complete_command(self.lineEdit.text()))
+            self.completer.complete()
         else:
-            self.completion_model.setStringList([])
+            self.finish_completion()
 
     def closeEvent(self, QCloseEvent):
         global instances
