@@ -611,7 +611,7 @@ class MainForm(QMainWindow, MainWindow):
             label_text = "Enter the new value"
             if type_defs.VALUE_INDEX.is_string(value_index):
                 label_text += "\nPINCE doesn't automatically insert a null terminated string at the end" \
-                              "\nCopy-paste this character (\0) if you need to insert it at somewhere"
+                              "\nCopy-paste this character(\0) if you need to insert it at somewhere"
             dialog = InputDialogForm(label_text=label_text, hide_line_edit=False,
                                      line_edit_text=value, parse_string=True, value_index=value_index)
             if dialog.exec_():
