@@ -109,6 +109,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - 26/12/2016 : Debugging is finished(At basic level)  
 
 # Current Roadmap
+- Create loseless codecs for all unicode types
 - Refactorize memory write/read functions
 - Implement selectionChanged signal of lineEdit_HexView
 - Implement multi selection for HexView
