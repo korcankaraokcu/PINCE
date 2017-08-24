@@ -110,6 +110,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 
 # Current Roadmap
 - Create loseless codecs for all unicode types
+- Indent docstrings properly like GDB_Engine.get_breakpoint_info does
 - Refactorize memory write/read functions
 - Implement selectionChanged signal of lineEdit_HexView
 - Implement multi selection for HexView
