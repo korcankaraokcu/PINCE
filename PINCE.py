@@ -565,6 +565,7 @@ class MainForm(QMainWindow, MainWindow):
     def on_inferior_exit(self):
         if GDB_Engine.currentpid == -1:
             self.on_status_running()
+            GDB_Engine.init_gdb(gdb_path)
             self.label_SelectedProcess.setText("No Process Selected")
 
     def on_status_stopped(self):
