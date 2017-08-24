@@ -44,7 +44,6 @@ hw_breakpoint_count = compile(r"(hw|read|acc)")
 breakpoint_size = compile(r"char\[(\d+)\]")
 breakpoint_created = compile(r"breakpoint-created")
 breakpoint_number = compile(r"number=\"(\d+)\"")
-breakpoint_modified = compile(r"breakpoint-modified")
 convenience_variable = compile(r'"(\$\d+)\s+=\s+(.*)"')  # "$26 = 3"
 convenience_variable_cli = compile(r'(\$\d+)\s+=\s+(.*)')  # $26 = 3
 entry_point = compile(r"Entry\s+point:\s+" + hex_number_grouped.pattern)
