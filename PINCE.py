@@ -1708,10 +1708,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         program_counter = GDB_Engine.convert_symbol_to_address("$pc")
         program_counter_int = int(program_counter, 16)
         row_colour = {}
-        breakpoint_list = []
         breakpoint_info = GDB_Engine.get_breakpoint_info()
-        for item in breakpoint_info:
-            breakpoint_list.append(int(item.address, 16))
 
         # TODO: Change this nonsense when the huge refactorization happens
         current_first_address = SysUtils.extract_address(disas_data[0][0])  # address of first list entry
@@ -1783,13 +1780,23 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     item[0] = "(M)" + item[0]
                     comment = self.tableWidget_Disassemble.bookmarks[bookmark_item]
                     break
-            for breakpoint in breakpoint_list:
-                if current_address == breakpoint:
+            for breakpoint in breakpoint_info:
+                int_breakpoint_address = int(breakpoint.address, 16)
+                if current_address == int_breakpoint_address:
                     try:
                         row_colour[row].append(BREAKPOINT_COLOUR)
                     except KeyError:
                         row_colour[row] = [BREAKPOINT_COLOUR]
-                    item[0] = "(B)" + item[0]
+                    breakpoint_mark = "(B"
+                    if breakpoint.enabled == "n":
+                        breakpoint_mark += "-disabled"
+                    else:
+                        if breakpoint.disp != "keep":
+                            breakpoint_mark += "-" + breakpoint.disp
+                        if breakpoint.enable_count:
+                            breakpoint_mark += "-" + breakpoint.enable_count
+                    breakpoint_mark += ")"
+                    item[0] = breakpoint_mark + item[0]
                     break
             if current_address == self.disassemble_last_selected_address_int:
                 self.tableWidget_Disassemble.selectRow(row)
@@ -1903,7 +1910,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                                            line_edit_text=condition_line_edit_text, label_alignment=Qt.AlignLeft)
         if condition_dialog.exec_():
             condition = condition_dialog.get_values()
-            if not GDB_Engine.add_breakpoint_condition(hex(int_address), condition):
+            if not GDB_Engine.modify_breakpoint(hex(int_address), type_defs.BREAKPOINT_MODIFY.CONDITION,
+                                                condition=condition):
                 QMessageBox.information(self, "Error", "Failed to set condition for address " + hex(int_address) +
                                         "\nCheck terminal for details")
 
@@ -2643,7 +2651,8 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
 
         if event.key() == Qt.Key_Delete:
             if current_address is not None:
-                self.delete_breakpoint(current_address)
+                GDB_Engine.delete_breakpoint(current_address)
+                self.refresh_all()
         elif event.key() == Qt.Key_R:
             self.refresh()
         else:
@@ -2662,9 +2671,20 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         menu = QMenu()
         if current_address is None:
             change_condition = -1
+            enable = -1
+            disable = -1
+            enable_once = -1
+            enable_count = -1
+            enable_delete = -1
             delete_breakpoint = -1
         else:
             change_condition = menu.addAction("Change condition of this breakpoint")
+            enable = menu.addAction("Enable this breakpoint")
+            disable = menu.addAction("Disable this breakpoint")
+            enable_once = menu.addAction("Disable this breakpoint after hit")
+            enable_count = menu.addAction("Disable this breakpoint after X hits")
+            enable_delete = menu.addAction("Delete this breakpoint after hit")
+            menu.addSeparator()
             delete_breakpoint = menu.addAction("Delete this breakpoint[Del]")
             menu.addSeparator()
         refresh = menu.addAction("Refresh[R]")
@@ -2672,20 +2692,37 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         if action == change_condition:
-            self.change_condition(current_address_int)
+            self.parent().add_breakpoint_condition(current_address_int)
+        elif action == enable:
+            GDB_Engine.modify_breakpoint(current_address, type_defs.BREAKPOINT_MODIFY.ENABLE)
+        elif action == disable:
+            GDB_Engine.modify_breakpoint(current_address, type_defs.BREAKPOINT_MODIFY.DISABLE)
+        elif action == enable_once:
+            GDB_Engine.modify_breakpoint(current_address, type_defs.BREAKPOINT_MODIFY.ENABLE_ONCE)
+        elif action == enable_count:
+            hit_count_dialog = InputDialogForm(label_text="Enter the hit count(1 or higher)", hide_line_edit=False)
+            if hit_count_dialog.exec_():
+                count = hit_count_dialog.get_values()
+                try:
+                    count = int(count)
+                except ValueError:
+                    QMessageBox.information(self, "Error", "Hit count must be an integer")
+                else:
+                    if count < 1:
+                        QMessageBox.information(self, "Error", "Hit count can't be lower than 1")
+                    else:
+                        GDB_Engine.modify_breakpoint(current_address, type_defs.BREAKPOINT_MODIFY.ENABLE_COUNT,
+                                                     count=count)
+        elif action == enable_delete:
+            GDB_Engine.modify_breakpoint(current_address, type_defs.BREAKPOINT_MODIFY.ENABLE_DELETE)
         elif action == delete_breakpoint:
-            self.delete_breakpoint(current_address)
-        elif action == refresh:
+            GDB_Engine.delete_breakpoint(current_address)
+        if action == refresh:
             self.refresh()
+        elif action != -1 and action is not None:
+            self.refresh_all()
 
-    def change_condition(self, int_address):
-        self.parent().add_breakpoint_condition(int_address)
-        self.parent().refresh_hex_view()
-        self.parent().refresh_disassemble_view()
-        self.refresh()
-
-    def delete_breakpoint(self, address):
-        GDB_Engine.delete_breakpoint(address)
+    def refresh_all(self):
         self.parent().refresh_hex_view()
         self.parent().refresh_disassemble_view()
         self.refresh()
@@ -2696,7 +2733,8 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         current_address_int = int(current_address, 16)
 
         if index.column() == BREAK_COND_COL:
-            self.change_condition(current_address_int)
+            self.parent().add_breakpoint_condition(current_address_int)
+            self.refresh_all()
         else:
             current_breakpoint_type = self.tableWidget_BreakpointInfo.item(index.row(), BREAK_TYPE_COL).text()
             if "breakpoint" in current_breakpoint_type:

@@ -195,19 +195,6 @@ def change_text_length(string, length):
 
 
 #:tag:GUI
-def remove_bookmark_mark(string):
-    """Removes the bookmark mark from the given string
-
-    Args:
-        string (str): String that'll be cleansed from the bookmark mark
-
-    Returns:
-        str: Remaining str after the cleansing
-    """
-    return common_regexes.bookmark_mark.sub("", string, count=1)
-
-
-#:tag:GUI
 def contains_reference_mark(string):
     """Checks if given string contains the reference mark
 

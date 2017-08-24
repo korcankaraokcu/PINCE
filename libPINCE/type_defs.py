@@ -84,6 +84,15 @@ class BREAKPOINT_ON_HIT:
     TRACE = 4
 
 
+class BREAKPOINT_MODIFY:
+    CONDITION = 1
+    ENABLE = 2
+    DISABLE = 3
+    ENABLE_ONCE = 4
+    ENABLE_COUNT = 5
+    ENABLE_DELETE = 6
+
+
 class STEP_MODE:
     SINGLE_STEP = 1
     STEP_OVER = 2
@@ -255,10 +264,9 @@ tag_to_string = collections.OrderedDict([
 
 ])
 
-# number-->str, breakpoint_type-->str, disp-->str, enabled-->str, address-->str, size-->int, condition-->str,
-# on_hit-->str
+# size-->int, any other field-->str
 tuple_breakpoint_info = collections.namedtuple("breakpoint_info", "number breakpoint_type \
-                                                disp enabled address size on_hit hit_count condition")
+                                                disp enabled address size on_hit hit_count enable_count condition")
 
 # start-->str, end-->str, region-->psutil.Process.memory_maps()[item]
 tuple_region_info = collections.namedtuple("region_info", "start end region")
