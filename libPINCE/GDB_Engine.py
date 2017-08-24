@@ -1258,10 +1258,20 @@ def get_breakpoint_info():
     """Returns current breakpoint/watchpoint list
 
     Returns:
-        list: A list of type_defs.tuple_breakpoint_info where number is the gdb breakpoint number, breakpoint_type is
-        the breakpoint type, address is the address of breakpoint, size is the size of breakpoint, condition is the
-        condition of breakpoint and the on_hit is the action that'll happen when the breakpoint is reached, all
-        represented as strings except size.
+        list: A list of type_defs.tuple_breakpoint_info where;
+            number is the gdb breakpoint number
+            breakpoint_type is the breakpoint type
+            disp shows what will be done after breakpoint hits
+            enabled shows if the breakpoint enabled or disabled
+            address is the address of breakpoint
+            size is the size of breakpoint
+            on_hit is the action that'll happen when the breakpoint is reached
+            hit_count shows how many times the breakpoint has been hit
+            enable_count shows how many times the breakpoint will get hit before it gets disabled
+            condition is the condition of breakpoint
+
+            size-->int
+            everything else-->str
 
     Note:
         GDB's python API can't detect hardware breakpoints, that's why we are using parser for this job
@@ -1271,8 +1281,9 @@ def get_breakpoint_info():
     raw_info = send_command("-break-list")
     for item in SysUtils.parse_response(raw_info)['payload']['BreakpointTable']['body']:
         item = defaultdict(lambda: "", item)
-        number, breakpoint_type, disp, enabled, address, what, condition, hit_count = item['number'] \
-            , item['type'], item['disp'], item['enabled'], item['addr'], item['what'], item['cond'], item['times']
+        number, breakpoint_type, disp, enabled, address, what, condition, hit_count, enable_count = \
+            item['number'], item['type'], item['disp'], item['enabled'], item['addr'], item['what'], item['cond'], \
+            item['times'], item['enable']
         if address == "<MULTIPLE>":
             multiple_break_data[number] = (breakpoint_type, disp, condition, hit_count)
             continue
@@ -1300,7 +1311,7 @@ def get_breakpoint_info():
                 size = 1
         returned_list.append(
             type_defs.tuple_breakpoint_info(number, breakpoint_type, disp, enabled, address, size, on_hit, hit_count,
-                                            condition))
+                                            enable_count, condition))
     return returned_list
 
 
@@ -1450,20 +1461,29 @@ def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TY
 
 
 #:tag:BreakWatchpoints
-def add_breakpoint_condition(expression, condition):
+def modify_breakpoint(expression, modify_what, condition=None, count=None):
     """Adds a condition to the breakpoint at the address evaluated by the given expression
 
     Args:
         expression (str): Any gdb expression
-        condition (str): Any gdb condition expression
+        modify_what (int): Can be a member of type_defs.BREAKPOINT_MODIFY_TYPES
+        This function modifies condition of the breakpoint if CONDITION, enables the breakpoint if ENABLE, disables the
+        breakpoint if DISABLE, enables once then disables after hit if ENABLE_ONCE, enables for specified count then
+        disables after the count is reached if ENABLE_COUNT, enables once then deletes the breakpoint if ENABLE_DELETE
+        condition (str): Any gdb condition expression. This parameter is only used if modify_what passed as CONDITION
+        count (int): Only used if modify_what passed as ENABLE_COUNT
 
     Returns:
         bool: True if the condition has been set successfully, False otherwise
 
     Examples:
+        modify_what-->type_defs.BREAKPOINT_MODIFY_TYPES.CONDITION
         condition-->$eax==0x523
         condition-->$rax>0 && ($rbp<0 || $rsp==0)
         condition-->printf($r10)==3
+
+        modify_what-->type_defs.BREAKPOINT_MODIFY_TYPES.ENABLE_COUNT
+        count-->10
     """
     str_address = convert_symbol_to_address(expression)
     if str_address == None:
@@ -1483,7 +1503,30 @@ def add_breakpoint_condition(expression, condition):
             continue
         else:
             breakpoint_number = found_breakpoint.number
-        send_command("condition " + breakpoint_number + " " + condition)
+        if modify_what == type_defs.BREAKPOINT_MODIFY.CONDITION:
+            if condition is None:
+                print("Please set condition first")
+                return False
+            send_command("condition " + breakpoint_number + " " + condition)
+        elif modify_what == type_defs.BREAKPOINT_MODIFY.ENABLE:
+            send_command("enable " + breakpoint_number)
+        elif modify_what == type_defs.BREAKPOINT_MODIFY.DISABLE:
+            send_command("disable " + breakpoint_number)
+        elif modify_what == type_defs.BREAKPOINT_MODIFY.ENABLE_ONCE:
+            send_command("enable once " + breakpoint_number)
+        elif modify_what == type_defs.BREAKPOINT_MODIFY.ENABLE_COUNT:
+            if count is None:
+                print("Please set count first")
+                return False
+            elif count < 1:
+                print("Count can't be lower than 1")
+                return False
+            send_command("enable count " + str(count) + " " + breakpoint_number)
+        elif modify_what == type_defs.BREAKPOINT_MODIFY.ENABLE_DELETE:
+            send_command("enable delete " + breakpoint_number)
+        else:
+            print("Parameter modify_what is not valid")
+            return False
     return True
 
 
@@ -1660,7 +1703,7 @@ def trace_instructions(expression, max_trace_count=1000, trigger_condition="", s
     breakpoint = add_breakpoint(expression, on_hit=type_defs.BREAKPOINT_ON_HIT.TRACE)
     if not breakpoint:
         return
-    add_breakpoint_condition(expression, trigger_condition)
+    modify_breakpoint(expression, type_defs.BREAKPOINT_MODIFY.CONDITION, condition=trigger_condition)
     contents_send = (type_defs.TRACE_STATUS.STATUS_IDLE, "Waiting for breakpoint to trigger")
     trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)
     pickle.dump(contents_send, open(trace_status_file, "wb"))

@@ -71,7 +71,6 @@ whitespaces = compile(r"\s+")
 valuetype_length = compile(r"\[(\d+)\]")
 valuetype_nzt = compile(r",NZT")
 reference_mark = compile(r"\{\d*\}")
-bookmark_mark = compile(r"\(M\)")
 
 # --------------------------------------------GDBCommandExtensions------------------------------------------------------
 
