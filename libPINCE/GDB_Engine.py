@@ -56,12 +56,6 @@ breakpoint_on_hit_dict = {}
 
 #:tag:GDBInformation
 #:doc:
-# A dictionary. Holds breakpoint addresses and their conditions
-# Format: {address1:condition1, address2:condition2, ...}
-breakpoint_condition_dict = {}
-
-#:tag:GDBInformation
-#:doc:
 # If an action such as deletion or condition modification happens in one of the breakpoints in a list, others in the
 # same list will get affected as well
 # Format: [[[address1, size1], [address2, size2], ...], [[address1, size1], ...], ...]
@@ -416,7 +410,6 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     global child
     global gdb_initialized
     global breakpoint_on_hit_dict
-    global breakpoint_condition_dict
     global chained_breakpoints
     global gdb_output
     global cancel_send_command
@@ -427,7 +420,6 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     SysUtils.create_PINCE_IPC_PATH(currentpid)
 
     breakpoint_on_hit_dict.clear()
-    breakpoint_condition_dict.clear()
     chained_breakpoints.clear()
     gdb_output = ""
     cancel_send_command = False
@@ -1491,10 +1483,7 @@ def add_breakpoint_condition(expression, condition):
             continue
         else:
             breakpoint_number = found_breakpoint.number
-        output = send_command("condition " + breakpoint_number + " " + condition)
-        if common_regexes.breakpoint_modified.search(output):
-            global breakpoint_condition_dict
-            breakpoint_condition_dict[int(found_breakpoint.address, 16)] = condition
+        send_command("condition " + breakpoint_number + " " + condition)
     return True
 
 
@@ -1528,11 +1517,6 @@ def delete_breakpoint(expression):
             continue
         else:
             breakpoint_number = found_breakpoint.number
-        global breakpoint_condition_dict
-        try:
-            del breakpoint_condition_dict[breakpoint[0]]
-        except KeyError:
-            pass
         global breakpoint_on_hit_dict
         try:
             del breakpoint_on_hit_dict[breakpoint[0]]
