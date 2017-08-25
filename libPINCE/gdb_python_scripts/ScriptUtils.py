@@ -135,7 +135,7 @@ def set_single_address(address, value_index, value):
             data_type = type_defs.index_to_struct_pack_dict.get(value_index, -1)
             write_data = struct.pack(data_type, write_data)
     else:
-        write_data = bytearray(write_data, encoding, option)
+        write_data = write_data.encode(encoding, option)
     FILE = open(mem_file, "rb+")
 
     # Check SetMultipleAddresses class in GDBCommandExtensions.py to see why we moved away the try/except block
