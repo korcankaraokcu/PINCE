@@ -116,6 +116,10 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - - text_to_valuetype is a bad design pattern. Store the information inside the items of tableWidget_AddressTable instead
 - - read_multiple_addresses follows a bad design pattern, use named tuples or something like that
 - - Provide an option to cut BOM bytes when writing to memory with the types UTF-16 and UTF-32
+- - Put a warning for users about replacement bytes for non UTF-8 types
+- - Extend string types with LE and BE variants of UTF-16 and UTF-32
+- - Change comboBox_ValueType string order to be ... String_UTF-8 String_Others Array of Bytes
+- - Implement a custom combobox class for comboBox_ValueType and create a context menu for String_Others item
 - Indent docstrings properly like GDB_Engine.get_breakpoint_info does(independent from other steps)
 - Implement selectionChanged signal of lineEdit_HexView
 - Implement multi selection for HexView
