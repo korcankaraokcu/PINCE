@@ -109,24 +109,29 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - 26/12/2016 : Debugging is finished(At basic level)  
 
 # Current Roadmap
-- Create loseless codecs for all unicode types
-- Indent docstrings properly like GDB_Engine.get_breakpoint_info does
 - Refactorize memory write/read functions
+- - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k. Implement a cache system for it by storing the raw bytes and converting them to desired types as the comboBox_ValueType changes
+- - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
+- - Consider using a class instead of primitive return types to store the raw bytes. This also gets rid of the unnecessary parameter only_bytes
+- - text_to_valuetype is a bad design pattern. Store the information inside the items of tableWidget_AddressTable instead
+- - read_multiple_addresses follows a bad design pattern, use named tuples or something like that
+- - Provide an option to cut BOM bytes when writing to memory with the types UTF-16 and UTF-32
+- Indent docstrings properly like GDB_Engine.get_breakpoint_info does(independent from other steps)
 - Implement selectionChanged signal of lineEdit_HexView
 - Implement multi selection for HexView
 - Extend search_referenced_strings with relative search
 - Move GUI classes of PINCE.py to their own files
 - Implement libPINCE engine
 - Extend tagging system to PINCE GUI functions
-- Implement inject_with_advanced_injection
+- Implement inject_with_advanced_injection(independent from other steps)
 - Implement single-line code injection
 - Implement multi-line code injection
 - Break on/Catch signals and syscalls
 - Execute custom libPINCE scripts on breakpoint/watchpoint trigger
 - Flowcharts based on disassembled output
 - Automatic function bypassing(make it return the desired value, hook specific parts etc.)
-- Implement speedhack
-- Implement unrandomizer
+- Implement speedhack(independent from other steps)
+- Implement unrandomizer(independent from other steps)
 - Implement non-stop Continuous Address Table Update feature
 - Implement memory search(with scanmem)
 - Implement pointer-scan
