@@ -285,6 +285,7 @@ def state_observe_thread():
         command_file = re.escape(SysUtils.get_gdb_command_file(currentpid))
         if common_regexes.gdb_command_source(command_file).search(child.before):
             child.expect_exact("(gdb)")
+            child.before = child.before.strip()
             check_inferior_status()
             gdb_output = child.before
         else:
