@@ -186,11 +186,12 @@ def except_hook(exception_type, value, tb):
         focused_widget = QApplication.focusWidget()
         if focused_widget:
             if exception_type == type_defs.GDBInitializeException:
-                QMessageBox.information(focused_widget, "Error", "GDB isn't initialized yet" +
-                                        "\nCreate or attach to a process to initialize")
+                QMessageBox.information(focused_widget, "Error", "GDB isn't initialized yet")
             elif exception_type == type_defs.InferiorRunningException:
-                QMessageBox.information(focused_widget, "Error", "Process is running" +
-                                        "\nPress " + break_hotkey + " to stop process")
+                error_dialog = InputDialogForm(label_text="Process is running" +
+                                                          "\nPress " + break_hotkey + " to stop process" +
+                                                          "\n\nGo to settings->General to disable this dialog")
+                error_dialog.exec_()
     traceback.print_exception(exception_type, value, tb)
 
 
