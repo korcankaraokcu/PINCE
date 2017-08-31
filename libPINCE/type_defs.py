@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # IMPORTANT: Any constant involving only PINCE.py should be declared in PINCE.py
 
-import collections, os
+import collections, os, queue
 
 
 class CONST_TIME:
@@ -280,3 +280,23 @@ class InferiorRunningException(Exception):
 class GDBInitializeException(Exception):
     def __init__(self, message="GDB not initialized"):
         super(GDBInitializeException, self).__init__(message)
+
+
+class RegisterQueue:
+    def __init__(self):
+        self.queue_list = []
+
+    def register_queue(self):
+        new_queue = queue.Queue()
+        self.queue_list.append(new_queue)
+        return new_queue
+
+    def broadcast_message(self, message):
+        for item in self.queue_list:
+            item.put(message)
+
+    def delete_queue(self, queue_instance):
+        try:
+            self.queue_list.remove(queue_instance)
+        except ValueError:
+            pass

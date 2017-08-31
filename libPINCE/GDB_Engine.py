@@ -70,13 +70,6 @@ lock_send_command = Lock()
 
 #:tag:ConditionsLocks
 #:doc:
-# This condition is notified whenever GDB recieves an async event such as breakpoint modification
-# Use the variable gdb_async_output to read async data
-# See PINCE's AwaitAsyncOutput class for an example
-gdb_async_condition = Condition()
-
-#:tag:ConditionsLocks
-#:doc:
 # This condition is notified whenever status of the inferior changes
 # Use the variable inferior_status to get information about inferior's status
 # See PINCE's CheckInferiorStatus class for an example
@@ -101,9 +94,9 @@ gdb_output = ""
 
 #:tag:GDBInformation
 #:doc:
-# A string. Modified whenever GDB recieves an async event such as breakpoint modification
-# See gdb_async_condition's docstrings
-gdb_async_output = ""
+# An instance of type_defs.RegisterQueue. Updated whenever GDB receives an async event such as breakpoint modification
+# See PINCE's AwaitAsyncOutput class for an example of usage
+gdb_async_output = type_defs.RegisterQueue()
 
 #:tag:GDBInformation
 #:doc:
@@ -234,8 +227,6 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
                     gdb_waiting_for_prompt_condition.wait()
         else:
             output = ""
-        if type(output) == str:
-            output = output.strip()
         time1 = time()
         print(time1 - time0)
         cancel_send_command = False
@@ -265,36 +256,43 @@ def state_observe_thread():
     Also generates output for send_command function
     Should be called by creating a thread. Usually called in initialization process by attach function
     """
-    global inferior_status
-    global child
-    global gdb_output
-    global gdb_async_output
-    while True:
-        with gdb_waiting_for_prompt_condition:
-            gdb_waiting_for_prompt_condition.notify_all()
-        child.expect_exact("(gdb)")
-        if gdb_output_mode is type_defs.GDB_OUTPUT_MODE.UNMUTED:
-            print(child.before)
+
+    def check_inferior_status():
         matches = common_regexes.gdb_state_observe.findall(child.before)
         if len(matches) > 0:
+            global stop_reason
+            global inferior_status
             if matches[-1][0]:  # stopped
-                global stop_reason
                 stop_reason = type_defs.STOP_REASON.DEBUG
                 inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
             else:
                 inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
             with status_changed_condition:
                 status_changed_condition.notify_all()
-        try:
-            # The command will always start with the word "source", check send_command function for the cause
-            command_file = re.escape(SysUtils.get_gdb_command_file(currentpid))
-            gdb_output = common_regexes.split_gdb_command(command_file).split(child.before, 1)[1]
-        except:
+
+    global child
+    global gdb_output
+    while True:
+        child.expect_exact("\r\n")  # A new line for TTY devices
+        child.before = child.before.strip()
+        if not child.before:
+            continue
+        check_inferior_status()
+        if child.before == "(gdb)":
+            with gdb_waiting_for_prompt_condition:
+                gdb_waiting_for_prompt_condition.notify_all()
+            continue
+        command_file = re.escape(SysUtils.get_gdb_command_file(currentpid))
+        if common_regexes.gdb_command_source(command_file).search(child.before):
+            child.expect_exact("(gdb)")
+            check_inferior_status()
+            gdb_output = child.before
+        else:
             if gdb_output_mode is type_defs.GDB_OUTPUT_MODE.ASYNC_OUTPUT_ONLY:
                 print(child.before)
-            with gdb_async_condition:
-                gdb_async_output = child.before
-                gdb_async_condition.notify_all()
+            gdb_async_output.broadcast_message(child.before)
+        if gdb_output_mode is type_defs.GDB_OUTPUT_MODE.UNMUTED:
+            print(child.before)
 
 
 #:tag:GDBCommunication
