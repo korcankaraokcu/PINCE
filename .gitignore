@@ -1,6 +1,7 @@
 __pycache__/
 .idea/*
 *.directory
+*.lprof
 *.py[cod]
 *$py.class
 gdb_pince/*
