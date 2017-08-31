@@ -144,6 +144,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - Embedded tutorial videos
 - Super-Uber-Rad credits roll with chiptune tunes
 - Extend process_stopped signal to separate GUI and libPINCE execution for optimization. Performance tests are required
+- Consider removing the command file layer of IPC system for GDB_Engine.send_command to speed up things(independent from other steps)
 - Consider inheriting QInputDialog instead of QDialog in InputDialogForm
 
 # License
