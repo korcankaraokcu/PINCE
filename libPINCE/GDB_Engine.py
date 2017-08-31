@@ -169,6 +169,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         ???: If recv_with_file is True. Content of the returned thing depends on the command sent
 
     Note:
+        TODO:This bug doesn't seem like to exist anymore. Remove the unnecessary file communication layer of IPC
         File communication system is used to avoid BEL emitting bug of pexpect. If you send more than a certain amount
         of characters to gdb, the input will be sheared at somewhere and gdb won't be receiving all of the input
         Visit this page for more information-->http://pexpect.readthedocs.io/en/stable/commonissues.html
