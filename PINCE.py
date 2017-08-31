@@ -1190,12 +1190,10 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
                         console_output = "Inferior is running"
             else:
                 GDB_Engine.interrupt_inferior()
-                if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
-                    console_output = "Inferior is already stopped"
-                else:
-                    console_output = ""
+                console_output = ""
         self.textBrowser.append("-->" + console_input)
-        self.textBrowser.append(console_output)
+        if console_output:
+            self.textBrowser.append(console_output)
         self.lineEdit.clear()
         self.scroll_to_bottom()
 
