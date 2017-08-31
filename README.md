@@ -144,7 +144,7 @@ sudo apt-get install pyqt5-dev-tools (pyuic5)
 - Embedded tutorial videos
 - Super-Uber-Rad credits roll with chiptune tunes
 - Extend process_stopped signal to separate GUI and libPINCE execution for optimization. Performance tests are required
-- Implement "don't show this messagebox again" option for InferiorRunningException messagebox
+- Consider inheriting QInputDialog instead of QDialog in InputDialogForm
 
 # License
 GPLv3+. See COPYING file for details
