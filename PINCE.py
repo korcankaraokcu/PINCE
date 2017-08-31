@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io
+import os, sys, traceback, signal, re, copy, io, queue
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 
@@ -220,13 +220,25 @@ class AwaitProcessExit(QThread):
 
 # Await async output from gdb
 class AwaitAsyncOutput(QThread):
-    async_output_ready = pyqtSignal()
+    async_output_ready = pyqtSignal(str)
+
+    def __init__(self):
+        super(AwaitAsyncOutput, self).__init__()
+        self.queue_active = True
 
     def run(self):
-        while True:
-            with GDB_Engine.gdb_async_condition:
-                GDB_Engine.gdb_async_condition.wait()
-            self.async_output_ready.emit()
+        async_output_queue = GDB_Engine.gdb_async_output.register_queue()
+        while self.queue_active:
+            try:
+                async_output = async_output_queue.get(timeout=5)
+            except queue.Empty:
+                pass
+            else:
+                self.async_output_ready.emit(async_output)
+        GDB_Engine.gdb_async_output.delete_queue(async_output_queue)
+
+    def stop(self):
+        self.queue_active = False
 
 
 class CheckInferiorStatus(QThread):
@@ -1231,8 +1243,8 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             self.lineEdit.setText(multiline_dialog.get_values())
             self.communicate()
 
-    def on_async_output(self):
-        self.textBrowser.append(GDB_Engine.gdb_async_output)
+    def on_async_output(self, async_output):
+        self.textBrowser.append(async_output)
         self.scroll_to_bottom()
 
     def lineEdit_keyPressEvent(self, e):
@@ -1262,6 +1274,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             self.finish_completion()
 
     def closeEvent(self, QCloseEvent):
+        self.await_async_output_thread.stop()
         global instances
         instances.remove(self)
 
