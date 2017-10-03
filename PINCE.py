@@ -1076,7 +1076,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 return
         elif current_table_update_interval < 0.1:
             if not InputDialogForm(item_list=[("Update interval should be bigger than 0.1 seconds" +
-                                                   "\nSetting update interval less than 0.1 seconds may cause slowness"
+                                                   "\nSetting update interval less than 0.1 seconds may cause slowdown"
                                                    "\nProceed?",)]).exec_():
                 return
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
