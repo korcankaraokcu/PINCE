@@ -1062,7 +1062,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             return
         if current_insturctions_shown < 1:
             QMessageBox.information(self, "Error", "Instruction count cannot be lower than 1" +
-                                    "\nIt would be retarded anyways, wouldn't it?")
+                                    "\nIt would be silly anyway, wouldn't it?")
             return
         if current_table_update_interval < 0:
             QMessageBox.information(self, "Error", "Update interval cannot be a negative number")
