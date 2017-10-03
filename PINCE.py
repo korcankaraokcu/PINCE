@@ -1064,7 +1064,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             QMessageBox.information(self, "Error", "Instruction count cannot be lower than 1" +
                                     "\nIt would be silly anyway, wouldn't it?")
             return
-        if current_table_update_interval < 0:
+        if not self.checkBox_AutoUpdateAddressTable.isChecked():
+            pass
+        elif current_table_update_interval < 0:
             QMessageBox.information(self, "Error", "Update interval cannot be a negative number")
             return
         elif current_table_update_interval == 0:
@@ -1078,7 +1080,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                                                    "\nProceed?",)]).exec_():
                 return
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
-        self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
+        if self.checkBox_AutoUpdateAddressTable.isChecked():
+            self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
         self.settings.setValue("General/show_messagebox_on_exception", self.checkBox_ShowMessageBox.isChecked())
         self.settings.setValue("General/gdb_output_mode", self.comboBox_GDBOutputMode.currentIndex())
         self.settings.setValue("Hotkeys/pause", self.pause_hotkey)
