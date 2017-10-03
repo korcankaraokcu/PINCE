@@ -22,7 +22,7 @@ from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, Q
     QIntValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip, QTreeWidgetItem, \
-    QCompleter
+    QCompleter, QLabel, QLineEdit, QComboBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel
 from time import sleep, time
@@ -188,9 +188,9 @@ def except_hook(exception_type, value, tb):
             if exception_type == type_defs.GDBInitializeException:
                 QMessageBox.information(focused_widget, "Error", "GDB isn't initialized yet")
             elif exception_type == type_defs.InferiorRunningException:
-                error_dialog = InputDialogForm(label_text="Process is running" +
-                                                          "\nPress " + break_hotkey + " to stop process" +
-                                                          "\n\nGo to settings->General to disable this dialog")
+                error_dialog = InputDialogForm(item_list=[("Process is running" +
+                                                           "\nPress " + break_hotkey + " to stop process" +
+                                                           "\n\nGo to settings->General to disable this dialog",)])
                 error_dialog.exec_()
     traceback.print_exception(exception_type, value, tb)
 
@@ -571,7 +571,7 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow.show()
 
     def delete_address_table_contents(self):
-        confirm_dialog = InputDialogForm(label_text="This will clear the contents of address table\nProceed?")
+        confirm_dialog = InputDialogForm(item_list=[("This will clear the contents of address table\nProceed?",)])
         if confirm_dialog.exec_():
             self.tableWidget_AddressTable.setRowCount(0)
 
@@ -626,8 +626,7 @@ class MainForm(QMainWindow, MainWindow):
             if type_defs.VALUE_INDEX.is_string(value_index):
                 label_text += "\nPINCE doesn't automatically insert a null terminated string at the end" \
                               "\nCopy-paste this character(\0) if you need to insert it at somewhere"
-            dialog = InputDialogForm(label_text=label_text, hide_line_edit=False,
-                                     line_edit_text=value, parse_string=True, value_index=value_index)
+            dialog = InputDialogForm(item_list=[(label_text, value)], parsed_index=0, value_index=value_index)
             if dialog.exec_():
                 table_contents = []
                 value_text = dialog.get_values()
@@ -649,8 +648,7 @@ class MainForm(QMainWindow, MainWindow):
 
         elif current_column is DESC_COL:
             description = self.tableWidget_AddressTable.item(current_row, DESC_COL).text()
-            dialog = InputDialogForm(label_text="Enter the new description", hide_line_edit=False,
-                                     line_edit_text=description)
+            dialog = InputDialogForm(item_list=[("Enter the new description", description)])
             if dialog.exec_():
                 description_text = dialog.get_values()
                 selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
@@ -755,16 +753,12 @@ class ProcessForm(QMainWindow, ProcessWindow):
     def pushButton_CreateProcess_clicked(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the target binary")[0]
         if file_path:
-            arg_dialog = InputDialogForm(label_text="Enter the optional arguments", hide_line_edit=False)
+            items = [("Enter the optional arguments", ""), ("LD_PRELOAD .so path (optional)", "")]
+            arg_dialog = InputDialogForm(item_list=items)
             if arg_dialog.exec_():
-                args = arg_dialog.get_values()
+                args, ld_preload_path = arg_dialog.get_values()
             else:
-                args = ""
-            ld_preload_dialog = InputDialogForm(label_text="LD_PRELOAD .so path (optional)", hide_line_edit=False)
-            if ld_preload_dialog.exec_():
-                ld_preload_path = ld_preload_dialog.get_values()
-            else:
-                ld_preload_path = ""
+                args, ld_preload_path = "", ""
             self.setCursor(QCursor(Qt.WaitCursor))
             if GDB_Engine.create_process(file_path, args, ld_preload_path, gdb_path):
                 p = SysUtils.get_process_information(GDB_Engine.currentpid)
@@ -947,26 +941,66 @@ class LoadingDialogForm(QDialog, LoadingDialog):
 
 
 class InputDialogForm(QDialog, InputDialog):
-    def __init__(self, parent=None, label_text="", hide_line_edit=True, line_edit_text="", parse_string=False,
-                 value_index=type_defs.VALUE_INDEX.INDEX_4BYTES, label_alignment=Qt.AlignCenter):
+    # Format of item_list->[(label_str, item_data, label_alignment), ...]
+    # If label_str is None, no label will be created
+    # If item_data is None, no input field will be created. If it's str, a QLineEdit containing the str will be created
+    # If it's a list, a QComboBox with the items in the list will be created, last item of the list should be an integer
+    # that points the current index of the QComboBox, for instance: ["0", "1", 1] will create a QCombobox with the items
+    # "1" and "2" then will set current index to 1 (which is the item "2")
+    # label_alignment is optional
+    def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=type_defs.VALUE_INDEX.INDEX_4BYTES):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.label.setAlignment(label_alignment)
-        self.parse_string = parse_string
+        self.object_list = []
+        for item in item_list:
+            if item[0] is not None:
+                label = QLabel(self)
+                try:
+                    label.setAlignment(item[2])
+                except IndexError:
+                    label.setAlignment(Qt.AlignCenter)
+                label.setText(item[0])
+                label.setTextInteractionFlags(Qt.LinksAccessibleByMouse | Qt.TextSelectableByMouse)
+                self.verticalLayout.addWidget(label)
+            try:
+                item_data = item[1]
+            except IndexError:
+                pass
+            else:
+                if item_data is not None:
+                    if type(item_data) is str:
+                        lineedit = QLineEdit(self)
+                        lineedit.setText(item_data)
+                        self.verticalLayout.addWidget(lineedit)
+                        self.object_list.append(lineedit)
+                    elif type(item_data) is list:
+                        combobox = QComboBox(self)
+                        current_index = item_data.pop()
+                        combobox.addItems(item_data)
+                        combobox.setCurrentIndex(current_index)
+                        self.verticalLayout.addWidget(combobox)
+                        self.object_list.append(combobox)
+        self.adjustSize()
+        self.verticalLayout.removeWidget(self.buttonBox)  # Pushing buttonBox to the end
+        self.verticalLayout.addWidget(self.buttonBox)
+        self.parsed_index = parsed_index
         self.value_index = value_index
-        self.label.setText(str(label_text))
-        if hide_line_edit:
-            self.lineEdit.hide()
-        else:
-            self.lineEdit.setText(str(line_edit_text))
+
+    def get_text(self, item):
+        try:
+            string = item.text()
+        except AttributeError:
+            string = item.currentText()
+        return string
 
     def get_values(self):
-        return self.lineEdit.text()
+        return self.get_text(self.object_list[0]) if len(self.object_list) == 1 else [self.get_text(item) for item in
+                                                                                      self.object_list]
 
     def accept(self):
-        if self.parse_string:
-            string = self.lineEdit.text()
-            if SysUtils.parse_string(string, self.value_index) is None:
+        if self.parsed_index != -1:
+            item = self.object_list[self.parsed_index]
+            if SysUtils.parse_string(self.get_text(item), self.value_index) is None:
                 QMessageBox.information(self, "Error", "Can't parse the input")
                 return
         super(InputDialogForm, self).accept()
@@ -1036,12 +1070,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         elif current_table_update_interval == 0:
 
             # Easter egg #2
-            if not InputDialogForm(label_text="You are asking for it, aren't you?").exec_():
+            if not InputDialogForm(item_list=[("You are asking for it, aren't you?",)]).exec_():
                 return
         elif current_table_update_interval < 0.1:
-            if not InputDialogForm(label_text="Update interval should be bigger than 0.1 seconds" +
-                    "\nSetting update interval less than 0.1 seconds may cause slowness" +
-                    "\n\tProceed?").exec_():
+            if not InputDialogForm(item_list=[("Update interval should be bigger than 0.1 seconds" +
+                                                   "\nSetting update interval less than 0.1 seconds may cause slowness"
+                                                   "\nProceed?",)]).exec_():
                 return
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
@@ -1061,7 +1095,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         selected_gdb_path = self.lineEdit_GDBPath.text()
         current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
         if selected_gdb_path != current_gdb_path:
-            if InputDialogForm(label_text="You have changed the GDB path, reset GDB now?").exec_():
+            if InputDialogForm(item_list=[("You have changed the GDB path, reset GDB now?",)]).exec_():
                 GDB_Engine.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         super(SettingsDialogForm, self).accept()
@@ -1112,7 +1146,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.keySequenceEdit.clear()
 
     def pushButton_ResetSettings_clicked(self):
-        confirm_dialog = InputDialogForm(label_text="This will reset to the default settings\nProceed?")
+        confirm_dialog = InputDialogForm(item_list=[("This will reset to the default settings\nProceed?",)])
         if confirm_dialog.exec_():
             self.reset_settings.emit()
         else:
@@ -1517,8 +1551,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.check_address_in_breakpoints(address):
             GDB_Engine.delete_breakpoint(hex(address))
         else:
-            watchpoint_dialog = InputDialogForm(label_text="Enter the watchpoint length in size of bytes",
-                                                hide_line_edit=False)
+            watchpoint_dialog = InputDialogForm(item_list=[("Enter the watchpoint length in size of bytes", "")])
             if watchpoint_dialog.exec_():
                 user_input = watchpoint_dialog.get_values()
                 user_input_int = SysUtils.parse_string(user_input, type_defs.VALUE_INDEX.INDEX_4BYTES)
@@ -1597,8 +1630,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def exec_hex_view_go_to_dialog(self):
         current_address = hex(self.hex_view_currently_displayed_address)
-        go_to_dialog = InputDialogForm(label_text="Enter the expression", hide_line_edit=False,
-                                       line_edit_text=current_address)
+        go_to_dialog = InputDialogForm(item_list=[("Enter the expression", current_address)])
         if go_to_dialog.exec_():
             expression = go_to_dialog.get_values()
             dest_address = GDB_Engine.convert_symbol_to_address(expression)
@@ -1918,8 +1950,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             condition_line_edit_text = breakpoint.condition
         else:
             condition_line_edit_text = ""
-        condition_dialog = InputDialogForm(label_text=condition_text, hide_line_edit=False,
-                                           line_edit_text=condition_line_edit_text, label_alignment=Qt.AlignLeft)
+        condition_dialog = InputDialogForm(item_list=[(condition_text, condition_line_edit_text, Qt.AlignLeft)])
         if condition_dialog.exec_():
             condition = condition_dialog.get_values()
             if not GDB_Engine.modify_breakpoint(hex(int_address), type_defs.BREAKPOINT_MODIFY.CONDITION,
@@ -2340,8 +2371,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
 
-        go_to_dialog = InputDialogForm(label_text="Enter the expression", hide_line_edit=False,
-                                       line_edit_text=current_address)
+        go_to_dialog = InputDialogForm(item_list=[("Enter the expression", current_address)])
         if go_to_dialog.exec_():
             traveled_exp = go_to_dialog.get_values()
             self.disassemble_expression(traveled_exp, append_to_travel_history=True)
@@ -2350,8 +2380,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if int_address in self.tableWidget_Disassemble.bookmarks:
             QMessageBox.information(self, "Error", "This address has already been bookmarked")
             return
-        comment_dialog = InputDialogForm(label_text="Enter the comment for bookmarked address",
-                                         hide_line_edit=False)
+        comment_dialog = InputDialogForm(item_list=[("Enter the comment for bookmarked address", "")])
         if comment_dialog.exec_():
             comment = comment_dialog.get_values()
         else:
@@ -2361,8 +2390,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def change_bookmark_comment(self, int_address):
         current_comment = self.tableWidget_Disassemble.bookmarks[int_address]
-        comment_dialog = InputDialogForm(label_text="Enter the comment for bookmarked address",
-                                         hide_line_edit=False, line_edit_text=current_comment)
+        comment_dialog = InputDialogForm(item_list=[("Enter the comment for bookmarked address", current_comment)])
         if comment_dialog.exec_():
             new_comment = comment_dialog.get_values()
         else:
@@ -2427,7 +2455,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                      '\n\n$28 is the assigned convenience variable' \
                      '\n4 is the result' \
                      '\nYou can use the assigned variable from the GDB Console'
-        call_dialog = InputDialogForm(label_text=label_text, hide_line_edit=False)
+        call_dialog = InputDialogForm(item_list=[(label_text, "")])
         if call_dialog.exec_():
             result = GDB_Engine.call_function_from_inferior(call_dialog.get_values())
             if result[0]:
@@ -2525,7 +2553,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         if action == add_entry:
-            entry_dialog = InputDialogForm(label_text="Enter the expression", hide_line_edit=False)
+            entry_dialog = InputDialogForm(item_list=[("Enter the expression", "")])
             if entry_dialog.exec_():
                 text = entry_dialog.get_values()
                 address = GDB_Engine.convert_symbol_to_address(text)
@@ -2589,8 +2617,7 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         current_register = current_table_widget.item(current_row, FLOAT_REGISTERS_NAME_COL).text()
         current_value = current_table_widget.item(current_row, FLOAT_REGISTERS_VALUE_COL).text()
         label_text = "Enter the new value of register " + current_register.upper()
-        register_dialog = InputDialogForm(label_text=label_text, hide_line_edit=False,
-                                          line_edit_text=current_value)
+        register_dialog = InputDialogForm(item_list=[(label_text, current_value)])
         if register_dialog.exec_():
             if self.currentWidget() == self.XMM:
                 current_register += ".v4_float"
@@ -2712,7 +2739,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         elif action == enable_once:
             GDB_Engine.modify_breakpoint(current_address, type_defs.BREAKPOINT_MODIFY.ENABLE_ONCE)
         elif action == enable_count:
-            hit_count_dialog = InputDialogForm(label_text="Enter the hit count(1 or higher)", hide_line_edit=False)
+            hit_count_dialog = InputDialogForm(item_list=[("Enter the hit count(1 or higher)", "")])
             if hit_count_dialog.exec_():
                 count = hit_count_dialog.get_values()
                 try:
@@ -2882,7 +2909,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
                      "\n\nAnother example:" \
                      "\nIf you enter '$rax,$rbx*$rcx+4,$rbp'(without quotes)" \
                      "\nPINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]"
-        register_expression_dialog = InputDialogForm(label_text=label_text, hide_line_edit=False)
+        register_expression_dialog = InputDialogForm(item_list=[(label_text, "")])
         if register_expression_dialog.exec_():
             register_expressions = register_expression_dialog.get_values()
         else:
@@ -3284,7 +3311,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
                "\n@plt means this function is a subroutine for the original one" \
                "\nThere can be more than one of the same function" \
                "\nIt means that the function is overloaded"
-        InputDialogForm(label_text=text, label_alignment=Qt.AlignLeft).exec_()
+        InputDialogForm(item_list=[(text, None, Qt.AlignLeft)]).exec_()
 
     def closeEvent(self, QCloseEvent):
         global instances
@@ -3689,7 +3716,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
                "\n'[re]cx' searches for both 'rcx' and 'ecx'" \
                "\nUse the char '\\' to escape special chars such as '['" \
                "\n'\[rsp\]' searches for opcodes that contain '[rsp]'"
-        InputDialogForm(label_text=text, label_alignment=Qt.AlignLeft).exec_()
+        InputDialogForm(item_list=[(text, None, Qt.AlignLeft)]).exec_()
 
     def tableWidget_Opcodes_item_double_clicked(self, index):
         row = index.row()
@@ -3939,7 +3966,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         self.hex_len = 16 if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64 else 8
         str_dict, jmp_dict, call_dict = GDB_Engine.get_dissect_code_data()
         if len(str_dict) == 0 and len(jmp_dict) == 0 and len(call_dict) == 0:
-            confirm_dialog = InputDialogForm(label_text="You need to dissect code first\nProceed?")
+            confirm_dialog = InputDialogForm(item_list=[("You need to dissect code first\nProceed?",)])
             if confirm_dialog.exec_():
                 dissect_code_dialog = DissectCodeDialogForm()
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
@@ -4060,7 +4087,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         self.hex_len = 16 if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64 else 8
         str_dict, jmp_dict, call_dict = GDB_Engine.get_dissect_code_data()
         if len(str_dict) == 0 and len(jmp_dict) == 0 and len(call_dict) == 0:
-            confirm_dialog = InputDialogForm(label_text="You need to dissect code first\nProceed?")
+            confirm_dialog = InputDialogForm(item_list=[("You need to dissect code first\nProceed?",)])
             if confirm_dialog.exec_():
                 dissect_code_dialog = DissectCodeDialogForm()
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)

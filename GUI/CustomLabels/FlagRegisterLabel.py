@@ -40,14 +40,8 @@ class QFlagRegisterLabel(QLabel):
     def mouseDoubleClickEvent(self, QMouseEvent):
         registers = GDB_Engine.read_registers()
         current_flag = self.objectName().lower()
-        label_text = "Enter the new value of flag " + self.objectName() + "(0 or 1)"
-        register_dialog = InputDialogForm(label_text=label_text,
-                                          hide_line_edit=False, line_edit_text=registers[current_flag])
+        label_text = "Enter the new value of flag " + self.objectName()
+        register_dialog = InputDialogForm(item_list=[(label_text, ["0", "1", int(registers[current_flag])])])
         if register_dialog.exec_():
-            result = register_dialog.get_values().strip()
-            if result == "0" or result == "1":
-                GDB_Engine.set_register_flag(current_flag, register_dialog.get_values())
-                self.set_value(GDB_Engine.read_registers()[current_flag])
-            else:
-                QMessageBox.information(self, "Error", "That's clearly not 0 or 1")
-                return
+            GDB_Engine.set_register_flag(current_flag, register_dialog.get_values())
+            self.set_value(GDB_Engine.read_registers()[current_flag])
