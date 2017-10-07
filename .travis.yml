@@ -21,7 +21,8 @@ before_install:
   - make
   - sudo make install
   - cd ..
-  - sudo apt-get install python3-software-properties && add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update && sudo apt-get install gcc-5 g++-5
+  - sudo apt-get install python3-software-properties python-software-properties python-apt python3-apt
+  - add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update && sudo apt-get install gcc-5 g++-5
   - sudo sh install_gdb.sh
   - wget https://bootstrap.pypa.io/get-pip.py
   - sudo python3 get-pip.py
