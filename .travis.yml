@@ -19,7 +19,6 @@ before_install:
   - cd Python-3.4.6
   - sh configure --prefix=/usr --enable-shared
   - make
-  - sudo ln -s /usr/bin/python3.4 /usr/bin/python3
   - sudo make install
   - cd ..
   - add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update && sudo apt-get install gcc-5 g++-5
