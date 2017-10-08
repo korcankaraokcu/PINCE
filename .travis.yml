@@ -14,13 +14,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 before_install:
-  - sudo sed -i '0,/python3/ s//python3.4/' /usr/bin/lsb_release
-  - sudo cat /usr/bin/lsb_release
   - wget https://www.python.org/ftp/python/3.4.6/Python-3.4.6.tgz
   - tar xfz Python-3.4.6.tgz
   - cd Python-3.4.6
   - sh configure --prefix=/usr --enable-shared
   - make
+  - sudo ln -s /usr/bin/python3.4 /usr/bin/python3
   - sudo make install
   - cd ..
   - add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update && sudo apt-get install gcc-5 g++-5
