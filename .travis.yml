@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 before_install:
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update && sudo apt-get install gcc-5 g++-5
   - wget https://www.python.org/ftp/python/3.4.6/Python-3.4.6.tgz
   - tar xfz Python-3.4.6.tgz
   - cd Python-3.4.6
@@ -21,10 +22,20 @@ before_install:
   - make
   - sudo make install
   - cd ..
-  - add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update && sudo apt-get install gcc-5 g++-5
   - sudo sh install_gdb.sh
+
+  # Temporarily mask /usr/bin/lsb_release
+
+  # An exception is raised if the status code is 1, but there is a check
+  # within the Pip installer for status code 127 - indicating that the
+  # command does not exist.
+
+  - sudo mv /usr/bin/lsb_release /usr/bin/lsb_release_masked
+
   - wget https://bootstrap.pypa.io/get-pip.py
   - sudo python3 get-pip.py
   - sudo pip3 install psutil pexpect distorm3 pygdbmi
+
+  - sudo mv /usr/bin/lsb_release_masked /usr/bin/lsb_release
 
 script: sudo python3 run_tests.py -c /bin/ls
