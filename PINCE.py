@@ -81,6 +81,7 @@ code_injection_method = int
 bring_disassemble_to_front = bool
 instructions_per_scroll = int
 gdb_path = str
+user_files_path = str
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -371,6 +372,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.endGroup()
         self.settings.beginGroup("Debug")
         self.settings.setValue("gdb_path", type_defs.PATHS.GDB_PATH)
+        self.settings.setValue("user_files_path", type_defs.USER_PATHS.ROOT_PATH)
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
         self.settings.setValue("version", current_settings_version)
@@ -417,6 +419,7 @@ class MainForm(QMainWindow, MainWindow):
         bring_disassemble_to_front = self.settings.value("Disassemble/bring_disassemble_to_front", type=bool)
         instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
         gdb_path = self.settings.value("Debug/gdb_path", type=str)
+        user_files_path = self.settings.value("Debug/user_files_path", type=str)
 
     def pause_hotkey_pressed(self):
         GDB_Engine.interrupt_inferior(type_defs.STOP_REASON.PAUSE)
@@ -1041,11 +1044,13 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
         icons_directory = GuiUtils.get_icons_directory()
         self.pushButton_GDBPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
+        self.pushButton_UserFilesPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
         self.listWidget_Functions.currentRowChanged.connect(self.listWidget_Functions_current_row_changed)
         self.keySequenceEdit.keySequenceChanged.connect(self.keySequenceEdit_key_sequence_changed)
         self.pushButton_ClearHotkey.clicked.connect(self.pushButton_ClearHotkey_clicked)
         self.pushButton_ResetSettings.clicked.connect(self.pushButton_ResetSettings_clicked)
         self.pushButton_GDBPath.clicked.connect(self.pushButton_GDBPath_clicked)
+        self.pushButton_UserFilesPath.clicked.connect(self.pushButton_UserFilesPath_clicked)
         self.checkBox_AutoUpdateAddressTable.stateChanged.connect(self.checkBox_AutoUpdateAddressTable_state_changed)
         self.config_gui()
 
@@ -1101,6 +1106,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             if InputDialogForm(item_list=[("You have changed the GDB path, reset GDB now?",)]).exec_():
                 GDB_Engine.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
+        selected_user_files_path = self.lineEdit_UserFilesPath.text()
+        self.settings.setValue("Debug/user_files_path", selected_user_files_path)
         super(SettingsDialogForm, self).accept()
 
     def config_gui(self):
@@ -1124,6 +1131,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.lineEdit_InstructionsPerScroll.setText(
             str(self.settings.value("Disassemble/instructions_per_scroll", type=int)))
         self.lineEdit_GDBPath.setText(str(self.settings.value("Debug/gdb_path", type=str)))
+        self.lineEdit_GDBPath.setText(str(self.settings.value("Debug/user_files_path", type=str)))
 
     def change_display(self, index):
         self.stackedWidget.setCurrentIndex(index)
@@ -1167,6 +1175,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         file_path = QFileDialog.getOpenFileName(self, "Select the gdb binary", os.path.dirname(current_path))[0]
         if file_path:
             self.lineEdit_GDBPath.setText(file_path)
+
+    def pushButton_UserFilesPath_clicked(self):
+        current_path = self.lineEdit_UserFilesPath.text()
+        file_path = str(QFileDialog.getExistingDirectory(self, "Select the PINCE_USER_FILES path"))
+        if file_path:
+            self.lineEdit_UserFilesPath.setText(file_path)
 
 
 class ConsoleWidgetForm(QWidget, ConsoleWidget):
