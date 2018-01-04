@@ -96,7 +96,7 @@ sudo apt-get install qttools5-dev-tools (qt5 form designer)
 sudo apt-get install pyqt5-dev-tools (pyuic5)
 sudo pip3 install line_profiler (for performance testing)
 ```
-How to use line_profile: Add ```@profile``` tag to the desired function and run PINCE with ```sudo kernprof -l -v PINCE.py```
+How to use line_profiler: Add ```@profile``` tag to the desired function and run PINCE with ```sudo kernprof -l -v PINCE.py```
 # History
 - A few weeks till 17/01/2016 : Learned GDB, process of analysis
 - 17/01/2016-22/01/2016 : Basic design, grasping of Python3 and Pyqt5, proof-testing
