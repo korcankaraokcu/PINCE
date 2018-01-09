@@ -4,4 +4,4 @@ If you like to install only gdb itself, run "sudo sh install_gdb.sh". "install.s
 
 To run PINCE after installation, run "sh PINCE.sh"
 
-If you like to uninstall PINCE, just delete this folder. Almost everything is installed locally, including gdb. There is only one exception: The "PINCE_USER_FILES" file. It can be found at the home directory, delete it if you like to get rid of PINCE completely
+If you like to uninstall PINCE, just delete this folder. Almost everything is installed locally, including gdb. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them if you want.

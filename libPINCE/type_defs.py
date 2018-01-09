@@ -34,7 +34,7 @@ class PATHS:
 
 class USER_PATHS:
     HOME_PATH = os.path.expanduser("~")
-    ROOT_PATH = HOME_PATH + "/PINCE_USER_FILES/"
+    ROOT_PATH = HOME_PATH + "/.config/PINCE/PINCE_USER_FILES/"
     TRACE_INSTRUCTIONS_PATH = ROOT_PATH + "TraceInstructions/"
     GDBINIT_PATH = ROOT_PATH + "gdbinit"
     GDBINIT_AA_PATH = ROOT_PATH + "gdbinit_after_attach"
