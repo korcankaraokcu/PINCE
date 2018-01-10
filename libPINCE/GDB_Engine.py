@@ -414,6 +414,7 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     global gdb_output
     global cancel_send_command
     global last_gdb_command
+    SysUtils.init_user_files()
     detach()
 
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
@@ -435,7 +436,6 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     status_thread = Thread(target=state_observe_thread)
     status_thread.daemon = True
     status_thread.start()
-    SysUtils.init_user_files()
     gdb_initialized = True
     send_command("source " + type_defs.USER_PATHS.GDBINIT_PATH)
     SysUtils.execute_script(type_defs.USER_PATHS.PINCEINIT_PATH)
