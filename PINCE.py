@@ -281,6 +281,7 @@ class MainForm(QMainWindow, MainWindow):
         QCoreApplication.setOrganizationName("PINCE")
         QCoreApplication.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
         QCoreApplication.setApplicationName("PINCE")
+        QSettings.setPath(QSettings.NativeFormat, QSettings.UserScope, SysUtils.get_user_config_dir())
         self.settings = QSettings()
         if not SysUtils.is_path_valid(self.settings.fileName()):
             self.set_default_settings()

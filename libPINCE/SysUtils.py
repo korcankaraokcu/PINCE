@@ -25,7 +25,7 @@ try:
 except ImportError:
     print("WARNING: GDB couldn't locate the package psutil, psutil based user-defined functions won't work\n" +
           "If you are getting this message without invoking GDB, it means that installation has failed, well, sort of")
-import os, shutil, sys, binascii, pickle, json, traceback, re
+import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, grp
 from . import type_defs, common_regexes
 from collections import OrderedDict
 from importlib.machinery import SourceFileLoader
@@ -920,6 +920,29 @@ def get_user_ids():
     uid = os.getenv("SUDO_UID") or str(os.getuid())
     gid = os.getenv("SUDO_GID") or str(os.getgid())
     return uid, gid
+
+
+#:tag:Utilities
+def get_user_dir():
+    """Returns the home directory of the current user
+
+    Returns:
+        str: Home directory of the current user
+    """
+    uid, _ = get_user_ids()
+    return pwd.getpwuid(int(uid)).pw_dir
+
+
+#:tag:Utilities
+def get_user_config_dir():
+    """Returns the config directory for the current user
+
+    Returns:
+        str: Config directory of the current user
+    """
+    # TODO: Use XDG specification
+    homedir = get_user_dir()
+    return os.path.join(homedir, ".config")
 
 
 #:tag:Tools
