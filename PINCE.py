@@ -281,7 +281,8 @@ class MainForm(QMainWindow, MainWindow):
         QCoreApplication.setOrganizationName("PINCE")
         QCoreApplication.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
         QCoreApplication.setApplicationName("PINCE")
-        QSettings.setPath(QSettings.NativeFormat, QSettings.UserScope, SysUtils.get_user_config_dir())
+        QSettings.setPath(QSettings.NativeFormat, QSettings.UserScope,
+                          SysUtils.get_user_path(type_defs.USER_PATHS.CONFIG_PATH))
         self.settings = QSettings()
         if not SysUtils.is_path_valid(self.settings.fileName()):
             self.set_default_settings()
@@ -3191,7 +3192,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.treeWidget_InstructionInfo.expandAll()
 
     def save_file(self):
-        trace_file_path = type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH
+        trace_file_path = SysUtils.get_user_path(type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH)
         file_path = \
             QFileDialog.getSaveFileName(self, "Save trace file", trace_file_path,
                                         "Trace File (*.trace);;All Files (*)")[0]
@@ -3200,7 +3201,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
                 QMessageBox.information(self, "Error", "Couldn't save the file, check terminal for details")
 
     def load_file(self):
-        trace_file_path = type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH
+        trace_file_path = SysUtils.get_user_path(type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH)
         file_path = \
             QFileDialog.getOpenFileName(self, "Open trace file", trace_file_path,
                                         "Trace File (*.trace);;All Files (*)")[0]

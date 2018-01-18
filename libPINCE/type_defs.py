@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # IMPORTANT: Any constant involving only PINCE.py should be declared in PINCE.py
 
-import collections, os, queue
+import collections, queue
 
 
 class CONST_TIME:
@@ -33,8 +33,10 @@ class PATHS:
 
 
 class USER_PATHS:
-    HOME_PATH = os.path.expanduser("~")
-    ROOT_PATH = HOME_PATH + "/.config/PINCE/PINCE_USER_FILES/"
+    # Use SysUtils.get_user_path() to make use of these
+
+    CONFIG_PATH = ".config/"
+    ROOT_PATH = CONFIG_PATH + "PINCE/PINCE_USER_FILES/"
     TRACE_INSTRUCTIONS_PATH = ROOT_PATH + "TraceInstructions/"
     GDBINIT_PATH = ROOT_PATH + "gdbinit"
     GDBINIT_AA_PATH = ROOT_PATH + "gdbinit_after_attach"
