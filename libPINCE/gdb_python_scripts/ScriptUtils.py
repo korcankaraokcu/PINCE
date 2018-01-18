@@ -21,6 +21,8 @@ from collections import OrderedDict
 # This is some retarded hack
 gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
 PINCE_PATH = gdbvalue.string()
+gdbvalue = gdb.parse_and_eval("$GDBINIT_AA_PATH")
+GDBINIT_AA_PATH = gdbvalue.string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
 from libPINCE import SysUtils, type_defs, common_regexes
@@ -44,9 +46,9 @@ else:
 # If you have to load a .gdbinit file, just load it in this function with command "source"
 def gdbinit():
     try:
-        gdb.execute("source " + type_defs.USER_PATHS.GDBINIT_AA_PATH)
-    except:
-        pass
+        gdb.execute("source " + GDBINIT_AA_PATH)
+    except Exception as e:
+        print(e)
     gdb.execute("set disassembly-flavor intel")
     gdb.execute("set case-sensitive auto")
     gdb.execute("set code-cache off")

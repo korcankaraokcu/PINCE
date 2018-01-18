@@ -437,8 +437,8 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
     status_thread.daemon = True
     status_thread.start()
     gdb_initialized = True
-    send_command("source " + type_defs.USER_PATHS.GDBINIT_PATH)
-    SysUtils.execute_script(type_defs.USER_PATHS.PINCEINIT_PATH)
+    send_command("source " + SysUtils.get_user_path(type_defs.USER_PATHS.GDBINIT_PATH))
+    SysUtils.execute_script(SysUtils.get_user_path(type_defs.USER_PATHS.PINCEINIT_PATH))
     if additional_commands:
         send_command(additional_commands)
 
@@ -455,12 +455,15 @@ def create_gdb_log_file(pid):
 
 
 #:tag:GDBCommunication
-def set_pince_path():
-    """Initializes $PINCE_PATH convenience variable to make commands in GDBCommandExtensions.py work
-    GDB scripts needs to know libPINCE directory, unfortunately they don't start from the place where script exists
+def set_pince_paths():
+    """Initializes $PINCE_PATH and $GDBINIT_AA_PATH convenience variables to make commands in GDBCommandExtensions.py
+    and ScriptUtils.py work. GDB scripts need to know libPINCE and .config directories, unfortunately they don't start
+    from the place where script exists
     """
     libpince_dir = SysUtils.get_libpince_directory()
     pince_dir = os.path.dirname(libpince_dir)
+    gdbinit_aa_dir = SysUtils.get_user_path(type_defs.USER_PATHS.GDBINIT_AA_PATH)
+    send_command('set $GDBINIT_AA_PATH=' + '"' + gdbinit_aa_dir + '"')
     send_command('set $PINCE_PATH=' + '"' + pince_dir + '"')
     send_command("source gdb_python_scripts/GDBCommandExtensions.py")
 
@@ -519,7 +522,7 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     SysUtils.create_PINCE_IPC_PATH(pid)
     create_gdb_log_file(pid)
     send_command("attach " + str(pid))
-    set_pince_path()
+    set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
     await_exit_thread = Thread(target=await_process_exit)
@@ -527,7 +530,7 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     await_exit_thread.start()
     result_message = "Successfully attached to the process with PID " + str(currentpid)
     print(result_message)
-    SysUtils.execute_script(type_defs.USER_PATHS.PINCEINIT_AA_PATH)
+    SysUtils.execute_script(SysUtils.get_user_path(type_defs.USER_PATHS.PINCEINIT_AA_PATH))
     return type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL, result_message
 
 
@@ -579,13 +582,13 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
     currentpid = int(pid)
     SysUtils.create_PINCE_IPC_PATH(pid)
     create_gdb_log_file(pid)
-    set_pince_path()
+    set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
     await_exit_thread = Thread(target=await_process_exit)
     await_exit_thread.daemon = True
     await_exit_thread.start()
-    SysUtils.execute_script(type_defs.USER_PATHS.PINCEINIT_AA_PATH)
+    SysUtils.execute_script(SysUtils.get_user_path(type_defs.USER_PATHS.PINCEINIT_AA_PATH))
     return True
 
 
@@ -602,7 +605,7 @@ def detach():
         inferior_status = -1
         gdb_initialized = False
         child.close()
-    SysUtils.chown_to_user(type_defs.USER_PATHS.ROOT_PATH, recursive=True)
+    SysUtils.chown_to_user(SysUtils.get_user_path(type_defs.USER_PATHS.ROOT_PATH), recursive=True)
     print("Detached from the process with PID:" + str(old_pid))
 
 

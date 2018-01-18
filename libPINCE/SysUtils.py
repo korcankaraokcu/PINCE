@@ -25,7 +25,7 @@ try:
 except ImportError:
     print("WARNING: GDB couldn't locate the package psutil, psutil based user-defined functions won't work\n" +
           "If you are getting this message without invoking GDB, it means that installation has failed, well, sort of")
-import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, grp
+import os, shutil, sys, binascii, pickle, json, traceback, re, pwd
 from . import type_defs, common_regexes
 from collections import OrderedDict
 from importlib.machinery import SourceFileLoader
@@ -889,13 +889,14 @@ def get_module_name(module):
 def init_user_files():
     """Initializes user files"""
     for directory in type_defs.USER_PATHS.get_init_directories():
-        is_path_valid(directory, "create")
+        is_path_valid(get_user_path(directory), "create")
     for file in type_defs.USER_PATHS.get_init_files():
+        file = get_user_path(file)
         try:
             open(file).close()
         except FileNotFoundError:
             open(file, "w").close()
-    chown_to_user(type_defs.USER_PATHS.ROOT_PATH, recursive=True)
+    chown_to_user(get_user_path(type_defs.USER_PATHS.ROOT_PATH), recursive=True)
 
 
 #:tag:Utilities
@@ -923,7 +924,7 @@ def get_user_ids():
 
 
 #:tag:Utilities
-def get_user_dir():
+def get_user_home_dir():
     """Returns the home directory of the current user
 
     Returns:
@@ -934,15 +935,18 @@ def get_user_dir():
 
 
 #:tag:Utilities
-def get_user_config_dir():
-    """Returns the config directory for the current user
+def get_user_path(user_path):
+    """Returns the specified user path for the current user
+
+    Args:
+        user_path (str): Can be a member of type_defs.USER_PATHS
 
     Returns:
-        str: Config directory of the current user
+        str: Specified user path of the current user
     """
     # TODO: Use XDG specification
-    homedir = get_user_dir()
-    return os.path.join(homedir, ".config")
+    homedir = get_user_home_dir()
+    return os.path.join(homedir, user_path)
 
 
 #:tag:Tools
