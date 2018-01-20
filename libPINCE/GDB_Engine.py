@@ -119,7 +119,7 @@ gdb_output_mode = type_defs.GDB_OUTPUT_MODE.UNMUTED
 When PINCE was first launched, it used gdb 7.7.1, which is a very outdated version of gdb
 interpreter-exec mi command of gdb showed some buggy behaviour at that time
 Because of that, PINCE couldn't support gdb/mi commands for a while
-But PINCE now uses gdb 8.0 and interpreter-exec seems to work much better
+But PINCE is now updated with the new versions of gdb as much as possible and the interpreter-exec works much better
 So, old parts of codebase still get their required information by parsing gdb console output
 New parts can try to rely on gdb/mi output
 '''
