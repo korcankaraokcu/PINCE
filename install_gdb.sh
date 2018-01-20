@@ -39,14 +39,14 @@ if [ $? -gt 0 ]; then
     sudo apt-get install gcc-5 g++-5
     if [ $? -gt 0 ]; then
         echo "Failed to install gcc-5 or g++-5, aborting..."
-        exit
+        exit 1
     fi
 fi
 
 CC=gcc-5 CXX=g++-5 ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
 if [ ! -e bin/gdb ] ; then
     echo "Failed to install GDB, restart the installation process"
-    exit
+    exit 1
 fi
 
 # In case of python part of gdb installation fails

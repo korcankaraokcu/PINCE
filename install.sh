@@ -15,6 +15,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
+
+install_gdb () {
+if ! sudo sh install_gdb.sh ; then
+    echo "Failed to install PINCE"
+    exit 1
+fi
+}
+
 OS_NAME="Debian"
 PKG_MGR="apt-get"
 PKG_NAMES_ALL="python3-setuptools python3-pip"
@@ -42,10 +50,10 @@ if [ -e libPINCE/gdb_pince/gdb-8.0/bin/gdb ] ; then
     echo "GDB has been already compiled&installed, recompile&install? (y/n)"
     read answer
     if echo "$answer" | grep -iq "^[Yy]" ;then
-        sudo sh install_gdb.sh
+        install_gdb
     fi
 else
-    sudo sh install_gdb.sh
+    install_gdb
 fi
 
 echo "PINCE has been installed successfully!"
