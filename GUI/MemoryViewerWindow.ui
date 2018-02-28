@@ -1562,6 +1562,8 @@
     <addaction name="actionExecute_Till_Return"/>
     <addaction name="actionToggle_Breakpoint"/>
     <addaction name="actionSet_Address"/>
+    <addaction name="separator"/>
+    <addaction name="actionToggle_Attach"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -1694,6 +1696,11 @@
   <action name="actionReferenced_Calls">
    <property name="text">
     <string>Referenced &amp;Calls</string>
+   </property>
+  </action>
+  <action name="actionToggle_Attach">
+   <property name="text">
+    <string>Toggle Attach</string>
    </property>
   </action>
  </widget>

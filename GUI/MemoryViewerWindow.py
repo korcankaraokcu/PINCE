@@ -758,6 +758,8 @@ class Ui_MainWindow_MemoryView(object):
         self.actionReferenced_Strings.setObjectName("actionReferenced_Strings")
         self.actionReferenced_Calls = QtWidgets.QAction(MainWindow_MemoryView)
         self.actionReferenced_Calls.setObjectName("actionReferenced_Calls")
+        self.actionToggle_Attach = QtWidgets.QAction(MainWindow_MemoryView)
+        self.actionToggle_Attach.setObjectName("actionToggle_Attach")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
         self.menuView.addAction(self.actionBreakpoints)
@@ -775,6 +777,8 @@ class Ui_MainWindow_MemoryView(object):
         self.menuDebug.addAction(self.actionExecute_Till_Return)
         self.menuDebug.addAction(self.actionToggle_Breakpoint)
         self.menuDebug.addAction(self.actionSet_Address)
+        self.menuDebug.addSeparator()
+        self.menuDebug.addAction(self.actionToggle_Attach)
         self.menuTools.addAction(self.actionInject_so_file)
         self.menuTools.addAction(self.actionCall_Function)
         self.menuTools.addAction(self.actionSearch_Opcode)
@@ -895,6 +899,7 @@ class Ui_MainWindow_MemoryView(object):
         self.actionDissect_Code.setText(_translate("MainWindow_MemoryView", "&Dissect Code"))
         self.actionReferenced_Strings.setText(_translate("MainWindow_MemoryView", "R&eferenced Strings"))
         self.actionReferenced_Calls.setText(_translate("MainWindow_MemoryView", "Referenced &Calls"))
+        self.actionToggle_Attach.setText(_translate("MainWindow_MemoryView", "Toggle Attach"))
 
 from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
 from GUI.CustomLabels.RegisterLabel import QRegisterLabel
