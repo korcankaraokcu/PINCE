@@ -946,7 +946,7 @@ class InputDialogForm(QDialog, InputDialog):
     # If item_data is None, no input field will be created. If it's str, a QLineEdit containing the str will be created
     # If it's a list, a QComboBox with the items in the list will be created, last item of the list should be an integer
     # that points the current index of the QComboBox, for instance: ["0", "1", 1] will create a QCombobox with the items
-    # "1" and "2" then will set current index to 1 (which is the item "2")
+    # "0" and "1" then will set current index to 1 (which is the item "1")
     # label_alignment is optional
     def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=type_defs.VALUE_INDEX.INDEX_4BYTES):
         super().__init__(parent=parent)
