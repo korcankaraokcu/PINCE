@@ -208,21 +208,6 @@
                  <property name="currentRow">
                   <number>-1</number>
                  </property>
-                 <item>
-                  <property name="text">
-                   <string>Pause the process</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>Break the process</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>Continue the process</string>
-                  </property>
-                 </item>
                 </widget>
                </item>
               </layout>

@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue
+import os, sys, traceback, signal, re, copy, io, queue, collections
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 
@@ -69,14 +69,13 @@ selfpid = os.getpid()
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-6"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-7"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = float
 show_messagebox_on_exception = bool
 gdb_output_mode = int
-pause_hotkey = str
-break_hotkey = str
-continue_hotkey = str
+global_hotkeys = collections.OrderedDict(
+    [("pause_hotkey", str), ("break_hotkey", str), ("continue_hotkey", str), ("toggle_attach_hotkey", str)])
 code_injection_method = int
 bring_disassemble_to_front = bool
 instructions_per_scroll = int
@@ -188,9 +187,9 @@ def except_hook(exception_type, value, tb):
             if exception_type == type_defs.GDBInitializeException:
                 QMessageBox.information(focused_widget, "Error", "GDB isn't initialized yet")
             elif exception_type == type_defs.InferiorRunningException:
-                error_dialog = InputDialogForm(item_list=[("Process is running" +
-                                                           "\nPress " + break_hotkey + " to stop process" +
-                                                           "\n\nGo to settings->General to disable this dialog",)])
+                error_dialog = InputDialogForm(item_list=[(
+                    "Process is running" + "\nPress " + global_hotkeys["break_hotkey"] + " to stop process" +
+                    "\n\nGo to settings->General to disable this dialog",)])
                 error_dialog.exec_()
     traceback.print_exception(exception_type, value, tb)
 
@@ -314,15 +313,11 @@ class MainForm(QMainWindow, MainWindow):
         self.update_address_table_thread = UpdateAddressTableThread()
         self.update_address_table_thread.update_table_signal.connect(self.update_address_table_manually)
         self.update_address_table_thread.start()
-        self.shortcut_pause = QShortcut(QKeySequence(pause_hotkey), self)
-        self.shortcut_pause.activated.connect(self.pause_hotkey_pressed)
-        self.shortcut_pause.setContext(Qt.ApplicationShortcut)
-        self.shortcut_break = QShortcut(QKeySequence(break_hotkey), self)
-        self.shortcut_break.activated.connect(self.break_hotkey_pressed)
-        self.shortcut_break.setContext(Qt.ApplicationShortcut)
-        self.shortcut_continue = QShortcut(QKeySequence(continue_hotkey), self)
-        self.shortcut_continue.activated.connect(self.continue_hotkey_pressed)
-        self.shortcut_continue.setContext(Qt.ApplicationShortcut)
+        for key, value in list(global_hotkeys.items()):
+            setattr(self, key, QShortcut(QKeySequence(value), self))
+            current_hotkey = getattr(self, key)
+            current_hotkey.activated.connect(getattr(self, key + "_pressed"))
+            current_hotkey.setContext(Qt.ApplicationShortcut)
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.tableWidget_AddressTable.keyPressEvent_original = self.tableWidget_AddressTable.keyPressEvent
@@ -360,9 +355,10 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("gdb_output_mode", type_defs.GDB_OUTPUT_MODE.UNMUTED)
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
-        self.settings.setValue("pause", "F1")
-        self.settings.setValue("break", "F2")
-        self.settings.setValue("continue", "F3")
+        self.settings.setValue("pause_hotkey", "F1")
+        self.settings.setValue("break_hotkey", "F2")
+        self.settings.setValue("continue_hotkey", "F3")
+        self.settings.setValue("toggle_attach_hotkey", "F10")
         self.settings.endGroup()
         self.settings.beginGroup("CodeInjection")
         self.settings.setValue("code_injection_method", type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL)
@@ -384,9 +380,7 @@ class MainForm(QMainWindow, MainWindow):
         global table_update_interval
         global show_messagebox_on_exception
         global gdb_output_mode
-        global pause_hotkey
-        global break_hotkey
-        global continue_hotkey
+        global global_hotkeys
         global code_injection_method
         global bring_disassemble_to_front
         global instructions_per_scroll
@@ -396,21 +390,15 @@ class MainForm(QMainWindow, MainWindow):
         show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
         gdb_output_mode = self.settings.value("General/gdb_output_mode", type=int)
         GDB_Engine.set_gdb_output_mode(gdb_output_mode)
-        pause_hotkey = self.settings.value("Hotkeys/pause")
-        break_hotkey = self.settings.value("Hotkeys/break")
-        continue_hotkey = self.settings.value("Hotkeys/continue")
-        try:
-            self.shortcut_pause.setKey(QKeySequence(pause_hotkey))
-        except AttributeError:
-            pass
-        try:
-            self.shortcut_break.setKey(QKeySequence(break_hotkey))
-        except AttributeError:
-            pass
-        try:
-            self.shortcut_continue.setKey(QKeySequence(continue_hotkey))
-        except AttributeError:
-            pass
+        for key, value in list(global_hotkeys.items()):
+            value = self.settings.value("Hotkeys/" + key)
+            global_hotkeys[key]= value
+            try:
+                current_hotkey = getattr(self, key)
+            except AttributeError:
+                pass
+            else:
+                current_hotkey.setKey(QKeySequence(value))
         try:
             self.memory_view_window.set_dynamic_debug_hotkeys()
         except AttributeError:
@@ -420,6 +408,8 @@ class MainForm(QMainWindow, MainWindow):
         instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
         gdb_path = self.settings.value("Debug/gdb_path", type=str)
 
+    # These "_pressed" event functions are automatically connected in MainForm.__init__ within a for loop
+    # These functions are used to declare stuff that'll be done when a global hotkey is triggered
     def pause_hotkey_pressed(self):
         GDB_Engine.interrupt_inferior(type_defs.STOP_REASON.PAUSE)
 
@@ -428,6 +418,9 @@ class MainForm(QMainWindow, MainWindow):
 
     def continue_hotkey_pressed(self):
         GDB_Engine.continue_inferior()
+
+    def toggle_attach_hotkey_pressed(self):
+        GDB_Engine.toggle_attach()
 
     def tableWidget_AddressTable_context_menu_event(self, event):
         menu = QMenu()
@@ -532,8 +525,7 @@ class MainForm(QMainWindow, MainWindow):
         self.about_widget.activateWindow()
 
     def pushButton_Settings_clicked(self):
-        settings_dialog = SettingsDialogForm()
-        settings_dialog.reset_settings.connect(self.set_default_settings)
+        settings_dialog = SettingsDialogForm(self.set_default_settings)
         if settings_dialog.exec_():
             self.apply_settings()
 
@@ -582,6 +574,12 @@ class MainForm(QMainWindow, MainWindow):
             self.on_status_running()
             GDB_Engine.init_gdb(gdb_path)
             self.label_SelectedProcess.setText("No Process Selected")
+
+    def on_status_detached(self):
+        self.label_SelectedProcess.setStyleSheet("color: blue")
+        self.label_InferiorStatus.setText("[detached]")
+        self.label_InferiorStatus.setVisible(True)
+        self.label_InferiorStatus.setStyleSheet("color: blue")
 
     def on_status_stopped(self):
         self.label_SelectedProcess.setStyleSheet("color: red")
@@ -1030,11 +1028,10 @@ class TextEditDialogForm(QDialog, TextEditDialog):
 
 
 class SettingsDialogForm(QDialog, SettingsDialog):
-    reset_settings = pyqtSignal()
-
-    def __init__(self, parent=None):
+    def __init__(self, set_default_settings_func, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.set_default_settings=set_default_settings_func
 
         # Yet another retarded hack, thanks to pyuic5 not supporting QKeySequenceEdit
         self.keySequenceEdit = QKeySequenceEdit()
@@ -1086,9 +1083,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
         self.settings.setValue("General/show_messagebox_on_exception", self.checkBox_ShowMessageBox.isChecked())
         self.settings.setValue("General/gdb_output_mode", self.comboBox_GDBOutputMode.currentIndex())
-        self.settings.setValue("Hotkeys/pause", self.pause_hotkey)
-        self.settings.setValue("Hotkeys/break", self.break_hotkey)
-        self.settings.setValue("Hotkeys/continue", self.continue_hotkey)
+        for key, value in list(global_hotkeys.items()):
+            self.settings.setValue("Hotkeys/" + key, getattr(self, key))
         if self.radioButton_SimpleDLopenCall.isChecked():
             injection_method = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
         elif self.radioButton_AdvancedInjection.isChecked():
@@ -1113,9 +1109,11 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             str(self.settings.value("General/address_table_update_interval", type=float)))
         self.checkBox_ShowMessageBox.setChecked(self.settings.value("General/show_messagebox_on_exception", type=bool))
         self.comboBox_GDBOutputMode.setCurrentIndex(self.settings.value("General/gdb_output_mode", type=int))
-        self.pause_hotkey = self.settings.value("Hotkeys/pause")
-        self.break_hotkey = self.settings.value("Hotkeys/break")
-        self.continue_hotkey = self.settings.value("Hotkeys/continue")
+        self.listWidget_Functions.clear()
+        self.listWidget_Functions.addItems(
+            ["Pause the process", "Break the process", "Continue the process", "Toggle attach/detach"])
+        for key, value in list(global_hotkeys.items()):
+            setattr(self, key, self.settings.value("Hotkeys/" + key))
         injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
         if injection_method == type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL:
             self.radioButton_SimpleDLopenCall.setChecked(True)
@@ -1131,21 +1129,17 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.stackedWidget.setCurrentIndex(index)
 
     def listWidget_Functions_current_row_changed(self, index):
-        if index is 0:
-            self.keySequenceEdit.setKeySequence(self.pause_hotkey)
-        elif index is 1:
-            self.keySequenceEdit.setKeySequence(self.break_hotkey)
-        elif index is 2:
-            self.keySequenceEdit.setKeySequence(self.continue_hotkey)
+        if index is -1:
+            self.keySequenceEdit.clear()
+        else:
+            self.keySequenceEdit.setKeySequence(getattr(self, list(global_hotkeys.items())[index][0]))
 
     def keySequenceEdit_key_sequence_changed(self):
         current_index = self.listWidget_Functions.currentIndex().row()
-        if current_index is 0:
-            self.pause_hotkey = self.keySequenceEdit.keySequence().toString()
-        if current_index is 1:
-            self.break_hotkey = self.keySequenceEdit.keySequence().toString()
-        elif current_index is 2:
-            self.continue_hotkey = self.keySequenceEdit.keySequence().toString()
+        if current_index is -1:
+            self.keySequenceEdit.clear()
+        else:
+            setattr(self, list(global_hotkeys.items())[current_index][0], self.keySequenceEdit.keySequence().toString())
 
     def pushButton_ClearHotkey_clicked(self):
         self.keySequenceEdit.clear()
@@ -1153,10 +1147,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
     def pushButton_ResetSettings_clicked(self):
         confirm_dialog = InputDialogForm(item_list=[("This will reset to the default settings\nProceed?",)])
         if confirm_dialog.exec_():
-            self.reset_settings.emit()
-        else:
-            return
-        self.config_gui()
+            self.set_default_settings()
+            self.config_gui()
 
     def checkBox_AutoUpdateAddressTable_state_changed(self):
         if self.checkBox_AutoUpdateAddressTable.isChecked():
@@ -1344,8 +1336,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     process_running = pyqtSignal()
 
     def set_dynamic_debug_hotkeys(self):
-        self.actionBreak.setText("Break[" + break_hotkey + "]")
-        self.actionRun.setText("Run[" + continue_hotkey + "]")
+        self.actionBreak.setText("Break[" + global_hotkeys["break_hotkey"] + "]")
+        self.actionRun.setText("Run[" + global_hotkeys["continue_hotkey"] + "]")
+        self.actionToggle_Attach.setText("Toggle Attach[" + global_hotkeys["toggle_attach_hotkey"] + "]")
 
     def set_debug_menu_shortcuts(self):
         self.shortcut_step = QShortcut(QKeySequence("F7"), self)
@@ -1365,6 +1358,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def initialize_debug_context_menu(self):
         self.actionBreak.triggered.connect(GDB_Engine.interrupt_inferior)
         self.actionRun.triggered.connect(GDB_Engine.continue_inferior)
+        self.actionToggle_Attach.triggered.connect(self.parent().toggle_attach_hotkey_pressed)
         self.actionStep.triggered.connect(self.step_instruction)
         self.actionStep_Over.triggered.connect(self.step_over_instruction)
         self.actionExecute_Till_Return.triggered.connect(self.execute_till_return)
@@ -2923,8 +2917,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         if not breakpoint:
             QMessageBox.information(self, "Error", "Unable to track breakpoint at expression " + address)
             return
-        self.label_Info.setText(
-            "Pause the process to refresh 'Value' part of the table(" + pause_hotkey + " or " + break_hotkey + ")")
+        self.label_Info.setText("Pause the process to refresh 'Value' part of the table(" +
+                                global_hotkeys["pause_hotkey"] + " or " + global_hotkeys["break_hotkey"] + ")")
         self.address = address
         self.breakpoint = breakpoint
         self.info = {}

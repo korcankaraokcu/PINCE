@@ -608,6 +608,10 @@ def detach():
     SysUtils.chown_to_user(SysUtils.get_user_path(type_defs.USER_PATHS.ROOT_PATH), recursive=True)
     print("Detached from the process with PID:" + str(old_pid))
 
+#:tag:Debug
+def toggle_attach():
+    NotImplementedError
+
 
 #:tag:Injection
 def inject_with_advanced_injection(library_path):
