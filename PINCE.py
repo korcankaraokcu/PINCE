@@ -189,7 +189,7 @@ def except_hook(exception_type, value, tb):
             elif exception_type == type_defs.InferiorRunningException:
                 error_dialog = InputDialogForm(item_list=[(
                     "Process is running" + "\nPress " + global_hotkeys["break_hotkey"] + " to stop process" +
-                    "\n\nGo to settings->General to disable this dialog",)],buttons=[QDialogButtonBox.Ok])
+                    "\n\nGo to settings->General to disable this dialog",)], buttons=[QDialogButtonBox.Ok])
                 error_dialog.exec_()
     traceback.print_exception(exception_type, value, tb)
 
@@ -1906,6 +1906,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def on_process_stop(self):
         if GDB_Engine.stop_reason == type_defs.STOP_REASON.PAUSE:
+            self.setWindowTitle("Memory Viewer - Paused")
             return
         self.updating_memoryview = True
         time0 = time()
@@ -3313,7 +3314,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
                "\n@plt means this function is a subroutine for the original one" \
                "\nThere can be more than one of the same function" \
                "\nIt means that the function is overloaded"
-        InputDialogForm(item_list=[(text, None, Qt.AlignLeft)],buttons=[QDialogButtonBox.Ok]).exec_()
+        InputDialogForm(item_list=[(text, None, Qt.AlignLeft)], buttons=[QDialogButtonBox.Ok]).exec_()
 
     def closeEvent(self, QCloseEvent):
         global instances
@@ -3718,7 +3719,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
                "\n'[re]cx' searches for both 'rcx' and 'ecx'" \
                "\nUse the char '\\' to escape special chars such as '['" \
                "\n'\[rsp\]' searches for opcodes that contain '[rsp]'"
-        InputDialogForm(item_list=[(text, None, Qt.AlignLeft)],buttons=[QDialogButtonBox.Ok]).exec_()
+        InputDialogForm(item_list=[(text, None, Qt.AlignLeft)], buttons=[QDialogButtonBox.Ok]).exec_()
 
     def tableWidget_Opcodes_item_double_clicked(self, index):
         row = index.row()
