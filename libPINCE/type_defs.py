@@ -121,6 +121,11 @@ class ATTACH_RESULT:
     PERM_DENIED = 5
 
 
+class TOGGLE_ATTACH:
+    ATTACHED = 1
+    DETACHED = 2
+
+
 # represents the indexes of value types
 # Also used in PINCE's value comboboxes
 class VALUE_INDEX:
