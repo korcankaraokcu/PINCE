@@ -22,7 +22,7 @@ from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, Q
     QIntValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip, QTreeWidgetItem, \
-    QCompleter, QLabel, QLineEdit, QComboBox
+    QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel
 from time import sleep, time
@@ -189,7 +189,7 @@ def except_hook(exception_type, value, tb):
             elif exception_type == type_defs.InferiorRunningException:
                 error_dialog = InputDialogForm(item_list=[(
                     "Process is running" + "\nPress " + global_hotkeys["break_hotkey"] + " to stop process" +
-                    "\n\nGo to settings->General to disable this dialog",)])
+                    "\n\nGo to settings->General to disable this dialog",)],buttons=[QDialogButtonBox.Ok])
                 error_dialog.exec_()
     traceback.print_exception(exception_type, value, tb)
 
@@ -392,7 +392,7 @@ class MainForm(QMainWindow, MainWindow):
         GDB_Engine.set_gdb_output_mode(gdb_output_mode)
         for key, value in list(global_hotkeys.items()):
             value = self.settings.value("Hotkeys/" + key)
-            global_hotkeys[key]= value
+            global_hotkeys[key] = value
             try:
                 current_hotkey = getattr(self, key)
             except AttributeError:
@@ -948,9 +948,12 @@ class InputDialogForm(QDialog, InputDialog):
     # that points the current index of the QComboBox, for instance: ["0", "1", 1] will create a QCombobox with the items
     # "0" and "1" then will set current index to 1 (which is the item "1")
     # label_alignment is optional
-    def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=type_defs.VALUE_INDEX.INDEX_4BYTES):
+    def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=type_defs.VALUE_INDEX.INDEX_4BYTES,
+                 buttons=(QDialogButtonBox.Ok, QDialogButtonBox.Cancel)):
         super().__init__(parent=parent)
         self.setupUi(self)
+        for button in buttons:
+            self.buttonBox.addButton(button)
         self.object_list = []
         for item in item_list:
             if item[0] is not None:
@@ -1031,7 +1034,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
     def __init__(self, set_default_settings_func, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.set_default_settings=set_default_settings_func
+        self.set_default_settings = set_default_settings_func
 
         # Yet another retarded hack, thanks to pyuic5 not supporting QKeySequenceEdit
         self.keySequenceEdit = QKeySequenceEdit()
@@ -3310,7 +3313,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
                "\n@plt means this function is a subroutine for the original one" \
                "\nThere can be more than one of the same function" \
                "\nIt means that the function is overloaded"
-        InputDialogForm(item_list=[(text, None, Qt.AlignLeft)]).exec_()
+        InputDialogForm(item_list=[(text, None, Qt.AlignLeft)],buttons=[QDialogButtonBox.Ok]).exec_()
 
     def closeEvent(self, QCloseEvent):
         global instances
@@ -3715,7 +3718,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
                "\n'[re]cx' searches for both 'rcx' and 'ecx'" \
                "\nUse the char '\\' to escape special chars such as '['" \
                "\n'\[rsp\]' searches for opcodes that contain '[rsp]'"
-        InputDialogForm(item_list=[(text, None, Qt.AlignLeft)]).exec_()
+        InputDialogForm(item_list=[(text, None, Qt.AlignLeft)],buttons=[QDialogButtonBox.Ok]).exec_()
 
     def tableWidget_Opcodes_item_double_clicked(self, index):
         row = index.row()
