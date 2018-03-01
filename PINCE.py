@@ -69,10 +69,11 @@ selfpid = os.getpid()
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-7"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-8"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = float
 show_messagebox_on_exception = bool
+show_messagebox_on_toggle_attach = bool
 gdb_output_mode = int
 global_hotkeys = collections.OrderedDict(
     [("pause_hotkey", str), ("break_hotkey", str), ("continue_hotkey", str), ("toggle_attach_hotkey", str)])
@@ -352,6 +353,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("auto_update_address_table", False)
         self.settings.setValue("address_table_update_interval", 0.5)
         self.settings.setValue("show_messagebox_on_exception", True)
+        self.settings.setValue("show_messagebox_on_toggle_attach", True)
         self.settings.setValue("gdb_output_mode", type_defs.GDB_OUTPUT_MODE.UNMUTED)
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
@@ -379,6 +381,7 @@ class MainForm(QMainWindow, MainWindow):
         global update_table
         global table_update_interval
         global show_messagebox_on_exception
+        global show_messagebox_on_toggle_attach
         global gdb_output_mode
         global global_hotkeys
         global code_injection_method
@@ -388,6 +391,7 @@ class MainForm(QMainWindow, MainWindow):
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
         table_update_interval = self.settings.value("General/address_table_update_interval", type=float)
         show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
+        show_messagebox_on_toggle_attach = self.settings.value("General/show_messagebox_on_toggle_attach", type=bool)
         gdb_output_mode = self.settings.value("General/gdb_output_mode", type=int)
         GDB_Engine.set_gdb_output_mode(gdb_output_mode)
         for key, value in list(global_hotkeys.items()):
@@ -420,7 +424,15 @@ class MainForm(QMainWindow, MainWindow):
         GDB_Engine.continue_inferior()
 
     def toggle_attach_hotkey_pressed(self):
-        GDB_Engine.toggle_attach()
+        if GDB_Engine.toggle_attach() is type_defs.TOGGLE_ATTACH.DETACHED:
+            self.on_status_detached()
+            dialog_text = "GDB is detached from the process"
+        else:
+            dialog_text = "GDB is attached back to the process"
+        if show_messagebox_on_toggle_attach:
+            dialog = InputDialogForm(item_list=[(
+                dialog_text + "\n\nGo to settings->General to disable this dialog",)], buttons=[QDialogButtonBox.Ok])
+            dialog.exec_()
 
     def tableWidget_AddressTable_context_menu_event(self, event):
         menu = QMenu()
@@ -1084,7 +1096,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
-        self.settings.setValue("General/show_messagebox_on_exception", self.checkBox_ShowMessageBox.isChecked())
+        self.settings.setValue("General/show_messagebox_on_exception", self.checkBox_MessageBoxOnException.isChecked())
+        self.settings.setValue("General/show_messagebox_on_toggle_attach",
+                               self.checkBox_MessageBoxOnToggleAttach.isChecked())
         self.settings.setValue("General/gdb_output_mode", self.comboBox_GDBOutputMode.currentIndex())
         for key, value in list(global_hotkeys.items()):
             self.settings.setValue("Hotkeys/" + key, getattr(self, key))
@@ -1110,7 +1124,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.settings.value("General/auto_update_address_table", type=bool))
         self.lineEdit_UpdateInterval.setText(
             str(self.settings.value("General/address_table_update_interval", type=float)))
-        self.checkBox_ShowMessageBox.setChecked(self.settings.value("General/show_messagebox_on_exception", type=bool))
+        self.checkBox_MessageBoxOnException.setChecked(
+            self.settings.value("General/show_messagebox_on_exception", type=bool))
+        self.checkBox_MessageBoxOnToggleAttach.setChecked(
+            self.settings.value("General/show_messagebox_on_toggle_attach", type=bool))
         self.comboBox_GDBOutputMode.setCurrentIndex(self.settings.value("General/gdb_output_mode", type=int))
         self.listWidget_Functions.clear()
         self.listWidget_Functions.addItems(

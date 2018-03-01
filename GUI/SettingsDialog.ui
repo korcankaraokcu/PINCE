@@ -137,9 +137,19 @@
               </layout>
              </item>
              <item>
-              <widget class="QCheckBox" name="checkBox_ShowMessageBox">
+              <widget class="QCheckBox" name="checkBox_MessageBoxOnException">
                <property name="text">
                 <string>Show a MessageBox on InferiorRunning and GDBInitialize exceptions</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="checkBox_MessageBoxOnToggleAttach">
+               <property name="text">
+                <string>Show a MessageBox on Toggle Attach</string>
                </property>
                <property name="checked">
                 <bool>true</bool>

@@ -608,9 +608,31 @@ def detach():
     SysUtils.chown_to_user(SysUtils.get_user_path(type_defs.USER_PATHS.ROOT_PATH), recursive=True)
     print("Detached from the process with PID:" + str(old_pid))
 
+
 #:tag:Debug
 def toggle_attach():
-    NotImplementedError
+    """Detaches from the current process without ending the season if currently attached. Attaches back if detached
+
+    Returns:
+        int: The new state of the process as a member of type_defs.TOGGLE_ATTACH
+    """
+    if is_attached():
+        send_command("phase-out")
+        return type_defs.TOGGLE_ATTACH.DETACHED
+    send_command("phase-in")
+    return type_defs.TOGGLE_ATTACH.ATTACHED
+
+
+#:tag:Debug
+def is_attached():
+    """Checks if gdb is attached to the current process
+
+    Returns:
+        bool: True if attached, False if not
+    """
+    if common_regexes.gdb_error.search(send_command("info proc")):
+        return False
+    return True
 
 
 #:tag:Injection
