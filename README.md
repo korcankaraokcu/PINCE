@@ -125,6 +125,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Implement "Investigate Registers" button to gather information about the addresses registers point to(independent from other steps)
 - Implement selectionChanged signal of lineEdit_HexView
 - Implement multi selection for HexView
+- Add the ability to track down registers and addresses in tracer(unsure)(independent from other steps)
 - Extend search_referenced_strings with relative search
 - Move GUI classes of PINCE.py to their own files
 - Implement libPINCE engine
