@@ -998,6 +998,11 @@ class InputDialogForm(QDialog, InputDialog):
         self.adjustSize()
         self.verticalLayout.removeWidget(self.buttonBox)  # Pushing buttonBox to the end
         self.verticalLayout.addWidget(self.buttonBox)
+        for widget in GuiUtils.get_layout_widgets(self.verticalLayout):
+            if isinstance(widget, QLabel):
+                continue
+            widget.setFocus()  # Focus to the first input field
+            break
         self.parsed_index = parsed_index
         self.value_index = value_index
 

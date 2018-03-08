@@ -108,6 +108,19 @@ def search_parents_by_function(qt_object, func_name):
             return qt_object
 
 
+#:tag:GUI
+def get_layout_widgets(layout):
+    """Returns the widgets of a layout as a list
+
+    Args:
+        layout: Self-explanatory
+
+    Returns:
+        list: A list that contains the widgets of the given layout
+    """
+    return [layout.itemAt(x).widget() for x in range(layout.count())]
+
+
 #:tag:ValueType
 def valuetype_to_text(value_index=int, length=0, zero_terminate=True):
     """Returns a str according to given parameters
