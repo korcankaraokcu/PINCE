@@ -258,8 +258,12 @@ def state_observe_thread():
     Should be called by creating a thread. Usually called in initialization process by attach function
     """
 
-    def check_inferior_status():
-        matches = common_regexes.gdb_state_observe.findall(child.before)
+    def check_inferior_status(cache=None):
+        if cache:
+            data = cache
+        else:
+            data = child.before
+        matches = common_regexes.gdb_state_observe.findall(data)
         if len(matches) > 0:
             global stop_reason
             global inferior_status
@@ -273,15 +277,18 @@ def state_observe_thread():
 
     global child
     global gdb_output
+    stored_output = ""
     while True:
         child.expect_exact("\r\n")  # A new line for TTY devices
         child.before = child.before.strip()
         if not child.before:
             continue
-        check_inferior_status()
+        stored_output += "\n" + child.before
         if child.before == "(gdb)":
             with gdb_waiting_for_prompt_condition:
                 gdb_waiting_for_prompt_condition.notify_all()
+            check_inferior_status(stored_output)
+            stored_output = ""
             continue
         command_file = re.escape(SysUtils.get_gdb_command_file(currentpid))
         if common_regexes.gdb_command_source(command_file).search(child.before):
@@ -289,6 +296,7 @@ def state_observe_thread():
             child.before = child.before.strip()
             check_inferior_status()
             gdb_output = child.before
+            stored_output = ""
         else:
             if gdb_output_mode is type_defs.GDB_OUTPUT_MODE.ASYNC_OUTPUT_ONLY:
                 print(child.before)
