@@ -770,7 +770,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             if arg_dialog.exec_():
                 args, ld_preload_path = arg_dialog.get_values()
             else:
-                args, ld_preload_path = "", ""
+                return
             self.setCursor(QCursor(Qt.WaitCursor))
             if GDB_Engine.create_process(file_path, args, ld_preload_path, gdb_path):
                 p = SysUtils.get_process_information(GDB_Engine.currentpid)
