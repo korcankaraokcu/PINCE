@@ -172,8 +172,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>332</width>
-              <height>336</height>
+              <width>316</width>
+              <height>341</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_8">
@@ -1256,8 +1256,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>547</width>
-              <height>193</height>
+              <width>555</width>
+              <height>191</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_11">
@@ -1533,7 +1533,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>30</height>
+     <height>31</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">
@@ -1650,7 +1650,7 @@
   </action>
   <action name="actionSet_Address">
    <property name="text">
-    <string>Set Address[&amp;F4]</string>
+    <string>Set Address[Shift+F4]</string>
    </property>
   </action>
   <action name="actionCall_Function">
@@ -1700,7 +1700,7 @@
   </action>
   <action name="actionToggle_Attach">
    <property name="text">
-    <string>Toggle Attach</string>
+    <string>To&amp;ggle Attach</string>
    </property>
   </action>
  </widget>

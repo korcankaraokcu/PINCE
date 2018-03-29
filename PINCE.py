@@ -69,7 +69,7 @@ selfpid = os.getpid()
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-8"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-9"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = float
 show_messagebox_on_exception = bool
@@ -360,7 +360,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("pause_hotkey", "F1")
         self.settings.setValue("break_hotkey", "F2")
         self.settings.setValue("continue_hotkey", "F3")
-        self.settings.setValue("toggle_attach_hotkey", "F10")
+        self.settings.setValue("toggle_attach_hotkey", "Shift+F10")
         self.settings.endGroup()
         self.settings.beginGroup("CodeInjection")
         self.settings.setValue("code_injection_method", type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL)
@@ -1374,7 +1374,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.shortcut_execute_till_return.activated.connect(self.execute_till_return)
         self.shortcut_toggle_breakpoint = QShortcut(QKeySequence("F5"), self)
         self.shortcut_toggle_breakpoint.activated.connect(self.toggle_breakpoint)
-        self.shortcut_set_address = QShortcut(QKeySequence("F4"), self)
+        self.shortcut_set_address = QShortcut(QKeySequence("Shift+F4"), self)
         self.shortcut_set_address.activated.connect(self.set_address)
 
     def initialize_file_context_menu(self):
