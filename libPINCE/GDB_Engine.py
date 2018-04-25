@@ -285,8 +285,6 @@ def state_observe_thread():
             continue
         stored_output += "\n" + child.before
         if child.before == "(gdb)":
-            with gdb_waiting_for_prompt_condition:
-                gdb_waiting_for_prompt_condition.notify_all()
             check_inferior_status(stored_output)
             stored_output = ""
             continue
@@ -297,6 +295,8 @@ def state_observe_thread():
             check_inferior_status()
             gdb_output = child.before
             stored_output = ""
+            with gdb_waiting_for_prompt_condition:
+                gdb_waiting_for_prompt_condition.notify_all()
         else:
             if gdb_output_mode is type_defs.GDB_OUTPUT_MODE.ASYNC_OUTPUT_ONLY:
                 print(child.before)
