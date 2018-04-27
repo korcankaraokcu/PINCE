@@ -278,6 +278,12 @@ def create_PINCE_IPC_PATH(pid):
     do_cleanups(pid)
     is_path_valid(get_PINCE_IPC_directory(pid), "create")
 
+    # Opening the command file with 'w' each time GDB_Engine.send_command() gets invoked slows down the process
+    # Instead, here we create the command file for only once when IPC path gets initialized
+    # Then, open the command file with 'r' in GDB_Engine.send_command() to get a better performance
+    command_file = get_gdb_command_file(pid)
+    open(command_file, "w").close()
+
 
 #:tag:GDBCommunication
 def get_PINCE_IPC_directory(pid):
