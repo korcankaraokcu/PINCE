@@ -204,7 +204,8 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             child.sendcontrol(command)
         else:
             command_file = SysUtils.get_gdb_command_file(currentpid)
-            command_fd = open(command_file, "w")
+            command_fd = open(command_file, "r+")
+            command_fd.truncate()
             command_fd.write(command)
             command_fd.close()
             if not cli_output:
