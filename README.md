@@ -147,6 +147,10 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Super-Uber-Rad credits roll with chiptune tunes
 - Extend process_stopped signal to separate GUI and libPINCE execution for optimization. Performance tests are required
 - ~~Consider removing the command file layer of IPC system for GDB_Engine.send_command to speed up things~~(independent from other steps)[Update-29/04/2018 : Delaying this until GDB/MI implements a native multiline command feature or improves ```interpreter-exec``` command to cover every single multiline command type(including ```define``` commands)]
+- Implement toggling of arrows for easier navigation for dissected regions(independent from other steps)
+- Provide information about absolute addresses in disassemble screen(independent from other steps)
+- Give users an option to toggle GDB logging(independent from other steps)
+- Consider giving users an option to disable specific GUI parts of PINCE to gain performance on low-end machines(independent from other steps)
 
 # License
 GPLv3+. See COPYING file for details
