@@ -29,7 +29,7 @@
          <item>
           <widget class="QLineEdit" name="lineEdit_Regex">
            <property name="placeholderText">
-            <string>Enter a string or a python-style regex</string>
+            <string>Enter a string or a python regex</string>
            </property>
           </widget>
          </item>

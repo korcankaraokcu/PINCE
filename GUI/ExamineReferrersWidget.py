@@ -53,8 +53,8 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Examine Referrers"))
-        self.lineEdit_Regex.setToolTip(_translate("Form", "Enter a string or a python-style regex"))
-        self.lineEdit_Regex.setPlaceholderText(_translate("Form", "Enter a string or a python-style regex"))
+        self.lineEdit_Regex.setToolTip(_translate("Form", "Enter a string or a python regex"))
+        self.lineEdit_Regex.setPlaceholderText(_translate("Form", "Enter a string or a python regex"))
         self.checkBox_IgnoreCase.setToolTip(_translate("Form", "Ignore case if checked"))
         self.checkBox_IgnoreCase.setText(_translate("Form", "Ignore case"))
         self.checkBox_Regex.setToolTip(_translate("Form", "Your string will be treated as a regex if checked"))
