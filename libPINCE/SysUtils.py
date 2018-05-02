@@ -733,7 +733,7 @@ def get_docstrings(modules, search_for=""):
 
 #:tag:Utilities
 def get_comments_of_variables(modules, search_for=""):
-    """Gathers comments from a list of modules
+    r"""Gathers comments from a list of modules
     Python normally doesn't allow modifying __doc__ variable of the variables
     This function is designed to bring a solution to this problem
     The documentation must be PINCE style. It must start with this--> "#:doc:"

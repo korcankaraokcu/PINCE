@@ -1,0 +1,5 @@
+2/5/2018 - All docstrings that has "\" character in them should start with "r" to make themselves interpreted as raw strings. Otherwise SysUtils.get_docstrings() won't be able to escape "\" by itself. Check these functions for examples:
+SysUtils.get_comments_of_variables()
+GDB_Engine.create_process()
+GDB_Engine.attach()
+GDB_Engine.init_gdb()
