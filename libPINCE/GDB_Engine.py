@@ -406,7 +406,7 @@ def execute_till_return():
 
 #:tag:GDBCommunication
 def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
-    """Spawns gdb and initializes/resets some of the global variables
+    r"""Spawns gdb and initializes/resets some of the global variables
 
     Args:
         gdb_path (str): Path of the gdb binary
@@ -490,7 +490,7 @@ def init_referenced_dicts(pid):
 
 #:tag:Debug
 def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
-    """Attaches gdb to the target and initializes some of the global variables
+    r"""Attaches gdb to the target and initializes some of the global variables
 
     Args:
         pid (int,str): PID of the process that'll be attached to
@@ -546,7 +546,7 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
 #:tag:Debug
 def create_process(process_path, args="", ld_preload_path="", additional_commands="",
                    gdb_path=type_defs.PATHS.GDB_PATH):
-    """Creates a new process for debugging and initializes some of the global variables
+    r"""Creates a new process for debugging and initializes some of the global variables
     Current process will be detached even if the create_process call fails
     Make sure to save your data before calling this monstrosity
 
