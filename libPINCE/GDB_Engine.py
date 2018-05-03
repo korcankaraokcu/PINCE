@@ -615,6 +615,8 @@ def detach():
         gdb_initialized = False
         child.close()
     SysUtils.chown_to_user(SysUtils.get_user_path(type_defs.USER_PATHS.ROOT_PATH), recursive=True)
+    if old_pid != -1:
+        SysUtils.delete_PINCE_IPC_PATH(old_pid)
     print("Detached from the process with PID:" + str(old_pid))
 
 
