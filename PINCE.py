@@ -299,7 +299,7 @@ class MainForm(QMainWindow, MainWindow):
         if settings_version != current_settings_version:
             self.settings.clear()
             self.set_default_settings()
-        GDB_Engine.init_gdb(gdb_path)
+        GDB_Engine.init_gdb(gdb_path=gdb_path)
         self.memory_view_window = MemoryViewWindowForm(self)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
@@ -584,7 +584,7 @@ class MainForm(QMainWindow, MainWindow):
     def on_inferior_exit(self):
         if GDB_Engine.currentpid == -1:
             self.on_status_running()
-            GDB_Engine.init_gdb(gdb_path)
+            GDB_Engine.init_gdb(gdb_path=gdb_path)
             self.label_SelectedProcess.setText("No Process Selected")
 
     def on_status_detached(self):
@@ -1119,7 +1119,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
         if selected_gdb_path != current_gdb_path:
             if InputDialogForm(item_list=[("You have changed the GDB path, reset GDB now?",)]).exec_():
-                GDB_Engine.init_gdb(selected_gdb_path)
+                GDB_Engine.init_gdb(gdb_path=selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         super(SettingsDialogForm, self).accept()
 

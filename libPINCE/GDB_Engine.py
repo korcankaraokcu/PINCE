@@ -405,7 +405,7 @@ def execute_till_return():
 
 
 #:tag:GDBCommunication
-def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, additional_commands=""):
+def init_gdb(additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     r"""Spawns gdb and initializes/resets some of the global variables
 
     Args:
@@ -525,7 +525,7 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
         print(error_message)
         return type_defs.ATTACH_RESULT.PERM_DENIED, error_message
     if currentpid != -1 or not gdb_initialized:
-        init_gdb(gdb_path, additional_commands)
+        init_gdb(additional_commands, gdb_path)
     global inferior_arch
     currentpid = pid
     SysUtils.create_PINCE_IPC_PATH(pid)
@@ -568,7 +568,7 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
     global currentpid
     global inferior_arch
     if currentpid != -1 or not gdb_initialized:
-        init_gdb(gdb_path, additional_commands)
+        init_gdb(additional_commands, gdb_path)
     output = send_command("file " + process_path)
     if common_regexes.gdb_error.search(output):
         print("An error occurred while trying to create process from the file at " + process_path)
