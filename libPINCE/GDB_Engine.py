@@ -189,10 +189,10 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             raise type_defs.InferiorRunningException
         gdb_output = ""
         if send_with_file:
-            send_file = SysUtils.get_ipc_from_PINCE_file(currentpid)
+            send_file = SysUtils.get_IPC_from_PINCE_file(currentpid)
             pickle.dump(file_contents_send, open(send_file, "wb"))
         if recv_with_file or cli_output:
-            recv_file = SysUtils.get_ipc_to_PINCE_file(currentpid)
+            recv_file = SysUtils.get_IPC_to_PINCE_file(currentpid)
 
             # Truncating the recv_file because we wouldn't like to see output of previous command in case of errors
             open(recv_file, "w").close()

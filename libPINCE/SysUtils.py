@@ -505,7 +505,7 @@ def get_referenced_calls_file(pid):
 
 
 #:tag:GDBCommunication
-def get_ipc_from_PINCE_file(pid):
+def get_IPC_from_PINCE_file(pid):
     """Get the path of IPC file sent to custom gdb commands from PINCE for given pid
 
     Args:
@@ -518,7 +518,7 @@ def get_ipc_from_PINCE_file(pid):
 
 
 #:tag:GDBCommunication
-def get_ipc_to_PINCE_file(pid):
+def get_IPC_to_PINCE_file(pid):
     """Get the path of IPC file sent to PINCE from custom gdb commands for given pid
 
     Args:
