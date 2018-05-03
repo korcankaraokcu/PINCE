@@ -295,7 +295,7 @@ def get_PINCE_IPC_directory(pid):
     Returns:
         str: Path of IPC directory
     """
-    return type_defs.PATHS.PINCE_IPC_PATH + str(pid)
+    return type_defs.IPC_PATHS.PINCE_IPC_PATH + str(pid)
 
 
 #:tag:GDBCommunication
@@ -514,7 +514,7 @@ def get_ipc_from_PINCE_file(pid):
     Returns:
         str: Path of IPC file
     """
-    return get_PINCE_IPC_directory(pid) + type_defs.PATHS.IPC_FROM_PINCE_PATH
+    return get_PINCE_IPC_directory(pid) + type_defs.IPC_PATHS.IPC_FROM_PINCE_PATH
 
 
 #:tag:GDBCommunication
@@ -527,7 +527,7 @@ def get_ipc_to_PINCE_file(pid):
     Returns:
         str: Path of IPC file
     """
-    return get_PINCE_IPC_directory(pid) + type_defs.PATHS.IPC_TO_PINCE_PATH
+    return get_PINCE_IPC_directory(pid) + type_defs.IPC_PATHS.IPC_TO_PINCE_PATH
 
 
 #:tag:ValueType
