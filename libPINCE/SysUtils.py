@@ -259,7 +259,7 @@ def is_path_valid(dest_path, issue_path=""):
 
 
 #:tag:GDBCommunication
-def do_cleanups(pid):
+def delete_PINCE_IPC_PATH(pid):
     """Deletes the IPC directory of given pid
 
     Args:
@@ -275,7 +275,7 @@ def create_PINCE_IPC_PATH(pid):
     Args:
         pid (int,str): PID of the process
     """
-    do_cleanups(pid)
+    delete_PINCE_IPC_PATH(pid)
     is_path_valid(get_PINCE_IPC_directory(pid), "create")
 
     # Opening the command file with 'w' each time GDB_Engine.send_command() gets invoked slows down the process
