@@ -26,7 +26,7 @@ class CONST_TIME:
 
 
 class PATHS:
-    PINCE_IPC_PATH = "/tmp/PINCE-connection/"
+    PINCE_IPC_PATH = "/dev/shm/PINCE-connection/"
     IPC_FROM_PINCE_PATH = "/from_PINCE_file"
     IPC_TO_PINCE_PATH = "/to_PINCE_file"
     GDB_PATH = "./gdb_pince/gdb-8.0.1/bin/gdb"
