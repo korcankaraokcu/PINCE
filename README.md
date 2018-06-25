@@ -146,6 +146,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Write examples for every function in libPINCE
 - Embedded tutorial videos
 - Super-Uber-Rad credits roll with chiptune tunes
+- Implement extra MemoryViewerWindow tabs(independent from other steps)
 - Extend process_stopped signal to separate GUI and libPINCE execution for optimization. Performance tests are required
 - ~~Consider removing the command file layer of IPC system for GDB_Engine.send_command to speed up things~~(independent from other steps)[Update-29/04/2018 : Delaying this until GDB/MI implements a native multiline command feature or improves ```interpreter-exec``` command to cover every single multiline command type(including ```define``` commands)]
 - Implement toggling of arrows for easier navigation for dissected regions(independent from other steps)
