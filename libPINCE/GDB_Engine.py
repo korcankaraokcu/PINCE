@@ -1001,18 +1001,17 @@ def get_current_thread_information():
     Returns:
         str: thread_address+" (LWP "+LWP_ID+")"
         str: thread_address
+        str: "LWP "+LWP_ID
         None: If the output is unexpected
 
     Examples:
         returned_str-->"0x7f34730d77c0 (LWP 6189)"
         returned_str-->"0x00007fb29406faba"
+        returned_str-->"LWP 6189"
     """
     thread_info = send_command("info threads")
-    parsed_info = common_regexes.thread_info_multiple_threads.search(thread_info)
-    if parsed_info:
-        return parsed_info.group(1)
-    else:
-        parsed_info = common_regexes.thread_info_single_thread.search(thread_info)
+    for regex in common_regexes.thread_info_regex_list:
+        parsed_info = regex.search(thread_info)
         if parsed_info:
             return parsed_info.group(1)
 
