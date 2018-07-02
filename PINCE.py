@@ -780,10 +780,14 @@ class ProcessForm(QMainWindow, ProcessWindow):
         processlist = SysUtils.search_in_processes_by_name(text)
         self.refresh_process_table(self.tableWidget_ProcessTable, processlist)
 
-    # closes the window whenever ESC key is pressed
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Escape:
+            # closes the window whenever ESC key is pressed
             self.close()
+        elif e.key() == Qt.Key_Return:
+            self.pushButton_Open_clicked()
+        elif e.key() == Qt.Key_F1:
+            self.pushButton_CreateProcess_clicked()
 
     # lists currently working processes to table
     def refresh_process_table(self, tablewidget, processlist):
