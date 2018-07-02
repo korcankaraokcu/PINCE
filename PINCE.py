@@ -439,9 +439,9 @@ class MainForm(QMainWindow, MainWindow):
         browse_region = menu.addAction("Browse this memory region[B]")
         disassemble = menu.addAction("Disassemble this address[D]")
         menu.addSeparator()
-        cut_record    = menu.addAction(   "Cut selected records[Ctrl+X]")
-        copy_record   = menu.addAction(  "Copy selected records[Ctrl+C]")
-        paste_record  = menu.addAction( "Paste selected records[Ctrl+V]")
+        cut_record = menu.addAction("Cut selected records[Ctrl+X]")
+        copy_record = menu.addAction("Copy selected records[Ctrl+C]")
+        paste_record = menu.addAction("Paste selected records[Ctrl+V]")
         delete_record = menu.addAction("Delete selected records[Del]")
         menu.addSeparator()
         what_writes = menu.addAction("Find out what writes to this address")
@@ -510,12 +510,12 @@ class MainForm(QMainWindow, MainWindow):
         selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
         QApplication.clipboard().setText(repr(
             [self.read_address_table_entries(selected_row.row())
-            for selected_row in selected_rows]
+             for selected_row in selected_rows]
         ))
 
     def insert_records(self, records, insert_row):
-        for row in reversed(data):
-            address_table.insertRow(insert_row)
+        for row in reversed(records):
+            self.tableWidget_AddressTable.insertRow(insert_row)
             frozen_checkbox = QCheckBox()
             self.tableWidget_AddressTable.setCellWidget(insert_row, FROZEN_COL, frozen_checkbox)
             self.change_address_table_entries(insert_row, *row)
@@ -524,7 +524,7 @@ class MainForm(QMainWindow, MainWindow):
         try:
             data = ast.literal_eval(QApplication.clipboard().text())
             if not isinstance(data, list) or \
-            any(not isinstance(row, tuple) or len(row) != 3 for row in data):
+                    any(not isinstance(row, tuple) or len(row) != 3 for row in data):
                 raise ValueError()
         except (SyntaxError, ValueError) as e:
             QMessageBox.information(self, "Error", "Invalid clipboard content")
