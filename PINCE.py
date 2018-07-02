@@ -546,26 +546,19 @@ class MainForm(QMainWindow, MainWindow):
                 self.tableWidget_AddressTable.removeRow(first_selected_row)
 
     def tableWidget_AddressTable_keyPressEvent(self, e):
-        key = e.key()
-        modifiers = e.modifiers()
-        if modifiers == Qt.NoModifier:
-            if key == Qt.Key_Delete:
-                self.delete_selected_records()
-            elif key == Qt.Key_B:
-                self.browse_region_for_selected_row()
-            elif key == Qt.Key_D:
-                self.disassemble_selected_row()
-            elif key == Qt.Key_R:
-                self.update_address_table_manually()
-            else:
-                self.tableWidget_AddressTable.keyPressEvent_original(e)
-        elif modifiers == Qt.ControlModifier:
-            if key == Qt.Key_X:
-                self.cut_selected_records()
-            elif key == Qt.Key_C:
-                self.copy_selected_records()
-            elif key == Qt.Key_V:
-                self.paste_records()
+        actions = {
+            (Qt.NoModifier, Qt.Key_Delete): self.delete_selected_records,
+            (Qt.NoModifier, Qt.Key_B)     : self.browse_region_for_selected_row,
+            (Qt.NoModifier, Qt.Key_D)     : self.disassemble_selected_row,
+            (Qt.NoModifier, Qt.Key_R)     : self.update_address_table_manually,
+            (Qt.ControlModifier, Qt.Key_X): self.cut_selected_records,
+            (Qt.ControlModifier, Qt.Key_C): self.copy_selected_records,
+            (Qt.ControlModifier, Qt.Key_V): self.paste_records,
+        }
+        try:
+            actions[e.modifiers(), e.key()]()
+        except KeyError:
+            self.tableWidget_AddressTable.keyPressEvent_original(e)
 
     def update_address_table_manually(self):
         table_contents = []
