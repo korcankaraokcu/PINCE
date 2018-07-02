@@ -522,18 +522,18 @@ class MainForm(QMainWindow, MainWindow):
 
     def paste_records(self):
         try:
-            data = ast.literal_eval(QApplication.clipboard().text())
-            if not isinstance(data, list) or \
-                    any(not isinstance(row, tuple) or len(row) != 3 for row in data):
+            records = ast.literal_eval(QApplication.clipboard().text())
+            if not isinstance(records, list) or \
+                    any(not isinstance(row, tuple) or len(row) != 3 for row in records):
                 raise ValueError()
-        except (SyntaxError, ValueError) as e:
+        except (SyntaxError, ValueError):
             QMessageBox.information(self, "Error", "Invalid clipboard content")
             return
 
         address_table = self.tableWidget_AddressTable
         selected_rows = address_table.selectionModel().selectedRows()
         insert_row = selected_rows[-1].row() if selected_rows else address_table.rowCount()
-        self.insert_records(data, insert_row)
+        self.insert_records(records, insert_row)
         self.update_address_table_manually()
 
     def delete_selected_records(self):
