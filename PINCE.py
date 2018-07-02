@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 
@@ -439,6 +439,9 @@ class MainForm(QMainWindow, MainWindow):
         browse_region = menu.addAction("Browse this memory region[B]")
         disassemble = menu.addAction("Disassemble this address[D]")
         menu.addSeparator()
+        cut_record    = menu.addAction(   "Cut selected records[Ctrl+X]")
+        copy_record   = menu.addAction(  "Copy selected records[Ctrl+C]")
+        paste_record  = menu.addAction( "Paste selected records[Ctrl+V]")
         delete_record = menu.addAction("Delete selected records[Del]")
         menu.addSeparator()
         what_writes = menu.addAction("Find out what writes to this address")
@@ -451,6 +454,12 @@ class MainForm(QMainWindow, MainWindow):
             self.browse_region_for_selected_row()
         elif action == disassemble:
             self.disassemble_selected_row()
+        elif action == cut_record:
+            self.cut_selected_records()
+        elif action == copy_record:
+            self.copy_selected_records()
+        elif action == paste_record:
+            self.paste_records()
         elif action == delete_record:
             self.delete_selected_records()
         elif action == what_writes:
@@ -493,8 +502,43 @@ class MainForm(QMainWindow, MainWindow):
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
+    def cut_selected_records(self):
+        self.copy_selected_records()
+        self.delete_selected_records()
+
+    def copy_selected_records(self):
+        selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
+        QApplication.clipboard().setText(repr(
+            [self.read_address_table_entries(selected_row.row())
+            for selected_row in selected_rows]
+        ))
+
+    def insert_records(self, records, insert_row):
+        for row in reversed(data):
+            address_table.insertRow(insert_row)
+            frozen_checkbox = QCheckBox()
+            self.tableWidget_AddressTable.setCellWidget(insert_row, FROZEN_COL, frozen_checkbox)
+            self.change_address_table_entries(insert_row, *row)
+
+    def paste_records(self):
+        try:
+            data = ast.literal_eval(QApplication.clipboard().text())
+            if not isinstance(data, list) or \
+            any(not isinstance(row, tuple) or len(row) != 3 for row in data):
+                raise ValueError()
+        except (SyntaxError, ValueError) as e:
+            QMessageBox.information(self, "Error", "Invalid clipboard content")
+            return
+
+        address_table = self.tableWidget_AddressTable
+        selected_rows = address_table.selectionModel().selectedRows()
+        insert_row = selected_rows[-1].row() if selected_rows else address_table.rowCount()
+        self.insert_records(data, insert_row)
+        self.update_address_table_manually()
+
     def delete_selected_records(self):
         selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
+
         while selected_rows:
             selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
             if selected_rows:
@@ -502,16 +546,26 @@ class MainForm(QMainWindow, MainWindow):
                 self.tableWidget_AddressTable.removeRow(first_selected_row)
 
     def tableWidget_AddressTable_keyPressEvent(self, e):
-        if e.key() == Qt.Key_Delete:
-            self.delete_selected_records()
-        elif e.key() == Qt.Key_B:
-            self.browse_region_for_selected_row()
-        elif e.key() == Qt.Key_D:
-            self.disassemble_selected_row()
-        elif e.key() == Qt.Key_R:
-            self.update_address_table_manually()
-        else:
-            self.tableWidget_AddressTable.keyPressEvent_original(e)
+        key = e.key()
+        modifiers = e.modifiers()
+        if modifiers == Qt.NoModifier:
+            if key == Qt.Key_Delete:
+                self.delete_selected_records()
+            elif key == Qt.Key_B:
+                self.browse_region_for_selected_row()
+            elif key == Qt.Key_D:
+                self.disassemble_selected_row()
+            elif key == Qt.Key_R:
+                self.update_address_table_manually()
+            else:
+                self.tableWidget_AddressTable.keyPressEvent_original(e)
+        elif modifiers == Qt.ControlModifier:
+            if key == Qt.Key_X:
+                self.cut_selected_records()
+            elif key == Qt.Key_C:
+                self.copy_selected_records()
+            elif key == Qt.Key_V:
+                self.paste_records()
 
     def update_address_table_manually(self):
         table_contents = []
