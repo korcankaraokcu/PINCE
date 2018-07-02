@@ -472,14 +472,22 @@ class MainForm(QMainWindow, MainWindow):
         TrackWatchpointWidgetForm(address, byte_len, watchpoint_type, self).show()
 
     def browse_region_for_selected_row(self):
-        last_selected_row = self.tableWidget_AddressTable.selectionModel().selectedRows()[-1].row()
+        selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
+        if not selected_rows:
+            QMessageBox.information(self, "Warning", "Nothing to browse")
+            return
+        last_selected_row = selected_rows[-1].row()
         self.memory_view_window.hex_dump_address(
             int(self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text(), 16))
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
     def disassemble_selected_row(self):
-        last_selected_row = self.tableWidget_AddressTable.selectionModel().selectedRows()[-1].row()
+        selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
+        if not selected_rows:
+            QMessageBox.information(self, "Warning", "Nothing to disassemble")
+            return
+        last_selected_row = selected_rows[-1].row()
         self.memory_view_window.disassemble_expression(
             self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text(), append_to_travel_history=True)
         self.memory_view_window.show()
