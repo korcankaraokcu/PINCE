@@ -1137,11 +1137,11 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             QMessageBox.information(self, "Error", "Update interval must be a float")
             return
         try:
-            current_insturctions_shown = int(self.lineEdit_InstructionsPerScroll.text())
+            current_instructions_shown = int(self.lineEdit_InstructionsPerScroll.text())
         except:
             QMessageBox.information(self, "Error", "Instruction count must be an integer")
             return
-        if current_insturctions_shown < 1:
+        if current_instructions_shown < 1:
             QMessageBox.information(self, "Error", "Instruction count cannot be lower than 1" +
                                     "\nIt would be silly anyway, wouldn't it?")
             return
@@ -1176,7 +1176,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("CodeInjection/code_injection_method", injection_method)
         self.settings.setValue("Disassemble/bring_disassemble_to_front",
                                self.checkBox_BringDisassembleToFront.isChecked())
-        self.settings.setValue("Disassemble/instructions_per_scroll", current_insturctions_shown)
+        self.settings.setValue("Disassemble/instructions_per_scroll", current_instructions_shown)
         selected_gdb_path = self.lineEdit_GDBPath.text()
         current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
         if selected_gdb_path != current_gdb_path:
