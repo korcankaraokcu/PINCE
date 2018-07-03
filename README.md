@@ -110,6 +110,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - 26/12/2016 : Debugging is finished(At basic level)  
 
 # Current Roadmap
+- Consider adding type guessing for the StackView
 - Refactorize memory write/read functions
 - - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k. Implement a cache system for it by storing the raw bytes and converting them to desired types as the comboBox_ValueType changes
 - - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
