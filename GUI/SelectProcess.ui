@@ -85,7 +85,7 @@
         <string>Process Name</string>
        </property>
        <property name="textAlignment">
-        <set>AlignLeft|AlignVCenter</set>
+        <set>AlignLeading|AlignVCenter</set>
        </property>
       </column>
      </widget>
@@ -158,7 +158,7 @@
          <string>Open an executable</string>
         </property>
         <property name="text">
-         <string>Create Process</string>
+         <string>Create Process[F1]</string>
         </property>
        </widget>
       </item>
