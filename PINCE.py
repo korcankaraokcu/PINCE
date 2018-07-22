@@ -546,6 +546,13 @@ class MainForm(QMainWindow, MainWindow):
                 self.tableWidget_AddressTable.removeRow(first_selected_row)
 
     def tableWidget_AddressTable_keyPressEvent(self, e):
+        def call_with_selected_record(function):
+            def result():
+                selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
+                if selected_rows:
+                    function(selected_rows[-1].row())
+            return result
+
         actions = {
             (Qt.NoModifier, Qt.Key_Delete): self.delete_selected_records,
             (Qt.NoModifier, Qt.Key_B)     : self.browse_region_for_selected_row,
@@ -554,6 +561,9 @@ class MainForm(QMainWindow, MainWindow):
             (Qt.ControlModifier, Qt.Key_X): self.cut_selected_records,
             (Qt.ControlModifier, Qt.Key_C): self.copy_selected_records,
             (Qt.ControlModifier, Qt.Key_V): self.paste_records,
+            (Qt.NoModifier     , Qt.Key_Return): call_with_selected_record(self.tableWidget_AddressTable_edit_value),
+            (Qt.ControlModifier, Qt.Key_Return): call_with_selected_record(self.tableWidget_AddressTable_edit_description),
+            (Qt.AltModifier    , Qt.Key_Return): call_with_selected_record(self.tableWidget_AddressTable_edit_address_and_type),
         }
         try:
             actions[e.modifiers(), e.key()]()
@@ -683,60 +693,67 @@ class MainForm(QMainWindow, MainWindow):
         self.activateWindow()
 
     def tableWidget_AddressTable_item_double_clicked(self, index):
-        current_row = index.row()
-        current_column = index.column()
-        if current_column is VALUE_COL:
-            value = self.tableWidget_AddressTable.item(current_row, VALUE_COL).text()
-            value_index = GuiUtils.text_to_valuetype(
-                self.tableWidget_AddressTable.item(current_row, TYPE_COL).text())[0]
-            label_text = "Enter the new value"
-            if type_defs.VALUE_INDEX.is_string(value_index):
-                label_text += "\nPINCE doesn't automatically insert a null terminated string at the end" \
-                              "\nCopy-paste this character(\0) if you need to insert it at somewhere"
-            dialog = InputDialogForm(item_list=[(label_text, value)], parsed_index=0, value_index=value_index)
-            if dialog.exec_():
-                table_contents = []
-                value_text = dialog.get_values()
-                selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
-                for item in selected_rows:
-                    row = item.row()
-                    address = self.tableWidget_AddressTable.item(row, ADDR_COL).text()
-                    value_type = self.tableWidget_AddressTable.item(row, TYPE_COL).text()
-                    value_index = GuiUtils.text_to_valuetype(value_type)[0]
-                    if type_defs.VALUE_INDEX.is_string(value_index) or value_index == type_defs.VALUE_INDEX.INDEX_AOB:
-                        unknown_type = SysUtils.parse_string(value_text, value_index)
-                        if unknown_type is not None:
-                            length = len(unknown_type)
-                            self.tableWidget_AddressTable.setItem(row, TYPE_COL, QTableWidgetItem(
-                                GuiUtils.change_text_length(value_type, length)))
-                    table_contents.append((address, value_index))
-                GDB_Engine.set_multiple_addresses(table_contents, value_text)
-                self.update_address_table_manually()
+        action_for_column = {
+            VALUE_COL : self.tableWidget_AddressTable_edit_value,
+            DESC_COL  : self.tableWidget_AddressTable_edit_description,
+            ADDR_COL  : self.tableWidget_AddressTable_edit_address_and_type,
+            TYPE_COL  : self.tableWidget_AddressTable_edit_address_and_type,
+        }
+        action_for_column[index.column()](index.row())
 
-        elif current_column is DESC_COL:
-            description = self.tableWidget_AddressTable.item(current_row, DESC_COL).text()
-            dialog = InputDialogForm(item_list=[("Enter the new description", description)])
-            if dialog.exec_():
-                description_text = dialog.get_values()
-                selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
-                for item in selected_rows:
-                    self.tableWidget_AddressTable.setItem(item.row(), DESC_COL, QTableWidgetItem(description_text))
-        elif current_column is ADDR_COL or current_column is TYPE_COL:
-            description, address, value_type = self.read_address_table_entries(row=current_row)
-            index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
-            manual_address_dialog = ManualAddressDialogForm(description=description, address=address, index=index,
-                                                            length=length, zero_terminate=zero_terminate)
-            if manual_address_dialog.exec_():
-                description, address, typeofaddress, length, zero_terminate = manual_address_dialog.get_values()
-                typeofaddress_text = GuiUtils.valuetype_to_text(value_index=typeofaddress, length=length,
-                                                                zero_terminate=zero_terminate)
-                address_text = GDB_Engine.convert_symbol_to_address(address)
-                if address_text:
-                    address = address_text
-                value = GDB_Engine.read_single_address(address=address, value_index=typeofaddress,
-                                                       length=length, zero_terminate=zero_terminate)
-                self.change_address_table_entries(row=current_row, description=description, address=address,
-                                                  typeofaddress=typeofaddress_text, value=str(value))
+    def tableWidget_AddressTable_edit_value(self, row):
+        value = self.tableWidget_AddressTable.item(row, VALUE_COL).text()
+        value_index = GuiUtils.text_to_valuetype(
+            self.tableWidget_AddressTable.item(row, TYPE_COL).text())[0]
+        label_text = "Enter the new value"
+        if type_defs.VALUE_INDEX.is_string(value_index):
+            label_text += "\nPINCE doesn't automatically insert a null terminated string at the end" \
+                          "\nCopy-paste this character(\0) if you need to insert it at somewhere"
+        dialog = InputDialogForm(item_list=[(label_text, value)], parsed_index=0, value_index=value_index)
+        if dialog.exec_():
+            table_contents = []
+            value_text = dialog.get_values()
+            selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
+            for item in selected_rows:
+                row = item.row()
+                address = self.tableWidget_AddressTable.item(row, ADDR_COL).text()
+                value_type = self.tableWidget_AddressTable.item(row, TYPE_COL).text()
+                value_index = GuiUtils.text_to_valuetype(value_type)[0]
+                if type_defs.VALUE_INDEX.is_string(value_index) or value_index == type_defs.VALUE_INDEX.INDEX_AOB:
+                    unknown_type = SysUtils.parse_string(value_text, value_index)
+                    if unknown_type is not None:
+                        length = len(unknown_type)
+                        self.tableWidget_AddressTable.setItem(row, TYPE_COL, QTableWidgetItem(
+                            GuiUtils.change_text_length(value_type, length)))
+                table_contents.append((address, value_index))
+            GDB_Engine.set_multiple_addresses(table_contents, value_text)
+            self.update_address_table_manually()
+
+    def tableWidget_AddressTable_edit_description(self, row):
+        description = self.tableWidget_AddressTable.item(row, DESC_COL).text()
+        dialog = InputDialogForm(item_list=[("Enter the new description", description)])
+        if dialog.exec_():
+            description_text = dialog.get_values()
+            selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
+            for item in selected_rows:
+                self.tableWidget_AddressTable.setItem(item.row(), DESC_COL, QTableWidgetItem(description_text))
+
+    def tableWidget_AddressTable_edit_address_and_type(self, row):
+        description, address, value_type = self.read_address_table_entries(row=row)
+        index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
+        manual_address_dialog = ManualAddressDialogForm(description=description, address=address, index=index,
+                                                        length=length, zero_terminate=zero_terminate)
+        if manual_address_dialog.exec_():
+            description, address, typeofaddress, length, zero_terminate = manual_address_dialog.get_values()
+            typeofaddress_text = GuiUtils.valuetype_to_text(value_index=typeofaddress, length=length,
+                                                            zero_terminate=zero_terminate)
+            address_text = GDB_Engine.convert_symbol_to_address(address)
+            if address_text:
+                address = address_text
+            value = GDB_Engine.read_single_address(address=address, value_index=typeofaddress,
+                                                   length=length, zero_terminate=zero_terminate)
+            self.change_address_table_entries(row=row, description=description, address=address,
+                                              typeofaddress=typeofaddress_text, value=str(value))
 
     # Changes the column values of the given row
     def change_address_table_entries(self, row, description="", address="", typeofaddress="", value=""):
