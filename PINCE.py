@@ -551,22 +551,24 @@ class MainForm(QMainWindow, MainWindow):
                 selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
                 if selected_rows:
                     function(selected_rows[-1].row())
+
             return result
 
         actions = {
             (Qt.NoModifier, Qt.Key_Delete): self.delete_selected_records,
-            (Qt.NoModifier, Qt.Key_B)     : self.browse_region_for_selected_row,
-            (Qt.NoModifier, Qt.Key_D)     : self.disassemble_selected_row,
-            (Qt.NoModifier, Qt.Key_R)     : self.update_address_table_manually,
+            (Qt.NoModifier, Qt.Key_B): self.browse_region_for_selected_row,
+            (Qt.NoModifier, Qt.Key_D): self.disassemble_selected_row,
+            (Qt.NoModifier, Qt.Key_R): self.update_address_table_manually,
             (Qt.ControlModifier, Qt.Key_X): self.cut_selected_records,
             (Qt.ControlModifier, Qt.Key_C): self.copy_selected_records,
             (Qt.ControlModifier, Qt.Key_V): self.paste_records,
-            (Qt.NoModifier     , Qt.Key_Return): call_with_selected_record(self.tableWidget_AddressTable_edit_value),
-            (Qt.ControlModifier, Qt.Key_Return): call_with_selected_record(self.tableWidget_AddressTable_edit_description),
-            (Qt.AltModifier    , Qt.Key_Return): call_with_selected_record(self.tableWidget_AddressTable_edit_address_and_type),
+            (Qt.NoModifier, Qt.Key_Return): call_with_selected_record(self.tableWidget_AddressTable_edit_value),
+            (Qt.ControlModifier, Qt.Key_Return): call_with_selected_record(self.tableWidget_AddressTable_edit_desc),
+            (Qt.AltModifier, Qt.Key_Return): call_with_selected_record(
+                self.tableWidget_AddressTable_edit_address_and_type)
         }
         try:
-            actions[e.modifiers(), e.key()]()
+            actions[int(e.modifiers()), e.key()]()
         except KeyError:
             self.tableWidget_AddressTable.keyPressEvent_original(e)
 
@@ -694,10 +696,10 @@ class MainForm(QMainWindow, MainWindow):
 
     def tableWidget_AddressTable_item_double_clicked(self, index):
         action_for_column = {
-            VALUE_COL : self.tableWidget_AddressTable_edit_value,
-            DESC_COL  : self.tableWidget_AddressTable_edit_description,
-            ADDR_COL  : self.tableWidget_AddressTable_edit_address_and_type,
-            TYPE_COL  : self.tableWidget_AddressTable_edit_address_and_type,
+            VALUE_COL: self.tableWidget_AddressTable_edit_value,
+            DESC_COL: self.tableWidget_AddressTable_edit_desc,
+            ADDR_COL: self.tableWidget_AddressTable_edit_address_and_type,
+            TYPE_COL: self.tableWidget_AddressTable_edit_address_and_type
         }
         action_for_column[index.column()](index.row())
 
@@ -729,7 +731,7 @@ class MainForm(QMainWindow, MainWindow):
             GDB_Engine.set_multiple_addresses(table_contents, value_text)
             self.update_address_table_manually()
 
-    def tableWidget_AddressTable_edit_description(self, row):
+    def tableWidget_AddressTable_edit_desc(self, row):
         description = self.tableWidget_AddressTable.item(row, DESC_COL).text()
         dialog = InputDialogForm(item_list=[("Enter the new description", description)])
         if dialog.exec_():
