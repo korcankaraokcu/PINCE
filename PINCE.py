@@ -33,6 +33,7 @@ from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
 from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
+from GUI.EditTypeDialog import Ui_Dialog as EditTypeDialog
 from GUI.LoadingDialog import Ui_Dialog as LoadingDialog
 from GUI.InputDialog import Ui_Dialog as InputDialog
 from GUI.TextEditDialog import Ui_Dialog as TextEditDialog
@@ -554,21 +555,22 @@ class MainForm(QMainWindow, MainWindow):
 
             return result
 
-        actions = {
-            (Qt.NoModifier, Qt.Key_Delete): self.delete_selected_records,
-            (Qt.NoModifier, Qt.Key_B): self.browse_region_for_selected_row,
-            (Qt.NoModifier, Qt.Key_D): self.disassemble_selected_row,
-            (Qt.NoModifier, Qt.Key_R): self.update_address_table_manually,
-            (Qt.ControlModifier, Qt.Key_X): self.cut_selected_records,
-            (Qt.ControlModifier, Qt.Key_C): self.copy_selected_records,
-            (Qt.ControlModifier, Qt.Key_V): self.paste_records,
-            (Qt.NoModifier, Qt.Key_Return): call_with_selected_record(self.tableWidget_AddressTable_edit_value),
-            (Qt.ControlModifier, Qt.Key_Return): call_with_selected_record(self.tableWidget_AddressTable_edit_desc),
-            (Qt.AltModifier, Qt.Key_Return): call_with_selected_record(
-                self.tableWidget_AddressTable_edit_address_and_type)
-        }
+        actions = type_defs.KeyboardModifiersTupleDict([
+            ((Qt.NoModifier, Qt.Key_Delete), self.delete_selected_records),
+            ((Qt.NoModifier, Qt.Key_B), self.browse_region_for_selected_row),
+            ((Qt.NoModifier, Qt.Key_D), self.disassemble_selected_row),
+            ((Qt.NoModifier, Qt.Key_R), self.update_address_table_manually),
+            ((Qt.ControlModifier, Qt.Key_X), self.cut_selected_records),
+            ((Qt.ControlModifier, Qt.Key_C), self.copy_selected_records),
+            ((Qt.ControlModifier, Qt.Key_V), self.paste_records),
+            ((Qt.NoModifier, Qt.Key_Return), call_with_selected_record(self.tableWidget_AddressTable_edit_value)),
+            ((Qt.ControlModifier, Qt.Key_Return), call_with_selected_record(self.tableWidget_AddressTable_edit_desc)),
+            ((Qt.ControlModifier | Qt.AltModifier, Qt.Key_Return),
+             call_with_selected_record(self.tableWidget_AddressTable_edit_address)),
+            ((Qt.AltModifier, Qt.Key_Return), call_with_selected_record(self.tableWidget_AddressTable_edit_type))
+        ])
         try:
-            actions[int(e.modifiers()), e.key()]()
+            actions[e.modifiers(), e.key()]()
         except KeyError:
             self.tableWidget_AddressTable.keyPressEvent_original(e)
 
@@ -698,8 +700,8 @@ class MainForm(QMainWindow, MainWindow):
         action_for_column = {
             VALUE_COL: self.tableWidget_AddressTable_edit_value,
             DESC_COL: self.tableWidget_AddressTable_edit_desc,
-            ADDR_COL: self.tableWidget_AddressTable_edit_address_and_type,
-            TYPE_COL: self.tableWidget_AddressTable_edit_address_and_type
+            ADDR_COL: self.tableWidget_AddressTable_edit_address,
+            TYPE_COL: self.tableWidget_AddressTable_edit_type
         }
         action_for_column[index.column()](index.row())
 
@@ -740,7 +742,7 @@ class MainForm(QMainWindow, MainWindow):
             for item in selected_rows:
                 self.tableWidget_AddressTable.setItem(item.row(), DESC_COL, QTableWidgetItem(description_text))
 
-    def tableWidget_AddressTable_edit_address_and_type(self, row):
+    def tableWidget_AddressTable_edit_address(self, row):
         description, address, value_type = self.read_address_table_entries(row=row)
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
         manual_address_dialog = ManualAddressDialogForm(description=description, address=address, index=index,
@@ -756,6 +758,18 @@ class MainForm(QMainWindow, MainWindow):
                                                    length=length, zero_terminate=zero_terminate)
             self.change_address_table_entries(row=row, description=description, address=address,
                                               typeofaddress=typeofaddress_text, value=str(value))
+
+    def tableWidget_AddressTable_edit_type(self, row):
+        value_type = self.tableWidget_AddressTable.item(row, TYPE_COL).text()
+        value_index, length, zero_terminate = GuiUtils.text_to_valuetype(value_type)[0:3]
+        dialog = EditTypeDialogForm(index=value_index, length=length, zero_terminate=zero_terminate)
+        if dialog.exec_():
+            params = dialog.get_values()
+            type_text = GuiUtils.valuetype_to_text(*params)
+            selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
+            for item in selected_rows:
+                self.tableWidget_AddressTable.setItem(item.row(), TYPE_COL, QTableWidgetItem(type_text))
+            self.update_address_table_manually()
 
     # Changes the column values of the given row
     def change_address_table_entries(self, row, description="", address="", typeofaddress="", value=""):
@@ -879,7 +893,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
         self.lineEdit_description.setText(description)
         self.lineEdit_address.setText(address)
-        self.comboBox_ValueType.setCurrentIndex(index)
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.label_length.show()
             self.lineEdit_length.show()
@@ -979,6 +992,81 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             zero_terminate = True
         typeofaddress = self.comboBox_ValueType.currentIndex()
         return description, address, typeofaddress, length, zero_terminate
+
+
+class EditTypeDialogForm(QDialog, EditTypeDialog):
+    def __init__(self, parent=None, index=type_defs.VALUE_INDEX.INDEX_4BYTES, length=10, zero_terminate=True):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.setMaximumSize(100, 100)
+        self.lineEdit_Length.setValidator(QIntValidator(0, 200, self))
+        GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
+        if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
+            self.label_Length.show()
+            self.lineEdit_Length.show()
+            try:
+                length = str(length)
+            except:
+                length = "10"
+            self.lineEdit_Length.setText(length)
+            self.checkBox_ZeroTerminate.show()
+            self.checkBox_ZeroTerminate.setChecked(zero_terminate)
+        elif self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_AOB:
+            self.label_Length.show()
+            self.lineEdit_Length.show()
+            try:
+                length = str(length)
+            except:
+                length = "10"
+            self.lineEdit_Length.setText(length)
+            self.checkBox_ZeroTerminate.hide()
+        else:
+            self.label_Length.hide()
+            self.lineEdit_Length.hide()
+            self.checkBox_ZeroTerminate.hide()
+        self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
+
+    def comboBox_ValueType_current_index_changed(self):
+        if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
+            self.label_Length.show()
+            self.lineEdit_Length.show()
+            self.checkBox_ZeroTerminate.show()
+        elif self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_AOB:
+            self.label_Length.show()
+            self.lineEdit_Length.show()
+            self.checkBox_ZeroTerminate.hide()
+        else:
+            self.label_Length.hide()
+            self.lineEdit_Length.hide()
+            self.checkBox_ZeroTerminate.hide()
+
+    def reject(self):
+        super(EditTypeDialogForm, self).reject()
+
+    def accept(self):
+        if self.label_Length.isVisible():
+            length = self.lineEdit_Length.text()
+            try:
+                length = int(length)
+            except:
+                QMessageBox.information(self, "Error", "Length is not valid")
+                return
+            if length < 0:
+                QMessageBox.information(self, "Error", "Length cannot be smaller than 0")
+                return
+        super(EditTypeDialogForm, self).accept()
+
+    def get_values(self):
+        length = self.lineEdit_Length.text()
+        try:
+            length = int(length)
+        except:
+            length = 0
+        zero_terminate = False
+        if self.checkBox_ZeroTerminate.isChecked():
+            zero_terminate = True
+        typeofaddress = self.comboBox_ValueType.currentIndex()
+        return typeofaddress, length, zero_terminate
 
 
 class LoadingDialogForm(QDialog, LoadingDialog):
