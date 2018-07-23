@@ -747,6 +747,7 @@ class MainForm(QMainWindow, MainWindow):
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
         manual_address_dialog = ManualAddressDialogForm(description=description, address=address, index=index,
                                                         length=length, zero_terminate=zero_terminate)
+        manual_address_dialog.setWindowTitle("Edit Address")
         if manual_address_dialog.exec_():
             description, address, typeofaddress, length, zero_terminate = manual_address_dialog.get_values()
             typeofaddress_text = GuiUtils.valuetype_to_text(value_index=typeofaddress, length=length,
