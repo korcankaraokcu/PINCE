@@ -310,3 +310,23 @@ class RegisterQueue:
             self.queue_list.remove(queue_instance)
         except ValueError:
             pass
+
+
+class KeyboardModifiersTupleDict(collections.Mapping):
+    def _convert_to_int(self, tuple_key):
+        return tuple(int(x) for x in tuple_key)
+
+    def __init__(self, OrderedDict_like_list):
+        new_dict = {}
+        for tuple_key, value in OrderedDict_like_list:
+            new_dict[self._convert_to_int(tuple_key)] = value
+        self._storage = new_dict
+
+    def __getitem__(self, tuple_key):
+        return self._storage[self._convert_to_int(tuple_key)]
+
+    def __iter__(self):
+        return iter(self._storage)
+
+    def __len__(self):
+        return len(self._storage)
