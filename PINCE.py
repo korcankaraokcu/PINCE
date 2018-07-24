@@ -462,8 +462,7 @@ class MainForm(QMainWindow, MainWindow):
             disassemble = menu.addAction("Disassemble this address[D]")
             menu.addSeparator()
         else:
-            edit_menu = edit_desc = edit_address = edit_type = \
-                edit_value = toggle_record = browse_region = disassemble = -1
+            edit_desc = edit_address = edit_type = edit_value = toggle_record = browse_region = disassemble = -1
         cut_record = menu.addAction("Cut selected records[Ctrl+X]")
         copy_record = menu.addAction("Copy selected records[Ctrl+C]")
         paste_record = menu.addAction("Paste selected records[Ctrl+V]")
@@ -474,12 +473,12 @@ class MainForm(QMainWindow, MainWindow):
             what_reads = menu.addAction("Find out what reads this address")
             what_accesses = menu.addAction("Find out what accesses this address")
         else:
-            what_writes, what_reads, what_accesses = -1
+            what_writes = what_reads = what_accesses = -1
         font_size = self.tableWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         if action == edit_desc:
-            self.tableWidget_AddressTable_edit_desc(current_row)
+            self.tableWidget_AddressTable_edit_desc()
         elif action == edit_address:
             self.tableWidget_AddressTable_edit_address()
         elif action == edit_type:
