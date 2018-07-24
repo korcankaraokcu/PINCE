@@ -503,6 +503,13 @@ class MainForm(QMainWindow, MainWindow):
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
+    def toggle_selected_records(self, row):
+        check_state = self.tableWidget_AddressTable.item(row, FROZEN_COL).checkState()
+        new_check_state = Qt.Checked if check_state == Qt.Unchecked else Qt.Unchecked
+        selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
+        for item in selected_rows:
+            self.tableWidget_AddressTable.item(item.row(), FROZEN_COL).setCheckState(new_check_state)
+
     def cut_selected_records(self):
         self.copy_selected_records()
         self.delete_selected_records()
@@ -517,8 +524,9 @@ class MainForm(QMainWindow, MainWindow):
     def insert_records(self, records, insert_row):
         for row in reversed(records):
             self.tableWidget_AddressTable.insertRow(insert_row)
-            frozen_checkbox = QCheckBox()
-            self.tableWidget_AddressTable.setCellWidget(insert_row, FROZEN_COL, frozen_checkbox)
+            frozen_checkbox = QTableWidgetItem()
+            frozen_checkbox.setCheckState(Qt.Unchecked)
+            self.tableWidget_AddressTable.setItem(insert_row, FROZEN_COL, frozen_checkbox)
             self.change_address_table_entries(insert_row, *row)
 
     def paste_records(self):
@@ -551,7 +559,7 @@ class MainForm(QMainWindow, MainWindow):
             def result():
                 selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
                 if selected_rows:
-                    function(selected_rows[-1].row())
+                    function(self.tableWidget_AddressTable.selectionModel().currentIndex().row())
 
             return result
 
@@ -560,6 +568,7 @@ class MainForm(QMainWindow, MainWindow):
             ((Qt.NoModifier, Qt.Key_B), self.browse_region_for_selected_row),
             ((Qt.NoModifier, Qt.Key_D), self.disassemble_selected_row),
             ((Qt.NoModifier, Qt.Key_R), self.update_address_table_manually),
+            ((Qt.NoModifier, Qt.Key_Space), call_with_selected_record(self.toggle_selected_records)),
             ((Qt.ControlModifier, Qt.Key_X), self.cut_selected_records),
             ((Qt.ControlModifier, Qt.Key_C), self.copy_selected_records),
             ((Qt.ControlModifier, Qt.Key_V), self.paste_records),
@@ -680,7 +689,8 @@ class MainForm(QMainWindow, MainWindow):
         application.closeAllWindows()
 
     def add_entry_to_addresstable(self, description, address, typeofaddress, length=0, zero_terminate=True):
-        frozen_checkbox = QCheckBox()
+        frozen_checkbox = QTableWidgetItem()
+        frozen_checkbox.setCheckState(Qt.Unchecked)
         typeofaddress_text = GuiUtils.valuetype_to_text(typeofaddress, length, zero_terminate)
 
         # this line lets us take symbols as parameters, pretty rad isn't it?
@@ -690,7 +700,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_AddressTable.setRowCount(self.tableWidget_AddressTable.rowCount() + 1)
         currentrow = self.tableWidget_AddressTable.rowCount() - 1
         value = GDB_Engine.read_single_address(address, typeofaddress, length, zero_terminate)
-        self.tableWidget_AddressTable.setCellWidget(currentrow, FROZEN_COL, frozen_checkbox)
+        self.tableWidget_AddressTable.setItem(currentrow, FROZEN_COL, frozen_checkbox)
         self.change_address_table_entries(row=currentrow, description=description, address=address,
                                           typeofaddress=typeofaddress_text, value=str(value))
         self.show()  # In case of getting called from elsewhere
@@ -703,6 +713,7 @@ class MainForm(QMainWindow, MainWindow):
             ADDR_COL: self.tableWidget_AddressTable_edit_address,
             TYPE_COL: self.tableWidget_AddressTable_edit_type
         }
+        action_for_column = collections.defaultdict(lambda *args: lambda *args: None, action_for_column)
         action_for_column[index.column()](index.row())
 
     def tableWidget_AddressTable_edit_value(self, row):
