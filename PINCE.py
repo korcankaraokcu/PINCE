@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, functools
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 
@@ -207,6 +207,17 @@ def signal_handler(signal, frame):
 
 
 signal.signal(signal.SIGINT, signal_handler)
+
+
+# A decorator for tableWidget_AddressTable functions
+def call_with_selected_record(function):
+    @functools.wraps(function)
+    def wrapper(self):
+        selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
+        if selected_rows:
+            function(self, self.tableWidget_AddressTable.selectionModel().currentIndex().row())
+
+    return wrapper
 
 
 # Checks if the inferior has been terminated
@@ -436,22 +447,48 @@ class MainForm(QMainWindow, MainWindow):
             dialog.exec_()
 
     def tableWidget_AddressTable_context_menu_event(self, event):
+        current_row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
         menu = QMenu()
-        browse_region = menu.addAction("Browse this memory region[B]")
-        disassemble = menu.addAction("Disassemble this address[D]")
-        menu.addSeparator()
+        # TODO: Fix this spaghetti control flow and implement toggling of records
+        if current_row > -1:
+            edit_menu = menu.addMenu("Edit")
+            edit_desc = edit_menu.addAction("Description[Ctrl+Enter]")
+            edit_address = edit_menu.addAction("Address[Ctrl+Alt+Enter]")
+            edit_type = edit_menu.addAction("Type[Alt+Enter]")
+            edit_value = edit_menu.addAction("Value[Enter]")
+            toggle_record = menu.addAction("Toggle selected records[Space] (not implemented yet)")
+            menu.addSeparator()
+            browse_region = menu.addAction("Browse this memory region[B]")
+            disassemble = menu.addAction("Disassemble this address[D]")
+            menu.addSeparator()
+        else:
+            edit_menu = edit_desc = edit_address = edit_type = \
+                edit_value = toggle_record = browse_region = disassemble = -1
         cut_record = menu.addAction("Cut selected records[Ctrl+X]")
         copy_record = menu.addAction("Copy selected records[Ctrl+C]")
         paste_record = menu.addAction("Paste selected records[Ctrl+V]")
         delete_record = menu.addAction("Delete selected records[Del]")
-        menu.addSeparator()
-        what_writes = menu.addAction("Find out what writes to this address")
-        what_reads = menu.addAction("Find out what reads this address")
-        what_accesses = menu.addAction("Find out what accesses this address")
+        if current_row > -1:
+            menu.addSeparator()
+            what_writes = menu.addAction("Find out what writes to this address")
+            what_reads = menu.addAction("Find out what reads this address")
+            what_accesses = menu.addAction("Find out what accesses this address")
+        else:
+            what_writes, what_reads, what_accesses = -1
         font_size = self.tableWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
-        if action == browse_region:
+        if action == edit_desc:
+            self.tableWidget_AddressTable_edit_desc(current_row)
+        elif action == edit_address:
+            self.tableWidget_AddressTable_edit_address()
+        elif action == edit_type:
+            self.tableWidget_AddressTable_edit_type()
+        elif action == edit_value:
+            self.tableWidget_AddressTable_edit_value()
+        elif action == toggle_record:
+            self.toggle_selected_records()
+        elif action == browse_region:
             self.browse_region_for_selected_row()
         elif action == disassemble:
             self.disassemble_selected_row()
@@ -481,28 +518,20 @@ class MainForm(QMainWindow, MainWindow):
             byte_len = len(value_text.encode(encoding, option))
         TrackWatchpointWidgetForm(address, byte_len, watchpoint_type, self).show()
 
-    def browse_region_for_selected_row(self):
-        selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
-        if not selected_rows:
-            QMessageBox.information(self, "Warning", "Nothing to browse")
-            return
-        last_selected_row = selected_rows[-1].row()
-        self.memory_view_window.hex_dump_address(
-            int(self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text(), 16))
+    @call_with_selected_record
+    def browse_region_for_selected_row(self, row):
+        self.memory_view_window.hex_dump_address(int(self.tableWidget_AddressTable.item(row, ADDR_COL).text(), 16))
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
-    def disassemble_selected_row(self):
-        selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
-        if not selected_rows:
-            QMessageBox.information(self, "Warning", "Nothing to disassemble")
-            return
-        last_selected_row = selected_rows[-1].row()
+    @call_with_selected_record
+    def disassemble_selected_row(self, row):
         self.memory_view_window.disassemble_expression(
-            self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text(), append_to_travel_history=True)
+            self.tableWidget_AddressTable.item(row, ADDR_COL).text(), append_to_travel_history=True)
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
+    @call_with_selected_record
     def toggle_selected_records(self, row):
         check_state = self.tableWidget_AddressTable.item(row, FROZEN_COL).checkState()
         new_check_state = Qt.Checked if check_state == Qt.Unchecked else Qt.Unchecked
@@ -555,28 +584,19 @@ class MainForm(QMainWindow, MainWindow):
                 self.tableWidget_AddressTable.removeRow(first_selected_row)
 
     def tableWidget_AddressTable_keyPressEvent(self, e):
-        def call_with_selected_record(function):
-            def result():
-                selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
-                if selected_rows:
-                    function(self.tableWidget_AddressTable.selectionModel().currentIndex().row())
-
-            return result
-
         actions = type_defs.KeyboardModifiersTupleDict([
             ((Qt.NoModifier, Qt.Key_Delete), self.delete_selected_records),
             ((Qt.NoModifier, Qt.Key_B), self.browse_region_for_selected_row),
             ((Qt.NoModifier, Qt.Key_D), self.disassemble_selected_row),
             ((Qt.NoModifier, Qt.Key_R), self.update_address_table_manually),
-            ((Qt.NoModifier, Qt.Key_Space), call_with_selected_record(self.toggle_selected_records)),
+            ((Qt.NoModifier, Qt.Key_Space), self.toggle_selected_records),
             ((Qt.ControlModifier, Qt.Key_X), self.cut_selected_records),
             ((Qt.ControlModifier, Qt.Key_C), self.copy_selected_records),
             ((Qt.ControlModifier, Qt.Key_V), self.paste_records),
-            ((Qt.NoModifier, Qt.Key_Return), call_with_selected_record(self.tableWidget_AddressTable_edit_value)),
-            ((Qt.ControlModifier, Qt.Key_Return), call_with_selected_record(self.tableWidget_AddressTable_edit_desc)),
-            ((Qt.ControlModifier | Qt.AltModifier, Qt.Key_Return),
-             call_with_selected_record(self.tableWidget_AddressTable_edit_address)),
-            ((Qt.AltModifier, Qt.Key_Return), call_with_selected_record(self.tableWidget_AddressTable_edit_type))
+            ((Qt.NoModifier, Qt.Key_Return), self.tableWidget_AddressTable_edit_value),
+            ((Qt.ControlModifier, Qt.Key_Return), self.tableWidget_AddressTable_edit_desc),
+            ((Qt.ControlModifier | Qt.AltModifier, Qt.Key_Return), self.tableWidget_AddressTable_edit_address),
+            ((Qt.AltModifier, Qt.Key_Return), self.tableWidget_AddressTable_edit_type)
         ])
         try:
             actions[e.modifiers(), e.key()]()
@@ -714,8 +734,9 @@ class MainForm(QMainWindow, MainWindow):
             TYPE_COL: self.tableWidget_AddressTable_edit_type
         }
         action_for_column = collections.defaultdict(lambda *args: lambda *args: None, action_for_column)
-        action_for_column[index.column()](index.row())
+        action_for_column[index.column()]()
 
+    @call_with_selected_record
     def tableWidget_AddressTable_edit_value(self, row):
         value = self.tableWidget_AddressTable.item(row, VALUE_COL).text()
         value_index = GuiUtils.text_to_valuetype(
@@ -744,6 +765,7 @@ class MainForm(QMainWindow, MainWindow):
             GDB_Engine.set_multiple_addresses(table_contents, value_text)
             self.update_address_table_manually()
 
+    @call_with_selected_record
     def tableWidget_AddressTable_edit_desc(self, row):
         description = self.tableWidget_AddressTable.item(row, DESC_COL).text()
         dialog = InputDialogForm(item_list=[("Enter the new description", description)])
@@ -753,6 +775,7 @@ class MainForm(QMainWindow, MainWindow):
             for item in selected_rows:
                 self.tableWidget_AddressTable.setItem(item.row(), DESC_COL, QTableWidgetItem(description_text))
 
+    @call_with_selected_record
     def tableWidget_AddressTable_edit_address(self, row):
         description, address, value_type = self.read_address_table_entries(row=row)
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
@@ -771,6 +794,7 @@ class MainForm(QMainWindow, MainWindow):
             self.change_address_table_entries(row=row, description=description, address=address,
                                               typeofaddress=typeofaddress_text, value=str(value))
 
+    @call_with_selected_record
     def tableWidget_AddressTable_edit_type(self, row):
         value_type = self.tableWidget_AddressTable.item(row, TYPE_COL).text()
         value_index, length, zero_terminate = GuiUtils.text_to_valuetype(value_type)[0:3]
