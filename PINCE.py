@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
     QIntValidator
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QCheckBox, QWidget, \
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip, QTreeWidgetItem, \
     QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
@@ -449,7 +449,7 @@ class MainForm(QMainWindow, MainWindow):
     def tableWidget_AddressTable_context_menu_event(self, event):
         current_row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
         menu = QMenu()
-        # TODO: Fix this spaghetti control flow and implement toggling of records
+        # TODO: Implement toggling of records
         if current_row > -1:
             edit_menu = menu.addMenu("Edit")
             edit_desc = edit_menu.addAction("Description[Ctrl+Enter]")
@@ -477,34 +477,26 @@ class MainForm(QMainWindow, MainWindow):
         font_size = self.tableWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
-        if action == edit_desc:
-            self.tableWidget_AddressTable_edit_desc()
-        elif action == edit_address:
-            self.tableWidget_AddressTable_edit_address()
-        elif action == edit_type:
-            self.tableWidget_AddressTable_edit_type()
-        elif action == edit_value:
-            self.tableWidget_AddressTable_edit_value()
-        elif action == toggle_record:
-            self.toggle_selected_records()
-        elif action == browse_region:
-            self.browse_region_for_selected_row()
-        elif action == disassemble:
-            self.disassemble_selected_row()
-        elif action == cut_record:
-            self.cut_selected_records()
-        elif action == copy_record:
-            self.copy_selected_records()
-        elif action == paste_record:
-            self.paste_records()
-        elif action == delete_record:
-            self.delete_selected_records()
-        elif action == what_writes:
-            self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.WRITE_ONLY)
-        elif action == what_reads:
-            self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.READ_ONLY)
-        elif action == what_accesses:
-            self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.BOTH)
+        actions = {
+            edit_desc: self.tableWidget_AddressTable_edit_desc,
+            edit_address: self.tableWidget_AddressTable_edit_address,
+            edit_type: self.tableWidget_AddressTable_edit_type,
+            edit_value: self.tableWidget_AddressTable_edit_value,
+            toggle_record: self.toggle_selected_records,
+            browse_region: self.browse_region_for_selected_row,
+            disassemble: self.disassemble_selected_row,
+            cut_record: self.cut_selected_records,
+            copy_record: self.copy_selected_records,
+            paste_record: self.paste_records,
+            delete_record: self.delete_selected_records,
+            what_writes: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.WRITE_ONLY),
+            what_reads: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.READ_ONLY),
+            what_accesses: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.BOTH)
+        }
+        try:
+            actions[action]()
+        except KeyError:
+            pass
 
     def exec_track_watchpoint_widget(self, watchpoint_type):
         last_selected_row = self.tableWidget_AddressTable.selectionModel().selectedRows()[-1].row()
@@ -1296,8 +1288,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 return
         elif current_table_update_interval < 0.1:
             if not InputDialogForm(item_list=[("Update interval should be bigger than 0.1 seconds" +
-                                                   "\nSetting update interval less than 0.1 seconds may cause slowdown"
-                                                   "\nProceed?",)]).exec_():
+                                               "\nSetting update interval less than 0.1 seconds may cause slowdown"
+                                               "\nProceed?",)]).exec_():
                 return
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         if self.checkBox_AutoUpdateAddressTable.isChecked():
@@ -1523,7 +1515,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
 
     def complete_command(self):
         if GDB_Engine.gdb_initialized and GDB_Engine.currentpid != -1 and self.lineEdit.text() and \
-                        GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+                GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
             self.completion_model.setStringList(GDB_Engine.complete_command(self.lineEdit.text()))
             self.completer.complete()
         else:
@@ -3313,7 +3305,7 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
     def change_status(self):
         status_info = GDB_Engine.get_trace_instructions_status(self.breakpoint)
         if status_info[0] == type_defs.TRACE_STATUS.STATUS_FINISHED or \
-                        status_info[0] == type_defs.TRACE_STATUS.STATUS_PROCESSING:
+                status_info[0] == type_defs.TRACE_STATUS.STATUS_PROCESSING:
             self.close()
             return
         self.label_StatusText.setText(status_info[1])
@@ -3327,7 +3319,7 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         QApplication.processEvents()
         status_info = GDB_Engine.get_trace_instructions_status(self.breakpoint)
         if status_info[0] == type_defs.TRACE_STATUS.STATUS_TRACING or \
-                        status_info[0] == type_defs.TRACE_STATUS.STATUS_PROCESSING:
+                status_info[0] == type_defs.TRACE_STATUS.STATUS_PROCESSING:
             GDB_Engine.cancel_trace_instructions(self.breakpoint)
             while GDB_Engine.get_trace_instructions_status(self.breakpoint)[0] \
                     != type_defs.TRACE_STATUS.STATUS_FINISHED:
