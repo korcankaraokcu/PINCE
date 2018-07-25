@@ -458,8 +458,8 @@ class MainForm(QMainWindow, MainWindow):
             edit_value = edit_menu.addAction("Value[Enter]")
             toggle_record = menu.addAction("Toggle selected records[Space] (not implemented yet)")
             menu.addSeparator()
-            browse_region = menu.addAction("Browse this memory region[B]")
-            disassemble = menu.addAction("Disassemble this address[D]")
+            browse_region = menu.addAction("Browse this memory region[Ctrl+B]")
+            disassemble = menu.addAction("Disassemble this address[Ctrl+D]")
             menu.addSeparator()
         else:
             edit_desc = edit_address = edit_type = edit_value = toggle_record = browse_region = disassemble = -1
@@ -577,8 +577,8 @@ class MainForm(QMainWindow, MainWindow):
     def tableWidget_AddressTable_keyPressEvent(self, e):
         actions = type_defs.KeyboardModifiersTupleDict([
             ((Qt.NoModifier, Qt.Key_Delete), self.delete_selected_records),
-            ((Qt.NoModifier, Qt.Key_B), self.browse_region_for_selected_row),
-            ((Qt.NoModifier, Qt.Key_D), self.disassemble_selected_row),
+            ((Qt.ControlModifier, Qt.Key_B), self.browse_region_for_selected_row),
+            ((Qt.ControlModifier, Qt.Key_D), self.disassemble_selected_row),
             ((Qt.NoModifier, Qt.Key_R), self.update_address_table_manually),
             ((Qt.NoModifier, Qt.Key_Space), self.toggle_selected_records),
             ((Qt.ControlModifier, Qt.Key_X), self.cut_selected_records),
