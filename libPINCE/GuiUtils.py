@@ -123,15 +123,13 @@ def delete_menu_entries(QMenu, QAction_list):
 
     def remove_entries(menu):
         for action in menu.actions():
-            if action.menu():
-                remove_entries(action.menu())
+            try:
+                QAction_list.index(action)
+            except ValueError:
+                if action.menu():
+                    remove_entries(action.menu())
             else:
-                try:
-                    QAction_list.index(action)
-                except ValueError:
-                    pass
-                else:
-                    menu.removeAction(action)
+                menu.removeAction(action)
 
     def clean_entries(menu):
         for action in menu.actions():

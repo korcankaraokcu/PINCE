@@ -473,8 +473,8 @@ class MainForm(QMainWindow, MainWindow):
         what_reads = menu.addAction("Find out what reads this address")
         what_accesses = menu.addAction("Find out what accesses this address")
         if current_row == -1:
-            deletion_list = [edit_desc, edit_address, edit_type, edit_value, toggle_record,
-                             browse_region, disassemble, what_writes, what_reads, what_accesses]
+            deletion_list = [edit_menu.menuAction(), toggle_record, browse_region, disassemble, what_writes, what_reads,
+                             what_accesses]
             GuiUtils.delete_menu_entries(menu, deletion_list)
         font_size = self.tableWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
@@ -1812,19 +1812,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         menu.addSeparator()
         refresh = menu.addAction("Refresh[R]")
         menu.addSeparator()
+        watchpoint_menu = menu.addMenu("Set Watchpoint")
+        write_only_watchpoint = watchpoint_menu.addAction("Write Only")
+        read_only_watchpoint = watchpoint_menu.addAction("Read Only")
+        both_watchpoint = watchpoint_menu.addAction("Both")
+        add_condition = menu.addAction("Add/Change condition for breakpoint")
+        delete_breakpoint = menu.addAction("Delete Breakpoint")
         if not GDB_Engine.check_address_in_breakpoints(selected_address):
-            watchpoint_menu = menu.addMenu("Set Watchpoint")
-            write_only_watchpoint = watchpoint_menu.addAction("Write Only")
-            read_only_watchpoint = watchpoint_menu.addAction("Read Only")
-            both_watchpoint = watchpoint_menu.addAction("Both")
-            add_condition = -1
-            delete_breakpoint = -1
+            GuiUtils.delete_menu_entries(menu, [add_condition, delete_breakpoint])
         else:
-            write_only_watchpoint = -1
-            read_only_watchpoint = -1
-            both_watchpoint = -1
-            add_condition = menu.addAction("Add/Change condition for breakpoint")
-            delete_breakpoint = menu.addAction("Delete Breakpoint")
+            GuiUtils.delete_menu_entries(menu, [watchpoint_menu.menuAction()])
         font_size = self.widget_HexView.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -2251,7 +2248,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         copy_return = clipboard_menu.addAction("Copy Return Address")
         copy_frame = clipboard_menu.addAction("Copy Frame Address")
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_return, copy_frame])
+            GuiUtils.delete_menu_entries(menu, [clipboard_menu.menuAction()])
         refresh = menu.addAction("Refresh[R]")
         font_size = self.tableWidget_StackTrace.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
@@ -2310,7 +2307,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         show_in_disas = menu.addAction("Disassemble 'value' pointer address[D]")
         show_in_hex = menu.addAction("Show 'value' pointer in HexView[H]")
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_address, copy_value, copy_points_to, show_in_disas, show_in_hex])
+            GuiUtils.delete_menu_entries(menu, [clipboard_menu.menuAction(), show_in_disas, show_in_hex])
         font_size = self.tableWidget_Stack.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -2466,23 +2463,20 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         followable = SysUtils.extract_address(
             self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text(),
             search_for_location_changing_instructions=True)
-        if followable:
-            follow = menu.addAction("Follow[Space]")
-        else:
-            follow = -1
-        if GuiUtils.contains_reference_mark(current_address_text):
-            examine_referrers = menu.addAction("Examine Referrers[E]")
-        else:
-            examine_referrers = -1
+        follow = menu.addAction("Follow[Space]")
+        if not followable:
+            GuiUtils.delete_menu_entries(menu, [follow])
+        examine_referrers = menu.addAction("Examine Referrers[E]")
+        if not GuiUtils.contains_reference_mark(current_address_text):
+            GuiUtils.delete_menu_entries(menu, [examine_referrers])
+        bookmark = menu.addAction("Bookmark this address[B]")
+        delete_bookmark = menu.addAction("Delete this bookmark")
+        change_comment = menu.addAction("Change comment")
         is_bookmarked = current_address_int in self.tableWidget_Disassemble.bookmarks
         if not is_bookmarked:
-            bookmark = menu.addAction("Bookmark this address[B]")
-            delete_bookmark = -1
-            change_comment = -1
+            GuiUtils.delete_menu_entries(menu, [delete_bookmark, change_comment])
         else:
-            bookmark = -1
-            delete_bookmark = menu.addAction("Delete this bookmark")
-            change_comment = menu.addAction("Change comment")
+            GuiUtils.delete_menu_entries(menu, [bookmark])
         go_to_bookmark = menu.addMenu("Go to bookmarked address")
         bookmark_action_list = []
         nested_list = []
@@ -2497,10 +2491,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             bookmark_action_list.append(go_to_bookmark.addAction(text_append))
         menu.addSeparator()
         toggle_breakpoint = menu.addAction("Toggle Breakpoint[F5]")
-        if GDB_Engine.check_address_in_breakpoints(current_address_int):
-            add_condition = menu.addAction("Add/Change condition for breakpoint")
-        else:
-            add_condition = -1
+        add_condition = menu.addAction("Add/Change condition for breakpoint")
+        if not GDB_Engine.check_address_in_breakpoints(current_address_int):
+            GuiUtils.delete_menu_entries(menu, [add_condition])
         menu.addSeparator()
         track_breakpoint = menu.addAction("Find out which addresses this instruction accesses")
         trace_instructions = menu.addAction("Break and trace instructions[T]")
@@ -2763,8 +2756,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
             current_item = self.listWidget.currentItem().text()
             current_address = int(SysUtils.extract_address(current_item), 16)
         else:
-            current_item = None
-            current_address = None
+            current_item = current_address = None
         if current_item is not None:
             if current_address not in self.parent().tableWidget_Disassemble.bookmarks:
                 QMessageBox.information(self, "Error", "Invalid entries detected, refreshing the page")
@@ -2776,8 +2768,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
             change_comment = menu.addAction("Change comment of this record")
             delete_record = menu.addAction("Delete this record[Del]")
         else:
-            change_comment = -1
-            delete_record = -1
+            change_comment = delete_record = -1
         menu.addSeparator()
         refresh = menu.addAction("Refresh[R]")
         font_size = self.listWidget.font().pointSize()
@@ -2940,13 +2931,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
 
         menu = QMenu()
         if current_address is None:
-            change_condition = -1
-            enable = -1
-            disable = -1
-            enable_once = -1
-            enable_count = -1
-            enable_delete = -1
-            delete_breakpoint = -1
+            change_condition = enable = disable = enable_once = enable_count = enable_delete = delete_breakpoint = - 1
         else:
             change_condition = menu.addAction("Change condition of this breakpoint")
             enable = menu.addAction("Enable this breakpoint")
