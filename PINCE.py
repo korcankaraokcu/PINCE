@@ -501,7 +501,7 @@ class MainForm(QMainWindow, MainWindow):
             pass
 
     def exec_track_watchpoint_widget(self, watchpoint_type):
-        last_selected_row = self.tableWidget_AddressTable.selectionModel().selectedRows()[-1].row()
+        last_selected_row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
         address = self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text()
         value_type_text = self.tableWidget_AddressTable.item(last_selected_row, TYPE_COL).text()
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type_text)
@@ -513,14 +513,14 @@ class MainForm(QMainWindow, MainWindow):
 
     @requires_selection("tableWidget_AddressTable")
     def browse_region_for_selected_row(self):
-        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
+        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
         self.memory_view_window.hex_dump_address(int(self.tableWidget_AddressTable.item(row, ADDR_COL).text(), 16))
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
     @requires_selection("tableWidget_AddressTable")
     def disassemble_selected_row(self):
-        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
+        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
         self.memory_view_window.disassemble_expression(
             self.tableWidget_AddressTable.item(row, ADDR_COL).text(), append_to_travel_history=True)
         self.memory_view_window.show()
@@ -528,7 +528,7 @@ class MainForm(QMainWindow, MainWindow):
 
     @requires_selection("tableWidget_AddressTable")
     def toggle_selected_records(self):
-        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
+        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
         check_state = self.tableWidget_AddressTable.item(row, FROZEN_COL).checkState()
         new_check_state = Qt.Checked if check_state == Qt.Unchecked else Qt.Unchecked
         selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
@@ -734,7 +734,7 @@ class MainForm(QMainWindow, MainWindow):
 
     @requires_selection("tableWidget_AddressTable")
     def tableWidget_AddressTable_edit_value(self):
-        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
+        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
         value = self.tableWidget_AddressTable.item(row, VALUE_COL).text()
         value_index = GuiUtils.text_to_valuetype(
             self.tableWidget_AddressTable.item(row, TYPE_COL).text())[0]
@@ -764,7 +764,7 @@ class MainForm(QMainWindow, MainWindow):
 
     @requires_selection("tableWidget_AddressTable")
     def tableWidget_AddressTable_edit_desc(self):
-        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
+        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
         description = self.tableWidget_AddressTable.item(row, DESC_COL).text()
         dialog = InputDialogForm(item_list=[("Enter the new description", description)])
         if dialog.exec_():
@@ -775,7 +775,7 @@ class MainForm(QMainWindow, MainWindow):
 
     @requires_selection("tableWidget_AddressTable")
     def tableWidget_AddressTable_edit_address(self):
-        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
+        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
         description, address, value_type = self.read_address_table_entries(row=row)
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
         manual_address_dialog = ManualAddressDialogForm(description=description, address=address, index=index,
@@ -795,7 +795,7 @@ class MainForm(QMainWindow, MainWindow):
 
     @requires_selection("tableWidget_AddressTable")
     def tableWidget_AddressTable_edit_type(self):
-        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
+        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
         value_type = self.tableWidget_AddressTable.item(row, TYPE_COL).text()
         value_index, length, zero_terminate = GuiUtils.text_to_valuetype(value_type)[0:3]
         dialog = EditTypeDialogForm(index=value_index, length=length, zero_terminate=zero_terminate)
@@ -1755,14 +1755,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         GDB_Engine.execute_till_return()
 
     def set_address(self):
-        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         GDB_Engine.set_convenience_variable("pc", current_address)
         self.refresh_disassemble_view()
 
     def toggle_breakpoint(self):
-        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
@@ -2280,7 +2280,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Stack.resizeColumnToContents(STACK_VALUE_COL)
 
     def tableWidget_Stack_key_press_event(self, event):
-        selected_row = self.tableWidget_Stack.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Stack)
         current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
 
@@ -2334,7 +2334,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.hex_dump_address(int(current_address, 16))
 
     def tableWidget_Stack_double_click(self, index):
-        selected_row = self.tableWidget_Stack.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Stack)
         if index.column() == STACK_POINTER_ADDRESS_COL:
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_POINTER_ADDRESS_COL).text()
             current_address = SysUtils.extract_address(current_address_text)
@@ -2349,7 +2349,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.disassemble_expression(current_address, append_to_travel_history=True)
 
     def tableWidget_StackTrace_double_click(self, index):
-        selected_row = self.tableWidget_StackTrace.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_StackTrace)
         if index.column() == STACKTRACE_RETURN_ADDRESS_COL:
             current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_RETURN_ADDRESS_COL).text()
             current_address = SysUtils.extract_address(current_address_text)
@@ -2400,7 +2400,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableView_HexView_Hex.keyPressEvent_original(event)
 
     def tableWidget_Disassemble_key_press_event(self, event):
-        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
@@ -2426,7 +2426,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def tableWidget_Disassemble_item_double_clicked(self, index):
         if index.column() == DISAS_COMMENT_COL:
-            selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+            selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
             current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
             current_address = int(SysUtils.extract_address(current_address_text), 16)
             if current_address in self.tableWidget_Disassemble.bookmarks:
@@ -2436,7 +2436,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def tableWidget_Disassemble_item_selection_changed(self):
         try:
-            selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+            selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
             selected_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
             selected_address_int = int(SysUtils.extract_address(selected_address_text), 16)
             self.disassemble_last_selected_address_int = selected_address_int
@@ -2453,7 +2453,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.disassemble_expression(address, append_to_travel_history=True)
 
     def tableWidget_Disassemble_context_menu_event(self, event):
-        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
@@ -2566,7 +2566,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.disassemble_expression(SysUtils.extract_address(action.text()), append_to_travel_history=True)
 
     def dissect_current_region(self):
-        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         dissect_code_dialog = DissectCodeDialogForm(int_address=int(current_address, 16))
@@ -2583,14 +2583,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         examine_referrers_widget.show()
 
     def exec_trace_instructions_dialog(self):
-        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         trace_instructions_window = TraceInstructionsWindowForm(current_address, parent=self)
         trace_instructions_window.showMaximized()
 
     def exec_track_breakpoint_dialog(self):
-        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
@@ -2598,7 +2598,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         track_breakpoint_widget.show()
 
     def exec_disassemble_go_to_dialog(self):
-        selected_row = self.tableWidget_Disassemble.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
 
@@ -2913,7 +2913,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
 
     def tableWidget_BreakpointInfo_key_press_event(self, event):
         try:
-            selected_row = self.tableWidget_BreakpointInfo.selectionModel().selectedRows()[-1].row()
+            selected_row = GuiUtils.get_current_row(self.tableWidget_BreakpointInfo)
             current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
             current_address = SysUtils.extract_address(current_address_text)
         except IndexError:
@@ -2930,7 +2930,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
 
     def tableWidget_BreakpointInfo_context_menu_event(self, event):
         try:
-            selected_row = self.tableWidget_BreakpointInfo.selectionModel().selectedRows()[-1].row()
+            selected_row = GuiUtils.get_current_row(self.tableWidget_BreakpointInfo)
             current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
             current_address = SysUtils.extract_address(current_address_text)
             current_address_int = int(current_address, 16)
@@ -3512,7 +3512,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
             self.textBrowser_AddressInfo.append(info)
 
     def tableWidget_SymbolInfo_context_menu_event(self, event):
-        selected_row = self.tableWidget_SymbolInfo.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_SymbolInfo)
 
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
@@ -3655,7 +3655,7 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
         self.treeWidget_ResourceTree.collapsed.connect(self.resize_resource_tree)
 
     def tableWidget_ResourceTable_context_menu_event(self, event):
-        selected_row = self.tableWidget_ResourceTable.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_ResourceTable)
 
         menu = QMenu()
         refresh = menu.addAction("Refresh")
@@ -3955,7 +3955,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         self.parent().disassemble_expression(SysUtils.extract_address(address), append_to_travel_history=True)
 
     def tableWidget_Opcodes_context_menu_event(self, event):
-        selected_row = self.tableWidget_Opcodes.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Opcodes)
 
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
@@ -4018,7 +4018,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         self.tableWidget_MemoryRegions.horizontalHeader().setStretchLastSection(True)
 
     def tableWidget_MemoryRegions_context_menu_event(self, event):
-        selected_row = self.tableWidget_MemoryRegions.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_MemoryRegions)
 
         menu = QMenu()
         refresh = menu.addAction("Refresh[R]")
@@ -4271,7 +4271,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
 
     def tableWidget_References_context_menu_event(self, event):
-        selected_row = self.tableWidget_References.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_References)
 
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
@@ -4287,7 +4287,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
                 self.tableWidget_References.item(selected_row, REF_STR_VAL_COL).text())
 
     def listWidget_Referrers_context_menu_event(self, event):
-        selected_row = self.listWidget_Referrers.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.listWidget_Referrers)
 
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
@@ -4387,7 +4387,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
 
     def tableWidget_References_context_menu_event(self, event):
-        selected_row = self.tableWidget_References.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_References)
 
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
@@ -4399,7 +4399,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
                 self.tableWidget_References.item(selected_row, REF_CALL_ADDR_COL).text())
 
     def listWidget_Referrers_context_menu_event(self, event):
-        selected_row = self.listWidget_Referrers.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.listWidget_Referrers)
 
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
@@ -4516,7 +4516,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
 
     def listWidget_Referrers_context_menu_event(self, event):
-        selected_row = self.listWidget_Referrers.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.listWidget_Referrers)
 
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
