@@ -94,6 +94,64 @@ def fill_value_combobox(QCombobox, current_index=type_defs.VALUE_INDEX.INDEX_4BY
 
 
 #:tag:GUI
+def get_current_row(QObject):
+    """Returns the currently selected row index for the given QObject
+    If you try to use only selectionModel().currentIndex().row() for this purpose, you'll get the last selected row even
+    if it was unselected afterwards. This is why this function exists, it checks the selection state before returning
+    the selected row
+
+    Args:
+        QObject (QObject): Self-explanatory
+
+    Returns:
+        int: Currently selected row. Returns -1 if nothing is selected
+    """
+    if QObject.selectionModel().selectedRows():
+        return QObject.selectionModel().currentIndex().row()
+    return -1
+
+
+#:tag:GUI
+def delete_menu_entries(QMenu, QAction_list):
+    """Deletes given QActions from the QMenu recursively and cleans up the remaining redundant separators and menus
+    Doesn't support menus that includes types other than actions, separators and menus
+
+    Args:
+        QMenu (QMenu): Self-explanatory
+        QAction_list (list): List of QActions. Leave blank if you just want to clean the redundant separators up
+    """
+
+    def remove_entries(menu):
+        for action in menu.actions():
+            if action.menu():
+                remove_entries(action.menu())
+            else:
+                try:
+                    QAction_list.index(action)
+                except ValueError:
+                    pass
+                else:
+                    menu.removeAction(action)
+
+    def clean_entries(menu):
+        for action in menu.actions():
+            if action.menu():
+                clean_entries(action.menu())
+                if not action.menu().actions():
+                    menu.removeAction(action.menu().menuAction())
+            elif action.isSeparator():
+                actions = menu.actions()
+                current_index = actions.index(action)
+                if len(actions) == 1 or (current_index == 0 and actions[1].isSeparator()) or \
+                        (current_index == -1 and actions[-2].isSeparator()) or \
+                        (actions[current_index - 1].isSeparator() and actions[current_index + 1].isSeparator()):
+                    menu.removeAction(action)
+
+    remove_entries(QMenu)
+    clean_entries(QMenu)
+
+
+#:tag:GUI
 def search_parents_by_function(qt_object, func_name):
     """Search for func_name in the parents of given qt_object. Once function is found, parent that possesses func_name
     is returned

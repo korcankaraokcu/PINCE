@@ -209,15 +209,19 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-# A decorator for tableWidget_AddressTable functions
-def call_with_selected_record(function):
-    @functools.wraps(function)
-    def wrapper(self):
-        selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
-        if selected_rows:
-            function(self, self.tableWidget_AddressTable.selectionModel().currentIndex().row())
+# A decorator for selection control
+def requires_selection(attribute_name):
+    def real_decorator(func):
+        @functools.wraps(func)
+        def wrapper(self):
+            attribute = getattr(self, attribute_name)
+            selected_rows = attribute.selectionModel().selectedRows()
+            if selected_rows:
+                func(self)
 
-    return wrapper
+        return wrapper
+
+    return real_decorator
 
 
 # Checks if the inferior has been terminated
@@ -447,33 +451,31 @@ class MainForm(QMainWindow, MainWindow):
             dialog.exec_()
 
     def tableWidget_AddressTable_context_menu_event(self, event):
-        current_row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
+        current_row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
         menu = QMenu()
+        edit_menu = menu.addMenu("Edit")
+        edit_desc = edit_menu.addAction("Description[Ctrl+Enter]")
+        edit_address = edit_menu.addAction("Address[Ctrl+Alt+Enter]")
+        edit_type = edit_menu.addAction("Type[Alt+Enter]")
+        edit_value = edit_menu.addAction("Value[Enter]")
         # TODO: Implement toggling of records
-        if current_row > -1:
-            edit_menu = menu.addMenu("Edit")
-            edit_desc = edit_menu.addAction("Description[Ctrl+Enter]")
-            edit_address = edit_menu.addAction("Address[Ctrl+Alt+Enter]")
-            edit_type = edit_menu.addAction("Type[Alt+Enter]")
-            edit_value = edit_menu.addAction("Value[Enter]")
-            toggle_record = menu.addAction("Toggle selected records[Space] (not implemented yet)")
-            menu.addSeparator()
-            browse_region = menu.addAction("Browse this memory region[Ctrl+B]")
-            disassemble = menu.addAction("Disassemble this address[Ctrl+D]")
-            menu.addSeparator()
-        else:
-            edit_desc = edit_address = edit_type = edit_value = toggle_record = browse_region = disassemble = -1
+        toggle_record = menu.addAction("Toggle selected records[Space] (not implemented yet)")
+        menu.addSeparator()
+        browse_region = menu.addAction("Browse this memory region[Ctrl+B]")
+        disassemble = menu.addAction("Disassemble this address[Ctrl+D]")
+        menu.addSeparator()
         cut_record = menu.addAction("Cut selected records[Ctrl+X]")
         copy_record = menu.addAction("Copy selected records[Ctrl+C]")
         paste_record = menu.addAction("Paste selected records[Ctrl+V]")
         delete_record = menu.addAction("Delete selected records[Del]")
-        if current_row > -1:
-            menu.addSeparator()
-            what_writes = menu.addAction("Find out what writes to this address")
-            what_reads = menu.addAction("Find out what reads this address")
-            what_accesses = menu.addAction("Find out what accesses this address")
-        else:
-            what_writes = what_reads = what_accesses = -1
+        menu.addSeparator()
+        what_writes = menu.addAction("Find out what writes to this address")
+        what_reads = menu.addAction("Find out what reads this address")
+        what_accesses = menu.addAction("Find out what accesses this address")
+        if current_row == -1:
+            deletion_list = [edit_desc, edit_address, edit_type, edit_value, toggle_record,
+                             browse_region, disassemble, what_writes, what_reads, what_accesses]
+            GuiUtils.delete_menu_entries(menu, deletion_list)
         font_size = self.tableWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -509,21 +511,24 @@ class MainForm(QMainWindow, MainWindow):
             byte_len = len(value_text.encode(encoding, option))
         TrackWatchpointWidgetForm(address, byte_len, watchpoint_type, self).show()
 
-    @call_with_selected_record
-    def browse_region_for_selected_row(self, row):
+    @requires_selection("tableWidget_AddressTable")
+    def browse_region_for_selected_row(self):
+        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
         self.memory_view_window.hex_dump_address(int(self.tableWidget_AddressTable.item(row, ADDR_COL).text(), 16))
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
-    @call_with_selected_record
-    def disassemble_selected_row(self, row):
+    @requires_selection("tableWidget_AddressTable")
+    def disassemble_selected_row(self):
+        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
         self.memory_view_window.disassemble_expression(
             self.tableWidget_AddressTable.item(row, ADDR_COL).text(), append_to_travel_history=True)
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
-    @call_with_selected_record
-    def toggle_selected_records(self, row):
+    @requires_selection("tableWidget_AddressTable")
+    def toggle_selected_records(self):
+        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
         check_state = self.tableWidget_AddressTable.item(row, FROZEN_COL).checkState()
         new_check_state = Qt.Checked if check_state == Qt.Unchecked else Qt.Unchecked
         selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
@@ -727,8 +732,9 @@ class MainForm(QMainWindow, MainWindow):
         action_for_column = collections.defaultdict(lambda *args: lambda *args: None, action_for_column)
         action_for_column[index.column()]()
 
-    @call_with_selected_record
-    def tableWidget_AddressTable_edit_value(self, row):
+    @requires_selection("tableWidget_AddressTable")
+    def tableWidget_AddressTable_edit_value(self):
+        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
         value = self.tableWidget_AddressTable.item(row, VALUE_COL).text()
         value_index = GuiUtils.text_to_valuetype(
             self.tableWidget_AddressTable.item(row, TYPE_COL).text())[0]
@@ -756,8 +762,9 @@ class MainForm(QMainWindow, MainWindow):
             GDB_Engine.set_multiple_addresses(table_contents, value_text)
             self.update_address_table_manually()
 
-    @call_with_selected_record
-    def tableWidget_AddressTable_edit_desc(self, row):
+    @requires_selection("tableWidget_AddressTable")
+    def tableWidget_AddressTable_edit_desc(self):
+        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
         description = self.tableWidget_AddressTable.item(row, DESC_COL).text()
         dialog = InputDialogForm(item_list=[("Enter the new description", description)])
         if dialog.exec_():
@@ -766,8 +773,9 @@ class MainForm(QMainWindow, MainWindow):
             for item in selected_rows:
                 self.tableWidget_AddressTable.setItem(item.row(), DESC_COL, QTableWidgetItem(description_text))
 
-    @call_with_selected_record
-    def tableWidget_AddressTable_edit_address(self, row):
+    @requires_selection("tableWidget_AddressTable")
+    def tableWidget_AddressTable_edit_address(self):
+        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
         description, address, value_type = self.read_address_table_entries(row=row)
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
         manual_address_dialog = ManualAddressDialogForm(description=description, address=address, index=index,
@@ -785,8 +793,9 @@ class MainForm(QMainWindow, MainWindow):
             self.change_address_table_entries(row=row, description=description, address=address,
                                               typeofaddress=typeofaddress_text, value=str(value))
 
-    @call_with_selected_record
-    def tableWidget_AddressTable_edit_type(self, row):
+    @requires_selection("tableWidget_AddressTable")
+    def tableWidget_AddressTable_edit_type(self):
+        row = self.tableWidget_AddressTable.selectionModel().currentIndex().row()
         value_type = self.tableWidget_AddressTable.item(row, TYPE_COL).text()
         value_index, length, zero_terminate = GuiUtils.text_to_valuetype(value_type)[0:3]
         dialog = EditTypeDialogForm(index=value_index, length=length, zero_terminate=zero_terminate)
@@ -2233,7 +2242,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_StackTrace.setItem(row, STACKTRACE_FRAME_ADDRESS_COL, QTableWidgetItem(item[1]))
 
     def tableWidget_StackTrace_context_menu_event(self, event):
-        selected_row = self.tableWidget_StackTrace.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_StackTrace)
 
         menu = QMenu()
         switch_to_stack = menu.addAction("Full Stack")
@@ -2241,6 +2250,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         clipboard_menu = menu.addMenu("Copy to Clipboard")
         copy_return = clipboard_menu.addAction("Copy Return Address")
         copy_frame = clipboard_menu.addAction("Copy Frame Address")
+        if selected_row == -1:
+            GuiUtils.delete_menu_entries(menu, [copy_return, copy_frame])
         refresh = menu.addAction("Refresh[R]")
         font_size = self.tableWidget_StackTrace.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
@@ -2283,7 +2294,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Stack.keyPressEvent_original(event)
 
     def tableWidget_Stack_context_menu_event(self, event):
-        selected_row = self.tableWidget_Stack.selectionModel().selectedRows()[-1].row()
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Stack)
         current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
 
@@ -2298,6 +2309,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         menu.addSeparator()
         show_in_disas = menu.addAction("Disassemble 'value' pointer address[D]")
         show_in_hex = menu.addAction("Show 'value' pointer in HexView[H]")
+        if selected_row == -1:
+            GuiUtils.delete_menu_entries(menu, [copy_address, copy_value, copy_points_to, show_in_disas, show_in_hex])
         font_size = self.tableWidget_Stack.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
