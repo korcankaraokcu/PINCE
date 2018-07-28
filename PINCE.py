@@ -2752,7 +2752,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
 
     def listWidget_context_menu_event(self, event):
-        if self.listWidget.count() != 0:
+        if GuiUtils.get_current_row(self.listWidget) != -1:
             current_item = self.listWidget.currentItem().text()
             current_address = int(SysUtils.extract_address(current_item), 16)
         else:
@@ -2764,11 +2764,10 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
                 return
         menu = QMenu()
         add_entry = menu.addAction("Add new entry")
-        if current_item is not None:
-            change_comment = menu.addAction("Change comment of this record")
-            delete_record = menu.addAction("Delete this record[Del]")
-        else:
-            change_comment = delete_record = -1
+        change_comment = menu.addAction("Change comment of this record")
+        delete_record = menu.addAction("Delete this record[Del]")
+        if current_item is None:
+            GuiUtils.delete_menu_entries(menu, [change_comment, delete_record])
         menu.addSeparator()
         refresh = menu.addAction("Refresh[R]")
         font_size = self.listWidget.font().pointSize()
@@ -2920,28 +2919,29 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
             self.tableWidget_BreakpointInfo.keyPressEvent_original(event)
 
     def tableWidget_BreakpointInfo_context_menu_event(self, event):
-        try:
-            selected_row = GuiUtils.get_current_row(self.tableWidget_BreakpointInfo)
+        selected_row = GuiUtils.get_current_row(self.tableWidget_BreakpointInfo)
+        if selected_row != -1:
             current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
             current_address = SysUtils.extract_address(current_address_text)
             current_address_int = int(current_address, 16)
-        except IndexError:
+        else:
             current_address = None
             current_address_int = None
 
         menu = QMenu()
+        change_condition = menu.addAction("Change condition of this breakpoint")
+        enable = menu.addAction("Enable this breakpoint")
+        disable = menu.addAction("Disable this breakpoint")
+        enable_once = menu.addAction("Disable this breakpoint after hit")
+        enable_count = menu.addAction("Disable this breakpoint after X hits")
+        enable_delete = menu.addAction("Delete this breakpoint after hit")
+        menu.addSeparator()
+        delete_breakpoint = menu.addAction("Delete this breakpoint[Del]")
+        menu.addSeparator()
         if current_address is None:
-            change_condition = enable = disable = enable_once = enable_count = enable_delete = delete_breakpoint = - 1
-        else:
-            change_condition = menu.addAction("Change condition of this breakpoint")
-            enable = menu.addAction("Enable this breakpoint")
-            disable = menu.addAction("Disable this breakpoint")
-            enable_once = menu.addAction("Disable this breakpoint after hit")
-            enable_count = menu.addAction("Disable this breakpoint after X hits")
-            enable_delete = menu.addAction("Delete this breakpoint after hit")
-            menu.addSeparator()
-            delete_breakpoint = menu.addAction("Delete this breakpoint[Del]")
-            menu.addSeparator()
+            deletion_list = [change_condition, enable, disable, enable_once, enable_count, enable_delete,
+                             delete_breakpoint]
+            GuiUtils.delete_menu_entries(menu, deletion_list)
         refresh = menu.addAction("Refresh[R]")
         font_size = self.tableWidget_BreakpointInfo.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
@@ -3502,6 +3502,8 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
         copy_symbol = menu.addAction("Copy Symbol")
+        if selected_row == -1:
+            GuiUtils.delete_menu_entries(menu, [copy_address, copy_symbol])
         font_size = self.tableWidget_SymbolInfo.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -3644,8 +3646,11 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
 
         menu = QMenu()
         refresh = menu.addAction("Refresh")
+        menu.addSeparator()
         copy_item = menu.addAction("Copy Item")
         copy_value = menu.addAction("Copy Value")
+        if selected_row == -1:
+            GuiUtils.delete_menu_entries(menu, [copy_item, copy_value])
         font_size = self.tableWidget_ResourceTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -3659,10 +3664,15 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
                 self.tableWidget_ResourceTable.item(selected_row, LIBPINCE_REFERENCE_VALUE_COL).text())
 
     def treeWidget_ResourceTree_context_menu_event(self, event):
+        selected_row = GuiUtils.get_current_row(self.treeWidget_ResourceTree)
+
         menu = QMenu()
         refresh = menu.addAction("Refresh")
+        menu.addSeparator()
         copy_item = menu.addAction("Copy Item")
         copy_value = menu.addAction("Copy Value")
+        if selected_row == -1:
+            GuiUtils.delete_menu_entries(menu, [copy_item, copy_value])
         menu.addSeparator()
         expand_all = menu.addAction("Expand All")
         collapse_all = menu.addAction("Collapse All")
@@ -3945,6 +3955,8 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
         copy_opcode = menu.addAction("Copy Opcode")
+        if selected_row == -1:
+            GuiUtils.delete_menu_entries(menu, [copy_address, copy_opcode])
         font_size = self.tableWidget_Opcodes.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -4011,6 +4023,8 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         copy_addresses = menu.addAction("Copy Addresses")
         copy_size = menu.addAction("Copy Size")
         copy_path = menu.addAction("Copy Path")
+        if selected_row == -1:
+            GuiUtils.delete_menu_entries(menu, [copy_addresses, copy_size, copy_path])
         font_size = self.tableWidget_MemoryRegions.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -4261,6 +4275,8 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
         copy_value = menu.addAction("Copy Value")
+        if selected_row == -1:
+            GuiUtils.delete_menu_entries(menu, [copy_address, copy_value])
         font_size = self.tableWidget_References.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -4276,6 +4292,8 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
 
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
+        if selected_row == -1:
+            GuiUtils.delete_menu_entries(menu, [copy_address])
         font_size = self.listWidget_Referrers.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -4376,6 +4394,8 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
 
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
+        if selected_row == -1:
+            GuiUtils.delete_menu_entries(menu, [copy_address])
         font_size = self.tableWidget_References.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -4388,6 +4408,8 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
 
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
+        if selected_row == -1:
+            GuiUtils.delete_menu_entries(menu, [copy_address])
         font_size = self.listWidget_Referrers.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -4505,6 +4527,8 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
 
         menu = QMenu()
         copy_address = menu.addAction("Copy Address")
+        if selected_row == -1:
+            GuiUtils.delete_menu_entries(menu, [copy_address])
         font_size = self.listWidget_Referrers.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
