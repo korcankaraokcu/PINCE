@@ -579,7 +579,7 @@ class MainForm(QMainWindow, MainWindow):
                 first_selected_row = selected_rows[0].row()
                 self.tableWidget_AddressTable.removeRow(first_selected_row)
 
-    def tableWidget_AddressTable_key_press_event(self, e):
+    def tableWidget_AddressTable_key_press_event(self, event):
         actions = type_defs.KeyboardModifiersTupleDict([
             ((Qt.NoModifier, Qt.Key_Delete), self.delete_selected_records),
             ((Qt.ControlModifier, Qt.Key_B), self.browse_region_for_selected_row),
@@ -595,9 +595,9 @@ class MainForm(QMainWindow, MainWindow):
             ((Qt.AltModifier, Qt.Key_Return), self.tableWidget_AddressTable_edit_type)
         ])
         try:
-            actions[e.modifiers(), e.key()]()
+            actions[event.modifiers(), event.key()]()
         except KeyError:
-            self.tableWidget_AddressTable.keyPressEvent_original(e)
+            self.tableWidget_AddressTable.keyPressEvent_original(event)
 
     def update_address_table_manually(self):
         table_contents = []
@@ -1509,20 +1509,28 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.textBrowser.append(async_output)
         self.scroll_to_bottom()
 
-    def lineEdit_key_press_event(self, e):
-        if e.key() == Qt.Key_Up:
-            try:
-                self.lineEdit.setText(self.input_history[self.current_history_index - 1])
-                self.current_history_index += -1
-            except IndexError:
-                pass
-        elif e.key() == Qt.Key_Down:
-            if self.current_history_index == -1:
-                return
-            self.lineEdit.setText(self.input_history[self.current_history_index + 1])
-            self.current_history_index += 1
-        else:
-            self.lineEdit.keyPressEvent_original(e)
+    def scroll_backwards_history(self):
+        try:
+            self.lineEdit.setText(self.input_history[self.current_history_index - 1])
+            self.current_history_index += -1
+        except IndexError:
+            pass
+
+    def scroll_forwards_history(self):
+        if self.current_history_index == -1:
+            return
+        self.lineEdit.setText(self.input_history[self.current_history_index + 1])
+        self.current_history_index += 1
+
+    def lineEdit_key_press_event(self, event):
+        actions = type_defs.KeyboardModifiersTupleDict([
+            ((Qt.NoModifier, Qt.Key_Up), self.scroll_backwards_history),
+            ((Qt.NoModifier, Qt.Key_Down), self.scroll_forwards_history)
+        ])
+        try:
+            actions[event.modifiers(), event.key()]()
+        except KeyError:
+            self.lineEdit.keyPressEvent_original(event)
 
     def finish_completion(self):
         self.completion_model.setStringList([])
@@ -1818,10 +1826,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         menu = QMenu()
         edit = menu.addAction("Edit")
         menu.addSeparator()
-        go_to = menu.addAction("Go to expression[G]")
-        disassemble = menu.addAction("Disassemble this address[D]")
+        go_to = menu.addAction("Go to expression[Ctrl+G]")
+        disassemble = menu.addAction("Disassemble this address[Ctrl+D]")
         menu.addSeparator()
-        add_address = menu.addAction("Add this address to address list[A]")
+        add_address = menu.addAction("Add this address to address list[Ctrl+A]")
         menu.addSeparator()
         refresh = menu.addAction("Refresh[R]")
         menu.addSeparator()
@@ -2299,13 +2307,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
 
-        if event.key() == Qt.Key_R:
-            self.update_stack()
-        elif event.key() == Qt.Key_D:
-            self.disassemble_expression(current_address, append_to_travel_history=True)
-        elif event.key() == Qt.Key_H:
-            self.hex_dump_address(int(current_address, 16))
-        else:
+        actions = type_defs.KeyboardModifiersTupleDict([
+            ((Qt.NoModifier, Qt.Key_R), self.update_stack),
+            ((Qt.ControlModifier, Qt.Key_D),
+             lambda: self.disassemble_expression(current_address, append_to_travel_history=True)),
+            ((Qt.ControlModifier, Qt.Key_H), lambda: self.hex_dump_address(int(current_address, 16)))
+        ])
+        try:
+            actions[event.modifiers(), event.key()]()
+        except KeyError:
             self.tableWidget_Stack.keyPressEvent_original(event)
 
     def tableWidget_Stack_context_menu_event(self, event):
@@ -2325,8 +2335,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         copy_points_to = clipboard_menu.addAction("Copy Points to")
         refresh = menu.addAction("Refresh[R]")
         menu.addSeparator()
-        show_in_disas = menu.addAction("Disassemble 'value' pointer address[D]")
-        show_in_hex = menu.addAction("Show 'value' pointer in HexView[H]")
+        show_in_disas = menu.addAction("Disassemble 'value' pointer address[Ctrl+D]")
+        show_in_hex = menu.addAction("Show 'value' pointer in HexView[Ctrl+H]")
         if selected_row == -1:
             GuiUtils.delete_menu_entries(menu, [clipboard_menu.menuAction(), show_in_disas, show_in_hex])
         font_size = self.tableWidget_Stack.font().pointSize()
@@ -2373,9 +2383,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.hex_dump_address(int(current_address, 16))
 
     def tableWidget_StackTrace_key_press_event(self, event):
-        if event.key() == Qt.Key_R:
-            self.update_stacktrace()
-        else:
+        actions = type_defs.KeyboardModifiersTupleDict([
+            ((Qt.NoModifier, Qt.Key_R), self.update_stacktrace)
+        ])
+        try:
+            actions[event.modifiers(), event.key()]()
+        except KeyError:
             self.tableWidget_StackTrace.keyPressEvent_original(event)
 
     def widget_Disassemble_wheel_event(self, event):
@@ -2401,15 +2414,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def widget_HexView_key_press_event(self, event):
         selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
 
-        if event.key() == Qt.Key_G:
-            self.exec_hex_view_go_to_dialog()
-        elif event.key() == Qt.Key_D:
-            self.disassemble_expression(hex(selected_address), append_to_travel_history=True)
-        elif event.key() == Qt.Key_A:
-            self.exec_hex_view_add_address_dialog()
-        elif event.key() == Qt.Key_R:
-            self.refresh_hex_view()
-        else:
+        actions = type_defs.KeyboardModifiersTupleDict([
+            ((Qt.ControlModifier, Qt.Key_G), self.exec_hex_view_go_to_dialog),
+            ((Qt.ControlModifier, Qt.Key_D),
+             lambda: self.disassemble_expression(hex(selected_address), append_to_travel_history=True)),
+            ((Qt.ControlModifier, Qt.Key_A), self.exec_hex_view_add_address_dialog),
+            ((Qt.NoModifier, Qt.Key_R), self.refresh_hex_view)
+        ])
+        try:
+            actions[event.modifiers(), event.key()]()
+        except KeyError:
             self.tableView_HexView_Hex.keyPressEvent_original(event)
 
     def tableWidget_Disassemble_key_press_event(self, event):
@@ -2418,23 +2432,19 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
 
-        if event.key() == Qt.Key_Space:
-            self.follow_instruction(selected_row)
-        elif event.key() == Qt.Key_E:
-            self.exec_examine_referrers_widget(current_address_text)
-        elif event.key() == Qt.Key_G:
-            self.exec_disassemble_go_to_dialog()
-        elif event.key() == Qt.Key_H:
-            self.hex_dump_address(current_address_int)
-        elif event.key() == Qt.Key_B:
-            self.bookmark_address(current_address_int)
-        elif event.key() == Qt.Key_D:
-            self.dissect_current_region()
-        elif event.key() == Qt.Key_T:
-            self.exec_trace_instructions_dialog()
-        elif event.key() == Qt.Key_R:
-            self.refresh_disassemble_view()
-        else:
+        actions = type_defs.KeyboardModifiersTupleDict([
+            ((Qt.NoModifier, Qt.Key_Space), lambda: self.follow_instruction(selected_row)),
+            ((Qt.ControlModifier, Qt.Key_E), lambda: self.exec_examine_referrers_widget(current_address_text)),
+            ((Qt.ControlModifier, Qt.Key_G), self.exec_disassemble_go_to_dialog),
+            ((Qt.ControlModifier, Qt.Key_H), lambda: self.hex_dump_address(current_address_int)),
+            ((Qt.ControlModifier, Qt.Key_B), lambda: self.bookmark_address(current_address_int)),
+            ((Qt.ControlModifier, Qt.Key_D), self.dissect_current_region),
+            ((Qt.ControlModifier, Qt.Key_T), self.exec_trace_instructions_dialog),
+            ((Qt.NoModifier, Qt.Key_R), self.refresh_disassemble_view)
+        ])
+        try:
+            actions[event.modifiers(), event.key()]()
+        except KeyError:
             self.tableWidget_Disassemble.keyPressEvent_original(event)
 
     def tableWidget_Disassemble_item_double_clicked(self, index):
@@ -2487,9 +2497,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_int = int(current_address, 16)
 
         menu = QMenu()
-        go_to = menu.addAction("Go to expression[G]")
+        go_to = menu.addAction("Go to expression[Ctrl+G]")
         back = menu.addAction("Back")
-        show_in_hex_view = menu.addAction("Show this address in HexView[H]")
+        show_in_hex_view = menu.addAction("Show this address in HexView[Ctrl+H]")
         menu.addSeparator()
         followable = SysUtils.extract_address(
             self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text(),
@@ -2497,10 +2507,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         follow = menu.addAction("Follow[Space]")
         if not followable:
             GuiUtils.delete_menu_entries(menu, [follow])
-        examine_referrers = menu.addAction("Examine Referrers[E]")
+        examine_referrers = menu.addAction("Examine Referrers[Ctrl+E]")
         if not GuiUtils.contains_reference_mark(current_address_text):
             GuiUtils.delete_menu_entries(menu, [examine_referrers])
-        bookmark = menu.addAction("Bookmark this address[B]")
+        bookmark = menu.addAction("Bookmark this address[Ctrl+B]")
         delete_bookmark = menu.addAction("Delete this bookmark")
         change_comment = menu.addAction("Change comment")
         is_bookmarked = current_address_int in self.tableWidget_Disassemble.bookmarks
@@ -2527,8 +2537,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             GuiUtils.delete_menu_entries(menu, [add_condition])
         menu.addSeparator()
         track_breakpoint = menu.addAction("Find out which addresses this instruction accesses")
-        trace_instructions = menu.addAction("Break and trace instructions[T]")
-        dissect_region = menu.addAction("Dissect this region[D]")
+        trace_instructions = menu.addAction("Break and trace instructions[Ctrl+T]")
+        dissect_region = menu.addAction("Dissect this region[Ctrl+D]")
         menu.addSeparator()
         refresh = menu.addAction("Refresh[R]")
         menu.addSeparator()
@@ -2920,21 +2930,26 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         self.textBrowser_BreakpointInfo.clear()
         self.textBrowser_BreakpointInfo.setText(GDB_Engine.send_command("info break", cli_output=True))
 
+    def delete_breakpoint(self, address):
+        if address is not None:
+            GDB_Engine.delete_breakpoint(address)
+            self.refresh_all()
+
     def tableWidget_BreakpointInfo_key_press_event(self, event):
-        try:
-            selected_row = GuiUtils.get_current_row(self.tableWidget_BreakpointInfo)
+        selected_row = GuiUtils.get_current_row(self.tableWidget_BreakpointInfo)
+        if selected_row != -1:
             current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
             current_address = SysUtils.extract_address(current_address_text)
-        except IndexError:
+        else:
             current_address = None
 
-        if event.key() == Qt.Key_Delete:
-            if current_address is not None:
-                GDB_Engine.delete_breakpoint(current_address)
-                self.refresh_all()
-        elif event.key() == Qt.Key_R:
-            self.refresh()
-        else:
+        actions = type_defs.KeyboardModifiersTupleDict([
+            ((Qt.NoModifier, Qt.Key_Delete), lambda: self.delete_breakpoint(current_address)),
+            ((Qt.NoModifier, Qt.Key_R), self.refresh)
+        ])
+        try:
+            actions[event.modifiers(), event.key()]()
+        except KeyError:
             self.tableWidget_BreakpointInfo.keyPressEvent_original(event)
 
     def exec_enable_count_dialog(self, current_address):
