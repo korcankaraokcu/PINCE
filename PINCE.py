@@ -338,7 +338,7 @@ class MainForm(QMainWindow, MainWindow):
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.tableWidget_AddressTable.keyPressEvent_original = self.tableWidget_AddressTable.keyPressEvent
-        self.tableWidget_AddressTable.keyPressEvent = self.tableWidget_AddressTable_keyPressEvent
+        self.tableWidget_AddressTable.keyPressEvent = self.tableWidget_AddressTable_key_press_event
         self.tableWidget_AddressTable.contextMenuEvent = self.tableWidget_AddressTable_context_menu_event
         self.pushButton_AttachProcess.clicked.connect(self.pushButton_AttachProcess_clicked)
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
@@ -579,7 +579,7 @@ class MainForm(QMainWindow, MainWindow):
                 first_selected_row = selected_rows[0].row()
                 self.tableWidget_AddressTable.removeRow(first_selected_row)
 
-    def tableWidget_AddressTable_keyPressEvent(self, e):
+    def tableWidget_AddressTable_key_press_event(self, e):
         actions = type_defs.KeyboardModifiersTupleDict([
             ((Qt.NoModifier, Qt.Key_Delete), self.delete_selected_records),
             ((Qt.ControlModifier, Qt.Key_B), self.browse_region_for_selected_row),
@@ -1428,7 +1428,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.lineEdit.keyPressEvent_original = self.lineEdit.keyPressEvent
-        self.lineEdit.keyPressEvent = self.lineEdit_keyPressEvent
+        self.lineEdit.keyPressEvent = self.lineEdit_key_press_event
         self.reset_console_text()
 
     def communicate(self, control=False):
@@ -1509,7 +1509,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.textBrowser.append(async_output)
         self.scroll_to_bottom()
 
-    def lineEdit_keyPressEvent(self, e):
+    def lineEdit_key_press_event(self, e):
         if e.key() == Qt.Key_Up:
             try:
                 self.lineEdit.setText(self.input_history[self.current_history_index - 1])
