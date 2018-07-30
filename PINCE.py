@@ -2461,9 +2461,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         try:
             selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
             selected_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-            selected_address_int = int(SysUtils.extract_address(selected_address_text), 16)
-            self.disassemble_last_selected_address_int = selected_address_int
-        except:
+            self.disassemble_last_selected_address_int = int(SysUtils.extract_address(selected_address_text), 16)
+        except (TypeError, ValueError, AttributeError):
             pass
 
     # Search the item in given row for location changing instructions
