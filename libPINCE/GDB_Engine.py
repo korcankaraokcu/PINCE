@@ -574,6 +574,10 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
         print("An error occurred while trying to create process from the file at " + process_path)
         detach()
         return False
+
+    send_command("starti")
+    wait_for_stop()
+
     entry_point = find_entry_point()
     if entry_point:
         send_command("b *" + entry_point)
