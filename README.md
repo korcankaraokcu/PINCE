@@ -75,9 +75,9 @@ cd gdb_pince
 ```  
 Download and extract the gdb source code:
 ```  
-wget "http://ftp.gnu.org/gnu/gdb/gdb-8.0.1.tar.gz"
-tar -zxvf gdb-8.0.1.tar.gz
-cd gdb-8.0.1
+wget "http://ftp.gnu.org/gnu/gdb/gdb-8.1.1.tar.gz"
+tar -zxvf gdb-8.1.1.tar.gz
+cd gdb-8.1.1
 ```  
 Then compile&install locally:
 ```  
