@@ -574,15 +574,13 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
         print("An error occurred while trying to create process from the file at " + process_path)
         detach()
         return False
-
     send_command("starti")
     wait_for_stop()
-
     entry_point = find_entry_point()
     if entry_point:
-        send_command("b *" + entry_point)
+        send_command("tbreak *" + entry_point)
     else:
-        send_command("b _start")
+        send_command("tbreak _start")
     send_command("set args " + args)
     if ld_preload_path:
         send_command("set exec-wrapper env 'LD_PRELOAD=" + ld_preload_path + "'")
@@ -590,7 +588,6 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
 
     # We have to wait till breakpoint hits
     wait_for_stop()
-    send_command("delete")
     pid = get_inferior_pid()
     currentpid = int(pid)
     SysUtils.create_PINCE_IPC_PATH(pid)
