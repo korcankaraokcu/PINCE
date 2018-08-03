@@ -903,7 +903,6 @@ class ProcessForm(QMainWindow, ProcessWindow):
             if GDB_Engine.create_process(file_path, args, ld_preload_path, gdb_path):
                 p = SysUtils.get_process_information(GDB_Engine.currentpid)
                 self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
-                self.parent().on_status_stopped()
                 self.enable_scan_gui()
                 self.close()
             else:
