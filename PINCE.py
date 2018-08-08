@@ -22,7 +22,7 @@ from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, Q
     QIntValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip, QTreeWidgetItem, \
-    QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox
+    QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel
 from time import sleep, time
@@ -210,14 +210,14 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 # A decorator for selection control
-def requires_selection(attribute_name):
+def requires_selection(attribute_name, single):
     def real_decorator(func):
         @functools.wraps(func)
-        def wrapper(self):
+        def wrapper(self, *args, **kwargs):
             attribute = getattr(self, attribute_name)
             selected_rows = attribute.selectionModel().selectedRows()
-            if selected_rows:
-                func(self)
+            if ((len(selected_rows) == 1) if single else selected_rows):
+                func(self, *args, **kwargs)
 
         return wrapper
 
@@ -290,10 +290,10 @@ class MainForm(QMainWindow, MainWindow):
         super().__init__()
         self.setupUi(self)
         GuiUtils.center(self)
-        self.tableWidget_AddressTable.setColumnWidth(FROZEN_COL, 25)
-        self.tableWidget_AddressTable.setColumnWidth(DESC_COL, 150)
-        self.tableWidget_AddressTable.setColumnWidth(ADDR_COL, 150)
-        self.tableWidget_AddressTable.setColumnWidth(TYPE_COL, 150)
+        self.treeWidget_AddressTable.setColumnWidth(FROZEN_COL, 50)
+        self.treeWidget_AddressTable.setColumnWidth(DESC_COL, 150)
+        self.treeWidget_AddressTable.setColumnWidth(ADDR_COL, 150)
+        self.treeWidget_AddressTable.setColumnWidth(TYPE_COL, 150)
         QCoreApplication.setOrganizationName("PINCE")
         QCoreApplication.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
         QCoreApplication.setApplicationName("PINCE")
@@ -337,9 +337,9 @@ class MainForm(QMainWindow, MainWindow):
             current_hotkey.setContext(Qt.ApplicationShortcut)
 
         # Saving the original function because super() doesn't work when we override functions like this
-        self.tableWidget_AddressTable.keyPressEvent_original = self.tableWidget_AddressTable.keyPressEvent
-        self.tableWidget_AddressTable.keyPressEvent = self.tableWidget_AddressTable_key_press_event
-        self.tableWidget_AddressTable.contextMenuEvent = self.tableWidget_AddressTable_context_menu_event
+        self.treeWidget_AddressTable.keyPressEvent_original = self.treeWidget_AddressTable.keyPressEvent
+        self.treeWidget_AddressTable.keyPressEvent = self.treeWidget_AddressTable_key_press_event
+        self.treeWidget_AddressTable.contextMenuEvent = self.treeWidget_AddressTable_context_menu_event
         self.pushButton_AttachProcess.clicked.connect(self.pushButton_AttachProcess_clicked)
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
@@ -351,7 +351,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_MemoryView.clicked.connect(self.pushButton_MemoryView_clicked)
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
-        self.tableWidget_AddressTable.itemDoubleClicked.connect(self.tableWidget_AddressTable_item_double_clicked)
+        self.treeWidget_AddressTable.itemDoubleClicked.connect(self.treeWidget_AddressTable_item_double_clicked)
         icons_directory = GuiUtils.get_icons_directory()
         self.pushButton_AttachProcess.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
@@ -450,8 +450,8 @@ class MainForm(QMainWindow, MainWindow):
                 dialog_text + "\n\nGo to settings->General to disable this dialog",)], buttons=[QDialogButtonBox.Ok])
             dialog.exec_()
 
-    def tableWidget_AddressTable_context_menu_event(self, event):
-        current_row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
+    def treeWidget_AddressTable_context_menu_event(self, event):
+        current_row = self.treeWidget_AddressTable.currentItem()
         menu = QMenu()
         edit_menu = menu.addMenu("Edit")
         edit_desc = edit_menu.addAction("Description[Ctrl+Enter]")
@@ -466,30 +466,34 @@ class MainForm(QMainWindow, MainWindow):
         menu.addSeparator()
         cut_record = menu.addAction("Cut selected records[Ctrl+X]")
         copy_record = menu.addAction("Copy selected records[Ctrl+C]")
-        paste_record = menu.addAction("Paste selected records[Ctrl+V]")
+        paste_record_before = menu.addAction("Paste selected records before[Ctrl+V]")
+        paste_record_after = menu.addAction("Paste selected records after[V]")
+        paste_record_inside = menu.addAction("Paste selected records inside[I]")
         delete_record = menu.addAction("Delete selected records[Del]")
         menu.addSeparator()
         what_writes = menu.addAction("Find out what writes to this address")
         what_reads = menu.addAction("Find out what reads this address")
         what_accesses = menu.addAction("Find out what accesses this address")
-        if current_row == -1:
+        if current_row == None:
             deletion_list = [edit_menu.menuAction(), toggle_record, browse_region, disassemble, what_writes, what_reads,
                              what_accesses]
             GuiUtils.delete_menu_entries(menu, deletion_list)
-        font_size = self.tableWidget_AddressTable.font().pointSize()
+        font_size = self.treeWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         actions = {
-            edit_desc: self.tableWidget_AddressTable_edit_desc,
-            edit_address: self.tableWidget_AddressTable_edit_address,
-            edit_type: self.tableWidget_AddressTable_edit_type,
-            edit_value: self.tableWidget_AddressTable_edit_value,
+            edit_desc: self.treeWidget_AddressTable_edit_desc,
+            edit_address: self.treeWidget_AddressTable_edit_address,
+            edit_type: self.treeWidget_AddressTable_edit_type,
+            edit_value: self.treeWidget_AddressTable_edit_value,
             toggle_record: self.toggle_selected_records,
             browse_region: self.browse_region_for_selected_row,
             disassemble: self.disassemble_selected_row,
             cut_record: self.cut_selected_records,
             copy_record: self.copy_selected_records,
-            paste_record: self.paste_records,
+            paste_record_before: lambda: self.paste_records(insert_after = False),
+            paste_record_after: lambda: self.paste_records(insert_after = True),
+            paste_record_inside: lambda: self.paste_records(insert_inside = True),
             delete_record: self.delete_selected_records,
             what_writes: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.WRITE_ONLY),
             what_reads: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.READ_ONLY),
@@ -500,61 +504,64 @@ class MainForm(QMainWindow, MainWindow):
         except KeyError:
             pass
 
+    @requires_selection("treeWidget_AddressTable", single=True)
     def exec_track_watchpoint_widget(self, watchpoint_type):
-        last_selected_row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
-        address = self.tableWidget_AddressTable.item(last_selected_row, ADDR_COL).text()
-        value_type_text = self.tableWidget_AddressTable.item(last_selected_row, TYPE_COL).text()
+        selected_row = self.treeWidget_AddressTable.currentItem()
+        address = selected_row.text(ADDR_COL).text()
+        value_type_text = selected_row.text(TYPE_COL).text()
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type_text)
         if byte_len == -1:
-            value_text = self.tableWidget_AddressTable.item(last_selected_row, VALUE_COL).text()
+            value_text = selected_row.text(VALUE_COL).text()
             encoding, option = type_defs.string_index_to_encoding_dict[index]
             byte_len = len(value_text.encode(encoding, option))
         TrackWatchpointWidgetForm(address, byte_len, watchpoint_type, self).show()
 
-    @requires_selection("tableWidget_AddressTable")
+    @requires_selection("treeWidget_AddressTable", single=True)
     def browse_region_for_selected_row(self):
-        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
-        self.memory_view_window.hex_dump_address(int(self.tableWidget_AddressTable.item(row, ADDR_COL).text(), 16))
+        row = self.treeWidget_AddressTable.currentItem()
+        self.memory_view_window.hex_dump_address(int(row.text(ADDR_COL), 16))
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
-    @requires_selection("tableWidget_AddressTable")
+    @requires_selection("treeWidget_AddressTable", single=True)
     def disassemble_selected_row(self):
-        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
+        row = self.treeWidget_AddressTable.currentItem()
         self.memory_view_window.disassemble_expression(
-            self.tableWidget_AddressTable.item(row, ADDR_COL).text(), append_to_travel_history=True)
+            row.text(ADDR_COL), append_to_travel_history=True)
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
-    @requires_selection("tableWidget_AddressTable")
+    @requires_selection("treeWidget_AddressTable", single=False)
     def toggle_selected_records(self):
-        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
-        check_state = self.tableWidget_AddressTable.item(row, FROZEN_COL).checkState()
+        row = self.treeWidget_AddressTable.currentItem()
+        check_state = row.checkState(FROZEN_COL)
         new_check_state = Qt.Checked if check_state == Qt.Unchecked else Qt.Unchecked
-        selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
-        for item in selected_rows:
-            self.tableWidget_AddressTable.item(item.row(), FROZEN_COL).setCheckState(new_check_state)
+        for row in self.treeWidget_AddressTable.selectedItems():
+            row.setCheckState(FROZEN_COL, new_check_state)
 
     def cut_selected_records(self):
+        # Flat cut, does not preserve structure
         self.copy_selected_records()
         self.delete_selected_records()
 
     def copy_selected_records(self):
-        selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
+        # Flat copy, does not preserve structure
         QApplication.clipboard().setText(repr(
-            [self.read_address_table_entries(selected_row.row())
-             for selected_row in selected_rows]
+            [self.read_address_table_entries(selected_row)
+             for selected_row in self.treeWidget_AddressTable.selectedItems()]
         ))
 
-    def insert_records(self, records, insert_row):
-        for row in reversed(records):
-            self.tableWidget_AddressTable.insertRow(insert_row)
-            frozen_checkbox = QTableWidgetItem()
-            frozen_checkbox.setCheckState(Qt.Unchecked)
-            self.tableWidget_AddressTable.setItem(insert_row, FROZEN_COL, frozen_checkbox)
-            self.change_address_table_entries(insert_row, *row)
+    def insert_records(self, records, parent_row, insert_index):
+        # parent_row should be a QTreeWidgetItem in treeWidget_AddressTable
+        # records should be a list of list of strings
+        assert isinstance(parent_row, QTreeWidgetItem)
 
-    def paste_records(self):
+        records = [QTreeWidgetItem(("",) + x) for x in records]
+        for rec in records: rec.setCheckState(FROZEN_COL, Qt.Unchecked)
+
+        parent_row.insertChildren(insert_index, records)
+
+    def paste_records(self, insert_after = None, insert_inside = False):
         try:
             records = ast.literal_eval(QApplication.clipboard().text())
             if not isinstance(records, list) or \
@@ -564,22 +571,23 @@ class MainForm(QMainWindow, MainWindow):
             QMessageBox.information(self, "Error", "Invalid clipboard content")
             return
 
-        address_table = self.tableWidget_AddressTable
-        selected_rows = address_table.selectionModel().selectedRows()
-        insert_row = selected_rows[-1].row() if selected_rows else address_table.rowCount()
-        self.insert_records(records, insert_row)
+        insert_row = self.treeWidget_AddressTable.currentItem()
+        root = self.treeWidget_AddressTable.invisibleRootItem()
+        if not insert_row: # this is common when the treeWidget_AddressTable is empty
+            self.insert_records(records, root, self.treeWidget_AddressTable.topLevelItemCount())
+        elif insert_inside:
+            self.insert_records(records, insert_row, 0) 
+        else:
+            parent = insert_row.parent() or root
+            self.insert_records(records, parent, parent.indexOfChild(insert_row) + insert_after)
         self.update_address_table_manually()
 
     def delete_selected_records(self):
-        selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
+        root = self.treeWidget_AddressTable.invisibleRootItem()
+        for item in self.treeWidget_AddressTable.selectedItems():
+            (item.parent() or root).removeChild(item)
 
-        while selected_rows:
-            selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
-            if selected_rows:
-                first_selected_row = selected_rows[0].row()
-                self.tableWidget_AddressTable.removeRow(first_selected_row)
-
-    def tableWidget_AddressTable_key_press_event(self, event):
+    def treeWidget_AddressTable_key_press_event(self, event):
         actions = type_defs.KeyboardModifiersTupleDict([
             ((Qt.NoModifier, Qt.Key_Delete), self.delete_selected_records),
             ((Qt.ControlModifier, Qt.Key_B), self.browse_region_for_selected_row),
@@ -588,28 +596,36 @@ class MainForm(QMainWindow, MainWindow):
             ((Qt.NoModifier, Qt.Key_Space), self.toggle_selected_records),
             ((Qt.ControlModifier, Qt.Key_X), self.cut_selected_records),
             ((Qt.ControlModifier, Qt.Key_C), self.copy_selected_records),
-            ((Qt.ControlModifier, Qt.Key_V), self.paste_records),
-            ((Qt.NoModifier, Qt.Key_Return), self.tableWidget_AddressTable_edit_value),
-            ((Qt.ControlModifier, Qt.Key_Return), self.tableWidget_AddressTable_edit_desc),
-            ((Qt.ControlModifier | Qt.AltModifier, Qt.Key_Return), self.tableWidget_AddressTable_edit_address),
-            ((Qt.AltModifier, Qt.Key_Return), self.tableWidget_AddressTable_edit_type)
+            ((Qt.ControlModifier, Qt.Key_V), lambda: self.paste_records(insert_after = False)),
+            ((Qt.NoModifier, Qt.Key_V), lambda: self.paste_records(insert_after = True)),
+            ((Qt.NoModifier, Qt.Key_I), lambda: self.paste_records(insert_inside = True)),
+            ((Qt.NoModifier, Qt.Key_Return), self.treeWidget_AddressTable_edit_value),
+            ((Qt.ControlModifier, Qt.Key_Return), self.treeWidget_AddressTable_edit_desc),
+            ((Qt.ControlModifier | Qt.AltModifier, Qt.Key_Return), self.treeWidget_AddressTable_edit_address),
+            ((Qt.AltModifier, Qt.Key_Return), self.treeWidget_AddressTable_edit_type)
         ])
         try:
             actions[event.modifiers(), event.key()]()
         except KeyError:
-            self.tableWidget_AddressTable.keyPressEvent_original(event)
+            self.treeWidget_AddressTable.keyPressEvent_original(event)
 
     def update_address_table_manually(self):
+        it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
         table_contents = []
-        row_count = self.tableWidget_AddressTable.rowCount()
-        for row in range(row_count):
-            address = self.tableWidget_AddressTable.item(row, ADDR_COL).text()
-            index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(
-                self.tableWidget_AddressTable.item(row, TYPE_COL).text())
+        rows = []
+        while True:
+            row = it.value()
+            if not row: break
+            it += 1
+
+            address = row.text(ADDR_COL)
+            index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(row.text(TYPE_COL))
             table_contents.append((address, index, length, zero_terminate))
+            rows.append(row)
+
         new_table_contents = GDB_Engine.read_multiple_addresses(table_contents)
-        for row, item in enumerate(new_table_contents):
-            self.tableWidget_AddressTable.setItem(row, VALUE_COL, QTableWidgetItem(str(item)))
+        for row, item in zip(rows, new_table_contents):
+            row.setText(VALUE_COL, str(item))
 
     # gets the information from the dialog then adds it to addresstable
     def pushButton_AddAddressManually_clicked(self):
@@ -673,7 +689,7 @@ class MainForm(QMainWindow, MainWindow):
     def delete_address_table_contents(self):
         confirm_dialog = InputDialogForm(item_list=[("This will clear the contents of address table\nProceed?",)])
         if confirm_dialog.exec_():
-            self.tableWidget_AddressTable.setRowCount(0)
+            self.treeWidget_AddressTable.clear()
 
     def on_inferior_exit(self):
         if GDB_Engine.currentpid == -1:
@@ -705,39 +721,37 @@ class MainForm(QMainWindow, MainWindow):
         application.closeAllWindows()
 
     def add_entry_to_addresstable(self, description, address, typeofaddress, length=0, zero_terminate=True):
-        frozen_checkbox = QTableWidgetItem()
-        frozen_checkbox.setCheckState(Qt.Unchecked)
+        currentrow = QTreeWidgetItem()
+        currentrow.setCheckState(FROZEN_COL, Qt.Unchecked)
         typeofaddress_text = GuiUtils.valuetype_to_text(typeofaddress, length, zero_terminate)
 
         # this line lets us take symbols as parameters, pretty rad isn't it?
         address_text = GDB_Engine.convert_symbol_to_address(address)
         if address_text:
             address = address_text
-        self.tableWidget_AddressTable.setRowCount(self.tableWidget_AddressTable.rowCount() + 1)
-        currentrow = self.tableWidget_AddressTable.rowCount() - 1
+        self.treeWidget_AddressTable.addTopLevelItem(currentrow)
         value = GDB_Engine.read_single_address(address, typeofaddress, length, zero_terminate)
-        self.tableWidget_AddressTable.setItem(currentrow, FROZEN_COL, frozen_checkbox)
         self.change_address_table_entries(row=currentrow, description=description, address=address,
                                           typeofaddress=typeofaddress_text, value=str(value))
         self.show()  # In case of getting called from elsewhere
         self.activateWindow()
 
-    def tableWidget_AddressTable_item_double_clicked(self, index):
+    def treeWidget_AddressTable_item_double_clicked(self, row, column):
         action_for_column = {
-            VALUE_COL: self.tableWidget_AddressTable_edit_value,
-            DESC_COL: self.tableWidget_AddressTable_edit_desc,
-            ADDR_COL: self.tableWidget_AddressTable_edit_address,
-            TYPE_COL: self.tableWidget_AddressTable_edit_type
+            VALUE_COL: self.treeWidget_AddressTable_edit_value,
+            DESC_COL: self.treeWidget_AddressTable_edit_desc,
+            ADDR_COL: self.treeWidget_AddressTable_edit_address,
+            TYPE_COL: self.treeWidget_AddressTable_edit_type
         }
-        action_for_column = collections.defaultdict(lambda *args: lambda *args: None, action_for_column)
-        action_for_column[index.column()]()
+        action_for_column = collections.defaultdict(lambda *args: lambda: None, action_for_column)
+        action_for_column[column]()
 
-    @requires_selection("tableWidget_AddressTable")
-    def tableWidget_AddressTable_edit_value(self):
-        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
-        value = self.tableWidget_AddressTable.item(row, VALUE_COL).text()
+    @requires_selection("treeWidget_AddressTable", single=False)
+    def treeWidget_AddressTable_edit_value(self):
+        row = self.treeWidget_AddressTable.currentItem()
+        value = row.text(VALUE_COL)
         value_index = GuiUtils.text_to_valuetype(
-            self.tableWidget_AddressTable.item(row, TYPE_COL).text())[0]
+            row.text(TYPE_COL))[0]
         label_text = "Enter the new value"
         if type_defs.VALUE_INDEX.is_string(value_index):
             label_text += "\nPINCE doesn't automatically insert a null terminated string at the end" \
@@ -746,36 +760,32 @@ class MainForm(QMainWindow, MainWindow):
         if dialog.exec_():
             table_contents = []
             value_text = dialog.get_values()
-            selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
-            for item in selected_rows:
-                row = item.row()
-                address = self.tableWidget_AddressTable.item(row, ADDR_COL).text()
-                value_type = self.tableWidget_AddressTable.item(row, TYPE_COL).text()
+            for row in self.treeWidget_AddressTable.selectedItems():
+                address = row.text(ADDR_COL)
+                value_type = row.text(TYPE_COL)
                 value_index = GuiUtils.text_to_valuetype(value_type)[0]
                 if type_defs.VALUE_INDEX.is_string(value_index) or value_index == type_defs.VALUE_INDEX.INDEX_AOB:
                     unknown_type = SysUtils.parse_string(value_text, value_index)
                     if unknown_type is not None:
                         length = len(unknown_type)
-                        self.tableWidget_AddressTable.setItem(row, TYPE_COL, QTableWidgetItem(
-                            GuiUtils.change_text_length(value_type, length)))
+                        row.setText(TYPE_COL, GuiUtils.change_text_length(value_type, length))
                 table_contents.append((address, value_index))
             GDB_Engine.set_multiple_addresses(table_contents, value_text)
             self.update_address_table_manually()
 
-    @requires_selection("tableWidget_AddressTable")
-    def tableWidget_AddressTable_edit_desc(self):
-        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
-        description = self.tableWidget_AddressTable.item(row, DESC_COL).text()
+    @requires_selection("treeWidget_AddressTable", single=False)
+    def treeWidget_AddressTable_edit_desc(self):
+        row = self.treeWidget_AddressTable.currentItem()
+        description = row.text(DESC_COL)
         dialog = InputDialogForm(item_list=[("Enter the new description", description)])
         if dialog.exec_():
             description_text = dialog.get_values()
-            selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
-            for item in selected_rows:
-                self.tableWidget_AddressTable.setItem(item.row(), DESC_COL, QTableWidgetItem(description_text))
+            for row in self.treeWidget_AddressTable.selectedItems():
+                row.setText(DESC_COL, description_text)
 
-    @requires_selection("tableWidget_AddressTable")
-    def tableWidget_AddressTable_edit_address(self):
-        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
+    @requires_selection("treeWidget_AddressTable", single=False)
+    def treeWidget_AddressTable_edit_address(self):
+        row = self.treeWidget_AddressTable.currentItem()
         description, address, value_type = self.read_address_table_entries(row=row)
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
         manual_address_dialog = ManualAddressDialogForm(description=description, address=address, index=index,
@@ -793,32 +803,32 @@ class MainForm(QMainWindow, MainWindow):
             self.change_address_table_entries(row=row, description=description, address=address,
                                               typeofaddress=typeofaddress_text, value=str(value))
 
-    @requires_selection("tableWidget_AddressTable")
-    def tableWidget_AddressTable_edit_type(self):
-        row = GuiUtils.get_current_row(self.tableWidget_AddressTable)
-        value_type = self.tableWidget_AddressTable.item(row, TYPE_COL).text()
+    @requires_selection("treeWidget_AddressTable", single=False)
+    def treeWidget_AddressTable_edit_type(self):
+        row = self.treeWidget_AddressTable.currentItem()
+        value_type = row.text(TYPE_COL)
         value_index, length, zero_terminate = GuiUtils.text_to_valuetype(value_type)[0:3]
         dialog = EditTypeDialogForm(index=value_index, length=length, zero_terminate=zero_terminate)
         if dialog.exec_():
             params = dialog.get_values()
             type_text = GuiUtils.valuetype_to_text(*params)
-            selected_rows = self.tableWidget_AddressTable.selectionModel().selectedRows()
-            for item in selected_rows:
-                self.tableWidget_AddressTable.setItem(item.row(), TYPE_COL, QTableWidgetItem(type_text))
+            for row in self.treeWidget_AddressTable.selectedItems():
+                row.setText(TYPE_COL, type_text)
             self.update_address_table_manually()
 
     # Changes the column values of the given row
     def change_address_table_entries(self, row, description="", address="", typeofaddress="", value=""):
-        self.tableWidget_AddressTable.setItem(row, DESC_COL, QTableWidgetItem(description))
-        self.tableWidget_AddressTable.setItem(row, ADDR_COL, QTableWidgetItem(address))
-        self.tableWidget_AddressTable.setItem(row, TYPE_COL, QTableWidgetItem(typeofaddress))
-        self.tableWidget_AddressTable.setItem(row, VALUE_COL, QTableWidgetItem(value))
+        assert isinstance(row, QTreeWidgetItem)
+        row.setText(DESC_COL, description)
+        row.setText(ADDR_COL, address)
+        row.setText(TYPE_COL, typeofaddress)
+        row.setText(VALUE_COL, value)
 
     # Returns the column values of the given row
     def read_address_table_entries(self, row):
-        description = self.tableWidget_AddressTable.item(row, DESC_COL).text()
-        address = self.tableWidget_AddressTable.item(row, ADDR_COL).text()
-        value_type = self.tableWidget_AddressTable.item(row, TYPE_COL).text()
+        description = row.text(DESC_COL)
+        address = row.text(ADDR_COL)
+        value_type = row.text(TYPE_COL)
         return description, address, value_type
 
 
