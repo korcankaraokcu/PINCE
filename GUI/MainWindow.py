@@ -260,6 +260,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.addLayout(self.horizontalLayout_8)
         self.treeWidget_AddressTable = QtWidgets.QTreeWidget(self.centralwidget)
         self.treeWidget_AddressTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.treeWidget_AddressTable.setDragDropMode(QtWidgets.QAbstractItemView.DragDrop)
+        self.treeWidget_AddressTable.setDefaultDropAction(QtCore.Qt.MoveAction)
         self.treeWidget_AddressTable.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.treeWidget_AddressTable.setExpandsOnDoubleClick(False)
         self.treeWidget_AddressTable.setObjectName("treeWidget_AddressTable")
