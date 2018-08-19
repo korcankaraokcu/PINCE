@@ -507,11 +507,11 @@ class MainForm(QMainWindow, MainWindow):
     @requires_selection("treeWidget_AddressTable")
     def exec_track_watchpoint_widget(self, watchpoint_type):
         selected_row = self.treeWidget_AddressTable.currentItem()
-        address = selected_row.text(ADDR_COL).text()
-        value_type_text = selected_row.text(TYPE_COL).text()
+        address = selected_row.text(ADDR_COL)
+        value_type_text = selected_row.text(TYPE_COL)
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type_text)
         if byte_len == -1:
-            value_text = selected_row.text(VALUE_COL).text()
+            value_text = selected_row.text(VALUE_COL)
             encoding, option = type_defs.string_index_to_encoding_dict[index]
             byte_len = len(value_text.encode(encoding, option))
         TrackWatchpointWidgetForm(address, byte_len, watchpoint_type, self).show()
