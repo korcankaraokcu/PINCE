@@ -210,13 +210,13 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 # A decorator for selection control
-def requires_selection(attribute_name, single):
+def requires_selection(attribute_name):
     def real_decorator(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
             attribute = getattr(self, attribute_name)
             selected_rows = attribute.selectionModel().selectedRows()
-            if ((len(selected_rows) == 1) if single else selected_rows):
+            if selected_rows:
                 func(self, *args, **kwargs)
 
         return wrapper
@@ -491,9 +491,9 @@ class MainForm(QMainWindow, MainWindow):
             disassemble: self.disassemble_selected_row,
             cut_record: self.cut_selected_records,
             copy_record: self.copy_selected_records,
-            paste_record_before: lambda: self.paste_records(insert_after = False),
-            paste_record_after: lambda: self.paste_records(insert_after = True),
-            paste_record_inside: lambda: self.paste_records(insert_inside = True),
+            paste_record_before: lambda: self.paste_records(insert_after=False),
+            paste_record_after: lambda: self.paste_records(insert_after=True),
+            paste_record_inside: lambda: self.paste_records(insert_inside=True),
             delete_record: self.delete_selected_records,
             what_writes: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.WRITE_ONLY),
             what_reads: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.READ_ONLY),
@@ -504,7 +504,7 @@ class MainForm(QMainWindow, MainWindow):
         except KeyError:
             pass
 
-    @requires_selection("treeWidget_AddressTable", single=True)
+    @requires_selection("treeWidget_AddressTable")
     def exec_track_watchpoint_widget(self, watchpoint_type):
         selected_row = self.treeWidget_AddressTable.currentItem()
         address = selected_row.text(ADDR_COL).text()
@@ -516,14 +516,14 @@ class MainForm(QMainWindow, MainWindow):
             byte_len = len(value_text.encode(encoding, option))
         TrackWatchpointWidgetForm(address, byte_len, watchpoint_type, self).show()
 
-    @requires_selection("treeWidget_AddressTable", single=True)
+    @requires_selection("treeWidget_AddressTable")
     def browse_region_for_selected_row(self):
         row = self.treeWidget_AddressTable.currentItem()
         self.memory_view_window.hex_dump_address(int(row.text(ADDR_COL), 16))
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
-    @requires_selection("treeWidget_AddressTable", single=True)
+    @requires_selection("treeWidget_AddressTable")
     def disassemble_selected_row(self):
         row = self.treeWidget_AddressTable.currentItem()
         self.memory_view_window.disassemble_expression(
@@ -531,7 +531,7 @@ class MainForm(QMainWindow, MainWindow):
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
-    @requires_selection("treeWidget_AddressTable", single=False)
+    @requires_selection("treeWidget_AddressTable")
     def toggle_selected_records(self):
         row = self.treeWidget_AddressTable.currentItem()
         check_state = row.checkState(FROZEN_COL)
@@ -561,7 +561,7 @@ class MainForm(QMainWindow, MainWindow):
 
         parent_row.insertChildren(insert_index, records)
 
-    def paste_records(self, insert_after = None, insert_inside = False):
+    def paste_records(self, insert_after=None, insert_inside=False):
         try:
             records = ast.literal_eval(QApplication.clipboard().text())
             if not isinstance(records, list) or \
@@ -573,10 +573,10 @@ class MainForm(QMainWindow, MainWindow):
 
         insert_row = self.treeWidget_AddressTable.currentItem()
         root = self.treeWidget_AddressTable.invisibleRootItem()
-        if not insert_row: # this is common when the treeWidget_AddressTable is empty
+        if not insert_row:  # this is common when the treeWidget_AddressTable is empty
             self.insert_records(records, root, self.treeWidget_AddressTable.topLevelItemCount())
         elif insert_inside:
-            self.insert_records(records, insert_row, 0) 
+            self.insert_records(records, insert_row, 0)
         else:
             parent = insert_row.parent() or root
             self.insert_records(records, parent, parent.indexOfChild(insert_row) + insert_after)
@@ -596,9 +596,9 @@ class MainForm(QMainWindow, MainWindow):
             ((Qt.NoModifier, Qt.Key_Space), self.toggle_selected_records),
             ((Qt.ControlModifier, Qt.Key_X), self.cut_selected_records),
             ((Qt.ControlModifier, Qt.Key_C), self.copy_selected_records),
-            ((Qt.ControlModifier, Qt.Key_V), lambda: self.paste_records(insert_after = False)),
-            ((Qt.NoModifier, Qt.Key_V), lambda: self.paste_records(insert_after = True)),
-            ((Qt.NoModifier, Qt.Key_I), lambda: self.paste_records(insert_inside = True)),
+            ((Qt.ControlModifier, Qt.Key_V), lambda: self.paste_records(insert_after=False)),
+            ((Qt.NoModifier, Qt.Key_V), lambda: self.paste_records(insert_after=True)),
+            ((Qt.NoModifier, Qt.Key_I), lambda: self.paste_records(insert_inside=True)),
             ((Qt.NoModifier, Qt.Key_Return), self.treeWidget_AddressTable_edit_value),
             ((Qt.ControlModifier, Qt.Key_Return), self.treeWidget_AddressTable_edit_desc),
             ((Qt.ControlModifier | Qt.AltModifier, Qt.Key_Return), self.treeWidget_AddressTable_edit_address),
@@ -746,7 +746,7 @@ class MainForm(QMainWindow, MainWindow):
         action_for_column = collections.defaultdict(lambda *args: lambda: None, action_for_column)
         action_for_column[column]()
 
-    @requires_selection("treeWidget_AddressTable", single=False)
+    @requires_selection("treeWidget_AddressTable")
     def treeWidget_AddressTable_edit_value(self):
         row = self.treeWidget_AddressTable.currentItem()
         value = row.text(VALUE_COL)
@@ -773,7 +773,7 @@ class MainForm(QMainWindow, MainWindow):
             GDB_Engine.set_multiple_addresses(table_contents, value_text)
             self.update_address_table_manually()
 
-    @requires_selection("treeWidget_AddressTable", single=False)
+    @requires_selection("treeWidget_AddressTable")
     def treeWidget_AddressTable_edit_desc(self):
         row = self.treeWidget_AddressTable.currentItem()
         description = row.text(DESC_COL)
@@ -783,7 +783,7 @@ class MainForm(QMainWindow, MainWindow):
             for row in self.treeWidget_AddressTable.selectedItems():
                 row.setText(DESC_COL, description_text)
 
-    @requires_selection("treeWidget_AddressTable", single=False)
+    @requires_selection("treeWidget_AddressTable")
     def treeWidget_AddressTable_edit_address(self):
         row = self.treeWidget_AddressTable.currentItem()
         description, address, value_type = self.read_address_table_entries(row=row)
@@ -803,7 +803,7 @@ class MainForm(QMainWindow, MainWindow):
             self.change_address_table_entries(row=row, description=description, address=address,
                                               typeofaddress=typeofaddress_text, value=str(value))
 
-    @requires_selection("treeWidget_AddressTable", single=False)
+    @requires_selection("treeWidget_AddressTable")
     def treeWidget_AddressTable_edit_type(self):
         row = self.treeWidget_AddressTable.currentItem()
         value_type = row.text(TYPE_COL)
