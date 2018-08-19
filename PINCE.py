@@ -352,6 +352,8 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
         self.treeWidget_AddressTable.itemDoubleClicked.connect(self.treeWidget_AddressTable_item_double_clicked)
+        self.treeWidget_AddressTable.expanded.connect(self.resize_address_table)
+        self.treeWidget_AddressTable.collapsed.connect(self.resize_address_table)
         icons_directory = GuiUtils.get_icons_directory()
         self.pushButton_AttachProcess.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
@@ -626,6 +628,9 @@ class MainForm(QMainWindow, MainWindow):
         new_table_contents = GDB_Engine.read_multiple_addresses(table_contents)
         for row, item in zip(rows, new_table_contents):
             row.setText(VALUE_COL, str(item))
+
+    def resize_address_table(self):
+        self.treeWidget_AddressTable.resizeColumnToContents(FROZEN_COL)
 
     # gets the information from the dialog then adds it to addresstable
     def pushButton_AddAddressManually_clicked(self):
