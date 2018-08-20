@@ -643,10 +643,8 @@ class MainForm(QMainWindow, MainWindow):
     def pushButton_AddAddressManually_clicked(self):
         manual_address_dialog = ManualAddressDialogForm()
         if manual_address_dialog.exec_():
-            description, address_expr, typeofaddress, length, zero_terminate = manual_address_dialog.get_values()
-            self.add_entry_to_addresstable(description=description, address_expr=address_expr,
-                                           typeofaddress=typeofaddress,
-                                           length=length, zero_terminate=zero_terminate)
+            description, address_expr, address_type, length, zero_terminate = manual_address_dialog.get_values()
+            self.add_entry_to_addresstable(description, address_expr, address_type, length, zero_terminate)
 
     def pushButton_MemoryView_clicked(self):
         self.memory_view_window.showMaximized()
@@ -733,14 +731,13 @@ class MainForm(QMainWindow, MainWindow):
         application = QApplication.instance()
         application.closeAllWindows()
 
-    def add_entry_to_addresstable(self, description, address_expr, typeofaddress, length=0, zero_terminate=True):
-        currentrow = QTreeWidgetItem()
-        currentrow.setCheckState(FROZEN_COL, Qt.Unchecked)
-        typeofaddress_text = GuiUtils.valuetype_to_text(typeofaddress, length, zero_terminate)
+    def add_entry_to_addresstable(self, description, address_expr, address_type, length=0, zero_terminate=True):
+        current_row = QTreeWidgetItem()
+        current_row.setCheckState(FROZEN_COL, Qt.Unchecked)
+        address_type_text = GuiUtils.valuetype_to_text(address_type, length, zero_terminate)
 
-        self.treeWidget_AddressTable.addTopLevelItem(currentrow)
-        self.change_address_table_entries(row=currentrow, description=description, address_expr=address_expr,
-                                          typeofaddress=typeofaddress_text)
+        self.treeWidget_AddressTable.addTopLevelItem(current_row)
+        self.change_address_table_entries(current_row, description, address_expr, address_type_text)
         self.show()  # In case of getting called from elsewhere
         self.activateWindow()
 
@@ -800,11 +797,10 @@ class MainForm(QMainWindow, MainWindow):
                                                         length=length, zero_terminate=zero_terminate)
         manual_address_dialog.setWindowTitle("Edit Address")
         if manual_address_dialog.exec_():
-            description, address_expr, typeofaddress, length, zero_terminate = manual_address_dialog.get_values()
-            typeofaddress_text = GuiUtils.valuetype_to_text(value_index=typeofaddress, length=length,
-                                                            zero_terminate=zero_terminate)
-            self.change_address_table_entries(row=row, description=description, address_expr=address_expr,
-                                              typeofaddress=typeofaddress_text)
+            description, address_expr, address_type, length, zero_terminate = manual_address_dialog.get_values()
+            address_type_text = GuiUtils.valuetype_to_text(value_index=address_type, length=length,
+                                                           zero_terminate=zero_terminate)
+            self.change_address_table_entries(row, description, address_expr, address_type_text)
 
     @requires_selection("treeWidget_AddressTable")
     def treeWidget_AddressTable_edit_type(self):
@@ -820,10 +816,10 @@ class MainForm(QMainWindow, MainWindow):
             self.update_address_table_manually()
 
     # Changes the column values of the given row
-    def change_address_table_entries(self, row, description="", address_expr="", typeofaddress=""):
+    def change_address_table_entries(self, row, description="", address_expr="", address_type=""):
         address = GDB_Engine.convert_symbol_to_address(address_expr)
         value = ''
-        index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(typeofaddress)
+        index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(address_type)
         if address:
             value = str(GDB_Engine.read_single_address(address, index, length, zero_terminate))
 
@@ -831,7 +827,7 @@ class MainForm(QMainWindow, MainWindow):
         row.setText(DESC_COL, description)
         row.setData(ADDR_COL, ADDR_EXPR_ROLE, address_expr)
         row.setText(ADDR_COL, address or address_expr)
-        row.setText(TYPE_COL, typeofaddress)
+        row.setText(TYPE_COL, address_type)
         row.setText(VALUE_COL, value)
 
     # Returns the column values of the given row
@@ -1051,8 +1047,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         zero_terminate = False
         if self.checkBox_zeroterminate.isChecked():
             zero_terminate = True
-        typeofaddress = self.comboBox_ValueType.currentIndex()
-        return description, address, typeofaddress, length, zero_terminate
+        address_type = self.comboBox_ValueType.currentIndex()
+        return description, address, address_type, length, zero_terminate
 
 
 class EditTypeDialogForm(QDialog, EditTypeDialog):
@@ -1126,8 +1122,8 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         zero_terminate = False
         if self.checkBox_ZeroTerminate.isChecked():
             zero_terminate = True
-        typeofaddress = self.comboBox_ValueType.currentIndex()
-        return typeofaddress, length, zero_terminate
+        address_type = self.comboBox_ValueType.currentIndex()
+        return address_type, length, zero_terminate
 
 
 class LoadingDialogForm(QDialog, LoadingDialog):
@@ -1904,8 +1900,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address),
                                                         index=type_defs.VALUE_INDEX.INDEX_AOB)
         if manual_address_dialog.exec_():
-            description, address_expr, typeofaddress, length, zero_terminate = manual_address_dialog.get_values()
-            self.parent().add_entry_to_addresstable(description, address_expr, typeofaddress, length, zero_terminate)
+            description, address_expr, address_type, length, zero_terminate = manual_address_dialog.get_values()
+            self.parent().add_entry_to_addresstable(description, address_expr, address_type, length, zero_terminate)
 
     def verticalScrollBar_HexView_mouse_release_event(self, event):
         GuiUtils.center_scroll_bar(self.verticalScrollBar_HexView)
@@ -3251,8 +3247,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
     def tableWidget_TrackInfo_item_double_clicked(self, index):
         address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
         self.parent().parent().add_entry_to_addresstable("Changed by address " + self.address, address,
-                                                         self.comboBox_ValueType.currentIndex(),
-                                                         10, True, True)
+                                                         self.comboBox_ValueType.currentIndex(), 10, True, True)
 
     def pushButton_Stop_clicked(self):
         if self.stopped:
