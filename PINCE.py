@@ -479,7 +479,7 @@ class MainForm(QMainWindow, MainWindow):
         what_writes = menu.addAction("Find out what writes to this address")
         what_reads = menu.addAction("Find out what reads this address")
         what_accesses = menu.addAction("Find out what accesses this address")
-        if current_row == None:
+        if current_row is None:
             deletion_list = [edit_menu.menuAction(), toggle_record, browse_region, disassemble, what_writes, what_reads,
                              what_accesses]
             GuiUtils.delete_menu_entries(menu, deletion_list)
@@ -644,7 +644,8 @@ class MainForm(QMainWindow, MainWindow):
         manual_address_dialog = ManualAddressDialogForm()
         if manual_address_dialog.exec_():
             description, address_expr, typeofaddress, length, zero_terminate = manual_address_dialog.get_values()
-            self.add_entry_to_addresstable(description=description, address_expr=address_expr, typeofaddress=typeofaddress,
+            self.add_entry_to_addresstable(description=description, address_expr=address_expr,
+                                           typeofaddress=typeofaddress,
                                            length=length, zero_terminate=zero_terminate)
 
     def pushButton_MemoryView_clicked(self):
