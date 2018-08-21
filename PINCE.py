@@ -471,8 +471,8 @@ class MainForm(QMainWindow, MainWindow):
         menu.addSeparator()
         cut_record = menu.addAction("Cut selected records[Ctrl+X]")
         copy_record = menu.addAction("Copy selected records[Ctrl+C]")
-        cut_record_recursively = menu.addAction("Cut selected records (recursive)")
-        copy_record_recursively = menu.addAction("Copy selected records (recursive)")
+        cut_record_recursively = menu.addAction("Cut selected records (recursive)[X]")
+        copy_record_recursively = menu.addAction("Copy selected records (recursive)[C]")
         paste_record_before = menu.addAction("Paste selected records before[Ctrl+V]")
         paste_record_after = menu.addAction("Paste selected records after[V]")
         paste_record_inside = menu.addAction("Paste selected records inside[I]")
@@ -648,6 +648,8 @@ class MainForm(QMainWindow, MainWindow):
             ((Qt.NoModifier, Qt.Key_Space), self.toggle_selected_records),
             ((Qt.ControlModifier, Qt.Key_X), self.cut_selected_records),
             ((Qt.ControlModifier, Qt.Key_C), self.copy_selected_records),
+            ((Qt.NoModifier, Qt.Key_X), self.cut_selected_records_recursively),
+            ((Qt.NoModifier, Qt.Key_C), self.copy_selected_records_recursively),
             ((Qt.ControlModifier, Qt.Key_V), lambda: self.paste_records(insert_after=False)),
             ((Qt.NoModifier, Qt.Key_V), lambda: self.paste_records(insert_after=True)),
             ((Qt.NoModifier, Qt.Key_I), lambda: self.paste_records(insert_inside=True)),
