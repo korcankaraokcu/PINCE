@@ -471,6 +471,8 @@ class MainForm(QMainWindow, MainWindow):
         menu.addSeparator()
         cut_record = menu.addAction("Cut selected records[Ctrl+X]")
         copy_record = menu.addAction("Copy selected records[Ctrl+C]")
+        cut_record_recursively = menu.addAction("Cut selected records (recursive)")
+        copy_record_recursively = menu.addAction("Copy selected records (recursive)")
         paste_record_before = menu.addAction("Paste selected records before[Ctrl+V]")
         paste_record_after = menu.addAction("Paste selected records after[V]")
         paste_record_inside = menu.addAction("Paste selected records inside[I]")
@@ -496,6 +498,8 @@ class MainForm(QMainWindow, MainWindow):
             disassemble: self.disassemble_selected_row,
             cut_record: self.cut_selected_records,
             copy_record: self.copy_selected_records,
+            cut_record_recursively: self.cut_selected_records_recursively,
+            copy_record_recursively: self.copy_selected_records_recursively,
             paste_record_before: lambda: self.paste_records(insert_after=False),
             paste_record_after: lambda: self.paste_records(insert_after=True),
             paste_record_inside: lambda: self.paste_records(insert_inside=True),
