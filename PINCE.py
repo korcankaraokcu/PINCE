@@ -552,20 +552,22 @@ class MainForm(QMainWindow, MainWindow):
     def copy_selected_records(self):
         # Flat copy, does not preserve structure
         QApplication.clipboard().setText(repr(
-            [self.read_address_table_entries(selected_row)
+            [self.read_address_table_entries(selected_row) + ((), )
              for selected_row in self.treeWidget_AddressTable.selectedItems()]
         ))
+        # each element in the list has no children
 
     def insert_records(self, records, parent_row, insert_index):
         # parent_row should be a QTreeWidgetItem in treeWidget_AddressTable
-        # records should be a list of list of strings
+        # records should be an iterable of valid output of read_address_table_recursively
         assert isinstance(parent_row, QTreeWidgetItem)
 
         rows = []
         for rec in records:
             row = QTreeWidgetItem()
             row.setCheckState(FROZEN_COL, Qt.Unchecked)
-            self.change_address_table_entries(row, *rec)
+            self.change_address_table_entries(row, *rec[:-1])
+            self.insert_records(rec[-1], row, 0)
             rows.append(row)
 
         parent_row.insertChildren(insert_index, rows)
@@ -573,9 +575,6 @@ class MainForm(QMainWindow, MainWindow):
     def paste_records(self, insert_after=None, insert_inside=False):
         try:
             records = ast.literal_eval(QApplication.clipboard().text())
-            if not isinstance(records, list) or \
-                    any(not isinstance(row, tuple) or len(row) != 3 for row in records):
-                raise ValueError()
         except (SyntaxError, ValueError):
             QMessageBox.information(self, "Error", "Invalid clipboard content")
             return
