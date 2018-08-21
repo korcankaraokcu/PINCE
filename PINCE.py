@@ -837,6 +837,13 @@ class MainForm(QMainWindow, MainWindow):
         value_type = row.text(TYPE_COL)
         return description, address_expr, value_type
 
+    # Returns the values inside the given row and all of its descendants.
+    # All values except the last are the same as read_address_table_entries output.
+    # Last value is an iterable of information about its direct children.
+    def read_address_table_recursively(self, row):
+        return self.read_address_table_entries(row) + \
+                ([self.read_address_table_recursively(row.child(i)) for i in range(row.childCount())],)
+
 
 # process select window
 class ProcessForm(QMainWindow, ProcessWindow):
