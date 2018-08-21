@@ -557,6 +557,46 @@ class MainForm(QMainWindow, MainWindow):
         ))
         # each element in the list has no children
 
+    def cut_selected_records_recursively(self):
+        self.copy_selected_records_recursively()
+        self.delete_selected_records()
+
+    def copy_selected_records_recursively(self):
+        # Recursive copy
+        items = self.treeWidget_AddressTable.selectedItems()
+
+        def index_of(item):
+            """Returns the index used to access the given QTreeWidgetItem
+            as a list of ints."""
+            result = []
+            while True:
+                parent = item.parent()
+                if parent:
+                    result.append(parent.indexOfChild(item))
+                    item = parent
+                else:
+                    result.append(item.treeWidget().indexOfTopLevelItem(item))
+                    return result[::-1]
+
+        # First, order the items by their indices in the tree widget.
+        # Store the indices for later usage.
+        index_items = [(index_of(item), item) for item in items]
+        index_items.sort(key=lambda x:x[0])  # sort by index
+
+        # Now filter any selected items that is a descendant of another selected items.
+        items = []
+        last_index = [-1] # any invalid list of indices are fine
+        for index, item in index_items:
+            if index[:len(last_index)] == last_index:
+                continue    # this item is a descendant of the last item
+            items.append(item)
+            last_index = index
+
+        QApplication.clipboard().setText(repr(
+            [self.read_address_table_recursively(item) for item in items]
+        ))
+
+
     def insert_records(self, records, parent_row, insert_index):
         # parent_row should be a QTreeWidgetItem in treeWidget_AddressTable
         # records should be an iterable of valid output of read_address_table_recursively
