@@ -701,6 +701,37 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow = ProcessForm(self)
         self.processwindow.show()
 
+    # Returns: a bool value indicates whether the operation succeeded.
+    def attach_to_pid(self, pid):
+        attach_result = GDB_Engine.attach(pid, gdb_path=gdb_path)
+        if attach_result[0] == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
+            self.on_new_process()
+            return True
+        else:
+            QMessageBox.information(self, "Error", attach_result[1])
+            return False
+
+    # Returns: a bool value indicates whether the operation succeeded.
+    def create_new_process(self, file_path, args, ld_preload_path):
+        if GDB_Engine.create_process(file_path, args, ld_preload_path):
+            self.on_new_process()
+            return True
+        else:
+            QMessageBox.information(self, "Error", "An error occurred while trying to create process")
+            self.on_inferior_exit()
+            return False
+
+    # This is called whenever a new process is created/attached to by PINCE
+    # in order to change the form appearance
+    def on_new_process(self):
+        p = SysUtils.get_process_information(GDB_Engine.currentpid)
+        self.label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
+
+        # enable scan GUI
+        self.QWidget_Toolbox.setEnabled(True)
+        self.pushButton_NextScan.setEnabled(False)
+        self.pushButton_UndoScan.setEnabled(False)
+
     def delete_address_table_contents(self):
         confirm_dialog = InputDialogForm(item_list=[("This will clear the contents of address table\nProceed?",)])
         if confirm_dialog.exec_():
@@ -900,14 +931,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 QMessageBox.information(self, "Error", "What the fuck are you trying to do?")  # planned easter egg
                 return
             self.setCursor(QCursor(Qt.WaitCursor))
-            attach_result = GDB_Engine.attach(pid, gdb_path=gdb_path)
-            if attach_result[0] == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
-                p = SysUtils.get_process_information(GDB_Engine.currentpid)
-                self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
-                self.enable_scan_gui()
+            if self.parent().attach_to_pid(pid):
                 self.close()
-            else:
-                QMessageBox.information(self, "Error", attach_result[1])
             self.setCursor(QCursor(Qt.ArrowCursor))
 
     def pushButton_CreateProcess_clicked(self):
@@ -920,20 +945,9 @@ class ProcessForm(QMainWindow, ProcessWindow):
             else:
                 return
             self.setCursor(QCursor(Qt.WaitCursor))
-            if GDB_Engine.create_process(file_path, args, ld_preload_path, gdb_path):
-                p = SysUtils.get_process_information(GDB_Engine.currentpid)
-                self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
-                self.enable_scan_gui()
+            if self.parent().create_new_process(file_path, args, ld_preload_path):
                 self.close()
-            else:
-                QMessageBox.information(self, "Error", "An error occurred while trying to create process")
-                self.parent().on_inferior_exit()
             self.setCursor(QCursor(Qt.ArrowCursor))
-
-    def enable_scan_gui(self):
-        self.parent().QWidget_Toolbox.setEnabled(True)
-        self.parent().pushButton_NextScan.setEnabled(False)
-        self.parent().pushButton_UndoScan.setEnabled(False)
 
 
 # Add Address Manually Dialog
