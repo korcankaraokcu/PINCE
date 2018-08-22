@@ -340,6 +340,18 @@ class MainForm(QMainWindow, MainWindow):
             current_hotkey.activated.connect(getattr(self, key + "_pressed"))
             current_hotkey.setContext(Qt.ApplicationShortcut)
 
+        # Check if any process should be attached to automatically.
+        # Patterns at former position has higher priority.
+        procs = [(process.name(), process.pid) for process in SysUtils.get_process_list()]
+        for pattern in auto_attach_list:
+            for name, pid in procs:
+                if re.fullmatch(pattern, name):
+                    self.attach_to_pid(pid)
+                    break
+            else: # not found
+                continue
+            break # found. Python doesn't have a way to break out of multiple loops.
+
         # Saving the original function because super() doesn't work when we override functions like this
         self.treeWidget_AddressTable.keyPressEvent_original = self.treeWidget_AddressTable.keyPressEvent
         self.treeWidget_AddressTable.keyPressEvent = self.treeWidget_AddressTable_key_press_event
