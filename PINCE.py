@@ -82,6 +82,7 @@ code_injection_method = int
 bring_disassemble_to_front = bool
 instructions_per_scroll = int
 gdb_path = str
+auto_attach_list = list
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -376,6 +377,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("show_messagebox_on_exception", True)
         self.settings.setValue("show_messagebox_on_toggle_attach", True)
         self.settings.setValue("gdb_output_mode", type_defs.GDB_OUTPUT_MODE.UNMUTED)
+        self.settings.setValue("auto_attach_list", [])
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
         self.settings.setValue("pause_hotkey", "F1")
@@ -404,6 +406,7 @@ class MainForm(QMainWindow, MainWindow):
         global show_messagebox_on_exception
         global show_messagebox_on_toggle_attach
         global gdb_output_mode
+        global auto_attach_list
         global global_hotkeys
         global code_injection_method
         global bring_disassemble_to_front
@@ -414,6 +417,7 @@ class MainForm(QMainWindow, MainWindow):
         show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
         show_messagebox_on_toggle_attach = self.settings.value("General/show_messagebox_on_toggle_attach", type=bool)
         gdb_output_mode = self.settings.value("General/gdb_output_mode", type=int)
+        auto_attach_list = self.settings.value("General/auto_attach_list", type=list)
         GDB_Engine.set_gdb_output_mode(gdb_output_mode)
         for key, value in list(global_hotkeys.items()):
             value = self.settings.value("Hotkeys/" + key)
@@ -1321,6 +1325,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                                                "\nSetting update interval less than 0.1 seconds may cause slowdown"
                                                "\nProceed?",)]).exec_():
                 return
+
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
@@ -1328,6 +1333,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/show_messagebox_on_toggle_attach",
                                self.checkBox_MessageBoxOnToggleAttach.isChecked())
         self.settings.setValue("General/gdb_output_mode", self.comboBox_GDBOutputMode.currentIndex())
+        self.settings.setValue("General/auto_attach_list", self.plainTextEdit_autoAttachList.toPlainText().splitlines())
         for key, value in list(global_hotkeys.items()):
             self.settings.setValue("Hotkeys/" + key, getattr(self, key))
         if self.radioButton_SimpleDLopenCall.isChecked():
@@ -1357,6 +1363,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.checkBox_MessageBoxOnToggleAttach.setChecked(
             self.settings.value("General/show_messagebox_on_toggle_attach", type=bool))
         self.comboBox_GDBOutputMode.setCurrentIndex(self.settings.value("General/gdb_output_mode", type=int))
+        self.plainTextEdit_autoAttachList.setPlainText('\n'.join(self.settings.value("General/auto_attach_list", type=list)))
         self.listWidget_Functions.clear()
         self.listWidget_Functions.addItems(
             ["Pause the process", "Break the process", "Continue the process", "Toggle attach/detach"])
