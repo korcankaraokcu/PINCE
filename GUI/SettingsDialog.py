@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'SettingsDialog.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -94,6 +94,18 @@ class Ui_Dialog(object):
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem1)
         self.verticalLayout_5.addLayout(self.horizontalLayout_3)
+        self.horizontalLayout_12 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_12.setContentsMargins(-1, 0, -1, -1)
+        self.horizontalLayout_12.setObjectName("horizontalLayout_12")
+        self.label_9 = QtWidgets.QLabel(self.page)
+        self.label_9.setWordWrap(True)
+        self.label_9.setObjectName("label_9")
+        self.horizontalLayout_12.addWidget(self.label_9)
+        self.plainTextEdit_autoAttachList = QtWidgets.QPlainTextEdit(self.page)
+        self.plainTextEdit_autoAttachList.setMaximumSize(QtCore.QSize(16777215, 38))
+        self.plainTextEdit_autoAttachList.setObjectName("plainTextEdit_autoAttachList")
+        self.horizontalLayout_12.addWidget(self.plainTextEdit_autoAttachList)
+        self.verticalLayout_5.addLayout(self.horizontalLayout_12)
         spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_5.addItem(spacerItem2)
         self.gridLayout.addLayout(self.verticalLayout_5, 0, 0, 1, 1)
@@ -272,6 +284,7 @@ class Ui_Dialog(object):
         self.checkBox_MessageBoxOnException.setText(_translate("Dialog", "Show a MessageBox on InferiorRunning and GDBInitialize exceptions"))
         self.checkBox_MessageBoxOnToggleAttach.setText(_translate("Dialog", "Show a MessageBox on Toggle Attach"))
         self.label_8.setText(_translate("Dialog", "GDB console output mode"))
+        self.label_9.setText(_translate("Dialog", "On start, automatically attach to processes with name matching one of the regex:"))
         self.label_3.setText(_translate("Dialog", "Functions"))
         self.label_4.setText(_translate("Dialog", "Hotkey"))
         self.pushButton_ClearHotkey.setText(_translate("Dialog", "Clear"))
