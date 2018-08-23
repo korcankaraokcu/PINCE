@@ -345,6 +345,8 @@ class MainForm(QMainWindow, MainWindow):
         self.treeWidget_AddressTable.keyPressEvent = self.treeWidget_AddressTable_key_press_event
         self.treeWidget_AddressTable.contextMenuEvent = self.treeWidget_AddressTable_context_menu_event
         self.pushButton_AttachProcess.clicked.connect(self.pushButton_AttachProcess_clicked)
+        self.pushButton_Open.clicked.connect(self.pushButton_Open_clicked)
+        self.pushButton_Save.clicked.connect(self.pushButton_Save_clicked)
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
         self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
@@ -774,6 +776,33 @@ class MainForm(QMainWindow, MainWindow):
     def pushButton_AttachProcess_clicked(self):
         self.processwindow = ProcessForm(self)
         self.processwindow.show()
+
+    def pushButton_Open_clicked(self):
+        file_paths = QFileDialog.getOpenFileNames(self, caption="Open PCT file(s)",
+            filter="PINCE cheat table format (*.pct);;All files (*)")[0]
+        if not file_paths: return
+        if self.treeWidget_AddressTable.topLevelItemCount() > 0:
+            if InputDialogForm(item_list=[("Clear existing address table?",)]).exec_():
+                self.treeWidget_AddressTable.clear()
+
+        for file_path in file_paths:
+            content = SysUtils.load_file(file_path)
+            if not isinstance(content, list):
+                QMessageBox.information(self, "Error", "File "+file_path+"does not exist, "
+                        "is inaccessible or contains invalid content. Terminating...")
+                break
+            self.insert_records(content, self.treeWidget_AddressTable.invisibleRootItem(),
+                    self.treeWidget_AddressTable.topLevelItemCount())
+
+    def pushButton_Save_clicked(self):
+        file_path = QFileDialog.getSaveFileName(self, caption="Save PCT file",
+            filter="PINCE cheat table format (*.pct);;All files (*)")[0]
+        if not file_path: return
+        content = [self.read_address_table_recursively(
+                self.treeWidget_AddressTable.topLevelItem(i))
+                for i in range(self.treeWidget_AddressTable.topLevelItemCount())]
+        if not SysUtils.save_file(content, file_path):
+            QMessageBox.information(self, "Error", "Cannot save to file")
 
     # Returns: a bool value indicates whether the operation succeeded.
     def attach_to_pid(self, pid):
