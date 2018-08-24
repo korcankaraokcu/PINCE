@@ -70,7 +70,7 @@ selfpid = os.getpid()
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-10"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-11"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = float
 show_messagebox_on_exception = bool
@@ -82,7 +82,7 @@ code_injection_method = int
 bring_disassemble_to_front = bool
 instructions_per_scroll = int
 gdb_path = str
-auto_attach_list = list
+auto_attach_list = str
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -340,17 +340,18 @@ class MainForm(QMainWindow, MainWindow):
             current_hotkey.activated.connect(getattr(self, key + "_pressed"))
             current_hotkey.setContext(Qt.ApplicationShortcut)
 
-        # Check if any process should be attached to automatically.
-        # Patterns at former position has higher priority.
-        procs = [(process.name(), process.pid) for process in SysUtils.get_process_list()]
-        for pattern in auto_attach_list:
-            for name, pid in procs:
-                if re.fullmatch(pattern, name):
-                    self.attach_to_pid(pid)
-                    break
-            else: # not found
-                continue
-            break # found. Python doesn't have a way to break out of multiple loops.
+        # Check if any process should be attached to automatically
+        # Patterns at former position has higher priority
+        processes = [(process.name(), process.pid) for process in SysUtils.get_process_list()]
+        for pattern in auto_attach_list.split(";"):
+            if pattern:
+                for name, pid in processes:
+                    if re.search(pattern, name):
+                        self.attach_to_pid(pid)
+                        break
+                else:  # not found
+                    continue
+            break  # found. Python doesn't have a way to break out of multiple loops
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.treeWidget_AddressTable.keyPressEvent_original = self.treeWidget_AddressTable.keyPressEvent
@@ -389,7 +390,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("show_messagebox_on_exception", True)
         self.settings.setValue("show_messagebox_on_toggle_attach", True)
         self.settings.setValue("gdb_output_mode", type_defs.GDB_OUTPUT_MODE.UNMUTED)
-        self.settings.setValue("auto_attach_list", [])
+        self.settings.setValue("auto_attach_list", "")
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
         self.settings.setValue("pause_hotkey", "F1")
@@ -429,7 +430,7 @@ class MainForm(QMainWindow, MainWindow):
         show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
         show_messagebox_on_toggle_attach = self.settings.value("General/show_messagebox_on_toggle_attach", type=bool)
         gdb_output_mode = self.settings.value("General/gdb_output_mode", type=int)
-        auto_attach_list = self.settings.value("General/auto_attach_list", type=list)
+        auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
         GDB_Engine.set_gdb_output_mode(gdb_output_mode)
         for key, value in list(global_hotkeys.items()):
             value = self.settings.value("Hotkeys/" + key)
@@ -572,7 +573,7 @@ class MainForm(QMainWindow, MainWindow):
     def copy_selected_records(self):
         # Flat copy, does not preserve structure
         QApplication.clipboard().setText(repr(
-            [self.read_address_table_entries(selected_row) + ((), )
+            [self.read_address_table_entries(selected_row) + ((),)
              for selected_row in self.treeWidget_AddressTable.selectedItems()]
         ))
         # each element in the list has no children
@@ -601,21 +602,20 @@ class MainForm(QMainWindow, MainWindow):
         # First, order the items by their indices in the tree widget.
         # Store the indices for later usage.
         index_items = [(index_of(item), item) for item in items]
-        index_items.sort(key=lambda x:x[0])  # sort by index
+        index_items.sort(key=lambda x: x[0])  # sort by index
 
         # Now filter any selected items that is a descendant of another selected items.
         items = []
-        last_index = [-1] # any invalid list of indices are fine
+        last_index = [-1]  # any invalid list of indices are fine
         for index, item in index_items:
             if index[:len(last_index)] == last_index:
-                continue    # this item is a descendant of the last item
+                continue  # this item is a descendant of the last item
             items.append(item)
             last_index = index
 
         QApplication.clipboard().setText(repr(
             [self.read_address_table_recursively(item) for item in items]
         ))
-
 
     def insert_records(self, records, parent_row, insert_index):
         # parent_row should be a QTreeWidgetItem in treeWidget_AddressTable
@@ -934,7 +934,7 @@ class MainForm(QMainWindow, MainWindow):
     # Last value is an iterable of information about its direct children.
     def read_address_table_recursively(self, row):
         return self.read_address_table_entries(row) + \
-                ([self.read_address_table_recursively(row.child(i)) for i in range(row.childCount())],)
+               ([self.read_address_table_recursively(row.child(i)) for i in range(row.childCount())],)
 
 
 # process select window
@@ -1411,7 +1411,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/show_messagebox_on_toggle_attach",
                                self.checkBox_MessageBoxOnToggleAttach.isChecked())
         self.settings.setValue("General/gdb_output_mode", self.comboBox_GDBOutputMode.currentIndex())
-        self.settings.setValue("General/auto_attach_list", self.plainTextEdit_autoAttachList.toPlainText().splitlines())
+        self.settings.setValue("General/auto_attach_list", self.lineEdit_AutoAttachList.text())
         for key, value in list(global_hotkeys.items()):
             self.settings.setValue("Hotkeys/" + key, getattr(self, key))
         if self.radioButton_SimpleDLopenCall.isChecked():
@@ -1441,7 +1441,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.checkBox_MessageBoxOnToggleAttach.setChecked(
             self.settings.value("General/show_messagebox_on_toggle_attach", type=bool))
         self.comboBox_GDBOutputMode.setCurrentIndex(self.settings.value("General/gdb_output_mode", type=int))
-        self.plainTextEdit_autoAttachList.setPlainText('\n'.join(self.settings.value("General/auto_attach_list", type=list)))
+        self.lineEdit_AutoAttachList.setText(self.settings.value("General/auto_attach_list", type=str))
         self.listWidget_Functions.clear()
         self.listWidget_Functions.addItems(
             ["Pause the process", "Break the process", "Continue the process", "Toggle attach/detach"])

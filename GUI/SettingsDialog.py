@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'SettingsDialog.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.2
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(652, 558)
+        Dialog.resize(652, 559)
         self.gridLayout_2 = QtWidgets.QGridLayout(Dialog)
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.verticalLayout = QtWidgets.QVBoxLayout()
@@ -98,13 +98,14 @@ class Ui_Dialog(object):
         self.horizontalLayout_12.setContentsMargins(-1, 0, -1, -1)
         self.horizontalLayout_12.setObjectName("horizontalLayout_12")
         self.label_9 = QtWidgets.QLabel(self.page)
-        self.label_9.setWordWrap(True)
         self.label_9.setObjectName("label_9")
         self.horizontalLayout_12.addWidget(self.label_9)
-        self.plainTextEdit_autoAttachList = QtWidgets.QPlainTextEdit(self.page)
-        self.plainTextEdit_autoAttachList.setMaximumSize(QtCore.QSize(16777215, 38))
-        self.plainTextEdit_autoAttachList.setObjectName("plainTextEdit_autoAttachList")
-        self.horizontalLayout_12.addWidget(self.plainTextEdit_autoAttachList)
+        self.lineEdit_AutoAttachList = QtWidgets.QLineEdit(self.page)
+        self.lineEdit_AutoAttachList.setObjectName("lineEdit_AutoAttachList")
+        self.horizontalLayout_12.addWidget(self.lineEdit_AutoAttachList)
+        self.label_10 = QtWidgets.QLabel(self.page)
+        self.label_10.setObjectName("label_10")
+        self.horizontalLayout_12.addWidget(self.label_10)
         self.verticalLayout_5.addLayout(self.horizontalLayout_12)
         spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_5.addItem(spacerItem2)
@@ -284,7 +285,9 @@ class Ui_Dialog(object):
         self.checkBox_MessageBoxOnException.setText(_translate("Dialog", "Show a MessageBox on InferiorRunning and GDBInitialize exceptions"))
         self.checkBox_MessageBoxOnToggleAttach.setText(_translate("Dialog", "Show a MessageBox on Toggle Attach"))
         self.label_8.setText(_translate("Dialog", "GDB console output mode"))
-        self.label_9.setText(_translate("Dialog", "On start, automatically attach to processes with name matching one of the regex:"))
+        self.label_9.setToolTip(_translate("Dialog", "On start, automatically attach to processes with name matching one of the regexes"))
+        self.label_9.setText(_translate("Dialog", "Auto-attach on start"))
+        self.label_10.setText(_translate("Dialog", "(Separate processes with ;)"))
         self.label_3.setText(_translate("Dialog", "Functions"))
         self.label_4.setText(_translate("Dialog", "Hotkey"))
         self.pushButton_ClearHotkey.setText(_translate("Dialog", "Clear"))
