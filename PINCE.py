@@ -487,6 +487,8 @@ class MainForm(QMainWindow, MainWindow):
         menu.addSeparator()
         cut_record = menu.addAction("Cut selected records[Ctrl+X]")
         copy_record = menu.addAction("Copy selected records[Ctrl+C]")
+        cut_record_recursively = menu.addAction("Cut selected records (recursive)[X]")
+        copy_record_recursively = menu.addAction("Copy selected records (recursive)[C]")
         paste_record_before = menu.addAction("Paste selected records before[Ctrl+V]")
         paste_record_after = menu.addAction("Paste selected records after[V]")
         paste_record_inside = menu.addAction("Paste selected records inside[I]")
@@ -512,6 +514,8 @@ class MainForm(QMainWindow, MainWindow):
             disassemble: self.disassemble_selected_row,
             cut_record: self.cut_selected_records,
             copy_record: self.copy_selected_records,
+            cut_record_recursively: self.cut_selected_records_recursively,
+            copy_record_recursively: self.copy_selected_records_recursively,
             paste_record_before: lambda: self.paste_records(insert_after=False),
             paste_record_after: lambda: self.paste_records(insert_after=True),
             paste_record_inside: lambda: self.paste_records(insert_inside=True),
@@ -568,20 +572,62 @@ class MainForm(QMainWindow, MainWindow):
     def copy_selected_records(self):
         # Flat copy, does not preserve structure
         QApplication.clipboard().setText(repr(
-            [self.read_address_table_entries(selected_row)
+            [self.read_address_table_entries(selected_row) + ((), )
              for selected_row in self.treeWidget_AddressTable.selectedItems()]
         ))
+        # each element in the list has no children
+
+    def cut_selected_records_recursively(self):
+        self.copy_selected_records_recursively()
+        self.delete_selected_records()
+
+    def copy_selected_records_recursively(self):
+        # Recursive copy
+        items = self.treeWidget_AddressTable.selectedItems()
+
+        def index_of(item):
+            """Returns the index used to access the given QTreeWidgetItem
+            as a list of ints."""
+            result = []
+            while True:
+                parent = item.parent()
+                if parent:
+                    result.append(parent.indexOfChild(item))
+                    item = parent
+                else:
+                    result.append(item.treeWidget().indexOfTopLevelItem(item))
+                    return result[::-1]
+
+        # First, order the items by their indices in the tree widget.
+        # Store the indices for later usage.
+        index_items = [(index_of(item), item) for item in items]
+        index_items.sort(key=lambda x:x[0])  # sort by index
+
+        # Now filter any selected items that is a descendant of another selected items.
+        items = []
+        last_index = [-1] # any invalid list of indices are fine
+        for index, item in index_items:
+            if index[:len(last_index)] == last_index:
+                continue    # this item is a descendant of the last item
+            items.append(item)
+            last_index = index
+
+        QApplication.clipboard().setText(repr(
+            [self.read_address_table_recursively(item) for item in items]
+        ))
+
 
     def insert_records(self, records, parent_row, insert_index):
         # parent_row should be a QTreeWidgetItem in treeWidget_AddressTable
-        # records should be a list of list of strings
+        # records should be an iterable of valid output of read_address_table_recursively
         assert isinstance(parent_row, QTreeWidgetItem)
 
         rows = []
         for rec in records:
             row = QTreeWidgetItem()
             row.setCheckState(FROZEN_COL, Qt.Unchecked)
-            self.change_address_table_entries(row, *rec)
+            self.change_address_table_entries(row, *rec[:-1])
+            self.insert_records(rec[-1], row, 0)
             rows.append(row)
 
         parent_row.insertChildren(insert_index, rows)
@@ -589,9 +635,6 @@ class MainForm(QMainWindow, MainWindow):
     def paste_records(self, insert_after=None, insert_inside=False):
         try:
             records = ast.literal_eval(QApplication.clipboard().text())
-            if not isinstance(records, list) or \
-                    any(not isinstance(row, tuple) or len(row) != 3 for row in records):
-                raise ValueError()
         except (SyntaxError, ValueError):
             QMessageBox.information(self, "Error", "Invalid clipboard content")
             return
@@ -621,6 +664,8 @@ class MainForm(QMainWindow, MainWindow):
             ((Qt.NoModifier, Qt.Key_Space), self.toggle_selected_records),
             ((Qt.ControlModifier, Qt.Key_X), self.cut_selected_records),
             ((Qt.ControlModifier, Qt.Key_C), self.copy_selected_records),
+            ((Qt.NoModifier, Qt.Key_X), self.cut_selected_records_recursively),
+            ((Qt.NoModifier, Qt.Key_C), self.copy_selected_records_recursively),
             ((Qt.ControlModifier, Qt.Key_V), lambda: self.paste_records(insert_after=False)),
             ((Qt.NoModifier, Qt.Key_V), lambda: self.paste_records(insert_after=True)),
             ((Qt.NoModifier, Qt.Key_I), lambda: self.paste_records(insert_inside=True)),
@@ -883,6 +928,13 @@ class MainForm(QMainWindow, MainWindow):
         address_expr = row.data(ADDR_COL, ADDR_EXPR_ROLE)
         value_type = row.text(TYPE_COL)
         return description, address_expr, value_type
+
+    # Returns the values inside the given row and all of its descendants.
+    # All values except the last are the same as read_address_table_entries output.
+    # Last value is an iterable of information about its direct children.
+    def read_address_table_recursively(self, row):
+        return self.read_address_table_entries(row) + \
+                ([self.read_address_table_recursively(row.child(i)) for i in range(row.childCount())],)
 
 
 # process select window
