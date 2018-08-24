@@ -82,6 +82,7 @@ code_injection_method = int
 bring_disassemble_to_front = bool
 instructions_per_scroll = int
 gdb_path = str
+auto_attach_list = list
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -339,6 +340,18 @@ class MainForm(QMainWindow, MainWindow):
             current_hotkey.activated.connect(getattr(self, key + "_pressed"))
             current_hotkey.setContext(Qt.ApplicationShortcut)
 
+        # Check if any process should be attached to automatically.
+        # Patterns at former position has higher priority.
+        procs = [(process.name(), process.pid) for process in SysUtils.get_process_list()]
+        for pattern in auto_attach_list:
+            for name, pid in procs:
+                if re.fullmatch(pattern, name):
+                    self.attach_to_pid(pid)
+                    break
+            else: # not found
+                continue
+            break # found. Python doesn't have a way to break out of multiple loops.
+
         # Saving the original function because super() doesn't work when we override functions like this
         self.treeWidget_AddressTable.keyPressEvent_original = self.treeWidget_AddressTable.keyPressEvent
         self.treeWidget_AddressTable.keyPressEvent = self.treeWidget_AddressTable_key_press_event
@@ -376,6 +389,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("show_messagebox_on_exception", True)
         self.settings.setValue("show_messagebox_on_toggle_attach", True)
         self.settings.setValue("gdb_output_mode", type_defs.GDB_OUTPUT_MODE.UNMUTED)
+        self.settings.setValue("auto_attach_list", [])
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
         self.settings.setValue("pause_hotkey", "F1")
@@ -404,6 +418,7 @@ class MainForm(QMainWindow, MainWindow):
         global show_messagebox_on_exception
         global show_messagebox_on_toggle_attach
         global gdb_output_mode
+        global auto_attach_list
         global global_hotkeys
         global code_injection_method
         global bring_disassemble_to_front
@@ -414,6 +429,7 @@ class MainForm(QMainWindow, MainWindow):
         show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
         show_messagebox_on_toggle_attach = self.settings.value("General/show_messagebox_on_toggle_attach", type=bool)
         gdb_output_mode = self.settings.value("General/gdb_output_mode", type=int)
+        auto_attach_list = self.settings.value("General/auto_attach_list", type=list)
         GDB_Engine.set_gdb_output_mode(gdb_output_mode)
         for key, value in list(global_hotkeys.items()):
             value = self.settings.value("Hotkeys/" + key)
@@ -697,6 +713,37 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow = ProcessForm(self)
         self.processwindow.show()
 
+    # Returns: a bool value indicates whether the operation succeeded.
+    def attach_to_pid(self, pid):
+        attach_result = GDB_Engine.attach(pid, gdb_path=gdb_path)
+        if attach_result[0] == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
+            self.on_new_process()
+            return True
+        else:
+            QMessageBox.information(self, "Error", attach_result[1])
+            return False
+
+    # Returns: a bool value indicates whether the operation succeeded.
+    def create_new_process(self, file_path, args, ld_preload_path):
+        if GDB_Engine.create_process(file_path, args, ld_preload_path):
+            self.on_new_process()
+            return True
+        else:
+            QMessageBox.information(self, "Error", "An error occurred while trying to create process")
+            self.on_inferior_exit()
+            return False
+
+    # This is called whenever a new process is created/attached to by PINCE
+    # in order to change the form appearance
+    def on_new_process(self):
+        p = SysUtils.get_process_information(GDB_Engine.currentpid)
+        self.label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
+
+        # enable scan GUI
+        self.QWidget_Toolbox.setEnabled(True)
+        self.pushButton_NextScan.setEnabled(False)
+        self.pushButton_UndoScan.setEnabled(False)
+
     def delete_address_table_contents(self):
         confirm_dialog = InputDialogForm(item_list=[("This will clear the contents of address table\nProceed?",)])
         if confirm_dialog.exec_():
@@ -896,14 +943,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 QMessageBox.information(self, "Error", "What the fuck are you trying to do?")  # planned easter egg
                 return
             self.setCursor(QCursor(Qt.WaitCursor))
-            attach_result = GDB_Engine.attach(pid, gdb_path=gdb_path)
-            if attach_result[0] == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
-                p = SysUtils.get_process_information(GDB_Engine.currentpid)
-                self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
-                self.enable_scan_gui()
+            if self.parent().attach_to_pid(pid):
                 self.close()
-            else:
-                QMessageBox.information(self, "Error", attach_result[1])
             self.setCursor(QCursor(Qt.ArrowCursor))
 
     def pushButton_CreateProcess_clicked(self):
@@ -916,20 +957,9 @@ class ProcessForm(QMainWindow, ProcessWindow):
             else:
                 return
             self.setCursor(QCursor(Qt.WaitCursor))
-            if GDB_Engine.create_process(file_path, args, ld_preload_path, gdb_path):
-                p = SysUtils.get_process_information(GDB_Engine.currentpid)
-                self.parent().label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
-                self.enable_scan_gui()
+            if self.parent().create_new_process(file_path, args, ld_preload_path):
                 self.close()
-            else:
-                QMessageBox.information(self, "Error", "An error occurred while trying to create process")
-                self.parent().on_inferior_exit()
             self.setCursor(QCursor(Qt.ArrowCursor))
-
-    def enable_scan_gui(self):
-        self.parent().QWidget_Toolbox.setEnabled(True)
-        self.parent().pushButton_NextScan.setEnabled(False)
-        self.parent().pushButton_UndoScan.setEnabled(False)
 
 
 # Add Address Manually Dialog
@@ -1321,6 +1351,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                                                "\nSetting update interval less than 0.1 seconds may cause slowdown"
                                                "\nProceed?",)]).exec_():
                 return
+
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
@@ -1328,6 +1359,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/show_messagebox_on_toggle_attach",
                                self.checkBox_MessageBoxOnToggleAttach.isChecked())
         self.settings.setValue("General/gdb_output_mode", self.comboBox_GDBOutputMode.currentIndex())
+        self.settings.setValue("General/auto_attach_list", self.plainTextEdit_autoAttachList.toPlainText().splitlines())
         for key, value in list(global_hotkeys.items()):
             self.settings.setValue("Hotkeys/" + key, getattr(self, key))
         if self.radioButton_SimpleDLopenCall.isChecked():
@@ -1357,6 +1389,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.checkBox_MessageBoxOnToggleAttach.setChecked(
             self.settings.value("General/show_messagebox_on_toggle_attach", type=bool))
         self.comboBox_GDBOutputMode.setCurrentIndex(self.settings.value("General/gdb_output_mode", type=int))
+        self.plainTextEdit_autoAttachList.setPlainText('\n'.join(self.settings.value("General/auto_attach_list", type=list)))
         self.listWidget_Functions.clear()
         self.listWidget_Functions.addItems(
             ["Pause the process", "Break the process", "Continue the process", "Toggle attach/detach"])
