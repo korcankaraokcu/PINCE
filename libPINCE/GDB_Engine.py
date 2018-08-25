@@ -21,6 +21,7 @@ from collections import OrderedDict, defaultdict
 import pexpect, os, ctypes, pickle, json, shelve, re
 from . import SysUtils, type_defs, common_regexes
 
+self_pid = os.getpid()
 libc = ctypes.CDLL('libc.so.6')
 
 #:tag:GDBInformation
@@ -507,6 +508,10 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     """
     global currentpid
     pid = int(pid)
+    if pid == self_pid:
+        error_message = "Nice try, smartass"  # planned easter egg
+        print(error_message)
+        return type_defs.ATTACH_RESULT.ATTACH_SELF, error_message
     if not SysUtils.is_process_valid(pid):
         error_message = "Selected process is not valid"
         print(error_message)
@@ -515,9 +520,9 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
         error_message = "You're debugging this process already"
         print(error_message)
         return type_defs.ATTACH_RESULT.ALREADY_DEBUGGING, error_message
-    tracedby = SysUtils.is_traced(pid)
-    if tracedby:
-        error_message = "That process is already being traced by " + tracedby + ", could not attach to the process"
+    traced_by = SysUtils.is_traced(pid)
+    if traced_by:
+        error_message = "That process is already being traced by " + traced_by + ", could not attach to the process"
         print(error_message)
         return type_defs.ATTACH_RESULT.ALREADY_TRACED, error_message
     if not can_attach(pid):

@@ -66,7 +66,6 @@ from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
 
-selfpid = os.getpid()
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
@@ -945,7 +944,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         GuiUtils.center_to_parent(self)
         processlist = SysUtils.get_process_list()
         self.refresh_process_table(self.tableWidget_ProcessTable, processlist)
-        self.pushButton_Close.clicked.connect(self.pushButton_Close_clicked)
+        self.pushButton_Close.clicked.connect(self.close)
         self.pushButton_Open.clicked.connect(self.pushButton_Open_clicked)
         self.pushButton_CreateProcess.clicked.connect(self.pushButton_CreateProcess_clicked)
         self.lineEdit_SearchProcess.textChanged.connect(self.generate_new_list)
@@ -980,20 +979,13 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 tablewidget.setItem(i, 1, QTableWidgetItem(row.username))
             tablewidget.setItem(i, 2, QTableWidgetItem(row.name()))
 
-    # self-explanatory
-    def pushButton_Close_clicked(self):
-        self.close()
-
     # gets the pid out of the selection to attach
     def pushButton_Open_clicked(self):
-        currentitem = self.tableWidget_ProcessTable.item(self.tableWidget_ProcessTable.currentIndex().row(), 0)
-        if currentitem is None:
+        current_item = self.tableWidget_ProcessTable.item(self.tableWidget_ProcessTable.currentIndex().row(), 0)
+        if current_item is None:
             QMessageBox.information(self, "Error", "Please select a process first")
         else:
-            pid = int(currentitem.text())
-            if pid == selfpid:
-                QMessageBox.information(self, "Error", "What the fuck are you trying to do?")  # planned easter egg
-                return
+            pid = int(current_item.text())
             self.setCursor(QCursor(Qt.WaitCursor))
             if self.parent().attach_to_pid(pid):
                 self.close()
