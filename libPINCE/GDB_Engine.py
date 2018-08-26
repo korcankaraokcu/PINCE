@@ -508,27 +508,21 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     """
     global currentpid
     pid = int(pid)
-    if pid == self_pid:
-        error_message = "Nice try, smartass"  # planned easter egg
-        print(error_message)
-        return type_defs.ATTACH_RESULT.ATTACH_SELF, error_message
-    if not SysUtils.is_process_valid(pid):
-        error_message = "Selected process is not valid"
-        print(error_message)
-        return type_defs.ATTACH_RESULT.PROCESS_NOT_VALID, error_message
-    if pid == currentpid:
-        error_message = "You're debugging this process already"
-        print(error_message)
-        return type_defs.ATTACH_RESULT.ALREADY_DEBUGGING, error_message
     traced_by = SysUtils.is_traced(pid)
-    if traced_by:
-        error_message = "That process is already being traced by " + traced_by + ", could not attach to the process"
-        print(error_message)
-        return type_defs.ATTACH_RESULT.ALREADY_TRACED, error_message
-    if not can_attach(pid):
-        error_message = "Permission denied, could not attach to the process"
-        print(error_message)
-        return type_defs.ATTACH_RESULT.PERM_DENIED, error_message
+    pid_control_list = [
+        (lambda: pid == self_pid, type_defs.ATTACH_RESULT.ATTACH_SELF, "Nice try, smartass"),  # planned easter egg
+        (lambda: not SysUtils.is_process_valid(pid), type_defs.ATTACH_RESULT.PROCESS_NOT_VALID,
+         "Selected process is not valid"),
+        (lambda: pid == currentpid, type_defs.ATTACH_RESULT.ALREADY_DEBUGGING, "You're debugging this process already"),
+        (lambda: traced_by is not False, type_defs.ATTACH_RESULT.ALREADY_TRACED,
+         "That process is already being traced by " + str(traced_by) + ", could not attach to the process"),
+        (lambda: not can_attach(pid), type_defs.ATTACH_RESULT.PERM_DENIED,
+         "Permission denied, could not attach to the process")
+    ]
+    for control_func, attach_result, error_message in pid_control_list:
+        if control_func():
+            print(error_message)
+            return attach_result, error_message
     if currentpid != -1 or not gdb_initialized:
         init_gdb(additional_commands, gdb_path)
     global inferior_arch

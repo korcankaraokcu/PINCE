@@ -188,15 +188,19 @@ def is_traced(pid):
 
     Returns:
         str: Name of the tracer if the specified process is being traced
-        bool: False, if the specified process is not being traced
+        bool: False, if the specified process is not being traced or the process doesn't exist anymore
     """
-    for line in open("/proc/%d/status" % pid).readlines():
+    try:
+        status_file = open("/proc/%d/status" % pid)
+    except FileNotFoundError:
+        return False
+    for line in status_file.readlines():
         if line.startswith("TracerPid:"):
-            tracerpid = line.split(":", 1)[1].strip()
-            if tracerpid == "0":
+            tracer_pid = line.split(":", 1)[1].strip()
+            if tracer_pid == "0":
                 return False
             else:
-                return psutil.Process(int(tracerpid)).name()
+                return psutil.Process(int(tracer_pid)).name()
 
 
 #:tag:Processes
