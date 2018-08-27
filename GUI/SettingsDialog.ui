@@ -191,7 +191,8 @@
                <item>
                 <widget class="QLabel" name="label_9">
                  <property name="toolTip">
-                  <string>On start, automatically attach to processes with name matching one of the regexes</string>
+                  <string>On start, automatically attach to processes with name matching one of the entries
+Patterns at former positions have higher priority if regex is off</string>
                  </property>
                  <property name="text">
                   <string>Auto-attach on start</string>
@@ -202,9 +203,9 @@
                 <widget class="QLineEdit" name="lineEdit_AutoAttachList"/>
                </item>
                <item>
-                <widget class="QLabel" name="label_10">
+                <widget class="QCheckBox" name="checkBox_AutoAttachRegex">
                  <property name="text">
-                  <string>(Separate processes with ;)</string>
+                  <string>Regex</string>
                  </property>
                 </widget>
                </item>

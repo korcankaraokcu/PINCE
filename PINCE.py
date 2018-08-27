@@ -69,19 +69,20 @@ from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-11"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-12"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = float
 show_messagebox_on_exception = bool
 show_messagebox_on_toggle_attach = bool
 gdb_output_mode = int
+auto_attach_list = str
+auto_attach_regex = bool
 global_hotkeys = collections.OrderedDict(
     [("pause_hotkey", str), ("break_hotkey", str), ("continue_hotkey", str), ("toggle_attach_hotkey", str)])
 code_injection_method = int
 bring_disassemble_to_front = bool
 instructions_per_scroll = int
 gdb_path = str
-auto_attach_list = str
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -339,19 +340,6 @@ class MainForm(QMainWindow, MainWindow):
             current_hotkey.activated.connect(getattr(self, key + "_pressed"))
             current_hotkey.setContext(Qt.ApplicationShortcut)
 
-        # Check if any process should be attached to automatically
-        # Patterns at former position has higher priority
-        processes = [(process.name(), process.pid) for process in SysUtils.get_process_list()]
-        for pattern in auto_attach_list.split(";"):
-            if pattern:
-                for name, pid in processes:
-                    if re.search(pattern, name):
-                        self.attach_to_pid(pid)
-                        break
-                else:  # not found
-                    continue
-            break  # found. Python doesn't have a way to break out of multiple loops
-
         # Saving the original function because super() doesn't work when we override functions like this
         self.treeWidget_AddressTable.keyPressEvent_original = self.treeWidget_AddressTable.keyPressEvent
         self.treeWidget_AddressTable.keyPressEvent = self.treeWidget_AddressTable_key_press_event
@@ -381,6 +369,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Console.setIcon(QIcon(QPixmap(icons_directory + "/application_xp_terminal.png")))
         self.pushButton_Wiki.setIcon(QIcon(QPixmap(icons_directory + "/book_open.png")))
         self.pushButton_About.setIcon(QIcon(QPixmap(icons_directory + "/information.png")))
+        self.auto_attach()
 
     def set_default_settings(self):
         self.settings.beginGroup("General")
@@ -390,6 +379,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("show_messagebox_on_toggle_attach", True)
         self.settings.setValue("gdb_output_mode", type_defs.GDB_OUTPUT_MODE.UNMUTED)
         self.settings.setValue("auto_attach_list", "")
+        self.settings.setValue("auto_attach_regex", False)
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
         self.settings.setValue("pause_hotkey", "F1")
@@ -419,6 +409,7 @@ class MainForm(QMainWindow, MainWindow):
         global show_messagebox_on_toggle_attach
         global gdb_output_mode
         global auto_attach_list
+        global auto_attach_regex
         global global_hotkeys
         global code_injection_method
         global bring_disassemble_to_front
@@ -430,6 +421,7 @@ class MainForm(QMainWindow, MainWindow):
         show_messagebox_on_toggle_attach = self.settings.value("General/show_messagebox_on_toggle_attach", type=bool)
         gdb_output_mode = self.settings.value("General/gdb_output_mode", type=int)
         auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
+        auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
         GDB_Engine.set_gdb_output_mode(gdb_output_mode)
         for key, value in list(global_hotkeys.items()):
             value = self.settings.value("Hotkeys/" + key)
@@ -448,6 +440,28 @@ class MainForm(QMainWindow, MainWindow):
         bring_disassemble_to_front = self.settings.value("Disassemble/bring_disassemble_to_front", type=bool)
         instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
         gdb_path = self.settings.value("Debug/gdb_path", type=str)
+
+    # Check if any process should be attached to automatically
+    # Patterns at former positions have higher priority if regex is off
+    def auto_attach(self):
+        if not auto_attach_list:
+            return
+        if auto_attach_regex:
+            try:
+                compiled_re = re.compile(auto_attach_list)
+            except:
+                print("Auto-attach failed: " + auto_attach_list + " isn't a valid regex")
+                return
+            for process in SysUtils.get_process_list():
+                if compiled_re.search(process.name()):
+                    self.attach_to_pid(process.pid)
+                    return
+        else:
+            for target in auto_attach_list.split(";"):
+                for process in SysUtils.get_process_list():
+                    if process.name().find(target) != -1:
+                        self.attach_to_pid(process.pid)
+                        return
 
     # These "_pressed" event functions are automatically connected in MainForm.__init__ within a for loop
     # These functions are used to declare stuff that'll be done when a global hotkey is triggered
@@ -1363,6 +1377,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.pushButton_ResetSettings.clicked.connect(self.pushButton_ResetSettings_clicked)
         self.pushButton_GDBPath.clicked.connect(self.pushButton_GDBPath_clicked)
         self.checkBox_AutoUpdateAddressTable.stateChanged.connect(self.checkBox_AutoUpdateAddressTable_state_changed)
+        self.checkBox_AutoAttachRegex.stateChanged.connect(self.checkBox_AutoAttachRegex_state_changed)
+        self.checkBox_AutoAttachRegex_state_changed()
         self.config_gui()
 
     def accept(self):
@@ -1403,7 +1419,14 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/show_messagebox_on_toggle_attach",
                                self.checkBox_MessageBoxOnToggleAttach.isChecked())
         self.settings.setValue("General/gdb_output_mode", self.comboBox_GDBOutputMode.currentIndex())
+        if self.checkBox_AutoAttachRegex.isChecked():
+            try:
+                re.compile(self.lineEdit_AutoAttachList.text())
+            except:
+                QMessageBox.information(self, "Error", self.lineEdit_AutoAttachList.text() + " isn't a valid regex")
+                return
         self.settings.setValue("General/auto_attach_list", self.lineEdit_AutoAttachList.text())
+        self.settings.setValue("General/auto_attach_regex", self.checkBox_AutoAttachRegex.isChecked())
         for key, value in list(global_hotkeys.items()):
             self.settings.setValue("Hotkeys/" + key, getattr(self, key))
         if self.radioButton_SimpleDLopenCall.isChecked():
@@ -1434,6 +1457,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.settings.value("General/show_messagebox_on_toggle_attach", type=bool))
         self.comboBox_GDBOutputMode.setCurrentIndex(self.settings.value("General/gdb_output_mode", type=int))
         self.lineEdit_AutoAttachList.setText(self.settings.value("General/auto_attach_list", type=str))
+        self.checkBox_AutoAttachRegex.setChecked(self.settings.value("General/auto_attach_regex", type=bool))
         self.listWidget_Functions.clear()
         self.listWidget_Functions.addItems(
             ["Pause the process", "Break the process", "Continue the process", "Toggle attach/detach"])
@@ -1480,6 +1504,17 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.QWidget_UpdateInterval.setEnabled(True)
         else:
             self.QWidget_UpdateInterval.setEnabled(False)
+
+    def checkBox_AutoAttachRegex_state_changed(self):
+        if self.checkBox_AutoAttachRegex.isChecked():
+            self.lineEdit_AutoAttachList.setPlaceholderText("Mouse over on this text for examples")
+            self.lineEdit_AutoAttachList.setToolTip("'asdf|qwer' searches for asdf or qwer\n" +
+                                                    "'[as]df' searches for both adf and sdf\n" +
+                                                    "Use the char '\\' to escape special chars such as '['\n" +
+                                                    "'\[asdf\]' searches for opcodes that contain '[asdf]'")
+        else:
+            self.lineEdit_AutoAttachList.setPlaceholderText("Separate processes with ;")
+            self.lineEdit_AutoAttachList.setToolTip("")
 
     def pushButton_GDBPath_clicked(self):
         current_path = self.lineEdit_GDBPath.text()
