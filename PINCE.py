@@ -565,10 +565,9 @@ class MainForm(QMainWindow, MainWindow):
     @requires_selection("treeWidget_AddressTable")
     def disassemble_selected_row(self):
         row = self.treeWidget_AddressTable.currentItem()
-        self.memory_view_window.disassemble_expression(
-            row.text(ADDR_COL), append_to_travel_history=True)
-        self.memory_view_window.show()
-        self.memory_view_window.activateWindow()
+        if self.memory_view_window.disassemble_expression(row.text(ADDR_COL), append_to_travel_history=True):
+            self.memory_view_window.show()
+            self.memory_view_window.activateWindow()
 
     @requires_selection("treeWidget_AddressTable")
     def toggle_selected_records(self):
@@ -778,7 +777,7 @@ class MainForm(QMainWindow, MainWindow):
             self.on_new_process()
             return True
         else:
-            QMessageBox.information(self, "Error", attach_result[1])
+            QMessageBox.information(QApplication.focusWidget(), "Error", attach_result[1])
             return False
 
     # Returns: a bool value indicates whether the operation succeeded.
@@ -787,7 +786,8 @@ class MainForm(QMainWindow, MainWindow):
             self.on_new_process()
             return True
         else:
-            QMessageBox.information(self, "Error", "An error occurred while trying to create process")
+            QMessageBox.information(QApplication.focusWidget(), "Error",
+                                    "An error occurred while trying to create process")
             self.on_inferior_exit()
             return False
 
@@ -2112,11 +2112,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.hex_dump_address(self.hex_view_currently_displayed_address)
 
     # offset can also be an address as hex str
+    # returns True if the given expression is disassembled correctly, False if not
     def disassemble_expression(self, expression, offset="+200", append_to_travel_history=False):
         disas_data = GDB_Engine.disassemble(expression, offset)
         if not disas_data:
-            QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
-            return
+            QMessageBox.information(QApplication.focusWidget(), "Error",
+                                    "Cannot access memory at expression " + expression)
+            return False
         program_counter = GDB_Engine.convert_symbol_to_address("$pc")
         program_counter_int = int(program_counter, 16)
         row_colour = {}
@@ -2235,6 +2237,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if append_to_travel_history:
             self.tableWidget_Disassemble.travel_history.append(previous_first_address)
         self.disassemble_currently_displayed_address = current_first_address
+        return True
 
     def refresh_disassemble_view(self):
         self.disassemble_expression(self.disassemble_currently_displayed_address)
@@ -2324,8 +2327,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             condition = condition_dialog.get_values()
             if not GDB_Engine.modify_breakpoint(hex(int_address), type_defs.BREAKPOINT_MODIFY.CONDITION,
                                                 condition=condition):
-                QMessageBox.information(self, "Error", "Failed to set condition for address " + hex(int_address) +
-                                        "\nCheck terminal for details")
+                QMessageBox.information(QApplication.focusWidget(), "Error", "Failed to set condition for address " +
+                                        hex(int_address) + "\nCheck terminal for details")
 
     def update_registers(self):
         registers = GDB_Engine.read_registers()
@@ -2750,7 +2753,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def bookmark_address(self, int_address):
         if int_address in self.tableWidget_Disassemble.bookmarks:
-            QMessageBox.information(self, "Error", "This address has already been bookmarked")
+            QMessageBox.information(QApplication.focusWidget(), "Error", "This address has already been bookmarked")
             return
         comment_dialog = InputDialogForm(item_list=[("Enter the comment for bookmarked address", "")])
         if comment_dialog.exec_():

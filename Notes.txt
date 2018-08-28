@@ -32,3 +32,5 @@ If you need to only create one instance of a GUI class, use this instead to crea
 If you need to pass self as a parameter, please don't use 'super().__init__(parent=parent)' in the child class, it makes Qt hide the child window. Use this in the child instead:
     super().__init__()
     self.parent = lambda: parent  # A quick hack to make other functions see the correct parent(). But Qt won't see it, so there'll be no bugs
+
+28/8/2018 - All QMessageBoxes that's called from outside of their classes(via parent() etc.) must use 'QApplication.focusWidget()' instead of 'self' in their first parameter. Refer to issue #57 for more information
