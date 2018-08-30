@@ -30,6 +30,7 @@ hex_number = compile(r"0x" + hex_plain.pattern)
 hex_number_grouped = compile(r"(" + hex_number.pattern + r")")
 memory_read_aob = compile(r"\\t0x(" + hex_plain.pattern + r")")  # 0x40c431:\t0x31\t0xed\t0x49\t...
 memory_read_other = compile(r":\\t(" + hex_float.pattern + r")")  # 0x400000:\t1,3961517377359369e-309
+cannot_access_memory = compile(r"Cannot\s*access\s*memory\s*at\s*address\s*"+hex_number_grouped.pattern)
 address_with_symbol = compile(r"(" + hex_number_grouped.pattern + r"\s+(<.+>)):")  # 0x40c435 <_start+4>:\t0x89485ed1\n
 address_without_symbol = compile(hex_number_grouped.pattern + r":")  # 0x1f58010:\t0x00647361\n
 # * 1    Thread 0x7f34730d77c0 (LWP 6189)
