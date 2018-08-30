@@ -941,20 +941,31 @@ def convert_symbol_to_address(expression):
         str: Address of corresponding symbol
         If the address is unreachable, a null string returned instead
     """
-    expression = expression.strip()
-    if expression is "":
+    contents_recv = send_command("pince-multiple-symbols-to-addresses", send_with_file=True,
+                                 file_contents_send=[expression], recv_with_file=True)
+    if not contents_recv:
+        print("an error occurred while reading symbol")
         return ""
-    result = send_command("x/b " + expression)
-    if common_regexes.cannot_access_memory.search(result):
-        return ""
-    filtered_result = common_regexes.address_with_symbol.search(result)
-    if filtered_result:
-        return filtered_result.group(2)
-    else:
-        filtered_result = common_regexes.address_without_symbol.search(result)
-        if filtered_result:
-            return filtered_result.group(1)
-    return ""
+    return contents_recv[0]
+
+
+#:tag:GDBExpressions
+def convert_multiple_symbols_to_addresses(expression_list):
+    """Optimized version of convert_symbol_to_address for multiple inputs
+    Args:
+        expression_list (list): List of gdb expressions as str
+    Returns:
+        list: Addresses, as a list of str
+        If any errors occurs while reading addresses, it's ignored and the belonging address is returned as null string
+        For instance; If 4 addresses have been read and 3rd one is problematic, the returned list will be
+        [returned_address1,returned_address2,"",returned_address4]
+    """
+    contents_recv = send_command("pince-multiple-symbols-to-addresses", send_with_file=True,
+                                 file_contents_send=expression_list, recv_with_file=True)
+    if not contents_recv:
+        print("an error occurred while reading symbols")
+        contents_recv = []
+    return contents_recv
 
 
 #:tag:MemoryRW

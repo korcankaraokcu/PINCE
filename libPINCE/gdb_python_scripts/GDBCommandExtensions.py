@@ -688,6 +688,20 @@ class MultipleAddressesToSymbols(gdb.Command):
         send_to_pince(data_read_list)
 
 
+class MultipleSymbolsToAddresses(gdb.Command):
+    def __init__(self):
+        super(MultipleSymbolsToAddresses, self).__init__("pince-multiple-symbols-to-addresses", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        data_read_list = []
+        contents_recv = receive_from_pince()
+        # contents_recv format: [expression1, expression2, ...]
+        for expression in contents_recv:
+            data_read = ScriptUtils.convert_symbol_to_address(expression)
+            data_read_list.append(data_read)
+        send_to_pince(data_read_list)
+
+
 IgnoreErrors()
 CLIOutput()
 ReadMultipleAddresses()
@@ -712,3 +726,4 @@ ExecuteFromSoFile()
 DissectCode()
 SearchReferencedCalls()
 MultipleAddressesToSymbols()
+MultipleSymbolsToAddresses()
