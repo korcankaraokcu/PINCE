@@ -891,7 +891,7 @@ def convert_address_to_symbol(expression, include_address=True):
     Returns:
         str: Symbol of corresponding address(such as printf, scanf, _start etc.). If no symbols are found, address as
         str returned instead. If include_address is passed as True, returned str looks like this-->0x40c435 <_start+4>
-        If the address is unreachable, a null string returned instead
+        Returns a null string if the expression is not valid
     """
     contents_send = [(expression, include_address)]
     contents_recv = send_command("pince-multiple-addresses-to-symbols", send_with_file=True,
@@ -939,7 +939,7 @@ def convert_symbol_to_address(expression):
 
     Returns:
         str: Address of corresponding symbol
-        If the address is unreachable, a null string returned instead
+        Returns a null string if the expression is not valid
     """
     contents_recv = send_command("pince-multiple-symbols-to-addresses", send_with_file=True,
                                  file_contents_send=[expression], recv_with_file=True)
@@ -966,21 +966,6 @@ def convert_multiple_symbols_to_addresses(expression_list):
         print("an error occurred while reading symbols")
         contents_recv = []
     return contents_recv
-
-
-#:tag:MemoryRW
-def validate_memory_address(expression):
-    """Check if the address evaluated by the given expression is valid
-
-    Args:
-        expression (str): Any gdb expression
-
-    Returns:
-        bool: True if address is reachable, False if not
-    """
-    if convert_symbol_to_address(expression) is "":
-        return False
-    return True
 
 
 #:tag:GDBExpressions
