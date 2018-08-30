@@ -724,29 +724,29 @@ def read_single_address_by_expression(expression, value_index, length=None, zero
     if length is "":
         return "??"
     if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
-        typeofaddress = value_index_to_gdbcommand(value_index)
+        address_type = value_index_to_gdbcommand(value_index)
         try:
             expected_length = str(int(length))  # length must be a legit number, so had to do this trick
         except:
             return "??"
-        result = send_command("x/" + expected_length + typeofaddress + " " + expression)
-        filteredresult = common_regexes.memory_read_aob.findall(result)
-        if filteredresult:
-            return ' '.join(filteredresult)  # combine all the matched results
+        result = send_command("x/" + expected_length + address_type + " " + expression)
+        filtered_result = common_regexes.memory_read_aob.findall(result)
+        if filtered_result:
+            return ' '.join(filtered_result)  # combine all the matched results
         return "??"
     elif type_defs.VALUE_INDEX.is_string(value_index):
-        typeofaddress = value_index_to_gdbcommand(value_index)
+        address_type = value_index_to_gdbcommand(value_index)
         try:
             expected_length = int(length)
         except:
             return "??"
         expected_length *= type_defs.string_index_to_multiplier_dict.get(value_index, 1)
-        result = send_command("x/" + str(expected_length) + typeofaddress + " " + expression)
-        filteredresult = common_regexes.memory_read_aob.findall(result)
-        if filteredresult:
-            filteredresult = ''.join(filteredresult)
+        result = send_command("x/" + str(expected_length) + address_type + " " + expression)
+        filtered_result = common_regexes.memory_read_aob.findall(result)
+        if filtered_result:
+            filtered_result = ''.join(filtered_result)
             encoding, option = type_defs.string_index_to_encoding_dict[value_index]
-            returned_string = bytes.fromhex(filteredresult).decode(encoding, option)
+            returned_string = bytes.fromhex(filtered_result).decode(encoding, option)
             if zero_terminate:
                 if returned_string.startswith('\x00'):
                     returned_string = '\x00'
@@ -755,11 +755,11 @@ def read_single_address_by_expression(expression, value_index, length=None, zero
             return returned_string[0:int(length)]
         return "??"
     else:
-        typeofaddress = value_index_to_gdbcommand(value_index)
-        result = send_command("x/" + typeofaddress + " " + expression)
-        filteredresult = common_regexes.memory_read_other.search(result)
-        if filteredresult:
-            return filteredresult.group(1)
+        address_type = value_index_to_gdbcommand(value_index)
+        result = send_command("x/" + address_type + " " + expression)
+        filtered_result = common_regexes.memory_read_other.search(result)
+        if filtered_result:
+            return filtered_result.group(1)
         return "??"
 
 
@@ -895,12 +895,10 @@ def convert_address_to_symbol(expression, include_address=True):
     """
     contents_send = [(expression, include_address)]
     contents_recv = send_command("pince-multiple-addresses-to-symbols", send_with_file=True,
-                                 file_contents_send=contents_send,
-                                 recv_with_file=True)
+                                 file_contents_send=contents_send, recv_with_file=True)
     if not contents_recv:
         print("an error occurred while reading address")
-        contents_recv = ""
-        return contents_recv
+        return ""
     return contents_recv[0]
 
 
@@ -918,9 +916,9 @@ def convert_multiple_addresses_to_symbols(nested_list):
         Parameters are partially passed-->[[expression1],[expression2, include_address2], ...]
 
     Returns:
-        list: A list of the symbols read.
+        list: Symbols, as a list of str
         If any errors occurs while reading symbols, it's ignored and the belonging symbol is returned as null string
-        For instance; If 4 symbols has been read and 3rd one is problematic, the returned list will be
+        For instance; If 4 symbols have been read and 3rd one is problematic, the returned list will be
         [returned_symbol1,returned_symbol2,"",returned_symbol4]
     """
     contents_send = nested_list
@@ -949,13 +947,14 @@ def convert_symbol_to_address(expression):
     result = send_command("x/b " + expression)
     if common_regexes.cannot_access_memory.search(result):
         return ""
-    filteredresult = common_regexes.address_with_symbol.search(result)
-    if filteredresult:
-        return filteredresult.group(2)
+    filtered_result = common_regexes.address_with_symbol.search(result)
+    if filtered_result:
+        return filtered_result.group(2)
     else:
-        filteredresult = common_regexes.address_without_symbol.search(result)
-        if filteredresult:
-            return filteredresult.group(1)
+        filtered_result = common_regexes.address_without_symbol.search(result)
+        if filtered_result:
+            return filtered_result.group(1)
+    return ""
 
 
 #:tag:MemoryRW
@@ -978,7 +977,7 @@ def parse_convenience_variables(variable_list):
     """Converts the convenience variables to their str equivalents
 
     Args:
-        variable_list (list of str): List of convenience variables as strings.
+        variable_list (list): List of convenience variables as str
 
     Examples:
         variable_list-->["$pc","$_gthread","$_inferior","$_exitcode","$_siginfo"]
