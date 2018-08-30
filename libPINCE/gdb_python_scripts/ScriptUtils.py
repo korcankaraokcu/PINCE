@@ -222,10 +222,11 @@ def convert_address_to_symbol(expression, include_address=True):
     result = gdb.execute("x/b " + expression, to_string=True)
     if common_regexes.cannot_access_memory.search(result):
         return ""
-    filteredresult = common_regexes.address_with_symbol.search(result)  # 0x4125d0 <_start>:	0x31
-    if filteredresult:
-        return filteredresult.group(1) if include_address else filteredresult.group(3)
+    filtered_result = common_regexes.address_with_symbol.search(result)  # 0x4125d0 <_start>:	0x31
+    if filtered_result:
+        return filtered_result.group(1) if include_address else filtered_result.group(3)
     else:
-        filteredresult = common_regexes.address_without_symbol.search(result)  # 0x400000:	0x7f
-        if filteredresult:
-            return filteredresult.group(1)
+        filtered_result = common_regexes.address_without_symbol.search(result)  # 0x400000:	0x7f
+        if filtered_result:
+            return filtered_result.group(1)
+    return ""

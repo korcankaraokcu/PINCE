@@ -697,7 +697,8 @@ class MainForm(QMainWindow, MainWindow):
         rows = []
         while True:
             row = it.value()
-            if not row: break
+            if not row:
+                break
             it += 1
 
             address = row.text(ADDR_COL)
