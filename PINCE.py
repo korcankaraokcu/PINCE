@@ -694,21 +694,25 @@ class MainForm(QMainWindow, MainWindow):
     def update_address_table_manually(self):
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
         table_contents = []
+        address_expr_list = []
+        value_type_list = []
         rows = []
         while True:
             row = it.value()
             if not row:
                 break
             it += 1
-
-            address = row.text(ADDR_COL)
-            index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(row.text(TYPE_COL))
-            table_contents.append((address, index, length, zero_terminate))
+            address_expr_list.append(row.data(ADDR_COL, ADDR_EXPR_ROLE))
+            value_type_list.append(row.text(TYPE_COL))
             rows.append(row)
-
+        address_list = GDB_Engine.convert_multiple_symbols_to_addresses(address_expr_list)
+        for address, value_type in zip(address_list, value_type_list):
+            index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
+            table_contents.append((address, index, length, zero_terminate))
         new_table_contents = GDB_Engine.read_multiple_addresses(table_contents)
-        for row, item in zip(rows, new_table_contents):
-            row.setText(VALUE_COL, str(item))
+        for row, address, value in zip(rows, address_list, new_table_contents):
+            row.setText(ADDR_COL, address)
+            row.setText(VALUE_COL, str(value))
 
     def resize_address_table(self):
         self.treeWidget_AddressTable.resizeColumnToContents(FROZEN_COL)
