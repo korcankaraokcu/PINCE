@@ -651,7 +651,7 @@ class SearchReferencedCalls(gdb.Command):
         returned_list = []
         for index, item in enumerate(str_dict):
             symbol = ScriptUtils.convert_address_to_symbol(item)
-            if symbol is None:
+            if symbol is "":
                 continue
             if enable_regex:
                 if not regex.search(symbol):
