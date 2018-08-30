@@ -223,8 +223,6 @@ def convert_address_to_symbol(expression, include_address=True):
         result = gdb.execute("x/b " + expression, to_string=True)
     except:
         return ""
-    if common_regexes.cannot_access_memory.search(result):
-        return ""
     filtered_result = common_regexes.address_with_symbol.search(result)  # 0x4125d0 <_start>:	0x31
     if filtered_result:
         return filtered_result.group(1) if include_address else filtered_result.group(3)
@@ -242,8 +240,6 @@ def convert_symbol_to_address(expression):
     try:
         result = gdb.execute("x/b " + expression, to_string=True)
     except:
-        return ""
-    if common_regexes.cannot_access_memory.search(result):
         return ""
     filtered_result = common_regexes.address_with_symbol.search(result)
     if filtered_result:
