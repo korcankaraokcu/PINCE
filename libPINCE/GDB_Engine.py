@@ -978,7 +978,7 @@ def validate_memory_address(expression):
     Returns:
         bool: True if address is reachable, False if not
     """
-    if convert_symbol_to_address(expression) == None:
+    if convert_symbol_to_address(expression) is "":
         return False
     return True
 
@@ -1427,7 +1427,7 @@ def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWAR
     """
     output = ""
     str_address = convert_symbol_to_address(expression)
-    if str_address == None:
+    if str_address is "":
         print("expression for breakpoint is not valid")
         return
     if check_address_in_breakpoints(str_address):
@@ -1464,7 +1464,7 @@ def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TY
         list: Numbers of the successfully set breakpoints as strings
     """
     str_address = convert_symbol_to_address(expression)
-    if str_address == None:
+    if str_address is "":
         print("expression for watchpoint is not valid")
         return
     if watchpoint_type == type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
@@ -1536,7 +1536,7 @@ def modify_breakpoint(expression, modify_what, condition=None, count=None):
         count-->10
     """
     str_address = convert_symbol_to_address(expression)
-    if str_address == None:
+    if str_address is "":
         print("expression for breakpoint is not valid")
         return False
     str_address_int = int(str_address, 16)
@@ -1591,7 +1591,7 @@ def delete_breakpoint(expression):
         bool: True if the breakpoint has been deleted successfully, False otherwise
     """
     str_address = convert_symbol_to_address(expression)
-    if str_address == None:
+    if str_address is "":
         print("expression for breakpoint is not valid")
         return False
     str_address_int = int(str_address, 16)
