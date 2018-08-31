@@ -721,8 +721,6 @@ def read_single_address_by_expression(expression, value_index, length=None, zero
     expression = expression.strip()
     if not expression:
         return "??"
-    if not length:
-        return "??"
     if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         address_type = value_index_to_gdbcommand(value_index)
         try:
