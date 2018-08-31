@@ -217,7 +217,7 @@ def remove_disas_comment(disas_str):
 
 def convert_address_to_symbol(expression, include_address=True):
     expression = expression.strip()
-    if expression is "":
+    if not expression:
         return ""
     try:
         result = gdb.execute("x/b " + expression, to_string=True)
@@ -238,7 +238,7 @@ def convert_address_to_symbol(expression, include_address=True):
 
 def convert_symbol_to_address(expression):
     expression = expression.strip()
-    if expression is "":
+    if not expression:
         return ""
     try:
         result = gdb.execute("x/b " + expression, to_string=True)

@@ -2007,7 +2007,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if go_to_dialog.exec_():
             expression = go_to_dialog.get_values()
             dest_address = GDB_Engine.convert_symbol_to_address(expression)
-            if dest_address is "":
+            if not dest_address:
                 QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
                 return
             self.hex_dump_address(int(dest_address, 16))
@@ -2660,7 +2660,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             item_str = hex(item)
             nested_list.append((item_str,))
         for index, item in enumerate(GDB_Engine.convert_multiple_addresses_to_symbols(nested_list)):
-            if item is "":
+            if not item:
                 text_append = nested_list[index][0] + "(Unreachable)"
             else:
                 text_append = item
@@ -2889,7 +2889,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
             item_str = hex(item)
             nested_list.append((item_str,))
         for index, item in enumerate(GDB_Engine.convert_multiple_addresses_to_symbols(nested_list)):
-            if item is "":
+            if not item:
                 text_append = nested_list[index][0] + "(Unreachable)"
             else:
                 text_append = item
@@ -2912,7 +2912,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         if entry_dialog.exec_():
             text = entry_dialog.get_values()
             address = GDB_Engine.convert_symbol_to_address(text)
-            if address is "":
+            if not address:
                 QMessageBox.information(self, "Error", "Invalid expression or address")
                 return
             self.parent().bookmark_address(int(address, 16))
