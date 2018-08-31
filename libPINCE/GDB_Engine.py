@@ -214,7 +214,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             else:
                 child.sendline("cli-output source " + command_file)
         if not control:
-            while gdb_output is "":
+            while not gdb_output:
                 sleep(type_defs.CONST_TIME.GDB_INPUT_SLEEP)
                 if cancel_send_command:
                     break
@@ -719,9 +719,9 @@ def read_single_address_by_expression(expression, value_index, length=None, zero
         str: The value of address read as str. If the expression/address is not valid, returns the string "??"
     """
     expression = expression.strip()
-    if expression is "":
+    if not expression:
         return "??"
-    if length is "":
+    if not length:
         return "??"
     if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         address_type = value_index_to_gdbcommand(value_index)
@@ -1414,7 +1414,7 @@ def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWAR
     """
     output = ""
     str_address = convert_symbol_to_address(expression)
-    if str_address is "":
+    if not str_address:
         print("expression for breakpoint is not valid")
         return
     if check_address_in_breakpoints(str_address):
@@ -1451,7 +1451,7 @@ def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TY
         list: Numbers of the successfully set breakpoints as strings
     """
     str_address = convert_symbol_to_address(expression)
-    if str_address is "":
+    if not str_address:
         print("expression for watchpoint is not valid")
         return
     if watchpoint_type == type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
@@ -1523,7 +1523,7 @@ def modify_breakpoint(expression, modify_what, condition=None, count=None):
         count-->10
     """
     str_address = convert_symbol_to_address(expression)
-    if str_address is "":
+    if not str_address:
         print("expression for breakpoint is not valid")
         return False
     str_address_int = int(str_address, 16)
@@ -1578,7 +1578,7 @@ def delete_breakpoint(expression):
         bool: True if the breakpoint has been deleted successfully, False otherwise
     """
     str_address = convert_symbol_to_address(expression)
-    if str_address is "":
+    if not str_address:
         print("expression for breakpoint is not valid")
         return False
     str_address_int = int(str_address, 16)
@@ -2012,7 +2012,7 @@ def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.IN
     value_list = read_multiple_addresses(nested_list)
     for index, item in enumerate(value_list):
         item_str = str(item)
-        if item_str is "":
+        if not item_str:
             continue
         if enable_regex:
             if not regex.search(item_str):
