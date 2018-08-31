@@ -3767,7 +3767,10 @@ class HexEditDialogForm(QDialog, HexEditDialog):
             self.lineEdit_AsciiView.setStyleSheet("QLineEdit {background-color: red;}")
 
     def refresh_view(self):
-        address = self.lineEdit_Address.text()
+        address = GDB_Engine.convert_symbol_to_address(self.lineEdit_Address.text())
+        if not address:
+            self.lineEdit_AsciiView.clear()
+            self.lineEdit_HexView.clear()
         length = self.lineEdit_Length.text()
         aob_array = GDB_Engine.hex_dump(address, length)
         ascii_str = SysUtils.aob_to_str(aob_array, "utf-8")
@@ -3775,7 +3778,11 @@ class HexEditDialogForm(QDialog, HexEditDialog):
         self.lineEdit_HexView.setText(" ".join(aob_array))
 
     def accept(self):
-        address = self.lineEdit_Address.text()
+        expression = self.lineEdit_Address.text()
+        address = GDB_Engine.convert_symbol_to_address(expression)
+        if not address:
+            QMessageBox.information(self, "Error", expression + " isn't a valid expression")
+            return
         value = self.lineEdit_HexView.text()
         GDB_Engine.set_single_address(address, type_defs.VALUE_INDEX.INDEX_AOB, value)
         super(HexEditDialogForm, self).accept()

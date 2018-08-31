@@ -1273,6 +1273,7 @@ def hex_dump(address, offset):
 
     Returns:
         list: List of strings read as str. If an error occurs while reading a memory cell, that cell is returned as "??"
+        An empty list is returned if an error occurs
 
     Examples:
         returned list-->["??","??","??","7f","43","67","40","??","??, ...]
@@ -1285,6 +1286,7 @@ def hex_dump(address, offset):
                                  recv_with_file=True)
     if contents_recv is None:
         print("an error occurred while hex dumping address " + hex(address) + " with offset " + str(offset))
+        return []
     return contents_recv
 
 
