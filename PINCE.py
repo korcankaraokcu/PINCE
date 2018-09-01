@@ -710,8 +710,8 @@ class MainForm(QMainWindow, MainWindow):
             index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
             table_contents.append((address, index, length, zero_terminate))
         new_table_contents = GDB_Engine.read_multiple_addresses(table_contents)
-        for row, address, value in zip(rows, address_list, new_table_contents):
-            row.setText(ADDR_COL, address)
+        for row, address, address_expr, value in zip(rows, address_list, address_expr_list, new_table_contents):
+            row.setText(ADDR_COL, address or address_expr)
             row.setText(VALUE_COL, str(value))
 
     def resize_address_table(self):
