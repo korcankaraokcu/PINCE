@@ -687,10 +687,32 @@ def split_symbol(symbol_string):
         returned_list-->["printf"]
     """
     returned_list = []
-    if "(" in symbol_string:
-        returned_list.append(symbol_string.split("(", maxsplit=1)[0])
-    if "@" in symbol_string:
-        returned_list.append(symbol_string.split("@", maxsplit=1)[0])
+    p_count = 0
+    # this algorithm searches for balanced parentheses and removes the outer group
+    # using string reversing with recursive re.split makes the code confusing as hell, going with this one instead
+    # searching for balanced parentheses works because apparently no demangled symbol can finish with <.*>
+    # XXX: run this code to test while attached to a process and open a detailed issue if you get a result
+    """
+    from libPINCE import GDB_Engine
+    import re
+    result=GDB_Engine.search_functions("")
+    for address, symbol in result:
+        if re.search("<.*>[^()]+$", symbol):
+            print(symbol)
+    """
+    for index, letter in enumerate(symbol_string[::-1]):
+        if letter == ")":
+            p_count += 1
+        elif letter == "(":
+            p_count -= 1
+            if p_count == 0:
+                returned_list.append((symbol_string[:-(index + 1)]))
+                break
+            assert p_count >= 0, symbol_string + " contains unhealthy amount of left parentheses\nGotta give him some" \
+                                                 ' right parentheses. Like Bob always says "everyone needs a friend"'
+    assert p_count == 0, symbol_string + " contains unbalanced parentheses"
+    if "@plt" in symbol_string:
+        returned_list.append(symbol_string.rsplit("@plt", maxsplit=1)[0])
     returned_list.append(symbol_string)
     return returned_list
 
