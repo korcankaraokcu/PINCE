@@ -22,3 +22,12 @@ If test is declared like above, test.__doc__ will return "documentation for test
 
 If test is declared like above, test.__doc__ will return a null string because subtest blocks the docstring. This is the wrong documentation
 All functions that has a subfunction can be found with the regex def.*:.*\s+def
+
+2/9/2018 - Seek methods of all file handles that read directly from the memory(/proc/pid/mem etc.) should be wrapped in a try/except block that catches both OSError and ValueError exceptions. For instance:
+
+    try:
+        self.memory.seek(start_addr)
+    except (OSError, ValueError):
+        break
+
+OSError handles I/O related errors and ValueError handles the off_t limit error that prints "cannot fit 'int' into an offset-sized integer"

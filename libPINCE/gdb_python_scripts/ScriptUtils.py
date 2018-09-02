@@ -98,7 +98,7 @@ def read_single_address(address, value_type, length=0, zero_terminate=True, only
     try:
         mem_handle.seek(address)
         data_read = mem_handle.read(expected_length)
-    except (IOError, ValueError):
+    except (OSError, ValueError):
         print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return ""
     if only_bytes:
@@ -139,11 +139,12 @@ def set_single_address(address, value_index, value):
     else:
         write_data = write_data.encode(encoding, option)
     FILE = open(mem_file, "rb+")
-
-    # Check SetMultipleAddresses class in GDBCommandExtensions.py to see why we moved away the try/except block
-    FILE.seek(address)
-    FILE.write(write_data)
-    FILE.close()
+    try:
+        FILE.seek(address)
+        FILE.write(write_data)
+        FILE.close()
+    except (OSError, ValueError):
+        print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + len(write_data)))
 
 
 def get_general_registers():
