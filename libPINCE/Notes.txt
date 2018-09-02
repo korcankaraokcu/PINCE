@@ -3,3 +3,22 @@ SysUtils.get_comments_of_variables()
 GDB_Engine.create_process()
 GDB_Engine.attach()
 GDB_Engine.init_gdb()
+
+2/9/2018 - All functions with docstrings should have their subfunctions written after their docstrings. For instance:
+
+    def test():
+        """documentation for test"""
+        def subtest():
+            return
+        return
+
+If test is declared like above, test.__doc__ will return "documentation for test" correctly. This is the correct documentation
+
+    def test():
+        def subtest():
+            return
+        """documentation for test"""
+        return
+
+If test is declared like above, test.__doc__ will return a null string because subtest blocks the docstring. This is the wrong documentation
+All functions that has a subfunction can be found with the regex def.*:.*\s+def
