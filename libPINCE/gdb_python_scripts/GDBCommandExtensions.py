@@ -101,17 +101,7 @@ class SetMultipleAddresses(gdb.Command):
         for item in contents_recv:
             address = item[0]
             index = item[1]
-
-            '''
-            The reason we do the check here instead of inside of the function set_single_address() is because try/except
-            block doesn't work in function set_single_address() when writing something to file in /proc/$pid/mem. Python
-            is normally capable of catching IOError exception, but I have no idea about why it doesn't work in function
-            set_single_address()
-            '''
-            try:
-                ScriptUtils.set_single_address(address, index, value)
-            except (IOError, ValueError):
-                print("Can't access the address " + address if type(address) == str else hex(address))
+            ScriptUtils.set_single_address(address, index, value)
 
 
 class ReadSingleAddress(gdb.Command):
@@ -245,15 +235,19 @@ class GetStackInfo(gdb.Command):
             result = gdb.execute("p/x $esp", from_tty, to_string=True)
         stack_address = int(SysUtils.extract_address(result), 16)  # $6 = 0x7f0bc0b6bb40
         with open(ScriptUtils.mem_file, "rb") as FILE:
-            old_position = FILE.seek(stack_address)
+            try:
+                old_position = FILE.seek(stack_address)
+            except (OSError, ValueError):
+                send_to_pince(stack_info_list)
+                return
             for index in range(int(4096 / chunk_size)):
                 current_offset = chunk_size * index
                 stack_indicator = hex(stack_address + current_offset) + "(" + stack_register + "+" + hex(
                     current_offset) + ")"
-                FILE.seek(old_position)
                 try:
+                    FILE.seek(old_position)
                     read = FILE.read(chunk_size)
-                except:
+                except (OSError, ValueError):
                     print("Can't access the stack after address " + stack_indicator)
                     break
                 old_position = FILE.tell()
@@ -262,7 +256,7 @@ class GetStackInfo(gdb.Command):
                 try:
                     FILE.seek(int_addr)
                     read_pointer = FILE.read(20)
-                except:
+                except (OSError, ValueError):
                     pointer_data = ""
                 else:
                     result = gdb.execute("x/b " + hex_repr, to_string=True)
@@ -323,13 +317,19 @@ class HexDump(gdb.Command):
         address = contents_recv[0]
         offset = contents_recv[1]
         with open(ScriptUtils.mem_file, "rb") as FILE:
-            FILE.seek(address)
+            try:
+                FILE.seek(address)
+            except (OSError, ValueError):
+                pass
             for item in range(offset):
                 try:
                     current_item = " ".join(format(n, '02x') for n in FILE.read(1))
-                except IOError:
+                except OSError:
                     current_item = "??"
-                    FILE.seek(1, io.SEEK_CUR)  # Necessary since read() failed to execute
+                    try:
+                        FILE.seek(1, io.SEEK_CUR)  # Necessary since read() failed to execute
+                    except (OSError, ValueError):
+                        pass
                 hex_byte_list.append(current_item)
         send_to_pince(hex_byte_list)
 
@@ -532,7 +532,7 @@ class DissectCode(gdb.Command):
     def is_memory_valid(self, int_address, discard_invalid_strings=False):
         try:
             self.memory.seek(int_address)
-        except ValueError:
+        except (OSError, ValueError):
             return False  # vsyscall is ignored if vDSO is present, so we can safely ignore vsyscall
         try:
             if discard_invalid_strings:
@@ -579,7 +579,10 @@ class DissectCode(gdb.Command):
                 status_info = region_info + (hex(start_addr) + "-" + hex(start_addr + offset),
                                              ref_str_count, ref_jmp_count, ref_call_count)
                 pickle.dump(status_info, open(dissect_code_status_file, "wb"))
-                self.memory.seek(start_addr)
+                try:
+                    self.memory.seek(start_addr)
+                except (OSError, ValueError):
+                    break
                 code = self.memory.read(offset)
                 disas_data = distorm3.Decode(start_addr, code, disas_option)
                 if not region_finished:
