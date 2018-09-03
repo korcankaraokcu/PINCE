@@ -724,7 +724,7 @@ def read_single_address_by_expression(expression, value_index, length=None, zero
     if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         address_type = value_index_to_gdbcommand(value_index)
         try:
-            expected_length = str(int(length))  # length must be a legit number, so had to do this trick
+            expected_length = str(int(length, 0))  # length must be a legit number, so had to do this trick
         except:
             return "??"
         result = send_command("x/" + expected_length + address_type + " " + expression)
@@ -735,7 +735,7 @@ def read_single_address_by_expression(expression, value_index, length=None, zero
     elif type_defs.VALUE_INDEX.is_string(value_index):
         address_type = value_index_to_gdbcommand(value_index)
         try:
-            expected_length = int(length)
+            expected_length = int(length, 0)
         except:
             return "??"
         expected_length *= type_defs.string_index_to_multiplier_dict.get(value_index, 1)
@@ -750,7 +750,7 @@ def read_single_address_by_expression(expression, value_index, length=None, zero
                     returned_string = '\x00'
                 else:
                     returned_string = returned_string.split('\x00')[0]
-            return returned_string[0:int(length)]
+            return returned_string[0:int(length, 0)]
         return "??"
     else:
         address_type = value_index_to_gdbcommand(value_index)
@@ -1266,8 +1266,8 @@ def hex_dump(address, offset):
     """Returns hex dump of range (address to address+offset)
 
     Args:
-        address (int,str): Hex address or an int
-        offset (int,str): The range that'll be read
+        address (int): Self-explanatory
+        offset (int): The range that'll be read
 
     Returns:
         list: List of strings read as str. If an error occurs while reading a memory cell, that cell is returned as "??"
@@ -1276,10 +1276,6 @@ def hex_dump(address, offset):
     Examples:
         returned list-->["??","??","??","7f","43","67","40","??","??, ...]
     """
-    if type(address) != int:
-        address = int(address, 16)
-    if type(offset) != int:
-        offset = int(offset)
     contents_recv = send_command("pince-hex-dump", send_with_file=True, file_contents_send=(address, offset),
                                  recv_with_file=True)
     if contents_recv is None:
