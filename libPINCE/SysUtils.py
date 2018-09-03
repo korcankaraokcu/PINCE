@@ -597,13 +597,13 @@ def parse_string(string, value_index):
                 print(string + " can't be parsed as integer or hexadecimal")
                 return
         if value_index is type_defs.VALUE_INDEX.INDEX_BYTE:
-            string = string % 256
+            string = string % 0x100  # 256
         elif value_index is type_defs.VALUE_INDEX.INDEX_2BYTES:
-            string = string % 65536
+            string = string % 0x10000  # 65536
         elif value_index is type_defs.VALUE_INDEX.INDEX_4BYTES:
-            string = string % 4294967296
+            string = string % 0x100000000  # 4294967296
         elif value_index is type_defs.VALUE_INDEX.INDEX_8BYTES:
-            string = string % 18446744073709551616
+            string = string % 0x10000000000000000  # 18446744073709551616
         return string
 
 
