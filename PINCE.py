@@ -18,8 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
-    QIntValidator
+from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip, QTreeWidgetItem, \
     QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox
@@ -65,6 +64,7 @@ from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
+from GUI.CustomValidators.HexValidator import QHexValidator
 
 instances = []  # Holds temporary instances that will be deleted later on
 
@@ -1034,7 +1034,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.adjustSize()
         self.setMinimumWidth(300)
         self.setFixedHeight(self.height())
-        self.lineEdit_length.setValidator(QIntValidator(0, 200, self))
+        self.lineEdit_length.setValidator(QHexValidator(300, self))
         GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
         self.lineEdit_description.setText(description)
         self.lineEdit_address.setText(address)
@@ -1120,7 +1120,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         if self.label_length.isVisible():
             length = self.lineEdit_length.text()
             try:
-                length = int(length)
+                length = int(length, 0)
             except:
                 QMessageBox.information(self, "Error", "Length is not valid")
                 return
@@ -1134,7 +1134,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         address = self.lineEdit_address.text()
         length = self.lineEdit_length.text()
         try:
-            length = int(length)
+            length = int(length, 0)
         except:
             length = 0
         zero_terminate = False
@@ -1149,7 +1149,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setMaximumSize(100, 100)
-        self.lineEdit_Length.setValidator(QIntValidator(0, 200, self))
+        self.lineEdit_Length.setValidator(QHexValidator(300, self))
         GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.label_Length.show()
@@ -1197,7 +1197,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         if self.label_Length.isVisible():
             length = self.lineEdit_Length.text()
             try:
-                length = int(length)
+                length = int(length, 0)
             except:
                 QMessageBox.information(self, "Error", "Length is not valid")
                 return
@@ -1209,7 +1209,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
     def get_values(self):
         length = self.lineEdit_Length.text()
         try:
-            length = int(length)
+            length = int(length, 0)
         except:
             length = 0
         zero_terminate = False
@@ -3719,6 +3719,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
     def __init__(self, address, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.lineEdit_Length.setValidator(QHexValidator(300, self))
         self.lineEdit_Address.setText(address)
         self.lineEdit_Length.setText("20")
         self.refresh_view()
@@ -3767,11 +3768,17 @@ class HexEditDialogForm(QDialog, HexEditDialog):
             self.lineEdit_AsciiView.setStyleSheet("QLineEdit {background-color: red;}")
 
     def refresh_view(self):
+        self.lineEdit_AsciiView.clear()
+        self.lineEdit_HexView.clear()
         address = GDB_Engine.convert_symbol_to_address(self.lineEdit_Address.text())
         if not address:
-            self.lineEdit_AsciiView.clear()
-            self.lineEdit_HexView.clear()
+            return
         length = self.lineEdit_Length.text()
+        try:
+            length = int(length, 0)
+            address = int(address, 0)
+        except ValueError:
+            return
         aob_array = GDB_Engine.hex_dump(address, length)
         ascii_str = SysUtils.aob_to_str(aob_array, "utf-8")
         self.lineEdit_AsciiView.setText(ascii_str)

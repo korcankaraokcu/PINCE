@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from GUI.CustomTableViews.HexView import QHexView
 
+
 class QAsciiView(QHexView):
     # data_array is returned from GDB_Engine.hex_dump()
     def __init__(self, parent=None):
