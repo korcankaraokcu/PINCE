@@ -582,23 +582,20 @@ def parse_string(string, value_index):
             string = float(string)
         except:
             try:
-                string = float(int(string, 16))
+                string = float(int(string, 0))
             except:
                 print(string + " can't be parsed as floating point variable")
                 return
         return string
     else:
         try:
-            string = int(string)
+            string = int(string, 0)
         except:
             try:
-                string = int(string, 16)
+                string = int(float(string))
             except:
-                try:
-                    string = int(float(string))
-                except:
-                    print(string + " can't be parsed as integer or hexadecimal")
-                    return
+                print(string + " can't be parsed as integer or hexadecimal")
+                return
         if value_index is type_defs.VALUE_INDEX.INDEX_BYTE:
             string = string % 256
         elif value_index is type_defs.VALUE_INDEX.INDEX_2BYTES:
