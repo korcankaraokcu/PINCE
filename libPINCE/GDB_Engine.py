@@ -510,7 +510,7 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     pid = int(pid)
     traced_by = SysUtils.is_traced(pid)
     pid_control_list = [
-        #  Attaching PINCE to itself makes PINCE freeze immediately because gdb freezes the target on attach
+        # Attaching PINCE to itself makes PINCE freeze immediately because gdb freezes the target on attach
         (lambda: pid == self_pid, type_defs.ATTACH_RESULT.ATTACH_SELF, "Nice try, smartass"),  # planned easter egg
         (lambda: not SysUtils.is_process_valid(pid), type_defs.ATTACH_RESULT.PROCESS_NOT_VALID,
          "Selected process is not valid"),
