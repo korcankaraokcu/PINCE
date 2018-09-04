@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt5.QtWidgets import QTableView, QAbstractItemView
 from PyQt5.QtCore import Qt
 
+from libPINCE import SysUtils, GDB_Engine
+
 
 class QHexView(QTableView):
     def __init__(self, parent=None):
@@ -40,5 +42,7 @@ class QHexView(QTableView):
         self.setMinimumWidth(size)
         self.setMaximumWidth(size)
 
-    def get_current_offset(self):
-        return self.currentIndex().row() * self.model().columnCount() + self.currentIndex().column()
+    def get_selected_address(self):
+        ci = self.currentIndex()
+        current_address = self.model().current_address + ci.row() * self.model().columnCount() + ci.column()
+        return SysUtils.modulo_address(current_address, GDB_Engine.inferior_arch)

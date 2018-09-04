@@ -1840,7 +1840,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def initialize_hex_view(self):
         self.hex_view_last_selected_address_int = 0
-        self.hex_view_currently_displayed_address = 0
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
         self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
         self.tableView_HexView_Ascii.contextMenuEvent = self.widget_HexView_context_menu_event
@@ -1955,7 +1954,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             pass
 
     def widget_HexView_context_menu_event(self, event):
-        selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
+        selected_address = self.tableView_HexView_Hex.get_selected_address()
         menu = QMenu()
         edit = menu.addAction("Edit")
         menu.addSeparator()
@@ -1984,7 +1983,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             go_to: self.exec_hex_view_go_to_dialog,
             disassemble: lambda: self.disassemble_expression(hex(selected_address), append_to_travel_history=True),
             add_address: self.exec_hex_view_add_address_dialog,
-            refresh: lambda: self.hex_dump_address(self.hex_view_currently_displayed_address),
+            refresh: self.refresh_hex_view,
             watchpoint_write: lambda: self.toggle_watchpoint(selected_address, type_defs.WATCHPOINT_TYPE.WRITE_ONLY),
             watchpoint_read: lambda: self.toggle_watchpoint(selected_address, type_defs.WATCHPOINT_TYPE.READ_ONLY),
             watchpoint_both: lambda: self.toggle_watchpoint(selected_address, type_defs.WATCHPOINT_TYPE.BOTH),
@@ -1997,12 +1996,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             pass
 
     def exec_hex_view_edit_dialog(self):
-        selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
+        selected_address = self.tableView_HexView_Hex.get_selected_address()
         HexEditDialogForm(hex(selected_address)).exec_()
         self.refresh_hex_view()
 
     def exec_hex_view_go_to_dialog(self):
-        current_address = hex(self.hex_view_currently_displayed_address)
+        current_address = hex(self.hex_model.current_address)
         go_to_dialog = InputDialogForm(item_list=[("Enter the expression", current_address)])
         if go_to_dialog.exec_():
             expression = go_to_dialog.get_values()
@@ -2013,7 +2012,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.hex_dump_address(int(dest_address, 16))
 
     def exec_hex_view_add_address_dialog(self):
-        selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
+        selected_address = self.tableView_HexView_Hex.get_selected_address()
         manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address),
                                                         index=type_defs.VALUE_INDEX.INDEX_AOB)
         if manual_address_dialog.exec_():
@@ -2035,7 +2034,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_value = self.verticalScrollBar_HexView.value()
         if midst - 10 < current_value < midst + 10:
             return
-        current_address = self.hex_view_currently_displayed_address
+        current_address = self.hex_model.current_address
         if current_value < midst:
             next_address = current_address - 0x40
         else:
@@ -2062,8 +2061,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def on_hex_view_current_changed(self, QModelIndex_current):
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SingleSelection)
-        selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
-        self.hex_view_last_selected_address_int = selected_address
+        self.hex_view_last_selected_address_int = self.tableView_HexView_Hex.get_selected_address()
         self.tableView_HexView_Ascii.selectionModel().setCurrentIndex(QModelIndex_current,
                                                                       QItemSelectionModel.ClearAndSelect)
         self.tableWidget_HexView_Address.selectRow(QModelIndex_current.row())
@@ -2076,7 +2074,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.selectRow(QModelIndex_current.row())
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.NoSelection)
 
+    # TODO: Consider merging HexView_Address, HexView_Hex and HexView_Ascii into one UI class
+    # TODO: Move this function to that class if that happens
+    # TODO: Also consider moving shared fields of HexView and HexModel to that class(such as HexModel.current_address)
     def hex_dump_address(self, int_address, offset=HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT):
+        int_address = SysUtils.modulo_address(int_address, GDB_Engine.inferior_arch)
         information = SysUtils.get_region_info(GDB_Engine.currentpid, int_address)
         if information is not None:
             self.label_HexView_Information.setText(
@@ -2086,16 +2088,21 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.setRowCount(0)
         self.tableWidget_HexView_Address.setRowCount(HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
         for row, current_offset in enumerate(range(HEX_VIEW_ROW_COUNT)):
-            self.tableWidget_HexView_Address.setItem(row, 0, QTableWidgetItem(hex(int_address + current_offset * 16)))
+            row_address = hex(SysUtils.modulo_address(int_address + current_offset * 16, GDB_Engine.inferior_arch))
+            self.tableWidget_HexView_Address.setItem(row, 0, QTableWidgetItem(row_address))
         tableWidget_HexView_column_size = self.tableWidget_HexView_Address.sizeHintForColumn(0) + 5
         self.tableWidget_HexView_Address.setMaximumWidth(tableWidget_HexView_column_size)
         self.tableWidget_HexView_Address.setMinimumWidth(tableWidget_HexView_column_size)
         self.tableWidget_HexView_Address.setColumnWidth(0, tableWidget_HexView_column_size)
         self.hex_model.refresh(int_address, offset)
         self.ascii_model.refresh(int_address, offset)
-        self.hex_view_currently_displayed_address = int_address
+        difference = None
         if int_address <= self.hex_view_last_selected_address_int <= int_address + offset:
             difference = self.hex_view_last_selected_address_int - int_address
+        elif SysUtils.modulo_address(int_address + offset, GDB_Engine.inferior_arch) < int_address:
+            difference = SysUtils.modulo_address(self.hex_view_last_selected_address_int - int_address,
+                                                 GDB_Engine.inferior_arch)
+        if difference is not None:
             model_index = QModelIndex(
                 self.hex_model.index(int(difference / HEX_VIEW_COL_COUNT), difference % HEX_VIEW_COL_COUNT))
             self.tableView_HexView_Hex.selectionModel().select(model_index, QItemSelectionModel.ClearAndSelect)
@@ -2114,7 +2121,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableView_HexView_Hex.resize_to_contents()
             self.tableView_HexView_Ascii.resize_to_contents()
         else:
-            self.hex_dump_address(self.hex_view_currently_displayed_address)
+            self.hex_dump_address(self.hex_model.current_address)
 
     # offset can also be an address as hex str
     # returns True if the given expression is disassembled correctly, False if not
@@ -2540,7 +2547,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def widget_HexView_wheel_event(self, event):
         steps = event.angleDelta()
-        current_address = self.hex_view_currently_displayed_address
+        current_address = self.hex_model.current_address
         if steps.y() > 0:
             next_address = current_address - 0x40
         else:
@@ -2548,7 +2555,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_dump_address(next_address)
 
     def widget_HexView_key_press_event(self, event):
-        selected_address = self.hex_view_currently_displayed_address + self.tableView_HexView_Hex.get_current_offset()
+        selected_address = self.tableView_HexView_Hex.get_selected_address()
 
         actions = type_defs.KeyboardModifiersTupleDict([
             ((Qt.ControlModifier, Qt.Key_G), self.exec_hex_view_go_to_dialog),

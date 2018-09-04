@@ -631,6 +631,25 @@ def extract_address(string, search_for_location_changing_instructions=False):
             return result.group(0)
 
 
+#:tag:Utilities
+def modulo_address(int_address, arch_type):
+    """Calculates the modulo of the given integer based on the given architecture type to make sure that it doesn't
+    exceed the borders of the given architecture type (0xffffffff->x86, 0xffffffffffffffff->x64)
+
+    Args:
+        int_address (int): Self-explanatory
+        arch_type (int): Architecture type (x86, x64). Can be a member of type_defs.INFERIOR_ARCH
+
+    Returns:
+        int: Modulo of the given integer based on the given architecture type
+    """
+    if arch_type == type_defs.INFERIOR_ARCH.ARCH_32:
+        return int_address % 0x100000000
+    elif arch_type == type_defs.INFERIOR_ARCH.ARCH_64:
+        return int_address % 0x10000000000000000
+    raise Exception("arch_type must be a member of type_defs.INFERIOR_ARCH")
+
+
 #:tag:ValueType
 def aob_to_str(list_of_bytes, encoding="ascii"):
     """Converts given array of hex strings to str
