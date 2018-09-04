@@ -2103,10 +2103,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             difference = SysUtils.modulo_address(self.hex_view_last_selected_address_int - int_address,
                                                  GDB_Engine.inferior_arch)
         if difference is not None:
+            row_index = int(difference / HEX_VIEW_COL_COUNT)
             model_index = QModelIndex(
-                self.hex_model.index(int(difference / HEX_VIEW_COL_COUNT), difference % HEX_VIEW_COL_COUNT))
+                self.hex_model.index(row_index, difference % HEX_VIEW_COL_COUNT))
             self.tableView_HexView_Hex.selectionModel().select(model_index, QItemSelectionModel.ClearAndSelect)
             self.tableView_HexView_Ascii.selectionModel().select(model_index, QItemSelectionModel.ClearAndSelect)
+            self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SingleSelection)
+            self.tableWidget_HexView_Address.selectRow(row_index)
+            self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.NoSelection)
         else:
             self.tableView_HexView_Hex.clearSelection()
             self.tableView_HexView_Ascii.clearSelection()
