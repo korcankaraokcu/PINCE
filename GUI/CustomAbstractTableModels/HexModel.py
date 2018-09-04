@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
 from PyQt5.QtGui import QColor
 
-from libPINCE import GDB_Engine
+from libPINCE import SysUtils, GDB_Engine
 
 
 class QHexModel(QAbstractTableModel):
@@ -27,6 +27,7 @@ class QHexModel(QAbstractTableModel):
         self.breakpoint_list = set()
         self.row_count = row_count
         self.column_count = column_count
+        self.current_address = 0
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return self.row_count
@@ -47,6 +48,7 @@ class QHexModel(QAbstractTableModel):
         return QVariant(self.data_array[QModelIndex.row() * self.column_count + QModelIndex.column()])
 
     def refresh(self, int_address, offset):
+        int_address = SysUtils.modulo_address(int_address, GDB_Engine.inferior_arch)
         self.breakpoint_list.clear()
         hex_list = GDB_Engine.hex_dump(int_address, offset)
         self.data_array = hex_list
@@ -59,4 +61,5 @@ class QHexModel(QAbstractTableModel):
             size = breakpoint.size
             for i in range(size):
                 self.breakpoint_list.add(difference + i)
+        self.current_address = int_address
         self.layoutChanged.emit()
