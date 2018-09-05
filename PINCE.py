@@ -2001,7 +2001,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.refresh_hex_view()
 
     def exec_hex_view_go_to_dialog(self):
-        current_address = hex(self.hex_model.current_address)
+        current_address = hex(self.tableView_HexView_Hex.get_selected_address())
         go_to_dialog = InputDialogForm(item_list=[("Enter the expression", current_address)])
         if go_to_dialog.exec_():
             expression = go_to_dialog.get_values()
