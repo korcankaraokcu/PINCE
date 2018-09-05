@@ -101,8 +101,13 @@ def get_region_info(pid, address):
         address (int,str): Can be an int or a hex str
 
     Returns:
-        type_defs.tuple_region_info: Starting address as hex str, ending address as hex str and region corresponding to
+        type_defs.tuple_region_info: Starting address as int, ending address as int and region corresponding to
         the given address as pmmap_ext object
+        None: If the given address isn't in any valid address range
+
+    Note:
+        This function is very slow because of the poor performance on psutils' part. You might want to optimize your
+        code while using this function. Check MemoryViewWindowForm.hex_dump_address() for an optimization example
     """
     if type(pid) != int:
         pid = int(pid)
@@ -113,8 +118,8 @@ def get_region_info(pid, address):
         splitted_address = item.addr.split("-")
         start = int(splitted_address[0], 16)
         end = int(splitted_address[1], 16)
-        if start <= address <= end:
-            return type_defs.tuple_region_info(hex(start), hex(end), item)
+        if start <= address < end:
+            return type_defs.tuple_region_info(start, end, item)
 
 
 #:tag:Processes
