@@ -1034,7 +1034,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.adjustSize()
         self.setMinimumWidth(300)
         self.setFixedHeight(self.height())
-        self.lineEdit_length.setValidator(QHexValidator(300, self))
+        self.lineEdit_length.setValidator(QHexValidator(999, self))
         GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
         self.lineEdit_description.setText(description)
         self.lineEdit_address.setText(address)
@@ -1149,7 +1149,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setMaximumSize(100, 100)
-        self.lineEdit_Length.setValidator(QHexValidator(300, self))
+        self.lineEdit_Length.setValidator(QHexValidator(999, self))
         GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.label_Length.show()
@@ -3732,7 +3732,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
     def __init__(self, address, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.lineEdit_Length.setValidator(QHexValidator(300, self))
+        self.lineEdit_Length.setValidator(QHexValidator(999, self))
         self.lineEdit_Address.setText(address)
         self.lineEdit_Length.setText("20")
         self.refresh_view()
