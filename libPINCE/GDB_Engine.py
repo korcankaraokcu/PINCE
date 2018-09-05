@@ -657,7 +657,7 @@ def inject_with_advanced_injection(library_path):
     Returns:
         bool: Result of the injection
 
-    Notes:
+    Note:
         This function was reserved for linux-inject and since linux-inject is no more(F to pay respects), I'll leave
         this function as a template for now
     """
