@@ -39,7 +39,8 @@ class QHexModel(QAbstractTableModel):
         if not QModelIndex.isValid():
             return QVariant()
         if int_role == Qt.BackgroundColorRole:
-            if QModelIndex.row() * self.column_count + QModelIndex.column() in self.breakpoint_list:
+            address = self.current_address + QModelIndex.row() * self.column_count + QModelIndex.column()
+            if SysUtils.modulo_address(address, GDB_Engine.inferior_arch) in self.breakpoint_list:
                 return QVariant(QColor(Qt.red))
         elif int_role != Qt.DisplayRole:
             return QVariant()
@@ -50,16 +51,10 @@ class QHexModel(QAbstractTableModel):
     def refresh(self, int_address, offset):
         int_address = SysUtils.modulo_address(int_address, GDB_Engine.inferior_arch)
         self.breakpoint_list.clear()
-        hex_list = GDB_Engine.hex_dump(int_address, offset)
-        self.data_array = hex_list
-
-        breakpoint_list = GDB_Engine.get_breakpoint_info()
-        for breakpoint in breakpoint_list:
-            difference = int(breakpoint.address, 16) - int_address
-            if difference < 0:
-                continue
-            size = breakpoint.size
-            for i in range(size):
-                self.breakpoint_list.add(difference + i)
+        self.data_array = GDB_Engine.hex_dump(int_address, offset)
+        for breakpoint in GDB_Engine.get_breakpoint_info():
+            breakpoint_address = int(breakpoint.address, 16)
+            for i in range(breakpoint.size):
+                self.breakpoint_list.add(SysUtils.modulo_address(breakpoint_address + i, GDB_Engine.inferior_arch))
         self.current_address = int_address
         self.layoutChanged.emit()

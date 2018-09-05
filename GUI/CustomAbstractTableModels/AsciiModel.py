@@ -18,7 +18,7 @@ from PyQt5.QtCore import QVariant, Qt
 from PyQt5.QtGui import QColor
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 
-from libPINCE import SysUtils
+from libPINCE import SysUtils, GDB_Engine
 
 
 class QAsciiModel(QHexModel):
@@ -29,7 +29,8 @@ class QAsciiModel(QHexModel):
         if not QModelIndex.isValid():
             return QVariant()
         if int_role == Qt.BackgroundColorRole:
-            if QModelIndex.row() * self.column_count + QModelIndex.column() in self.breakpoint_list:
+            address = self.current_address + QModelIndex.row() * self.column_count + QModelIndex.column()
+            if SysUtils.modulo_address(address, GDB_Engine.inferior_arch) in self.breakpoint_list:
                 return QVariant(QColor(Qt.red))
         elif int_role != Qt.DisplayRole:
             return QVariant()

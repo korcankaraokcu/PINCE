@@ -2096,21 +2096,17 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.setColumnWidth(0, tableWidget_HexView_column_size)
         self.hex_model.refresh(int_address, offset)
         self.ascii_model.refresh(int_address, offset)
-        difference = None
-        if int_address <= self.hex_view_last_selected_address_int <= int_address + offset:
-            difference = self.hex_view_last_selected_address_int - int_address
-        elif SysUtils.modulo_address(int_address + offset, GDB_Engine.inferior_arch) < int_address:
-            difference = SysUtils.modulo_address(self.hex_view_last_selected_address_int - int_address,
-                                                 GDB_Engine.inferior_arch)
-        if difference is not None:
-            row_index = int(difference / HEX_VIEW_COL_COUNT)
-            model_index = QModelIndex(
-                self.hex_model.index(row_index, difference % HEX_VIEW_COL_COUNT))
-            self.tableView_HexView_Hex.selectionModel().select(model_index, QItemSelectionModel.ClearAndSelect)
-            self.tableView_HexView_Ascii.selectionModel().select(model_index, QItemSelectionModel.ClearAndSelect)
-            self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SingleSelection)
-            self.tableWidget_HexView_Address.selectRow(row_index)
-            self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.NoSelection)
+        for index in range(offset):
+            current_address = SysUtils.modulo_address(self.hex_model.current_address + index, GDB_Engine.inferior_arch)
+            if current_address == self.hex_view_last_selected_address_int:
+                row_index = int(index / HEX_VIEW_COL_COUNT)
+                model_index = QModelIndex(self.hex_model.index(row_index, index % HEX_VIEW_COL_COUNT))
+                self.tableView_HexView_Hex.selectionModel().select(model_index, QItemSelectionModel.ClearAndSelect)
+                self.tableView_HexView_Ascii.selectionModel().select(model_index, QItemSelectionModel.ClearAndSelect)
+                self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SingleSelection)
+                self.tableWidget_HexView_Address.selectRow(row_index)
+                self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.NoSelection)
+                break
         else:
             self.tableView_HexView_Hex.clearSelection()
             self.tableView_HexView_Ascii.clearSelection()
