@@ -1039,13 +1039,13 @@ def find_address_of_closest_instruction(address, how_many_instructions_to_look_f
         disas_data = disassemble(address + offset, address)
     if not disas_data:
         if instruction_location != "next":
-            start_address = SysUtils.get_region_info(currentpid, address).start
+            start_address = hex(SysUtils.get_region_info(currentpid, address).start)
             disas_data = disassemble(start_address, address)
     if instruction_location == "next":
         try:
             return SysUtils.extract_address(disas_data[how_many_instructions_to_look_for][0])
         except IndexError:
-            return SysUtils.get_region_info(currentpid, address).end
+            return hex(SysUtils.get_region_info(currentpid, address).end)
     else:
         try:
             return SysUtils.extract_address(disas_data[-how_many_instructions_to_look_for][0])
@@ -1053,7 +1053,7 @@ def find_address_of_closest_instruction(address, how_many_instructions_to_look_f
             try:
                 return start_address
             except UnboundLocalError:
-                return SysUtils.get_region_info(currentpid, address).start
+                return hex(SysUtils.get_region_info(currentpid, address).start)
 
 
 #:tag:GDBExpressions

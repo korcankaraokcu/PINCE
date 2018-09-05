@@ -1840,6 +1840,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def initialize_hex_view(self):
         self.hex_view_last_selected_address_int = 0
+        self.hex_view_current_region = type_defs.tuple_region_info(0, 0, None)
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
         self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
         self.tableView_HexView_Ascii.contextMenuEvent = self.widget_HexView_context_menu_event
@@ -2079,12 +2080,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     # TODO: Also consider moving shared fields of HexView and HexModel to that class(such as HexModel.current_address)
     def hex_dump_address(self, int_address, offset=HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT):
         int_address = SysUtils.modulo_address(int_address, GDB_Engine.inferior_arch)
-        information = SysUtils.get_region_info(GDB_Engine.currentpid, int_address)
-        if information is not None:
-            self.label_HexView_Information.setText(
-                "Protection:" + information.region.perms + " | Base:" + information.start + "-" + information.end)
-        else:
-            self.label_HexView_Information.setText("This region is invalid")
+        if not (self.hex_view_current_region.start <= int_address < self.hex_view_current_region.end):
+            information = SysUtils.get_region_info(GDB_Engine.currentpid, int_address)
+            if information:
+                self.hex_view_current_region = information
+                self.label_HexView_Information.setText("Protection:" + information.region.perms + " | Base:" +
+                                                       hex(information.start) + "-" + hex(information.end))
+            else:
+                self.hex_view_current_region = type_defs.tuple_region_info(0, 0, None)
+                self.label_HexView_Information.setText("This region is invalid")
         self.tableWidget_HexView_Address.setRowCount(0)
         self.tableWidget_HexView_Address.setRowCount(HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
         for row, current_offset in enumerate(range(HEX_VIEW_ROW_COUNT)):
