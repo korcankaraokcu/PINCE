@@ -2101,8 +2101,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             if current_address == self.hex_view_last_selected_address_int:
                 row_index = int(index / HEX_VIEW_COL_COUNT)
                 model_index = QModelIndex(self.hex_model.index(row_index, index % HEX_VIEW_COL_COUNT))
-                self.tableView_HexView_Hex.selectionModel().select(model_index, QItemSelectionModel.ClearAndSelect)
-                self.tableView_HexView_Ascii.selectionModel().select(model_index, QItemSelectionModel.ClearAndSelect)
+                self.tableView_HexView_Hex.selectionModel().setCurrentIndex(model_index,
+                                                                            QItemSelectionModel.ClearAndSelect)
+                self.tableView_HexView_Ascii.selectionModel().setCurrentIndex(model_index,
+                                                                              QItemSelectionModel.ClearAndSelect)
                 self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SingleSelection)
                 self.tableWidget_HexView_Address.selectRow(row_index)
                 self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.NoSelection)
