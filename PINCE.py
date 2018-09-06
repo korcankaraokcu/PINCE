@@ -712,7 +712,7 @@ class MainForm(QMainWindow, MainWindow):
         new_table_contents = GDB_Engine.read_addresses(table_contents)
         for row, address, address_expr, value in zip(rows, address_list, address_expr_list, new_table_contents):
             row.setText(ADDR_COL, address or address_expr)
-            row.setText(VALUE_COL, str(value))
+            row.setText(VALUE_COL, "" if value is None else str(value))
 
     def resize_address_table(self):
         self.treeWidget_AddressTable.resizeColumnToContents(FROZEN_COL)
@@ -931,14 +931,14 @@ class MainForm(QMainWindow, MainWindow):
         value = ''
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(address_type)
         if address:
-            value = str(GDB_Engine.read_address(address, index, length, zero_terminate))
+            value = GDB_Engine.read_address(address, index, length, zero_terminate)
 
         assert isinstance(row, QTreeWidgetItem)
         row.setText(DESC_COL, description)
         row.setData(ADDR_COL, ADDR_EXPR_ROLE, address_expr)
         row.setText(ADDR_COL, address or address_expr)
         row.setText(TYPE_COL, address_type)
-        row.setText(VALUE_COL, value)
+        row.setText(VALUE_COL, "" if value is None else str(value))
 
     # Returns the column values of the given row
     def read_address_table_entries(self, row):
@@ -1124,8 +1124,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             except:
                 QMessageBox.information(self, "Error", "Length is not valid")
                 return
-            if length < 0:
-                QMessageBox.information(self, "Error", "Length cannot be smaller than 0")
+            if not length > 0:
+                QMessageBox.information(self, "Error", "Length must be greater than 0")
                 return
         super(ManualAddressDialogForm, self).accept()
 
@@ -1201,8 +1201,8 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             except:
                 QMessageBox.information(self, "Error", "Length is not valid")
                 return
-            if length < 0:
-                QMessageBox.information(self, "Error", "Length cannot be smaller than 0")
+            if not length > 0:
+                QMessageBox.information(self, "Error", "Length must be greater than 0")
                 return
         super(EditTypeDialogForm, self).accept()
 
@@ -3367,7 +3367,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
             param_list.append((address, value_type, 10))
         value_list = GDB_Engine.read_addresses(param_list)
         for row, value in enumerate(value_list):
-            self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(str(value)))
+            value = "" if value is None else str(value)
+            self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(value))
         self.tableWidget_TrackInfo.resizeColumnsToContents()
         self.tableWidget_TrackInfo.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_TrackInfo.selectRow(self.last_selected_row)

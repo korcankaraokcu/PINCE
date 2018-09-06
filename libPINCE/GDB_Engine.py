@@ -776,21 +776,22 @@ def read_address(address, value_index, length=None, zero_terminate=True, only_by
     Args:
         address (str, int): Can be a hex string or an integer.
         value_index (int): Determines the type of data read. Can be a member of type_defs.VALUE_INDEX
-        length (int): Length of the data that'll be read. Only used when the value_index is INDEX_STRING or INDEX_AOB.
-        Ignored otherwise.
+        length (int): Length of the data that'll be read. Must be greater than 0. Only used when the value_index is
+        INDEX_STRING or INDEX_AOB. Ignored otherwise
         zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
-        value_index is INDEX_STRING. Ignored otherwise.
+        value_index is INDEX_STRING. Ignored otherwise
         only_bytes (bool): Returns only bytes instead of converting it to the according type of value_index
 
     Returns:
-        str: If the value_index is INDEX_STRING or INDEX_AOB. If an error occurs when reading, returns a null string
+        str: If the value_index is INDEX_STRING or INDEX_AOB
         float: If the value_index is INDEX_FLOAT or INDEX_DOUBLE
         int: If the value_index is anything else
         bytes: If the only_bytes is True
+        None: If an error occurs while reading the given address
     """
     return send_command("pince-read-addresses", send_with_file=True,
                         file_contents_send=[[address, value_index, length, zero_terminate, only_bytes]],
-                        recv_with_file=True)
+                        recv_with_file=True)[0]
 
 
 #:tag:MemoryRW
@@ -2003,22 +2004,22 @@ def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.IN
         nested_list.append((int(item, 16), value_index, 100))
         referenced_list.append(item)
     value_list = read_addresses(nested_list)
-    for index, item in enumerate(value_list):
-        item_str = str(item)
-        if not item_str:
+    for index, value in enumerate(value_list):
+        value_str = "" if value is None else str(value)
+        if not value_str:
             continue
         if enable_regex:
-            if not regex.search(item_str):
+            if not regex.search(value_str):
                 continue
         else:
             if ignore_case:
-                if item_str.lower().find(searched_str.lower()) == -1:
+                if value_str.lower().find(searched_str.lower()) == -1:
                     continue
             else:
-                if item_str.find(searched_str) == -1:
+                if value_str.find(searched_str) == -1:
                     continue
         ref_addr = referenced_list[index]
-        returned_list.append((ref_addr, len(str_dict[ref_addr]), item))
+        returned_list.append((ref_addr, len(str_dict[ref_addr]), value))
     str_dict.close()
     return returned_list
 
