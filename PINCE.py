@@ -990,11 +990,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         for process in processlist:
             try:
                 pid = str(process.pid)
-                # For psutil compatibility with different versions
-                try:
-                    username = process.username()
-                except TypeError:
-                    username = process.username
+                username = process.username()
                 name = process.name()
             except psutil.NoSuchProcess:
                 continue
