@@ -701,77 +701,8 @@ def value_index_to_gdbcommand(index):
 
 
 #:tag:MemoryRW
-def read_single_address_by_expression(expression, value_index, length=None, zero_terminate=True):
-    """Reads value from the given address or expression by using "x" command of gdb then converts it to the given
-    value type. Unlike the other read_address variations, this function can read the contents of [vsyscall]
-
-    The expression can also be a function name such as "_start", "malloc", "printf" and "scanf"
-
-    Args:
-        expression (str): Can be a hex string or an expression.
-        value_index (int): Determines the type of data read. Can be a member of type_defs.VALUE_INDEX
-        length (int): Length of the data that'll be read. Only used when the value_index is INDEX_STRING or INDEX_AOB.
-        Ignored otherwise.
-        zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
-        value_index is INDEX_STRING. Ignored otherwise.
-
-    Returns:
-        str: The value of address read as str. If the expression/address is not valid, returns the string "??"
-    """
-    expression = expression.strip()
-    if not expression:
-        return "??"
-    if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
-        address_type = value_index_to_gdbcommand(value_index)
-        try:
-            expected_length = str(int(length, 0))  # length must be a legit number, so had to do this trick
-        except:
-            return "??"
-        result = send_command("x/" + expected_length + address_type + " " + expression)
-        filtered_result = common_regexes.memory_read_aob.findall(result)
-        if filtered_result:
-            return ' '.join(filtered_result)  # combine all the matched results
-        return "??"
-    elif type_defs.VALUE_INDEX.is_string(value_index):
-        address_type = value_index_to_gdbcommand(value_index)
-        try:
-            expected_length = int(length, 0)
-        except:
-            return "??"
-        expected_length *= type_defs.string_index_to_multiplier_dict.get(value_index, 1)
-        result = send_command("x/" + str(expected_length) + address_type + " " + expression)
-        filtered_result = common_regexes.memory_read_aob.findall(result)
-        if filtered_result:
-            filtered_result = ''.join(filtered_result)
-            encoding, option = type_defs.string_index_to_encoding_dict[value_index]
-            returned_string = bytes.fromhex(filtered_result).decode(encoding, option)
-            if zero_terminate:
-                if returned_string.startswith('\x00'):
-                    returned_string = '\x00'
-                else:
-                    returned_string = returned_string.split('\x00')[0]
-            return returned_string[0:int(length, 0)]
-        return "??"
-    else:
-        address_type = value_index_to_gdbcommand(value_index)
-        result = send_command("x/" + address_type + " " + expression)
-        filtered_result = common_regexes.memory_read_other.search(result)
-        if filtered_result:
-            return filtered_result.group(1)
-        return "??"
-
-
-#:tag:MemoryRW
 def read_address(address, value_index, length=None, zero_terminate=True, only_bytes=False):
     """Reads value from the given address by using an optimized gdb python script
-
-    A variant of the function read_single_address_by_expression. This function is slightly faster and more advanced.
-    It only accepts addresses instead of expressions. Use this function if you like to read only addresses, use the
-    other variant if you also would like to input expressions.
-    This function also calculates float and double variables more precisely.
-    For instance, if you calculate the address 0x40c495(_start+100) on KMines with value_index=INDEX_DOUBLE with the
-    function read_single_address_by_expression(which uses gdb's "x" command), you'll get the result "6". But if you use
-    this function instead(custom script), you'll get the result "6.968143721100816e+38" instead
 
     Args:
         address (str, int): Can be a hex string or an integer.

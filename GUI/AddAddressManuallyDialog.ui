@@ -76,7 +76,7 @@
        <item>
         <widget class="QLabel" name="label_valueofaddress">
          <property name="text">
-          <string>??</string>
+          <string/>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
