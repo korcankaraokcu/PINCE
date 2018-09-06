@@ -8,7 +8,6 @@ Code Relocations:
 		/gdb_python_script/ contains all the python scripts that'll invoked from the gdb
 	PINCE.py is used to interract with GUI and other utility libraries
 	/media/ contains all the images, icons n' stuff
-	/pince-non-stop-files/ contains old codes that made the non-stop mode alive. It'll be re-implemented when the project finishes at basic level, this folder is just a... museum(?) for now
 **Don't touch anything in GUI folder, it contains auto-generated codes created by pyuic
 
 27/3/2017 - All GUI classes that will be instanced multiple times must contain these code blocks to prevent getting removed by garbage collector:
