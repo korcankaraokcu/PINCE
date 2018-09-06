@@ -106,7 +106,7 @@ def get_region_info(pid, address):
         None: If the given address isn't in any valid address range
 
     Note:
-        This function is very slow because of the poor performance on psutils' part. You might want to optimize your
+        This function is very slow because of the poor performance on psutil's part. You might want to optimize your
         code while using this function. Check MemoryViewWindowForm.hex_dump_address() for an optimization example
     """
     if type(pid) != int:
