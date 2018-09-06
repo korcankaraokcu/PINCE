@@ -1083,20 +1083,20 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             pass
 
     def update_value_of_address(self):
-        address = self.lineEdit_address.text()
+        address = GDB_Engine.convert_symbol_to_address(self.lineEdit_address.text())
         address_type = self.comboBox_ValueType.currentIndex()
         if address_type is type_defs.VALUE_INDEX.INDEX_AOB:
             length = self.lineEdit_length.text()
-            self.label_valueofaddress.setText(
-                GDB_Engine.read_single_address_by_expression(address, address_type, length))
+            value = GDB_Engine.read_address(address, address_type, length)
+            self.label_valueofaddress.setText("" if value is None else str(value))
         elif type_defs.VALUE_INDEX.is_string(address_type):
             length = self.lineEdit_length.text()
             is_zeroterminate = self.checkBox_zeroterminate.isChecked()
-            self.label_valueofaddress.setText(
-                GDB_Engine.read_single_address_by_expression(address, address_type, length, is_zeroterminate))
+            value = GDB_Engine.read_address(address, address_type, length, is_zeroterminate)
+            self.label_valueofaddress.setText("" if value is None else str(value))
         else:
-            self.label_valueofaddress.setText(
-                GDB_Engine.read_single_address_by_expression(address, address_type))
+            value = GDB_Engine.read_address(address, address_type)
+            self.label_valueofaddress.setText("" if value is None else str(value))
 
     def comboBox_ValueType_current_index_changed(self):
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
