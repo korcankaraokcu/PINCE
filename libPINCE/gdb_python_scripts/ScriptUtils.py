@@ -66,32 +66,38 @@ def issue_command(command, error_message=""):
 
 
 # mem_handle parameter example-->open(ScriptUtils.mem_file, "rb"), don't forget to close the handle after you're done
-def read_address(address, value_type, length=0, zero_terminate=True, only_bytes=False, mem_handle=None):
+def read_address(address, value_type, length=None, zero_terminate=True, only_bytes=False, mem_handle=None):
     try:
         value_type = int(value_type)
     except:
         print(str(value_type) + " is not a valid value index")
-        return ""
+        return
     if not type(address) == int:
         try:
             address = int(address, 16)
         except:
             print(str(address) + " is not a valid address")
-            return ""
+            return
     packed_data = type_defs.index_to_valuetype_dict.get(value_type, -1)
     if type_defs.VALUE_INDEX.is_string(value_type):
         try:
-            int(length)
+            temp_len = int(length)
         except:
             print(str(length) + " is not a valid length")
-            return ""
+            return
+        if not temp_len > 0:
+            print("length must be greater than 0")
+            return
         expected_length = length * type_defs.string_index_to_multiplier_dict.get(value_type, 1)
     elif value_type is type_defs.VALUE_INDEX.INDEX_AOB:
         try:
             expected_length = int(length)
         except:
             print(str(length) + " is not a valid length")
-            return ""
+            return
+        if not expected_length > 0:
+            print("length must be greater than 0")
+            return
     else:
         expected_length = packed_data[0]
         data_type = packed_data[1]
@@ -100,7 +106,7 @@ def read_address(address, value_type, length=0, zero_terminate=True, only_bytes=
         data_read = mem_handle.read(expected_length)
     except (OSError, ValueError):
         print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
-        return ""
+        return
     if only_bytes:
         return data_read
     if type_defs.VALUE_INDEX.is_string(value_type):
