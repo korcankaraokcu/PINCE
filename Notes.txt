@@ -1,7 +1,7 @@
 Code Relocations:
 	--libPINCE
 		GuiUtils.py is used to contain GUI related utility functions
-		SysUtils.py is used to contain all useful but non-GDB related libraries such as psutils
+		SysUtils.py is used to contain all useful but non-GDB related libraries such as psutil
 		GDB_Engine.py is used to contain all GDB related functions
 		type_defs.py is used to contain all static&shared variable definitions
 		All codes that'll be injected to the inferior go to the folder "Injection"
