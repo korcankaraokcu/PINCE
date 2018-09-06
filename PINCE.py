@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, functools
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, functools, psutil
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 
@@ -987,16 +987,22 @@ class ProcessForm(QMainWindow, ProcessWindow):
     # lists currently working processes to table
     def refresh_process_table(self, tablewidget, processlist):
         tablewidget.setRowCount(0)
-        tablewidget.setRowCount(len(processlist))
-        for i, row in enumerate(processlist):
-            tablewidget.setItem(i, 0, QTableWidgetItem(str(row.pid)))
-
-            # For psutil compatibility with different versions
+        for process in processlist:
             try:
-                tablewidget.setItem(i, 1, QTableWidgetItem(row.username()))
-            except TypeError:
-                tablewidget.setItem(i, 1, QTableWidgetItem(row.username))
-            tablewidget.setItem(i, 2, QTableWidgetItem(row.name()))
+                pid = str(process.pid)
+                # For psutil compatibility with different versions
+                try:
+                    username = process.username()
+                except TypeError:
+                    username = process.username
+                name = process.name()
+            except psutil.NoSuchProcess:
+                continue
+            current_row = tablewidget.rowCount()
+            tablewidget.insertRow(current_row)
+            tablewidget.setItem(current_row, 0, QTableWidgetItem(pid))
+            tablewidget.setItem(current_row, 1, QTableWidgetItem(username))
+            tablewidget.setItem(current_row, 2, QTableWidgetItem(name))
 
     # gets the pid out of the selection to attach
     def pushButton_Open_clicked(self):
