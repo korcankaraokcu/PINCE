@@ -56,9 +56,9 @@ def send_to_pince(contents_send):
 ScriptUtils.gdbinit()
 
 
-class ReadMultipleAddresses(gdb.Command):
+class ReadAddresses(gdb.Command):
     def __init__(self):
-        super(ReadMultipleAddresses, self).__init__("pince-read-multiple-addresses", gdb.COMMAND_USER)
+        super(ReadAddresses, self).__init__("pince-read-addresses", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
         data_read_list = []
@@ -81,15 +81,15 @@ class ReadMultipleAddresses(gdb.Command):
                 only_bytes = item[4]
             except IndexError:
                 only_bytes = False
-            data_read = ScriptUtils.read_single_address(address, index, length, zero_terminate, only_bytes, mem_handle)
+            data_read = ScriptUtils.read_address(address, index, length, zero_terminate, only_bytes, mem_handle)
             data_read_list.append(data_read)
         mem_handle.close()
         send_to_pince(data_read_list)
 
 
-class SetMultipleAddresses(gdb.Command):
+class WriteAddresses(gdb.Command):
     def __init__(self):
-        super(SetMultipleAddresses, self).__init__("pince-set-multiple-addresses", gdb.COMMAND_USER)
+        super(WriteAddresses, self).__init__("pince-write-addresses", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
         contents_recv = receive_from_pince()
@@ -101,24 +101,7 @@ class SetMultipleAddresses(gdb.Command):
         for item in contents_recv:
             address = item[0]
             index = item[1]
-            ScriptUtils.set_single_address(address, index, value)
-
-
-class ReadSingleAddress(gdb.Command):
-    def __init__(self):
-        super(ReadSingleAddress, self).__init__("pince-read-single-address", gdb.COMMAND_USER)
-
-    def invoke(self, arg, from_tty):
-        contents_recv = receive_from_pince()
-        address = contents_recv[0]
-        index = contents_recv[1]
-        length = contents_recv[2]
-        zero_terminate = contents_recv[3]
-        only_bytes = contents_recv[4]
-        mem_handle = open(ScriptUtils.mem_file, "rb")
-        data_read = ScriptUtils.read_single_address(address, index, length, zero_terminate, only_bytes, mem_handle)
-        mem_handle.close()
-        send_to_pince(data_read)
+            ScriptUtils.write_address(address, index, value)
 
 
 class IgnoreErrors(gdb.Command):
@@ -707,9 +690,8 @@ class MultipleSymbolsToAddresses(gdb.Command):
 
 IgnoreErrors()
 CLIOutput()
-ReadMultipleAddresses()
-SetMultipleAddresses()
-ReadSingleAddress()
+ReadAddresses()
+WriteAddresses()
 ParseConvenienceVariables()
 ReadRegisters()
 ReadFloatRegisters()

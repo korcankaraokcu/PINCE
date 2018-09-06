@@ -161,9 +161,9 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
 
     Examples:
         send_command(c,control=True)--> Sends ctrl+c instead of the str "c"
-        send_command("pince-read-multiple-addresses", file_contents_send=nested_list, recv_file=True)--> This line calls
-        the custom gdb command "pince-read-multiple-addresses" with parameter nested_list and since that gdb command
-        returns the addresses read as a list, we also pass the parameter recv_file as True
+        send_command("pince-read-addresses", file_contents_send=nested_list, recv_file=True)--> This line calls the
+        custom gdb command "pince-read-addresses" with parameter nested_list and since that gdb command returns the
+        addresses read as a list, we also pass the parameter recv_file as True
 
     Returns:
         str: Result of the command sent, commands in the form of "ctrl+key" always returns a null string
@@ -703,7 +703,7 @@ def value_index_to_gdbcommand(index):
 #:tag:MemoryRW
 def read_single_address_by_expression(expression, value_index, length=None, zero_terminate=True):
     """Reads value from the given address or expression by using "x" command of gdb then converts it to the given
-    value type. Unlike the other read_single_address variations, this function can read the contents of [vsyscall]
+    value type. Unlike the other read_address variations, this function can read the contents of [vsyscall]
 
     The expression can also be a function name such as "_start", "malloc", "printf" and "scanf"
 
@@ -762,7 +762,7 @@ def read_single_address_by_expression(expression, value_index, length=None, zero
 
 
 #:tag:MemoryRW
-def read_single_address(address, value_index, length=None, zero_terminate=True, only_bytes=False):
+def read_address(address, value_index, length=None, zero_terminate=True, only_bytes=False):
     """Reads value from the given address by using an optimized gdb python script
 
     A variant of the function read_single_address_by_expression. This function is slightly faster and more advanced.
@@ -788,22 +788,22 @@ def read_single_address(address, value_index, length=None, zero_terminate=True, 
         int: If the value_index is anything else
         bytes: If the only_bytes is True
     """
-    return send_command("pince-read-single-address", send_with_file=True,
-                        file_contents_send=(address, value_index, length, zero_terminate, only_bytes),
+    return send_command("pince-read-addresses", send_with_file=True,
+                        file_contents_send=[[address, value_index, length, zero_terminate, only_bytes]],
                         recv_with_file=True)
 
 
 #:tag:MemoryRW
-def read_multiple_addresses(nested_list):
+def read_addresses(nested_list):
     """Reads multiple values from the given addresses by using an optimized gdb python script
 
-    Optimized version of the function read_single_address. This function is significantly faster after 100 addresses
-    compared to using read_single_address in a for loop.
+    Optimized version of the function read_address. This function is significantly faster after 100 addresses compared
+    to using read_address in a for loop.
 
     Args:
-        nested_list (list): List of *args of the function read_single_address. You don't have to pass all of the
-        parameters for each list in the nested_list, only parameters address and value_index are obligatory. Defaults
-        of the other parameters are the same with the function read_single_address.
+        nested_list (list): List of *args of the function read_address. You don't have to pass all of the parameters for
+        each list in the nested_list, only parameters address and value_index are obligatory. Defaults of the other
+        parameters are the same with the function read_address.
 
     Examples:
         All parameters are passed-->[[address1, value_index1, length1, zero_terminate1, only_bytes], ...]
@@ -816,7 +816,7 @@ def read_multiple_addresses(nested_list):
         For instance; If 4 addresses has been read and 3rd one is problematic, the returned list will be
         [returned_value1,returned_value2,"",returned_value4]
     """
-    contents_recv = send_command("pince-read-multiple-addresses", send_with_file=True, file_contents_send=nested_list,
+    contents_recv = send_command("pince-read-addresses", send_with_file=True, file_contents_send=nested_list,
                                  recv_with_file=True)
     if contents_recv is None:
         print("an error occurred while reading addresses")
@@ -825,7 +825,7 @@ def read_multiple_addresses(nested_list):
 
 
 #:tag:MemoryRW
-def set_single_address(address, value_index, value):
+def write_address(address, value_index, value):
     """Sets the given value to the given address by using an optimized gdb python script
 
     If any errors occurs while setting value to the according address, it'll be ignored but the information about
@@ -836,20 +836,19 @@ def set_single_address(address, value_index, value):
         value_index (int): Can be a member of type_defs.VALUE_INDEX
         value (str): The value that'll be written to the given address
     """
-    nested_list = [[address, value_index]]
-    nested_list.append(value)
-    send_command("pince-set-multiple-addresses", send_with_file=True, file_contents_send=nested_list)
+    nested_list = [[address, value_index], value]
+    send_command("pince-write-addresses", send_with_file=True, file_contents_send=nested_list)
 
 
 #:tag:MemoryRW
-def set_multiple_addresses(nested_list, value):
+def write_addresses(nested_list, value):
     """Sets the given value to the given addresses by using an optimized gdb python script
 
     If any errors occurs while setting values to the according addresses, it'll be ignored but the information about
     error will be printed to the terminal.
 
     Args:
-        nested_list (list): List of the address and value_index parameters of the function set_single_address
+        nested_list (list): List of the address and value_index parameters of the function write_address
         Both parameters address and value_index are necessary.
         value (str): The value that'll be written to the given addresses
 
@@ -857,7 +856,7 @@ def set_multiple_addresses(nested_list, value):
         nested_list-->[[address1, value_index1],[address2, value_index2], ...]
     """
     nested_list.append(value)
-    send_command("pince-set-multiple-addresses", send_with_file=True, file_contents_send=nested_list)
+    send_command("pince-write-addresses", send_with_file=True, file_contents_send=nested_list)
 
 
 #:tag:Assembly
@@ -2003,7 +2002,7 @@ def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.IN
     for item in str_dict:
         nested_list.append((int(item, 16), value_index, 100))
         referenced_list.append(item)
-    value_list = read_multiple_addresses(nested_list)
+    value_list = read_addresses(nested_list)
     for index, item in enumerate(value_list):
         item_str = str(item)
         if not item_str:

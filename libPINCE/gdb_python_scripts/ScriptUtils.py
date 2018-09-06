@@ -66,7 +66,7 @@ def issue_command(command, error_message=""):
 
 
 # mem_handle parameter example-->open(ScriptUtils.mem_file, "rb"), don't forget to close the handle after you're done
-def read_single_address(address, value_type, length=0, zero_terminate=True, only_bytes=False, mem_handle=None):
+def read_address(address, value_type, length=0, zero_terminate=True, only_bytes=False, mem_handle=None):
     try:
         value_type = int(value_type)
     except:
@@ -118,8 +118,8 @@ def read_single_address(address, value_type, length=0, zero_terminate=True, only
         return struct.unpack_from(data_type, data_read)[0]
 
 
-# TODO: Implement an mem_handle parameter like in read_single_address function for optimization
-def set_single_address(address, value_index, value):
+# TODO: Implement an mem_handle parameter like in read_address function for optimization
+def write_address(address, value_index, value):
     if not type(address) == int:
         try:
             address = int(address, 16)

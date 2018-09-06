@@ -116,7 +116,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
 - - Consider using a class instead of primitive return types to store the raw bytes. This also gets rid of the unnecessary parameter only_bytes
 - - text_to_valuetype is a bad design pattern. Store the information inside the items of tableWidget_AddressTable instead
-- - read_multiple_addresses follows a bad design pattern, use named tuples or something like that
+- - read_addresses follows a bad design pattern, use named tuples or something like that
 - - Provide an option to cut BOM bytes when writing to memory with the types UTF-16 and UTF-32
 - - Put a warning for users about replacement bytes for non UTF-8 types
 - - Extend string types with LE and BE variants of UTF-16 and UTF-32

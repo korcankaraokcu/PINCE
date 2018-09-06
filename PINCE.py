@@ -709,7 +709,7 @@ class MainForm(QMainWindow, MainWindow):
         for address, value_type in zip(address_list, value_type_list):
             index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
             table_contents.append((address, index, length, zero_terminate))
-        new_table_contents = GDB_Engine.read_multiple_addresses(table_contents)
+        new_table_contents = GDB_Engine.read_addresses(table_contents)
         for row, address, address_expr, value in zip(rows, address_list, address_expr_list, new_table_contents):
             row.setText(ADDR_COL, address or address_expr)
             row.setText(VALUE_COL, str(value))
@@ -885,7 +885,7 @@ class MainForm(QMainWindow, MainWindow):
                         length = len(unknown_type)
                         row.setText(TYPE_COL, GuiUtils.change_text_length(value_type, length))
                 table_contents.append((address, value_index))
-            GDB_Engine.set_multiple_addresses(table_contents, value_text)
+            GDB_Engine.write_addresses(table_contents, value_text)
             self.update_address_table_manually()
 
     @requires_selection("treeWidget_AddressTable")
@@ -931,7 +931,7 @@ class MainForm(QMainWindow, MainWindow):
         value = ''
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(address_type)
         if address:
-            value = str(GDB_Engine.read_single_address(address, index, length, zero_terminate))
+            value = str(GDB_Engine.read_address(address, index, length, zero_terminate))
 
         assert isinstance(row, QTreeWidgetItem)
         row.setText(DESC_COL, description)
@@ -3365,7 +3365,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         for row in range(self.tableWidget_TrackInfo.rowCount()):
             address = self.tableWidget_TrackInfo.item(row, TRACK_BREAKPOINT_ADDR_COL).text()
             param_list.append((address, value_type, 10))
-        value_list = GDB_Engine.read_multiple_addresses(param_list)
+        value_list = GDB_Engine.read_addresses(param_list)
         for row, value in enumerate(value_list):
             self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(str(value)))
         self.tableWidget_TrackInfo.resizeColumnsToContents()
@@ -3804,7 +3804,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
             QMessageBox.information(self, "Error", expression + " isn't a valid expression")
             return
         value = self.lineEdit_HexView.text()
-        GDB_Engine.set_single_address(address, type_defs.VALUE_INDEX.INDEX_AOB, value)
+        GDB_Engine.write_address(address, type_defs.VALUE_INDEX.INDEX_AOB, value)
         super(HexEditDialogForm, self).accept()
 
 
