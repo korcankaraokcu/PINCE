@@ -48,11 +48,16 @@ class QHexModel(QAbstractTableModel):
             return QVariant()
         return QVariant(self.data_array[QModelIndex.row() * self.column_count + QModelIndex.column()])
 
-    def refresh(self, int_address, offset):
+    def refresh(self, int_address, offset, data_array=None, breakpoint_info=None):
         int_address = SysUtils.modulo_address(int_address, GDB_Engine.inferior_arch)
         self.breakpoint_list.clear()
-        self.data_array = GDB_Engine.hex_dump(int_address, offset)
-        for breakpoint in GDB_Engine.get_breakpoint_info():
+        if data_array is None:
+            self.data_array = GDB_Engine.hex_dump(int_address, offset)
+        else:
+            self.data_array = data_array
+        if breakpoint_info is None:
+            breakpoint_info = GDB_Engine.get_breakpoint_info()
+        for breakpoint in breakpoint_info:
             breakpoint_address = int(breakpoint.address, 16)
             for i in range(breakpoint.size):
                 self.breakpoint_list.add(SysUtils.modulo_address(breakpoint_address + i, GDB_Engine.inferior_arch))
