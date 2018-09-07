@@ -2101,8 +2101,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.setMaximumWidth(tableWidget_HexView_column_size)
         self.tableWidget_HexView_Address.setMinimumWidth(tableWidget_HexView_column_size)
         self.tableWidget_HexView_Address.setColumnWidth(0, tableWidget_HexView_column_size)
-        self.hex_model.refresh(int_address, offset)
-        self.ascii_model.refresh(int_address, offset)
+        data_array, breakpoint_info = GDB_Engine.hex_dump(int_address, offset), GDB_Engine.get_breakpoint_info()
+        self.hex_model.refresh(int_address, offset, data_array, breakpoint_info)
+        self.ascii_model.refresh(int_address, offset, data_array, breakpoint_info)
         for index in range(offset):
             current_address = SysUtils.modulo_address(self.hex_model.current_address + index, GDB_Engine.inferior_arch)
             if current_address == self.hex_view_last_selected_address_int:
