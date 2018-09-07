@@ -1544,7 +1544,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.completer.setMaxVisibleItems(8)
         self.lineEdit.setCompleter(self.completer)
         self.quit_commands = ("q", "quit", "-gdb-exit")
-        self.input_history = [""]
+        self.input_history = ["", ""]
         self.current_history_index = -1
         self.await_async_output_thread = AwaitAsyncOutput()
         self.await_async_output_thread.async_output_ready.connect(self.on_async_output)
@@ -1570,9 +1570,10 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         if control:
             console_input = "/Ctrl+C"
         else:
-            console_input = self.lineEdit.text()
-            self.input_history.insert(-1, console_input)
             self.current_history_index = -1
+            console_input = self.lineEdit.text()
+            if console_input != self.input_history[-2] and console_input != "":
+                self.input_history.insert(-1, console_input)
         if console_input.lower() == "/clear":
             self.reset_console_text()
             return
@@ -1647,9 +1648,9 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
     def scroll_backwards_history(self):
         try:
             self.lineEdit.setText(self.input_history[self.current_history_index - 1])
-            self.current_history_index += -1
         except IndexError:
-            pass
+            return
+        self.current_history_index -= 1
 
     def scroll_forwards_history(self):
         if self.current_history_index == -1:
