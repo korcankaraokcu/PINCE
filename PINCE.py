@@ -2190,7 +2190,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                         ref_count += 1
                 if ref_count > 30:
                     tooltip_text += "\n..."
-                tooltip_text += "\n\nPress 'E' to see a detailed list of referrers"
+                tooltip_text += "\n\nPress 'Ctrl+E' to see a detailed list of referrers"
                 try:
                     row_colour[row].append(REF_COLOUR)
                 except KeyError:
