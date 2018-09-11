@@ -744,9 +744,9 @@ def read_addresses(nested_list):
 
     Returns:
         list: A list of the values read.
-        If any errors occurs while reading addresses, it's ignored and the belonging address is returned as null string
+        If any errors occurs while reading addresses, it's ignored and the belonging address is returned as None
         For instance; If 4 addresses has been read and 3rd one is problematic, the returned list will be
-        [returned_value1,returned_value2,"",returned_value4]
+        [returned_value1,returned_value2,None,returned_value4]
     """
     contents_recv = send_command("pince-read-addresses", send_with_file=True, file_contents_send=nested_list,
                                  recv_with_file=True)
