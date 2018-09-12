@@ -31,3 +31,7 @@ All functions that has a subfunction can be found with the regex def.*:.*\s+def
         break
 
 OSError handles I/O related errors and ValueError handles the off_t limit error that prints "cannot fit 'int' into an offset-sized integer"
+
+12/9/2018 - All namedtuples must have the same field name with their variable names. This makes the namedtuple transferable via pickle. For instance:
+
+    tuple_examine_expression = collections.namedtuple("tuple_examine_expression", "all address symbol")

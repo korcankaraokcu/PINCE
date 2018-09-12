@@ -276,11 +276,11 @@ tag_to_string = collections.OrderedDict([
 ])
 
 # size-->int, any other field-->str
-tuple_breakpoint_info = collections.namedtuple("breakpoint_info", "number breakpoint_type \
+tuple_breakpoint_info = collections.namedtuple("tuple_breakpoint_info", "number breakpoint_type \
                                                 disp enabled address size on_hit hit_count enable_count condition")
 
 # start-->int, end-->int, region-->psutil.Process.memory_maps()[item]
-tuple_region_info = collections.namedtuple("region_info", "start end region")
+tuple_region_info = collections.namedtuple("tuple_region_info", "start end region")
 
 # all, address, symbol-->str/None
 tuple_examine_expression = collections.namedtuple("tuple_examine_expression", "all address symbol")
