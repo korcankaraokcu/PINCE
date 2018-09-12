@@ -810,89 +810,37 @@ def disassemble(expression, offset_or_address):
 
 
 #:tag:GDBExpressions
-def convert_address_to_symbol(expression, include_address=True):
-    """Converts the address evaluated by the given expression to symbol if any symbol exists for it
-
-    Args:
-        expression (str): Any gdb expression
-        include_address (bool): If true, returned string includes address
-
-    Returns:
-        str: Symbol of corresponding address(such as printf, scanf, _start etc.). If no symbols are found, address as
-        str returned instead. If include_address is passed as True, returned str looks like this-->0x40c435 <_start+4>
-        Returns a null string if the expression is not valid
-    """
-    contents_send = [(expression, include_address)]
-    contents_recv = send_command("pince-multiple-addresses-to-symbols", send_with_file=True,
-                                 file_contents_send=contents_send, recv_with_file=True)
-    if not contents_recv:
-        print("an error occurred while reading address")
-        return ""
-    return contents_recv[0]
-
-
-#:tag:GDBExpressions
-def convert_multiple_addresses_to_symbols(nested_list):
-    """Optimized version of convert_address_to_symbol for multiple inputs
-
-    Args:
-        nested_list (list): List of *args of the function convert_address_to_symbol. You don't have to pass all of the
-        parameters for each list in the nested_list, only the parameter expression is obligatory. Defaults of the other
-        parameters are the same with the function convert_address_to_symbol.
-
-    Examples:
-        All parameters are passed-->[[expression1, include_address1], ...]
-        Parameters are partially passed-->[[expression1],[expression2, include_address2], ...]
-
-    Returns:
-        list: Symbols, as a list of str
-        If any errors occurs while reading symbols, it's ignored and the belonging symbol is returned as null string
-        For instance; If 4 symbols have been read and 3rd one is problematic, the returned list will be
-        [returned_symbol1,returned_symbol2,"",returned_symbol4]
-    """
-    contents_send = nested_list
-    contents_recv = send_command("pince-multiple-addresses-to-symbols", send_with_file=True,
-                                 file_contents_send=contents_send, recv_with_file=True)
-    if not contents_recv:
-        print("an error occurred while reading addresses")
-        contents_recv = []
-    return contents_recv
-
-
-#:tag:GDBExpressions
-def convert_symbol_to_address(expression):
-    """Converts the symbol evaluated by the given expression to address
+def examine_expression(expression):
+    """Evaluates the given expression and returns evaluated value, address and symbol
 
     Args:
         expression (str): Any gdb expression
 
     Returns:
-        str: Address of corresponding symbol
-        Returns a null string if the expression is not valid
+        type_defs.tuple_examine_expression: Evaluated value, address and symbol in a tuple
+        Any erroneous field will be returned as None instead of str
     """
-    contents_recv = send_command("pince-multiple-symbols-to-addresses", send_with_file=True,
+    contents_recv = send_command("pince-examine-expressions", send_with_file=True,
                                  file_contents_send=[expression], recv_with_file=True)
     if not contents_recv:
-        print("an error occurred while reading symbol")
-        return ""
+        print("an error occurred while processing the given expression")
+        return type_defs.tuple_examine_expression(None, None, None)
     return contents_recv[0]
 
 
-#:tag:GDBExpressions
-def convert_multiple_symbols_to_addresses(expression_list):
-    """Optimized version of convert_symbol_to_address for multiple inputs
+def examine_expressions(expression_list):
+    """Optimized version of examine_expression for multiple inputs
+
     Args:
         expression_list (list): List of gdb expressions as str
+
     Returns:
-        list: Addresses, as a list of str
-        If any errors occurs while reading addresses, it's ignored and the belonging address is returned as null string
-        For instance; If 4 addresses have been read and 3rd one is problematic, the returned list will be
-        [returned_address1,returned_address2,"",returned_address4]
+        list: List of type_defs.tuple_examine_expression
     """
-    contents_recv = send_command("pince-multiple-symbols-to-addresses", send_with_file=True,
+    contents_recv = send_command("pince-examine-expressions", send_with_file=True,
                                  file_contents_send=expression_list, recv_with_file=True)
     if not contents_recv:
-        print("an error occurred while reading symbols")
+        print("an error occurred while processing expression_list")
         contents_recv = []
     return contents_recv
 
@@ -1255,7 +1203,7 @@ def get_breakpoint_info():
         if what:
             address = SysUtils.extract_address(what)
             if not address:
-                address = convert_symbol_to_address(what)
+                address = examine_expression(what).address
         try:
             int_address = int(address, 16)
         except ValueError:
@@ -1338,7 +1286,7 @@ def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWAR
         None: If setting breakpoint fails
     """
     output = ""
-    str_address = convert_symbol_to_address(expression)
+    str_address = examine_expression(expression).address
     if not str_address:
         print("expression for breakpoint is not valid")
         return
@@ -1375,7 +1323,7 @@ def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TY
     Returns:
         list: Numbers of the successfully set breakpoints as strings
     """
-    str_address = convert_symbol_to_address(expression)
+    str_address = examine_expression(expression).address
     if not str_address:
         print("expression for watchpoint is not valid")
         return
@@ -1447,7 +1395,7 @@ def modify_breakpoint(expression, modify_what, condition=None, count=None):
         modify_what-->type_defs.BREAKPOINT_MODIFY_TYPES.ENABLE_COUNT
         count-->10
     """
-    str_address = convert_symbol_to_address(expression)
+    str_address = examine_expression(expression).address
     if not str_address:
         print("expression for breakpoint is not valid")
         return False
@@ -1502,7 +1450,7 @@ def delete_breakpoint(expression):
     Returns:
         bool: True if the breakpoint has been deleted successfully, False otherwise
     """
-    str_address = convert_symbol_to_address(expression)
+    str_address = examine_expression(expression).address
     if not str_address:
         print("expression for breakpoint is not valid")
         return False
