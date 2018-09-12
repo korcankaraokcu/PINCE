@@ -19,10 +19,8 @@ import gdb, struct, sys
 from collections import OrderedDict
 
 # This is some retarded hack
-gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
-PINCE_PATH = gdbvalue.string()
-gdbvalue = gdb.parse_and_eval("$GDBINIT_AA_PATH")
-GDBINIT_AA_PATH = gdbvalue.string()
+PINCE_PATH = gdb.parse_and_eval("$PINCE_PATH").string()
+GDBINIT_AA_PATH = gdb.parse_and_eval("$GDBINIT_AA_PATH").string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
 from libPINCE import SysUtils, type_defs, common_regexes
@@ -35,6 +33,8 @@ REGISTERS_32 = ["eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp", "eip"]
 REGISTERS_64 = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip", "r8", "r9", "r10", "r11", "r12",
                 "r13", "r14", "r15"]
 REGISTERS_SEGMENT = ["cs", "ss", "ds", "es", "fs", "gs"]
+
+void_ptr = gdb.lookup_type("void").pointer()
 
 if str(gdb.parse_and_eval("$rax")) == "void":
     current_arch = type_defs.INFERIOR_ARCH.ARCH_32
@@ -222,43 +222,11 @@ def remove_disas_comment(disas_str):
         return disas_str[:index]
 
 
-def convert_address_to_symbol(expression, include_address=True):
-    expression = expression.strip()
-    if not expression:
-        return ""
+def examine_expression(expression):
     try:
-        result = gdb.execute("x/b " + expression, to_string=True)
+        value = gdb.parse_and_eval(expression).cast(void_ptr)
     except Exception as e:
-        result = common_regexes.cannot_access_memory.search(str(e))
-        if result:
-            return result.group(1)
-        return ""
-    filtered_result = common_regexes.address_with_symbol.search(result)  # 0x4125d0 <_start>:	0x31
-    if filtered_result:
-        return filtered_result.group(1) if include_address else filtered_result.group(3)
-    else:
-        filtered_result = common_regexes.address_without_symbol.search(result)  # 0x400000:	0x7f
-        if filtered_result:
-            return filtered_result.group(1)
-    return ""
-
-
-def convert_symbol_to_address(expression):
-    expression = expression.strip()
-    if not expression:
-        return ""
-    try:
-        result = gdb.execute("x/b " + expression, to_string=True)
-    except Exception as e:
-        result = common_regexes.cannot_access_memory.search(str(e))
-        if result:
-            return result.group(1)
-        return ""
-    filtered_result = common_regexes.address_with_symbol.search(result)
-    if filtered_result:
-        return filtered_result.group(2)
-    else:
-        filtered_result = common_regexes.address_without_symbol.search(result)
-        if filtered_result:
-            return filtered_result.group(1)
-    return ""
+        print(e, "for expression " + expression)
+        return type_defs.tuple_examine_expression(None, None, None)
+    result = common_regexes.address_with_symbol.search(str(value))
+    return type_defs.tuple_examine_expression(*result.groups())

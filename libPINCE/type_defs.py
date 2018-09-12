@@ -282,6 +282,9 @@ tuple_breakpoint_info = collections.namedtuple("breakpoint_info", "number breakp
 # start-->int, end-->int, region-->psutil.Process.memory_maps()[item]
 tuple_region_info = collections.namedtuple("region_info", "start end region")
 
+# all, address, symbol-->str/None
+tuple_examine_expression = collections.namedtuple("tuple_examine_expression", "all address symbol")
+
 
 class InferiorRunningException(Exception):
     def __init__(self, message="Inferior is running"):

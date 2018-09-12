@@ -705,7 +705,7 @@ class MainForm(QMainWindow, MainWindow):
             address_expr_list.append(row.data(ADDR_COL, ADDR_EXPR_ROLE))
             value_type_list.append(row.text(TYPE_COL))
             rows.append(row)
-        address_list = GDB_Engine.convert_multiple_symbols_to_addresses(address_expr_list)
+        address_list = [item.address for item in GDB_Engine.examine_expressions(address_expr_list)]
         for address, value_type in zip(address_list, value_type_list):
             index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
             table_contents.append((address, index, length, zero_terminate))
@@ -927,7 +927,7 @@ class MainForm(QMainWindow, MainWindow):
 
     # Changes the column values of the given row
     def change_address_table_entries(self, row, description="", address_expr="", address_type=""):
-        address = GDB_Engine.convert_symbol_to_address(address_expr)
+        address = GDB_Engine.examine_expression(address_expr).address
         value = ''
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(address_type)
         if address:
@@ -1085,7 +1085,9 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             pass
 
     def update_value_of_address(self):
-        address = GDB_Engine.convert_symbol_to_address(self.lineEdit_address.text())
+        address = GDB_Engine.examine_expression(self.lineEdit_address.text()).address
+        if not address:
+            return
         address_type = self.comboBox_ValueType.currentIndex()
         if address_type is type_defs.VALUE_INDEX.INDEX_AOB:
             length = self.lineEdit_length.text()
@@ -2009,9 +2011,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         go_to_dialog = InputDialogForm(item_list=[("Enter the expression", current_address)])
         if go_to_dialog.exec_():
             expression = go_to_dialog.get_values()
-            dest_address = GDB_Engine.convert_symbol_to_address(expression)
+            dest_address = GDB_Engine.examine_expression(expression).address
             if not dest_address:
-                QMessageBox.information(self, "Error", "Cannot access memory at expression " + expression)
+                QMessageBox.information(self, "Error", expression + " is invalid")
                 return
             self.hex_dump_address(int(dest_address, 16))
 
@@ -2141,7 +2143,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             QMessageBox.information(QApplication.focusWidget(), "Error",
                                     "Cannot access memory at expression " + expression)
             return False
-        program_counter = GDB_Engine.convert_symbol_to_address("$pc")
+        program_counter = GDB_Engine.examine_expression("$pc").address
         program_counter_int = int(program_counter, 16)
         row_colour = {}
         breakpoint_info = GDB_Engine.get_breakpoint_info()
@@ -2671,17 +2673,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         else:
             GuiUtils.delete_menu_entries(menu, [bookmark])
         go_to_bookmark = menu.addMenu("Go to bookmarked address")
-        bookmark_action_list = []
-        nested_list = []
-        for item in self.tableWidget_Disassemble.bookmarks.keys():
-            item_str = hex(item)
-            nested_list.append((item_str,))
-        for index, item in enumerate(GDB_Engine.convert_multiple_addresses_to_symbols(nested_list)):
-            if not item:
-                text_append = nested_list[index][0] + "(Unreachable)"
-            else:
-                text_append = item
-            bookmark_action_list.append(go_to_bookmark.addAction(text_append))
+        address_list = [hex(address) for address in self.tableWidget_Disassemble.bookmarks.keys()]
+        bookmark_actions = [go_to_bookmark.addAction(item.all) for item in GDB_Engine.examine_expressions(address_list)]
         menu.addSeparator()
         toggle_breakpoint = menu.addAction("Toggle Breakpoint[F5]")
         add_condition = menu.addAction("Add/Change condition for breakpoint")
@@ -2728,7 +2721,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             actions[action]()
         except KeyError:
             pass
-        if action in bookmark_action_list:
+        if action in bookmark_actions:
             self.disassemble_expression(SysUtils.extract_address(action.text()), append_to_travel_history=True)
 
     def dissect_current_region(self):
@@ -2901,16 +2894,8 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
 
     def refresh_table(self):
         self.listWidget.clear()
-        nested_list = []
-        for item in self.parent().tableWidget_Disassemble.bookmarks.keys():
-            item_str = hex(item)
-            nested_list.append((item_str,))
-        for index, item in enumerate(GDB_Engine.convert_multiple_addresses_to_symbols(nested_list)):
-            if not item:
-                text_append = nested_list[index][0] + "(Unreachable)"
-            else:
-                text_append = item
-            self.listWidget.addItem(text_append)
+        address_list = [hex(address) for address in self.parent().tableWidget_Disassemble.bookmarks.keys()]
+        self.listWidget.addItems([item.all for item in GDB_Engine.examine_expressions(address_list)])
 
     def change_display(self):
         try:
@@ -2928,7 +2913,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         entry_dialog = InputDialogForm(item_list=[("Enter the expression", "")])
         if entry_dialog.exec_():
             text = entry_dialog.get_values()
-            address = GDB_Engine.convert_symbol_to_address(text)
+            address = GDB_Engine.examine_expression(text).address
             if not address:
                 QMessageBox.information(self, "Error", "Invalid expression or address")
                 return
@@ -3788,7 +3773,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
     def refresh_view(self):
         self.lineEdit_AsciiView.clear()
         self.lineEdit_HexView.clear()
-        address = GDB_Engine.convert_symbol_to_address(self.lineEdit_Address.text())
+        address = GDB_Engine.examine_expression(self.lineEdit_Address.text()).address
         if not address:
             return
         length = self.lineEdit_Length.text()
@@ -3804,7 +3789,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
 
     def accept(self):
         expression = self.lineEdit_Address.text()
-        address = GDB_Engine.convert_symbol_to_address(expression)
+        address = GDB_Engine.examine_expression(expression).address
         if not address:
             QMessageBox.information(self, "Error", expression + " isn't a valid expression")
             return
@@ -4483,11 +4468,8 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         str_dict = GDB_Engine.get_dissect_code_data(True, False, False)[0]
         addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_STR_ADDR_COL).text()
         referrers = str_dict[hex(int(addr, 16))]
-        nested_list = []
-        for item in referrers:
-            nested_list.append((hex(item),))
-        for item in GDB_Engine.convert_multiple_addresses_to_symbols(nested_list):
-            self.listWidget_Referrers.addItem(self.pad_hex(item))
+        addrs = [hex(address) for address in referrers]
+        self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in GDB_Engine.examine_expressions(addrs)])
         self.listWidget_Referrers.sortItems(Qt.AscendingOrder)
         str_dict.close()
 
@@ -4615,11 +4597,8 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         call_dict = GDB_Engine.get_dissect_code_data(False, False, True)[0]
         addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_CALL_ADDR_COL).text()
         referrers = call_dict[hex(int(SysUtils.extract_address(addr), 16))]
-        nested_list = []
-        for item in referrers:
-            nested_list.append((hex(item),))
-        for item in GDB_Engine.convert_multiple_addresses_to_symbols(nested_list):
-            self.listWidget_Referrers.addItem(self.pad_hex(item))
+        addrs = [hex(address) for address in referrers]
+        self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in GDB_Engine.examine_expressions(addrs)])
         self.listWidget_Referrers.sortItems(Qt.AscendingOrder)
         call_dict.close()
 
@@ -4717,17 +4696,15 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         except KeyError:
             pass
         else:
-            jmp_referrers = [(hex(item),) for item in jmp_referrers]
-            self.referrer_data.extend(
-                [item for item in GDB_Engine.convert_multiple_addresses_to_symbols(jmp_referrers)])
+            jmp_referrers = [hex(item) for item in jmp_referrers]
+            self.referrer_data.extend([item.all for item in GDB_Engine.examine_expressions(jmp_referrers)])
         try:
             call_referrers = call_dict[self.referenced_hex]
         except KeyError:
             pass
         else:
-            call_referrers = [(hex(item),) for item in call_referrers]
-            self.referrer_data.extend(
-                [item for item in GDB_Engine.convert_multiple_addresses_to_symbols(call_referrers)])
+            call_referrers = [hex(item) for item in call_referrers]
+            self.referrer_data.extend([item.all for item in GDB_Engine.examine_expressions(call_referrers)])
         jmp_dict.close()
         call_dict.close()
 

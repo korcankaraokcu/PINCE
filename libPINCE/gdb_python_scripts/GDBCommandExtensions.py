@@ -636,7 +636,7 @@ class SearchReferencedCalls(gdb.Command):
         str_dict = shelve.open(SysUtils.get_referenced_calls_file(pid), "r")
         returned_list = []
         for index, item in enumerate(str_dict):
-            symbol = ScriptUtils.convert_address_to_symbol(item)
+            symbol = ScriptUtils.examine_expression(item).all
             if not symbol:
                 continue
             if enable_regex:
@@ -654,37 +654,17 @@ class SearchReferencedCalls(gdb.Command):
         send_to_pince(returned_list)
 
 
-class MultipleAddressesToSymbols(gdb.Command):
+class ExamineExpressions(gdb.Command):
     def __init__(self):
-        super(MultipleAddressesToSymbols, self).__init__("pince-multiple-addresses-to-symbols", gdb.COMMAND_USER)
-
-    def invoke(self, arg, from_tty):
-        data_read_list = []
-        contents_recv = receive_from_pince()
-
-        # contents_recv format: [[expression1, include_address1], ...]
-        for item in contents_recv:
-            expression = item[0]
-            try:
-                include_address = item[1]
-            except IndexError:
-                include_address = True
-            data_read = ScriptUtils.convert_address_to_symbol(expression, include_address)
-            data_read_list.append(data_read)
-        send_to_pince(data_read_list)
-
-
-class MultipleSymbolsToAddresses(gdb.Command):
-    def __init__(self):
-        super(MultipleSymbolsToAddresses, self).__init__("pince-multiple-symbols-to-addresses", gdb.COMMAND_USER)
+        super(ExamineExpressions, self).__init__("pince-examine-expressions", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
         data_read_list = []
         contents_recv = receive_from_pince()
         # contents_recv format: [expression1, expression2, ...]
         for expression in contents_recv:
-            data_read = ScriptUtils.convert_symbol_to_address(expression)
-            data_read_list.append(data_read)
+            result_tuple = ScriptUtils.examine_expression(expression)
+            data_read_list.append(result_tuple)
         send_to_pince(data_read_list)
 
 
@@ -710,5 +690,4 @@ GetSoFileInformation()
 ExecuteFromSoFile()
 DissectCode()
 SearchReferencedCalls()
-MultipleAddressesToSymbols()
-MultipleSymbolsToAddresses()
+ExamineExpressions()
