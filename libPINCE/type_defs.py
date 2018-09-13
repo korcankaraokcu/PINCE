@@ -260,7 +260,6 @@ tag_to_string = collections.OrderedDict([
     ("ConditionsLocks", "Conditions&Locks"),
     ("GDBInformation", "GDB Information"),
     ("InferiorInformation", "Inferior Information"),
-
 ])
 
 # size-->int, any other field-->str
