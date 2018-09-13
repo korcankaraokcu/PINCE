@@ -156,6 +156,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Give users an option to set IPC path(independent from other steps)
 - Implement settings system for libPINCE like Qt does(independent from other steps)
 - Use type hints(py 3.5) and variable annotations(py 3.6) when support drops for older systems(independent from other steps)
+- All tables that hold large amount of data should only update the visible rows(independent from other steps)
 - Create ```CONTRIBUTING.md``` when coding style becomes more consistent(independent from other steps)
 - Consider giving users an option to disable specific GUI parts of PINCE to gain performance on low-end machines(independent from other steps)
 
