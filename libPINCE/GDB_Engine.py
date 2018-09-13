@@ -756,12 +756,8 @@ def read_addresses(nested_list):
         For instance; If 4 addresses has been read and 3rd one is problematic, the returned list will be
         [returned_value1,returned_value2,None,returned_value4]
     """
-    contents_recv = send_command("pince-read-addresses", send_with_file=True, file_contents_send=nested_list,
-                                 recv_with_file=True)
-    if contents_recv is None:
-        print("an error occurred while reading addresses")
-        contents_recv = []
-    return contents_recv
+    return send_command("pince-read-addresses", send_with_file=True, file_contents_send=nested_list,
+                        recv_with_file=True)
 
 
 #:tag:MemoryRW
@@ -828,12 +824,8 @@ def examine_expression(expression):
         type_defs.tuple_examine_expression: Evaluated value, address and symbol in a tuple
         Any erroneous field will be returned as None instead of str
     """
-    contents_recv = send_command("pince-examine-expressions", send_with_file=True,
-                                 file_contents_send=[expression], recv_with_file=True)
-    if not contents_recv:
-        print("an error occurred while processing the given expression")
-        return type_defs.tuple_examine_expression(None, None, None)
-    return contents_recv[0]
+    return send_command("pince-examine-expressions", send_with_file=True, file_contents_send=[expression],
+                        recv_with_file=True)[0]
 
 
 def examine_expressions(expression_list):
@@ -845,12 +837,8 @@ def examine_expressions(expression_list):
     Returns:
         list: List of type_defs.tuple_examine_expression
     """
-    contents_recv = send_command("pince-examine-expressions", send_with_file=True,
-                                 file_contents_send=expression_list, recv_with_file=True)
-    if not contents_recv:
-        print("an error occurred while processing expression_list")
-        contents_recv = []
-    return contents_recv
+    return send_command("pince-examine-expressions", send_with_file=True, file_contents_send=expression_list,
+                        recv_with_file=True)
 
 
 #:tag:GDBExpressions
@@ -866,13 +854,8 @@ def parse_convenience_variables(variable_list):
     Returns:
         list: List of str values of the corresponding convenience variables
     """
-    contents_recv = send_command("pince-parse-convenience-variables", send_with_file=True,
-                                 file_contents_send=variable_list,
-                                 recv_with_file=True)
-    if contents_recv is None:
-        print("an error occurred while reading variables")
-        contents_recv = []
-    return contents_recv
+    return send_command("pince-parse-convenience-variables", send_with_file=True, file_contents_send=variable_list,
+                        recv_with_file=True)
 
 
 #:tag:Threads
@@ -1017,11 +1000,7 @@ def read_registers():
     Returns:
         dict: A dict that holds general registers, flags and segment registers
     """
-    contents_recv = send_command("pince-read-registers", recv_with_file=True)
-    if contents_recv is None:
-        print("an error occurred while reading registers")
-        contents_recv = {}
-    return contents_recv
+    return send_command("pince-read-registers", recv_with_file=True)
 
 
 #:tag:Registers
@@ -1031,11 +1010,7 @@ def read_float_registers():
     Returns:
         dict: A dict that holds float registers(st0-7, xmm0-7)
     """
-    contents_recv = send_command("pince-read-float-registers", recv_with_file=True)
-    if contents_recv is None:
-        print("an error occurred while reading float registers")
-        contents_recv = {}
-    return contents_recv
+    return send_command("pince-read-float-registers", recv_with_file=True)
 
 
 #:tag:GDBExpressions
@@ -1078,11 +1053,7 @@ def get_stacktrace_info():
         return_address_info looks like this-->Return address of frame+symbol-->0x40c431 <_start>
         frame_address_info looks like this-->Beginning of frame+distance from stack pointer-->0x7ffe1e989a40(rsp+0x100)
     """
-    contents_recv = send_command("pince-get-stack-trace-info", recv_with_file=True)
-    if contents_recv is None:
-        print("an error occurred while reading stacktrace")
-        contents_recv = []
-    return contents_recv
+    return send_command("pince-get-stack-trace-info", recv_with_file=True)
 
 
 #:tag:Stack
@@ -1100,11 +1071,7 @@ def get_stack_info():
         if points to a symbol-->(ptr)<function_name>
         pointer_info becomes a null string if pointer isn't valid
     """
-    contents_recv = send_command("pince-get-stack-info", recv_with_file=True)
-    if contents_recv is None:
-        print("an error occurred while reading stack")
-        contents_recv = []
-    return contents_recv
+    return send_command("pince-get-stack-info", recv_with_file=True)
 
 
 #:tag:Stack
@@ -1116,11 +1083,7 @@ def get_stack_frame_return_addresses():
 
         return_address_info looks like this-->Return address of frame+symbol-->0x40c431 <_start>
     """
-    contents_recv = send_command("pince-get-frame-return-addresses", recv_with_file=True)
-    if contents_recv is None:
-        print("an error occurred while reading return addresses of stack frames")
-        contents_recv = []
-    return contents_recv
+    return send_command("pince-get-frame-return-addresses", recv_with_file=True)
 
 
 #:tag:Stack
@@ -1141,11 +1104,7 @@ def get_stack_frame_info(index):
             Saved registers:
                 rip at 0x7ffc5f87f698
     """
-    contents_recv = send_command("pince-get-frame-info", send_with_file=True, file_contents_send=str(index),
-                                 recv_with_file=True)
-    if contents_recv is None:
-        print("an error occurred while reading stack frame " + str(index))
-    return contents_recv
+    return send_command("pince-get-frame-info", send_with_file=True, file_contents_send=str(index), recv_with_file=True)
 
 
 #:tag:MemoryRW
@@ -1163,12 +1122,8 @@ def hex_dump(address, offset):
     Examples:
         returned list-->["??","??","??","7f","43","67","40","??","??, ...]
     """
-    contents_recv = send_command("pince-hex-dump", send_with_file=True, file_contents_send=(address, offset),
-                                 recv_with_file=True)
-    if contents_recv is None:
-        print("an error occurred while hex dumping address " + hex(address) + " with offset " + str(offset))
-        return []
-    return contents_recv
+    return send_command("pince-hex-dump", send_with_file=True, file_contents_send=(address, offset),
+                        recv_with_file=True)
 
 
 #:tag:BreakWatchpoints

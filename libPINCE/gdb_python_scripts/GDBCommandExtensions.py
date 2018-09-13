@@ -161,8 +161,7 @@ class ReadFloatRegisters(gdb.Command):
         super(ReadFloatRegisters, self).__init__("pince-read-float-registers", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        float_registers = ScriptUtils.get_float_registers()
-        send_to_pince(float_registers)
+        send_to_pince(ScriptUtils.get_float_registers())
 
 
 class GetStackTraceInfo(gdb.Command):
