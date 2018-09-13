@@ -69,12 +69,12 @@ from GUI.CustomValidators.HexValidator import QHexValidator
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-12"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-13"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = float
 show_messagebox_on_exception = bool
 show_messagebox_on_toggle_attach = bool
-gdb_output_mode = int
+gdb_output_mode = tuple
 auto_attach_list = str
 auto_attach_regex = bool
 global_hotkeys = collections.OrderedDict(
@@ -377,7 +377,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("address_table_update_interval", 0.5)
         self.settings.setValue("show_messagebox_on_exception", True)
         self.settings.setValue("show_messagebox_on_toggle_attach", True)
-        self.settings.setValue("gdb_output_mode", type_defs.GDB_OUTPUT_MODE.UNMUTED)
+        self.settings.setValue("gdb_output_mode", type_defs.gdb_output_mode(True, True))
         self.settings.setValue("auto_attach_list", "")
         self.settings.setValue("auto_attach_regex", False)
         self.settings.endGroup()
@@ -419,7 +419,7 @@ class MainForm(QMainWindow, MainWindow):
         table_update_interval = self.settings.value("General/address_table_update_interval", type=float)
         show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
         show_messagebox_on_toggle_attach = self.settings.value("General/show_messagebox_on_toggle_attach", type=bool)
-        gdb_output_mode = self.settings.value("General/gdb_output_mode", type=int)
+        gdb_output_mode = self.settings.value("General/gdb_output_mode", type=tuple)
         auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
         auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
         GDB_Engine.set_gdb_output_mode(gdb_output_mode)
@@ -1376,7 +1376,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         # Yet another retarded hack, thanks to pyuic5 not supporting QKeySequenceEdit
         self.keySequenceEdit = QKeySequenceEdit()
         self.verticalLayout_Hotkey.addWidget(self.keySequenceEdit)
-        self.comboBox_GDBOutputMode.addItems(type_defs.gdb_output_mode_to_text.values())
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
         icons_directory = GuiUtils.get_icons_directory()
         self.pushButton_GDBPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
@@ -1427,7 +1426,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/show_messagebox_on_exception", self.checkBox_MessageBoxOnException.isChecked())
         self.settings.setValue("General/show_messagebox_on_toggle_attach",
                                self.checkBox_MessageBoxOnToggleAttach.isChecked())
-        self.settings.setValue("General/gdb_output_mode", self.comboBox_GDBOutputMode.currentIndex())
+        current_gdb_output_mode = type_defs.gdb_output_mode(self.checkBox_OutputModeAsync.isChecked(),
+                                                            self.checkBox_OutputModeLastCommand.isChecked())
+        self.settings.setValue("General/gdb_output_mode", current_gdb_output_mode)
         if self.checkBox_AutoAttachRegex.isChecked():
             try:
                 re.compile(self.lineEdit_AutoAttachList.text())
@@ -1464,7 +1465,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.settings.value("General/show_messagebox_on_exception", type=bool))
         self.checkBox_MessageBoxOnToggleAttach.setChecked(
             self.settings.value("General/show_messagebox_on_toggle_attach", type=bool))
-        self.comboBox_GDBOutputMode.setCurrentIndex(self.settings.value("General/gdb_output_mode", type=int))
+        self.checkBox_OutputModeAsync.setChecked(self.settings.value("General/gdb_output_mode").async_output)
+        self.checkBox_OutputModeLastCommand.setChecked(self.settings.value("General/gdb_output_mode").last_command)
         self.lineEdit_AutoAttachList.setText(self.settings.value("General/auto_attach_list", type=str))
         self.checkBox_AutoAttachRegex.setChecked(self.settings.value("General/auto_attach_regex", type=bool))
         self.listWidget_Functions.clear()

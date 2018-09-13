@@ -159,18 +159,6 @@ class VALUE_INDEX:
                value_index == VALUE_INDEX.INDEX_AOB
 
 
-class GDB_OUTPUT_MODE:
-    UNMUTED = 0
-    ASYNC_OUTPUT_ONLY = 1
-    MUTED = 2
-
-
-gdb_output_mode_to_text = {
-    GDB_OUTPUT_MODE.UNMUTED: "Unmuted",
-    GDB_OUTPUT_MODE.ASYNC_OUTPUT_ONLY: "Async output only",
-    GDB_OUTPUT_MODE.MUTED: "Muted",
-}
-
 on_hit_to_text_dict = {
     BREAKPOINT_ON_HIT.BREAK: "Break",
     BREAKPOINT_ON_HIT.FIND_CODE: "Find Code",
@@ -284,6 +272,9 @@ tuple_region_info = collections.namedtuple("tuple_region_info", "start end regio
 
 # all, address, symbol-->str/None
 tuple_examine_expression = collections.namedtuple("tuple_examine_expression", "all address symbol")
+
+# all fields-->bool
+gdb_output_mode = collections.namedtuple("gdb_output_mode", "async_output last_command")
 
 
 class InferiorRunningException(Exception):

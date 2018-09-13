@@ -113,8 +113,9 @@ last_gdb_command = ""
 
 #:tag:GDBInformation
 #:doc:
-# An integer. Used to adjust gdb output
-gdb_output_mode = type_defs.GDB_OUTPUT_MODE.UNMUTED
+# A list of booleans. Used to adjust gdb output
+# Use the function set_gdb_output_mode to make use of this variable
+gdb_output_mode = type_defs.gdb_output_mode(True, True)
 
 '''
 When PINCE was first launched, it used gdb 7.7.1, which is a very outdated version of gdb
@@ -127,14 +128,15 @@ New parts can try to rely on gdb/mi output
 
 
 #:tag:GDBCommunication
-def set_gdb_output_mode(mode):
-    """Reduces, mutes or unmutes gdb output
+def set_gdb_output_mode(output_mode_tuple):
+    """Adjusts gdb output
 
     Args:
-        mode (int): Can be a member of type_defs.GDB_OUTPUT_MODE
+        output_mode_tuple (type_defs.gdb_output_mode): Setting any field True will enable the output that's associated
+        with that field. Setting it False will disable the associated output
     """
     global gdb_output_mode
-    gdb_output_mode = mode
+    gdb_output_mode = output_mode_tuple
 
 
 #:tag:GDBCommunication
@@ -183,7 +185,8 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
     global cancel_send_command
     global last_gdb_command
     with lock_send_command:
-        time0 = time()
+        if gdb_output_mode.last_command:
+            time0 = time()
         if not gdb_initialized:
             raise type_defs.GDBInitializeException
         if inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_RUNNING and not control:
@@ -200,7 +203,8 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         command = str(command)
         command = 'interpreter-exec mi "' + command + '"' if command.startswith("-") else command
         last_gdb_command = command if not control else "Ctrl+" + command
-        print("Last command: " + last_gdb_command)
+        if gdb_output_mode.last_command:
+            print("Last command: " + last_gdb_command)
         if control:
             child.sendcontrol(command)
         else:
@@ -230,8 +234,12 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
                     gdb_waiting_for_prompt_condition.wait()
         else:
             output = ""
-        time1 = time()
-        print(time1 - time0)
+        if gdb_output_mode.last_command:
+            time1 = time()
+            try:
+                print(time1 - time0)
+            except NameError:
+                pass
         cancel_send_command = False
         return output
 
@@ -299,12 +307,12 @@ def state_observe_thread():
             stored_output = ""
             with gdb_waiting_for_prompt_condition:
                 gdb_waiting_for_prompt_condition.notify_all()
+            if gdb_output_mode.last_command:
+                print(child.before)
         else:
-            if gdb_output_mode is type_defs.GDB_OUTPUT_MODE.ASYNC_OUTPUT_ONLY:
+            if gdb_output_mode.async_output:
                 print(child.before)
             gdb_async_output.broadcast_message(child.before)
-        if gdb_output_mode is type_defs.GDB_OUTPUT_MODE.UNMUTED:
-            print(child.before)
 
 
 #:tag:GDBCommunication

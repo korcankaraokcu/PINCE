@@ -161,12 +161,29 @@
                <item>
                 <widget class="QLabel" name="label_8">
                  <property name="text">
-                  <string>GDB console output mode</string>
+                  <string>GDB output:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QComboBox" name="comboBox_GDBOutputMode"/>
+                <widget class="QCheckBox" name="checkBox_OutputModeAsync">
+                 <property name="text">
+                  <string>Async</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="checkBox_OutputModeLastCommand">
+                 <property name="text">
+                  <string>Last command</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
                </item>
                <item>
                 <spacer name="horizontalSpacer_7">
