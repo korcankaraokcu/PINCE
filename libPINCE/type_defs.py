@@ -167,21 +167,21 @@ on_hit_to_text_dict = {
 }
 
 # Represents the texts at indexes in combobox
-index_to_text_dict = {
-    VALUE_INDEX.INDEX_BYTE: "Byte",
-    VALUE_INDEX.INDEX_2BYTES: "2 Bytes",
-    VALUE_INDEX.INDEX_4BYTES: "4 Bytes",
-    VALUE_INDEX.INDEX_8BYTES: "8 Bytes",
-    VALUE_INDEX.INDEX_FLOAT: "Float",
-    VALUE_INDEX.INDEX_DOUBLE: "Double",
-    VALUE_INDEX.INDEX_STRING_ASCII: "String_ASCII",
-    VALUE_INDEX.INDEX_STRING_UTF8: "String_UTF8",
-    VALUE_INDEX.INDEX_STRING_UTF16: "String_UTF16",
-    VALUE_INDEX.INDEX_STRING_UTF32: "String_UTF32",
-    VALUE_INDEX.INDEX_AOB: "AoB"
-}
+index_to_text_dict = collections.OrderedDict([
+    (VALUE_INDEX.INDEX_BYTE, "Byte"),
+    (VALUE_INDEX.INDEX_2BYTES, "2 Bytes"),
+    (VALUE_INDEX.INDEX_4BYTES, "4 Bytes"),
+    (VALUE_INDEX.INDEX_8BYTES, "8 Bytes"),
+    (VALUE_INDEX.INDEX_FLOAT, "Float"),
+    (VALUE_INDEX.INDEX_DOUBLE, "Double"),
+    (VALUE_INDEX.INDEX_STRING_ASCII, "String_ASCII"),
+    (VALUE_INDEX.INDEX_STRING_UTF8, "String_UTF8"),
+    (VALUE_INDEX.INDEX_STRING_UTF16, "String_UTF16"),
+    (VALUE_INDEX.INDEX_STRING_UTF32, "String_UTF32"),
+    (VALUE_INDEX.INDEX_AOB, "AoB")
+])
 
-text_to_index_dict = {}
+text_to_index_dict = collections.OrderedDict()
 for key in index_to_text_dict:
     text_to_index_dict[index_to_text_dict[key]] = key
 
