@@ -454,14 +454,22 @@ class MainForm(QMainWindow, MainWindow):
             except:
                 print("Auto-attach failed: " + auto_attach_list + " isn't a valid regex")
                 return
-            for process in SysUtils.get_process_list():
-                if compiled_re.search(process.name()):
+            for process in SysUtils.iterate_processes():
+                try:
+                    name = process.name()
+                except psutil.NoSuchProcess:
+                    continue
+                if compiled_re.search(name):
                     self.attach_to_pid(process.pid)
                     return
         else:
             for target in auto_attach_list.split(";"):
-                for process in SysUtils.get_process_list():
-                    if process.name().find(target) != -1:
+                for process in SysUtils.iterate_processes():
+                    try:
+                        name = process.name()
+                    except psutil.NoSuchProcess:
+                        continue
+                    if name.find(target) != -1:
                         self.attach_to_pid(process.pid)
                         return
 
@@ -963,8 +971,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center_to_parent(self)
-        processlist = SysUtils.get_process_list()
-        self.refresh_process_table(self.tableWidget_ProcessTable, processlist)
+        self.refresh_process_table(self.tableWidget_ProcessTable, SysUtils.iterate_processes())
         self.pushButton_Close.clicked.connect(self.close)
         self.pushButton_Open.clicked.connect(self.pushButton_Open_clicked)
         self.pushButton_CreateProcess.clicked.connect(self.pushButton_CreateProcess_clicked)
@@ -990,8 +997,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
     def refresh_process_table(self, tablewidget, processlist):
         tablewidget.setRowCount(0)
         for process in processlist:
+            pid = str(process.pid)
             try:
-                pid = str(process.pid)
                 username = process.username()
                 name = process.name()
             except psutil.NoSuchProcess:
