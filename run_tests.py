@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import unittest, argparse
+import unittest, argparse, psutil
 from libPINCE import GDB_Engine, SysUtils
 
 desc = 'Runs all unit tests by creating or attaching to a process'
@@ -38,8 +38,13 @@ if args.a:
     if not process_list:
         parser.error("There's no process with the name " + args.a)
     if len(process_list) > 1:
-        for item in process_list:
-            print(item.name())
+        for p in process_list:
+            try:
+                name = p.name()
+            except psutil.NoSuchProcess:
+                print("Process with pid", p.pid, "does not exist anymore")
+                continue
+            print(name)
         print("There are more than one process with the name " + args.a)
         exit()
     pid = process_list[0].pid

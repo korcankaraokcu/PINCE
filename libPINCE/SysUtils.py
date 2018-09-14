@@ -33,16 +33,17 @@ from pygdbmi import gdbmiparser
 
 
 #:tag:Processes
-def get_process_list():
-    """Returns a list of psutil.Process objects corresponding to currently running processes
+def iterate_processes():
+    """Returns a generator of psutil.Process objects corresponding to currently running processes
 
     Returns:
-        list: List of psutil.Process objects
+        generator: Generator of psutil.Process objects
+
+    Note:
+        Calling any function from the iterated processes will give the psutil.NoSuchProcess exception if the iterated
+        process doesn't exist anymore. Use functions in a try/except block for safety
     """
-    processlist = []
-    for p in psutil.process_iter():
-        processlist.append(p)
-    return processlist
+    return psutil.process_iter()
 
 
 #:tag:Processes
@@ -55,8 +56,7 @@ def get_process_information(pid):
     Returns:
         psutil.Process: psutil.Process object corresponding to the given pid
     """
-    p = psutil.Process(pid)
-    return p
+    return psutil.Process(pid)
 
 
 #:tag:Processes
@@ -69,10 +69,18 @@ def search_in_processes_by_name(process_name):
 
     Returns:
         list: List of psutil.Process objects corresponding to the filtered processes
+
+    Note:
+        Calling any function from the iterated processes will give the psutil.NoSuchProcess exception if the iterated
+        process doesn't exist anymore. Use functions in a try/except block for safety
     """
     processlist = []
     for p in psutil.process_iter():
-        if re.search(process_name, p.name(), re.IGNORECASE):
+        try:
+            name = p.name()
+        except psutil.NoSuchProcess:
+            continue
+        if re.search(process_name, name, re.IGNORECASE):
             processlist.append(p)
     return processlist
 
@@ -87,8 +95,7 @@ def get_memory_regions(pid):
     Returns:
         list: List of pmmap_ext objects corresponding to the given pid
     """
-    p = psutil.Process(pid)
-    return p.memory_maps(grouped=False)
+    return psutil.Process(pid).memory_maps(grouped=False)
 
 
 #:tag:Processes
