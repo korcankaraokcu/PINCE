@@ -115,7 +115,7 @@ last_gdb_command = ""
 #:doc:
 # A list of booleans. Used to adjust gdb output
 # Use the function set_gdb_output_mode to make use of this variable
-gdb_output_mode = type_defs.gdb_output_mode(True, True)
+gdb_output_mode = type_defs.gdb_output_mode(True, True, True)
 
 '''
 When PINCE was first launched, it used gdb 7.7.1, which is a very outdated version of gdb
@@ -185,7 +185,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
     global cancel_send_command
     global last_gdb_command
     with lock_send_command:
-        if gdb_output_mode.last_command:
+        if gdb_output_mode.command_info:
             time0 = time()
         if not gdb_initialized:
             raise type_defs.GDBInitializeException
@@ -203,7 +203,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         command = str(command)
         command = 'interpreter-exec mi "' + command + '"' if command.startswith("-") else command
         last_gdb_command = command if not control else "Ctrl+" + command
-        if gdb_output_mode.last_command:
+        if gdb_output_mode.command_info:
             print("Last command: " + last_gdb_command)
         if control:
             child.sendcontrol(command)
@@ -234,7 +234,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
                     gdb_waiting_for_prompt_condition.wait()
         else:
             output = ""
-        if gdb_output_mode.last_command:
+        if gdb_output_mode.command_info:
             time1 = time()
             try:
                 print(time1 - time0)
@@ -307,7 +307,7 @@ def state_observe_thread():
             stored_output = ""
             with gdb_waiting_for_prompt_condition:
                 gdb_waiting_for_prompt_condition.notify_all()
-            if gdb_output_mode.last_command:
+            if gdb_output_mode.command_output:
                 print(child.before)
         else:
             if gdb_output_mode.async_output:

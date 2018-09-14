@@ -273,7 +273,7 @@ tuple_region_info = collections.namedtuple("tuple_region_info", "start end regio
 tuple_examine_expression = collections.namedtuple("tuple_examine_expression", "all address symbol")
 
 # all fields-->bool
-gdb_output_mode = collections.namedtuple("gdb_output_mode", "async_output last_command")
+gdb_output_mode = collections.namedtuple("gdb_output_mode", "async_output command_output command_info")
 
 
 class InferiorRunningException(Exception):
