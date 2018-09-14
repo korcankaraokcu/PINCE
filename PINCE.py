@@ -307,16 +307,18 @@ class MainForm(QMainWindow, MainWindow):
         if not SysUtils.is_path_valid(self.settings.fileName()):
             self.set_default_settings()
         try:
-            self.apply_settings()
+            settings_version = self.settings.value("Misc/version", type=str)
         except Exception as e:
-            print("An exception occurred while trying to load settings, rolling back to the default configuration\n", e)
+            print("An exception occurred while reading settings version\n", e)
+            settings_version = None
+        if settings_version != current_settings_version:
+            print("Settings version mismatch, rolling back to the default configuration")
             self.settings.clear()
             self.set_default_settings()
         try:
-            settings_version = self.settings.value("Misc/version", type=str)
-        except TypeError:
-            settings_version = None
-        if settings_version != current_settings_version:
+            self.apply_settings()
+        except Exception as e:
+            print("An exception occurred while trying to load settings, rolling back to the default configuration\n", e)
             self.settings.clear()
             self.set_default_settings()
         GDB_Engine.init_gdb(gdb_path=gdb_path)
