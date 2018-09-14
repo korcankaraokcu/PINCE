@@ -1202,7 +1202,7 @@ def check_address_in_breakpoints(address, range_offset=0):
         None: If it doesn't exist
     """
     if type(address) != int:
-        address = int(address, 16)
+        address = int(address, 0)
     max_address = max(address, address + range_offset)
     min_address = min(address, address + range_offset)
     breakpoint_info = get_breakpoint_info()
