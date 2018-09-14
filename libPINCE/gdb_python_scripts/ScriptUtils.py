@@ -74,7 +74,7 @@ def read_address(address, value_type, length=None, zero_terminate=True, only_byt
         return
     if not type(address) == int:
         try:
-            address = int(address, 16)
+            address = int(address, 0)
         except:
             print(str(address) + " is not a valid address")
             return
@@ -128,7 +128,7 @@ def read_address(address, value_type, length=None, zero_terminate=True, only_byt
 def write_address(address, value_index, value):
     if not type(address) == int:
         try:
-            address = int(address, 16)
+            address = int(address, 0)
         except:
             print(str(address) + " is not a valid address")
             return

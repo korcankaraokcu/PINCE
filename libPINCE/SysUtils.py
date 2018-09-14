@@ -112,7 +112,7 @@ def get_region_info(pid, address):
     if type(pid) != int:
         pid = int(pid)
     if type(address) != int:
-        address = int(address, 16)
+        address = int(address, 0)
     region_list = get_memory_regions(pid)
     for item in region_list:
         splitted_address = item.addr.split("-")
