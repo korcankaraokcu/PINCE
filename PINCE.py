@@ -1089,6 +1089,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def update_value_of_address(self):
         address = GDB_Engine.examine_expression(self.lineEdit_address.text()).address
         if not address:
+            self.label_valueofaddress.clear()
             return
         address_type = self.comboBox_ValueType.currentIndex()
         if address_type is type_defs.VALUE_INDEX.INDEX_AOB:
