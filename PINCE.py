@@ -1662,6 +1662,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.scroll_to_bottom()
 
     def scroll_backwards_history(self):
+        self.input_history[self.current_history_index] = self.lineEdit.text()
         try:
             self.lineEdit.setText(self.input_history[self.current_history_index - 1])
         except IndexError:
@@ -1669,6 +1670,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.current_history_index -= 1
 
     def scroll_forwards_history(self):
+        self.input_history[self.current_history_index] = self.lineEdit.text()
         if self.current_history_index == -1:
             return
         self.lineEdit.setText(self.input_history[self.current_history_index + 1])
