@@ -124,7 +124,8 @@ def read_address(address, value_type, length=None, zero_terminate=True, only_byt
         return struct.unpack_from(data_type, data_read)[0]
 
 
-# TODO: Implement an mem_handle parameter like in read_address function for optimization
+# TODO: Implement a mem_handle parameter for optimization, check read_address for an example
+# If a file handle fails to write to an address, it becomes unusable. You have to reopen the file to continue writing
 def write_address(address, value_index, value):
     if not type(address) == int:
         try:
