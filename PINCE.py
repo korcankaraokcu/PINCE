@@ -788,7 +788,8 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow.show()
 
     def pushButton_Open_clicked(self):
-        file_paths = QFileDialog.getOpenFileNames(self, "Open PCT file(s)", "",
+        pct_file_path = SysUtils.get_user_path(type_defs.USER_PATHS.CHEAT_TABLES_PATH)
+        file_paths = QFileDialog.getOpenFileNames(self, "Open PCT file(s)", pct_file_path,
                                                   "PINCE cheat table format (*.pct);;All files (*)")[0]
         if not file_paths:
             return
@@ -806,7 +807,8 @@ class MainForm(QMainWindow, MainWindow):
                                 self.treeWidget_AddressTable.topLevelItemCount())
 
     def pushButton_Save_clicked(self):
-        file_path = QFileDialog.getSaveFileName(self, "Save PCT file", "",
+        pct_file_path = SysUtils.get_user_path(type_defs.USER_PATHS.CHEAT_TABLES_PATH)
+        file_path = QFileDialog.getSaveFileName(self, "Save PCT file", pct_file_path,
                                                 "PINCE Cheat Table (*.pct);;All files (*)")[0]
         if not file_path:
             return

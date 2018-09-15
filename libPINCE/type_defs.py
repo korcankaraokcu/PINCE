@@ -41,6 +41,7 @@ class USER_PATHS:
     CONFIG_PATH = ".config/"
     ROOT_PATH = CONFIG_PATH + "PINCE/PINCE_USER_FILES/"
     TRACE_INSTRUCTIONS_PATH = ROOT_PATH + "TraceInstructions/"
+    CHEAT_TABLES_PATH = ROOT_PATH + "CheatTables/"
     GDBINIT_PATH = ROOT_PATH + "gdbinit"
     GDBINIT_AA_PATH = ROOT_PATH + "gdbinit_after_attach"
     PINCEINIT_PATH = ROOT_PATH + "pinceinit.py"
@@ -48,12 +49,12 @@ class USER_PATHS:
 
     @staticmethod
     def get_init_directories():
-        return USER_PATHS.ROOT_PATH, USER_PATHS.TRACE_INSTRUCTIONS_PATH
+        return USER_PATHS.ROOT_PATH, USER_PATHS.TRACE_INSTRUCTIONS_PATH, USER_PATHS.CHEAT_TABLES_PATH
 
     @staticmethod
     def get_init_files():
-        return USER_PATHS.GDBINIT_PATH, USER_PATHS.GDBINIT_AA_PATH, \
-               USER_PATHS.PINCEINIT_PATH, USER_PATHS.PINCEINIT_AA_PATH
+        return USER_PATHS.GDBINIT_PATH, USER_PATHS.GDBINIT_AA_PATH, USER_PATHS.PINCEINIT_PATH, \
+               USER_PATHS.PINCEINIT_AA_PATH
 
 
 class INFERIOR_STATUS:
