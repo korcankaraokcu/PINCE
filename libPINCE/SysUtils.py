@@ -383,6 +383,21 @@ def get_trace_instructions_file(pid, breakpoint):
 
 
 #:tag:Utilities
+def append_file_extension(string, extension):
+    """Appends the given extension to the given string if it doesn't end with the given extension
+
+    Args:
+        string (str): Self-explanatory
+        extension (str): Self-explanatory, you don't have to include the dot
+
+    Returns:
+        str: Given string with the extension
+    """
+    extension = extension.strip(".")
+    return string if string.endswith("." + extension) else string + "." + extension
+
+
+#:tag:Utilities
 def save_file(data, file_path, save_method="json"):
     """Saves the specified data to given path
 
