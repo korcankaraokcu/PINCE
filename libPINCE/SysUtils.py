@@ -387,15 +387,12 @@ def save_file(data, file_path, save_method="json"):
     """Saves the specified data to given path
 
     Args:
-        data (??): Saved data, can be anything, but must be supported by save_method
+        data (??): Saved data, can be anything, must be supported by save_method
         file_path (str): Path of the saved file
         save_method (str): Can be "json" or "pickle"
 
     Returns:
         bool: True if saved successfully, False if not
-
-    Known extensions(name, ext, type):
-        Trace File, .trace, json
     """
     if save_method == "json":
         try:
@@ -404,7 +401,7 @@ def save_file(data, file_path, save_method="json"):
             chown_to_user(file_path)
             return True
         except Exception as e:
-            print(e, "Encountered an exception while dumping the data")
+            print("Encountered an exception while dumping the data\n", e)
             return False
     elif save_method == "pickle":
         try:
@@ -413,7 +410,7 @@ def save_file(data, file_path, save_method="json"):
             chown_to_user(file_path)
             return True
         except Exception as e:
-            print(e, "Encountered an exception while dumping the data")
+            print("Encountered an exception while dumping the data\n", e)
             return False
     else:
         print("Unsupported save_method, bailing out...")
@@ -421,36 +418,32 @@ def save_file(data, file_path, save_method="json"):
 
 
 #:tag:Utilities
-def load_file(file_path, load_method="json", return_on_fail=None):
+def load_file(file_path, load_method="json"):
     """Loads data from the given path
 
     Args:
         file_path (str): Path of the saved file
         load_method (str): Can be "json" or "pickle"
-        return_on_fail (??): Return this object if loading fails, None is the default
 
     Returns:
         ??: file_path is like a box of chocolates, you never know what you're gonna get
-        Returns return_on_fail if loading fails, None is the default
-
-    Known extensions(name, ext, type):
-        Trace File, .trace, json
+        None: If loading fails
     """
     if load_method == "json":
         try:
             output = json.load(open(file_path, "r"), object_pairs_hook=OrderedDict)
         except Exception as e:
-            print(e, "Encountered an exception while loading the data")
-            return return_on_fail
+            print("Encountered an exception while loading the data\n", e)
+            return
     elif load_method == "pickle":
         try:
             output = pickle.load(open(file_path, "rb"))
         except Exception as e:
-            print(e, "Encountered an exception while loading the data")
-            return return_on_fail
+            print("Encountered an exception while loading the data\n", e)
+            return
     else:
         print("Unsupported load_method, bailing out...")
-        return return_on_fail
+        return
     return output
 
 

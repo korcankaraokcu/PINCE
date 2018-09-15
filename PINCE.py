@@ -3641,8 +3641,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
                                         "Trace File (*.trace);;All Files (*)")[0]
         if file_path:
             self.treeWidget_InstructionInfo.clear()
-            trace_data = SysUtils.load_file(file_path, return_on_fail=[])
-            self.show_trace_info(trace_data)
+            self.show_trace_info(SysUtils.load_file(file_path))
 
     def treeWidget_InstructionInfo_context_menu_event(self, event):
         menu = QMenu()
