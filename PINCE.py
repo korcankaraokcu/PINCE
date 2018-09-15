@@ -811,6 +811,7 @@ class MainForm(QMainWindow, MainWindow):
         content = [self.read_address_table_recursively(
                 self.treeWidget_AddressTable.topLevelItem(i))
                 for i in range(self.treeWidget_AddressTable.topLevelItemCount())]
+        file_path = SysUtils.append_file_extension(file_path, "pct")
         if not SysUtils.save_file(content, file_path):
             QMessageBox.information(self, "Error", "Cannot save to file")
 
@@ -3631,7 +3632,8 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             QFileDialog.getSaveFileName(self, "Save trace file", trace_file_path,
                                         "Trace File (*.trace);;All Files (*)")[0]
         if file_path:
-            if not SysUtils.save_file(self.trace_data, file_path + ".trace"):
+            file_path = SysUtils.append_file_extension(file_path, "trace")
+            if not SysUtils.save_file(self.trace_data, file_path):
                 QMessageBox.information(self, "Error", "Couldn't save the file, check terminal for details")
 
     def load_file(self):
