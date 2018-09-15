@@ -788,29 +788,30 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow.show()
 
     def pushButton_Open_clicked(self):
-        file_paths = QFileDialog.getOpenFileNames(self, caption="Open PCT file(s)",
-            filter="PINCE cheat table format (*.pct);;All files (*)")[0]
-        if not file_paths: return
+        file_paths = QFileDialog.getOpenFileNames(self, "Open PCT file(s)", "",
+                                                  "PINCE cheat table format (*.pct);;All files (*)")[0]
+        if not file_paths:
+            return
         if self.treeWidget_AddressTable.topLevelItemCount() > 0:
             if InputDialogForm(item_list=[("Clear existing address table?",)]).exec_():
                 self.treeWidget_AddressTable.clear()
 
         for file_path in file_paths:
             content = SysUtils.load_file(file_path)
-            if not isinstance(content, list):
-                QMessageBox.information(self, "Error", "File "+file_path+"does not exist, "
-                        "is inaccessible or contains invalid content. Terminating...")
+            if content is None:
+                QMessageBox.information(self, "Error", "File " + file_path + " does not exist, " +
+                                        "is inaccessible or contains invalid content. Terminating...")
                 break
             self.insert_records(content, self.treeWidget_AddressTable.invisibleRootItem(),
-                    self.treeWidget_AddressTable.topLevelItemCount())
+                                self.treeWidget_AddressTable.topLevelItemCount())
 
     def pushButton_Save_clicked(self):
-        file_path = QFileDialog.getSaveFileName(self, caption="Save PCT file",
-            filter="PINCE cheat table format (*.pct);;All files (*)")[0]
-        if not file_path: return
-        content = [self.read_address_table_recursively(
-                self.treeWidget_AddressTable.topLevelItem(i))
-                for i in range(self.treeWidget_AddressTable.topLevelItemCount())]
+        file_path = QFileDialog.getSaveFileName(self, "Save PCT file", "",
+                                                "PINCE Cheat Table (*.pct);;All files (*)")[0]
+        if not file_path:
+            return
+        content = [self.read_address_table_recursively(self.treeWidget_AddressTable.topLevelItem(i))
+                   for i in range(self.treeWidget_AddressTable.topLevelItemCount())]
         file_path = SysUtils.append_file_extension(file_path, "pct")
         if not SysUtils.save_file(content, file_path):
             QMessageBox.information(self, "Error", "Cannot save to file")
@@ -3628,22 +3629,25 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
 
     def save_file(self):
         trace_file_path = SysUtils.get_user_path(type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH)
-        file_path = \
-            QFileDialog.getSaveFileName(self, "Save trace file", trace_file_path,
-                                        "Trace File (*.trace);;All Files (*)")[0]
+        file_path = QFileDialog.getSaveFileName(self, "Save trace file", trace_file_path,
+                                                "Trace File (*.trace);;All Files (*)")[0]
         if file_path:
             file_path = SysUtils.append_file_extension(file_path, "trace")
             if not SysUtils.save_file(self.trace_data, file_path):
-                QMessageBox.information(self, "Error", "Couldn't save the file, check terminal for details")
+                QMessageBox.information(self, "Error", "Cannot save to file")
 
     def load_file(self):
         trace_file_path = SysUtils.get_user_path(type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH)
-        file_path = \
-            QFileDialog.getOpenFileName(self, "Open trace file", trace_file_path,
-                                        "Trace File (*.trace);;All Files (*)")[0]
+        file_path = QFileDialog.getOpenFileName(self, "Open trace file", trace_file_path,
+                                                "Trace File (*.trace);;All Files (*)")[0]
         if file_path:
+            content = SysUtils.load_file(file_path)
+            if content is None:
+                QMessageBox.information(self, "Error", "File " + file_path + " does not exist, " +
+                                        "is inaccessible or contains invalid content. Terminating...")
+                return
             self.treeWidget_InstructionInfo.clear()
-            self.show_trace_info(SysUtils.load_file(file_path))
+            self.show_trace_info(content)
 
     def treeWidget_InstructionInfo_context_menu_event(self, event):
         menu = QMenu()
