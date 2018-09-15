@@ -1560,7 +1560,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.completer.setMaxVisibleItems(8)
         self.lineEdit.setCompleter(self.completer)
         self.quit_commands = ("q", "quit", "-gdb-exit")
-        self.input_history = ["", ""]
+        self.input_history = [""]
         self.current_history_index = -1
         self.await_async_output_thread = AwaitAsyncOutput()
         self.await_async_output_thread.async_output_ready.connect(self.on_async_output)
@@ -1588,8 +1588,12 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         else:
             self.current_history_index = -1
             console_input = self.lineEdit.text()
-            if console_input != self.input_history[-2] and console_input != "":
-                self.input_history.insert(-1, console_input)
+            last_input = self.input_history[-2] if len(self.input_history) > 1 else ""
+            if console_input != last_input and console_input != "":
+                self.input_history[-1] = console_input
+                self.input_history.append("")
+            else:
+                self.input_history[-1] = ""
         if console_input.lower() == "/clear":
             self.reset_console_text()
             return
@@ -1662,19 +1666,20 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.scroll_to_bottom()
 
     def scroll_backwards_history(self):
-        self.input_history[self.current_history_index] = self.lineEdit.text()
         try:
-            self.lineEdit.setText(self.input_history[self.current_history_index - 1])
+            new_text = self.input_history[self.current_history_index - 1]
         except IndexError:
             return
+        self.input_history[self.current_history_index] = self.lineEdit.text()
         self.current_history_index -= 1
+        self.lineEdit.setText(new_text)
 
     def scroll_forwards_history(self):
-        self.input_history[self.current_history_index] = self.lineEdit.text()
         if self.current_history_index == -1:
             return
-        self.lineEdit.setText(self.input_history[self.current_history_index + 1])
+        self.input_history[self.current_history_index] = self.lineEdit.text()
         self.current_history_index += 1
+        self.lineEdit.setText(self.input_history[self.current_history_index])
 
     def lineEdit_key_press_event(self, event):
         actions = type_defs.KeyboardModifiersTupleDict([
