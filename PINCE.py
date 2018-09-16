@@ -1597,21 +1597,22 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.reset_console_text()
 
     def communicate(self, control=False):
+        self.current_history_index = -1
+        self.input_history[-1] = ""
         if control:
             console_input = "/Ctrl+C"
         else:
-            self.current_history_index = -1
             console_input = self.lineEdit.text()
             last_input = self.input_history[-2] if len(self.input_history) > 1 else ""
             if console_input != last_input and console_input != "":
                 self.input_history[-1] = console_input
                 self.input_history.append("")
-            else:
-                self.input_history[-1] = ""
         if console_input.lower() == "/clear":
+            self.lineEdit.clear()
             self.reset_console_text()
             return
-        elif console_input.strip().lower() in self.quit_commands:
+        self.lineEdit.clear()
+        if console_input.strip().lower() in self.quit_commands:
             console_output = "Quitting current session will crash PINCE"
         else:
             if not control:
@@ -1628,7 +1629,6 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.textBrowser.append("-->" + console_input)
         if console_output:
             self.textBrowser.append(console_output)
-        self.lineEdit.clear()
         self.scroll_to_bottom()
 
     def reset_console_text(self):
