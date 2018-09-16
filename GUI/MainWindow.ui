@@ -69,7 +69,7 @@
          </sizepolicy>
         </property>
         <property name="toolTip">
-         <string>Open a file, script or a cheat table</string>
+         <string>Open a cheat table</string>
         </property>
         <property name="text">
          <string/>
@@ -85,7 +85,7 @@
          </sizepolicy>
         </property>
         <property name="toolTip">
-         <string>Save current tables to a file</string>
+         <string>Save current table to a file</string>
         </property>
         <property name="text">
          <string/>
@@ -286,14 +286,14 @@
               <item>
                <widget class="QRadioButton" name="radioButton_Bits">
                 <property name="text">
-                 <string>Bits</string>
+                 <string>B&amp;its</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QRadioButton" name="radioButton_Decimal">
                 <property name="text">
-                 <string>Decimal</string>
+                 <string>&amp;Decimal</string>
                 </property>
                </widget>
               </item>
@@ -433,14 +433,14 @@
               <item>
                <widget class="QRadioButton" name="radioButton_RoundedDefault">
                 <property name="text">
-                 <string>Rounded (Default)</string>
+                 <string>Ro&amp;unded (Default)</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QRadioButton" name="radioButton_RoundedExtreme">
                 <property name="text">
-                 <string>Rounded (Extreme)</string>
+                 <string>Rou&amp;nded (Extreme)</string>
                 </property>
                </widget>
               </item>
@@ -650,7 +650,7 @@
      <x>0</x>
      <y>0</y>
      <width>751</width>
-     <height>20</height>
+     <height>31</height>
     </rect>
    </property>
   </widget>
