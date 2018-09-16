@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'GUI/MainWindow.ui'
+# Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.2
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -268,7 +268,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.addWidget(self.treeWidget_AddressTable)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 751, 20))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 751, 31))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
 
@@ -280,8 +280,8 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "PINCE"))
         self.pushButton_AttachProcess.setToolTip(_translate("MainWindow", "Create or attach to a process"))
-        self.pushButton_Open.setToolTip(_translate("MainWindow", "Open a file, script or a cheat table"))
-        self.pushButton_Save.setToolTip(_translate("MainWindow", "Save current tables to a file"))
+        self.pushButton_Open.setToolTip(_translate("MainWindow", "Open a cheat table"))
+        self.pushButton_Save.setToolTip(_translate("MainWindow", "Save current table to a file"))
         self.pushButton_Wiki.setToolTip(_translate("MainWindow", "Wiki"))
         self.pushButton_About.setToolTip(_translate("MainWindow", "About"))
         self.label_SelectedProcess.setText(_translate("MainWindow", "No Process Selected"))
@@ -296,8 +296,8 @@ class Ui_MainWindow(object):
         self.pushButton_NewFirstScan.setText(_translate("MainWindow", "First Scan"))
         self.pushButton_NextScan.setText(_translate("MainWindow", "Next Scan"))
         self.pushButton_UndoScan.setText(_translate("MainWindow", "Undo Scan"))
-        self.radioButton_Bits.setText(_translate("MainWindow", "Bits"))
-        self.radioButton_Decimal.setText(_translate("MainWindow", "Decimal"))
+        self.radioButton_Bits.setText(_translate("MainWindow", "B&its"))
+        self.radioButton_Decimal.setText(_translate("MainWindow", "&Decimal"))
         self.checkBox_Hex.setText(_translate("MainWindow", "Hex"))
         self.label.setText(_translate("MainWindow", "Scan Type:"))
         self.label_2.setText(_translate("MainWindow", "Value Type:"))
@@ -310,8 +310,8 @@ class Ui_MainWindow(object):
         self.comboBox_ValueType.setItemText(6, _translate("MainWindow", "String"))
         self.comboBox_ValueType.setItemText(7, _translate("MainWindow", "Array of bytes"))
         self.pushButton_ShowMemoryRegions.setText(_translate("MainWindow", "Show Memory Regions"))
-        self.radioButton_RoundedDefault.setText(_translate("MainWindow", "Rounded (Default)"))
-        self.radioButton_RoundedExtreme.setText(_translate("MainWindow", "Rounded (Extreme)"))
+        self.radioButton_RoundedDefault.setText(_translate("MainWindow", "Ro&unded (Default)"))
+        self.radioButton_RoundedExtreme.setText(_translate("MainWindow", "Rou&nded (Extreme)"))
         self.radioButton_Truncated.setText(_translate("MainWindow", "Truncated"))
         self.checkBox_Unicode.setText(_translate("MainWindow", "Unicode"))
         self.checkBox_CaseSensitive.setText(_translate("MainWindow", "Case Sensitive"))
