@@ -149,6 +149,7 @@ def delete_menu_entries(QMenu, QAction_list):
     clean_entries(QMenu)
 
 
+# TODO: This is a really bad design pattern, remove this function after moving classes to their own files
 #:tag:GUI
 def search_parents_by_function(qt_object, func_name):
     """Search for func_name in the parents of given qt_object. Once function is found, parent that possesses func_name
