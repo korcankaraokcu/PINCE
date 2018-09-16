@@ -3612,7 +3612,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             else:
                 return
         self.trace_data = copy.deepcopy(trace_data)
-        while current_root_index != None:
+        while current_root_index is not None:
             try:
                 current_index = trace_tree[current_root_index][2][0]  # Get the first child
                 current_item = trace_tree[current_index][0]
