@@ -757,30 +757,10 @@ class MainForm(QMainWindow, MainWindow):
         console_widget.showMaximized()
 
     def pushButton_NewFirstScan_clicked(self):
-        QMessageBox.information(self, "Error", "Memory searching isn't implemented yet" +
-                                "\nUse GameConqueror for now" +
-                                "\nUse GDB Console to detach&attach PINCE(at top right)")
-        print("Exception test")
-        x = 0 / 0
-        if self.pushButton_NewFirstScan.text() == "First Scan":
-            self.pushButton_NextScan.setEnabled(True)
-            self.pushButton_UndoScan.setEnabled(True)
-            self.pushButton_NewFirstScan.setText("New Scan")
-            return
-        if self.pushButton_NewFirstScan.text() == "New Scan":
-            self.pushButton_NextScan.setEnabled(False)
-            self.pushButton_UndoScan.setEnabled(False)
-            self.pushButton_NewFirstScan.setText("First Scan")
+        return
 
     def pushButton_NextScan_clicked(self):
-        # GDB_Engine.send_command('interrupt\nx _start\nc &')  # test
-        GDB_Engine.send_command("x/100x _start")
-        # t = Thread(target=GDB_Engine.test)  # test
-        # t2=Thread(target=test2)
-        # t.start()
-        # t2.start()
-        if self.tableWidget_valuesearchtable.rowCount() <= 0:
-            return
+        return
 
     # shows the process select window
     def pushButton_AttachProcess_clicked(self):
@@ -846,9 +826,10 @@ class MainForm(QMainWindow, MainWindow):
         self.label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
 
         # enable scan GUI
-        self.QWidget_Toolbox.setEnabled(True)
-        self.pushButton_NextScan.setEnabled(False)
-        self.pushButton_UndoScan.setEnabled(False)
+        self.lineEdit_Scan.setText("This is a placeholder")
+        # self.QWidget_Toolbox.setEnabled(True)
+        # self.pushButton_NextScan.setEnabled(False)
+        # self.pushButton_UndoScan.setEnabled(False)
 
     def delete_address_table_contents(self):
         confirm_dialog = InputDialogForm(item_list=[("This will clear the contents of address table\nProceed?",)])
