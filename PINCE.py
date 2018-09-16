@@ -1631,7 +1631,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             self.reset_console_text()
             return
         elif console_input.strip().lower() in self.quit_commands:
-            console_output = "pls don't"
+            console_output = "Quitting current session will crash PINCE"
         else:
             if not control:
                 if self.radioButton_CLI.isChecked():
