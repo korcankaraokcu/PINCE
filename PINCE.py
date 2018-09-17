@@ -78,15 +78,16 @@ gdb_output_mode = tuple
 auto_attach_list = str
 auto_attach_regex = bool
 
-Hotkey = collections.namedtuple('Hotkey', 'name desc default context', defaults=[Qt.ApplicationShortcut])
+# TODO:Implement defaults parameter when we migrate to py 3.7
+Hotkey = collections.namedtuple("Hotkey", "name desc default context")
 # Represents a hotkey
 # By default they're application-wide, but that can be changed by providing different
 # context (Qt.WindowShortcut for example)
 hotkeys_data = [
-    Hotkey("pause_hotkey", "Pause the process", "F1"),
-    Hotkey("break_hotkey", "Break the process", "F2"),
-    Hotkey("continue_hotkey", "Continue the process", "F3"),
-    Hotkey("toggle_attach_hotkey", "Toggle attach/detach", "Shift+F10"),
+    Hotkey("pause_hotkey", "Pause the process", "F1", Qt.ApplicationShortcut),
+    Hotkey("break_hotkey", "Break the process", "F2", Qt.ApplicationShortcut),
+    Hotkey("continue_hotkey", "Continue the process", "F3", Qt.ApplicationShortcut),
+    Hotkey("toggle_attach_hotkey", "Toggle attach/detach", "Shift+F10", Qt.ApplicationShortcut),
 ]
 # each hotkey "name" is attached to the method "name_pressed"
 global_hotkeys = collections.OrderedDict([(hotkey.name, str) for hotkey in hotkeys_data])
