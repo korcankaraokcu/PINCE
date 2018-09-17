@@ -401,8 +401,8 @@ class TraceInstructions(gdb.Command):
         super(TraceInstructions, self).__init__("pince-trace-instructions", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers, \
-        collect_flag_registers, collect_segment_registers, collect_float_registers = eval(arg)
+        (breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers,
+         collect_flag_registers, collect_segment_registers, collect_float_registers) = eval(arg)
         gdb.execute("delete " + breakpoint)
         trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
 

@@ -172,8 +172,8 @@ def get_flag_registers():
     result = gdb.execute("p/t $eflags", to_string=True)
     parsed_result = common_regexes.convenience_variable_cli.search(result).group(2)  # $8 = 1010010011
     reversed_parsed_result = "".join(reversed(parsed_result))
-    contents_send["cf"], contents_send["pf"], contents_send["af"], contents_send["zf"], contents_send["sf"], \
-    contents_send["tf"], contents_send["if"], contents_send["df"], contents_send["of"] = ["0"] * 9
+    (contents_send["cf"], contents_send["pf"], contents_send["af"], contents_send["zf"], contents_send["sf"],
+     contents_send["tf"], contents_send["if"], contents_send["df"], contents_send["of"]) = ["0"] * 9
     try:
         contents_send["cf"] = reversed_parsed_result[0]
         contents_send["pf"] = reversed_parsed_result[2]
