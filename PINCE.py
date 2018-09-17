@@ -351,7 +351,7 @@ class MainForm(QMainWindow, MainWindow):
         for hotkey in hotkeys_data:
             setattr(self, hotkey.name, QShortcut(QKeySequence(global_hotkeys[hotkey.name]), self))
             current_hotkey = getattr(self, hotkey.name)
-            current_hotkey.activated.connect(getattr(self, hotkey.name+'_pressed'))
+            current_hotkey.activated.connect(getattr(self, hotkey.name + '_pressed'))
             current_hotkey.setContext(hotkey.context)
 
         # Saving the original function because super() doesn't work when we override functions like this
@@ -4367,13 +4367,12 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         self.pushButton_StartCancel.setText("Cancel")
 
     def refresh_dissect_status(self):
-        current_region, region_count, current_range, \
-        string_count, jump_count, call_count = GDB_Engine.get_dissect_code_status()
-        if not current_region:
+        region, region_count, range, string_count, jump_count, call_count = GDB_Engine.get_dissect_code_status()
+        if not region:
             return
-        self.label_RegionInfo.setText(current_region)
+        self.label_RegionInfo.setText(region)
         self.label_RegionCountInfo.setText(region_count)
-        self.label_CurrentRange.setText(current_range)
+        self.label_CurrentRange.setText(range)
         self.label_StringReferenceCount.setText(str(string_count))
         self.label_JumpReferenceCount.setText(str(jump_count))
         self.label_CallReferenceCount.setText(str(call_count))

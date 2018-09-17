@@ -1460,9 +1460,9 @@ def track_watchpoint(expression, length, watchpoint_type):
     if not breakpoints:
         return
     for breakpoint in breakpoints:
-        send_command("commands " + breakpoint \
-                     + "\npince-get-track-watchpoint-info " + str(breakpoints) \
-                     + "\nc" \
+        send_command("commands " + breakpoint
+                     + "\npince-get-track-watchpoint-info " + str(breakpoints)
+                     + "\nc"
                      + "\nend")
     return breakpoints
 
@@ -1511,9 +1511,9 @@ def track_breakpoint(expression, register_expressions):
     breakpoint = add_breakpoint(expression, on_hit=type_defs.BREAKPOINT_ON_HIT.FIND_ADDR)
     if not breakpoint:
         return
-    send_command("commands " + breakpoint \
+    send_command("commands " + breakpoint
                  + "\npince-get-track-breakpoint-info " + register_expressions.replace(" ", "") + "," + breakpoint
-                 + "\nc" \
+                 + "\nc"
                  + "\nend")
     return breakpoint
 
@@ -1583,7 +1583,7 @@ def trace_instructions(expression, max_trace_count=1000, trigger_condition="", s
     param_str = (
         breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers,
         collect_flag_registers, collect_segment_registers, collect_float_registers)
-    send_command("commands " + breakpoint \
+    send_command("commands " + breakpoint
                  + "\npince-trace-instructions " + str(param_str)
                  + "\nend")
     return breakpoint
