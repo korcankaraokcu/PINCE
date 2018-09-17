@@ -77,8 +77,19 @@ show_messagebox_on_toggle_attach = bool
 gdb_output_mode = tuple
 auto_attach_list = str
 auto_attach_regex = bool
-global_hotkeys = collections.OrderedDict(
-    [("pause_hotkey", str), ("break_hotkey", str), ("continue_hotkey", str), ("toggle_attach_hotkey", str)])
+
+Hotkey = collections.namedtuple('Hotkey', 'name desc default context', defaults=[Qt.ApplicationShortcut])
+# Represents a hotkey
+# By default they're application-wide, but that can be changed by providing different
+# context (Qt.WindowShortcut for example)
+hotkeys_data = [
+    Hotkey("pause_hotkey", "Pause the process", "F1"),
+    Hotkey("break_hotkey", "Break the process", "F2"),
+    Hotkey("continue_hotkey", "Continue the process", "F3"),
+    Hotkey("toggle_attach_hotkey", "Toggle attach/detach", "Shift+F10"),
+]
+# each hotkey "name" is attached to the method "name_pressed"
+global_hotkeys = collections.OrderedDict([(hotkey.name, str) for hotkey in hotkeys_data])
 code_injection_method = int
 bring_disassemble_to_front = bool
 instructions_per_scroll = int
@@ -336,11 +347,11 @@ class MainForm(QMainWindow, MainWindow):
         self.update_address_table_thread = UpdateAddressTableThread()
         self.update_address_table_thread.update_table_signal.connect(self.update_address_table_manually)
         self.update_address_table_thread.start()
-        for key, value in list(global_hotkeys.items()):
-            setattr(self, key, QShortcut(QKeySequence(value), self))
-            current_hotkey = getattr(self, key)
-            current_hotkey.activated.connect(getattr(self, key + "_pressed"))
-            current_hotkey.setContext(Qt.ApplicationShortcut)
+        for hotkey in hotkeys_data:
+            setattr(self, hotkey.name, QShortcut(QKeySequence(global_hotkeys[hotkey.name]), self))
+            current_hotkey = getattr(self, hotkey.name)
+            current_hotkey.activated.connect(getattr(self, hotkey.name+'_pressed'))
+            current_hotkey.setContext(hotkey.context)
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.treeWidget_AddressTable.keyPressEvent_original = self.treeWidget_AddressTable.keyPressEvent
@@ -386,10 +397,8 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("auto_attach_regex", False)
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
-        self.settings.setValue("pause_hotkey", "F1")
-        self.settings.setValue("break_hotkey", "F2")
-        self.settings.setValue("continue_hotkey", "F3")
-        self.settings.setValue("toggle_attach_hotkey", "Shift+F10")
+        for hotkey in hotkeys_data:
+            self.settings.setValue(hotkey.name, hotkey.default)
         self.settings.endGroup()
         self.settings.beginGroup("CodeInjection")
         self.settings.setValue("code_injection_method", type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL)
@@ -1496,8 +1505,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.lineEdit_AutoAttachList.setText(self.settings.value("General/auto_attach_list", type=str))
         self.checkBox_AutoAttachRegex.setChecked(self.settings.value("General/auto_attach_regex", type=bool))
         self.listWidget_Functions.clear()
-        self.listWidget_Functions.addItems(
-            ["Pause the process", "Break the process", "Continue the process", "Toggle attach/detach"])
+        self.listWidget_Functions.addItems([hotkey.desc for hotkey in hotkeys_data])
         for key, value in list(global_hotkeys.items()):
             setattr(self, key, self.settings.value("Hotkeys/" + key))
         injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
