@@ -635,11 +635,14 @@ def toggle_attach():
 
     Returns:
         int: The new state of the process as a member of type_defs.TOGGLE_ATTACH
+        None: If detaching or attaching fails
     """
     if is_attached():
-        send_command("phase-out")
+        if common_regexes.gdb_error.search(send_command("phase-out")):
+            return
         return type_defs.TOGGLE_ATTACH.DETACHED
-    send_command("phase-in")
+    if common_regexes.gdb_error.search(send_command("phase-in")):
+        return
     return type_defs.TOGGLE_ATTACH.ATTACHED
 
 

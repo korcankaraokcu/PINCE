@@ -507,7 +507,10 @@ class MainForm(QMainWindow, MainWindow):
         GDB_Engine.continue_inferior()
 
     def toggle_attach_hotkey_pressed(self):
-        if GDB_Engine.toggle_attach() is type_defs.TOGGLE_ATTACH.DETACHED:
+        result = GDB_Engine.toggle_attach()
+        if not result:
+            dialog_text = "Unable to toggle attach"
+        elif result is type_defs.TOGGLE_ATTACH.DETACHED:
             self.on_status_detached()
             dialog_text = "GDB is detached from the process"
         else:
