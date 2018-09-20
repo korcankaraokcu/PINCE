@@ -367,6 +367,12 @@ class MainForm(QMainWindow, MainWindow):
         self.update_address_table_thread = UpdateAddressTableThread()
         self.update_address_table_thread.update_table_signal.connect(self.update_address_table_manually)
         self.update_address_table_thread.start()
+        self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
+        self.shortcut_open_file.activated.connect(self.pushButton_Open_clicked)
+        GuiUtils.append_shortcut_to_tooltip(self.pushButton_Open, self.shortcut_open_file)
+        self.shortcut_save_file = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.shortcut_save_file.activated.connect(self.pushButton_Save_clicked)
+        GuiUtils.append_shortcut_to_tooltip(self.pushButton_Save, self.shortcut_save_file)
         # Saving the original function because super() doesn't work when we override functions like this
         self.treeWidget_AddressTable.keyPressEvent_original = self.treeWidget_AddressTable.keyPressEvent
         self.treeWidget_AddressTable.keyPressEvent = self.treeWidget_AddressTable_key_press_event

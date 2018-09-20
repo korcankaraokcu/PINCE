@@ -275,3 +275,14 @@ def contains_reference_mark(string):
         bool: True if given string contains the reference mark, False otherwise
     """
     return True if common_regexes.reference_mark.search(string) else False
+
+
+#:tag:GUI
+def append_shortcut_to_tooltip(QObject, QShortcut):
+    """Appends key string of the given QShortcut to the toolTip of the given QObject
+
+    Args:
+        QObject (QObject): Self-explanatory
+        QShortcut (QShortcut): Self-explanatory
+    """
+    QObject.setToolTip(QObject.toolTip() + "[" + QShortcut.key().toString() + "]")
