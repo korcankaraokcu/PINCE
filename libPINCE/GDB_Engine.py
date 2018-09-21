@@ -26,7 +26,7 @@ libc = ctypes.CDLL('libc.so.6')
 
 #:tag:GDBInformation
 #:doc:
-# A boolean value. True if gdb is attached to or has created a process, False if not
+# A boolean value. True if gdb is initialized, False if not
 gdb_initialized = False
 
 #:tag:InferiorInformation

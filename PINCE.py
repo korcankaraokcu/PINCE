@@ -215,7 +215,7 @@ def except_hook(exception_type, value, tb):
             elif exception_type == type_defs.InferiorRunningException:
                 error_dialog = InputDialogForm(item_list=[(
                     "Process is running" + "\nPress " + Hotkeys.break_hotkey.value + " to stop process" +
-                    "\n\nGo to settings->General to disable this dialog",)], buttons=[QDialogButtonBox.Ok])
+                    "\n\nGo to Settings->General to disable this dialog",)], buttons=[QDialogButtonBox.Ok])
                 error_dialog.exec_()
     traceback.print_exception(exception_type, value, tb)
 
@@ -524,7 +524,7 @@ class MainForm(QMainWindow, MainWindow):
             dialog_text = "GDB is attached back to the process"
         if show_messagebox_on_toggle_attach:
             dialog = InputDialogForm(item_list=[(
-                dialog_text + "\n\nGo to settings->General to disable this dialog",)], buttons=[QDialogButtonBox.Ok])
+                dialog_text + "\n\nGo to Settings->General to disable this dialog",)], buttons=[QDialogButtonBox.Ok])
             dialog.exec_()
 
     def treeWidget_AddressTable_context_menu_event(self, event):
