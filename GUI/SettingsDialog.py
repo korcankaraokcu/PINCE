@@ -243,6 +243,9 @@ class Ui_Dialog(object):
         self.pushButton_GDBPath.setObjectName("pushButton_GDBPath")
         self.horizontalLayout_11.addWidget(self.pushButton_GDBPath)
         self.verticalLayout_11.addLayout(self.horizontalLayout_11)
+        self.checkBox_GDBLogging = QtWidgets.QCheckBox(self.page_5)
+        self.checkBox_GDBLogging.setObjectName("checkBox_GDBLogging")
+        self.verticalLayout_11.addWidget(self.checkBox_GDBLogging)
         spacerItem10 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_11.addItem(spacerItem10)
         self.gridLayout_6.addLayout(self.verticalLayout_11, 0, 0, 1, 1)
@@ -310,5 +313,6 @@ class Ui_Dialog(object):
         self.checkBox_BringDisassembleToFront.setText(_translate("Dialog", "Bring disassemble screen to front when the inferior is stopped"))
         self.label_6.setText(_translate("Dialog", "Instructions shown per scroll"))
         self.label_7.setText(_translate("Dialog", "GDB Path"))
+        self.checkBox_GDBLogging.setText(_translate("Dialog", "GDB Logging"))
         self.pushButton_ResetSettings.setText(_translate("Dialog", "Reset Settings"))
 

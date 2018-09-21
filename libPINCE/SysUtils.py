@@ -315,7 +315,7 @@ def get_PINCE_IPC_directory(pid):
 
 
 #:tag:GDBCommunication
-def get_gdb_log_file(pid):
+def get_logging_file(pid):
     """Get the path of gdb logfile of given pid
 
     Args:
