@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'LogFileWidget.ui'
 #
-# Created: Sat Feb 11 01:51:44 2017
-#      by: PyQt5 UI code generator 5.2.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -15,10 +14,16 @@ class Ui_Form(object):
         Form.resize(582, 558)
         self.gridLayout = QtWidgets.QGridLayout(Form)
         self.gridLayout.setObjectName("gridLayout")
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
         self.label_FilePath = QtWidgets.QLabel(Form)
         self.label_FilePath.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
         self.label_FilePath.setObjectName("label_FilePath")
-        self.gridLayout.addWidget(self.label_FilePath, 0, 0, 1, 1)
+        self.horizontalLayout.addWidget(self.label_FilePath)
+        self.label_LoggingStatus = QtWidgets.QLabel(Form)
+        self.label_LoggingStatus.setObjectName("label_LoggingStatus")
+        self.horizontalLayout.addWidget(self.label_LoggingStatus)
+        self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
         self.textBrowser_LogContent = QtWidgets.QTextBrowser(Form)
         self.textBrowser_LogContent.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
         self.textBrowser_LogContent.setObjectName("textBrowser_LogContent")
@@ -31,4 +36,5 @@ class Ui_Form(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
         self.label_FilePath.setText(_translate("Form", "TextLabel"))
+        self.label_LoggingStatus.setText(_translate("Form", "TextLabel"))
 

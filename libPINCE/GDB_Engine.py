@@ -455,6 +455,7 @@ def init_gdb(additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     status_thread.daemon = True
     status_thread.start()
     gdb_initialized = True
+    set_logging(False)
     send_command("source " + SysUtils.get_user_path(type_defs.USER_PATHS.GDBINIT_PATH))
     SysUtils.execute_script(SysUtils.get_user_path(type_defs.USER_PATHS.PINCEINIT_PATH))
     if additional_commands:
@@ -462,14 +463,16 @@ def init_gdb(additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
 
 
 #:tag:GDBCommunication
-def create_gdb_log_file(pid):
-    """Creates a gdb log file for the current inferior
+def set_logging(state):
+    """Sets logging on or off
 
     Args:
-        pid (int,str): PID of the current process
+        state (bool): Sets logging on if True, off if False
     """
-    send_command("set logging file " + SysUtils.get_gdb_log_file(pid))
-    send_command("set logging on")
+    send_command("set logging off")
+    send_command("set logging file " + SysUtils.get_logging_file(currentpid))
+    if state:
+        send_command("set logging on")
 
 
 #:tag:GDBCommunication
@@ -537,7 +540,6 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     global inferior_arch
     currentpid = pid
     SysUtils.create_PINCE_IPC_PATH(pid)
-    create_gdb_log_file(pid)
     send_command("attach " + str(pid))
     set_pince_paths()
     init_referenced_dicts(pid)
@@ -599,7 +601,6 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
     pid = get_inferior_pid()
     currentpid = int(pid)
     SysUtils.create_PINCE_IPC_PATH(pid)
-    create_gdb_log_file(pid)
     set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()

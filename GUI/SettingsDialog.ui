@@ -515,6 +515,13 @@ Patterns at former positions have higher priority if regex is off</string>
               </layout>
              </item>
              <item>
+              <widget class="QCheckBox" name="checkBox_GDBLogging">
+               <property name="text">
+                <string>GDB Logging</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <spacer name="verticalSpacer_5">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>

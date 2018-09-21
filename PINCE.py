@@ -69,7 +69,7 @@ from GUI.CustomValidators.HexValidator import QHexValidator
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-14"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-15"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = float
 show_messagebox_on_exception = bool
@@ -102,6 +102,7 @@ code_injection_method = int
 bring_disassemble_to_front = bool
 instructions_per_scroll = int
 gdb_path = str
+gdb_logging = bool
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -353,6 +354,7 @@ class MainForm(QMainWindow, MainWindow):
             self.settings.clear()
             self.set_default_settings()
         GDB_Engine.init_gdb(gdb_path=gdb_path)
+        GDB_Engine.set_logging(gdb_logging)
         self.memory_view_window = MemoryViewWindowForm(self)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
@@ -429,6 +431,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.endGroup()
         self.settings.beginGroup("Debug")
         self.settings.setValue("gdb_path", type_defs.PATHS.GDB_PATH)
+        self.settings.setValue("gdb_logging", False)
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
         self.settings.setValue("version", current_settings_version)
@@ -447,6 +450,7 @@ class MainForm(QMainWindow, MainWindow):
         global bring_disassemble_to_front
         global instructions_per_scroll
         global gdb_path
+        global gdb_logging
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
         table_update_interval = self.settings.value("General/address_table_update_interval", type=float)
         show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
@@ -466,6 +470,9 @@ class MainForm(QMainWindow, MainWindow):
         bring_disassemble_to_front = self.settings.value("Disassemble/bring_disassemble_to_front", type=bool)
         instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
         gdb_path = self.settings.value("Debug/gdb_path", type=str)
+        gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
+        if GDB_Engine.gdb_initialized:
+            GDB_Engine.set_logging(gdb_logging)
 
     # Check if any process should be attached to automatically
     # Patterns at former positions have higher priority if regex is off
@@ -825,6 +832,7 @@ class MainForm(QMainWindow, MainWindow):
     def attach_to_pid(self, pid):
         attach_result = GDB_Engine.attach(pid, gdb_path=gdb_path)
         if attach_result[0] == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
+            GDB_Engine.set_logging(gdb_logging)
             self.on_new_process()
             return True
         else:
@@ -834,6 +842,7 @@ class MainForm(QMainWindow, MainWindow):
     # Returns: a bool value indicates whether the operation succeeded.
     def create_new_process(self, file_path, args, ld_preload_path):
         if GDB_Engine.create_process(file_path, args, ld_preload_path):
+            GDB_Engine.set_logging(gdb_logging)
             self.on_new_process()
             return True
         else:
@@ -863,6 +872,7 @@ class MainForm(QMainWindow, MainWindow):
         if GDB_Engine.currentpid == -1:
             self.on_status_running()
             GDB_Engine.init_gdb(gdb_path=gdb_path)
+            GDB_Engine.set_logging(gdb_logging)
             self.label_SelectedProcess.setText("No Process Selected")
 
     def on_status_detached(self):
@@ -1502,6 +1512,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             if InputDialogForm(item_list=[("You have changed the GDB path, reset GDB now?",)]).exec_():
                 GDB_Engine.init_gdb(gdb_path=selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
+        self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
         super(SettingsDialogForm, self).accept()
 
     def config_gui(self):
@@ -1534,6 +1545,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.lineEdit_InstructionsPerScroll.setText(
             str(self.settings.value("Disassemble/instructions_per_scroll", type=int)))
         self.lineEdit_GDBPath.setText(str(self.settings.value("Debug/gdb_path", type=str)))
+        self.checkBox_GDBLogging.setChecked(self.settings.value("Debug/gdb_logging", type=bool))
 
     def change_display(self, index):
         self.stackedWidget.setCurrentIndex(index)
@@ -4118,9 +4130,6 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         global instances
         instances.append(self)
         self.setWindowFlags(Qt.Window)
-        self.log_path = SysUtils.get_gdb_log_file(GDB_Engine.currentpid)
-        self.setWindowTitle("Log File of PID " + str(GDB_Engine.currentpid))
-        self.label_FilePath.setText("Contents of " + self.log_path + " (only last 20000 bytes are shown)")
         self.contents = ""
         self.refresh_contents()
         self.refresh_timer = QTimer()
@@ -4129,7 +4138,20 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         self.refresh_timer.start()
 
     def refresh_contents(self):
-        log_file = open(self.log_path)
+        log_path = SysUtils.get_logging_file(GDB_Engine.currentpid)
+        self.setWindowTitle("Log File of PID " + str(GDB_Engine.currentpid))
+        self.label_FilePath.setText("Contents of " + log_path + " (only last 20000 bytes are shown)")
+        logging_status = "<font color=blue>ON</font>" if gdb_logging else "<font color=red>OFF</font>"
+        self.label_LoggingStatus.setText("<b>LOGGING: " + logging_status + "</b>")
+        try:
+            log_file = open(log_path)
+        except OSError:
+            self.textBrowser_LogContent.clear()
+            error_message = "Unable to read log file at " + log_path + "\n"
+            if not gdb_logging:
+                error_message += "Go to Settings->Debug to enable logging"
+            self.textBrowser_LogContent.setText(error_message)
+            return
         log_file.seek(0, io.SEEK_END)
         end_pos = log_file.tell()
         if end_pos > 20000:
