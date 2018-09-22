@@ -800,7 +800,7 @@ class MainForm(QMainWindow, MainWindow):
     def pushButton_Open_clicked(self):
         pct_file_path = SysUtils.get_user_path(type_defs.USER_PATHS.CHEAT_TABLES_PATH)
         file_paths = QFileDialog.getOpenFileNames(self, "Open PCT file(s)", pct_file_path,
-                                                  "PINCE cheat table format (*.pct);;All files (*)")[0]
+                                                  "PINCE Cheat Table (*.pct);;All files (*)")[0]
         if not file_paths:
             return
         if self.treeWidget_AddressTable.topLevelItemCount() > 0:
