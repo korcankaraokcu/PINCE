@@ -28,15 +28,7 @@ hex_plain = compile(r"[0-9a-fA-F]+")
 hex_number = compile(r"0x" + hex_plain.pattern)
 hex_number_grouped = compile(r"(" + hex_number.pattern + r")")
 address_with_symbol = compile(r"(" + hex_number_grouped.pattern + r"\s*(<.+>)?)")  # 0x7f3067f1174d <poll+45>\n
-# * 1    Thread 0x7f34730d77c0 (LWP 6189)
-thread_info_multiple_threads = compile(r"\*\s+\d+\s+Thread\s+(" + hex_number.pattern + r"\s+\(LWP\s+\d+\))")
-# Output is like this if the inferior has only one thread
-# * 1    process 2935 process name 0x00007fb29406faba
-thread_info_single_thread = compile(r"\*\s+\d+\s+process.*" + hex_number_grouped.pattern)
-# Output is like this on multithreaded wine processes, reported by user202729
-# * 1    LWP 7406 "process name" 0xf7ffade9
-thread_info_lwp_only = compile(r"\*\s+\d+\s+(LWP\s+\d+).*" + hex_number.pattern)
-thread_info_regex_list = [thread_info_multiple_threads, thread_info_single_thread, thread_info_lwp_only]
+thread_info = compile(r"\*\s+\d+\s+(.*)\\n")
 inferior_pid = compile(r"process\s+(\d+)")
 numbers = compile(r"\d+")
 hw_breakpoint_count = compile(r"(hw|read|acc)")

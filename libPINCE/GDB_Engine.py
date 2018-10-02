@@ -864,24 +864,14 @@ def parse_convenience_variables(variable_list):
 
 #:tag:Threads
 def get_current_thread_information():
-    """Gather information about the current thread
+    """Invokes "info threads" command and returns the line corresponding to the current thread
 
     Returns:
-        str: thread_address+" (LWP "+LWP_ID+")"
-        str: thread_address
-        str: "LWP "+LWP_ID
-        None: If the output is unexpected
-
-    Examples:
-        returned_str-->"0x7f34730d77c0 (LWP 6189)"
-        returned_str-->"0x00007fb29406faba"
-        returned_str-->"LWP 6189"
+        str: Current thread information
+        None: If the output doesn't fit the regex
     """
     thread_info = send_command("info threads")
-    for regex in common_regexes.thread_info_regex_list:
-        parsed_info = regex.search(thread_info)
-        if parsed_info:
-            return parsed_info.group(1)
+    return re.sub(r'\\"', r'"', common_regexes.thread_info.search(thread_info).group(1))
 
 
 #:tag:Assembly
