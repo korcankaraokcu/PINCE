@@ -66,10 +66,9 @@ reference_mark = compile(r"\{\d*\}")
 
 # --------------------------------------------GDBCommandExtensions------------------------------------------------------
 
-max_frame_count = compile(r"#(\d+)\s+" + hex_number.pattern + r"\s+in")  # 10 0x000000000040c45a in
+max_frame_count = compile(r"#(\d+)\s+.*")
 frame_address = compile(r"frame\s+at\s+" + hex_number_grouped.pattern)  # frame at 0x7ffe1e989950
 return_address = compile(r"saved.*=\s+" + hex_number_grouped.pattern)  # saved rip = 0x7f633a853fe4
-return_address_with_info = compile(r"(" + hex_number.pattern + r".*):")  # 0x40c431 <_start>:
 plain_symbol = compile(r"<.+>")
 trace_instructions_ret = compile(r":\s+ret")  # 0x7f71a4dc5ff8 <poll+72>:	ret
 trace_instructions_call = compile(r":\s+call")  # 0x7f71a4dc5fe4 <poll+52>:	call   0x7f71a4de1100
