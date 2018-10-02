@@ -22,7 +22,7 @@ from re import compile
 # --------------------------------------------GDB_Engine----------------------------------------------------------------
 
 # stopped-threads="all"  # *running,thread-id="all"
-gdb_state_observe = compile(r"(stopped)\-threads=\"all\"|\*(running),thread\-id=\"all\"")
+gdb_state_observe = compile(r"(stopped)-threads=\"all\"|\*(running),thread-id=\"all\"")
 gdb_error = compile(r"\^error")
 hex_plain = compile(r"[0-9a-fA-F]+")
 hex_number = compile(r"0x" + hex_plain.pattern)
