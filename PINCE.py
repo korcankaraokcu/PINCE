@@ -2375,7 +2375,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.updating_memoryview = True
         time0 = time()
         thread_info = GDB_Engine.get_current_thread_information()
-        self.setWindowTitle("Memory Viewer - Currently Debugging Thread " + thread_info)
+        if thread_info:
+            self.setWindowTitle("Memory Viewer - Currently debugging " + thread_info)
+        else:
+            self.setWindowTitle("Error while getting thread information: " +
+                                "Please invoke 'info threads' command in GDB Console and open an issue with the output")
         self.disassemble_expression("$pc")
         self.update_registers()
         if self.stackedWidget_StackScreens.currentWidget() == self.StackTrace:
