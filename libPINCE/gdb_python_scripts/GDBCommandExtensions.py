@@ -188,11 +188,7 @@ class GetStackTraceInfo(gdb.Command):
             frame_address_with_difference = frame_address + "(" + sp_register + "+" + difference + ")"
             return_address = common_regexes.return_address.search(result)
             if return_address:
-                try:
-                    result = gdb.execute("x/b " + return_address.group(1), from_tty, to_string=True)
-                except:
-                    break
-                return_address_with_info = common_regexes.return_address_with_info.search(result).group(1)
+                return_address_with_info = ScriptUtils.examine_expression(return_address.group(1)).all
             else:
                 return_address_with_info = "<unavailable>"
             stacktrace_info_list.append([return_address_with_info, frame_address_with_difference])
@@ -265,8 +261,7 @@ class GetFrameReturnAddresses(gdb.Command):
             result = gdb.execute("info frame " + str(item), from_tty, to_string=True)
             return_address = common_regexes.return_address.search(result)
             if return_address:
-                result = gdb.execute("x/b " + return_address.group(1), from_tty, to_string=True)
-                return_address_with_info = common_regexes.return_address_with_info.search(result).group(1)
+                return_address_with_info = ScriptUtils.examine_expression(return_address.group(1)).all
             else:
                 return_address_with_info = "<unavailable>"
             return_address_list.append(return_address_with_info)
