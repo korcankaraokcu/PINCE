@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import gdb, struct, sys
+import gdb, struct, sys, traceback, functools
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -55,14 +55,17 @@ def gdbinit():
     gdb.execute("set stack-cache off")
 
 
-# This function is used to avoid errors in gdb scripts, because gdb scripts stop working when encountered an error
-def issue_command(command, error_message=""):
-    try:
-        gdb.execute(command)
-    except:
-        if error_message:
-            error_message = str(error_message)
-            gdb.execute('echo ' + error_message + '\n')
+# A decorator for printing exception information because GDB doesn't give proper information about exceptions
+# GDB also overrides sys.excepthook apparently. So this is a proper solution to the exception problem
+def print_exception(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except Exception as e:
+            traceback.print_exception(type(e), e, e.__traceback__)
+
+    return wrapper
 
 
 # mem_handle parameter example-->open(ScriptUtils.mem_file, "rb"), don't forget to close the handle after you're done
