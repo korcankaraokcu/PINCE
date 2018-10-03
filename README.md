@@ -150,6 +150,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Super-Uber-Rad credits roll with chiptune tunes
 - Implement extra MemoryViewerWindow tabs(independent from other steps)
 - ~~Consider removing the command file layer of IPC system for GDB_Engine.send_command to speed up things~~(independent from other steps)[Update-29/04/2018 : Delaying this until GDB/MI implements a native multiline command feature or improves ```interpreter-exec``` command to cover every single multiline command type(including ```define``` commands)]
+- Implement thread info widget
 - Implement toggling of arrows for easier navigation for dissected regions(independent from other steps)
 - Provide information about absolute addresses in disassemble screen(independent from other steps)
 - Use type hints(py 3.5) and variable annotations(py 3.6) when support drops for older systems(independent from other steps)
