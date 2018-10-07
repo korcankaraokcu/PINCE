@@ -846,19 +846,24 @@ def examine_expressions(expression_list):
 
 
 #:tag:GDBExpressions
-def parse_convenience_variables(variable_list):
-    """Converts the convenience variables to their str equivalents
+def parse_and_eval(expression, cast=str):
+    """Calls gdb.parse_and_eval with the given expression and returns the value after casting with the given type
+    Use examine_expression if your data can be expressed as an address or a symbol, use this function otherwise
+    Unlike examine_expression, this function can read data that has void type or multiple type representations
+    For instance:
+        $eflags has both str and int reprs
+        $_siginfo is a struct with many fields
+        x64 register convenience vars such as $rax are void if the process is x86
 
     Args:
-        variable_list (list): List of convenience variables as str
-
-    Examples:
-        variable_list-->["$pc","$_gthread","$_inferior","$_exitcode","$_siginfo"]
+        expression (str): Any gdb expression
+        cast (type): Evaluated value will be cast to this type in gdb
 
     Returns:
-        list: List of str values of the corresponding convenience variables
+        cast: Self-explanatory
+        None: If casting fails
     """
-    return send_command("pince-parse-convenience-variables", send_with_file=True, file_contents_send=variable_list,
+    return send_command("pince-parse-and-eval", send_with_file=True, file_contents_send=(expression, cast),
                         recv_with_file=True)
 
 
@@ -982,7 +987,7 @@ def get_inferior_arch():
     Returns:
         int: A member of type_defs.INFERIOR_ARCH
     """
-    if parse_convenience_variables(["$rax"])[0] == "void":
+    if parse_and_eval("$rax") == "void":
         return type_defs.INFERIOR_ARCH.ARCH_32
     return type_defs.INFERIOR_ARCH.ARCH_64
 

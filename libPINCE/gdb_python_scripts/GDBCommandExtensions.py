@@ -128,21 +128,21 @@ class CLIOutput(gdb.Command):
         send_to_pince(contents_send)
 
 
-class ParseConvenienceVariables(gdb.Command):
+class ParseAndEval(gdb.Command):
     def __init__(self):
-        super(ParseConvenienceVariables, self).__init__("pince-parse-convenience-variables", gdb.COMMAND_USER)
+        super(ParseAndEval, self).__init__("pince-parse-and-eval", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        parsed_value_list = []
-        variables = receive_from_pince()
-        for item in variables:
-            try:
-                value = gdb.parse_and_eval(item)
-                parsed_value = str(value)
-            except:
-                parsed_value = None
-            parsed_value_list.append(parsed_value)
-        send_to_pince(parsed_value_list)
+        expression, cast = receive_from_pince()
+        try:
+            value = gdb.parse_and_eval(expression)
+            parsed_value = cast(value)
+        except Exception as e:
+            print(e)
+            print("Expression: " + expression)
+            print("Cast type: " + str(cast))
+            parsed_value = None
+        send_to_pince(parsed_value)
 
 
 class ReadRegisters(gdb.Command):
@@ -660,7 +660,7 @@ IgnoreErrors()
 CLIOutput()
 ReadAddresses()
 WriteAddresses()
-ParseConvenienceVariables()
+ParseAndEval()
 ReadRegisters()
 ReadFloatRegisters()
 GetStackTraceInfo()
