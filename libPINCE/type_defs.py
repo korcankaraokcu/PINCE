@@ -131,6 +131,14 @@ class TOGGLE_ATTACH:
     DETACHED = 2
 
 
+class REGISTERS:
+    GENERAL_32 = ["eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp", "eip"]
+    GENERAL_64 = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip", "r8", "r9", "r10", "r11", "r12",
+                  "r13", "r14", "r15"]
+    SEGMENT = ["cs", "ss", "ds", "es", "fs", "gs"]
+    FLAG = ["cf", "pf", "af", "zf", "sf", "tf", "if", "df", "of"]
+
+
 # represents the indexes of value types
 # Also used in PINCE's value comboboxes
 class VALUE_INDEX:

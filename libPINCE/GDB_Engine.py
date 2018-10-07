@@ -1030,7 +1030,7 @@ def set_register_flag(flag, value):
     """Sets given register flag to given value
 
     Args:
-        flag (str): "cf", "pf", "af", "zf", "sf", "tf", "if", "df" or "of"
+        flag (str): A member of type_defs.REGISTERS.FLAG
         value (str): "0" or "1"
         Theoretically, you can pass anything as value. But, it may fuck other flag registers... VERY BADLY!
     """
