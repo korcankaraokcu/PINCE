@@ -36,7 +36,6 @@ breakpoint_size = compile(r"char\[(\d+)\]")
 breakpoint_created = compile(r"breakpoint-created")
 breakpoint_number = compile(r"number=\"(\d+)\"")
 convenience_variable = compile(r'"(\$\d+)\s+=\s+(.*)"')  # "$26 = 3"
-convenience_variable_cli = compile(r'(\$\d+)\s+=\s+(.*)')  # $26 = 3
 entry_point = compile(r"Entry\s+point:\s+" + hex_number_grouped.pattern)
 # The command will always start with the word "source", check GDB_Engine.send_command function for the cause
 gdb_command_source = lambda command_file: compile(r"&\".*source\s" + command_file + r"\\n\"")  # &"command\n"

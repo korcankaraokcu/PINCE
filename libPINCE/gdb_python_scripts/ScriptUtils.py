@@ -165,21 +165,20 @@ def get_general_registers():
 
 def get_flag_registers():
     contents_send = OrderedDict()
-    result = gdb.execute("p/t $eflags", to_string=True)
-    parsed_result = common_regexes.convenience_variable_cli.search(result).group(2)  # $8 = 1010010011
-    reversed_parsed_result = "".join(reversed(parsed_result))
+    bitwise_flags = bin(int(gdb.parse_and_eval("$eflags")))[2:]
+    reversed_bitwise_flags = "".join(reversed(bitwise_flags))
     (contents_send["cf"], contents_send["pf"], contents_send["af"], contents_send["zf"], contents_send["sf"],
      contents_send["tf"], contents_send["if"], contents_send["df"], contents_send["of"]) = ["0"] * 9
     try:
-        contents_send["cf"] = reversed_parsed_result[0]
-        contents_send["pf"] = reversed_parsed_result[2]
-        contents_send["af"] = reversed_parsed_result[4]
-        contents_send["zf"] = reversed_parsed_result[6]
-        contents_send["sf"] = reversed_parsed_result[7]
-        contents_send["tf"] = reversed_parsed_result[8]
-        contents_send["if"] = reversed_parsed_result[9]
-        contents_send["df"] = reversed_parsed_result[10]
-        contents_send["of"] = reversed_parsed_result[11]
+        contents_send["cf"] = reversed_bitwise_flags[0]
+        contents_send["pf"] = reversed_bitwise_flags[2]
+        contents_send["af"] = reversed_bitwise_flags[4]
+        contents_send["zf"] = reversed_bitwise_flags[6]
+        contents_send["sf"] = reversed_bitwise_flags[7]
+        contents_send["tf"] = reversed_bitwise_flags[8]
+        contents_send["if"] = reversed_bitwise_flags[9]
+        contents_send["df"] = reversed_bitwise_flags[10]
+        contents_send["of"] = reversed_bitwise_flags[11]
     except IndexError:
         pass
     return contents_send
