@@ -172,11 +172,9 @@ class GetStackTraceInfo(gdb.Command):
         stacktrace_info_list = []
         if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             sp_register = "rsp"
-            result = gdb.execute("p/x $rsp", from_tty, to_string=True)
         else:
             sp_register = "esp"
-            result = gdb.execute("p/x $esp", from_tty, to_string=True)
-        stack_pointer_int = int(SysUtils.extract_address(result), 16)  # $6 = 0x7f0bc0b6bb40
+        stack_pointer_int = int(ScriptUtils.examine_expression("$" + sp_register).address, 16)
         result = gdb.execute("bt", from_tty, to_string=True)
         max_frame = common_regexes.max_frame_count.findall(result)[-1]
 
@@ -204,24 +202,21 @@ class GetStackInfo(gdb.Command):
         if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
             chunk_size = 8
             int_format = "Q"
-            stack_register = "rsp"
-            result = gdb.execute("p/x $rsp", from_tty, to_string=True)
+            sp_register = "rsp"
         else:
             chunk_size = 4
             int_format = "I"
-            stack_register = "esp"
-            result = gdb.execute("p/x $esp", from_tty, to_string=True)
-        stack_address = int(SysUtils.extract_address(result), 16)  # $6 = 0x7f0bc0b6bb40
+            sp_register = "esp"
+        sp_address = int(ScriptUtils.examine_expression("$" + sp_register).address, 16)
         with open(ScriptUtils.mem_file, "rb") as FILE:
             try:
-                old_position = FILE.seek(stack_address)
+                old_position = FILE.seek(sp_address)
             except (OSError, ValueError):
                 send_to_pince(stack_info_list)
                 return
             for index in range(int(4096 / chunk_size)):
                 current_offset = chunk_size * index
-                stack_indicator = hex(stack_address + current_offset) + "(" + stack_register + "+" + hex(
-                    current_offset) + ")"
+                stack_indicator = hex(sp_address + current_offset) + "(" + sp_register + "+" + hex(current_offset) + ")"
                 try:
                     FILE.seek(old_position)
                     read = FILE.read(chunk_size)
@@ -237,12 +232,11 @@ class GetStackInfo(gdb.Command):
                 except (OSError, ValueError):
                     pointer_data = ""
                 else:
-                    result = gdb.execute("x/b " + hex_repr, to_string=True)
-                    result = common_regexes.plain_symbol.search(result)
-                    if not result:
+                    symbol = ScriptUtils.examine_expression(hex_repr).symbol
+                    if not symbol:
                         pointer_data = "(str)" + read_pointer.decode("utf-8", "ignore")
                     else:
-                        pointer_data = "(ptr)" + result.group(0)
+                        pointer_data = "(ptr)" + symbol
                 stack_info_list.append([stack_indicator, hex_repr, pointer_data])
         send_to_pince(stack_info_list)
 
@@ -361,7 +355,7 @@ class GetTrackBreakpointInfo(gdb.Command):
             if not register_expression in track_breakpoint_dict[breakpoint_number]:
                 track_breakpoint_dict[breakpoint_number][register_expression] = OrderedDict()
             try:
-                address = SysUtils.extract_address(gdb.execute("p/x " + register_expression, from_tty, to_string=True))
+                address = ScriptUtils.examine_expression(register_expression).address
             except:
                 address = None
             if address:
