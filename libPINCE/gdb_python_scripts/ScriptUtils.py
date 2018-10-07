@@ -164,9 +164,7 @@ def get_general_registers():
     else:
         general_register_list = REGISTERS_32
     for item in general_register_list:
-        result = gdb.execute("p/x $" + item, to_string=True)
-        parsed_result = common_regexes.hex_number.search(result).group(0)  # $6 = 0x7f0bc0b6bb40
-        contents_send[item] = parsed_result
+        contents_send[item] = examine_expression("$" + item).address
     return contents_send
 
 
@@ -195,9 +193,7 @@ def get_flag_registers():
 def get_segment_registers():
     contents_send = OrderedDict()
     for item in REGISTERS_SEGMENT:
-        result = gdb.execute("p/x $" + item, to_string=True)
-        parsed_result = common_regexes.hex_number.search(result).group(0)  # $6 = 0x7f0bc0b6bb40
-        contents_send[item] = parsed_result
+        contents_send[item] = examine_expression("$" + item).address
     return contents_send
 
 
