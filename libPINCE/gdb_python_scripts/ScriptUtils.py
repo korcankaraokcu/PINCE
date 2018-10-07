@@ -218,14 +218,6 @@ def get_float_registers():
     return contents_send
 
 
-def remove_disas_comment(disas_str):
-    index = disas_str.rfind("#")
-    if index == -1:
-        return disas_str
-    else:
-        return disas_str[:index]
-
-
 def examine_expression(expression):
     try:
         value = gdb.parse_and_eval(expression).cast(void_ptr)
