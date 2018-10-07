@@ -29,11 +29,6 @@ inferior = gdb.selected_inferior()
 pid = inferior.pid
 mem_file = "/proc/" + str(pid) + "/mem"
 
-REGISTERS_32 = ["eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp", "eip"]
-REGISTERS_64 = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip", "r8", "r9", "r10", "r11", "r12",
-                "r13", "r14", "r15"]
-REGISTERS_SEGMENT = ["cs", "ss", "ds", "es", "fs", "gs"]
-
 void_ptr = gdb.lookup_type("void").pointer()
 
 if str(gdb.parse_and_eval("$rax")) == "void":
@@ -160,9 +155,9 @@ def write_address(address, value_index, value):
 def get_general_registers():
     contents_send = OrderedDict()
     if current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
-        general_register_list = REGISTERS_64
+        general_register_list = type_defs.REGISTERS.GENERAL_64
     else:
-        general_register_list = REGISTERS_32
+        general_register_list = type_defs.REGISTERS.GENERAL_32
     for item in general_register_list:
         contents_send[item] = examine_expression("$" + item).address
     return contents_send
@@ -192,7 +187,7 @@ def get_flag_registers():
 
 def get_segment_registers():
     contents_send = OrderedDict()
-    for item in REGISTERS_SEGMENT:
+    for item in type_defs.REGISTERS.SEGMENT:
         contents_send[item] = examine_expression("$" + item).address
     return contents_send
 
