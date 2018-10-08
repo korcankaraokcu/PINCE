@@ -1031,11 +1031,15 @@ def set_register_flag(flag, value):
 
     Args:
         flag (str): A member of type_defs.REGISTERS.FLAG
-        value (str): "0" or "1"
-        Theoretically, you can pass anything as value. But, it may fuck other flag registers... VERY BADLY!
+        value (Union[int,str]): 0 or 1
     """
     registers = read_registers()
+    value = str(value)
     registers[flag] = value
+    if value != "0" and value != "1":
+        raise Exception(value + " isn't valid value. It can be only 0 or 1")
+    if flag not in type_defs.REGISTERS.FLAG:
+        raise Exception(flag + " isn't a valid flag, must be a member of type_defs.REGISTERS.FLAG")
     eflags_hex_value = hex(int(
         registers["of"] + registers["df"] + registers["if"] + registers["tf"] + registers["sf"] + registers[
             "zf"] + "0" + registers["af"] + "0" + registers["pf"] + "0" + registers["cf"], 2))
