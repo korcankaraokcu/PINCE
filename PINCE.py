@@ -3058,17 +3058,11 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         self.tableWidget_XMM.setRowCount(0)
         self.tableWidget_XMM.setRowCount(8)
         float_registers = GDB_Engine.read_float_registers()
-
-        # st0-7, xmm0-7
-        for row, index in enumerate(range(8)):
-            current_st_register = "st" + str(index)
-            current_xmm_register = "xmm" + str(index)
-            self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(current_st_register))
-            self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_VALUE_COL,
-                                         QTableWidgetItem(float_registers[current_st_register]))
-            self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(current_xmm_register))
-            self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_VALUE_COL,
-                                         QTableWidgetItem(float_registers[current_xmm_register]))
+        for row, (st, xmm) in enumerate(zip(type_defs.REGISTERS.FLOAT.ST, type_defs.REGISTERS.FLOAT.XMM)):
+            self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(st))
+            self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(float_registers[st]))
+            self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(xmm))
+            self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(float_registers[xmm]))
 
     def set_register(self, index):
         current_row = index.row()

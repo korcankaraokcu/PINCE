@@ -138,6 +138,10 @@ class REGISTERS:
     SEGMENT = ["cs", "ss", "ds", "es", "fs", "gs"]
     FLAG = ["cf", "pf", "af", "zf", "sf", "tf", "if", "df", "of"]
 
+    class FLOAT:
+        ST = ["st" + str(i) for i in range(8)]
+        XMM = ["xmm" + str(i) for i in range(8)]
+
 
 # represents the indexes of value types
 # Also used in PINCE's value comboboxes
