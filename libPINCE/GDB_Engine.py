@@ -997,7 +997,7 @@ def read_registers():
     """Returns the current registers
 
     Returns:
-        dict: A dict that holds general registers, flags and segment registers
+        dict: A dict that holds general, flag and segment registers. Check type_defs.REGISTERS for the full list
     """
     return send_command("pince-read-registers", recv_with_file=True)
 
@@ -1007,7 +1007,10 @@ def read_float_registers():
     """Returns the current floating point registers
 
     Returns:
-        dict: A dict that holds float registers(st0-7, xmm0-7)
+        dict: A dict that holds floating point registers. Check type_defs.REGISTERS.FLOAT for the full list
+
+    Note:
+        Returned xmm values are based on xmm.v4_float
     """
     return send_command("pince-read-float-registers", recv_with_file=True)
 

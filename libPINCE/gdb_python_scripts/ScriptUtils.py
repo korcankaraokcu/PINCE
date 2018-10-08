@@ -193,18 +193,12 @@ def get_segment_registers():
 
 def get_float_registers():
     contents_send = OrderedDict()
-
-    # st0-7
-    for index in range(8):
-        current_register = "st" + str(index)
-        value = gdb.parse_and_eval("$" + current_register)
-        contents_send[current_register] = str(value)
-
-    # xmm0-7
-    for index in range(8):
-        current_register = "xmm" + str(index)
-        value = gdb.parse_and_eval("$" + current_register + ".v4_float")
-        contents_send[current_register] = str(value)
+    for register in type_defs.REGISTERS.FLOAT.ST:
+        value = gdb.parse_and_eval("$" + register)
+        contents_send[register] = str(value)
+    for register in type_defs.REGISTERS.FLOAT.XMM:
+        value = gdb.parse_and_eval("$" + register + ".v4_float")
+        contents_send[register] = str(value)
     return contents_send
 
 
