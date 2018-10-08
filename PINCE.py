@@ -1143,21 +1143,19 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def update_value_of_address(self):
         address = GDB_Engine.examine_expression(self.lineEdit_address.text()).address
         if not address:
-            self.label_valueofaddress.clear()
+            self.label_valueofaddress.setText("<font color=red>??</font>")
             return
         address_type = self.comboBox_ValueType.currentIndex()
         if address_type is type_defs.VALUE_INDEX.INDEX_AOB:
             length = self.lineEdit_length.text()
             value = GDB_Engine.read_address(address, address_type, length)
-            self.label_valueofaddress.setText("" if value is None else str(value))
         elif type_defs.VALUE_INDEX.is_string(address_type):
             length = self.lineEdit_length.text()
             is_zeroterminate = self.checkBox_zeroterminate.isChecked()
             value = GDB_Engine.read_address(address, address_type, length, is_zeroterminate)
-            self.label_valueofaddress.setText("" if value is None else str(value))
         else:
             value = GDB_Engine.read_address(address, address_type)
-            self.label_valueofaddress.setText("" if value is None else str(value))
+        self.label_valueofaddress.setText("<font color=red>??</font>" if value is None else str(value))
 
     def comboBox_ValueType_current_index_changed(self):
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
