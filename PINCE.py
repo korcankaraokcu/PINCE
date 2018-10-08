@@ -3070,6 +3070,8 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
             current_table_widget = self.tableWidget_FPU
         elif self.currentWidget() == self.XMM:
             current_table_widget = self.tableWidget_XMM
+        else:
+            raise Exception("Current widget is invalid: " + str(self.currentWidget().objectName()))
         current_register = current_table_widget.item(current_row, FLOAT_REGISTERS_NAME_COL).text()
         current_value = current_table_widget.item(current_row, FLOAT_REGISTERS_VALUE_COL).text()
         label_text = "Enter the new value of register " + current_register.upper()
