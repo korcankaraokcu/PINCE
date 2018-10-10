@@ -3259,6 +3259,8 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
             string = "reading from"
         elif watchpoint_type == type_defs.WATCHPOINT_TYPE.BOTH:
             string = "accessing to"
+        else:
+            raise Exception("Watchpoint type is invalid: " + str(watchpoint_type))
         self.setWindowTitle("Opcodes " + string + " the address " + address)
         breakpoints = GDB_Engine.track_watchpoint(address, length, watchpoint_type)
         if not breakpoints:
