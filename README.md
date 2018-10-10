@@ -114,7 +114,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Refactorize memory write/read functions
 - - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k. Implement a cache system for it by storing the raw bytes and converting them to desired types as the comboBox_ValueType changes. Also consider only updating the visible rows instead of implementing a full-fledged cache system
 - - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
-- - Consider using a class instead of primitive return types to store the raw bytes. This also gets rid of the unnecessary parameter only_bytes
+- - Consider using a class instead of primitive return types to store the raw bytes. This also gets rid of the unnecessary parameter only_bytes. This class should also include a method to display None type as red '??' text for Qt
 - - text_to_valuetype is a bad design pattern. Store the information inside the items of tableWidget_AddressTable instead
 - - read_addresses follows a bad design pattern, use named tuples or something like that
 - - Provide an option to cut BOM bytes when writing to memory with the types UTF-16 and UTF-32
