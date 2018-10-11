@@ -3308,15 +3308,8 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         for item in info[key][2]:
             self.textBrowser_Info.append(item + "=" + info[key][2][item])
         self.textBrowser_Info.append(" ")
-        for row, index in enumerate(range(8)):
-            current_st_register = "st" + str(index)
-            string = current_st_register + "=" + info[key][3][current_st_register]
-            self.textBrowser_Info.append(string)
-        self.textBrowser_Info.append(" ")
-        for row, index in enumerate(range(8)):
-            current_xmm_register = "xmm" + str(index)
-            string = current_xmm_register + "=" + info[key][3][current_xmm_register]
-            self.textBrowser_Info.append(string)
+        for item in info[key][3]:
+            self.textBrowser_Info.append(item + "=" + info[key][3][item])
         self.textBrowser_Info.verticalScrollBar().setValue(self.textBrowser_Info.verticalScrollBar().minimum())
         self.textBrowser_Disassemble.setPlainText(info[key][4])
 
