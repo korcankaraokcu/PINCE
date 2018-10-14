@@ -24,8 +24,7 @@ Pre-release screenshots:
   * **Manual Address Table Update:** **[Done]**
   * **Smart casting:** PINCE lets you modify multiple different-type values together as long as the input is parsable. All parsing/memory errors are directed to the terminal **[Done]**
   * **Continuous Address Table Update:** You can adjust update timer or cancel updating by modifying settings. Non-stop version is Postponed\Quarterway Done **[Done\Only works when the inferior is stopped]**
-  * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables **[Postponed\Quarterway Done]**
-  * *Postpone reason:* These two features requires thread injection to the target or gdb and PINCE's injection methods are not perfect yet, I've already spent more(read:WAY MORE) time than I should on this, these features are not vital for now, also you have got the options to manually update the table and set the value manually already
+  * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables **[Planned]**
 - **Memory View** **[Done/Basic]**
   * **Infinite Scrolling:** PINCE automatically disassembles the next available instruction(s) on mouse wheel/scrollbar move. Instruction count can be changed from settings. Hex View also supports this feature **[Done]**
   * **Dissect Code:** You can dissect desired memory regions to find referenced calls, jumps and strings. Disassemble screen will automatically handle the referenced data and show you if there's a referenced address in the current dissasemble view. It can be used from Tools->Dissect Code in the MemoryView window. Using its hotkey instead in the MemoryView window automatically dissects the currently viewed region. You can separately view referenced calls and strings after the search from View->Referenced Calls/Strings. *Note: If you decide to uncheck 'Discard invalid strings' before the search, PINCE will try to search for regular pointers as well* **[Done]**
@@ -110,7 +109,10 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - 26/12/2016 : Debugging is finished(At basic level)  
 
 # Current Roadmap
-- Consider adding type guessing for the StackView
+- Move read/write memory functions to GDB_Engine from ScriptUtils. Also consider renaming them to read/write_memory
+- Consider replacing read/write_addresses functions with mem_handle&read_write_address functions, this fixes the "read_addresses follows a bad design pattern" step
+- Implement non-stop Continuous Address Table Update feature
+- Implement Variable Locking
 - Refactorize memory write/read functions
 - - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k. Implement a cache system for it by storing the raw bytes and converting them to desired types as the comboBox_ValueType changes. Also consider only updating the visible rows instead of implementing a full-fledged cache system
 - - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
@@ -129,6 +131,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Add the ability to track down registers and addresses in tracer(unsure)(independent from other steps)
 - Implement CE's Ultimap-like feature for tracing data, dissect code data and raw instruction list. Search for calls and store their hit counts to filter out the functions that haven't or have executed specific number of times. Implement a flexible input field for the execution count. For instance, 2^x only searches for hit counts 2, 4, 8 and so on, 3x only searches for 3, 6, 9 etc.(try on Torchlight's loot function first)(independent from other steps)
 - Extend search_referenced_strings with relative search
+- Consider adding type guessing for the StackView(independent from other steps)
 - Move GUI classes of PINCE.py to their own files
 - Implement libPINCE engine
 - Extend tagging system to PINCE GUI functions
@@ -136,12 +139,11 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Implement single-line code injection
 - Implement multi-line code injection
 - Break on/Catch signals and syscalls
-- Execute custom libPINCE scripts on breakpoint/watchpoint trigger
+- Move non-communication functions in GDB_Engine to ScriptUtils and create corresponding fields in GDB_Engine and GDBCommandExtensions automatically. This lets entire functionality of libPINCE to be used with both python scripts and gdb python scripts, thus allowing it to be used as a plugin for projects such as radare2
 - Flowcharts based on disassembled output
 - Automatic function bypassing(make it return the desired value, hook specific parts etc.)
 - Implement speedhack(independent from other steps)
 - Implement unrandomizer(independent from other steps)
-- Implement non-stop Continuous Address Table Update feature
 - Implement memory search(with scanmem)
 - Implement pointer-scan
 - Write at least one test for each function in libPINCE
