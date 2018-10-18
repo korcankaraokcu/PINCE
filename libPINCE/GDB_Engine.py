@@ -961,6 +961,11 @@ def search_functions(expression, ignore_case=True):
 
     Returns:
         list: A list of str-->[(address1, symbol1), (address2, symbol2), ...]
+
+    Todo:
+        This function only returns the non-debugging symbols, improve regex to return all functions
+        GDB-MI wiki points out to the command -symbol-list-functions but apparently it isn't implemented yet
+        https://sourceware.org/bugzilla/show_bug.cgi?id=23796
     """
     if ignore_case:
         send_command("set case-sensitive off")
