@@ -656,6 +656,31 @@ class ExamineExpressions(gdb.Command):
         send_to_pince(data_read_list)
 
 
+class SearchFunctions(gdb.Command):
+    def __init__(self):
+        super(SearchFunctions, self).__init__("pince-search-functions", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        expression, ignore_case = receive_from_pince()
+        function_list = []
+        if ignore_case:
+            gdb.execute("set case-sensitive off")
+        else:
+            gdb.execute("set case-sensitive on")
+        output = gdb.execute("info functions " + expression, to_string=True).splitlines()
+        gdb.execute("set case-sensitive auto")
+        for line in output:
+            non_debugging = common_regexes.info_functions_non_debugging.search(line)
+            if non_debugging:
+                function_list.append((non_debugging.group(1), non_debugging.group(2)))
+            else:
+                defined = common_regexes.info_functions_defined.search(line)
+                if defined:
+                    symbol = defined.group(1)
+                    function_list.append((ScriptUtils.examine_expression("'" + symbol + "'").address, symbol))
+        send_to_pince(function_list)
+
+
 IgnoreErrors()
 CLIOutput()
 ReadAddresses()
@@ -679,3 +704,4 @@ ExecuteFromSoFile()
 DissectCode()
 SearchReferencedCalls()
 ExamineExpressions()
+SearchFunctions()

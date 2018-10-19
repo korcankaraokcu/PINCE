@@ -963,15 +963,12 @@ def search_functions(expression, ignore_case=True):
         list: A list of str-->[(address1, symbol1), (address2, symbol2), ...]
 
     Todo:
-        This function only returns the non-debugging symbols, improve regex to return all functions
         GDB-MI wiki points out to the command -symbol-list-functions but apparently it isn't implemented yet
+        If the feature below gets implemented, use it instead
         https://sourceware.org/bugzilla/show_bug.cgi?id=23796
     """
-    if ignore_case:
-        send_command("set case-sensitive off")
-    output = send_command("info functions " + expression, cli_output=True)
-    send_command("set case-sensitive auto")
-    return common_regexes.info_functions_output.findall(output)
+    return send_command("pince-search-functions", send_with_file=True, file_contents_send=(expression, ignore_case),
+                        recv_with_file=True)
 
 
 #:tag:InferiorInformation
