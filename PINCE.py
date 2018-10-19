@@ -1604,7 +1604,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.completion_model = QStringListModel()
         self.completer = QCompleter()
         self.completer.setModel(self.completion_model)
-        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.completer.setCompletionMode(QCompleter.UnfilteredPopupCompletion)
         self.completer.setMaxVisibleItems(8)
         self.lineEdit.setCompleter(self.completer)
         self.quit_commands = ("q", "quit", "-gdb-exit")
