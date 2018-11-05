@@ -129,7 +129,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Implement selectionChanged signal of lineEdit_HexView
 - Implement multi selection for HexView
 - Add the ability to track down registers and addresses in tracer(unsure)(independent from other steps)
-- Implement CE's Ultimap-like feature for tracing data, dissect code data and raw instruction list. Search for calls and store their hit counts to filter out the functions that haven't or have executed specific number of times. Implement a flexible input field for the execution count. For instance, 2^x only searches for hit counts 2, 4, 8 and so on, 3x only searches for 3, 6, 9 etc.(try on Torchlight's loot function first)(independent from other steps)
+- Implement CE's Ultimap-like feature for tracing data, dissect code data and raw instruction list. Search for calls and store their hit counts to filter out the functions that haven't or have executed specific number of times. Implement a flexible input field for the execution count. For instance, 2^x only searches for hit counts 2, 4, 8 and so on, 3x only searches for 3, 6, 9 etc.(try on Torchlight's loot function first)(independent from other steps)([CE#358](https://github.com/cheat-engine/cheat-engine/issues/358))
 - Extend search_referenced_strings with relative search
 - Consider adding type guessing for the StackView(independent from other steps)
 - Move GUI classes of PINCE.py to their own files
