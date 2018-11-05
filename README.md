@@ -133,6 +133,8 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Extend search_referenced_strings with relative search
 - Consider adding type guessing for the StackView(independent from other steps)
 - Move GUI classes of PINCE.py to their own files
+- Handle signals and internal errors that causes gdb to halt, such as SIGSEGV and overlapping breakpoints(independent from other steps)
+- Implement a psuedo-terminal for the inferior like edb does(independent from other steps)
 - Implement libPINCE engine
 - Extend tagging system to PINCE GUI functions
 - Implement inject_with_advanced_injection(independent from other steps)
