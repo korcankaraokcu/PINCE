@@ -189,5 +189,5 @@ Gibus <lilac66.dev@gmail.com>
     * Hearthstone(~~It interrupts itself with SIGUSR1 whenever continued, implementing signal passing on PINCE might be very useful in future~~)[Update-23/04/2017 : Fixed, please check [here](https://github.com/korcankaraokcu/PINCE/wiki/Init-files) for instructions]
 
 # Trusted Sources
-  * This page and other github forks
+  * [Official github page](https://github.com/korcankaraokcu/PINCE)
   * [AUR package for Archlinux](https://aur.archlinux.org/packages/pince-git/)
