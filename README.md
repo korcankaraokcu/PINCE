@@ -136,6 +136,8 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Handle signals and internal errors that causes gdb to halt, such as SIGSEGV and overlapping breakpoints(independent from other steps)
 - Implement a psuedo-terminal for the inferior like edb does(independent from other steps)
 - Implement libPINCE engine
+- Implement auto-ESP&aimbot (depends on libPINCE engine)
+- Try to optimize TrackBreakpoint and TrackWatchpoint return data structures further, adding an id field might simplify traversing of the tree, performance tests are required(independent from other steps)
 - Extend tagging system to PINCE GUI functions
 - Implement inject_with_advanced_injection(independent from other steps)
 - Implement single-line code injection
