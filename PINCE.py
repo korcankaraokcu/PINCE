@@ -396,6 +396,7 @@ class MainForm(QMainWindow, MainWindow):
         self.treeWidget_AddressTable.expanded.connect(self.resize_address_table)
         self.treeWidget_AddressTable.collapsed.connect(self.resize_address_table)
         icons_directory = GuiUtils.get_icons_directory()
+        current_dir = SysUtils.get_current_script_directory()
         self.pushButton_AttachProcess.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
         self.pushButton_Save.setIcon(QIcon(QPixmap(icons_directory + "/disk.png")))
@@ -406,6 +407,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Console.setIcon(QIcon(QPixmap(icons_directory + "/application_xp_terminal.png")))
         self.pushButton_Wiki.setIcon(QIcon(QPixmap(icons_directory + "/book_open.png")))
         self.pushButton_About.setIcon(QIcon(QPixmap(icons_directory + "/information.png")))
+        QApplication.setWindowIcon(QIcon(current_dir + "/media/logo/ozgurozbek/pince_small.png"))
         self.auto_attach()
 
     def set_default_settings(self):
