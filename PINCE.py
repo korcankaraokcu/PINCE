@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, \
-    QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QToolTip, QTreeWidgetItem, \
+    QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, \
     QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QCoreApplication, QEvent, \
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, functools, psutil
@@ -208,7 +208,7 @@ REF_CALL_COUNT_COL = 1
 
 def except_hook(exception_type, value, tb):
     if show_messagebox_on_exception:
-        focused_widget = QApplication.focusWidget()
+        focused_widget = app.focusWidget()
         if focused_widget:
             if exception_type == type_defs.GDBInitializeException:
                 QMessageBox.information(focused_widget, "Error", "GDB isn't initialized yet")
@@ -330,9 +330,9 @@ class MainForm(QMainWindow, MainWindow):
         self.treeWidget_AddressTable.setColumnWidth(DESC_COL, 150)
         self.treeWidget_AddressTable.setColumnWidth(ADDR_COL, 150)
         self.treeWidget_AddressTable.setColumnWidth(TYPE_COL, 150)
-        QCoreApplication.setOrganizationName("PINCE")
-        QCoreApplication.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
-        QCoreApplication.setApplicationName("PINCE")
+        app.setOrganizationName("PINCE")
+        app.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
+        app.setApplicationName("PINCE")
         QSettings.setPath(QSettings.NativeFormat, QSettings.UserScope,
                           SysUtils.get_user_path(type_defs.USER_PATHS.CONFIG_PATH))
         self.settings = QSettings()
@@ -407,7 +407,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Console.setIcon(QIcon(QPixmap(icons_directory + "/application_xp_terminal.png")))
         self.pushButton_Wiki.setIcon(QIcon(QPixmap(icons_directory + "/book_open.png")))
         self.pushButton_About.setIcon(QIcon(QPixmap(icons_directory + "/information.png")))
-        QApplication.setWindowIcon(QIcon(current_dir + "/media/logo/ozgurozbek/pince_small.png"))
+        app.setWindowIcon(QIcon(current_dir + "/media/logo/ozgurozbek/pince_small.png"))
         self.auto_attach()
 
     def set_default_settings(self):
@@ -628,10 +628,8 @@ class MainForm(QMainWindow, MainWindow):
 
     def copy_selected_records(self):
         # Flat copy, does not preserve structure
-        QApplication.clipboard().setText(repr(
-            [self.read_address_table_entries(selected_row) + ((),)
-             for selected_row in self.treeWidget_AddressTable.selectedItems()]
-        ))
+        app.clipboard().setText(repr([self.read_address_table_entries(selected_row) + ((),) for selected_row in
+                                      self.treeWidget_AddressTable.selectedItems()]))
         # each element in the list has no children
 
     def cut_selected_records_recursively(self):
@@ -669,9 +667,7 @@ class MainForm(QMainWindow, MainWindow):
             items.append(item)
             last_index = index
 
-        QApplication.clipboard().setText(repr(
-            [self.read_address_table_recursively(item) for item in items]
-        ))
+        app.clipboard().setText(repr([self.read_address_table_recursively(item) for item in items]))
 
     def insert_records(self, records, parent_row, insert_index):
         # parent_row should be a QTreeWidgetItem in treeWidget_AddressTable
@@ -690,7 +686,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def paste_records(self, insert_after=None, insert_inside=False):
         try:
-            records = ast.literal_eval(QApplication.clipboard().text())
+            records = ast.literal_eval(app.clipboard().text())
         except (SyntaxError, ValueError):
             QMessageBox.information(self, "Error", "Invalid clipboard content")
             return
@@ -838,7 +834,7 @@ class MainForm(QMainWindow, MainWindow):
             self.on_new_process()
             return True
         else:
-            QMessageBox.information(QApplication.focusWidget(), "Error", attach_result[1])
+            QMessageBox.information(app.focusWidget(), "Error", attach_result[1])
             return False
 
     # Returns: a bool value indicates whether the operation succeeded.
@@ -848,8 +844,7 @@ class MainForm(QMainWindow, MainWindow):
             self.on_new_process()
             return True
         else:
-            QMessageBox.information(QApplication.focusWidget(), "Error",
-                                    "An error occurred while trying to create process")
+            QMessageBox.information(app.focusWidget(), "Error", "An error occurred while trying to create process")
             self.on_inferior_exit()
             return False
 
@@ -897,8 +892,7 @@ class MainForm(QMainWindow, MainWindow):
     # closes all windows on exit
     def closeEvent(self, event):
         GDB_Engine.detach()
-        application = QApplication.instance()
-        application.closeAllWindows()
+        app.closeAllWindows()
 
     def add_entry_to_addresstable(self, description, address_expr, address_type, length=0, zero_terminate=True):
         current_row = QTreeWidgetItem()
@@ -2015,7 +2009,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def label_HexView_Information_context_menu_event(self, event):
         def copy_to_clipboard():
-            QApplication.clipboard().setText(self.label_HexView_Information.text())
+            app.clipboard().setText(self.label_HexView_Information.text())
 
         menu = QMenu()
         copy_label = menu.addAction("Copy to Clipboard")
@@ -2211,8 +2205,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def disassemble_expression(self, expression, offset="+200", append_to_travel_history=False):
         disas_data = GDB_Engine.disassemble(expression, offset)
         if not disas_data:
-            QMessageBox.information(QApplication.focusWidget(), "Error",
-                                    "Cannot access memory at expression " + expression)
+            QMessageBox.information(app.focusWidget(), "Error", "Cannot access memory at expression " + expression)
             return False
         program_counter = GDB_Engine.examine_expression("$pc").address
         program_counter_int = int(program_counter, 16)
@@ -2403,7 +2396,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.float_registers_widget.update_registers()
         except AttributeError:
             pass
-        QApplication.processEvents()
+        app.processEvents()
         time1 = time()
         print("UPDATED MEMORYVIEW IN:" + str(time1 - time0))
         self.updating_memoryview = False
@@ -2426,7 +2419,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             condition = condition_dialog.get_values()
             if not GDB_Engine.modify_breakpoint(hex(int_address), type_defs.BREAKPOINT_MODIFY.CONDITION,
                                                 condition=condition):
-                QMessageBox.information(QApplication.focusWidget(), "Error", "Failed to set condition for address " +
+                QMessageBox.information(app.focusWidget(), "Error", "Failed to set condition for address " +
                                         hex(int_address) + "\nCheck terminal for details")
 
     def update_registers(self):
@@ -2494,7 +2487,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def tableWidget_StackTrace_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
-            QApplication.clipboard().setText(self.tableWidget_StackTrace.item(row, column).text())
+            app.clipboard().setText(self.tableWidget_StackTrace.item(row, column).text())
 
         selected_row = GuiUtils.get_current_row(self.tableWidget_StackTrace)
 
@@ -2550,7 +2543,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def tableWidget_Stack_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
-            QApplication.clipboard().setText(self.tableWidget_Stack.item(row, column).text())
+            app.clipboard().setText(self.tableWidget_Stack.item(row, column).text())
 
         selected_row = GuiUtils.get_current_row(self.tableWidget_Stack)
         current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
@@ -2712,13 +2705,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def tableWidget_Disassemble_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
-            QApplication.clipboard().setText(self.tableWidget_Disassemble.item(row, column).text())
+            app.clipboard().setText(self.tableWidget_Disassemble.item(row, column).text())
 
         def copy_all_columns(row):
             copied_string = ""
             for column in range(self.tableWidget_Disassemble.columnCount()):
                 copied_string += self.tableWidget_Disassemble.item(row, column).text() + "\t"
-            QApplication.clipboard().setText(copied_string)
+            app.clipboard().setText(copied_string)
 
         selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -2843,7 +2836,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def bookmark_address(self, int_address):
         if int_address in self.tableWidget_Disassemble.bookmarks:
-            QMessageBox.information(QApplication.focusWidget(), "Error", "This address has already been bookmarked")
+            QMessageBox.information(app.focusWidget(), "Error", "This address has already been bookmarked")
             return
         comment_dialog = InputDialogForm(item_list=[("Enter the comment for bookmarked address", "")])
         if comment_dialog.exec_():
@@ -3520,14 +3513,14 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
             self.close()
             return
         self.label_StatusText.setText(status_info[1])
-        QApplication.processEvents()
+        app.processEvents()
 
     def closeEvent(self, QCloseEvent):
         self.status_timer.stop()
         self.label_StatusText.setText("Processing the collected data")
         self.pushButton_Cancel.setVisible(False)
         self.adjustSize()
-        QApplication.processEvents()
+        app.processEvents()
         status_info = GDB_Engine.get_trace_instructions_status(self.breakpoint)
         if status_info[0] == type_defs.TRACE_STATUS.STATUS_TRACING or \
                 status_info[0] == type_defs.TRACE_STATUS.STATUS_PROCESSING:
@@ -3535,7 +3528,7 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
             while GDB_Engine.get_trace_instructions_status(self.breakpoint)[0] \
                     != type_defs.TRACE_STATUS.STATUS_FINISHED:
                 sleep(0.1)
-                QApplication.processEvents()
+                app.processEvents()
         try:
             GDB_Engine.delete_breakpoint(self.address)
         except type_defs.InferiorRunningException:
@@ -3718,7 +3711,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
 
     def tableWidget_SymbolInfo_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
-            QApplication.clipboard().setText(self.tableWidget_SymbolInfo.item(row, column).text())
+            app.clipboard().setText(self.tableWidget_SymbolInfo.item(row, column).text())
 
         selected_row = GuiUtils.get_current_row(self.tableWidget_SymbolInfo)
 
@@ -3882,7 +3875,7 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
 
     def tableWidget_ResourceTable_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
-            QApplication.clipboard().setText(self.tableWidget_ResourceTable.item(row, column).text())
+            app.clipboard().setText(self.tableWidget_ResourceTable.item(row, column).text())
 
         selected_row = GuiUtils.get_current_row(self.tableWidget_ResourceTable)
 
@@ -3908,7 +3901,7 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
 
     def treeWidget_ResourceTree_context_menu_event(self, event):
         def copy_to_clipboard(column):
-            QApplication.clipboard().setText(self.treeWidget_ResourceTree.currentItem().text(column))
+            app.clipboard().setText(self.treeWidget_ResourceTree.currentItem().text(column))
 
         def expand_all():
             self.treeWidget_ResourceTree.expandAll()
@@ -4212,7 +4205,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
 
     def tableWidget_Opcodes_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
-            QApplication.clipboard().setText(self.tableWidget_Opcodes.item(row, column).text())
+            app.clipboard().setText(self.tableWidget_Opcodes.item(row, column).text())
 
         selected_row = GuiUtils.get_current_row(self.tableWidget_Opcodes)
 
@@ -4282,7 +4275,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
 
     def tableWidget_MemoryRegions_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
-            QApplication.clipboard().setText(self.tableWidget_MemoryRegions.item(row, column).text())
+            app.clipboard().setText(self.tableWidget_MemoryRegions.item(row, column).text())
 
         selected_row = GuiUtils.get_current_row(self.tableWidget_MemoryRegions)
 
@@ -4535,7 +4528,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
 
     def tableWidget_References_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
-            QApplication.clipboard().setText(self.tableWidget_References.item(row, column).text())
+            app.clipboard().setText(self.tableWidget_References.item(row, column).text())
 
         selected_row = GuiUtils.get_current_row(self.tableWidget_References)
 
@@ -4558,7 +4551,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
 
     def listWidget_Referrers_context_menu_event(self, event):
         def copy_to_clipboard(row):
-            QApplication.clipboard().setText(self.listWidget_Referrers.item(row).text())
+            app.clipboard().setText(self.listWidget_Referrers.item(row).text())
 
         selected_row = GuiUtils.get_current_row(self.listWidget_Referrers)
 
@@ -4664,7 +4657,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
 
     def tableWidget_References_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
-            QApplication.clipboard().setText(self.tableWidget_References.item(row, column).text())
+            app.clipboard().setText(self.tableWidget_References.item(row, column).text())
 
         selected_row = GuiUtils.get_current_row(self.tableWidget_References)
 
@@ -4685,7 +4678,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
 
     def listWidget_Referrers_context_menu_event(self, event):
         def copy_to_clipboard(row):
-            QApplication.clipboard().setText(self.listWidget_Referrers.item(row).text())
+            app.clipboard().setText(self.listWidget_Referrers.item(row).text())
 
         selected_row = GuiUtils.get_current_row(self.listWidget_Referrers)
 
@@ -4809,7 +4802,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
 
     def listWidget_Referrers_context_menu_event(self, event):
         def copy_to_clipboard(row):
-            QApplication.clipboard().setText(self.listWidget_Referrers.item(row).text())
+            app.clipboard().setText(self.listWidget_Referrers.item(row).text())
 
         selected_row = GuiUtils.get_current_row(self.listWidget_Referrers)
 
