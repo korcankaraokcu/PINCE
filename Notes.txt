@@ -7,7 +7,7 @@ Code Relocations:
 		All codes that'll be injected to the inferior go to the folder "Injection"
 		/gdb_python_script/ contains all the python scripts that'll invoked from the gdb
 	PINCE.py is used to interract with GUI and other utility libraries
-	/media/ contains all the images, icons n' stuff
+	/media/ contains all the images, icons, logos n' stuff
 **Don't touch anything in GUI folder, it contains auto-generated codes created by pyuic
 
 27/3/2017 - All GUI classes that will be instanced multiple times must contain these code blocks to prevent getting removed by garbage collector:
@@ -33,3 +33,20 @@ If you need to pass self as a parameter, please don't use 'super().__init__(pare
     self.parent = lambda: parent  # A quick hack to make other functions see the correct parent(). But Qt won't see it, so there'll be no bugs
 
 28/8/2018 - All QMessageBoxes that's called from outside of their classes(via parent() etc.) must use 'QApplication.focusWidget()' instead of 'self' in their first parameter. Refer to issue #57 for more information
+
+14/11/2018 - All logo requests should be posted in media/logo/your_username. Instead of opening a new issue, PR your logo files to that folder. Your PR must include at least one png file named pince_small, pince_medium or pince_big, according to its size. It's preferred that you post your design files as well so people can contribute to your design(s)
+So, a minimal PR will look like this:
+
+/media/logo/your_username/pince_big.png
+
+pince_big is interchangeable with pince_medium and pince_small
+A full PR will look like this:
+
+/media/logo/your_username/pince_big.png
+/media/logo/your_username/pince_medium.png
+/media/logo/your_username/pince_small.png
+/media/logo/your_username/pince_big.ai
+/media/logo/your_username/pince_medium.ai
+/media/logo/your_username/pince_small.ai
+
+It doesn't have to be ai extension, I just picked Adobe Illustrator for the example above
