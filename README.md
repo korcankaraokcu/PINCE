@@ -3,8 +3,10 @@ PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB)
 
 ### [Feel free to join our discord server!](https://discord.gg/KCNDp9m)  
 
-*Disclaimer: Do not trust to any source other than [Trusted Sources](#trusted-sources) that claims to have the source code or package for PINCE and remember to report them* <em>**immediately**</em>  
-  
+*Disclaimer: Do not trust to any source other than [Trusted Sources](#trusted-sources) that claims to have the source code or package for PINCE and remember to report them **immediately***
+
+*Disclaimer: **YOU** are responsible for your actions. PINCE does **NOT** take any responsibility for the damage caused by the users*
+
 Pre-release screenshots:  
 ![](screenshots/pince.png)
 ![](screenshots/pince1.png)
@@ -131,7 +133,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Implement selectionChanged signal of lineEdit_HexView
 - Implement multi selection for HexView
 - Add the ability to track down registers and addresses in tracer(unsure)(independent from other steps)
-- Implement CE's Ultimap-like feature for tracing data, dissect code data and raw instruction list. Search for calls and store their hit counts to filter out the functions that haven't or have executed specific number of times. Implement a flexible input field for the execution count. For instance, 2^x only searches for hit counts 2, 4, 8 and so on, 3x only searches for 3, 6, 9 etc.(try on Torchlight's loot function first)(independent from other steps)([CE#358](https://github.com/cheat-engine/cheat-engine/issues/358))
+- Implement CE's Ultimap-like feature for tracing data, dissect code data and raw instruction list. Search for calls and store their hit counts to filter out the functions that haven't or have executed specific number of times. Implement a flexible input field for the execution count. For instance, 2^x only searches for hit counts 2, 4, 8 and so on, 3x only searches for 3, 6, 9 etc.(independent from other steps)([CE#358](https://github.com/cheat-engine/cheat-engine/issues/358))
 - Extend search_referenced_strings with relative search
 - Consider adding type guessing for the StackView(independent from other steps)
 - Move GUI classes of PINCE.py to their own files
@@ -175,22 +177,10 @@ Jakob Kreuze <jakob@memeware.net>
 Gibus <lilac66.dev@gmail.com>  
 
 # Supported platforms
-- **Platforms tested so far:**
-  * Kubuntu 14.04 & 16.04(Also tested on x86 variants)
-  * Debian 8.5
-  * Linux Mint 18.1(install the package "python3-psutil" if you encounter ImportError or NameError, thanks Gibus)
-  * Archlinux(contact with [Çağrı Ulaş](https://github.com/cagriulas) or [Jakob Kreuze](https://github.com/TsarFox))
-- **Games&Applications tested so far:**
-  * KMines
-  * Torchlight 2
-  * Skullgirls
-  * Amnesia: The Dark Descent
-  * Steam
-  * Firefox
-  * WINE Games
-    * FTL
-    * Undertale
-    * Hearthstone(~~It interrupts itself with SIGUSR1 whenever continued, implementing signal passing on PINCE might be very useful in future~~)[Update-23/04/2017 : Fixed, please check [here](https://github.com/korcankaraokcu/PINCE/wiki/Init-files) for instructions]
+- Kubuntu 14.04 & 16.04(Also tested on x86 variants)
+- Debian 8.5
+- Linux Mint 18.1(install the package "python3-psutil" if you encounter ImportError or NameError, thanks Gibus)
+- Archlinux(contact with [Çağrı Ulaş](https://github.com/cagriulas) or [Jakob Kreuze](https://github.com/TsarFox))
 
 # Trusted Sources
   * [Official github page](https://github.com/korcankaraokcu/PINCE)
