@@ -530,7 +530,7 @@ class DissectCode(gdb.Command):
         dissect_code_status_file = SysUtils.get_dissect_code_status_file(pid)
         region_count = len(region_list)
         self.memory = open(ScriptUtils.mem_file, "rb")
-        buffer = 0x130000  # Has the best record of 121secs. Tested on Torchlight2 with Intel i7-4702MQ CPU and 8GB RAM
+        buffer = 0x130000  # Has the best record of 13.6 sec. Tested on 0ad with Intel i7-4702MQ CPU and 8GB RAM
         ref_str_count = len(referenced_strings_dict)
         ref_jmp_count = len(referenced_jumps_dict)
         ref_call_count = len(referenced_calls_dict)
