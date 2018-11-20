@@ -674,10 +674,8 @@ class SearchFunctions(gdb.Command):
             if non_debugging:
                 function_list.append((non_debugging.group(1), non_debugging.group(2)))
             else:
-                defined = common_regexes.info_functions_defined.search(line)
-                if defined:
-                    symbol = defined.group(1)
-                    function_list.append((ScriptUtils.examine_expression("'" + symbol + "'").address, symbol))
+                if line.endswith(";"):  # defined
+                    function_list.append((None, line[:-1]))
         send_to_pince(function_list)
 
 

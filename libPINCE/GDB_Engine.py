@@ -961,11 +961,16 @@ def search_functions(expression, ignore_case=True):
 
     Returns:
         list: A list of str-->[(address1, symbol1), (address2, symbol2), ...]
+            address will be None if the corresponding symbol is in defined category
 
     Todo:
         GDB-MI wiki points out to the command -symbol-list-functions but apparently it isn't implemented yet
         If the feature below gets implemented, use it instead
         https://sourceware.org/bugzilla/show_bug.cgi?id=23796
+
+        Add ability to show addresses of defined symbols when it gets implemented by gdb
+        Please don't try to write a symbol parser for every single language out there, it's an overkill
+        https://sourceware.org/bugzilla/show_bug.cgi?id=23899
     """
     return send_command("pince-search-functions", send_with_file=True, file_contents_send=(expression, ignore_case),
                         recv_with_file=True)
