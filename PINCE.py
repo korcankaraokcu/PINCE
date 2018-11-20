@@ -2691,9 +2691,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     # Search the item in given row for location changing instructions
     # Go to the address pointed by that instruction if it contains any
     def follow_instruction(self, selected_row):
-        address = SysUtils.extract_address(
-            self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text(),
-            search_for_location_changing_instructions=True)
+        address = SysUtils.instruction_follow_address(
+            self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text())
         if address:
             self.disassemble_expression(address, append_to_travel_history=True)
 
@@ -2723,9 +2722,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         back = menu.addAction("Back")
         show_in_hex_view = menu.addAction("Show this address in HexView[Ctrl+H]")
         menu.addSeparator()
-        followable = SysUtils.extract_address(
-            self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text(),
-            search_for_location_changing_instructions=True)
+        followable = SysUtils.instruction_follow_address(
+            self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text())
         follow = menu.addAction("Follow[Space]")
         if not followable:
             GuiUtils.delete_menu_entries(menu, [follow])

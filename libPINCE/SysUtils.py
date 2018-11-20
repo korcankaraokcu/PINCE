@@ -627,28 +627,37 @@ def parse_string(string, value_index):
         return string
 
 
+#:tag:Assembly
+def instruction_follow_address(string):
+    """Searches for the location changing instructions such as Jcc, CALL and LOOPcc in the given string. Returns the hex
+    address the instruction jumps to
+
+    Args:
+        string (str): An assembly expression
+
+    Returns:
+        str: Hex address
+        None: If no hex address is found or no location changing instructions found
+    """
+    result = common_regexes.instruction_follow.search(string)
+    if result:
+        return result.group(2)
+
+
 #:tag:Utilities
-def extract_address(string, search_for_location_changing_instructions=False):
+def extract_address(string):
     """Extracts hex address from the given string
 
     Args:
         string (str): The string that the hex address will be extracted from
-        search_for_location_changing_instructions (bool): Searches for the location changing instructions such as Jcc,
-        CALL and LOOPcc in the given string
 
     Returns:
-        str: The hex address found
-        None: If no hex address is found or no location changing instructions found(applies only if the parameter
-        search_for_location_changing_instructions is passed as True)
+        str: Hex address
+        None: If no hex address is found
     """
-    if search_for_location_changing_instructions:
-        result = common_regexes.location_changing_instructions.search(string)
-        if result:
-            return result.group(2)
-    else:
-        result = common_regexes.hex_number.search(string)
-        if result:
-            return result.group(0)
+    result = common_regexes.hex_number.search(string)
+    if result:
+        return result.group(0)
 
 
 #:tag:Utilities
