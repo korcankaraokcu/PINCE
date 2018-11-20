@@ -3704,9 +3704,9 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
                 address_item.setBackground(Qt.green)
             self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_ADDR_COL, address_item)
             self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_SYMBOL_COL, QTableWidgetItem(item[1]))
+        self.tableWidget_SymbolInfo.setSortingEnabled(True)
         self.tableWidget_SymbolInfo.resizeColumnsToContents()
         self.tableWidget_SymbolInfo.horizontalHeader().setStretchLastSection(True)
-        self.tableWidget_SymbolInfo.setSortingEnabled(True)
 
     def tableWidget_SymbolInfo_current_changed(self, QModelIndex_current):
         self.textBrowser_AddressInfo.clear()
