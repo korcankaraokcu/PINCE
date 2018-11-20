@@ -3696,18 +3696,30 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.tableWidget_SymbolInfo.setRowCount(0)
         self.tableWidget_SymbolInfo.setRowCount(len(output))
         for row, item in enumerate(output):
-            self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_ADDR_COL, QTableWidgetItem(item[0]))
+            address = item[0]
+            if address:
+                address_item = QTableWidgetItem(address)
+            else:
+                address_item = QTableWidgetItem("DEFINED")
+                address_item.setBackground(Qt.green)
+            self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_ADDR_COL, address_item)
             self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_SYMBOL_COL, QTableWidgetItem(item[1]))
         self.tableWidget_SymbolInfo.resizeColumnsToContents()
         self.tableWidget_SymbolInfo.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_SymbolInfo.setSortingEnabled(True)
 
     def tableWidget_SymbolInfo_current_changed(self, QModelIndex_current):
-        symbol = self.tableWidget_SymbolInfo.item(QModelIndex_current.row(), FUNCTIONS_INFO_SYMBOL_COL).text()
         self.textBrowser_AddressInfo.clear()
-        for item in SysUtils.split_symbol(symbol):
-            info = GDB_Engine.get_symbol_info(item)
-            self.textBrowser_AddressInfo.append(info)
+        address = self.tableWidget_SymbolInfo.item(QModelIndex_current.row(), FUNCTIONS_INFO_ADDR_COL).text()
+        if SysUtils.extract_address(address):
+            symbol = self.tableWidget_SymbolInfo.item(QModelIndex_current.row(), FUNCTIONS_INFO_SYMBOL_COL).text()
+            for item in SysUtils.split_symbol(symbol):
+                info = GDB_Engine.get_symbol_info(item)
+                self.textBrowser_AddressInfo.append(info)
+        else:
+            text = "This symbol is defined. You can use its body as a gdb expression. For instance:\n\n" \
+                   "void func(param) can be used as 'func' as a gdb expression"
+            self.textBrowser_AddressInfo.append(text)
 
     def tableWidget_SymbolInfo_context_menu_event(self, event):
         def copy_to_clipboard(row, column):

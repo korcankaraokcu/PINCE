@@ -42,7 +42,6 @@ gdb_command_source = lambda command_file: compile(r"&\".*source\s" + command_fil
 # 0x00007fd81d4c7400 <__printf+0>:\t48 81 ec d8 00 00 00\tsub    rsp,0xd8\n
 disassemble_output = compile(r"(" + hex_number.pattern + r".*)\\t(.+)\\t(.+)\\n")
 info_functions_non_debugging = compile(hex_number_grouped.pattern + r"\s+(.*)")
-info_functions_defined = compile(r".*?\s+(.*);")
 max_completions_reached = compile(r"\*\*\*\s+List\s+may\s+be\s+truncated,\s+max-completions\s+reached\.\s+\*\*\*")
 
 # --------------------------------------------SysUtils------------------------------------------------------------------
