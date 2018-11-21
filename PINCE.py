@@ -4330,14 +4330,11 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         self.update_dissect_results()
         self.show_memory_regions()
         self.splitter.setStretchFactor(0, 1)
-        self.checkBox_IncludeSystemRegions.stateChanged.connect(self.show_memory_regions)
         self.pushButton_StartCancel.clicked.connect(self.pushButton_StartCancel_clicked)
         self.refresh_timer = QTimer()
         self.refresh_timer.setInterval(100)
         self.refresh_timer.timeout.connect(self.refresh_dissect_status)
         if int_address != -1:
-            self.checkBox_IncludeSystemRegions.setChecked(True)
-            self.show_memory_regions()
             for row in range(self.tableWidget_ExecutableMemoryRegions.rowCount()):
                 item = self.tableWidget_ExecutableMemoryRegions.item(row, DISSECT_CODE_ADDR_COL).text()
                 start_addr, end_addr = item.split("-")
@@ -4398,8 +4395,6 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
 
     def show_memory_regions(self):
         executable_regions = SysUtils.get_memory_regions_by_perms(GDB_Engine.currentpid)[2]
-        if not self.checkBox_IncludeSystemRegions.isChecked():
-            executable_regions = SysUtils.exclude_system_memory_regions(executable_regions)
         self.region_list = executable_regions
         self.tableWidget_ExecutableMemoryRegions.setRowCount(0)
         self.tableWidget_ExecutableMemoryRegions.setRowCount(len(executable_regions))

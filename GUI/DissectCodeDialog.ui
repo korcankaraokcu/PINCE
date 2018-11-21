@@ -19,48 +19,35 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QWidget" name="layoutWidget">
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <widget class="QCheckBox" name="checkBox_IncludeSystemRegions">
-         <property name="text">
-          <string>Include system regions</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QTableWidget" name="tableWidget_ExecutableMemoryRegions">
-         <property name="editTriggers">
-          <set>QAbstractItemView::NoEditTriggers</set>
-         </property>
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectRows</enum>
-         </property>
-         <attribute name="horizontalHeaderStretchLastSection">
-          <bool>true</bool>
-         </attribute>
-         <attribute name="verticalHeaderVisible">
-          <bool>false</bool>
-         </attribute>
-         <attribute name="verticalHeaderDefaultSectionSize">
-          <number>16</number>
-         </attribute>
-         <attribute name="verticalHeaderMinimumSectionSize">
-          <number>16</number>
-         </attribute>
-         <column>
-          <property name="text">
-           <string>Regions</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Path</string>
-          </property>
-         </column>
-        </widget>
-       </item>
-      </layout>
+     <widget class="QTableWidget" name="tableWidget_ExecutableMemoryRegions">
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="selectionBehavior">
+       <enum>QAbstractItemView::SelectRows</enum>
+      </property>
+      <attribute name="horizontalHeaderStretchLastSection">
+       <bool>true</bool>
+      </attribute>
+      <attribute name="verticalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="verticalHeaderDefaultSectionSize">
+       <number>16</number>
+      </attribute>
+      <attribute name="verticalHeaderMinimumSectionSize">
+       <number>16</number>
+      </attribute>
+      <column>
+       <property name="text">
+        <string>Regions</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Path</string>
+       </property>
+      </column>
      </widget>
      <widget class="QWidget" name="layoutWidget">
       <layout class="QVBoxLayout" name="verticalLayout_2">

@@ -175,23 +175,6 @@ def exclude_shared_memory_regions(generated_list):
 
 
 #:tag:Processes
-def exclude_system_memory_regions(generated_list):
-    """Excludes the system-related memory regions from the list
-
-    Args:
-        generated_list (list): The list must be generated from the function get_memory_regions_by_perms or
-        get_memory_regions.
-
-    Returns:
-        list: List of the remaining pmmap_ext objects after exclusion
-    """
-    for m in generated_list[:]:
-        if common_regexes.memory_regions_system.match(m.addr):
-            generated_list.remove(m)
-    return generated_list
-
-
-#:tag:Processes
 def is_traced(pid):
     """Check if the process corresponding to given pid traced by any other process
 
