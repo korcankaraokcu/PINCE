@@ -31,15 +31,12 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="checkBox_IgnoreCase">
+      <widget class="QCheckBox" name="checkBox_CaseSensitive">
        <property name="toolTip">
         <string>Ignore case if checked</string>
        </property>
        <property name="text">
-        <string>Ignore case</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
+        <string>Case sensitive</string>
        </property>
       </widget>
      </item>

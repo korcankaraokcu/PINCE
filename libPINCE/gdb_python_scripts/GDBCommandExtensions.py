@@ -611,13 +611,13 @@ class SearchReferencedCalls(gdb.Command):
         super(SearchReferencedCalls, self).__init__("pince-search-referenced-calls", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        searched_str, ignore_case, enable_regex = eval(arg)
+        searched_str, case_sensitive, enable_regex = eval(arg)
         if enable_regex:
             try:
-                if ignore_case:
-                    regex = re.compile(searched_str, re.IGNORECASE)
-                else:
+                if case_sensitive:
                     regex = re.compile(searched_str)
+                else:
+                    regex = re.compile(searched_str, re.IGNORECASE)
             except Exception as e:
                 print("An exception occurred while trying to compile the given regex\n", str(e))
                 return
@@ -631,11 +631,11 @@ class SearchReferencedCalls(gdb.Command):
                 if not regex.search(symbol):
                     continue
             else:
-                if ignore_case:
-                    if symbol.lower().find(searched_str.lower()) == -1:
+                if case_sensitive:
+                    if symbol.find(searched_str) == -1:
                         continue
                 else:
-                    if symbol.find(searched_str) == -1:
+                    if symbol.lower().find(searched_str.lower()) == -1:
                         continue
             returned_list.append((symbol, len(str_dict[item])))
         str_dict.close()
@@ -661,12 +661,12 @@ class SearchFunctions(gdb.Command):
         super(SearchFunctions, self).__init__("pince-search-functions", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        expression, ignore_case = receive_from_pince()
+        expression, case_sensitive = receive_from_pince()
         function_list = []
-        if ignore_case:
-            gdb.execute("set case-sensitive off")
-        else:
+        if case_sensitive:
             gdb.execute("set case-sensitive on")
+        else:
+            gdb.execute("set case-sensitive off")
         output = gdb.execute("info functions " + expression, to_string=True).splitlines()
         gdb.execute("set case-sensitive auto")
         for line in output:
