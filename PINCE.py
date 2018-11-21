@@ -4348,6 +4348,9 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
                     break
             else:
                 QMessageBox.information(self, "Error", hex(int_address) + " isn't in a valid region range")
+        else:
+            if self.tableWidget_ExecutableMemoryRegions.rowCount() > 0:
+                self.tableWidget_ExecutableMemoryRegions.selectRow(0)
 
     class BackgroundThread(QThread):
         output_ready = pyqtSignal()
