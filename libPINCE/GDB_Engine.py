@@ -952,12 +952,12 @@ def get_symbol_info(expression):
 
 
 #:tag:Tools
-def search_functions(expression, ignore_case=True):
+def search_functions(expression, case_sensitive=False):
     """Runs the gdb command "info functions" for given expression and returns the result of it
 
     Args:
         expression (str): Any gdb expression
-        ignore_case (bool): If True, search will be case insensitive
+        case_sensitive (bool): If True, search will be case sensitive
 
     Returns:
         list: A list of str-->[(address1, symbol1), (address2, symbol2), ...]
@@ -972,7 +972,7 @@ def search_functions(expression, ignore_case=True):
         Please don't try to write a symbol parser for every single language out there, it's an overkill
         https://sourceware.org/bugzilla/show_bug.cgi?id=23899
     """
-    return send_command("pince-search-functions", send_with_file=True, file_contents_send=(expression, ignore_case),
+    return send_command("pince-search-functions", send_with_file=True, file_contents_send=(expression, case_sensitive),
                         recv_with_file=True)
 
 
@@ -1699,7 +1699,7 @@ def find_entry_point():
 
 
 #:tag:Tools
-def search_opcode(searched_str, starting_address, ending_address_or_offset, ignore_case=True, enable_regex=False):
+def search_opcode(searched_str, starting_address, ending_address_or_offset, case_sensitive=False, enable_regex=False):
     """Searches for the given str in the disassembled output
 
     Args:
@@ -1709,7 +1709,7 @@ def search_opcode(searched_str, starting_address, ending_address_or_offset, igno
         (e.g "+42" or "+0x42"). If you pass this parameter as an hex address, the address range between the expression
         and the secondary address is disassembled.
         If the second parameter is an address. it always should be bigger than the first address.
-        ignore_case (bool): If True, search will be case insensitive
+        case_sensitive (bool): If True, search will be case sensitive
         enable_regex (bool): If True, searched_str will be treated as a regex expression
 
     Returns:
@@ -1718,10 +1718,10 @@ def search_opcode(searched_str, starting_address, ending_address_or_offset, igno
     """
     if enable_regex:
         try:
-            if ignore_case:
-                regex = re.compile(searched_str, re.IGNORECASE)
-            else:
+            if case_sensitive:
                 regex = re.compile(searched_str)
+            else:
+                regex = re.compile(searched_str, re.IGNORECASE)
         except Exception as e:
             print("An exception occurred while trying to compile the given regex\n", str(e))
             return
@@ -1734,11 +1734,11 @@ def search_opcode(searched_str, starting_address, ending_address_or_offset, igno
             if not regex.search(opcode):
                 continue
         else:
-            if ignore_case:
-                if opcode.lower().find(searched_str.lower()) == -1:
+            if case_sensitive:
+                if opcode.find(searched_str) == -1:
                     continue
             else:
-                if opcode.find(searched_str) == -1:
+                if opcode.lower().find(searched_str.lower()) == -1:
                     continue
         returned_list.append([address, opcode])
     return returned_list
@@ -1828,14 +1828,14 @@ def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, refere
 
 
 #:tag:Tools
-def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.INDEX_STRING_UTF8, ignore_case=True,
+def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.INDEX_STRING_UTF8, case_sensitive=False,
                               enable_regex=False):
     """Searches for given str in the referenced strings
 
     Args:
         searched_str (str): String that will be searched
         value_index (int): Can be a member of type_defs.VALUE_INDEX
-        ignore_case (bool): If True, search will be case insensitive
+        case_sensitive (bool): If True, search will be case sensitive
         enable_regex (bool): If True, searched_str will be treated as a regex expression
 
     Returns:
@@ -1844,10 +1844,10 @@ def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.IN
     """
     if enable_regex:
         try:
-            if ignore_case:
-                regex = re.compile(searched_str, re.IGNORECASE)
-            else:
+            if case_sensitive:
                 regex = re.compile(searched_str)
+            else:
+                regex = re.compile(searched_str, re.IGNORECASE)
         except Exception as e:
             print("An exception occurred while trying to compile the given regex\n", str(e))
             return
@@ -1867,11 +1867,11 @@ def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.IN
             if not regex.search(value_str):
                 continue
         else:
-            if ignore_case:
-                if value_str.lower().find(searched_str.lower()) == -1:
+            if case_sensitive:
+                if value_str.find(searched_str) == -1:
                     continue
             else:
-                if value_str.find(searched_str) == -1:
+                if value_str.lower().find(searched_str.lower()) == -1:
                     continue
         ref_addr = referenced_list[index]
         returned_list.append((ref_addr, len(str_dict[ref_addr]), value))
@@ -1880,19 +1880,19 @@ def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.IN
 
 
 #:tag:Tools
-def search_referenced_calls(searched_str, ignore_case=True, enable_regex=False):
+def search_referenced_calls(searched_str, case_sensitive=True, enable_regex=False):
     """Searches for given str in the referenced calls
 
     Args:
         searched_str (str): String that will be searched
-        ignore_case (bool): If True, search will be case insensitive
+        case_sensitive (bool): If True, search will be case sensitive
         enable_regex (bool): If True, searched_str will be treated as a regex expression
 
     Returns:
         list: [[referenced_address1, found_string1], ...]
         None: If enable_regex is True and searched_str isn't a valid regex expression
     """
-    param_str = (searched_str, ignore_case, enable_regex)
+    param_str = (searched_str, case_sensitive, enable_regex)
     return send_command("pince-search-referenced-calls " + str(param_str), recv_with_file=True)
 
 

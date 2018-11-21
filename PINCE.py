@@ -3679,15 +3679,15 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
 
     def refresh_table(self):
         input_text = self.lineEdit_SearchInput.text()
-        ignore_case = self.checkBox_IgnoreCase.isChecked()
+        case_sensitive = self.checkBox_CaseSensitive.isChecked()
         self.loading_dialog = LoadingDialogForm(self)
         self.background_thread = self.loading_dialog.background_thread
-        self.background_thread.overrided_func = lambda: self.process_data(gdb_input=input_text, ignore_case=ignore_case)
+        self.background_thread.overrided_func = lambda: self.process_data(input_text, case_sensitive)
         self.background_thread.output_ready.connect(self.apply_data)
         self.loading_dialog.exec_()
 
-    def process_data(self, gdb_input, ignore_case):
-        return GDB_Engine.search_functions(gdb_input, ignore_case)
+    def process_data(self, gdb_input, case_sensitive):
+        return GDB_Engine.search_functions(gdb_input, case_sensitive)
 
     def apply_data(self, output):
         self.tableWidget_SymbolInfo.setSortingEnabled(False)
@@ -4174,19 +4174,17 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         start_address = self.lineEdit_Start.text()
         end_address = self.lineEdit_End.text()
         regex = self.lineEdit_Regex.text()
-        ignore_case = self.checkBox_IgnoreCase.isChecked()
+        case_sensitive = self.checkBox_CaseSensitive.isChecked()
         enable_regex = self.checkBox_Regex.isChecked()
         self.loading_dialog = LoadingDialogForm(self)
         self.background_thread = self.loading_dialog.background_thread
-        self.background_thread.overrided_func = lambda: self.process_data(regex=regex, start_address=start_address,
-                                                                          end_address=end_address,
-                                                                          ignore_case=ignore_case,
-                                                                          enable_regex=enable_regex)
+        self.background_thread.overrided_func = lambda: self.process_data(regex, start_address, end_address,
+                                                                          case_sensitive, enable_regex)
         self.background_thread.output_ready.connect(self.apply_data)
         self.loading_dialog.exec_()
 
-    def process_data(self, regex, start_address, end_address, ignore_case, enable_regex):
-        return GDB_Engine.search_opcode(regex, start_address, end_address, ignore_case, enable_regex)
+    def process_data(self, regex, start_address, end_address, case_sensitive, enable_regex):
+        return GDB_Engine.search_opcode(regex, start_address, end_address, case_sensitive, enable_regex)
 
     def apply_data(self, disas_data):
         if disas_data is None:
@@ -4497,7 +4495,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
     def refresh_table(self):
         item_list = GDB_Engine.search_referenced_strings(self.lineEdit_Regex.text(),
                                                          self.comboBox_ValueType.currentIndex(),
-                                                         self.checkBox_IgnoreCase.isChecked(),
+                                                         self.checkBox_CaseSensitive.isChecked(),
                                                          self.checkBox_Regex.isChecked())
         if item_list is None:
             QMessageBox.information(self, "Error",
@@ -4629,7 +4627,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
 
     def refresh_table(self):
         item_list = GDB_Engine.search_referenced_calls(self.lineEdit_Regex.text(),
-                                                       self.checkBox_IgnoreCase.isChecked(),
+                                                       self.checkBox_CaseSensitive.isChecked(),
                                                        self.checkBox_Regex.isChecked())
         if item_list is None:
             QMessageBox.information(self, "Error",
@@ -4765,14 +4763,14 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
 
     def refresh_table(self):
         searched_str = self.lineEdit_Regex.text()
-        ignore_case = self.checkBox_IgnoreCase.isChecked()
+        case_sensitive = self.checkBox_CaseSensitive.isChecked()
         enable_regex = self.checkBox_Regex.isChecked()
         if enable_regex:
             try:
-                if ignore_case:
-                    regex = re.compile(searched_str, re.IGNORECASE)
-                else:
+                if case_sensitive:
                     regex = re.compile(searched_str)
+                else:
+                    regex = re.compile(searched_str, re.IGNORECASE)
             except:
                 QMessageBox.information(self, "Error",
                                         "An exception occurred while trying to compile the given regex\n")
@@ -4784,11 +4782,11 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
                 if not regex.search(item):
                     continue
             else:
-                if ignore_case:
-                    if item.lower().find(searched_str.lower()) == -1:
+                if case_sensitive:
+                    if item.find(searched_str) == -1:
                         continue
                 else:
-                    if item.find(searched_str) == -1:
+                    if item.lower().find(searched_str.lower()) == -1:
                         continue
             self.listWidget_Referrers.addItem(item)
         self.listWidget_Referrers.setSortingEnabled(True)
