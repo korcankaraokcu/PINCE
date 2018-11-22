@@ -87,13 +87,13 @@ def search_in_processes_by_name(process_name):
 
 #:tag:Processes
 def get_memory_regions(pid):
-    """Returns memory regions as a list of pmmap_ext objects
+    """Returns memory regions as a list of psutil._pslinux.pmmap_ext objects
 
     Args:
         pid (int): PID of the process
 
     Returns:
-        list: List of pmmap_ext objects corresponding to the given pid
+        list: List of psutil._pslinux.pmmap_ext objects corresponding to the given pid
     """
     return psutil.Process(pid).memory_maps(grouped=False)
 
@@ -109,7 +109,7 @@ def get_region_info(pid, address):
 
     Returns:
         type_defs.tuple_region_info: Starting address as int, ending address as int and region corresponding to
-        the given address as pmmap_ext object
+        the given address as psutil._pslinux.pmmap_ext object
         None: If the given address isn't in any valid address range
 
     Note:
@@ -130,48 +130,30 @@ def get_region_info(pid, address):
 
 
 #:tag:Processes
-def get_memory_regions_by_perms(pid):
-    """Returns a tuple of four lists based on the permissions given to them
+def filter_memory_regions(pid, attribute, regex, case_sensitive=False):
+    """Filters memory regions by searching for the given regex within the given attribute
 
     Args:
         pid (int): PID of the process
+        attribute (str): The attribute that'll be filtered. Can be "addr", "perms" or "path"
+        regex (str): Regex statement that'll be searched
+        case_sensitive (bool): If True, search will be case sensitive
 
     Returns:
-        tuple: A tuple of four different lists formed of pmmap_ext objects
-        First list holds readable only regions
-        Second list holds writeable regions
-        Third list holds executable regions
-        Fourth list holds readable regions
+        list: A list of psutil._pslinux.pmmap_ext objects
     """
-    readable_only, writeable, executable, readable = [], [], [], []
+    assert attribute in ["addr", "perms", "path"], "invalid attribute"
+    if case_sensitive:
+        compiled_regex = re.compile(regex)
+    else:
+        compiled_regex = re.compile(regex, re.IGNORECASE)
+    filtered_regions = []
     p = psutil.Process(pid)
     for m in p.memory_maps(grouped=False):
-        if common_regexes.memory_regions_read_only.search(m.perms):
-            readable_only.append(m)
-        if common_regexes.memory_regions_write.search(m.perms):
-            writeable.append(m)
-        if common_regexes.memory_regions_execute.search(m.perms):
-            executable.append(m)
-        if common_regexes.memory_regions_read.search(m.perms):
-            readable.append(m)
-    return readable_only, writeable, executable, readable
-
-
-#:tag:Processes
-def exclude_shared_memory_regions(generated_list):
-    """Excludes the shared memory regions from the list
-
-    Args:
-        generated_list (list): The list must be generated from the function get_memory_regions_by_perms or
-        get_memory_regions.
-
-    Returns:
-        list: List of the remaining pmmap_ext objects after exclusion
-    """
-    for m in generated_list[:]:
-        if common_regexes.memory_regions_shared.search(m.perms):
-            generated_list.remove(m)
-    return generated_list
+        current_attribute = getattr(m, attribute)
+        if compiled_regex.search(current_attribute):
+            filtered_regions.append(m)
+    return filtered_regions
 
 
 #:tag:Processes

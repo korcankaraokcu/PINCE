@@ -46,11 +46,6 @@ max_completions_reached = compile(r"\*\*\*\s+List\s+may\s+be\s+truncated,\s+max-
 
 # --------------------------------------------SysUtils------------------------------------------------------------------
 
-memory_regions_read_only = compile(r"r--")
-memory_regions_write = compile(r"w")
-memory_regions_execute = compile(r"x")
-memory_regions_read = compile(r"r")
-memory_regions_shared = compile(r"s")
 instruction_follow = compile(r"(j|call|loop).*\s+" + hex_number_grouped.pattern)
 docstring_variable = compile(r"(\w+)\s*=")
 docstring_function_or_variable = compile(r"def\s+(\w+)|" + docstring_variable.pattern)
