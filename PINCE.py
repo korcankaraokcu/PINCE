@@ -530,7 +530,7 @@ class MainForm(QMainWindow, MainWindow):
             dialog.exec_()
 
     def treeWidget_AddressTable_context_menu_event(self, event):
-        current_row = self.treeWidget_AddressTable.currentItem()
+        current_row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         menu = QMenu()
         edit_menu = menu.addMenu("Edit")
         edit_desc = edit_menu.addAction("Description[Ctrl+Enter]")
@@ -589,7 +589,7 @@ class MainForm(QMainWindow, MainWindow):
 
     @requires_selection("treeWidget_AddressTable")
     def exec_track_watchpoint_widget(self, watchpoint_type):
-        selected_row = self.treeWidget_AddressTable.currentItem()
+        selected_row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         address = selected_row.text(ADDR_COL)
         value_type_text = selected_row.text(TYPE_COL)
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type_text)
@@ -601,21 +601,21 @@ class MainForm(QMainWindow, MainWindow):
 
     @requires_selection("treeWidget_AddressTable")
     def browse_region_for_selected_row(self):
-        row = self.treeWidget_AddressTable.currentItem()
+        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         self.memory_view_window.hex_dump_address(int(row.text(ADDR_COL), 16))
         self.memory_view_window.show()
         self.memory_view_window.activateWindow()
 
     @requires_selection("treeWidget_AddressTable")
     def disassemble_selected_row(self):
-        row = self.treeWidget_AddressTable.currentItem()
+        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if self.memory_view_window.disassemble_expression(row.text(ADDR_COL), append_to_travel_history=True):
             self.memory_view_window.show()
             self.memory_view_window.activateWindow()
 
     @requires_selection("treeWidget_AddressTable")
     def toggle_selected_records(self):
-        row = self.treeWidget_AddressTable.currentItem()
+        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         check_state = row.checkState(FROZEN_COL)
         new_check_state = Qt.Checked if check_state == Qt.Unchecked else Qt.Unchecked
         for row in self.treeWidget_AddressTable.selectedItems():
@@ -691,7 +691,7 @@ class MainForm(QMainWindow, MainWindow):
             QMessageBox.information(self, "Error", "Invalid clipboard content")
             return
 
-        insert_row = self.treeWidget_AddressTable.currentItem()
+        insert_row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         root = self.treeWidget_AddressTable.invisibleRootItem()
         if not insert_row:  # this is common when the treeWidget_AddressTable is empty
             self.insert_records(records, root, self.treeWidget_AddressTable.topLevelItemCount())
@@ -916,7 +916,7 @@ class MainForm(QMainWindow, MainWindow):
 
     @requires_selection("treeWidget_AddressTable")
     def treeWidget_AddressTable_edit_value(self):
-        row = self.treeWidget_AddressTable.currentItem()
+        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         value = row.text(VALUE_COL)
         value_index = GuiUtils.text_to_valuetype(
             row.text(TYPE_COL))[0]
@@ -943,7 +943,7 @@ class MainForm(QMainWindow, MainWindow):
 
     @requires_selection("treeWidget_AddressTable")
     def treeWidget_AddressTable_edit_desc(self):
-        row = self.treeWidget_AddressTable.currentItem()
+        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         description = row.text(DESC_COL)
         dialog = InputDialogForm(item_list=[("Enter the new description", description)])
         if dialog.exec_():
@@ -953,7 +953,7 @@ class MainForm(QMainWindow, MainWindow):
 
     @requires_selection("treeWidget_AddressTable")
     def treeWidget_AddressTable_edit_address(self):
-        row = self.treeWidget_AddressTable.currentItem()
+        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         description, address_expr, value_type = self.read_address_table_entries(row=row)
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
         manual_address_dialog = ManualAddressDialogForm(description=description, address=address_expr, index=index,
@@ -967,7 +967,7 @@ class MainForm(QMainWindow, MainWindow):
 
     @requires_selection("treeWidget_AddressTable")
     def treeWidget_AddressTable_edit_type(self):
-        row = self.treeWidget_AddressTable.currentItem()
+        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         value_type = row.text(TYPE_COL)
         value_index, length, zero_terminate = GuiUtils.text_to_valuetype(value_type)[0:3]
         dialog = EditTypeDialogForm(index=value_index, length=length, zero_terminate=zero_terminate)
@@ -2964,11 +2964,10 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.listWidget.addItems([item.all for item in GDB_Engine.examine_expressions(address_list)])
 
     def change_display(self):
-        try:
-            current_item = self.listWidget.currentItem().text()
-        except AttributeError:
+        current_item = GuiUtils.get_current_item(self.listWidget)
+        if not current_item:
             return
-        current_address = SysUtils.extract_address(current_item)
+        current_address = SysUtils.extract_address(current_item.text())
         self.lineEdit_Info.setText(GDB_Engine.get_address_info(current_address))
         self.lineEdit_Comment.setText(self.parent().tableWidget_Disassemble.bookmarks[int(current_address, 16)])
 
@@ -2991,16 +2990,15 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.refresh_table()
 
     def listWidget_context_menu_event(self, event):
-        if GuiUtils.get_current_row(self.listWidget) != -1:
-            current_item = self.listWidget.currentItem().text()
-            current_address = int(SysUtils.extract_address(current_item), 16)
-        else:
-            current_item = current_address = None
-        if current_item is not None:
+        current_item=GuiUtils.get_current_item(self.listWidget)
+        if current_item:
+            current_address = int(SysUtils.extract_address(current_item.text()), 16)
             if current_address not in self.parent().tableWidget_Disassemble.bookmarks:
                 QMessageBox.information(self, "Error", "Invalid entries detected, refreshing the page")
                 self.refresh_table()
                 return
+        else:
+            current_address = None
         menu = QMenu()
         add_entry = menu.addAction("Add new entry")
         change_comment = menu.addAction("Change comment of this record")
@@ -3024,8 +3022,10 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
             pass
 
     def delete_record(self):
-        current_item = self.listWidget.currentItem().text()
-        current_address = int(SysUtils.extract_address(current_item), 16)
+        current_item = GuiUtils.get_current_item(self.listWidget)
+        if not current_item:
+            return
+        current_address = int(SysUtils.extract_address(current_item.text()), 16)
         self.parent().delete_bookmark(current_address)
         self.refresh_table()
 
@@ -3566,10 +3566,10 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
 
     def display_collected_data(self):
         self.textBrowser_RegisterInfo.clear()
-        try:
-            current_dict = self.treeWidget_InstructionInfo.currentItem().trace_data[1]
-        except:
+        current_item = GuiUtils.get_current_item(self.treeWidget_InstructionInfo)
+        if not current_item:
             return
+        current_dict=current_item.trace_data[1]
         if current_dict:
             for key in current_dict:
                 self.textBrowser_RegisterInfo.append(str(key) + " = " + str(current_dict[key]))
@@ -3645,10 +3645,10 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             pass
 
     def treeWidget_InstructionInfo_item_double_clicked(self, index):
-        try:
-            address = SysUtils.extract_address(self.treeWidget_InstructionInfo.currentItem().trace_data[0])
-        except:
+        current_item=GuiUtils.get_current_item(self.treeWidget_InstructionInfo)
+        if not current_item:
             return
+        address = SysUtils.extract_address(current_item.trace_data[0])
         if address:
             self.parent().disassemble_expression(address, append_to_travel_history=True)
 
@@ -3911,7 +3911,9 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
 
     def treeWidget_ResourceTree_context_menu_event(self, event):
         def copy_to_clipboard(column):
-            app.clipboard().setText(self.treeWidget_ResourceTree.currentItem().text(column))
+            current_item=GuiUtils.get_current_item(self.treeWidget_ResourceTree)
+            if current_item:
+                app.clipboard().setText(current_item.text(column))
 
         def expand_all():
             self.treeWidget_ResourceTree.expandAll()

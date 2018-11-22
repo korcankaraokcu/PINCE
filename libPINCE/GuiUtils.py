@@ -112,6 +112,23 @@ def get_current_row(QObject):
 
 
 #:tag:GUI
+def get_current_item(QObject):
+    """Returns the currently selected item for the given QObject
+    If you try to use only selectionModel().currentItem() for this purpose, you'll get the last selected item even
+    if it was unselected afterwards. This is why this function exists, it checks the selection state before returning
+    the selected item. Unlike get_current_row, this function can be used with QTreeWidget
+
+    Args:
+        QObject (QObject): Self-explanatory
+
+    Returns:
+        Any: Currently selected item. Returns None if nothing is selected
+    """
+    if QObject.selectionModel().selectedRows():
+        return QObject.currentItem()
+
+
+#:tag:GUI
 def delete_menu_entries(QMenu, QAction_list):
     """Deletes given QActions from the QMenu recursively and cleans up the remaining redundant separators and menus
     Doesn't support menus that includes types other than actions, separators and menus
