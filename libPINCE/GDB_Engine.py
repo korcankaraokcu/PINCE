@@ -1750,7 +1750,7 @@ def dissect_code(region_list, discard_invalid_strings=True):
     Use function get_dissect_code_data() to gather the results
 
     Args:
-        region_list (list): A list of pmmap_ext objects
+        region_list (list): A list of psutil._pslinux.pmmap_ext objects
         Can be returned from functions like SysUtils.get_memory_regions_by_perms
         discard_invalid_strings (bool): Entries that can't be decoded as utf-8 won't be included in referenced strings
     """

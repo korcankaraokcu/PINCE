@@ -4394,7 +4394,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         self.label_CallReferenceCount.setText(str(len(referenced_calls)))
 
     def show_memory_regions(self):
-        executable_regions = SysUtils.get_memory_regions_by_perms(GDB_Engine.currentpid)[2]
+        executable_regions = SysUtils.filter_memory_regions(GDB_Engine.currentpid, "perms", "..x.")
         self.region_list = executable_regions
         self.tableWidget_ExecutableMemoryRegions.setRowCount(0)
         self.tableWidget_ExecutableMemoryRegions.setRowCount(len(executable_regions))
