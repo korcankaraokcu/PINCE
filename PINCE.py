@@ -3554,12 +3554,9 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             self.wait_dialog.widget_closed.connect(self.show_trace_info)
             self.wait_dialog.show()
 
-    def display_collected_data(self):
+    def display_collected_data(self, QTreeWidgetItem_current):
         self.textBrowser_RegisterInfo.clear()
-        current_item = GuiUtils.get_current_item(self.treeWidget_InstructionInfo)
-        if not current_item:
-            return
-        current_dict = current_item.trace_data[1]
+        current_dict = QTreeWidgetItem_current.trace_data[1]
         if current_dict:
             for key in current_dict:
                 self.textBrowser_RegisterInfo.append(str(key) + " = " + str(current_dict[key]))

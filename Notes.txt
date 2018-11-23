@@ -50,3 +50,5 @@ A full PR will look like this:
 /media/logo/your_username/pince_small.ai
 
 It doesn't have to be ai extension, I just picked Adobe Illustrator for the example above
+
+23/11/2018 - Don't use get_current_item or get_current_row within currentItemChanged or currentChanged signals. Qt doesn't update selected rows on first currentChanged or currentItemChanged calls
