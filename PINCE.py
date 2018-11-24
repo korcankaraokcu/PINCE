@@ -2528,7 +2528,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         try:
             actions[event.modifiers(), event.key()]()
         except KeyError:
-            self.tableWidget_Stack.keyPressEvent_original(event)
+            pass
+        self.tableWidget_Stack.keyPressEvent_original(event)
 
     def tableWidget_Stack_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -2601,7 +2602,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         try:
             actions[event.modifiers(), event.key()]()
         except KeyError:
-            self.tableWidget_StackTrace.keyPressEvent_original(event)
+            pass
+        self.tableWidget_StackTrace.keyPressEvent_original(event)
 
     def widget_Disassemble_wheel_event(self, event):
         steps = event.angleDelta()
@@ -2651,7 +2653,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         try:
             actions[event.modifiers(), event.key()]()
         except KeyError:
-            self.tableView_HexView_Hex.keyPressEvent_original(event)
+            pass
+        self.tableView_HexView_Hex.keyPressEvent_original(event)
 
     def tableWidget_Disassemble_key_press_event(self, event):
         selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
@@ -3156,7 +3159,8 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         try:
             actions[event.modifiers(), event.key()]()
         except KeyError:
-            self.tableWidget_BreakpointInfo.keyPressEvent_original(event)
+            pass
+        self.tableWidget_BreakpointInfo.keyPressEvent_original(event)
 
     def exec_enable_count_dialog(self, current_address):
         hit_count_dialog = InputDialogForm(item_list=[("Enter the hit count(1 or higher)", "")])
