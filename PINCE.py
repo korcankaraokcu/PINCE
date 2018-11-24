@@ -18,14 +18,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor
+from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
+    QKeyEvent
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, \
     QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, functools, psutil
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 
@@ -1025,6 +1026,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
             self.pushButton_Open_clicked()
         elif e.key() == Qt.Key_F1:
             self.pushButton_CreateProcess_clicked()
+        elif e.key() == Qt.Key_Down or e.key() == Qt.Key_Up:
+            self.tableWidget_ProcessTable.keyPressEvent(QKeyEvent(QEvent.KeyPress, e.key(), Qt.NoModifier))
 
     # lists currently working processes to table
     def refresh_process_table(self, tablewidget, processlist):
