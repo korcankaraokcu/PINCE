@@ -880,15 +880,14 @@ def get_current_thread_information():
 
 
 #:tag:Assembly
-def find_address_of_closest_instruction(address, how_many_instructions_to_look_for=1, instruction_location="next"):
+def find_address_of_closest_instruction(address, instruction_location="next", instruction_count=1):
     """Finds address of the closest instruction next to the given address, assuming that the given address is valid
 
     Args:
         address (str): Hex address or any gdb expression that can be used in disas command
-        how_many_instructions_to_look_for (int): Number of the instructions that'll be lo- OH COME ON NOW! That one is
-        obvious!
-        instruction_location (str): If it's "next", instructions coming after the address is searched. If it's anything
-        else, the instructions coming before the address is searched instead.
+        instruction_location (str): If it's "next", instructions coming after the address is searched
+        If it's "previous", the instructions coming before the address is searched instead
+        instruction_count (int): Number of the instructions that'll be looked for
 
     Returns:
         str: The address found as hex string. If starting/ending of a valid memory range is reached, starting/ending
@@ -900,11 +899,12 @@ def find_address_of_closest_instruction(address, how_many_instructions_to_look_f
         the backwards compatibility. The speed gain is not much of a big deal compared to backwards compatibility, so
         I'm not changing this function for now
     """
+    assert instruction_location in ["next", "previous"], "invalid instruction_location"
     if instruction_location == "next":
-        offset = "+" + str(how_many_instructions_to_look_for * 30)
+        offset = "+" + str(instruction_count * 30)
         disas_data = disassemble(address, address + offset)
     else:
-        offset = "-" + str(how_many_instructions_to_look_for * 30)
+        offset = "-" + str(instruction_count * 30)
         disas_data = disassemble(address + offset, address)
     if not disas_data:
         if instruction_location != "next":
@@ -912,12 +912,12 @@ def find_address_of_closest_instruction(address, how_many_instructions_to_look_f
             disas_data = disassemble(start_address, address)
     if instruction_location == "next":
         try:
-            return SysUtils.extract_address(disas_data[how_many_instructions_to_look_for][0])
+            return SysUtils.extract_address(disas_data[instruction_count][0])
         except IndexError:
             return hex(SysUtils.get_region_info(currentpid, address).end)
     else:
         try:
-            return SysUtils.extract_address(disas_data[-how_many_instructions_to_look_for][0])
+            return SysUtils.extract_address(disas_data[-instruction_count][0])
         except IndexError:
             try:
                 return start_address

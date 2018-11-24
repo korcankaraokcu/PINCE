@@ -118,7 +118,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Implement non-stop Continuous Address Table Update feature
 - Implement Variable Locking
 - Refactorize memory write/read functions
-- - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k. Implement a cache system for it by storing the raw bytes and converting them to desired types as the comboBox_ValueType changes. Also consider only updating the visible rows instead of implementing a full-fledged cache system
+- - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k. Only update the visible rows to prevent this(check ```disassemble_check_viewport``` for an example)
 - - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
 - - Consider using a class instead of primitive return types to store the raw bytes. This also gets rid of the unnecessary parameter only_bytes. This class should also include a method to display None type as red '??' text for Qt
 - - text_to_valuetype is a bad design pattern. Store the information inside the items of tableWidget_AddressTable instead
@@ -166,7 +166,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Implement toggling of arrows for easier navigation for dissected regions(independent from other steps)
 - Provide information about absolute addresses in disassemble screen(independent from other steps)
 - Use type hints(py 3.5) and variable annotations(py 3.6) when support drops for older systems(independent from other steps)
-- All tables that hold large amount of data should only update the visible rows(independent from other steps)
+- All tables that hold large amount of data should only update the visible rows(check ```disassemble_check_viewport``` for an example)(independent from other steps)
 - Create ```CONTRIBUTING.md``` when coding style becomes more consistent(independent from other steps)
 
 # License

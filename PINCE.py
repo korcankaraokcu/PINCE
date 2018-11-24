@@ -2114,14 +2114,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_value = self.verticalScrollBar_Disassemble.value()
         if midst - 10 < current_value < midst + 10:
             return
-        current_address = self.disassemble_currently_displayed_address
         if current_value < midst:
-            next_address = GDB_Engine.find_address_of_closest_instruction(current_address, instructions_per_scroll,
-                                                                          "previous")
+            self.tableWidget_Disassemble_scroll("previous", instructions_per_scroll)
         else:
-            next_address = GDB_Engine.find_address_of_closest_instruction(current_address, instructions_per_scroll,
-                                                                          "next")
-        self.disassemble_expression(next_address)
+            self.tableWidget_Disassemble_scroll("next", instructions_per_scroll)
 
     def on_hex_view_current_changed(self, QModelIndex_current):
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -2609,14 +2605,29 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def widget_Disassemble_wheel_event(self, event):
         steps = event.angleDelta()
-        current_address = self.disassemble_currently_displayed_address
         if steps.y() > 0:
-            next_address = GDB_Engine.find_address_of_closest_instruction(current_address, instructions_per_scroll,
-                                                                          "previous")
+            self.tableWidget_Disassemble_scroll("previous", instructions_per_scroll)
         else:
-            next_address = GDB_Engine.find_address_of_closest_instruction(current_address, instructions_per_scroll,
-                                                                          "next")
-        self.disassemble_expression(next_address)
+            self.tableWidget_Disassemble_scroll("next", instructions_per_scroll)
+
+    def disassemble_check_viewport(self, where, instruction_count):
+        current_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        current_row_height = self.tableWidget_Disassemble.rowViewportPosition(current_row)
+        row_height = self.tableWidget_Disassemble.verticalHeader().defaultSectionSize()
+        max_height = self.tableWidget_Disassemble.maximumViewportSize().height()
+        height = max_height - row_height * 3
+        if current_row_height > max_height:
+            current_address = SysUtils.extract_address(
+                self.tableWidget_Disassemble.item(current_row, DISAS_ADDR_COL).text())
+            new_address = GDB_Engine.find_address_of_closest_instruction(current_address, where, instruction_count)
+            self.disassemble_expression(new_address)
+        elif (where == "previous" and current_row == 0) or (where == "next" and current_row_height > height):
+            self.tableWidget_Disassemble_scroll(where, instruction_count)
+
+    def tableWidget_Disassemble_scroll(self, where, instruction_count):
+        current_address = self.disassemble_currently_displayed_address
+        new_address = GDB_Engine.find_address_of_closest_instruction(current_address, where, instruction_count)
+        self.disassemble_expression(new_address)
 
     def widget_HexView_wheel_event(self, event):
         steps = event.angleDelta()
@@ -2656,12 +2667,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             ((Qt.ControlModifier, Qt.Key_B), lambda: self.bookmark_address(current_address_int)),
             ((Qt.ControlModifier, Qt.Key_D), self.dissect_current_region),
             ((Qt.ControlModifier, Qt.Key_T), self.exec_trace_instructions_dialog),
-            ((Qt.NoModifier, Qt.Key_R), self.refresh_disassemble_view)
+            ((Qt.NoModifier, Qt.Key_R), self.refresh_disassemble_view),
+            ((Qt.NoModifier, Qt.Key_Down), lambda: self.disassemble_check_viewport("next", 1)),
+            ((Qt.NoModifier, Qt.Key_Up), lambda: self.disassemble_check_viewport("previous", 1))
         ])
         try:
             actions[event.modifiers(), event.key()]()
         except KeyError:
-            self.tableWidget_Disassemble.keyPressEvent_original(event)
+            pass
+        self.tableWidget_Disassemble.keyPressEvent_original(event)
 
     def tableWidget_Disassemble_item_double_clicked(self, index):
         if index.column() == DISAS_COMMENT_COL:
