@@ -2617,11 +2617,17 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_row_height = self.tableWidget_Disassemble.rowViewportPosition(current_row)
         row_height = self.tableWidget_Disassemble.verticalHeader().defaultSectionSize()
         max_height = self.tableWidget_Disassemble.maximumViewportSize().height()
-        height = max_height - row_height * 3
+        # visible_height = max_height - row_height
+        height = max_height - row_height * 3  # lets us see the next 2 instructions after the last visible row
         if current_row_height > max_height:
+            last_visible_row = 0
+            for row in range(self.tableWidget_Disassemble.rowCount()):
+                if self.tableWidget_Disassemble.rowViewportPosition(row) > height:
+                    break
+                last_visible_row += 1
             current_address = SysUtils.extract_address(
                 self.tableWidget_Disassemble.item(current_row, DISAS_ADDR_COL).text())
-            new_address = GDB_Engine.find_address_of_closest_instruction(current_address, where, instruction_count)
+            new_address = GDB_Engine.find_address_of_closest_instruction(current_address, "previous", last_visible_row)
             self.disassemble_expression(new_address)
         elif (where == "previous" and current_row == 0) or (where == "next" and current_row_height > height):
             self.tableWidget_Disassemble_scroll(where, instruction_count)
