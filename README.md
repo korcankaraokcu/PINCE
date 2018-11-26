@@ -8,16 +8,16 @@ PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB)
 *Disclaimer: **YOU** are responsible for your actions. PINCE does **NOT** take any responsibility for the damage caused by the users*
 
 Pre-release screenshots:  
-![](screenshots/pince.png)
-![](screenshots/pince1.png)
-![](screenshots/pince2.png)
-![](screenshots/pince3.png)
-![](screenshots/pince4.png)
-![](screenshots/pince5.png)
-![](screenshots/pince6.png)
-![](screenshots/pince7.png)
-![](screenshots/pince8.png)
-![](screenshots/pince9.png)
+![](media/screenshots/pince.png)
+![](media/screenshots/pince1.png)
+![](media/screenshots/pince2.png)
+![](media/screenshots/pince3.png)
+![](media/screenshots/pince4.png)
+![](media/screenshots/pince5.png)
+![](media/screenshots/pince6.png)
+![](media/screenshots/pince7.png)
+![](media/screenshots/pince8.png)
+![](media/screenshots/pince9.png)
 # Features  
 - **Memory searching** **[Planned]**  (The plan is to use libscanmem by wrapping it with a gdb python script)
 - **Variable Inspection&Modification** **[Done/Basic]**
