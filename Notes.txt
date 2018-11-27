@@ -34,7 +34,7 @@ If you need to pass self as a parameter, please don't use 'super().__init__(pare
 
 28/8/2018 - All QMessageBoxes that's called from outside of their classes(via parent() etc.) must use 'QApplication.focusWidget()' instead of 'self' in their first parameter. Refer to issue #57 for more information
 
-14/11/2018 - All logo requests should be posted in media/logo/your_username. Instead of opening a new issue, PR your logo files to that folder. Your PR must include at least one png file named pince_small, pince_medium or pince_big, according to its size. It's preferred that you post your design files as well so people can contribute to your design(s)
+14/11/2018 - All logo requests should be posted in media/logo/your_username. Instead of opening a new issue, PR your logo files to that folder. Your PR must include at least one png file named pince_small, pince_medium or pince_big, according to its size. Optionally, you can also post your design files
 So, a minimal PR will look like this:
 
 /media/logo/your_username/pince_big.png
