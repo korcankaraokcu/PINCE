@@ -21,29 +21,29 @@ mkdir -p gdb_pince
 cd gdb_pince
 
 # clean the directory if another installation happened
-rm -rf gdb-8.1.1
+rm -rf gdb-8.2
 
-if [ ! -e gdb-8.1.1.tar.gz ] ; then
-    wget "http://ftp.gnu.org/gnu/gdb/gdb-8.1.1.tar.gz"
+if [ ! -e gdb-8.2.tar.gz ] ; then
+    wget "http://ftp.gnu.org/gnu/gdb/gdb-8.2.tar.gz"
 fi
-tar -zxvf gdb-8.1.1.tar.gz
-cd gdb-8.1.1
+tar -zxvf gdb-8.2.tar.gz
+cd gdb-8.2
 
 # Dependencies required for compiling GDB
 sudo apt-get install python3-dev
-sudo apt-get install gcc-5 g++-5
+sudo apt-get install gcc g++
 if [ $? -gt 0 ]; then
     sudo apt-get install software-properties-common
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
     sudo apt-get update
-    sudo apt-get install gcc-5 g++-5
+    sudo apt-get install gcc g++
     if [ $? -gt 0 ]; then
-        echo "Failed to install gcc-5 or g++-5, aborting..."
+        echo "Failed to install gcc or g++, aborting..."
         exit 1
     fi
 fi
 
-CC=gcc-5 CXX=g++-5 ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
+CC=gcc CXX=g++ ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
 if [ ! -e bin/gdb ] ; then
     echo "Failed to install GDB, restart the installation process"
     exit 1

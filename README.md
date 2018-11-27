@@ -68,7 +68,7 @@ sudo pip3 install psutil pexpect distorm3 pygdbmi
 ### **Compiling gdb with python support**  
 Install the packages required for compiling gdb:
 ```
-sudo apt-get install python3-dev gcc-5 g++-5  
+sudo apt-get install python3-dev gcc g++  
 ```
 Then ```cd``` to the libPINCE folder and make a folder for gdb:  
 ```
@@ -78,13 +78,13 @@ cd gdb_pince
 ```  
 Download and extract the gdb source code:
 ```  
-wget "http://ftp.gnu.org/gnu/gdb/gdb-8.1.1.tar.gz"
-tar -zxvf gdb-8.1.1.tar.gz
-cd gdb-8.1.1
+wget "http://ftp.gnu.org/gnu/gdb/gdb-8.2.tar.gz"
+tar -zxvf gdb-8.2.tar.gz
+cd gdb-8.2
 ```  
 Then compile&install locally:
 ```  
-CC=gcc-5 CXX=g++-5 ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
+CC=gcc CXX=g++ ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
 ```  
 Move the contents of gdb/data-directory to share/gdb in case of python part of gdb installation fails:
 ```  
