@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 before_install:
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update && sudo apt-get install gcc-5 g++-5
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update && sudo apt-get install gcc g++
   - wget https://www.python.org/ftp/python/3.4.6/Python-3.4.6.tgz
   - tar xfz Python-3.4.6.tgz
   - cd Python-3.4.6
