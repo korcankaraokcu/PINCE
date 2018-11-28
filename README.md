@@ -173,16 +173,17 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 GPLv3+. See COPYING file for details
 
 # Contact Information
-Korcan Karaokçu <korcankaraokcu@gmail.com>  
-Çağrı Ulaş <cagriulas@gmail.com>  
-Jakob Kreuze <jakob@memeware.net>  
+Korcan Karaokçu([korcankaraokcu](https://github.com/cagriulas)) <korcankaraokcu@gmail.com>  
+Çağrı Ulaş([cagriulas](https://github.com/cagriulas)) <cagriulas@gmail.com>  
+Jakob Kreuze([TsarFox](https://github.com/TsarFox)) <jakob@memeware.net>  
 Gibus <lilac66.dev@gmail.com>  
 
 # Supported platforms
-- Kubuntu 14.04 & 16.04(Also tested on x86 variants)
-- Debian 8.5
-- Linux Mint 18.1(install the package "python3-psutil" if you encounter ImportError or NameError, thanks Gibus)
-- Archlinux(contact with [Çağrı Ulaş](https://github.com/cagriulas) or [Jakob Kreuze](https://github.com/TsarFox))
+- Kubuntu 18.04 & 16.04(Also tested on x86 variants)
+- Debian 9 (Stretch)
+- Kali Linux
+- Linux Mint 19 (Tara)(install the package "python3-psutil" if you encounter ImportError or NameError, thanks Gibus)
+- Archlinux(tag [cagriulas](https://github.com/cagriulas) or [TsarFox](https://github.com/TsarFox) when creating an issue)
 
 # Trusted Sources
   * [Official github page](https://github.com/korcankaraokcu/PINCE)
