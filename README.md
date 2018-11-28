@@ -168,6 +168,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Use type hints(py 3.5) and variable annotations(py 3.6) when support drops for older systems(independent from other steps)
 - All tables that hold large amount of data should only update the visible rows(check ```disassemble_check_viewport``` for an example)(independent from other steps)
 - Create ```CONTRIBUTING.md``` when coding style becomes more consistent(independent from other steps)
+- Add different kinds of themes and the ability to change between them on runtime. Implement dark theme first. Also add the ability to create a custom theme and modify the existing ones(independent from other steps)
 
 # License
 GPLv3+. See COPYING file for details
