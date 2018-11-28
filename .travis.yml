@@ -15,9 +15,9 @@
 
 before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update && sudo apt-get install gcc g++
-  - wget https://www.python.org/ftp/python/3.4.6/Python-3.4.6.tgz
-  - tar xfz Python-3.4.6.tgz
-  - cd Python-3.4.6
+  - wget https://www.python.org/ftp/python/3.5.3/Python-3.5.3.tgz
+  - tar xfz Python-3.5.3.tgz
+  - cd Python-3.5.3
   - sh configure --prefix=/usr --enable-shared
   - make
   - sudo make install
