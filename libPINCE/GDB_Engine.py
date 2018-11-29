@@ -1165,6 +1165,9 @@ def get_breakpoint_info():
     returned_list = []
     multiple_break_data = OrderedDict()
     raw_info = send_command("-break-list")
+    # Temporary fix for https://sourceware.org/bugzilla/show_bug.cgi?id=9659
+    # TODO:Delete this line when gdb or pygdbmi fixes the problem
+    raw_info = re.sub("script={(.*?)}", "script=[\g<1>]", raw_info)  # Please refer to issue #53
     for item in SysUtils.parse_response(raw_info)['payload']['BreakpointTable']['body']:
         item = defaultdict(lambda: "", item)
         number, breakpoint_type, disp, enabled, address, what, condition, hit_count, enable_count = \
