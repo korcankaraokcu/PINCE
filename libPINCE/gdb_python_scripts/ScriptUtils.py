@@ -79,11 +79,11 @@ def read_address(address, value_type, length=None, zero_terminate=True, only_byt
     packed_data = type_defs.index_to_valuetype_dict.get(value_type, -1)
     if type_defs.VALUE_INDEX.is_string(value_type):
         try:
-            temp_len = int(length)
+            length = int(length)
         except:
             print(str(length) + " is not a valid length")
             return
-        if not temp_len > 0:
+        if not length > 0:
             print("length must be greater than 0")
             return
         expected_length = length * type_defs.string_index_to_multiplier_dict.get(value_type, 1)
