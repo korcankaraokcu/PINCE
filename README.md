@@ -138,6 +138,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Consider adding type guessing for the StackView(independent from other steps)
 - Move GUI classes of PINCE.py to their own files
 - Handle signals and internal errors that causes gdb to halt, such as SIGSEGV and overlapping breakpoints(independent from other steps)
+- Use gdb python API breakpoints instead of breakpoint commands for optimization, also find a way to eliminate output coming from stepping commands such as ```stepi``` or ```nexti```(independent from other steps)
 - Implement a psuedo-terminal for the inferior like edb does(independent from other steps)
 - Implement libPINCE engine
 - Implement auto-ESP&aimbot (depends on libPINCE engine)
