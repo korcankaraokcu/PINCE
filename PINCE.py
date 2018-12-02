@@ -2979,11 +2979,8 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         address_list = [hex(address) for address in self.parent().tableWidget_Disassemble.bookmarks.keys()]
         self.listWidget.addItems([item.all for item in GDB_Engine.examine_expressions(address_list)])
 
-    def change_display(self):
-        current_item = GuiUtils.get_current_item(self.listWidget)
-        if not current_item:
-            return
-        current_address = SysUtils.extract_address(current_item.text())
+    def change_display(self, row):
+        current_address = SysUtils.extract_address(self.listWidget.item(row).text())
         self.lineEdit_Info.setText(GDB_Engine.get_address_info(current_address))
         self.lineEdit_Comment.setText(self.parent().tableWidget_Disassemble.bookmarks[int(current_address, 16)])
 

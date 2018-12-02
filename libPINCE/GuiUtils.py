@@ -105,6 +105,14 @@ def get_current_row(QObject):
 
     Returns:
         int: Currently selected row. Returns -1 if nothing is selected
+
+    Note:
+        This function doesn't work properly when used within signals such as currentItemChanged, currentIndexChanged,
+        currentChanged and currentRowChanged. Use the row, item, QModelIndex or whatever the signal provides instead.
+        This bug occurs because those signals only update the changed row, not the selectionModel. This causes
+        selectionModel().selectedRows() to return None and this function to behave improperly
+
+        For developers: You can use the regex \.current.*\.connect to search signals if a cleanup is needed
     """
     if QObject.selectionModel().selectedRows():
         return QObject.selectionModel().currentIndex().row()
@@ -123,6 +131,14 @@ def get_current_item(QObject):
 
     Returns:
         Any: Currently selected item. Returns None if nothing is selected
+
+    Note:
+        This function doesn't work properly when used within signals such as currentItemChanged, currentIndexChanged,
+        currentChanged and currentRowChanged. Use the row, item, QModelIndex or whatever the signal provides instead.
+        This bug occurs because those signals only update the changed row, not the selectionModel. This causes
+        selectionModel().selectedRows() to return None and this function to behave improperly
+
+        For developers: You can use the regex \.current.*\.connect to search signals if a cleanup is needed
     """
     if QObject.selectionModel().selectedRows():
         return QObject.currentItem()
