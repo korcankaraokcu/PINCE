@@ -113,6 +113,8 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - 26/12/2016 : Debugging is finished(At basic level)  
 
 # Current Roadmap
+- Refactor file naming conventions(libPINCE->libpince, decide on snake_case or camelCase for modules etc)
+- Create ```CONTRIBUTING.md``` and combine all non-tutorial notes within it
 - Move read/write memory functions to GDB_Engine from ScriptUtils. Also consider renaming them to read/write_memory
 - Consider replacing read/write_addresses functions with mem_handle&read_write_address functions, this fixes the "read_addresses follows a bad design pattern" step
 - Implement non-stop Continuous Address Table Update feature
@@ -168,7 +170,6 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Provide information about absolute addresses in disassemble screen(independent from other steps)
 - Use type hints(py 3.5) and variable annotations(py 3.6) when support drops for older systems(independent from other steps)
 - All tables that hold large amount of data should only update the visible rows(check ```disassemble_check_viewport``` for an example)(independent from other steps)
-- Create ```CONTRIBUTING.md``` when coding style becomes more consistent(independent from other steps)
 - Add different kinds of themes and the ability to change between them on runtime. Implement dark theme first. Also add the ability to create a custom theme and modify the existing ones(independent from other steps)
 
 # License
