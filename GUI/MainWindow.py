@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,23 +11,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(751, 659)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
-        MainWindow.setSizePolicy(sizePolicy)
-        MainWindow.setMinimumSize(QtCore.QSize(751, 659))
-        MainWindow.setMaximumSize(QtCore.QSize(751, 659))
+        MainWindow.resize(747, 659)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
-        self.centralwidget.setSizePolicy(sizePolicy)
         self.centralwidget.setObjectName("centralwidget")
-        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.centralwidget)
-        self.verticalLayout_6.setObjectName("verticalLayout_6")
+        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName("gridLayout")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
@@ -90,16 +78,10 @@ class Ui_MainWindow(object):
         self.pushButton_Settings.setText("")
         self.pushButton_Settings.setObjectName("pushButton_Settings")
         self.horizontalLayout_5.addWidget(self.pushButton_Settings)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_5)
+        self.gridLayout.addLayout(self.horizontalLayout_5, 0, 0, 1, 1)
         self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
         self.tableWidget_valuesearchtable = QtWidgets.QTableWidget(self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.tableWidget_valuesearchtable.sizePolicy().hasHeightForWidth())
-        self.tableWidget_valuesearchtable.setSizePolicy(sizePolicy)
-        self.tableWidget_valuesearchtable.setMinimumSize(QtCore.QSize(330, 0))
         self.tableWidget_valuesearchtable.setObjectName("tableWidget_valuesearchtable")
         self.tableWidget_valuesearchtable.setColumnCount(3)
         self.tableWidget_valuesearchtable.setRowCount(0)
@@ -229,7 +211,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.verticalLayout_5.addLayout(self.horizontalLayout_3)
         self.horizontalLayout_9.addWidget(self.QWidget_Toolbox)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_9)
+        self.gridLayout.addLayout(self.horizontalLayout_9, 1, 0, 1, 1)
         self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_8.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
@@ -257,7 +239,7 @@ class Ui_MainWindow(object):
         self.pushButton_AddAddressManually = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_AddAddressManually.setObjectName("pushButton_AddAddressManually")
         self.horizontalLayout_8.addWidget(self.pushButton_AddAddressManually)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_8)
+        self.gridLayout.addLayout(self.horizontalLayout_8, 2, 0, 1, 1)
         self.treeWidget_AddressTable = QtWidgets.QTreeWidget(self.centralwidget)
         self.treeWidget_AddressTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.treeWidget_AddressTable.setDragDropMode(QtWidgets.QAbstractItemView.DragDrop)
@@ -265,10 +247,10 @@ class Ui_MainWindow(object):
         self.treeWidget_AddressTable.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.treeWidget_AddressTable.setExpandsOnDoubleClick(False)
         self.treeWidget_AddressTable.setObjectName("treeWidget_AddressTable")
-        self.verticalLayout_6.addWidget(self.treeWidget_AddressTable)
+        self.gridLayout.addWidget(self.treeWidget_AddressTable, 3, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 751, 31))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 747, 32))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
 

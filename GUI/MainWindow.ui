@@ -6,40 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>751</width>
+    <width>747</width>
     <height>659</height>
    </rect>
-  </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
-  </property>
-  <property name="minimumSize">
-   <size>
-    <width>751</width>
-    <height>659</height>
-   </size>
-  </property>
-  <property name="maximumSize">
-   <size>
-    <width>751</width>
-    <height>659</height>
-   </size>
   </property>
   <property name="windowTitle">
    <string>PINCE</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout_6">
-    <item>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_5">
       <property name="sizeConstraint">
        <enum>QLayout::SetFixedSize</enum>
@@ -180,22 +156,10 @@
       </item>
      </layout>
     </item>
-    <item>
+    <item row="1" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_9">
       <item>
        <widget class="QTableWidget" name="tableWidget_valuesearchtable">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>330</width>
-          <height>0</height>
-         </size>
-        </property>
         <column>
          <property name="text">
           <string>Address</string>
@@ -502,7 +466,7 @@
       </item>
      </layout>
     </item>
-    <item>
+    <item row="2" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_8">
       <property name="sizeConstraint">
        <enum>QLayout::SetMinAndMaxSize</enum>
@@ -595,7 +559,7 @@
       </item>
      </layout>
     </item>
-    <item>
+    <item row="3" column="0">
      <widget class="QTreeWidget" name="treeWidget_AddressTable">
       <property name="editTriggers">
        <set>QAbstractItemView::NoEditTriggers</set>
@@ -649,8 +613,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>751</width>
-     <height>31</height>
+     <width>747</width>
+     <height>32</height>
     </rect>
    </property>
   </widget>
