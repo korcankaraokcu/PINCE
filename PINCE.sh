@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Change this bullcrap when polkit is implemented
 OS=$(lsb_release -si)
-if [ $OS = "Debian" ]; then
+# Get rid of gksudo when Debian 8 support drops or polkit gets implemented
+if [ $OS = "Debian" ] && [ -x "$(command -v gksudo)" ]; then
   gksudo python3 PINCE.py
 else
   sudo python3 PINCE.py
