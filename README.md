@@ -113,6 +113,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - 26/12/2016 : Debugging is finished(At basic level)  
 
 # Current Roadmap
+- Add ability to include non-absolute calls for dissect code feature(i.e call rax)
 - Refactor file naming conventions(libPINCE->libpince, decide on snake_case or camelCase for modules etc)
 - Create ```CONTRIBUTING.md``` and combine all non-tutorial notes within it
 - Move read/write memory functions to GDB_Engine from ScriptUtils. Also consider renaming them to read/write_memory
