@@ -186,6 +186,7 @@ Gibus <lilac66.dev@gmail.com>
 - Kubuntu 18.04 & 16.04(Also tested on x86 variants)
 - Debian 9 (Stretch)
 - Kali Linux
+- Parrot OS
 - Linux Mint 19 (Tara)(install the package "python3-psutil" if you encounter ImportError or NameError, thanks Gibus)
 - Archlinux(tag [cagriulas](https://github.com/cagriulas) or [TsarFox](https://github.com/TsarFox) when creating an issue)
 
