@@ -276,7 +276,7 @@ class CheckInferiorStatus(QThread):
         while True:
             with GDB_Engine.status_changed_condition:
                 GDB_Engine.status_changed_condition.wait()
-            if GDB_Engine.inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+            if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
                 self.process_stopped.emit()
             else:
                 self.process_running.emit()
@@ -289,7 +289,7 @@ class UpdateAddressTableThread(QThread):
         while True:
             while not update_table:
                 sleep(0.1)
-            if GDB_Engine.inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+            if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
                 self.update_table_signal.emit()
             sleep(table_update_interval)
 
@@ -505,7 +505,7 @@ class MainForm(QMainWindow, MainWindow):
         result = GDB_Engine.toggle_attach()
         if not result:
             dialog_text = "Unable to toggle attach"
-        elif result is type_defs.TOGGLE_ATTACH.DETACHED:
+        elif result == type_defs.TOGGLE_ATTACH.DETACHED:
             self.on_status_detached()
             dialog_text = "GDB is detached from the process"
         else:
@@ -1095,7 +1095,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_length.setText(length)
             self.checkBox_zeroterminate.show()
             self.checkBox_zeroterminate.setChecked(zero_terminate)
-        elif self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
             self.label_length.show()
             self.lineEdit_length.show()
             try:
@@ -1135,7 +1135,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.label_valueofaddress.setText("<font color=red>??</font>")
             return
         address_type = self.comboBox_ValueType.currentIndex()
-        if address_type is type_defs.VALUE_INDEX.INDEX_AOB:
+        if address_type == type_defs.VALUE_INDEX.INDEX_AOB:
             length = self.lineEdit_length.text()
             value = GDB_Engine.read_address(address, address_type, length)
         elif type_defs.VALUE_INDEX.is_string(address_type):
@@ -1151,7 +1151,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.label_length.show()
             self.lineEdit_length.show()
             self.checkBox_zeroterminate.show()
-        elif self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
             self.label_length.show()
             self.lineEdit_length.show()
             self.checkBox_zeroterminate.hide()
@@ -1209,7 +1209,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.lineEdit_Length.setText(length)
             self.checkBox_ZeroTerminate.show()
             self.checkBox_ZeroTerminate.setChecked(zero_terminate)
-        elif self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
             self.label_Length.show()
             self.lineEdit_Length.show()
             try:
@@ -1229,7 +1229,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.label_Length.show()
             self.lineEdit_Length.show()
             self.checkBox_ZeroTerminate.show()
-        elif self.comboBox_ValueType.currentIndex() is type_defs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
             self.label_Length.show()
             self.lineEdit_Length.show()
             self.checkBox_ZeroTerminate.hide()
@@ -1538,14 +1538,14 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.stackedWidget.setCurrentIndex(index)
 
     def listWidget_Functions_current_row_changed(self, index):
-        if index is -1:
+        if index == -1:
             self.keySequenceEdit.clear()
         else:
             self.keySequenceEdit.setKeySequence(self.hotkey_to_value[Hotkeys.get_hotkeys()[index].name])
 
     def keySequenceEdit_key_sequence_changed(self):
         index = self.listWidget_Functions.currentIndex().row()
-        if index is -1:
+        if index == -1:
             self.keySequenceEdit.clear()
         else:
             self.hotkey_to_value[Hotkeys.get_hotkeys()[index].name] = self.keySequenceEdit.keySequence().toString()
@@ -3337,7 +3337,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.pushButton_Stop.setText("Close")
 
     def closeEvent(self, QCloseEvent):
-        if GDB_Engine.inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
             QCloseEvent.ignore()
             raise type_defs.InferiorRunningException
         try:
@@ -3453,7 +3453,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.parent().refresh_disassemble_view()
 
     def closeEvent(self, QCloseEvent):
-        if GDB_Engine.inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
             QCloseEvent.ignore()
             raise type_defs.InferiorRunningException
         try:
@@ -4437,7 +4437,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
             self.label_ScanInfo.setText("Scan was canceled")
             self.init_pre_scan_gui()
         else:
-            if not GDB_Engine.inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+            if not GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
                 QMessageBox.information(self, "Error", "Please stop the process first")
                 return
             selected_rows = self.tableWidget_ExecutableMemoryRegions.selectionModel().selectedRows()
