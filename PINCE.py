@@ -70,7 +70,7 @@ from GUI.CustomValidators.HexValidator import QHexValidator
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-16"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-17"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = float
 show_messagebox_on_exception = bool
@@ -78,6 +78,7 @@ show_messagebox_on_toggle_attach = bool
 gdb_output_mode = tuple
 auto_attach_list = str
 auto_attach_regex = bool
+logo_path = str
 
 
 class Hotkeys:
@@ -393,7 +394,6 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Console.setIcon(QIcon(QPixmap(icons_directory + "/application_xp_terminal.png")))
         self.pushButton_Wiki.setIcon(QIcon(QPixmap(icons_directory + "/book_open.png")))
         self.pushButton_About.setIcon(QIcon(QPixmap(icons_directory + "/information.png")))
-        app.setWindowIcon(QIcon(current_dir + "/media/logo/ozgurozbek/pince_small.png"))
         self.auto_attach()
 
     def set_default_settings(self):
@@ -404,6 +404,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("show_messagebox_on_toggle_attach", True)
         self.settings.setValue("gdb_output_mode", type_defs.gdb_output_mode(True, True, True))
         self.settings.setValue("auto_attach_list", "")
+        self.settings.setValue("logo_path", "ozgurozbek/pince_small_transparent.png")
         self.settings.setValue("auto_attach_regex", False)
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
@@ -433,6 +434,7 @@ class MainForm(QMainWindow, MainWindow):
         global show_messagebox_on_toggle_attach
         global gdb_output_mode
         global auto_attach_list
+        global logo_path
         global auto_attach_regex
         global code_injection_method
         global bring_disassemble_to_front
@@ -445,6 +447,8 @@ class MainForm(QMainWindow, MainWindow):
         show_messagebox_on_toggle_attach = self.settings.value("General/show_messagebox_on_toggle_attach", type=bool)
         gdb_output_mode = self.settings.value("General/gdb_output_mode", type=tuple)
         auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
+        logo_path = self.settings.value("General/logo_path", type=str)
+        app.setWindowIcon(QIcon(os.path.join(SysUtils.get_logo_directory(), logo_path)))
         auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
         GDB_Engine.set_gdb_output_mode(gdb_output_mode)
         for hotkey in Hotkeys.get_hotkeys():
@@ -1284,8 +1288,8 @@ class LoadingDialogForm(QDialog, LoadingDialog):
         self.background_thread = self.BackgroundThread()
         self.background_thread.output_ready.connect(self.accept)
         self.pushButton_Cancel.clicked.connect(self.cancel_thread)
-        pince_directory = SysUtils.get_current_script_directory()
-        self.movie = QMovie(pince_directory + "/media/LoadingDialog/ajax-loader.gif", QByteArray())
+        media_directory = SysUtils.get_media_directory()
+        self.movie = QMovie(media_directory + "/LoadingDialog/ajax-loader.gif", QByteArray())
         self.label_Animated.setMovie(self.movie)
         self.movie.setScaledSize(QSize(25, 25))
         self.movie.setCacheMode(QMovie.CacheAll)
@@ -1482,6 +1486,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 QMessageBox.information(self, "Error", self.lineEdit_AutoAttachList.text() + " isn't a valid regex")
                 return
         self.settings.setValue("General/auto_attach_list", self.lineEdit_AutoAttachList.text())
+        self.settings.setValue("General/logo_path", self.comboBox_Logo.currentText())
         self.settings.setValue("General/auto_attach_regex", self.checkBox_AutoAttachRegex.isChecked())
         for hotkey in Hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
@@ -1516,6 +1521,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.checkBox_OutputModeCommand.setChecked(self.settings.value("General/gdb_output_mode").command_output)
         self.checkBox_OutputModeCommandInfo.setChecked(self.settings.value("General/gdb_output_mode").command_info)
         self.lineEdit_AutoAttachList.setText(self.settings.value("General/auto_attach_list", type=str))
+        logo_directory = SysUtils.get_logo_directory()
+        logo_list = SysUtils.search_files(logo_directory, "\.(png|jpg|jpeg|svg)$")
+        self.comboBox_Logo.clear()
+        for logo in logo_list:
+            self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
+        self.comboBox_Logo.setCurrentIndex(logo_list.index(self.settings.value("General/logo_path", type=str)))
         self.checkBox_AutoAttachRegex.setChecked(self.settings.value("General/auto_attach_regex", type=bool))
         self.listWidget_Functions.clear()
         self.hotkey_to_value.clear()
@@ -3504,8 +3515,8 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         GuiUtils.center(self)
         self.address = address
         self.breakpoint = breakpoint
-        pince_directory = SysUtils.get_current_script_directory()
-        self.movie = QMovie(pince_directory + "/media/TraceInstructionsWaitWidget/ajax-loader.gif", QByteArray())
+        media_directory = SysUtils.get_media_directory()
+        self.movie = QMovie(media_directory + "/TraceInstructionsWaitWidget/ajax-loader.gif", QByteArray())
         self.label_Animated.setMovie(self.movie)
         self.movie.setScaledSize(QSize(215, 100))
         self.setAttribute(Qt.WA_TranslucentBackground)
