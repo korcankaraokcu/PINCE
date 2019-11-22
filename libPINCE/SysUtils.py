@@ -25,7 +25,7 @@ try:
 except ImportError:
     print("WARNING: GDB couldn't locate the package psutil, psutil based user-defined functions won't work\n" +
           "If you are getting this message without invoking GDB, it means that installation has failed, well, sort of")
-import os, shutil, sys, binascii, pickle, json, traceback, re, pwd
+import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib
 from . import type_defs, common_regexes
 from collections import OrderedDict
 from importlib.machinery import SourceFileLoader
@@ -201,6 +201,26 @@ def get_current_script_directory():
         str: A string pointing to the current working directory
     """
     return sys.path[0]
+
+
+#:tag:Utilities
+def get_media_directory():
+    """Get media directory
+
+    Returns:
+        str: A string pointing to the media directory
+    """
+    return sys.path[0] + "/media"
+
+
+#:tag:Utilities
+def get_logo_directory():
+    """Get logo directory
+
+    Returns:
+        str: A string pointing to the logo directory
+    """
+    return sys.path[0] + "/media/logo"
 
 
 #:tag:Utilities
@@ -1034,3 +1054,22 @@ def parse_response(response, line_num=0):
         dict: Contents of the dict depends on the response
     """
     return gdbmiparser.parse_response(response.splitlines()[line_num])
+
+
+#:tag:Utilities
+def search_files(directory, regex):
+    """Searches the files in given directory for given regex recursively
+
+    Args:
+        directory (str): Directory to search for
+        regex (str): Regex to search for
+
+    Returns:
+        list: Sorted list of the relative paths(to the given directory) of the files found
+    """
+    file_list = []
+    for file in pathlib.Path(directory).rglob("*.*"):
+        result = re.search(regex, file.name, re.IGNORECASE)
+        if result:
+            file_list.append(str(file.relative_to(directory)))
+    return sorted(file_list)
