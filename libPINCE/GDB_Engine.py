@@ -1680,7 +1680,7 @@ def call_function_from_inferior(expression):
     Examples:
         call_function_from_inferior("printf('123')") returns ("$26","3")
     """
-    result = send_command("call " + expression)
+    result = send_command("call (char *) " + expression)
     filtered_result = common_regexes.convenience_variable.search(result)
     if filtered_result:
         return filtered_result.group(1), filtered_result.group(2)
