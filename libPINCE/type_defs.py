@@ -26,7 +26,7 @@ class CONST_TIME:
 
 
 class PATHS:
-    GDB_PATH = "./gdb_pince/gdb-8.2/bin/gdb"
+    GDB_PATH = "./gdb_pince/gdb-8.3.1/bin/gdb"
 
 
 class IPC_PATHS:
