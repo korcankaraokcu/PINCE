@@ -398,7 +398,6 @@ def save_file(data, file_path, save_method="json"):
         try:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             json.dump(data, open(file_path, "w"))
-            chown_to_user(file_path)
             return True
         except Exception as e:
             print("Encountered an exception while dumping the data\n", e)
@@ -407,7 +406,6 @@ def save_file(data, file_path, save_method="json"):
         try:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             pickle.dump(data, open(file_path, "wb"))
-            chown_to_user(file_path)
             return True
         except Exception as e:
             print("Encountered an exception while dumping the data\n", e)
@@ -958,19 +956,6 @@ def init_user_files():
             open(file).close()
         except FileNotFoundError:
             open(file, "w").close()
-    chown_to_user(get_user_path(type_defs.USER_PATHS.ROOT_PATH), recursive=True)
-
-
-#:tag:Utilities
-def chown_to_user(file_path, recursive=False):
-    """Gives ownership of given path to user
-
-    Args:
-        file_path (str): Self-explanatory
-        recursive (bool): If True, applies chown recursively
-    """
-    uid, gid = get_user_ids()
-    os.system("sudo chown " + ("-R " if recursive else "") + uid + ":" + gid + " " + file_path)
 
 
 #:tag:Utilities
