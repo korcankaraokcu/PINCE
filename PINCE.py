@@ -1981,6 +1981,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         GDB_Engine.set_convenience_variable("pc", current_address)
         self.refresh_disassemble_view()
 
+    @GDB_Engine.execute_with_temporary_interruption
     def toggle_breakpoint(self):
         selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -3357,7 +3358,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
             pass
         global instances
         instances.remove(self)
-        GDB_Engine.execute_with_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
+        GDB_Engine.execute_func_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
 
 
 class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
@@ -3473,7 +3474,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
             pass
         global instances
         instances.remove(self)
-        GDB_Engine.execute_with_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
+        GDB_Engine.execute_func_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
         self.parent().refresh_disassemble_view()
 
 

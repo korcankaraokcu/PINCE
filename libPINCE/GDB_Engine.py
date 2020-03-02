@@ -315,8 +315,17 @@ def state_observe_thread():
             gdb_async_output.broadcast_message(child.before)
 
 
+def execute_with_temporary_interruption(func):
+    """Decorator version of execute_func_temporary_interruption"""
+
+    def wrapper(*args, **kwargs):
+        execute_func_temporary_interruption(func, *args, **kwargs)
+
+    return wrapper
+
+
 #:tag:GDBCommunication
-def execute_with_temporary_interruption(func, *args, **kwargs):
+def execute_func_temporary_interruption(func, *args, **kwargs):
     """Interrupts the inferior before executing the given function, continues inferior's execution after calling the
     given function
 
