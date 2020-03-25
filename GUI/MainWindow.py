@@ -93,7 +93,6 @@ class Ui_MainWindow(object):
         self.tableWidget_valuesearchtable.setHorizontalHeaderItem(2, item)
         self.horizontalLayout_9.addWidget(self.tableWidget_valuesearchtable)
         self.QWidget_Toolbox = QtWidgets.QWidget(self.centralwidget)
-        self.QWidget_Toolbox.setEnabled(False)
         self.QWidget_Toolbox.setObjectName("QWidget_Toolbox")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.QWidget_Toolbox)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
