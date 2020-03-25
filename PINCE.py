@@ -26,9 +26,10 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil, re
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
+from libPINCE.PINCEBackend import PINCEBackend
 
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
@@ -342,6 +343,7 @@ class MainForm(QMainWindow, MainWindow):
             self.set_default_settings()
         GDB_Engine.init_gdb(gdb_path=gdb_path)
         GDB_Engine.set_logging(gdb_logging)
+        self.backend = PINCEBackend("libscanmem.so.1.0.0")
         self.memory_view_window = MemoryViewWindowForm(self)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
@@ -776,10 +778,34 @@ class MainForm(QMainWindow, MainWindow):
         console_widget.showMaximized()
 
     def pushButton_NewFirstScan_clicked(self):
+        self.backend.sm_exec_cmd("reset")
+        self.tableWidget_valuesearchtable.setRowCount(0)
+        self.backend.sm_exec_cmd(
+            self.lineEdit_Scan.text()) # add some verification later, for now proof ofconcept
+        matches_str = self.backend.sm_exec_cmd("list", True)
+
+        self.add_matches_to_valuesearchtable(matches_str)
         return
 
     def pushButton_NextScan_clicked(self):
+        self.backend.sm_exec_cmd(self.lineEdit_Scan.text(), True)
+        matches_str = self.backend.sm_exec_cmd("list", True)
+        self.add_matches_to_valuesearchtable(matches_str)
         return
+
+    def add_matches_to_valuesearchtable(self, matches_str):
+        self.tableWidget_valuesearchtable.clear()
+        matches_str = matches_str.decode("utf-8").splitlines()
+        line_regex = re.compile(r"^\[ *(\d+)\] +([\da-f]+), +\d+ \+ +([\da-f]+), +(\w+), (.*), +\[([\w ]+)\]$")
+
+        for line in matches_str:
+            (n, address, offset, region_type, value, t) = line_regex.match(line).groups()
+            n = int(n)
+            self.tableWidget_valuesearchtable.insertRow(
+                self.tableWidget_valuesearchtable.rowCount())
+            self.tableWidget_valuesearchtable.setItem(n, 0, QTableWidgetItem(address))
+            self.tableWidget_valuesearchtable.setItem(n, 1, QTableWidgetItem(value))
+            self.tableWidget_valuesearchtable.setItem(n, 2, QTableWidgetItem(value))
 
     # shows the process select window
     def pushButton_AttachProcess_clicked(self):
@@ -822,6 +848,7 @@ class MainForm(QMainWindow, MainWindow):
         attach_result = GDB_Engine.attach(pid, gdb_path=gdb_path)
         if attach_result[0] == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
             GDB_Engine.set_logging(gdb_logging)
+            self.backend.sm_exec_cmd("pid {}".format(pid))
             self.on_new_process()
             return True
         else:
