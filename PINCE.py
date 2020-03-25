@@ -779,7 +779,6 @@ class MainForm(QMainWindow, MainWindow):
 
     def pushButton_NewFirstScan_clicked(self):
         self.backend.sm_exec_cmd("reset")
-        self.tableWidget_valuesearchtable.setRowCount(0)
         self.backend.sm_exec_cmd(
             self.lineEdit_Scan.text()) # add some verification later, for now proof ofconcept
         matches_str = self.backend.sm_exec_cmd("list", True)
@@ -794,7 +793,7 @@ class MainForm(QMainWindow, MainWindow):
         return
 
     def add_matches_to_valuesearchtable(self, matches_str):
-        self.tableWidget_valuesearchtable.clear()
+        self.tableWidget_valuesearchtable.setRowCount(0)
         matches_str = matches_str.decode("utf-8").splitlines()
         line_regex = re.compile(r"^\[ *(\d+)\] +([\da-f]+), +\d+ \+ +([\da-f]+), +(\w+), (.*), +\[([\w ]+)\]$")
 
@@ -873,7 +872,7 @@ class MainForm(QMainWindow, MainWindow):
         self.label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
 
         # enable scan GUI
-        self.lineEdit_Scan.setText("This is a placeholder")
+        self.lineEdit_Scan.setPlaceholderText("Scan for")
         # self.QWidget_Toolbox.setEnabled(True)
         # self.pushButton_NextScan.setEnabled(False)
         # self.pushButton_UndoScan.setEnabled(False)
