@@ -373,6 +373,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Save.clicked.connect(self.pushButton_Save_clicked)
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
+        self.pushButton_NextScan.setEnabled(False)
         self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
         self.pushButton_Console.clicked.connect(self.pushButton_Console_clicked)
         self.pushButton_Wiki.clicked.connect(self.pushButton_Wiki_clicked)
@@ -778,12 +779,16 @@ class MainForm(QMainWindow, MainWindow):
         console_widget.showMaximized()
 
     def pushButton_NewFirstScan_clicked(self):
-        self.backend.sm_exec_cmd("reset")
-        self.backend.sm_exec_cmd(
-            self.lineEdit_Scan.text()) # add some verification later, for now proof ofconcept
-        matches_str = self.backend.sm_exec_cmd("list", True)
-
-        self.add_matches_to_valuesearchtable(matches_str)
+        if self.pushButton_NextScan.isEnabled():
+            self.backend.sm_exec_cmd("reset")
+            self.tableWidget_valuesearchtable.setRowCount(0)
+            self.pushButton_NextScan.setEnabled(False)
+        else:
+            self.backend.sm_exec_cmd(
+                self.lineEdit_Scan.text()) # add some verification later, for now proof ofconcept
+            matches_str = self.backend.sm_exec_cmd("list", True)
+            self.pushButton_NextScan.setEnabled(True)
+            self.add_matches_to_valuesearchtable(matches_str)
         return
 
     def pushButton_NextScan_clicked(self):
