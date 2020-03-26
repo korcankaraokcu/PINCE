@@ -278,9 +278,10 @@ class CheckInferiorStatus(QThread):
         while True:
             with GDB_Engine.status_changed_condition:
                 GDB_Engine.status_changed_condition.wait()
-            if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+            if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED and GDB_Engine.temporary_execution_bool != True:
+                print("execute condition: "+ str(GDB_Engine.temporary_execution_bool))
                 self.process_stopped.emit()
-            else:
+            elif GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING and GDB_Engine.temporary_execution_bool != True:
                 self.process_running.emit()
 
 
@@ -374,6 +375,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
         self.pushButton_NextScan.setEnabled(False)
+        self.comboBox_ValueType.currentTextChanged.connect(self.comboBox_ValueType_textChanged)
         self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
         self.pushButton_Console.clicked.connect(self.pushButton_Console_clicked)
         self.pushButton_Wiki.clicked.connect(self.pushButton_Wiki_clicked)
@@ -382,6 +384,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_MemoryView.clicked.connect(self.pushButton_MemoryView_clicked)
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
+        self.tableWidget_valuesearchtable.cellDoubleClicked.connect(self.tableWidget_valuesearchtable_cell_double_clicked)
         self.treeWidget_AddressTable.itemDoubleClicked.connect(self.treeWidget_AddressTable_item_double_clicked)
         self.treeWidget_AddressTable.expanded.connect(self.resize_address_table)
         self.treeWidget_AddressTable.collapsed.connect(self.resize_address_table)
@@ -784,8 +787,8 @@ class MainForm(QMainWindow, MainWindow):
             self.tableWidget_valuesearchtable.setRowCount(0)
             self.pushButton_NextScan.setEnabled(False)
         else:
-            self.backend.sm_exec_cmd(
-                self.lineEdit_Scan.text()) # add some verification later, for now proof ofconcept
+            scan_for = self.lineEdit_Scan.text()
+            self.backend.sm_exec_cmd(scan_for) # add some verification later, for now proof ofconcept
             matches_str = self.backend.sm_exec_cmd("list", True)
             self.pushButton_NextScan.setEnabled(True)
             self.add_matches_to_valuesearchtable(matches_str)
@@ -800,6 +803,11 @@ class MainForm(QMainWindow, MainWindow):
     def add_matches_to_valuesearchtable(self, matches_str):
         self.tableWidget_valuesearchtable.setRowCount(0)
         matches_str = matches_str.decode("utf-8").splitlines()
+        # based on information from the scanmem source, the format for a line from scanmem is:
+        # n     address       region id* offset   region type   value   type(s)
+        # [4425] 7fd3ef3cf488, 31 +       8cf488,  misc,         12,     [I8 ]
+        # * region id = line number in /proc/pid/maps
+        # region id can later be probably be used to get like "executable + offset"
         line_regex = re.compile(r"^\[ *(\d+)\] +([\da-f]+), +\d+ \+ +([\da-f]+), +(\w+), (.*), +\[([\w ]+)\]$")
 
         for line in matches_str:
@@ -807,9 +815,31 @@ class MainForm(QMainWindow, MainWindow):
             n = int(n)
             self.tableWidget_valuesearchtable.insertRow(
                 self.tableWidget_valuesearchtable.rowCount())
-            self.tableWidget_valuesearchtable.setItem(n, 0, QTableWidgetItem(address))
+            self.tableWidget_valuesearchtable.setItem(n, 0, QTableWidgetItem("0x" + address))
             self.tableWidget_valuesearchtable.setItem(n, 1, QTableWidgetItem(value))
             self.tableWidget_valuesearchtable.setItem(n, 2, QTableWidgetItem(value))
+
+    @GDB_Engine.execute_with_temporary_interruption
+    def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
+        addr = self.tableWidget_valuesearchtable.item(row, 0).text()
+        # TODO temporarely pause process and add it
+        # use execute_with_temporary_interruption decorator
+        self.add_entry_to_addresstable("", addr, self.comboBox_ValueType.currentIndex())
+
+
+    def comboBox_ValueType_textChanged(self, text):
+        PINCE_TYPES_TO_SCANMEM = {
+            "Byte": "int8",
+            "2 Bytes": "int16",
+            "4 Bytes": "int32",
+            "8 Bytes": "int64",
+            "Float": "float32",
+            "Double": "float64",
+            "String": "string",
+            "Array of bytes": "bytearray"
+        }
+        scanmem_type = PINCE_TYPES_TO_SCANMEM[text]
+        self.backend.sm_exec_cmd("option scan_data_type {}".format(scanmem_type))
 
     # shows the process select window
     def pushButton_AttachProcess_clicked(self):
