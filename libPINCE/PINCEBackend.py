@@ -23,7 +23,7 @@ from ctypes import byref
 import re
 
 # taken from https://github.com/scanmem/scanmem/blob/6a5e2e86ebacd87bed132dea354433d722081abf/gui/backend.py
-
+# see https://github.com/scanmem/scanmem/issues/225 for future improvements
 class PINCEBackend():
     BACKEND_FUNCTIONS = {
         "sm_init": (ctypes.c_bool, ),

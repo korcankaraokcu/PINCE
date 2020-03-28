@@ -7,6 +7,8 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtGui import QRegExpValidator
+from PyQt5.QtCore import QRegExp
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -138,6 +140,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_7.addWidget(self.widget)
         self.lineEdit_Scan = QtWidgets.QLineEdit(self.QWidget_Toolbox)
         self.lineEdit_Scan.setObjectName("lineEdit_Scan")
+        self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan))
         self.horizontalLayout_7.addWidget(self.lineEdit_Scan)
         self.verticalLayout_5.addLayout(self.horizontalLayout_7)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
@@ -153,6 +156,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.label)
         self.comboBox_ScanType = QtWidgets.QComboBox(self.widget1)
         self.comboBox_ScanType.setObjectName("comboBox_ScanType")
+        # this can probably be made into a better version somehow, defining it in for example type_defs.py, for now it works
+        # though it will be used in exactly one place but dunno
+        self.comboBox_ScanType.addItems(["Exact Match", "Increased", "Decreased", "Less Than", "More than", "Changed", "Unchanged"])
         self.horizontalLayout_2.addWidget(self.comboBox_ScanType)
         self.verticalLayout_4.addLayout(self.horizontalLayout_2)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -186,18 +192,24 @@ class Ui_MainWindow(object):
         self.verticalLayout.setObjectName("verticalLayout")
         self.radioButton_RoundedDefault = QtWidgets.QRadioButton(self.widget_2)
         self.radioButton_RoundedDefault.setObjectName("radioButton_RoundedDefault")
+        self.radioButton_RoundedDefault.setEnabled(False) # Not supported by scanmem
         self.verticalLayout.addWidget(self.radioButton_RoundedDefault)
         self.radioButton_RoundedExtreme = QtWidgets.QRadioButton(self.widget_2)
         self.radioButton_RoundedExtreme.setObjectName("radioButton_RoundedExtreme")
+        self.radioButton_RoundedExtreme.setEnabled(False) # Not supported by scanmem
         self.verticalLayout.addWidget(self.radioButton_RoundedExtreme)
         self.radioButton_Truncated = QtWidgets.QRadioButton(self.widget_2)
         self.radioButton_Truncated.setObjectName("radioButton_Truncated")
+        self.radioButton_Truncated.setEnabled(False) #Not supported by scanmem
         self.verticalLayout.addWidget(self.radioButton_Truncated)
         self.checkBox_Unicode = QtWidgets.QCheckBox(self.widget_2)
         self.checkBox_Unicode.setObjectName("checkBox_Unicode")
         self.verticalLayout.addWidget(self.checkBox_Unicode)
         self.checkBox_CaseSensitive = QtWidgets.QCheckBox(self.widget_2)
         self.checkBox_CaseSensitive.setObjectName("checkBox_CaseSensitive")
+        # disable unicode and case insensitive not supported by libscanmem so for now it will be disabled
+        self.checkBox_CaseSensitive.setEnabled(False)
+        self.checkBox_Unicode.setEnabled(False)
         self.verticalLayout.addWidget(self.checkBox_CaseSensitive)
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setObjectName("verticalLayout_3")
@@ -205,6 +217,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.addItem(spacerItem4)
         self.checkBox_Unrandomizer = QtWidgets.QCheckBox(self.widget_2)
         self.checkBox_Unrandomizer.setObjectName("checkBox_Unrandomizer")
+        self.checkBox_Unrandomizer.setEnabled(False)
         self.verticalLayout_3.addWidget(self.checkBox_Unrandomizer)
         self.verticalLayout.addLayout(self.verticalLayout_3)
         self.horizontalLayout_4.addWidget(self.widget_2)
