@@ -507,7 +507,7 @@ class DissectCode(gdb.Command):
             return False  # vsyscall is ignored if vDSO is present, so we can safely ignore vsyscall
         try:
             if discard_invalid_strings:
-                data_read = self.memory.read(100)
+                data_read = self.memory.read(32)
                 if data_read.startswith(b"\0"):
                     return False
                 data_read = data_read.split(b"\0", maxsplit=1)[0]
@@ -530,7 +530,9 @@ class DissectCode(gdb.Command):
         dissect_code_status_file = SysUtils.get_dissect_code_status_file(pid)
         region_count = len(region_list)
         self.memory = open(ScriptUtils.mem_file, "rb")
-        buffer = 0x130000  # Has the best record of 13.6 sec. Tested on 0ad with Intel i7-4702MQ CPU and 8GB RAM
+
+        # Has the best record of 111 secs. Tested on Torchlight 2 with Intel i7-4702MQ CPU and 8GB RAM
+        buffer = 0x10000  # Aligned to 2**16
         ref_str_count = len(referenced_strings_dict)
         ref_jmp_count = len(referenced_jumps_dict)
         ref_call_count = len(referenced_calls_dict)
