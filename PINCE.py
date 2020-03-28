@@ -19,12 +19,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
-    QKeyEvent
+    QKeyEvent, QRegExpValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, \
     QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
-    QItemSelectionModel, QTimer, QModelIndex, QStringListModel
+    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil, re
 
@@ -296,7 +296,8 @@ class UpdateAddressTableThread(QThread):
                 self.update_table_signal.emit()
             sleep(table_update_interval)
 
-
+# TODO undo scan, we would probably need to make some data structure we
+# could pass to scanmem which then would set the current matches
 # the mainwindow
 class MainForm(QMainWindow, MainWindow):
     def __init__(self):
@@ -375,6 +376,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
         self.pushButton_NextScan.setEnabled(False)
+        self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
         self.comboBox_ValueType.currentTextChanged.connect(self.comboBox_ValueType_textChanged)
         self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
         self.pushButton_Console.clicked.connect(self.pushButton_Console_clicked)
@@ -781,21 +783,59 @@ class MainForm(QMainWindow, MainWindow):
         console_widget = ConsoleWidgetForm()
         console_widget.showMaximized()
 
+    def checkBox_Hex_stateChanged(self, state):
+        if state == Qt.Checked:
+            # allows only things that are hex, can also start with 0x
+            self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("(0x)?[A-Fa-f0-9]*$"), parent=self.lineEdit_Scan)) 
+        else:
+            # sets it back to integers only
+            self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan))
+
+    # TODO add a damn keybind for this...
     def pushButton_NewFirstScan_clicked(self):
         if self.pushButton_NextScan.isEnabled():
             self.backend.sm_exec_cmd("reset")
             self.tableWidget_valuesearchtable.setRowCount(0)
+            self.comboBox_ValueType.setEnabled(True)
             self.pushButton_NextScan.setEnabled(False)
         else:
-            scan_for = self.lineEdit_Scan.text()
-            self.backend.sm_exec_cmd(scan_for) # add some verification later, for now proof ofconcept
-            matches_str = self.backend.sm_exec_cmd("list", True)
+            self.comboBox_ValueType.setEnabled(False)
             self.pushButton_NextScan.setEnabled(True)
-            self.add_matches_to_valuesearchtable(matches_str)
+            self.pushButton_NextScan_clicked() # makes code a little simpler to just implement everything in nextscan
         return
 
+    # :doc:
+    # adds things like 0x when searching for etc, basically just makes the line valid for scanmem
+    # this should cover most things, more things might be added later if need be
+    def validate_search(self, search_for):
+        current_index = self.comboBox_ScanType.currentIndex()
+        if current_index != 0:
+            index_to_symbol = {
+                1: "+", # increased
+                2: "-", # decreased
+                3: "<", # less than
+                4: ">", # more than
+                5: "!=",# changed
+                6: "="  # unchanged
+            }
+            return index_to_symbol[current_index]
+
+        # none of theese should be possible to be true at the same time
+        # TODO refactor later to use current index, and compare to type_defs constant
+        if self.comboBox_ValueType.currentText() == "float":
+            search_for.replace(".", ",") # this is odd, since when searching for floats from command line it uses `.` and not `,`
+        elif self.comboBox_ValueType.currentText() == "string": 
+            search_for = "\" " + search_for
+        elif self.checkBox_Hex.isChecked():
+            if not search_for.startswith("0x"):
+                search_for = "0x" + search_for  
+        return search_for
+
     def pushButton_NextScan_clicked(self):
-        self.backend.sm_exec_cmd(self.lineEdit_Scan.text(), True)
+        search_for = self.validate_search(self.lineEdit_Scan.text())
+
+        # TODO add some validation for the search command
+        self.backend.sm_exec_cmd(search_for)
         matches_str = self.backend.sm_exec_cmd("list", True)
         self.add_matches_to_valuesearchtable(matches_str)
         return
@@ -822,12 +862,11 @@ class MainForm(QMainWindow, MainWindow):
     @GDB_Engine.execute_with_temporary_interruption
     def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
         addr = self.tableWidget_valuesearchtable.item(row, 0).text()
-        # TODO temporarely pause process and add it
-        # use execute_with_temporary_interruption decorator
         self.add_entry_to_addresstable("", addr, self.comboBox_ValueType.currentIndex())
 
 
     def comboBox_ValueType_textChanged(self, text):
+        # used for making our types in the combo box into what scanmem uses
         PINCE_TYPES_TO_SCANMEM = {
             "Byte": "int8",
             "2 Bytes": "int16",
@@ -838,8 +877,31 @@ class MainForm(QMainWindow, MainWindow):
             "String": "string",
             "Array of bytes": "bytearray"
         }
+
+        validator_map = {
+            "int": QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan), # integers
+            "float": QRegExpValidator(QRegExp("-?[0-9]+[.,]?[0-9]*")), # floats, should work fine with the small amount of testing I did
+            "bytearray": QRegExpValidator(QRegExp("^(([A-Fa-f0-9]{2} +)+)$"), parent=self.lineEdit_Scan), # array of bytes
+            "string": None
+        }
+
         scanmem_type = PINCE_TYPES_TO_SCANMEM[text]
+        validator_str = scanmem_type # used to get the correct validator
+
+        # TODO this can probably be made to look nicer, though it doesn't really matter
+        if "int" in validator_str:
+            validator_str = "int"
+            self.checkBox_Hex.setEnabled(True)
+        else:
+            self.checkBox_Hex.setChecked(False)
+            self.checkBox_Hex.setEnabled(False)
+        if "float" in validator_str:
+            validator_str = "float"
+        
+        self.lineEdit_Scan.setValidator(validator_map[validator_str])        
         self.backend.sm_exec_cmd("option scan_data_type {}".format(scanmem_type))
+        # according to scanmem instructions you should always do `reset` after changing type
+        self.backend.sm_exec_cmd("reset") 
 
     # shows the process select window
     def pushButton_AttachProcess_clicked(self):
@@ -903,6 +965,7 @@ class MainForm(QMainWindow, MainWindow):
     # This is called whenever a new process is created/attached to by PINCE
     # in order to change the form appearance
     def on_new_process(self):
+        # TODO add scanmem attachment here
         p = SysUtils.get_process_information(GDB_Engine.currentpid)
         self.label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
 
