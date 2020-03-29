@@ -116,8 +116,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Add ability to include non-absolute calls for dissect code feature(i.e call rax)
 - Refactor file naming conventions(libPINCE->libpince, decide on snake_case or camelCase for modules etc)
 - Create ```CONTRIBUTING.md``` and combine all non-tutorial notes within it
-- Move read/write memory functions to GDB_Engine from ScriptUtils. Also consider renaming them to read/write_memory
-- Consider replacing read/write_addresses functions with mem_handle&read_write_address functions, this fixes the "read_addresses follows a bad design pattern" step
+- Consider replacing read/write_memory_multiple functions with mem_handle&read/write_memory functions, this fixes the "read_memory_multiple follows a bad design pattern" step
 - Implement non-stop Continuous Address Table Update feature
 - Implement Variable Locking
 - Refactorize memory write/read functions
@@ -125,7 +124,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
 - - Consider using a class instead of primitive return types to store the raw bytes. This also gets rid of the unnecessary parameter only_bytes. This class should also include a method to display None type as red '??' text for Qt
 - - text_to_valuetype is a bad design pattern. Store the information inside the items of tableWidget_AddressTable instead
-- - read_addresses follows a bad design pattern, use named tuples or something like that
+- - read_memory_multiple follows a bad design pattern, use named tuples or something like that
 - - Provide an option to cut BOM bytes when writing to memory with the types UTF-16 and UTF-32
 - - Put a warning for users about replacement bytes for non UTF-8 types
 - - Extend string types with LE and BE variants of UTF-16 and UTF-32
