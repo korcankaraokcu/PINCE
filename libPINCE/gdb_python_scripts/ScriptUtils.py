@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import gdb, struct, sys, traceback, functools
+import gdb, sys, traceback, functools
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -23,7 +23,7 @@ PINCE_PATH = gdb.parse_and_eval("$PINCE_PATH").string()
 GDBINIT_AA_PATH = gdb.parse_and_eval("$GDBINIT_AA_PATH").string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
-from libPINCE import SysUtils, type_defs, common_regexes
+from libPINCE import type_defs, common_regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
@@ -61,95 +61,6 @@ def print_exception(func):
             traceback.print_exception(type(e), e, e.__traceback__)
 
     return wrapper
-
-
-# mem_handle parameter example-->open(ScriptUtils.mem_file, "rb"), don't forget to close the handle after you're done
-def read_address(address, value_type, length=None, zero_terminate=True, only_bytes=False, mem_handle=None):
-    try:
-        value_type = int(value_type)
-    except:
-        print(str(value_type) + " is not a valid value index")
-        return
-    if not type(address) == int:
-        try:
-            address = int(address, 0)
-        except:
-            print(str(address) + " is not a valid address")
-            return
-    packed_data = type_defs.index_to_valuetype_dict.get(value_type, -1)
-    if type_defs.VALUE_INDEX.is_string(value_type):
-        try:
-            length = int(length)
-        except:
-            print(str(length) + " is not a valid length")
-            return
-        if not length > 0:
-            print("length must be greater than 0")
-            return
-        expected_length = length * type_defs.string_index_to_multiplier_dict.get(value_type, 1)
-    elif value_type is type_defs.VALUE_INDEX.INDEX_AOB:
-        try:
-            expected_length = int(length)
-        except:
-            print(str(length) + " is not a valid length")
-            return
-        if not expected_length > 0:
-            print("length must be greater than 0")
-            return
-    else:
-        expected_length = packed_data[0]
-        data_type = packed_data[1]
-    try:
-        mem_handle.seek(address)
-        data_read = mem_handle.read(expected_length)
-    except (OSError, ValueError):
-        print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
-        return
-    if only_bytes:
-        return data_read
-    if type_defs.VALUE_INDEX.is_string(value_type):
-        encoding, option = type_defs.string_index_to_encoding_dict[value_type]
-        returned_string = data_read.decode(encoding, option)
-        if zero_terminate:
-            if returned_string.startswith('\x00'):
-                returned_string = '\x00'
-            else:
-                returned_string = returned_string.split('\x00')[0]
-        return returned_string[0:length]
-    elif value_type is type_defs.VALUE_INDEX.INDEX_AOB:
-        return " ".join(format(n, '02x') for n in data_read)
-    else:
-        return struct.unpack_from(data_type, data_read)[0]
-
-
-# TODO: Implement a mem_handle parameter for optimization, check read_address for an example
-# If a file handle fails to write to an address, it becomes unusable. You have to reopen the file to continue writing
-def write_address(address, value_index, value):
-    if not type(address) == int:
-        try:
-            address = int(address, 0)
-        except:
-            print(str(address) + " is not a valid address")
-            return
-    write_data = SysUtils.parse_string(value, value_index)
-    if write_data is None:
-        return
-    encoding, option = type_defs.string_index_to_encoding_dict.get(value_index, (None, None))
-    if encoding is None:
-        if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
-            write_data = bytearray(write_data)
-        else:
-            data_type = type_defs.index_to_struct_pack_dict.get(value_index, -1)
-            write_data = struct.pack(data_type, write_data)
-    else:
-        write_data = write_data.encode(encoding, option)
-    FILE = open(mem_file, "rb+")
-    try:
-        FILE.seek(address)
-        FILE.write(write_data)
-        FILE.close()
-    except (OSError, ValueError):
-        print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + len(write_data)))
 
 
 def get_general_registers():

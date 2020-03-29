@@ -56,54 +56,6 @@ def send_to_pince(contents_send):
 ScriptUtils.gdbinit()
 
 
-class ReadAddresses(gdb.Command):
-    def __init__(self):
-        super(ReadAddresses, self).__init__("pince-read-addresses", gdb.COMMAND_USER)
-
-    def invoke(self, arg, from_tty):
-        data_read_list = []
-        contents_recv = receive_from_pince()
-        mem_handle = open(ScriptUtils.mem_file, "rb")
-
-        # contents_recv format: [[address1, index1, length1, zero_terminate1, only_bytes], ...]
-        for item in contents_recv:
-            address = item[0]
-            index = item[1]
-            try:
-                length = item[2]
-            except IndexError:
-                length = 0
-            try:
-                zero_terminate = item[3]
-            except IndexError:
-                zero_terminate = True
-            try:
-                only_bytes = item[4]
-            except IndexError:
-                only_bytes = False
-            data_read = ScriptUtils.read_address(address, index, length, zero_terminate, only_bytes, mem_handle)
-            data_read_list.append(data_read)
-        mem_handle.close()
-        send_to_pince(data_read_list)
-
-
-class WriteAddresses(gdb.Command):
-    def __init__(self):
-        super(WriteAddresses, self).__init__("pince-write-addresses", gdb.COMMAND_USER)
-
-    def invoke(self, arg, from_tty):
-        contents_recv = receive_from_pince()
-
-        # last item of contents_recv is always value, so we pop it from the list first
-        value = contents_recv.pop()
-
-        # contents_recv format after popping the value: [[address1, index1],[address2, index2], ...]
-        for item in contents_recv:
-            address = item[0]
-            index = item[1]
-            ScriptUtils.write_address(address, index, value)
-
-
 class IgnoreErrors(gdb.Command):
     def __init__(self):
         super(IgnoreErrors, self).__init__("ignore-errors", gdb.COMMAND_USER)
@@ -683,8 +635,6 @@ class SearchFunctions(gdb.Command):
 
 IgnoreErrors()
 CLIOutput()
-ReadAddresses()
-WriteAddresses()
 ParseAndEval()
 ReadRegisters()
 ReadFloatRegisters()
