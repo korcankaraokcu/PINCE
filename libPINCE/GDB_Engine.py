@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from threading import Lock, Thread, Condition
 from time import sleep, time
 from collections import OrderedDict, defaultdict
-import pexpect, os, ctypes, pickle, json, shelve, re
+import pexpect, os, ctypes, pickle, json, shelve, re, struct
 from . import SysUtils, type_defs, common_regexes
 
 self_pid = os.getpid()
@@ -122,6 +122,11 @@ last_gdb_command = ""
 # A list of booleans. Used to adjust gdb output
 # Use the function set_gdb_output_mode to make use of this variable
 gdb_output_mode = type_defs.gdb_output_mode(True, True, True)
+
+#:tag:InferiorInformation
+#:doc:
+# A string. memory file of the currently attached/created process
+mem_file = "/proc/" + str(currentpid) + "/mem"
 
 '''
 When PINCE was first launched, it used gdb 7.7.1, which is a very outdated version of gdb
@@ -579,7 +584,9 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     if currentpid != -1 or not gdb_initialized:
         init_gdb(additional_commands, gdb_path)
     global inferior_arch
+    global mem_file
     currentpid = pid
+    mem_file = "/proc/" + str(currentpid) + "/mem"
     SysUtils.create_PINCE_IPC_PATH(pid)
     send_command("attach " + str(pid))
     set_pince_paths()
@@ -618,6 +625,7 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
     """
     global currentpid
     global inferior_arch
+    global mem_file
     if currentpid != -1 or not gdb_initialized:
         init_gdb(additional_commands, gdb_path)
     output = send_command("file " + process_path)
@@ -641,6 +649,7 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
     wait_for_stop()
     pid = get_inferior_pid()
     currentpid = int(pid)
+    mem_file = "/proc/" + str(currentpid) + "/mem"
     SysUtils.create_PINCE_IPC_PATH(pid)
     set_pince_paths()
     init_referenced_dicts(pid)
@@ -753,8 +762,8 @@ def value_index_to_gdbcommand(index):
 
 
 #:tag:MemoryRW
-def read_address(address, value_index, length=None, zero_terminate=True, only_bytes=False):
-    """Reads value from the given address by using an optimized gdb python script
+def read_memory(address, value_index, length=None, zero_terminate=True, only_bytes=False, mem_handle=None):
+    """Reads value from the given address
 
     Args:
         address (str, int): Can be a hex string or an integer.
@@ -764,6 +773,9 @@ def read_address(address, value_index, length=None, zero_terminate=True, only_by
         zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
         value_index is INDEX_STRING. Ignored otherwise
         only_bytes (bool): Returns only bytes instead of converting it to the according type of value_index
+        mem_handle (BinaryIO): A file handle that points to the memory file of the current process
+        This parameter is used for optimization, intended for internal usage. Check read_memory_multiple for an example
+        Don't forget to close the handle after you're done if you use this parameter manually
 
     Returns:
         str: If the value_index is INDEX_STRING or INDEX_AOB
@@ -772,22 +784,76 @@ def read_address(address, value_index, length=None, zero_terminate=True, only_by
         bytes: If the only_bytes is True
         None: If an error occurs while reading the given address
     """
-    return send_command("pince-read-addresses", send_with_file=True,
-                        file_contents_send=[[address, value_index, length, zero_terminate, only_bytes]],
-                        recv_with_file=True)[0]
+    try:
+        value_index = int(value_index)
+    except:
+        print(str(value_index) + " is not a valid value index")
+        return
+    if not type(address) == int:
+        try:
+            address = int(address, 0)
+        except:
+            print(str(address) + " is not a valid address")
+            return
+    packed_data = type_defs.index_to_valuetype_dict.get(value_index, -1)
+    if type_defs.VALUE_INDEX.is_string(value_index):
+        try:
+            length = int(length)
+        except:
+            print(str(length) + " is not a valid length")
+            return
+        if not length > 0:
+            print("length must be greater than 0")
+            return
+        expected_length = length * type_defs.string_index_to_multiplier_dict.get(value_index, 1)
+    elif value_index is type_defs.VALUE_INDEX.INDEX_AOB:
+        try:
+            expected_length = int(length)
+        except:
+            print(str(length) + " is not a valid length")
+            return
+        if not expected_length > 0:
+            print("length must be greater than 0")
+            return
+    else:
+        expected_length = packed_data[0]
+        data_type = packed_data[1]
+    try:
+        if not mem_handle:
+            mem_handle = open(mem_file, "rb")
+        mem_handle.seek(address)
+        data_read = mem_handle.read(expected_length)
+    except (OSError, ValueError):
+        print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
+        return
+    if only_bytes:
+        return data_read
+    if type_defs.VALUE_INDEX.is_string(value_index):
+        encoding, option = type_defs.string_index_to_encoding_dict[value_index]
+        returned_string = data_read.decode(encoding, option)
+        if zero_terminate:
+            if returned_string.startswith('\x00'):
+                returned_string = '\x00'
+            else:
+                returned_string = returned_string.split('\x00')[0]
+        return returned_string[0:length]
+    elif value_index is type_defs.VALUE_INDEX.INDEX_AOB:
+        return " ".join(format(n, '02x') for n in data_read)
+    else:
+        return struct.unpack_from(data_type, data_read)[0]
 
 
 #:tag:MemoryRW
-def read_addresses(nested_list):
-    """Reads multiple values from the given addresses by using an optimized gdb python script
+def read_memory_multiple(nested_list):
+    """Reads multiple values from the given addresses
 
-    Optimized version of the function read_address. This function is significantly faster after 100 addresses compared
-    to using read_address in a for loop.
+    Optimized version of the function read_memory. This function is significantly faster after 100 addresses compared
+    to using read_memory in a for loop.
 
     Args:
-        nested_list (list): List of *args of the function read_address. You don't have to pass all of the parameters for
+        nested_list (list): List of *args of the function read_memory. You don't have to pass all of the parameters for
         each list in the nested_list, only parameters address and value_index are obligatory. Defaults of the other
-        parameters are the same with the function read_address.
+        parameters are the same with the function read_memory.
 
     Examples:
         All parameters are passed-->[[address1, value_index1, length1, zero_terminate1, only_bytes], ...]
@@ -800,13 +866,33 @@ def read_addresses(nested_list):
         For instance; If 4 addresses has been read and 3rd one is problematic, the returned list will be
         [returned_value1,returned_value2,None,returned_value4]
     """
-    return send_command("pince-read-addresses", send_with_file=True, file_contents_send=nested_list,
-                        recv_with_file=True)
+    data_read_list = []
+    mem_handle = open(mem_file, "rb")
+
+    for item in nested_list:
+        address = item[0]
+        index = item[1]
+        try:
+            length = item[2]
+        except IndexError:
+            length = 0
+        try:
+            zero_terminate = item[3]
+        except IndexError:
+            zero_terminate = True
+        try:
+            only_bytes = item[4]
+        except IndexError:
+            only_bytes = False
+        data_read = read_memory(address, index, length, zero_terminate, only_bytes, mem_handle)
+        data_read_list.append(data_read)
+    mem_handle.close()
+    return data_read_list
 
 
 #:tag:MemoryRW
-def write_address(address, value_index, value):
-    """Sets the given value to the given address by using an optimized gdb python script
+def write_memory(address, value_index, value):
+    """Sets the given value to the given address
 
     If any errors occurs while setting value to the according address, it'll be ignored but the information about
     error will be printed to the terminal.
@@ -815,28 +901,58 @@ def write_address(address, value_index, value):
         address (str, int): Can be a hex string or an integer
         value_index (int): Can be a member of type_defs.VALUE_INDEX
         value (str): The value that'll be written to the given address
+
+    Notes:
+        TODO: Implement a mem_handle parameter for optimization, check read_memory for an example
+        If a file handle fails to write to an address, it becomes unusable
+        You have to reopen the file to continue writing
     """
-    nested_list = [[address, value_index], value]
-    send_command("pince-write-addresses", send_with_file=True, file_contents_send=nested_list)
+    if not type(address) == int:
+        try:
+            address = int(address, 0)
+        except:
+            print(str(address) + " is not a valid address")
+            return
+    write_data = SysUtils.parse_string(value, value_index)
+    if write_data is None:
+        return
+    encoding, option = type_defs.string_index_to_encoding_dict.get(value_index, (None, None))
+    if encoding is None:
+        if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
+            write_data = bytearray(write_data)
+        else:
+            data_type = type_defs.index_to_struct_pack_dict.get(value_index, -1)
+            write_data = struct.pack(data_type, write_data)
+    else:
+        write_data = write_data.encode(encoding, option)
+    FILE = open(mem_file, "rb+")
+    try:
+        FILE.seek(address)
+        FILE.write(write_data)
+        FILE.close()
+    except (OSError, ValueError):
+        print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + len(write_data)))
 
 
 #:tag:MemoryRW
-def write_addresses(nested_list, value):
-    """Sets the given value to the given addresses by using an optimized gdb python script
+def write_memory_multiple(nested_list, value):
+    """Sets the given value to the given addresses
 
     If any errors occurs while setting values to the according addresses, it'll be ignored but the information about
     error will be printed to the terminal.
 
     Args:
-        nested_list (list): List of the address and value_index parameters of the function write_address
+        nested_list (list): List of the address and value_index parameters of the function write_memory
         Both parameters address and value_index are necessary.
         value (str): The value that'll be written to the given addresses
 
     Examples:
         nested_list-->[[address1, value_index1],[address2, value_index2], ...]
     """
-    nested_list.append(value)
-    send_command("pince-write-addresses", send_with_file=True, file_contents_send=nested_list)
+    for item in nested_list:
+        address = item[0]
+        index = item[1]
+        write_memory(address, index, value)
 
 
 #:tag:Assembly
@@ -1901,7 +2017,7 @@ def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.IN
     for item in str_dict:
         nested_list.append((int(item, 16), value_index, 100))
         referenced_list.append(item)
-    value_list = read_addresses(nested_list)
+    value_list = read_memory_multiple(nested_list)
     for index, value in enumerate(value_list):
         value_str = "" if value is None else str(value)
         if not value_str:
