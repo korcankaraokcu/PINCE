@@ -283,6 +283,7 @@ def state_observe_thread():
         if len(matches) > 0:
             global stop_reason
             global inferior_status
+
             if matches[-1][0]:  # stopped
                 stop_reason = type_defs.STOP_REASON.DEBUG
                 inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
@@ -380,7 +381,6 @@ def ___internal_interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG)
     send_command("c", control=True)
     wait_for_stop()
     stop_reason = interrupt_reason
-    temporary_execution_bool
 
 #:tag:Debug
 def can_attach(pid):
@@ -429,7 +429,6 @@ def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
     send_command("c", control=True)
     wait_for_stop()
     stop_reason = interrupt_reason
-
 
 #:tag:Debug
 def continue_inferior():

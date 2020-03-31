@@ -378,6 +378,8 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NextScan.setEnabled(False)
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
         self.comboBox_ValueType.currentTextChanged.connect(self.comboBox_ValueType_textChanged)
+        self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan))
+        self.comboBox_ScanType.addItems(["Exact Match", "Increased", "Decreased", "Less Than", "More than", "Changed", "Unchanged"])
         self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
         self.pushButton_Console.clicked.connect(self.pushButton_Console_clicked)
         self.pushButton_Wiki.clicked.connect(self.pushButton_Wiki_clicked)
@@ -837,6 +839,7 @@ class MainForm(QMainWindow, MainWindow):
         # TODO add some validation for the search command
         self.backend.sm_exec_cmd(search_for)
         matches_str = self.backend.sm_exec_cmd("list", True)
+        self.label_MatchCount.setText("Match count: {}".format(self.backend.sm_get_num_matches()))
         self.add_matches_to_valuesearchtable(matches_str)
         return
 
