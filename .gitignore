@@ -1,5 +1,7 @@
 __pycache__/
 .idea/*
+.vscode/*
+libscanmem.so*
 *.directory
 *.lprof
 *.py[cod]
