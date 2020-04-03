@@ -330,6 +330,7 @@ class UpdateAddressTableThread(QThread):
     def run(self):
         # maybe just pass the list to the signal?
         global saved_addresses_changed_list
+        global table_update_interval
         while True:
             ret = self.fetch_new_table_content()
             if ret == None:
@@ -343,7 +344,7 @@ class UpdateAddressTableThread(QThread):
                     changed_bool = True
             if changed_bool:
                 self.value_changed.emit()
-            sleep(0.2) # this can probably be set from settings?
+            sleep(table_update_interval) # this can probably be set from settings?
 
 # TODO undo scan, we would probably need to make some data structure we
 # could pass to scanmem which then would set the current matches
@@ -457,8 +458,8 @@ class MainForm(QMainWindow, MainWindow):
 
     def set_default_settings(self):
         self.settings.beginGroup("General")
-        self.settings.setValue("auto_update_address_table", False)
-        self.settings.setValue("address_table_update_interval", 0.5)
+        self.settings.setValue("auto_update_address_table", True) # uh kinda not used right now
+        self.settings.setValue("address_table_update_interval", 0.2)
         self.settings.setValue("show_messagebox_on_exception", True)
         self.settings.setValue("show_messagebox_on_toggle_attach", True)
         self.settings.setValue("gdb_output_mode", type_defs.gdb_output_mode(True, True, True))
@@ -857,6 +858,8 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_ValueType.setEnabled(True)
             self.pushButton_NextScan.setEnabled(False)
         else:
+            if not self.lineEdit_Scan.text():
+                return
             self.comboBox_ValueType.setEnabled(False)
             self.pushButton_NextScan.setEnabled(True)
             self.pushButton_NextScan_clicked() # makes code a little simpler to just implement everything in nextscan
@@ -890,7 +893,10 @@ class MainForm(QMainWindow, MainWindow):
         return search_for
 
     def pushButton_NextScan_clicked(self):
-        search_for = self.validate_search(self.lineEdit_Scan.text())
+        line_edit_text = self.lineEdit_Scan.text()
+        if not line_edit_text:
+            return
+        search_for = self.validate_search(line_edit_text)
 
         # TODO add some validation for the search command
         self.backend.sm_exec_cmd(search_for)
