@@ -208,6 +208,9 @@ REF_STR_VAL_COL = 2
 REF_CALL_ADDR_COL = 0
 REF_CALL_COUNT_COL = 1
 
+# used for automatically updating the values in the saved address tree widget
+# see UpdateAddressTableThread
+saved_addresses_changed_list = list()
 
 def except_hook(exception_type, value, tb):
     if show_messagebox_on_exception:
@@ -286,15 +289,61 @@ class CheckInferiorStatus(QThread):
 
 
 class UpdateAddressTableThread(QThread):
-    update_table_signal = pyqtSignal()
+    value_changed = pyqtSignal()
+    def __init__(self, treeWidget_AddressTable):
+        super().__init__()
+        self.treeWidget_AddressTable = treeWidget_AddressTable
+    
+    # TODO add gdb expressions somehow? https://github.com/korcankaraokcu/PINCE/wiki/About-GDB-Expressions
+    # can maybe be placed somehow on the `add address manually` button, idk
+    def fetch_new_table_content(self):
+        """
+            returns None if there's nothing in the treeWidget_AddressTable
 
-    def run(self):
+            if it's not empty:
+            returns: rows, table_content, new_table_content
+            rows: is the rows each of the entries map to
+            table_content: the old content to compare to
+            new_table_content: the new content (duhh)
+        """
+        it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
+        table_content = []
+        address_list = []
+        value_type_list = []
+        rows = []
         while True:
-            while not update_table:
-                sleep(0.1)
-            if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
-                self.update_table_signal.emit()
-            sleep(table_update_interval)
+            row = it.value()
+            if not row:
+                break
+            it += 1
+            address_list.append(row.data(ADDR_COL, ADDR_EXPR_ROLE))
+            value_type_list.append(row.text(TYPE_COL))
+            rows.append(row)
+        if len(rows) == 0:
+            return None
+        for address, value_type in zip(address_list, value_type_list):
+            index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
+            table_content.append((address, index, length, zero_terminate))
+        new_table_content = GDB_Engine.read_memory_multiple(table_content)
+        return (rows, table_content, new_table_content)
+        
+    def run(self):
+        # maybe just pass the list to the signal?
+        global saved_addresses_changed_list
+        while True:
+            ret = self.fetch_new_table_content()
+            if ret == None:
+                continue
+            rows, table_content, new_table_content = ret
+
+            changed_bool = False
+            for row, new_val, old_val in zip(rows, new_table_content, table_content):
+                if new_val != old_val:
+                    saved_addresses_changed_list.append((row, new_val))
+                    changed_bool = True
+            if changed_bool:
+                self.value_changed.emit()
+            sleep(0.2) # this can probably be set from settings?
 
 # TODO undo scan, we would probably need to make some data structure we
 # could pass to scanmem which then would set the current matches
@@ -357,8 +406,8 @@ class MainForm(QMainWindow, MainWindow):
         self.check_status_thread.process_stopped.connect(self.memory_view_window.process_stopped)
         self.check_status_thread.process_running.connect(self.memory_view_window.process_running)
         self.check_status_thread.start()
-        self.update_address_table_thread = UpdateAddressTableThread()
-        self.update_address_table_thread.update_table_signal.connect(self.update_address_table_manually)
+        self.update_address_table_thread = UpdateAddressTableThread(self.treeWidget_AddressTable)
+        self.update_address_table_thread.value_changed.connect(self.update_address_table_automatically)
         self.update_address_table_thread.start()
         self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
         self.shortcut_open_file.activated.connect(self.pushButton_Open_clicked)
@@ -732,6 +781,13 @@ class MainForm(QMainWindow, MainWindow):
         except KeyError:
             self.treeWidget_AddressTable.keyPressEvent_original(event)
 
+    def update_address_table_automatically(self):
+        global saved_addresses_changed_list
+        for row, value in saved_addresses_changed_list:
+            row.setText(VALUE_COL, str(value))
+
+        saved_addresses_changed_list = [] # not sure which is faster, clearing or just setting a new one
+
     def update_address_table_manually(self):
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
         table_contents = []
@@ -854,6 +910,8 @@ class MainForm(QMainWindow, MainWindow):
         line_regex = re.compile(r"^\[ *(\d+)\] +([\da-f]+), +\d+ \+ +([\da-f]+), +(\w+), (.*), +\[([\w ]+)\]$")
 
         for line in matches_str:
+            if line == None:
+                continue
             (n, address, offset, region_type, value, t) = line_regex.match(line).groups()
             n = int(n)
             self.tableWidget_valuesearchtable.insertRow(
