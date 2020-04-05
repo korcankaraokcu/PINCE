@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil, re
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 from libPINCE.PINCEBackend import PINCEBackend
