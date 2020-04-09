@@ -57,7 +57,10 @@ Pre-release screenshots:
   * PINCE provides a trainer auto-generated from current address table on demand by using libPINCE and PyQT5 together
 
 # Installing Automatically
-Just run ```sudo sh install.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. For Archlinux, use the [AUR package](https://aur.archlinux.org/packages/pince-git/) instead. See below if the automatic installation fails.
+Just run ```sudo sh install.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. For Archlinux, use the [AUR package](https://aur.archlinux.org/packages/pince-git/) instead. Check the [Installing Manually](#installing-manually) section if the automatic installation fails.
+
+***Note:*** GDB enhancements (peda, pwndbg, etc) that use a global gdbinit file might cause PINCE to misfunction at times. Please disable them or use them locally before starting PINCE
+
 # Installing Manually  
 To install PINCE, run this command chain then compile gdb:  
   
