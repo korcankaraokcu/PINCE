@@ -118,7 +118,6 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - 26/12/2016 : Debugging is finished(At basic level)  
 
 # Current Roadmap
-- Add ability to include non-absolute calls for dissect code feature(i.e call rax)
 - Refactor file naming conventions(libPINCE->libpince, decide on snake_case or camelCase for modules etc)
 - Create ```CONTRIBUTING.md``` and combine all non-tutorial notes within it
 - Consider replacing read/write_memory_multiple functions with mem_handle&read/write_memory functions, this fixes the "read_memory_multiple follows a bad design pattern" step
@@ -171,6 +170,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Implement thread info widget
 - Add ability to change logo and other assets if people contribute more than one asset per usage. Also consider using [PINCE-media](https://github.com/korcankaraokcu/PINCE-media) for development if needed(independent from other steps)
 - Implement developer mode in settings. Developer mode will include features like dissection of GUI elements on events such as mouse-over(independent from other steps)
+- Add ability to include non-absolute calls for dissect code feature(i.e call rax). Should be considered after the first version release. Might be useful for multi-breakpoint related features
 - Implement toggling of arrows for easier navigation for dissected regions(independent from other steps)
 - Provide information about absolute addresses in disassemble screen(independent from other steps)
 - Use type hints(py 3.5) and variable annotations(py 3.6) when support drops for older systems(independent from other steps)
