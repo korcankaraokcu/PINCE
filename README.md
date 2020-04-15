@@ -87,7 +87,7 @@ cd gdb-8.3.1
 ```  
 Then compile&install locally:
 ```  
-CC=gcc CXX=g++ ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
+CC=gcc CXX=g++ ./configure --prefix="$(pwd)" --with-python=python3 && make && sudo make -C gdb install
 ```  
 Move the contents of gdb/data-directory to share/gdb in case of python part of gdb installation fails:
 ```  
