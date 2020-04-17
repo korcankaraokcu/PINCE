@@ -59,6 +59,10 @@ install_scanmem() {
         cp --preserve gui/misc.py ../libPINCE/libscanmem
         echo "Exitting scanmem"
     )
+    # required, since it will throw an import error if it's just `import misc`
+    # some odd things python does with packages or something, I'm not a python dev
+    # I don't know why it does it, I just know it fixes the error
+    sed -i 's/import misc/from \. import misc/g' libPINCE/libscanmem/scanmem.py
 }
 
 OS_NAME="Debian"

@@ -29,7 +29,7 @@ from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
-from libPINCE.PINCEBackend import PINCEBackend
+from libPINCE.libscanmem.scanmem import Scanmem
 
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
@@ -306,6 +306,8 @@ class UpdateAddressTableThread(QThread):
             table_content: the old content to compare to
             new_table_content: the new content (duhh)
         """
+        if self.treeWidget_AddressTable is None:
+            return None
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
         table_content = []
         address_list = []
@@ -326,12 +328,13 @@ class UpdateAddressTableThread(QThread):
             table_content.append((address, index, length, zero_terminate))
         new_table_content = GDB_Engine.read_memory_multiple(table_content)
         return (rows, table_content, new_table_content)
-        
+
     def run(self):
         # maybe just pass the list to the signal?
         global saved_addresses_changed_list
         global table_update_interval
         while True:
+            sleep(table_update_interval) # this can probably be set from settings?
             ret = self.fetch_new_table_content()
             if ret == None:
                 continue
@@ -344,7 +347,6 @@ class UpdateAddressTableThread(QThread):
                     changed_bool = True
             if changed_bool:
                 self.value_changed.emit()
-            sleep(table_update_interval) # this can probably be set from settings?
 
 # TODO undo scan, we would probably need to make some data structure we
 # could pass to scanmem which then would set the current matches
@@ -395,7 +397,10 @@ class MainForm(QMainWindow, MainWindow):
             self.set_default_settings()
         GDB_Engine.init_gdb(gdb_path=gdb_path)
         GDB_Engine.set_logging(gdb_logging)
-        self.backend = PINCEBackend("libscanmem.so.1.0.0")
+        # this should be changed, only works if you use the current directory, fails if you for example install it to some place like bin
+        libscanmem_path = os.path.join(os.getcwd(), "libPINCE", "libscanmem", "libscanmem.so")  
+        self.backend = Scanmem(libscanmem_path)
+        self.backend.send_command("option noptrace 1")
         self.memory_view_window = MemoryViewWindowForm(self)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
@@ -853,7 +858,7 @@ class MainForm(QMainWindow, MainWindow):
     # TODO add a damn keybind for this...
     def pushButton_NewFirstScan_clicked(self):
         if self.pushButton_NextScan.isEnabled():
-            self.backend.sm_exec_cmd("reset")
+            self.backend.send_command("reset")
             self.tableWidget_valuesearchtable.setRowCount(0)
             self.comboBox_ValueType.setEnabled(True)
             self.pushButton_NextScan.setEnabled(False)
@@ -899,32 +904,19 @@ class MainForm(QMainWindow, MainWindow):
         search_for = self.validate_search(line_edit_text)
 
         # TODO add some validation for the search command
-        self.backend.sm_exec_cmd(search_for)
-        matches_str = self.backend.sm_exec_cmd("list", True)
-        self.label_MatchCount.setText("Match count: {}".format(self.backend.sm_get_num_matches()))
-        self.add_matches_to_valuesearchtable(matches_str)
-        return
-
-    def add_matches_to_valuesearchtable(self, matches_str):
+        self.backend.send_command(search_for)
+        matches = self.backend.matches()
+        self.label_MatchCount.setText("Match count: {}".format(self.backend.get_match_count()))
         self.tableWidget_valuesearchtable.setRowCount(0)
-        matches_str = matches_str.decode("utf-8").splitlines()
-        # based on information from the scanmem source, the format for a line from scanmem is:
-        # n     address       region id* offset   region type   value   type(s)
-        # [4425] 7fd3ef3cf488, 31 +       8cf488,  misc,         12,     [I8 ]
-        # * region id = line number in /proc/pid/maps
-        # region id can later be probably be used to get like "executable + offset"
-        line_regex = re.compile(r"^\[ *(\d+)\] +([\da-f]+), +\d+ \+ +([\da-f]+), +(\w+), (.*), +\[([\w ]+)\]$")
 
-        for line in matches_str:
-            if line == None:
-                continue
-            (n, address, offset, region_type, value, t) = line_regex.match(line).groups()
+        for n, address, offset, region_type, value, t in matches:
             n = int(n)
             self.tableWidget_valuesearchtable.insertRow(
-                self.tableWidget_valuesearchtable.rowCount())
+            self.tableWidget_valuesearchtable.rowCount())
             self.tableWidget_valuesearchtable.setItem(n, 0, QTableWidgetItem("0x" + address))
             self.tableWidget_valuesearchtable.setItem(n, 1, QTableWidgetItem(value))
             self.tableWidget_valuesearchtable.setItem(n, 2, QTableWidgetItem(value))
+        return
 
     @GDB_Engine.execute_with_temporary_interruption
     def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
@@ -966,9 +958,9 @@ class MainForm(QMainWindow, MainWindow):
             validator_str = "float"
         
         self.lineEdit_Scan.setValidator(validator_map[validator_str])        
-        self.backend.sm_exec_cmd("option scan_data_type {}".format(scanmem_type))
+        self.backend.send_command("option scan_data_type {}".format(scanmem_type))
         # according to scanmem instructions you should always do `reset` after changing type
-        self.backend.sm_exec_cmd("reset") 
+        self.backend.send_command("reset") 
 
     # shows the process select window
     def pushButton_AttachProcess_clicked(self):
@@ -1011,7 +1003,7 @@ class MainForm(QMainWindow, MainWindow):
         attach_result = GDB_Engine.attach(pid, gdb_path=gdb_path)
         if attach_result[0] == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
             GDB_Engine.set_logging(gdb_logging)
-            self.backend.sm_exec_cmd("pid {}".format(pid))
+            self.backend.send_command("pid {}".format(pid))
             self.on_new_process()
             return True
         else:
@@ -1206,6 +1198,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         self.pushButton_CreateProcess.clicked.connect(self.pushButton_CreateProcess_clicked)
         self.lineEdit_SearchProcess.textChanged.connect(self.generate_new_list)
         self.tableWidget_ProcessTable.itemDoubleClicked.connect(self.pushButton_Open_clicked)
+        print("initialized the form")
 
     # refreshes process list
     def generate_new_list(self):
