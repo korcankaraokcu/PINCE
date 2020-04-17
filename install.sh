@@ -34,10 +34,9 @@ compile_scanmem() {
 }
 
 install_scanmem() {
-    if [ ! -d "./scanmem" ]; then
-        echo "Downloading scanmem"
-        git submodule update --init --recursive
-    fi
+    echo "Downloading scanmem"
+    git submodule update --init --recursive
+    
     if [ ! -d "libPINCE/libscanmem" ]; then
         mkdir libPINCE/libscanmem
         chown -R "${CURRENT_USER}":"${CURRENT_USER}" libPINCE/libscanmem
