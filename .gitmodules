@@ -1,0 +1,3 @@
+[submodule "scanmem"]
+	path = scanmem
+	url = https://github.com/scanmem/scanmem.git
