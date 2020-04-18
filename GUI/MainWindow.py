@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'MainWindow.ui'
+# Form implementation generated from reading ui file 'GUI/MainWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.14.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -89,9 +89,12 @@ class Ui_MainWindow(object):
         self.label_MatchCount.setObjectName("label_MatchCount")
         self.verticalLayout_6.addWidget(self.label_MatchCount)
         self.tableWidget_valuesearchtable = QtWidgets.QTableWidget(self.centralwidget)
+        self.tableWidget_valuesearchtable.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.tableWidget_valuesearchtable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tableWidget_valuesearchtable.setAlternatingRowColors(True)
         self.tableWidget_valuesearchtable.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.tableWidget_valuesearchtable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tableWidget_valuesearchtable.setShowGrid(False)
         self.tableWidget_valuesearchtable.setObjectName("tableWidget_valuesearchtable")
         self.tableWidget_valuesearchtable.setColumnCount(3)
         self.tableWidget_valuesearchtable.setRowCount(0)
@@ -101,6 +104,11 @@ class Ui_MainWindow(object):
         self.tableWidget_valuesearchtable.setHorizontalHeaderItem(1, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_valuesearchtable.setHorizontalHeaderItem(2, item)
+        self.tableWidget_valuesearchtable.horizontalHeader().setSortIndicatorShown(True)
+        self.tableWidget_valuesearchtable.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_valuesearchtable.verticalHeader().setVisible(False)
+        self.tableWidget_valuesearchtable.verticalHeader().setDefaultSectionSize(23)
+        self.tableWidget_valuesearchtable.verticalHeader().setMinimumSectionSize(20)
         self.verticalLayout_6.addWidget(self.tableWidget_valuesearchtable)
         self.horizontalLayout_9.addLayout(self.verticalLayout_6)
         self.QWidget_Toolbox = QtWidgets.QWidget(self.centralwidget)
@@ -267,7 +275,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.treeWidget_AddressTable, 3, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 747, 23))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 747, 30))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
 

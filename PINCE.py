@@ -912,7 +912,7 @@ class MainForm(QMainWindow, MainWindow):
         for n, address, offset, region_type, value, t in matches:
             n = int(n)
             self.tableWidget_valuesearchtable.insertRow(
-            self.tableWidget_valuesearchtable.rowCount())
+                self.tableWidget_valuesearchtable.rowCount())
             self.tableWidget_valuesearchtable.setItem(n, 0, QTableWidgetItem("0x" + address))
             self.tableWidget_valuesearchtable.setItem(n, 1, QTableWidgetItem(value))
             self.tableWidget_valuesearchtable.setItem(n, 2, QTableWidgetItem(value))
