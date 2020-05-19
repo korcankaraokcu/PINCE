@@ -159,28 +159,72 @@
     <item row="1" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_9">
       <item>
-       <widget class="QTableWidget" name="tableWidget_valuesearchtable">
-        <column>
-         <property name="text">
-          <string>Address</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Value</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Previous</string>
-         </property>
-        </column>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_6">
+        <item>
+         <widget class="QLabel" name="label_MatchCount">
+          <property name="text">
+           <string>Match count: 0</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="tableWidget_valuesearchtable">
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="showGrid">
+           <bool>false</bool>
+          </property>
+          <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="verticalHeaderMinimumSectionSize">
+           <number>20</number>
+          </attribute>
+          <attribute name="verticalHeaderDefaultSectionSize">
+           <number>23</number>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>Address</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Value</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Previous</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="QWidget" name="QWidget_Toolbox" native="true">
         <property name="enabled">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_5">
          <item>
@@ -396,6 +440,12 @@
               </property>
               <item>
                <widget class="QRadioButton" name="radioButton_RoundedDefault">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="toolTip">
+                 <string>Not currently supported</string>
+                </property>
                 <property name="text">
                  <string>Ro&amp;unded (Default)</string>
                 </property>
@@ -403,6 +453,12 @@
               </item>
               <item>
                <widget class="QRadioButton" name="radioButton_RoundedExtreme">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="toolTip">
+                 <string>Not currently supported</string>
+                </property>
                 <property name="text">
                  <string>Rou&amp;nded (Extreme)</string>
                 </property>
@@ -410,6 +466,12 @@
               </item>
               <item>
                <widget class="QRadioButton" name="radioButton_Truncated">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="toolTip">
+                 <string>Not currently supported</string>
+                </property>
                 <property name="text">
                  <string>Truncated</string>
                 </property>
@@ -417,6 +479,12 @@
               </item>
               <item>
                <widget class="QCheckBox" name="checkBox_Unicode">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="toolTip">
+                 <string>Not currently supported</string>
+                </property>
                 <property name="text">
                  <string>Unicode</string>
                 </property>
@@ -424,6 +492,12 @@
               </item>
               <item>
                <widget class="QCheckBox" name="checkBox_CaseSensitive">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="toolTip">
+                 <string>Not currently supported</string>
+                </property>
                 <property name="text">
                  <string>Case Sensitive</string>
                 </property>
@@ -446,6 +520,12 @@
                 </item>
                 <item>
                  <widget class="QCheckBox" name="checkBox_Unrandomizer">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="toolTip">
+                   <string>Not currently supported</string>
+                  </property>
                   <property name="text">
                    <string>Unrandomizer</string>
                   </property>
@@ -614,7 +694,7 @@
      <x>0</x>
      <y>0</y>
      <width>747</width>
-     <height>32</height>
+     <height>30</height>
     </rect>
    </property>
   </widget>

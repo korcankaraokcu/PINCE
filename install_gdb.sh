@@ -28,21 +28,27 @@ if [ ! -e gdb-8.3.1.tar.gz ] ; then
 fi
 tar -zxvf gdb-8.3.1.tar.gz
 cd gdb-8.3.1
-
-# Dependencies required for compiling GDB
-sudo apt-get install python3-dev
-sudo apt-get install gcc g++
+echo "-------------------------------------------------------------------------"
+echo "DISCLAIMER"
+echo "-------------------------------------------------------------------------"
+echo "If you're not on debian or a similar distro with the 'apt' package manager the follow will not work if you don't have gcc and g++ installed"
+echo "Please install them manually for this to work, this issue will be addressed at a later date, but for now I'm too lazy to do it"
+command -v gcc g++ # extremely lazy fix for other distros, if gcc&g++ is available it will work, if not it won't
 if [ $? -gt 0 ]; then
-    sudo apt-get install software-properties-common
-    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-    sudo apt-get update
+    # Dependencies required for compiling GDB
+    sudo apt-get install python3-dev
     sudo apt-get install gcc g++
     if [ $? -gt 0 ]; then
-        echo "Failed to install gcc or g++, aborting..."
-        exit 1
+        sudo apt-get install software-properties-common
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        sudo apt-get update
+        sudo apt-get install gcc g++
+        if [ $? -gt 0 ]; then
+            echo "Failed to install gcc or g++, aborting..."
+            exit 1
+        fi
     fi
 fi
-
 CC=gcc CXX=g++ ./configure --prefix="$(pwd)" --with-python=python3 && make && sudo make -C gdb install
 if [ ! -e bin/gdb ] ; then
     echo "Failed to install GDB, restart the installation process"

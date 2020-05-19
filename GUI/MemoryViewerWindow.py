@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MainWindow_MemoryView(object):
     def setupUi(self, MainWindow_MemoryView):
@@ -42,8 +44,10 @@ class Ui_MainWindow_MemoryView(object):
         self.tableWidget_Disassemble.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.tableWidget_Disassemble.setAutoScroll(False)
         self.tableWidget_Disassemble.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tableWidget_Disassemble.setAlternatingRowColors(True)
         self.tableWidget_Disassemble.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.tableWidget_Disassemble.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tableWidget_Disassemble.setShowGrid(False)
         self.tableWidget_Disassemble.setObjectName("tableWidget_Disassemble")
         self.tableWidget_Disassemble.setColumnCount(4)
         self.tableWidget_Disassemble.setRowCount(0)
@@ -76,7 +80,7 @@ class Ui_MainWindow_MemoryView(object):
         self.scrollArea_Registers.setWidgetResizable(True)
         self.scrollArea_Registers.setObjectName("scrollArea_Registers")
         self.scrollAreaWidgetContents_Registers = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 316, 341))
+        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 332, 336))
         self.scrollAreaWidgetContents_Registers.setObjectName("scrollAreaWidgetContents_Registers")
         self.gridLayout_8 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_Registers)
         self.gridLayout_8.setContentsMargins(0, 0, 0, 0)
@@ -576,7 +580,7 @@ class Ui_MainWindow_MemoryView(object):
         self.scrollArea_Hex.setWidgetResizable(True)
         self.scrollArea_Hex.setObjectName("scrollArea_Hex")
         self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 555, 191))
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 547, 193))
         self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
         self.gridLayout_11 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -700,7 +704,7 @@ class Ui_MainWindow_MemoryView(object):
         self.gridLayout_5.addWidget(self.splitter_MainMiddle, 0, 0, 1, 1)
         MainWindow_MemoryView.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow_MemoryView)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 31))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 30))
         self.menubar.setObjectName("menubar")
         self.menuView = QtWidgets.QMenu(self.menubar)
         self.menuView.setObjectName("menuView")
@@ -900,7 +904,6 @@ class Ui_MainWindow_MemoryView(object):
         self.actionReferenced_Strings.setText(_translate("MainWindow_MemoryView", "R&eferenced Strings"))
         self.actionReferenced_Calls.setText(_translate("MainWindow_MemoryView", "Referenced &Calls"))
         self.actionToggle_Attach.setText(_translate("MainWindow_MemoryView", "To&ggle Attach"))
-
 from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
 from GUI.CustomLabels.RegisterLabel import QRegisterLabel
 from GUI.CustomTableViews.AsciiView import QAsciiView
