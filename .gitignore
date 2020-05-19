@@ -2,6 +2,7 @@ __pycache__/
 .idea/*
 .vscode/*
 libscanmem.so*
+libPINCE/libscanmem/*
 *.directory
 *.lprof
 *.py[cod]
