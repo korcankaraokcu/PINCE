@@ -19,7 +19,7 @@ Pre-release screenshots:
 ![](media/screenshots/pince8.png)
 ![](media/screenshots/pince9.png)
 # Features  
-- **Memory searching** **[Planned]**  (The plan is to use libscanmem by wrapping it with a gdb python script)
+- **Memory searching:** PINCE uses [libscanmem](https://github.com/scanmem/scanmem) to search the memory efficiently **[Done]**
 - **Variable Inspection&Modification** **[Done/Basic]**
   * **CheatEngine-like value type support:** Byte to 8 Bytes, Float, Double, Strings(including utf-8, utf-16, utf-32 and zero-terminate strings), Array of Bytes **[Done]**
   * **Symbol Recognition:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/About-GDB-Expressions) **[Done]**
@@ -116,6 +116,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - 21/08/2016 : Memory View is finished(At basic level)
 - 24/08/2016 : PINCE no more uses linux-inject because of stability issues(a fix for the [race conditions in the inferior](https://github.com/gaffe23/linux-inject/issues/7) would be nice)
 - 26/12/2016 : Debugging is finished(At basic level)  
+- 19/05/2020 : libscanmem integration is complete, enjoy memory searching. Huge thanks to fisu, xk and 12345ieee (libscanmem team)  
 
 # Current Roadmap
 - Refactor file naming conventions(libPINCE->libpince, decide on snake_case or camelCase for modules etc)
@@ -159,7 +160,6 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Automatic function bypassing(make it return the desired value, hook specific parts etc.)
 - Implement speedhack(independent from other steps)
 - Implement unrandomizer(independent from other steps)
-- Implement memory search(with scanmem)
 - Implement pointer-scan
 - Write at least one test for each function in libPINCE
 - Migrate to Sphinx documentation from the custom libPINCE documentation(independent from other steps)
