@@ -334,7 +334,7 @@ class UpdateAddressTableThread(QThread):
         global saved_addresses_changed_list
         global table_update_interval
         while True:
-            sleep(table_update_interval) # this can probably be set from settings?
+            sleep(table_update_interval)
             ret = self.fetch_new_table_content()
             if ret == None:
                 continue

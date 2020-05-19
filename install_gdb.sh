@@ -32,7 +32,7 @@ echo "-------------------------------------------------------------------------"
 echo "DISCLAIMER"
 echo "-------------------------------------------------------------------------"
 echo "If you're not on debian or a similar distro with the 'apt' package manager the follow will not work if you don't have gcc and g++ installed"
-echo "Please install them manually for this to work, this issue will be addressed at a later date, but for now I'm too lazy to do it"
+echo "Please install them manually for this to work, this issue will be addressed at a later date"
 command -v gcc g++ # extremely lazy fix for other distros, if gcc&g++ is available it will work, if not it won't
 if [ $? -gt 0 ]; then
     # Dependencies required for compiling GDB
