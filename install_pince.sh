@@ -16,6 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
 
+# this file cannot (or any file) be named `install.sh` since libtoolize(automake) will not work properly if it does
+# it will create the necessary files in PINCEs directory instead of scanmems, which will result in having to run `sh autogen.sh`
+# twice, see this link https://github.com/protocolbuffers/protobuf/issues/149#issuecomment-473092810
+
+
 CURRENT_USER="$(who mom likes | awk '{print $1}')"
 
 install_gdb () {

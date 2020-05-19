@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'MainWindow.ui'
+# Form implementation generated from reading ui file 'GUI/MainWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.10.1
+# Created by: PyQt5 UI code generator 5.14.2
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -81,7 +83,18 @@ class Ui_MainWindow(object):
         self.gridLayout.addLayout(self.horizontalLayout_5, 0, 0, 1, 1)
         self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
+        self.verticalLayout_6 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_6.setObjectName("verticalLayout_6")
+        self.label_MatchCount = QtWidgets.QLabel(self.centralwidget)
+        self.label_MatchCount.setObjectName("label_MatchCount")
+        self.verticalLayout_6.addWidget(self.label_MatchCount)
         self.tableWidget_valuesearchtable = QtWidgets.QTableWidget(self.centralwidget)
+        self.tableWidget_valuesearchtable.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.tableWidget_valuesearchtable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tableWidget_valuesearchtable.setAlternatingRowColors(True)
+        self.tableWidget_valuesearchtable.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.tableWidget_valuesearchtable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tableWidget_valuesearchtable.setShowGrid(False)
         self.tableWidget_valuesearchtable.setObjectName("tableWidget_valuesearchtable")
         self.tableWidget_valuesearchtable.setColumnCount(3)
         self.tableWidget_valuesearchtable.setRowCount(0)
@@ -91,9 +104,15 @@ class Ui_MainWindow(object):
         self.tableWidget_valuesearchtable.setHorizontalHeaderItem(1, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_valuesearchtable.setHorizontalHeaderItem(2, item)
-        self.horizontalLayout_9.addWidget(self.tableWidget_valuesearchtable)
+        self.tableWidget_valuesearchtable.horizontalHeader().setSortIndicatorShown(True)
+        self.tableWidget_valuesearchtable.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_valuesearchtable.verticalHeader().setVisible(False)
+        self.tableWidget_valuesearchtable.verticalHeader().setDefaultSectionSize(23)
+        self.tableWidget_valuesearchtable.verticalHeader().setMinimumSectionSize(20)
+        self.verticalLayout_6.addWidget(self.tableWidget_valuesearchtable)
+        self.horizontalLayout_9.addLayout(self.verticalLayout_6)
         self.QWidget_Toolbox = QtWidgets.QWidget(self.centralwidget)
-        self.QWidget_Toolbox.setEnabled(False)
+        self.QWidget_Toolbox.setEnabled(True)
         self.QWidget_Toolbox.setObjectName("QWidget_Toolbox")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.QWidget_Toolbox)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
@@ -183,18 +202,23 @@ class Ui_MainWindow(object):
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.radioButton_RoundedDefault = QtWidgets.QRadioButton(self.widget_2)
+        self.radioButton_RoundedDefault.setEnabled(False)
         self.radioButton_RoundedDefault.setObjectName("radioButton_RoundedDefault")
         self.verticalLayout.addWidget(self.radioButton_RoundedDefault)
         self.radioButton_RoundedExtreme = QtWidgets.QRadioButton(self.widget_2)
+        self.radioButton_RoundedExtreme.setEnabled(False)
         self.radioButton_RoundedExtreme.setObjectName("radioButton_RoundedExtreme")
         self.verticalLayout.addWidget(self.radioButton_RoundedExtreme)
         self.radioButton_Truncated = QtWidgets.QRadioButton(self.widget_2)
+        self.radioButton_Truncated.setEnabled(False)
         self.radioButton_Truncated.setObjectName("radioButton_Truncated")
         self.verticalLayout.addWidget(self.radioButton_Truncated)
         self.checkBox_Unicode = QtWidgets.QCheckBox(self.widget_2)
+        self.checkBox_Unicode.setEnabled(False)
         self.checkBox_Unicode.setObjectName("checkBox_Unicode")
         self.verticalLayout.addWidget(self.checkBox_Unicode)
         self.checkBox_CaseSensitive = QtWidgets.QCheckBox(self.widget_2)
+        self.checkBox_CaseSensitive.setEnabled(False)
         self.checkBox_CaseSensitive.setObjectName("checkBox_CaseSensitive")
         self.verticalLayout.addWidget(self.checkBox_CaseSensitive)
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
@@ -202,6 +226,7 @@ class Ui_MainWindow(object):
         spacerItem4 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_3.addItem(spacerItem4)
         self.checkBox_Unrandomizer = QtWidgets.QCheckBox(self.widget_2)
+        self.checkBox_Unrandomizer.setEnabled(False)
         self.checkBox_Unrandomizer.setObjectName("checkBox_Unrandomizer")
         self.verticalLayout_3.addWidget(self.checkBox_Unrandomizer)
         self.verticalLayout.addLayout(self.verticalLayout_3)
@@ -250,7 +275,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.treeWidget_AddressTable, 3, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 747, 32))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 747, 30))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
 
@@ -269,6 +294,7 @@ class Ui_MainWindow(object):
         self.label_SelectedProcess.setText(_translate("MainWindow", "No Process Selected"))
         self.pushButton_Console.setToolTip(_translate("MainWindow", "Open a gdb console"))
         self.pushButton_Settings.setToolTip(_translate("MainWindow", "Configure options"))
+        self.label_MatchCount.setText(_translate("MainWindow", "Match count: 0"))
         item = self.tableWidget_valuesearchtable.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Address"))
         item = self.tableWidget_valuesearchtable.horizontalHeaderItem(1)
@@ -292,11 +318,17 @@ class Ui_MainWindow(object):
         self.comboBox_ValueType.setItemText(6, _translate("MainWindow", "String"))
         self.comboBox_ValueType.setItemText(7, _translate("MainWindow", "Array of bytes"))
         self.pushButton_ShowMemoryRegions.setText(_translate("MainWindow", "Show Memory Regions"))
+        self.radioButton_RoundedDefault.setToolTip(_translate("MainWindow", "Not currently supported"))
         self.radioButton_RoundedDefault.setText(_translate("MainWindow", "Ro&unded (Default)"))
+        self.radioButton_RoundedExtreme.setToolTip(_translate("MainWindow", "Not currently supported"))
         self.radioButton_RoundedExtreme.setText(_translate("MainWindow", "Rou&nded (Extreme)"))
+        self.radioButton_Truncated.setToolTip(_translate("MainWindow", "Not currently supported"))
         self.radioButton_Truncated.setText(_translate("MainWindow", "Truncated"))
+        self.checkBox_Unicode.setToolTip(_translate("MainWindow", "Not currently supported"))
         self.checkBox_Unicode.setText(_translate("MainWindow", "Unicode"))
+        self.checkBox_CaseSensitive.setToolTip(_translate("MainWindow", "Not currently supported"))
         self.checkBox_CaseSensitive.setText(_translate("MainWindow", "Case Sensitive"))
+        self.checkBox_Unrandomizer.setToolTip(_translate("MainWindow", "Not currently supported"))
         self.checkBox_Unrandomizer.setText(_translate("MainWindow", "Unrandomizer"))
         self.pushButton_MemoryView.setText(_translate("MainWindow", "Memory View"))
         self.pushButton_CopyToAddressTable.setToolTip(_translate("MainWindow", "Copy selected items to the address table"))
@@ -309,4 +341,3 @@ class Ui_MainWindow(object):
         self.treeWidget_AddressTable.headerItem().setText(2, _translate("MainWindow", "Address"))
         self.treeWidget_AddressTable.headerItem().setText(3, _translate("MainWindow", "Type"))
         self.treeWidget_AddressTable.headerItem().setText(4, _translate("MainWindow", "Value"))
-

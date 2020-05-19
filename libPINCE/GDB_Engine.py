@@ -82,6 +82,12 @@ status_changed_condition = Condition()
 # See PINCE's AwaitProcessExit class for an example
 process_exited_condition = Condition()
 
+#:tag:bool
+#:doc:
+# Bool for telling CheckInferiorStatus if it's a "real" pause or just for a split 
+# second that it will continue very soon, used in execute_with_temporary_interruption
+temporary_execution_bool = False
+
 #:tag:ConditionsLocks
 #:doc:
 # This condition is notified if gdb starts to wait for the prompt output
@@ -189,7 +195,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
     global gdb_output
     global cancel_send_command
     global last_gdb_command
-    with lock_send_command:
+    with lock_send_command: 
         if gdb_output_mode.command_info:
             time0 = time()
         if not gdb_initialized:
@@ -282,6 +288,7 @@ def state_observe_thread():
         if len(matches) > 0:
             global stop_reason
             global inferior_status
+
             if matches[-1][0]:  # stopped
                 stop_reason = type_defs.STOP_REASON.DEBUG
                 inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
@@ -344,17 +351,41 @@ def execute_func_temporary_interruption(func, *args, **kwargs):
     Returns:
         ???: Result of the given function. Return type depends on the given function
     """
+    global temporary_execution_bool
+    temporary_execution_bool = True
     old_status = inferior_status
     if old_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-        interrupt_inferior(type_defs.STOP_REASON.PAUSE)
+        ___internal_interrupt_inferior(type_defs.STOP_REASON.PAUSE)
     result = func(*args, **kwargs)
     if old_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
         try:
-            continue_inferior()
+            ___internal_continue_inferior()
         except type_defs.InferiorRunningException:
             pass
     return result
 
+#:tag:Debug
+def ___internal_continue_inferior():
+    """
+        Continue the inferior
+        DOES NOT TOGGLE temporary_execution_condition
+        you should always use the real one
+        if you don't toggle the temporary_execution_condition it will never be able to break
+    """
+
+    send_command("c")
+
+#:tag:Debug
+def ___internal_interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
+    """Interrupt the inferior 
+    see notes on ___internal_continue_inferior
+    Args:
+        interrupt_reason (int): Just changes the global variable stop_reason. Can be a member of type_defs.STOP_REASON
+    """
+    global stop_reason
+    send_command("c", control=True)
+    wait_for_stop()
+    stop_reason = interrupt_reason
 
 #:tag:Debug
 def can_attach(pid):
@@ -398,10 +429,11 @@ def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
         interrupt_reason (int): Just changes the global variable stop_reason. Can be a member of type_defs.STOP_REASON
     """
     global stop_reason
+    global temporary_execution_bool
+    temporary_execution_bool = False
     send_command("c", control=True)
     wait_for_stop()
     stop_reason = interrupt_reason
-
 
 #:tag:Debug
 def continue_inferior():

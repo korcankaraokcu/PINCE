@@ -19,16 +19,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
-    QKeyEvent
+    QKeyEvent, QRegExpValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, \
     QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
-    QItemSelectionModel, QTimer, QModelIndex, QStringListModel
+    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
+from libPINCE.libscanmem.scanmem import Scanmem
 
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
@@ -207,6 +208,9 @@ REF_STR_VAL_COL = 2
 REF_CALL_ADDR_COL = 0
 REF_CALL_COUNT_COL = 1
 
+# used for automatically updating the values in the saved address tree widget
+# see UpdateAddressTableThread
+saved_addresses_changed_list = list()
 
 def except_hook(exception_type, value, tb):
     if show_messagebox_on_exception:
@@ -277,24 +281,75 @@ class CheckInferiorStatus(QThread):
         while True:
             with GDB_Engine.status_changed_condition:
                 GDB_Engine.status_changed_condition.wait()
-            if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+            if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED and GDB_Engine.temporary_execution_bool != True:
+                print("execute condition: "+ str(GDB_Engine.temporary_execution_bool))
                 self.process_stopped.emit()
-            else:
+            elif GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING and GDB_Engine.temporary_execution_bool != True:
                 self.process_running.emit()
 
 
 class UpdateAddressTableThread(QThread):
-    update_table_signal = pyqtSignal()
+    value_changed = pyqtSignal()
+    def __init__(self, treeWidget_AddressTable):
+        super().__init__()
+        self.treeWidget_AddressTable = treeWidget_AddressTable
+    
+    # TODO add gdb expressions somehow? https://github.com/korcankaraokcu/PINCE/wiki/About-GDB-Expressions
+    # can maybe be placed somehow on the `add address manually` button, idk
+    def fetch_new_table_content(self):
+        """
+            returns None if there's nothing in the treeWidget_AddressTable
+
+            if it's not empty:
+            returns: rows, table_content, new_table_content
+            rows: is the rows each of the entries map to
+            table_content: the old content to compare to
+            new_table_content: the new content (duhh)
+        """
+        if self.treeWidget_AddressTable is None:
+            return None
+        it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
+        table_content = []
+        address_list = []
+        value_type_list = []
+        rows = []
+        while True:
+            row = it.value()
+            if not row:
+                break
+            it += 1
+            address_list.append(row.data(ADDR_COL, ADDR_EXPR_ROLE))
+            value_type_list.append(row.text(TYPE_COL))
+            rows.append(row)
+        if len(rows) == 0:
+            return None
+        for address, value_type in zip(address_list, value_type_list):
+            index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
+            table_content.append((address, index, length, zero_terminate))
+        new_table_content = GDB_Engine.read_memory_multiple(table_content)
+        return (rows, table_content, new_table_content)
 
     def run(self):
+        # maybe just pass the list to the signal?
+        global saved_addresses_changed_list
+        global table_update_interval
         while True:
-            while not update_table:
-                sleep(0.1)
-            if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
-                self.update_table_signal.emit()
-            sleep(table_update_interval)
+            sleep(table_update_interval) # this can probably be set from settings?
+            ret = self.fetch_new_table_content()
+            if ret == None:
+                continue
+            rows, table_content, new_table_content = ret
 
+            changed_bool = False
+            for row, new_val, old_val in zip(rows, new_table_content, table_content):
+                if new_val != old_val:
+                    saved_addresses_changed_list.append((row, new_val))
+                    changed_bool = True
+            if changed_bool:
+                self.value_changed.emit()
 
+# TODO undo scan, we would probably need to make some data structure we
+# could pass to scanmem which then would set the current matches
 # the mainwindow
 class MainForm(QMainWindow, MainWindow):
     def __init__(self):
@@ -342,6 +397,10 @@ class MainForm(QMainWindow, MainWindow):
             self.set_default_settings()
         GDB_Engine.init_gdb(gdb_path=gdb_path)
         GDB_Engine.set_logging(gdb_logging)
+        # this should be changed, only works if you use the current directory, fails if you for example install it to some place like bin
+        libscanmem_path = os.path.join(os.getcwd(), "libPINCE", "libscanmem", "libscanmem.so")  
+        self.backend = Scanmem(libscanmem_path)
+        self.backend.send_command("option noptrace 1")
         self.memory_view_window = MemoryViewWindowForm(self)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
@@ -353,8 +412,8 @@ class MainForm(QMainWindow, MainWindow):
         self.check_status_thread.process_stopped.connect(self.memory_view_window.process_stopped)
         self.check_status_thread.process_running.connect(self.memory_view_window.process_running)
         self.check_status_thread.start()
-        self.update_address_table_thread = UpdateAddressTableThread()
-        self.update_address_table_thread.update_table_signal.connect(self.update_address_table_manually)
+        self.update_address_table_thread = UpdateAddressTableThread(self.treeWidget_AddressTable)
+        self.update_address_table_thread.value_changed.connect(self.update_address_table_automatically)
         self.update_address_table_thread.start()
         self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
         self.shortcut_open_file.activated.connect(self.pushButton_Open_clicked)
@@ -371,6 +430,11 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Save.clicked.connect(self.pushButton_Save_clicked)
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
+        self.pushButton_NextScan.setEnabled(False)
+        self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
+        self.comboBox_ValueType.currentTextChanged.connect(self.comboBox_ValueType_textChanged)
+        self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan))
+        self.comboBox_ScanType.addItems(["Exact Match", "Increased", "Decreased", "Less Than", "More than", "Changed", "Unchanged"])
         self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
         self.pushButton_Console.clicked.connect(self.pushButton_Console_clicked)
         self.pushButton_Wiki.clicked.connect(self.pushButton_Wiki_clicked)
@@ -379,6 +443,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_MemoryView.clicked.connect(self.pushButton_MemoryView_clicked)
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table_manually)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
+        self.tableWidget_valuesearchtable.cellDoubleClicked.connect(self.tableWidget_valuesearchtable_cell_double_clicked)
         self.treeWidget_AddressTable.itemDoubleClicked.connect(self.treeWidget_AddressTable_item_double_clicked)
         self.treeWidget_AddressTable.expanded.connect(self.resize_address_table)
         self.treeWidget_AddressTable.collapsed.connect(self.resize_address_table)
@@ -398,8 +463,8 @@ class MainForm(QMainWindow, MainWindow):
 
     def set_default_settings(self):
         self.settings.beginGroup("General")
-        self.settings.setValue("auto_update_address_table", False)
-        self.settings.setValue("address_table_update_interval", 0.5)
+        self.settings.setValue("auto_update_address_table", True) # uh kinda not used right now
+        self.settings.setValue("address_table_update_interval", 0.2)
         self.settings.setValue("show_messagebox_on_exception", True)
         self.settings.setValue("show_messagebox_on_toggle_attach", True)
         self.settings.setValue("gdb_output_mode", type_defs.gdb_output_mode(True, True, True))
@@ -722,6 +787,13 @@ class MainForm(QMainWindow, MainWindow):
         except KeyError:
             self.treeWidget_AddressTable.keyPressEvent_original(event)
 
+    def update_address_table_automatically(self):
+        global saved_addresses_changed_list
+        for row, value in saved_addresses_changed_list:
+            row.setText(VALUE_COL, str(value))
+
+        saved_addresses_changed_list = [] # not sure which is faster, clearing or just setting a new one
+
     def update_address_table_manually(self):
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
         table_contents = []
@@ -775,11 +847,120 @@ class MainForm(QMainWindow, MainWindow):
         console_widget = ConsoleWidgetForm()
         console_widget.showMaximized()
 
+    def checkBox_Hex_stateChanged(self, state):
+        if state == Qt.Checked:
+            # allows only things that are hex, can also start with 0x
+            self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("(0x)?[A-Fa-f0-9]*$"), parent=self.lineEdit_Scan)) 
+        else:
+            # sets it back to integers only
+            self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan))
+
+    # TODO add a damn keybind for this...
     def pushButton_NewFirstScan_clicked(self):
+        if self.pushButton_NextScan.isEnabled():
+            self.backend.send_command("reset")
+            self.tableWidget_valuesearchtable.setRowCount(0)
+            self.comboBox_ValueType.setEnabled(True)
+            self.pushButton_NextScan.setEnabled(False)
+        else:
+            if not self.lineEdit_Scan.text():
+                return
+            self.comboBox_ValueType.setEnabled(False)
+            self.pushButton_NextScan.setEnabled(True)
+            self.pushButton_NextScan_clicked() # makes code a little simpler to just implement everything in nextscan
         return
 
+    # :doc:
+    # adds things like 0x when searching for etc, basically just makes the line valid for scanmem
+    # this should cover most things, more things might be added later if need be
+    def validate_search(self, search_for):
+        current_index = self.comboBox_ScanType.currentIndex()
+        if current_index != 0:
+            index_to_symbol = {
+                1: "+", # increased
+                2: "-", # decreased
+                3: "<", # less than
+                4: ">", # more than
+                5: "!=",# changed
+                6: "="  # unchanged
+            }
+            return index_to_symbol[current_index]
+
+        # none of theese should be possible to be true at the same time
+        # TODO refactor later to use current index, and compare to type_defs constant
+        if self.comboBox_ValueType.currentText() == "float":
+            search_for.replace(".", ",") # this is odd, since when searching for floats from command line it uses `.` and not `,`
+        elif self.comboBox_ValueType.currentText() == "string": 
+            search_for = "\" " + search_for
+        elif self.checkBox_Hex.isChecked():
+            if not search_for.startswith("0x"):
+                search_for = "0x" + search_for  
+        return search_for
+
     def pushButton_NextScan_clicked(self):
+        line_edit_text = self.lineEdit_Scan.text()
+        if not line_edit_text:
+            return
+        search_for = self.validate_search(line_edit_text)
+
+        # TODO add some validation for the search command
+        self.backend.send_command(search_for)
+        matches = self.backend.matches()
+        self.label_MatchCount.setText("Match count: {}".format(self.backend.get_match_count()))
+        self.tableWidget_valuesearchtable.setRowCount(0)
+
+        for n, address, offset, region_type, value, t in matches:
+            n = int(n)
+            self.tableWidget_valuesearchtable.insertRow(
+                self.tableWidget_valuesearchtable.rowCount())
+            self.tableWidget_valuesearchtable.setItem(n, 0, QTableWidgetItem("0x" + address))
+            self.tableWidget_valuesearchtable.setItem(n, 1, QTableWidgetItem(value))
+            self.tableWidget_valuesearchtable.setItem(n, 2, QTableWidgetItem(value))
         return
+
+    @GDB_Engine.execute_with_temporary_interruption
+    def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
+        addr = self.tableWidget_valuesearchtable.item(row, 0).text()
+        self.add_entry_to_addresstable("", addr, self.comboBox_ValueType.currentIndex())
+
+
+    def comboBox_ValueType_textChanged(self, text):
+        # used for making our types in the combo box into what scanmem uses
+        PINCE_TYPES_TO_SCANMEM = {
+            "Byte": "int8",
+            "2 Bytes": "int16",
+            "4 Bytes": "int32",
+            "8 Bytes": "int64",
+            "Float": "float32",
+            "Double": "float64",
+            "String": "string",
+            "Array of bytes": "bytearray"
+        }
+
+        validator_map = {
+            "int": QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan), # integers
+            "float": QRegExpValidator(QRegExp("-?[0-9]+[.,]?[0-9]*")), # floats, should work fine with the small amount of testing I did
+            "bytearray": QRegExpValidator(QRegExp("^(([A-Fa-f0-9]{2} +)+)$"), parent=self.lineEdit_Scan), # array of bytes
+            "string": None
+        }
+
+        scanmem_type = PINCE_TYPES_TO_SCANMEM[text]
+        validator_str = scanmem_type # used to get the correct validator
+
+        # TODO this can probably be made to look nicer, though it doesn't really matter
+        if "int" in validator_str:
+            validator_str = "int"
+            self.checkBox_Hex.setEnabled(True)
+        else:
+            self.checkBox_Hex.setChecked(False)
+            self.checkBox_Hex.setEnabled(False)
+        if "float" in validator_str:
+            validator_str = "float"
+        
+        self.lineEdit_Scan.setValidator(validator_map[validator_str])        
+        self.backend.send_command("option scan_data_type {}".format(scanmem_type))
+        # according to scanmem instructions you should always do `reset` after changing type
+        self.backend.send_command("reset") 
 
     # shows the process select window
     def pushButton_AttachProcess_clicked(self):
@@ -822,6 +1003,7 @@ class MainForm(QMainWindow, MainWindow):
         attach_result = GDB_Engine.attach(pid, gdb_path=gdb_path)
         if attach_result[0] == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
             GDB_Engine.set_logging(gdb_logging)
+            self.backend.send_command("pid {}".format(pid))
             self.on_new_process()
             return True
         else:
@@ -842,11 +1024,12 @@ class MainForm(QMainWindow, MainWindow):
     # This is called whenever a new process is created/attached to by PINCE
     # in order to change the form appearance
     def on_new_process(self):
+        # TODO add scanmem attachment here
         p = SysUtils.get_process_information(GDB_Engine.currentpid)
         self.label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
 
         # enable scan GUI
-        self.lineEdit_Scan.setText("This is a placeholder")
+        self.lineEdit_Scan.setPlaceholderText("Scan for")
         # self.QWidget_Toolbox.setEnabled(True)
         # self.pushButton_NextScan.setEnabled(False)
         # self.pushButton_UndoScan.setEnabled(False)
@@ -1015,6 +1198,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         self.pushButton_CreateProcess.clicked.connect(self.pushButton_CreateProcess_clicked)
         self.lineEdit_SearchProcess.textChanged.connect(self.generate_new_list)
         self.tableWidget_ProcessTable.itemDoubleClicked.connect(self.pushButton_Open_clicked)
+        print("initialized the form")
 
     # refreshes process list
     def generate_new_list(self):

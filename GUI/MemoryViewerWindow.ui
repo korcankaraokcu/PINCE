@@ -87,11 +87,17 @@
            <property name="editTriggers">
             <set>QAbstractItemView::NoEditTriggers</set>
            </property>
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
            <property name="selectionMode">
             <enum>QAbstractItemView::SingleSelection</enum>
            </property>
            <property name="selectionBehavior">
             <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+           <property name="showGrid">
+            <bool>false</bool>
            </property>
            <attribute name="horizontalHeaderStretchLastSection">
             <bool>true</bool>
@@ -99,10 +105,10 @@
            <attribute name="verticalHeaderVisible">
             <bool>false</bool>
            </attribute>
-           <attribute name="verticalHeaderDefaultSectionSize">
+           <attribute name="verticalHeaderMinimumSectionSize">
             <number>16</number>
            </attribute>
-           <attribute name="verticalHeaderMinimumSectionSize">
+           <attribute name="verticalHeaderDefaultSectionSize">
             <number>16</number>
            </attribute>
            <attribute name="verticalHeaderStretchLastSection">
@@ -172,8 +178,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>316</width>
-              <height>341</height>
+              <width>332</width>
+              <height>336</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_8">
@@ -1256,8 +1262,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>555</width>
-              <height>191</height>
+              <width>547</width>
+              <height>193</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_11">
@@ -1434,10 +1440,10 @@
                <attribute name="verticalHeaderVisible">
                 <bool>false</bool>
                </attribute>
-               <attribute name="verticalHeaderDefaultSectionSize">
+               <attribute name="verticalHeaderMinimumSectionSize">
                 <number>16</number>
                </attribute>
-               <attribute name="verticalHeaderMinimumSectionSize">
+               <attribute name="verticalHeaderDefaultSectionSize">
                 <number>16</number>
                </attribute>
                <column>
@@ -1493,10 +1499,10 @@
                <attribute name="verticalHeaderVisible">
                 <bool>false</bool>
                </attribute>
-               <attribute name="verticalHeaderDefaultSectionSize">
+               <attribute name="verticalHeaderMinimumSectionSize">
                 <number>16</number>
                </attribute>
-               <attribute name="verticalHeaderMinimumSectionSize">
+               <attribute name="verticalHeaderDefaultSectionSize">
                 <number>16</number>
                </attribute>
                <column>
@@ -1533,7 +1539,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>31</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">
