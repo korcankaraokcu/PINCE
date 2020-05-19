@@ -63,9 +63,7 @@ install_scanmem() {
         cp --preserve gui/misc.py ../libPINCE/libscanmem
         echo "Exitting scanmem"
     )
-    # required, since it will throw an import error if it's just `import misc`
-    # some odd things python does with packages or something, I'm not a python dev
-    # I don't know why it does it, I just know it fixes the error
+    # required for relative import, since it will throw an import error if it's just `import misc`
     sed -i 's/import misc/from \. import misc/g' libPINCE/libscanmem/scanmem.py
 }
 
@@ -76,7 +74,7 @@ INSTALL_COMMAND="install"
 PKG_NAMES_ALL="python3-setuptools python3-pip"
 PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-pyqt5 autotools-dev libtool libreadline-dev intltool"
 PKG_NAMES_SUSE="$PKG_NAMES_ALL python3-qt5"
-PKG_NAMES_ARCH="python-pyqt5 python-setuptools autoconf readline intltool" # arch defaults to py3 now days
+PKG_NAMES_ARCH="python-pyqt5 python-setuptools autoconf readline intltool" # arch defaults to py3 nowadays
 PKG_NAMES="$PKG_NAMES_DEBIAN"
 PKG_NAMES_PIP="psutil pexpect distorm3 pygdbmi"
 
