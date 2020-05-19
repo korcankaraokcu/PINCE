@@ -49,7 +49,7 @@ if [ $? -gt 0 ]; then
         fi
     fi
 fi
-CC=gcc CXX=g++ ./configure --prefix=$(pwd) --with-python=python3 && make && sudo make -C gdb install
+CC=gcc CXX=g++ ./configure --prefix="$(pwd)" --with-python=python3 && make && sudo make -C gdb install
 if [ ! -e bin/gdb ] ; then
     echo "Failed to install GDB, restart the installation process"
     exit 1
