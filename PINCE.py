@@ -1318,7 +1318,11 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             pass
 
     def update_value_of_address(self):
-        address = GDB_Engine.examine_expression(self.lineEdit_address.text()).address
+        address = self.lineEdit_address.text()
+        try:
+            address = GDB_Engine.examine_expression(address).address
+        except type_defs.InferiorRunningException:
+            pass
         if not address:
             self.label_valueofaddress.setText("<font color=red>??</font>")
             return
