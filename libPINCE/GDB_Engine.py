@@ -787,33 +787,33 @@ def read_memory(address, value_index, length=None, zero_terminate=True, only_byt
     try:
         value_index = int(value_index)
     except:
-        print(str(value_index) + " is not a valid value index")
+        # print(str(value_index) + " is not a valid value index")
         return
     if not type(address) == int:
         try:
             address = int(address, 0)
         except:
-            print(str(address) + " is not a valid address")
+            # print(str(address) + " is not a valid address")
             return
     packed_data = type_defs.index_to_valuetype_dict.get(value_index, -1)
     if type_defs.VALUE_INDEX.is_string(value_index):
         try:
             length = int(length)
         except:
-            print(str(length) + " is not a valid length")
+            # print(str(length) + " is not a valid length")
             return
         if not length > 0:
-            print("length must be greater than 0")
+            # print("length must be greater than 0")
             return
         expected_length = length * type_defs.string_index_to_multiplier_dict.get(value_index, 1)
     elif value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         try:
             expected_length = int(length)
         except:
-            print(str(length) + " is not a valid length")
+            # print(str(length) + " is not a valid length")
             return
         if not expected_length > 0:
-            print("length must be greater than 0")
+            # print("length must be greater than 0")
             return
     else:
         expected_length = packed_data[0]
@@ -824,7 +824,11 @@ def read_memory(address, value_index, length=None, zero_terminate=True, only_byt
         mem_handle.seek(address)
         data_read = mem_handle.read(expected_length)
     except (OSError, ValueError):
-        print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
+        # TODO (read/write error output)
+        # Disabled read error printing. If needed, find a way to implement error logging with this function
+        # I've initially thought about enabling it on demand via a parameter but this function already has too many
+        # Maybe creating a function that toggles logging on and off? Other functions could use it too
+        # print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return
     if only_bytes:
         return data_read
@@ -911,7 +915,7 @@ def write_memory(address, value_index, value):
         try:
             address = int(address, 0)
         except:
-            print(str(address) + " is not a valid address")
+            # print(str(address) + " is not a valid address")
             return
     write_data = SysUtils.parse_string(value, value_index)
     if write_data is None:
@@ -931,7 +935,9 @@ def write_memory(address, value_index, value):
         FILE.write(write_data)
         FILE.close()
     except (OSError, ValueError):
-        print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + len(write_data)))
+        # Refer to TODO (read/write error output)
+        # print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + len(write_data)))
+        return
 
 
 #:tag:MemoryRW
