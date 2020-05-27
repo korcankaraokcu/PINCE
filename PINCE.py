@@ -71,7 +71,7 @@ from GUI.CustomValidators.HexValidator import QHexValidator
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-17"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-18"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = float
 show_messagebox_on_exception = bool
@@ -742,6 +742,8 @@ class MainForm(QMainWindow, MainWindow):
             self.treeWidget_AddressTable.keyPressEvent_original(event)
 
     def update_address_table(self):
+        if GDB_Engine.currentpid == -1 or self.treeWidget_AddressTable.topLevelItemCount() == 0:
+            return
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
         table_contents = []
         address_expr_list = []
