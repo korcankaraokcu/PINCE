@@ -755,7 +755,10 @@ class MainForm(QMainWindow, MainWindow):
             address_expr_list.append(row.data(ADDR_COL, ADDR_EXPR_ROLE))
             value_type_list.append(row.text(TYPE_COL))
             rows.append(row)
-        address_list = [item.address for item in GDB_Engine.examine_expressions(address_expr_list)]
+        try:
+            address_list = [item.address for item in GDB_Engine.examine_expressions(address_expr_list)]
+        except type_defs.InferiorRunningException:
+            address_list = address_expr_list
         for address, value_type in zip(address_list, value_type_list):
             index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
             table_contents.append((address, index, length, zero_terminate))
