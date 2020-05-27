@@ -887,9 +887,9 @@ class MainForm(QMainWindow, MainWindow):
         validator_map = {
             "int": QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan),  # integers
             "float": QRegExpValidator(QRegExp("-?[0-9]+[.,]?[0-9]*")),
-        # floats, should work fine with the small amount of testing I did
+            # floats, should work fine with the small amount of testing I did
             "bytearray": QRegExpValidator(QRegExp("^(([A-Fa-f0-9]{2} +)+)$"), parent=self.lineEdit_Scan),
-        # array of bytes
+            # array of bytes
             "string": None
         }
 
@@ -1108,7 +1108,10 @@ class MainForm(QMainWindow, MainWindow):
 
     # Changes the column values of the given row
     def change_address_table_entries(self, row, description="", address_expr="", address_type=""):
-        address = GDB_Engine.examine_expression(address_expr).address
+        try:
+            address = GDB_Engine.examine_expression(address_expr).address
+        except type_defs.InferiorRunningException:
+            address = address_expr
         value = ''
         index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(address_type)
         if address:
