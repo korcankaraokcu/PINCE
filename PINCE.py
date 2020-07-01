@@ -816,9 +816,6 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NextScan.setEnabled(False)
         else:
             print(self.lineEdit_Scan.text())
-            if self.comboBox_ScanType.currentIndex() != 7:
-                if not self.lineEdit_Scan.text():
-                    return
             self.comboBox_ValueType.setEnabled(False)
             self.pushButton_NextScan.setEnabled(True)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
@@ -855,9 +852,6 @@ class MainForm(QMainWindow, MainWindow):
 
     def pushButton_NextScan_clicked(self):
         line_edit_text = self.lineEdit_Scan.text()
-        if self.comboBox_ScanType.currentIndex() != 7:
-            if not line_edit_text:
-                return
         search_for = self.validate_search(line_edit_text)
         # TODO add some validation for the search command
         self.backend.send_command(search_for)
