@@ -387,7 +387,7 @@ class MainForm(QMainWindow, MainWindow):
         self.comboBox_ValueType.currentTextChanged.connect(self.comboBox_ValueType_textChanged)
         self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan))
         self.comboBox_ScanType.addItems(
-            ["Exact Match", "Increased", "Decreased", "Less Than", "More than", "Changed", "Unchanged"])
+            ["Exact Match", "Increased", "Decreased", "Less Than", "More than", "Changed", "Unchanged", "Unknown Initial"])
         self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
         self.pushButton_Console.clicked.connect(self.pushButton_Console_clicked)
         self.pushButton_Wiki.clicked.connect(self.pushButton_Wiki_clicked)
@@ -815,8 +815,10 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_ValueType.setEnabled(True)
             self.pushButton_NextScan.setEnabled(False)
         else:
-            if not self.lineEdit_Scan.text():
-                return
+            print(self.lineEdit_Scan.text())
+            if self.comboBox_ScanType.currentIndex() != 7:
+                if not self.lineEdit_Scan.text():
+                    return
             self.comboBox_ValueType.setEnabled(False)
             self.pushButton_NextScan.setEnabled(True)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
@@ -834,7 +836,8 @@ class MainForm(QMainWindow, MainWindow):
                 3: "<",  # less than
                 4: ">",  # more than
                 5: "!=",  # changed
-                6: "="  # unchanged
+                6: "=",  # unchanged
+                7: "snapshot" # unknown initial
             }
             return index_to_symbol[current_index]
 
@@ -852,10 +855,10 @@ class MainForm(QMainWindow, MainWindow):
 
     def pushButton_NextScan_clicked(self):
         line_edit_text = self.lineEdit_Scan.text()
-        if not line_edit_text:
-            return
+        if self.comboBox_ScanType.currentIndex() != 7:
+            if not line_edit_text:
+                return
         search_for = self.validate_search(line_edit_text)
-
         # TODO add some validation for the search command
         self.backend.send_command(search_for)
         matches = self.backend.matches()
