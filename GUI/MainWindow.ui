@@ -169,6 +169,12 @@
         </item>
         <item>
          <widget class="QTableWidget" name="tableWidget_valuesearchtable">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="autoFillBackground">
+           <bool>false</bool>
+          </property>
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
           </property>
@@ -179,7 +185,7 @@
            <bool>true</bool>
           </property>
           <property name="selectionMode">
-           <enum>QAbstractItemView::SingleSelection</enum>
+           <enum>QAbstractItemView::ExtendedSelection</enum>
           </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
@@ -694,7 +700,7 @@
      <x>0</x>
      <y>0</y>
      <width>747</width>
-     <height>30</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
