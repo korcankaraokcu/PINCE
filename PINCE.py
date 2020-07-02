@@ -395,6 +395,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_AddAddressManually.clicked.connect(self.pushButton_AddAddressManually_clicked)
         self.pushButton_MemoryView.clicked.connect(self.pushButton_MemoryView_clicked)
         self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table)
+        self.pushButton_CopyToAddressTable.clicked.connect(self.copy_to_address_table)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
         self.tableWidget_valuesearchtable.cellDoubleClicked.connect(
             self.tableWidget_valuesearchtable_cell_double_clicked)
@@ -990,7 +991,15 @@ class MainForm(QMainWindow, MainWindow):
         confirm_dialog = InputDialogForm(item_list=[("This will clear the contents of address table\nProceed?",)])
         if confirm_dialog.exec_():
             self.treeWidget_AddressTable.clear()
-
+    
+    def copy_to_address_table(self):
+        print(self.tableWidget_valuesearchtable.selectedItems())
+        i = -1
+        for row in self.tableWidget_valuesearchtable.selectedItems():
+            i = i + 1
+            if i % 3 == 0:
+                self.add_entry_to_addresstable("", row.text(), self.comboBox_ValueType.currentIndex())
+               
     def on_inferior_exit(self):
         if GDB_Engine.currentpid == -1:
             self.on_status_running()
