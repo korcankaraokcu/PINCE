@@ -993,7 +993,6 @@ class MainForm(QMainWindow, MainWindow):
             self.treeWidget_AddressTable.clear()
     
     def copy_to_address_table(self):
-        print(self.tableWidget_valuesearchtable.selectedItems())
         i = -1
         for row in self.tableWidget_valuesearchtable.selectedItems():
             i = i + 1
