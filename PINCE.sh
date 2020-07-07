@@ -22,5 +22,5 @@ OS=$(lsb_release -si)
 if [ $OS = "Debian" ] && [ -x "$(command -v gksudo)" ]; then
   gksudo python3 PINCE.py
 else
-  sudo python3 PINCE.py
+  sudo -E python3 PINCE.py
 fi
