@@ -2532,11 +2532,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         elif self.stackedWidget_StackScreens.currentWidget() == self.Stack:
             self.update_stack()
         self.refresh_hex_view()
-        if self.isVisible():
-            self.show()
-        else:
-            self.showMaximized()
         if bring_disassemble_to_front:
+            self.showMaximized()
             self.activateWindow()
         try:
             if self.stacktrace_info_widget.isVisible():
