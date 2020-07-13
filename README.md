@@ -68,7 +68,8 @@ Just run ```sudo sh install_pince.sh``` in the PINCE directory. Install script c
 - Having spaces in your path might cause GDB to fail compiling
 
 # Installing Manually  
-To install PINCE, run this command chain then compile gdb:  
+Clone this repo by running `git clone --recursive https://github.com/korcankaraokcu/PINCE`  
+Install the dependencies and then compile GDB & install PINCE:  
   
 ```
 sudo apt-get install python3-setuptools python3-pip python3-pyqt5  
