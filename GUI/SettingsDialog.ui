@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>684</width>
-    <height>555</height>
+    <width>884</width>
+    <height>633</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -97,22 +97,28 @@
                    <layout class="QHBoxLayout" name="horizontalLayout_UpdateInterval">
                     <item>
                      <widget class="QLabel" name="label">
+                      <property name="minimumSize">
+                       <size>
+                        <width>102</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
-                       <string>Update interval</string>
+                       <string>Update Interval</string>
                       </property>
                      </widget>
                     </item>
                     <item>
                      <widget class="QLineEdit" name="lineEdit_UpdateInterval">
                       <property name="text">
-                       <string>0.5</string>
+                       <string>200</string>
                       </property>
                      </widget>
                     </item>
                     <item>
                      <widget class="QLabel" name="label_2">
                       <property name="text">
-                       <string>sec</string>
+                       <string>ms</string>
                       </property>
                      </widget>
                     </item>
@@ -124,6 +130,24 @@
                    <layout class="QHBoxLayout" name="horizontalLayout_14">
                     <item>
                      <widget class="QLabel" name="label_12">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>102</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="baseSize">
+                       <size>
+                        <width>0</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>Freeze Interval</string>
                       </property>
@@ -137,8 +161,14 @@
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
+                      <property name="baseSize">
+                       <size>
+                        <width>20</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
-                       <string>5</string>
+                       <string>100</string>
                       </property>
                      </widget>
                     </item>
@@ -698,4 +728,21 @@ Patterns at former positions have higher priority if regex is off</string>
    </hints>
   </connection>
  </connections>
+ <designerdata>
+  <property name="gridDeltaX">
+   <number>5</number>
+  </property>
+  <property name="gridDeltaY">
+   <number>5</number>
+  </property>
+  <property name="gridSnapX">
+   <bool>true</bool>
+  </property>
+  <property name="gridSnapY">
+   <bool>true</bool>
+  </property>
+  <property name="gridVisible">
+   <bool>true</bool>
+  </property>
+ </designerdata>
 </ui>
