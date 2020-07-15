@@ -341,7 +341,7 @@ class Ui_Dialog(object):
         self.listWidget_Options.setSortingEnabled(__sortingEnabled)
         self.checkBox_AutoUpdateAddressTable.setText(_translate("Dialog", "Auto-update address table"))
         self.label.setText(_translate("Dialog", "Update Interval"))
-        self.lineEdit_UpdateInterval.setText(_translate("Dialog", "200"))
+        self.lineEdit_UpdateInterval.setText(_translate("Dialog", "500"))
         self.label_2.setText(_translate("Dialog", "ms"))
         self.label_12.setText(_translate("Dialog", "Freeze Interval"))
         self.lineEdit_FreezeInterval.setText(_translate("Dialog", "100"))
