@@ -74,7 +74,8 @@ instances = []  # Holds temporary instances that will be deleted later on
 # settings
 current_settings_version = "master-18"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
-table_update_interval = float
+table_update_interval = int
+FreezeInterval = int
 show_messagebox_on_exception = bool
 show_messagebox_on_toggle_attach = bool
 gdb_output_mode = tuple
@@ -218,7 +219,6 @@ saved_addresses_changed_list = list()
 FreezeThread = Thread
 FreezeVars = {}
 FreezeStop = 0
-FreezeInterval = 5
 
 def except_hook(exception_type, value, tb):
     if show_messagebox_on_exception:
@@ -301,7 +301,7 @@ class UpdateAddressTableThread(QThread):
 
     def run(self):
         while True:
-            sleep(table_update_interval)
+            sleep(table_update_interval/1000)
             if not update_table:
                 continue
             self.update_table_signal.emit()
@@ -435,7 +435,8 @@ class MainForm(QMainWindow, MainWindow):
     def set_default_settings(self):
         self.settings.beginGroup("General")
         self.settings.setValue("auto_update_address_table", True)
-        self.settings.setValue("address_table_update_interval", 0.2)
+        self.settings.setValue("address_table_update_interval", 500)
+        self.settings.setValue("freeze_interval", 100)
         self.settings.setValue("show_messagebox_on_exception", True)
         self.settings.setValue("show_messagebox_on_toggle_attach", True)
         self.settings.setValue("gdb_output_mode", type_defs.gdb_output_mode(True, True, True))
@@ -477,8 +478,11 @@ class MainForm(QMainWindow, MainWindow):
         global instructions_per_scroll
         global gdb_path
         global gdb_logging
+        global FreezeInterval
+
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
-        table_update_interval = self.settings.value("General/address_table_update_interval", type=float)
+        table_update_interval = self.settings.value("General/address_table_update_interval", type=int)
+        FreezeInterval = self.settings.value("General/freeze_interval", type=int)
         show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
         show_messagebox_on_toggle_attach = self.settings.value("General/show_messagebox_on_toggle_attach", type=bool)
         gdb_output_mode = self.settings.value("General/gdb_output_mode", type=tuple)
@@ -1645,13 +1649,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
     def accept(self):
         try:
-            current_table_update_interval = float(self.lineEdit_UpdateInterval.text())
+            current_table_update_interval = int(self.lineEdit_UpdateInterval.text())
         except:
-            QMessageBox.information(self, "Error", "Update interval must be a float")
+            QMessageBox.information(self, "Error", "Update interval must be an int")
             return
         try:
-            global FreezeInterval
-            FreezeInterval = int(self.lineEdit_FreezeInterval.text())
+            freezeinterval = int(self.lineEdit_FreezeInterval.text())
         except:
             QMessageBox.information(self, "Error", "Freeze interval must be an int")
             return
@@ -1666,23 +1669,24 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             return
         if not self.checkBox_AutoUpdateAddressTable.isChecked():
             pass
-        elif current_table_update_interval < 0:
-            QMessageBox.information(self, "Error", "Update interval cannot be a negative number")
+        elif current_table_update_interval < 0 or freezeinterval < 0:
+            QMessageBox.information(self, "Error", "Interval cannot be a negative number")
             return
-        elif current_table_update_interval == 0:
+        elif current_table_update_interval == 0 or freezeinterval == 0:
 
             # Easter egg #2
             if not InputDialogForm(item_list=[("You are asking for it, aren't you?",)]).exec_():
                 return
-        elif current_table_update_interval < 0.1:
-            if not InputDialogForm(item_list=[("Update interval should be bigger than 0.1 seconds" +
-                                               "\nSetting update interval less than 0.1 seconds may cause slowdown"
+        elif current_table_update_interval < 100:
+            if not InputDialogForm(item_list=[("Update interval should be bigger than 100 ms" +
+                                               "\nSetting update interval less than 100 ms may cause slowdown"
                                                "\nProceed?",)]).exec_():
                 return
 
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
+        self.settings.setValue("General/freeze_interval", freezeinterval)
         self.settings.setValue("General/show_messagebox_on_exception", self.checkBox_MessageBoxOnException.isChecked())
         self.settings.setValue("General/show_messagebox_on_toggle_attach",
                                self.checkBox_MessageBoxOnToggleAttach.isChecked())
@@ -1723,7 +1727,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.checkBox_AutoUpdateAddressTable.setChecked(
             self.settings.value("General/auto_update_address_table", type=bool))
         self.lineEdit_UpdateInterval.setText(
-            str(self.settings.value("General/address_table_update_interval", type=float)))
+            str(self.settings.value("General/address_table_update_interval", type=int)))
+        self.lineEdit_FreezeInterval.setText(
+            str(self.settings.value("General/freeze_interval", type=int)))
         self.checkBox_MessageBoxOnException.setChecked(
             self.settings.value("General/show_messagebox_on_exception", type=bool))
         self.checkBox_MessageBoxOnToggleAttach.setChecked(
