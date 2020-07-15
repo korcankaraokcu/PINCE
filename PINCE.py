@@ -214,11 +214,15 @@ REF_CALL_COUNT_COL = 1
 # see UpdateAddressTableThread
 saved_addresses_changed_list = list()
 
-# vars for communication/storage with the freeze thread
-# see treeWidget_AddressTable_item_clicked for current implementation
+# vars for communication/storage with the non blocking threads
+# see treeWidget_AddressTable_item_clicked
 FreezeThread = Thread
 FreezeVars = {}
 FreezeStop = 0
+ProgressThread = Thread
+update_progress = 0
+
+
 
 def except_hook(exception_type, value, tb):
     if show_messagebox_on_exception:
@@ -826,6 +830,7 @@ class MainForm(QMainWindow, MainWindow):
             self.tableWidget_valuesearchtable.setRowCount(0)
             self.comboBox_ValueType.setEnabled(True)
             self.pushButton_NextScan.setEnabled(False)
+            self.progressBar.setValue(0)
         else:
             print(self.lineEdit_Scan.text())
             self.comboBox_ValueType.setEnabled(False)
@@ -863,11 +868,18 @@ class MainForm(QMainWindow, MainWindow):
         return search_for
 
     def pushButton_NextScan_clicked(self):
+        global update_progress
+        global ProgressThread
+
         line_edit_text = self.lineEdit_Scan.text()
         search_for = self.validate_search(line_edit_text)
+        update_progress = 1
+        ProgressThread = Thread(target = self.update_progress_bar)
+        ProgressThread.start()
         # TODO add some validation for the search command
         self.backend.send_command(search_for)
         matches = self.backend.matches()
+        update_progress = 0
         self.label_MatchCount.setText("Match count: {}".format(self.backend.get_match_count()))
         self.tableWidget_valuesearchtable.setRowCount(0)
 
@@ -1066,6 +1078,14 @@ class MainForm(QMainWindow, MainWindow):
         
 #----------------------------------------------------
 #Async Functions
+
+    def update_progress_bar(self):
+        self.progressBar.setValue(0)
+        while(update_progress == 1):
+            sleep(0.1)
+            value = int(round(self.backend.get_scan_progress() * 100))
+            self.progressBar.setValue(value)
+
     def update_address_table_loop(self):
         while(True):
             sleep(table_update_interval/1000)
