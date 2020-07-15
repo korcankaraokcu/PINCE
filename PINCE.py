@@ -296,15 +296,6 @@ class CheckInferiorStatus(QThread):
                 self.process_running.emit()
 
 
-class UpdateAddressTableThread(QThread):
-    update_table_signal = pyqtSignal()
-
-    def run(self):
-        while True:
-            sleep(table_update_interval/1000)
-            if not update_table:
-                continue
-            self.update_table_signal.emit()
 
 
 # TODO undo scan, we would probably need to make some data structure we
@@ -378,8 +369,7 @@ class MainForm(QMainWindow, MainWindow):
         self.check_status_thread.process_stopped.connect(self.memory_view_window.process_stopped)
         self.check_status_thread.process_running.connect(self.memory_view_window.process_running)
         self.check_status_thread.start()
-        self.update_address_table_thread = UpdateAddressTableThread()
-        self.update_address_table_thread.update_table_signal.connect(self.update_address_table)
+        self.update_address_table_thread = Thread(target = self.update_address_table_loop)
         self.update_address_table_thread.start()
         self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
         self.shortcut_open_file.activated.connect(self.pushButton_Open_clicked)
@@ -431,6 +421,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Wiki.setIcon(QIcon(QPixmap(icons_directory + "/book_open.png")))
         self.pushButton_About.setIcon(QIcon(QPixmap(icons_directory + "/information.png")))
         self.auto_attach()
+
 
     def set_default_settings(self):
         self.settings.beginGroup("General")
@@ -1073,6 +1064,26 @@ class MainForm(QMainWindow, MainWindow):
         action_for_column = collections.defaultdict(lambda *args: lambda: None, action_for_column)
         action_for_column[column]()
         
+#----------------------------------------------------
+#Async Functions
+    def update_address_table_loop(self):
+        while(True):
+            sleep(table_update_interval/1000)
+    
+            if(update_table):
+                try:
+                    self.update_address_table()
+                except:
+                    print("Update Table failed :(")
+
+    def freeze(self):
+            while(True):
+                sleep(FreezeInterval/1000)
+                if FreezeStop == 1:
+                    break
+                for x in FreezeVars:
+                    GDB_Engine.write_memory(x, FreezeVars[x][0], FreezeVars[x][1])
+#----------------------------------------------------
 
     def treeWidget_AddressTable_item_clicked(self, row, column):
         global FreezeThread
@@ -1080,13 +1091,7 @@ class MainForm(QMainWindow, MainWindow):
         global FreezeStop
         global FreezeInterval
 
-        def freeze():
-            while(True):
-                sleep(FreezeInterval/1000)
-                for x in FreezeVars:
-                    GDB_Engine.write_memory(x, FreezeVars[x][0], FreezeVars[x][1])
-                if(FreezeStop == 1):
-                    break
+        
 
         if (column == 0):
             if (row.checkState(0) == Qt.Checked):
@@ -1094,7 +1099,7 @@ class MainForm(QMainWindow, MainWindow):
                 value_index = GuiUtils.text_to_valuetype(row.text(TYPE_COL))[0]
                 if(len(FreezeVars) == 0):
                     FreezeStop = 0
-                    FreezeThread = Thread(target = freeze)
+                    FreezeThread = Thread(target = self.freeze)
                     FreezeThread.start()
                 FreezeVars[row.text(ADDR_COL)] = [value_index, value]
             else:
