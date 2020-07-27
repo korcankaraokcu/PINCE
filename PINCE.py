@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil, pexpect
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 from libPINCE.libscanmem.scanmem import Scanmem
@@ -347,8 +347,15 @@ class MainForm(QMainWindow, MainWindow):
             print("An exception occurred while trying to load settings, rolling back to the default configuration\n", e)
             self.settings.clear()
             self.set_default_settings()
-        GDB_Engine.init_gdb(gdb_path=gdb_path)
-        GDB_Engine.set_logging(gdb_logging)
+        try:
+            GDB_Engine.init_gdb(gdb_path=gdb_path)
+        except pexpect.EOF:
+            text = "Unable to initialize GDB\n" \
+                   "You might want to reinstall GDB or use the system GDB\n" \
+                   "To change the current GDB path, check Settings->Debug"
+            InputDialogForm(item_list=[(text, None)], buttons=[QDialogButtonBox.Ok]).exec_()
+        else:
+            GDB_Engine.set_logging(gdb_logging)
         # this should be changed, only works if you use the current directory, fails if you for example install it to some place like bin
         libscanmem_path = os.path.join(os.getcwd(), "libPINCE", "libscanmem", "libscanmem.so")
         self.backend = Scanmem(libscanmem_path)
@@ -387,7 +394,8 @@ class MainForm(QMainWindow, MainWindow):
         self.comboBox_ValueType.currentTextChanged.connect(self.comboBox_ValueType_textChanged)
         self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan))
         self.comboBox_ScanType.addItems(
-            ["Exact Match", "Increased", "Decreased", "Less Than", "More than", "Changed", "Unchanged", "Unknown Initial"])
+            ["Exact Match", "Increased", "Decreased", "Less Than", "More than", "Changed", "Unchanged",
+             "Unknown Initial"])
         self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
         self.pushButton_Console.clicked.connect(self.pushButton_Console_clicked)
         self.pushButton_Wiki.clicked.connect(self.pushButton_Wiki_clicked)
@@ -835,7 +843,7 @@ class MainForm(QMainWindow, MainWindow):
                 4: ">",  # more than
                 5: "!=",  # changed
                 6: "=",  # unchanged
-                7: "snapshot" # unknown initial
+                7: "snapshot"  # unknown initial
             }
             return index_to_symbol[current_index]
 
@@ -991,14 +999,14 @@ class MainForm(QMainWindow, MainWindow):
         confirm_dialog = InputDialogForm(item_list=[("This will clear the contents of address table\nProceed?",)])
         if confirm_dialog.exec_():
             self.treeWidget_AddressTable.clear()
-    
+
     def copy_to_address_table(self):
         i = -1
         for row in self.tableWidget_valuesearchtable.selectedItems():
             i = i + 1
             if i % 3 == 0:
                 self.add_entry_to_addresstable("", row.text(), self.comboBox_ValueType.currentIndex())
-               
+
     def on_inferior_exit(self):
         if GDB_Engine.currentpid == -1:
             self.on_status_running()
