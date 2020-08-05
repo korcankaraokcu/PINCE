@@ -24,10 +24,9 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, \
     QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
-    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp
+    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp, QRunnable, QThreadPool
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil
-from threading import Thread
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil, pexpect
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 from libPINCE.libscanmem.scanmem import Scanmem
@@ -216,11 +215,23 @@ saved_addresses_changed_list = list()
 
 # vars for communication/storage with the non blocking threads
 # see treeWidget_AddressTable_item_clicked
-FreezeThread = Thread
+Exiting = 0
 FreezeVars = {}
 FreezeStop = 0
-ProgressThread = Thread
-update_progress = 0
+ProgressRun = 0
+threadpool = QThreadPool()
+
+
+class Worker(QRunnable):
+    def __init__(self, fn, *args, **kwargs):
+        super(Worker, self).__init__()
+
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+  
+    def run(self):
+        self.fn(*self.args, **self.kwargs)
 
 
 
@@ -373,8 +384,8 @@ class MainForm(QMainWindow, MainWindow):
         self.check_status_thread.process_stopped.connect(self.memory_view_window.process_stopped)
         self.check_status_thread.process_running.connect(self.memory_view_window.process_running)
         self.check_status_thread.start()
-        self.update_address_table_thread = Thread(target = self.update_address_table_loop)
-        self.update_address_table_thread.start()
+        self.update_address_table_thread = Worker(self.update_address_table_loop)
+        global threadpool; threadpool.start(self.update_address_table_thread) 
         self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
         self.shortcut_open_file.activated.connect(self.pushButton_Open_clicked)
         GuiUtils.append_shortcut_to_tooltip(self.pushButton_Open, self.shortcut_open_file)
@@ -868,18 +879,15 @@ class MainForm(QMainWindow, MainWindow):
         return search_for
 
     def pushButton_NextScan_clicked(self):
-        global update_progress
-        global ProgressThread
-
+        global ProgressRun
         line_edit_text = self.lineEdit_Scan.text()
         search_for = self.validate_search(line_edit_text)
-        update_progress = 1
-        ProgressThread = Thread(target = self.update_progress_bar)
-        ProgressThread.start()
+        #ProgressBar
+        global threadpool; threadpool.start(Worker(self.update_progress_bar))
         # TODO add some validation for the search command
         self.backend.send_command(search_for)
         matches = self.backend.matches()
-        update_progress = 0
+        ProgressRun = 0
         self.label_MatchCount.setText("Match count: {}".format(self.backend.get_match_count()))
         self.tableWidget_valuesearchtable.setRowCount(0)
 
@@ -1055,12 +1063,13 @@ class MainForm(QMainWindow, MainWindow):
     def closeEvent(self, event):
         GDB_Engine.detach()
         app.closeAllWindows()
+        
+        
 
     def add_entry_to_addresstable(self, description, address_expr, address_type, length=0, zero_terminate=True):
         current_row = QTreeWidgetItem()
         current_row.setCheckState(FROZEN_COL, Qt.Unchecked)
         address_type_text = GuiUtils.valuetype_to_text(address_type, length, zero_terminate)
-
         self.treeWidget_AddressTable.addTopLevelItem(current_row)
         self.change_address_table_entries(current_row, description, address_expr, address_type_text)
         self.show()  # In case of getting called from elsewhere
@@ -1080,16 +1089,18 @@ class MainForm(QMainWindow, MainWindow):
 #Async Functions
 
     def update_progress_bar(self):
+        global ProgressRun
+        global Exiting
         self.progressBar.setValue(0)
-        while(update_progress == 1):
+        ProgressRun = 1
+        while(ProgressRun == 1 and Exiting == 0):
             sleep(0.1)
             value = int(round(self.backend.get_scan_progress() * 100))
             self.progressBar.setValue(value)
 
     def update_address_table_loop(self):
-        while(True):
+        while(Exiting == 0):
             sleep(table_update_interval/1000)
-    
             if(update_table):
                 try:
                     self.update_address_table()
@@ -1097,30 +1108,25 @@ class MainForm(QMainWindow, MainWindow):
                     print("Update Table failed :(")
 
     def freeze(self):
-            while(True):
-                sleep(FreezeInterval/1000)
-                if FreezeStop == 1:
-                    break
-                for x in FreezeVars:
-                    GDB_Engine.write_memory(x, FreezeVars[x][0], FreezeVars[x][1])
+        while(FreezeStop == 0 and Exiting == 0):
+            sleep(FreezeInterval/1000)
+            for x in FreezeVars:
+                GDB_Engine.write_memory(x, FreezeVars[x][0], FreezeVars[x][1])
 #----------------------------------------------------
 
     def treeWidget_AddressTable_item_clicked(self, row, column):
-        global FreezeThread
         global FreezeVars
         global FreezeStop
         global FreezeInterval
-
-        
-
+        global threadpool
         if (column == 0):
             if (row.checkState(0) == Qt.Checked):
                 value = row.text(VALUE_COL)
                 value_index = GuiUtils.text_to_valuetype(row.text(TYPE_COL))[0]
                 if(len(FreezeVars) == 0):
                     FreezeStop = 0
-                    FreezeThread = Thread(target = self.freeze)
-                    FreezeThread.start()
+                    FreezeThread = Worker(self.freeze)
+                    threadpool.start(FreezeThread)
                 FreezeVars[row.text(ADDR_COL)] = [value_index, value]
             else:
                 del FreezeVars[row.text(ADDR_COL)]
@@ -1132,6 +1138,7 @@ class MainForm(QMainWindow, MainWindow):
 
 
     def treeWidget_AddressTable_edit_value(self):
+        global FreezeVars
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if not row:
             return
@@ -1155,6 +1162,8 @@ class MainForm(QMainWindow, MainWindow):
                     if unknown_type is not None:
                         length = len(unknown_type)
                         row.setText(TYPE_COL, GuiUtils.change_text_length(value_type, length))
+                if row.text(ADDR_COL) in FreezeVars:
+                    FreezeVars[row.text(ADDR_COL)] = [value_index, value_text]
                 table_contents.append((address, value_index))
             GDB_Engine.write_memory_multiple(table_contents, value_text)
             self.update_address_table()
@@ -5096,8 +5105,12 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         instances.remove(self)
 
 
+def exitHandler():
+    global Exiting; Exiting = 1
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.aboutToQuit.connect(exitHandler)
     window = MainForm()
     window.show()
     sys.exit(app.exec_())
