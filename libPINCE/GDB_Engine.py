@@ -262,7 +262,7 @@ def await_process_exit():
     Should be called by creating a thread. Usually called in initialization process by attach function
     """
     while True:
-        if currentpid is -1 or SysUtils.is_process_valid(currentpid):
+        if currentpid == -1 or SysUtils.is_process_valid(currentpid):
             sleep(0.1)
         else:
             with process_exited_condition:
@@ -398,7 +398,7 @@ def can_attach(pid):
         bool: True if attaching is successful, False otherwise
     """
     result = libc.ptrace(16, int(pid), 0, 0)  # 16 is PTRACE_ATTACH, check ptrace.h for details
-    if result is -1:
+    if result == -1:
         return False
     os.waitpid(int(pid), 0)
     libc.ptrace(17, int(pid), 0, 17)  # 17 is PTRACE_DETACH, check ptrace.h for details
@@ -740,9 +740,9 @@ def inject_with_dlopen_call(library_path):
     """
     injectionpath = '"' + library_path + '"'
     result = call_function_from_inferior("dlopen(" + injectionpath + ", 1)")[1]
-    if result is "0" or not result:
+    if result == "0" or not result:
         new_result = call_function_from_inferior("__libc_dlopen_mode(" + injectionpath + ", 1)")[1]
-        if new_result is "0" or not new_result:
+        if new_result == "0" or not new_result:
             return False
         return True
     return True
