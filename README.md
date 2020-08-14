@@ -60,46 +60,13 @@ Pre-release screenshots:
 - **Automatic Trainer Generation:** **[Planned]**  
   * PINCE provides a trainer auto-generated from current address table on demand by using libPINCE and PyQT5 together
 
-# Installing Automatically
-Just run ```sudo sh install_pince.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. For Archlinux, use the [AUR package](https://aur.archlinux.org/packages/pince-git/) instead. Check the [Installing Manually](#installing-manually) section if the automatic installation fails.
+# Installing
+Clone this repo by running `git clone --recursive https://github.com/korcankaraokcu/PINCE` then run ```sudo sh install_pince.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. For Archlinux, use the [AUR package](https://aur.archlinux.org/packages/pince-git/) instead.
 
 ***Notes:***
 - GDB enhancements (peda, pwndbg, etc) that use a global gdbinit file might cause PINCE to misfunction at times. Please disable them or use them locally before starting PINCE
 - Having spaces in your path might cause GDB to fail compiling
 
-# Installing Manually  
-Clone this repo by running `git clone --recursive https://github.com/korcankaraokcu/PINCE`  
-Install the dependencies and then compile GDB & install PINCE:  
-  
-```
-sudo apt-get install python3-setuptools python3-pip python3-pyqt5  
-sudo pip3 install psutil pexpect distorm3 pygdbmi  
-```  
-### **Compiling gdb with python support**  
-Install the packages required for compiling gdb:
-```
-sudo apt-get install python3-dev gcc g++  
-```
-Then ```cd``` to the libPINCE folder and make a folder for gdb:  
-```
-cd libPINCE
-mkdir -p gdb_pince
-cd gdb_pince
-```  
-Download and extract the gdb source code:
-```  
-wget "http://ftp.gnu.org/gnu/gdb/gdb-8.3.1.tar.gz"
-tar -zxvf gdb-8.3.1.tar.gz
-cd gdb-8.3.1
-```  
-Then compile&install locally:
-```  
-CC=gcc CXX=g++ ./configure --prefix="$(pwd)" --with-python=python3 && make && sudo make -C gdb install
-```  
-Move the contents of gdb/data-directory to share/gdb in case of python part of gdb installation fails:
-```  
-sudo cp -R gdb/data-directory/* share/gdb/
-```  
 # Running PINCE  
 Just run ```sh PINCE.sh``` in the PINCE directory
 
