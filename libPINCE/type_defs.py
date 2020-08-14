@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # IMPORTANT: Any constant involving only PINCE.py should be declared in PINCE.py
 
-import collections, queue, sys
+import collections.abc, queue, sys
 
 
 class CONST_TIME:
@@ -319,7 +319,7 @@ class RegisterQueue:
             pass
 
 
-class KeyboardModifiersTupleDict(collections.Mapping):
+class KeyboardModifiersTupleDict(collections.abc.Mapping):
     def _convert_to_int(self, tuple_key):
         return tuple(int(x) for x in tuple_key)
 

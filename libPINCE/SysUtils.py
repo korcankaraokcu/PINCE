@@ -250,11 +250,11 @@ def is_path_valid(dest_path, issue_path=""):
         bool: True if path is valid, False if not
     """
     if os.path.exists(dest_path):
-        if issue_path is "delete":
+        if issue_path == "delete":
             shutil.rmtree(dest_path)
         return True
     else:
-        if issue_path is "create":
+        if issue_path == "create":
             os.makedirs(dest_path)
         return False
 
