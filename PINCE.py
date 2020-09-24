@@ -966,6 +966,11 @@ class MainForm(QMainWindow, MainWindow):
             GDB_Engine.set_logging(gdb_logging)
             self.backend.send_command("pid {}".format(pid))
             self.on_new_process()
+
+            # TODO: This makes PINCE call on_process_stop twice when attaching
+            # TODO: Signal design might have to change to something like mutexes eventually
+            self.memory_view_window.on_process_stop()
+            GDB_Engine.continue_inferior()
             return True
         else:
             QMessageBox.information(app.focusWidget(), "Error", attach_result[1])
