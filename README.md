@@ -63,6 +63,8 @@ Pre-release screenshots:
 # Installing
 Clone this repo by running `git clone --recursive https://github.com/korcankaraokcu/PINCE` then run ```sudo sh install_pince.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. For Archlinux, use the [AUR package](https://aur.archlinux.org/packages/pince-git/) instead.
 
+If you like to uninstall PINCE, just delete this folder. Almost everything is installed locally, including gdb. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them if you want.
+
 ***Notes:***
 - GDB enhancements (peda, pwndbg, etc) that use a global gdbinit file might cause PINCE to misfunction at times. Please disable them or use them locally before starting PINCE
 - Having spaces in your path might cause GDB to fail compiling
