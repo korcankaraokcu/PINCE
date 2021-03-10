@@ -34,7 +34,7 @@ fi
 compile_scanmem() {
     sh autogen.sh
     ./configure --prefix=/usr 
-    make -j libscanmem.la
+    make -j $(grep -m 1 "cpu cores" /proc/cpuinfo | cut -d: -f 2 | xargs) libscanmem.la
     chown -R "${CURRENT_USER}":"${CURRENT_USER}" . # give permissions for normal user to change file
 }
 
