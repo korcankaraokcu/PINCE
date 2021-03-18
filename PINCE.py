@@ -24,7 +24,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, \
     QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
-    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp, QRunnable, QThreadPool
+    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp, QRunnable, QThreadPool, pyqtSlot
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil, pexpect
 
@@ -229,7 +229,8 @@ class Worker(QRunnable):
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
-  
+
+    @pyqtSlot()
     def run(self):
         self.fn(*self.args, **self.kwargs)
 
