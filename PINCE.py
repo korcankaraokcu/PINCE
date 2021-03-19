@@ -219,8 +219,10 @@ Exiting = 0
 FreezeVars = {}
 FreezeStop = 0
 ProgressRun = 0
-threadpool = QThreadPool()
 
+threadpool = QThreadPool()
+# Placeholder number, may have to be changed in the future
+threadpool.setMaxThreadCount(10)
 
 class Worker(QRunnable):
     def __init__(self, fn, *args, **kwargs):
