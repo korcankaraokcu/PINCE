@@ -1066,12 +1066,19 @@ class MainForm(QMainWindow, MainWindow):
     def closeEvent(self, event):
         GDB_Engine.detach()
         app.closeAllWindows()
-        
-        
+
+    #checks if item is a duplicate of something currently being frozen
+    def get_checked_state(self, address):
+        global FreezeVars
+        if address in FreezeVars:
+            return Qt.Checked
+        else:
+            return Qt.Unchecked
+
 
     def add_entry_to_addresstable(self, description, address_expr, address_type, length=0, zero_terminate=True):
         current_row = QTreeWidgetItem()
-        current_row.setCheckState(FROZEN_COL, Qt.Unchecked)
+        current_row.setCheckState(FROZEN_COL, self.get_checked_state(address_expr))
         address_type_text = GuiUtils.valuetype_to_text(address_type, length, zero_terminate)
         self.treeWidget_AddressTable.addTopLevelItem(current_row)
         self.change_address_table_entries(current_row, description, address_expr, address_type_text)
@@ -1117,6 +1124,18 @@ class MainForm(QMainWindow, MainWindow):
                 GDB_Engine.write_memory(x, FreezeVars[x][0], FreezeVars[x][1])
 #----------------------------------------------------
 
+
+    def freeze_consistancy(self, address, constant):
+        root = self.treeWidget_AddressTable.invisibleRootItem()
+        child_count = root.childCount()
+        for i in range(child_count):
+            item = root.child(i)
+            if item.text(ADDR_COL) == address:
+                if item.checkState(0) != constant:
+                    item.setCheckState(0, constant)
+
+
+
     def treeWidget_AddressTable_item_clicked(self, row, column):
         global FreezeVars
         global FreezeStop
@@ -1131,8 +1150,10 @@ class MainForm(QMainWindow, MainWindow):
                     FreezeThread = Worker(self.freeze)
                     threadpool.start(FreezeThread)
                 FreezeVars[row.text(ADDR_COL)] = [value_index, value]
+                self.freeze_consistancy(row.text(ADDR_COL), Qt.Checked)
             else:
                 del FreezeVars[row.text(ADDR_COL)]
+                self.freeze_consistancy(row.text(ADDR_COL), Qt.Unchecked)
                 if(len(FreezeVars) == 0):
                     FreezeStop = 1
 
