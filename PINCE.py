@@ -26,7 +26,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil, pexpect
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil
+from threading import Thread
 
 from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
 from libPINCE.libscanmem.scanmem import Scanmem
@@ -212,6 +213,12 @@ REF_CALL_COUNT_COL = 1
 # see UpdateAddressTableThread
 saved_addresses_changed_list = list()
 
+# vars for communication/storage with the freeze thread
+# see treeWidget_AddressTable_item_clicked for current implementation
+FreezeThread = Thread
+FreezeVars = {}
+FreezeStop = 0
+FreezeInterval = 5
 
 def except_hook(exception_type, value, tb):
     if show_messagebox_on_exception:
@@ -407,6 +414,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
         self.tableWidget_valuesearchtable.cellDoubleClicked.connect(
             self.tableWidget_valuesearchtable_cell_double_clicked)
+        self.treeWidget_AddressTable.itemClicked.connect(self.treeWidget_AddressTable_item_clicked)
         self.treeWidget_AddressTable.itemDoubleClicked.connect(self.treeWidget_AddressTable_item_double_clicked)
         self.treeWidget_AddressTable.expanded.connect(self.resize_address_table)
         self.treeWidget_AddressTable.collapsed.connect(self.resize_address_table)
@@ -1060,6 +1068,39 @@ class MainForm(QMainWindow, MainWindow):
         }
         action_for_column = collections.defaultdict(lambda *args: lambda: None, action_for_column)
         action_for_column[column]()
+        
+
+    def treeWidget_AddressTable_item_clicked(self, row, column):
+        global FreezeThread
+        global FreezeVars
+        global FreezeStop
+        global FreezeInterval
+
+        def freeze():
+            while(True):
+                sleep(FreezeInterval/1000)
+                for x in FreezeVars:
+                    GDB_Engine.write_memory(x, FreezeVars[x][0], FreezeVars[x][1])
+                if(FreezeStop == 1):
+                    break
+
+        if (column == 0):
+            if (row.checkState(0) == Qt.Checked):
+                value = row.text(VALUE_COL)
+                value_index = GuiUtils.text_to_valuetype(row.text(TYPE_COL))[0]
+                if(len(FreezeVars) == 0):
+                    FreezeStop = 0
+                    FreezeThread = Thread(target = freeze)
+                    FreezeThread.start()
+                FreezeVars[row.text(ADDR_COL)] = [value_index, value]
+            else:
+                del FreezeVars[row.text(ADDR_COL)]
+                if(len(FreezeVars) == 0):
+                    FreezeStop = 1
+
+        
+        
+
 
     def treeWidget_AddressTable_edit_value(self):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
@@ -1607,6 +1648,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             current_table_update_interval = float(self.lineEdit_UpdateInterval.text())
         except:
             QMessageBox.information(self, "Error", "Update interval must be a float")
+            return
+        try:
+            global FreezeInterval
+            FreezeInterval = int(self.lineEdit_FreezeInterval.text())
+        except:
+            QMessageBox.information(self, "Error", "Freeze interval must be an int")
             return
         try:
             current_instructions_shown = int(self.lineEdit_InstructionsPerScroll.text())
