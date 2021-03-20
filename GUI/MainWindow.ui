@@ -664,7 +664,7 @@
       </property>
       <column>
        <property name="text">
-        <string>F</string>
+        <string>Freeze</string>
        </property>
        <property name="toolTip">
         <string>Freeze the value</string>
