@@ -742,10 +742,21 @@ class MainForm(QMainWindow, MainWindow):
             self.insert_records(records, parent, parent.indexOfChild(insert_row) + insert_after)
         self.update_address_table()
 
+    def check_if_address_exists(self, address):
+        root = self.treeWidget_AddressTable.invisibleRootItem()
+        child_count = root.childCount()
+        for i in range(child_count):
+            item = root.child(i)
+            if item.text(ADDR_COL) == address:
+                return True
+        return False
+
     def delete_selected_records(self):
         root = self.treeWidget_AddressTable.invisibleRootItem()
         for item in self.treeWidget_AddressTable.selectedItems():
             (item.parent() or root).removeChild(item)
+        if not self.check_if_address_exists(item.text(ADDR_COL)):
+            del FreezeVars[item.text(ADDR_COL)]
 
     def treeWidget_AddressTable_key_press_event(self, event):
         actions = type_defs.KeyboardModifiersTupleDict([
@@ -1152,10 +1163,11 @@ class MainForm(QMainWindow, MainWindow):
                 FreezeVars[row.text(ADDR_COL)] = [value_index, value]
                 self.freeze_consistancy(row.text(ADDR_COL), Qt.Checked)
             else:
-                del FreezeVars[row.text(ADDR_COL)]
-                self.freeze_consistancy(row.text(ADDR_COL), Qt.Unchecked)
-                if(len(FreezeVars) == 0):
-                    FreezeStop = 1
+                if row.text(ADDR_COL) in FreezeVars:
+                    del FreezeVars[row.text(ADDR_COL)]
+                    self.freeze_consistancy(row.text(ADDR_COL), Qt.Unchecked)
+                    if(len(FreezeVars) == 0):
+                        FreezeStop = 1
 
         
         
