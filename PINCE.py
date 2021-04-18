@@ -868,7 +868,9 @@ class MainForm(QMainWindow, MainWindow):
     # this should cover most things, more things might be added later if need be
     def validate_search(self, search_for):
         current_index = self.comboBox_ScanType.currentIndex()
-        if current_index != 0:
+        if current_index == 7:
+            return "snapshot"
+        elif current_index != 0:
             index_to_symbol = {
                 1: "+",  # increased
                 2: "-",  # decreased
@@ -876,9 +878,8 @@ class MainForm(QMainWindow, MainWindow):
                 4: ">",  # more than
                 5: "!=",  # changed
                 6: "=",  # unchanged
-                7: "snapshot"  # unknown initial
             }
-            return index_to_symbol[current_index]
+            search_for = index_to_symbol[current_index] + " " + search_for
 
         # none of theese should be possible to be true at the same time
         # TODO refactor later to use current index, and compare to type_defs constant
