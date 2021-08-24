@@ -67,7 +67,6 @@ If you like to uninstall PINCE, just delete this folder, almost everything is in
 
 ***Notes:***
 - GDB enhancements (peda, pwndbg, etc) that use a global gdbinit file might cause PINCE to misfunction at times. Please disable them or use them locally before starting PINCE
-- Having spaces in your path might cause GDB to fail compiling
 
 # Running PINCE  
 Just run ```sh PINCE.sh``` in the PINCE directory
