@@ -71,7 +71,7 @@ from GUI.CustomValidators.HexValidator import QHexValidator
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-18"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-19"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = int
 FreezeInterval = int
