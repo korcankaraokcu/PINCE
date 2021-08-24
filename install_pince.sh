@@ -23,13 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 CURRENT_USER="$(who mom likes | awk '{print $1}')"
 
-install_gdb () {
-if ! sudo sh install_gdb.sh ; then
-    echo "Failed to install PINCE"
-    exit 1
-fi
-}
-
 # assumes you're in scanmem directory
 compile_scanmem() {
     sh autogen.sh
@@ -71,17 +64,22 @@ OS_NAME="Debian"
 PKG_MGR="apt-get"
 INSTALL_COMMAND="install"
 
-PKG_NAMES_ALL="python3-setuptools python3-pip"
-PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-pyqt5 autotools-dev libtool libreadline-dev intltool"
+PKG_NAMES_ALL="python3-pip gdb"
+PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-pyqt5 libtool libreadline-dev intltool"
 PKG_NAMES_SUSE="$PKG_NAMES_ALL python3-qt5"
-PKG_NAMES_ARCH="python-pyqt5 python-setuptools autoconf readline intltool" # arch defaults to py3 nowadays
+PKG_NAMES_ARCH="python-pip python-pyqt5 readline intltool gdb lsb-release" # arch defaults to py3 nowadays
 PKG_NAMES="$PKG_NAMES_DEBIAN"
 PKG_NAMES_PIP="psutil pexpect distorm3 pygdbmi"
+PIP_COMMAND="pip3"
 
 LSB_RELEASE="$(command -v lsb_release)"
 if [ -n "$LSB_RELEASE" ] ; then
     OS_NAME="$(${LSB_RELEASE} -d -s)"
+else
+    . /etc/os-release
+    OS_NAME="$NAME"
 fi
+
 case "$OS_NAME" in
 *SUSE*)
     PKG_MGR="zypper"
@@ -91,21 +89,13 @@ case "$OS_NAME" in
     PKG_MGR="pacman"
     PKG_NAMES="$PKG_NAMES_ARCH"
     INSTALL_COMMAND="-S"
+    PIP_COMMAND="pip"
     ;;
 esac
 
 sudo ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES}
-sudo pip3 install ${PKG_NAMES_PIP}
+sudo ${PIP_COMMAND} install ${PKG_NAMES_PIP}
 
-if [ -e libPINCE/gdb_pince/gdb-8.3.1/bin/gdb ] ; then
-    echo "GDB has been already compiled&installed, recompile&install? (y/n)"
-    read -r answer
-    if echo "$answer" | grep -iq "^[Yy]" ;then
-        install_gdb
-    fi
-else
-    install_gdb
-fi
 install_scanmem
 
 echo "PINCE has been installed successfully!"
