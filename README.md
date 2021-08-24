@@ -65,7 +65,7 @@ Clone this repo by running `git clone --recursive https://github.com/korcankarao
 
 If you like to uninstall PINCE, just delete this folder, almost everything is installed locally. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them if you want.
 
-***Notes:***
+***Note:***
 - GDB enhancements (peda, pwndbg, etc) that use a global gdbinit file might cause PINCE to misfunction at times. Please disable them or use them locally before starting PINCE
 
 # Running PINCE  
