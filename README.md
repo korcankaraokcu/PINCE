@@ -61,9 +61,9 @@ Pre-release screenshots:
   * PINCE provides a trainer auto-generated from current address table on demand by using libPINCE and PyQT5 together
 
 # Installing
-Clone this repo by running `git clone --recursive https://github.com/korcankaraokcu/PINCE` then run ```sudo sh install_pince.sh``` in the PINCE directory. Install script currently supports Ubuntu and Debian. For Archlinux, use the [AUR package](https://aur.archlinux.org/packages/pince-git/) instead.
+Clone this repo by running `git clone --recursive https://github.com/korcankaraokcu/PINCE` then run ```sudo sh install_pince.sh``` in the PINCE directory. For Archlinux, you can also use the [AUR package](https://aur.archlinux.org/packages/pince-git/) as an alternative.
 
-If you like to uninstall PINCE, just delete this folder. Almost everything is installed locally, including gdb. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them if you want.
+If you like to uninstall PINCE, just delete this folder, almost everything is installed locally. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them if you want.
 
 ***Notes:***
 - GDB enhancements (peda, pwndbg, etc) that use a global gdbinit file might cause PINCE to misfunction at times. Please disable them or use them locally before starting PINCE
@@ -160,11 +160,11 @@ Jakob Kreuze([TsarFox](https://github.com/TsarFox)) <jakob@memeware.net>
 Gibus <lilac66.dev@gmail.com>  
 
 # Supported platforms
-- Kubuntu 18.04 & 16.04(Also tested on x86 variants)
-- Debian 9 (Stretch)
+- Ubuntu and its flavors, actively tested on Kubuntu
+- Debian
 - Kali Linux
 - Parrot OS
-- Linux Mint 19 (Tara)(install the package "python3-psutil" if you encounter ImportError or NameError, thanks Gibus)
+- Linux Mint (install the package "python3-psutil" if you encounter ImportError or NameError, thanks Gibus)
 - Archlinux(tag [cagriulas](https://github.com/cagriulas) or [TsarFox](https://github.com/TsarFox) when creating an issue)
 
 # Trusted Sources
