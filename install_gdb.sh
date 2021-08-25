@@ -16,18 +16,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
 
-cd libPINCE
+# This script installs a specific gdb version locally, the default installation script doesn't need this anymore, you can use it as a fallback if system gdb is being problematic
+# After installing a local gdb, you must specify its binary location via the Settings->Debug
+
+GDB_VERSION="gdb-10.2"
+
 mkdir -p gdb_pince
 cd gdb_pince
 
 # clean the directory if another installation happened
-rm -rf gdb-8.3.1
+rm -rf $GDB_VERSION
 
-if [ ! -e gdb-8.3.1.tar.gz ] ; then
-    wget "http://ftp.gnu.org/gnu/gdb/gdb-8.3.1.tar.gz"
+if [ ! -e ${GDB_VERSION}.tar.gz ] ; then
+    wget "http://ftp.gnu.org/gnu/gdb/${GDB_VERSION}.tar.gz"
 fi
-tar -zxvf gdb-8.3.1.tar.gz
-cd gdb-8.3.1
+tar -zxvf ${GDB_VERSION}.tar.gz
+cd $GDB_VERSION
 echo "-------------------------------------------------------------------------"
 echo "DISCLAIMER"
 echo "-------------------------------------------------------------------------"
