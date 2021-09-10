@@ -295,6 +295,9 @@ class Ui_Dialog(object):
         self.checkBox_GDBLogging = QtWidgets.QCheckBox(self.page_5)
         self.checkBox_GDBLogging.setObjectName("checkBox_GDBLogging")
         self.verticalLayout_11.addWidget(self.checkBox_GDBLogging)
+        self.checkBox_IgnoreSegfault = QtWidgets.QCheckBox(self.page_5)
+        self.checkBox_IgnoreSegfault.setObjectName("checkBox_IgnoreSegfault")
+        self.verticalLayout_11.addWidget(self.checkBox_IgnoreSegfault)
         spacerItem12 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_11.addItem(spacerItem12)
         self.gridLayout_6.addLayout(self.verticalLayout_11, 0, 0, 1, 1)
@@ -367,4 +370,15 @@ class Ui_Dialog(object):
         self.label_6.setText(_translate("Dialog", "Instructions shown per scroll"))
         self.label_7.setText(_translate("Dialog", "GDB Path"))
         self.checkBox_GDBLogging.setText(_translate("Dialog", "GDB Logging"))
+        self.checkBox_IgnoreSegfault.setText(_translate("Dialog", "Ignore segfault signal"))
         self.pushButton_ResetSettings.setText(_translate("Dialog", "Reset Settings"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    Dialog = QtWidgets.QDialog()
+    ui = Ui_Dialog()
+    ui.setupUi(Dialog)
+    Dialog.show()
+    sys.exit(app.exec_())

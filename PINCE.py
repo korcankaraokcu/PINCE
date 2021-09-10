@@ -71,7 +71,7 @@ from GUI.CustomValidators.HexValidator import QHexValidator
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-19"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-20"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = int
 FreezeInterval = int
@@ -107,6 +107,7 @@ bring_disassemble_to_front = bool
 instructions_per_scroll = int
 gdb_path = str
 gdb_logging = bool
+ignore_sigsegv = bool
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -224,6 +225,7 @@ threadpool = QThreadPool()
 # Placeholder number, may have to be changed in the future
 threadpool.setMaxThreadCount(10)
 
+
 class Worker(QRunnable):
     def __init__(self, fn, *args, **kwargs):
         super(Worker, self).__init__()
@@ -235,7 +237,6 @@ class Worker(QRunnable):
     @pyqtSlot()
     def run(self):
         self.fn(*self.args, **self.kwargs)
-
 
 
 def except_hook(exception_type, value, tb):
@@ -314,8 +315,6 @@ class CheckInferiorStatus(QThread):
                 self.process_running.emit()
 
 
-
-
 # TODO undo scan, we would probably need to make some data structure we
 # could pass to scanmem which then would set the current matches
 # the mainwindow
@@ -364,7 +363,7 @@ class MainForm(QMainWindow, MainWindow):
             self.settings.clear()
             self.set_default_settings()
         try:
-            GDB_Engine.init_gdb(gdb_path=gdb_path)
+            GDB_Engine.init_gdb(gdb_path, ignore_sigsegv)
         except pexpect.EOF:
             text = "Unable to initialize GDB\n" \
                    "You might want to reinstall GDB or use the system GDB\n" \
@@ -388,7 +387,8 @@ class MainForm(QMainWindow, MainWindow):
         self.check_status_thread.process_running.connect(self.memory_view_window.process_running)
         self.check_status_thread.start()
         self.update_address_table_thread = Worker(self.update_address_table_loop)
-        global threadpool; threadpool.start(self.update_address_table_thread) 
+        global threadpool;
+        threadpool.start(self.update_address_table_thread)
         self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
         self.shortcut_open_file.activated.connect(self.pushButton_Open_clicked)
         GuiUtils.append_shortcut_to_tooltip(self.pushButton_Open, self.shortcut_open_file)
@@ -440,7 +440,6 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_About.setIcon(QIcon(QPixmap(icons_directory + "/information.png")))
         self.auto_attach()
 
-
     def set_default_settings(self):
         self.settings.beginGroup("General")
         self.settings.setValue("auto_update_address_table", True)
@@ -467,6 +466,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.beginGroup("Debug")
         self.settings.setValue("gdb_path", type_defs.PATHS.GDB_PATH)
         self.settings.setValue("gdb_logging", False)
+        self.settings.setValue("ignore_sigsegv", False)
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
         self.settings.setValue("version", current_settings_version)
@@ -487,6 +487,7 @@ class MainForm(QMainWindow, MainWindow):
         global instructions_per_scroll
         global gdb_path
         global gdb_logging
+        global ignore_sigsegv
         global FreezeInterval
 
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
@@ -512,8 +513,13 @@ class MainForm(QMainWindow, MainWindow):
         instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
         gdb_path = self.settings.value("Debug/gdb_path", type=str)
         gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
+        ignore_sigsegv = self.settings.value("Debug/ignore_sigsegv", type=bool)
         if GDB_Engine.gdb_initialized:
             GDB_Engine.set_logging(gdb_logging)
+            if ignore_sigsegv:
+                GDB_Engine.send_command("handle SIGSEGV nostop noprint")
+            else:
+                GDB_Engine.send_command("handle SIGSEGV stop print")
 
     # Check if any process should be attached to automatically
     # Patterns at former positions have higher priority if regex is off
@@ -896,8 +902,9 @@ class MainForm(QMainWindow, MainWindow):
         global ProgressRun
         line_edit_text = self.lineEdit_Scan.text()
         search_for = self.validate_search(line_edit_text)
-        #ProgressBar
-        global threadpool; threadpool.start(Worker(self.update_progress_bar))
+        # ProgressBar
+        global threadpool;
+        threadpool.start(Worker(self.update_progress_bar))
         # TODO add some validation for the search command
         self.backend.send_command(search_for)
         matches = self.backend.matches()
@@ -998,7 +1005,7 @@ class MainForm(QMainWindow, MainWindow):
 
     # Returns: a bool value indicates whether the operation succeeded.
     def attach_to_pid(self, pid):
-        attach_result = GDB_Engine.attach(pid, gdb_path=gdb_path)
+        attach_result = GDB_Engine.attach(pid, gdb_path, ignore_sigsegv)
         if attach_result[0] == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
             GDB_Engine.set_logging(gdb_logging)
             self.backend.send_command("pid {}".format(pid))
@@ -1015,7 +1022,7 @@ class MainForm(QMainWindow, MainWindow):
 
     # Returns: a bool value indicates whether the operation succeeded.
     def create_new_process(self, file_path, args, ld_preload_path):
-        if GDB_Engine.create_process(file_path, args, ld_preload_path):
+        if GDB_Engine.create_process(file_path, args, ld_preload_path, ignore_sigsegv):
             GDB_Engine.set_logging(gdb_logging)
             self.on_new_process()
             return True
@@ -1052,7 +1059,7 @@ class MainForm(QMainWindow, MainWindow):
     def on_inferior_exit(self):
         if GDB_Engine.currentpid == -1:
             self.on_status_running()
-            GDB_Engine.init_gdb(gdb_path=gdb_path)
+            GDB_Engine.init_gdb(gdb_path, ignore_sigsegv)
             GDB_Engine.set_logging(gdb_logging)
             self.label_SelectedProcess.setText("No Process Selected")
 
@@ -1078,14 +1085,13 @@ class MainForm(QMainWindow, MainWindow):
         GDB_Engine.detach()
         app.closeAllWindows()
 
-    #checks if item is a duplicate of something currently being frozen
+    # checks if item is a duplicate of something currently being frozen
     def get_checked_state(self, address):
         global FreezeVars
         if address in FreezeVars:
             return Qt.Checked
         else:
             return Qt.Unchecked
-
 
     def add_entry_to_addresstable(self, description, address_expr, address_type, length=0, zero_terminate=True):
         current_row = QTreeWidgetItem()
@@ -1105,36 +1111,36 @@ class MainForm(QMainWindow, MainWindow):
         }
         action_for_column = collections.defaultdict(lambda *args: lambda: None, action_for_column)
         action_for_column[column]()
-        
-#----------------------------------------------------
-#Async Functions
+
+    # ----------------------------------------------------
+    # Async Functions
 
     def update_progress_bar(self):
         global ProgressRun
         global Exiting
         self.progressBar.setValue(0)
         ProgressRun = 1
-        while(ProgressRun == 1 and Exiting == 0):
+        while (ProgressRun == 1 and Exiting == 0):
             sleep(0.1)
             value = int(round(self.backend.get_scan_progress() * 100))
             self.progressBar.setValue(value)
 
     def update_address_table_loop(self):
-        while(Exiting == 0):
-            sleep(table_update_interval/1000)
-            if(update_table):
+        while (Exiting == 0):
+            sleep(table_update_interval / 1000)
+            if (update_table):
                 try:
                     self.update_address_table()
                 except:
                     print("Update Table failed :(")
 
     def freeze(self):
-        while(FreezeStop == 0 and Exiting == 0):
-            sleep(FreezeInterval/1000)
+        while (FreezeStop == 0 and Exiting == 0):
+            sleep(FreezeInterval / 1000)
             for x in FreezeVars:
                 GDB_Engine.write_memory(x, FreezeVars[x][0], FreezeVars[x][1])
-#----------------------------------------------------
 
+    # ----------------------------------------------------
 
     def freeze_consistancy(self, address, constant):
         root = self.treeWidget_AddressTable.invisibleRootItem()
@@ -1145,8 +1151,6 @@ class MainForm(QMainWindow, MainWindow):
                 if item.checkState(0) != constant:
                     item.setCheckState(0, constant)
 
-
-
     def treeWidget_AddressTable_item_clicked(self, row, column):
         global FreezeVars
         global FreezeStop
@@ -1156,7 +1160,7 @@ class MainForm(QMainWindow, MainWindow):
             if (row.checkState(0) == Qt.Checked):
                 value = row.text(VALUE_COL)
                 value_index = GuiUtils.text_to_valuetype(row.text(TYPE_COL))[0]
-                if(len(FreezeVars) == 0):
+                if (len(FreezeVars) == 0):
                     FreezeStop = 0
                     FreezeThread = Worker(self.freeze)
                     threadpool.start(FreezeThread)
@@ -1166,12 +1170,8 @@ class MainForm(QMainWindow, MainWindow):
                 if row.text(ADDR_COL) in FreezeVars:
                     del FreezeVars[row.text(ADDR_COL)]
                     self.freeze_consistancy(row.text(ADDR_COL), Qt.Unchecked)
-                    if(len(FreezeVars) == 0):
+                    if (len(FreezeVars) == 0):
                         FreezeStop = 1
-
-        
-        
-
 
     def treeWidget_AddressTable_edit_value(self):
         global FreezeVars
@@ -1787,9 +1787,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
         if selected_gdb_path != current_gdb_path:
             if InputDialogForm(item_list=[("You have changed the GDB path, reset GDB now?",)]).exec_():
-                GDB_Engine.init_gdb(gdb_path=selected_gdb_path)
+                GDB_Engine.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
+        self.settings.setValue("Debug/ignore_sigsegv", self.checkBox_IgnoreSegfault.isChecked())
         super(SettingsDialogForm, self).accept()
 
     def config_gui(self):
@@ -1831,6 +1832,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             str(self.settings.value("Disassemble/instructions_per_scroll", type=int)))
         self.lineEdit_GDBPath.setText(str(self.settings.value("Debug/gdb_path", type=str)))
         self.checkBox_GDBLogging.setChecked(self.settings.value("Debug/gdb_logging", type=bool))
+        self.checkBox_IgnoreSegfault.setChecked(self.settings.value("Debug/ignore_sigsegv", type=bool))
 
     def change_display(self, index):
         self.stackedWidget.setCurrentIndex(index)
@@ -5142,7 +5144,9 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
 
 
 def exitHandler():
-    global Exiting; Exiting = 1
+    global Exiting;
+    Exiting = 1
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

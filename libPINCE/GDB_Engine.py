@@ -195,7 +195,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
     global gdb_output
     global cancel_send_command
     global last_gdb_command
-    with lock_send_command: 
+    with lock_send_command:
         if gdb_output_mode.command_info:
             time0 = time()
         if not gdb_initialized:
@@ -364,6 +364,7 @@ def execute_func_temporary_interruption(func, *args, **kwargs):
             pass
     return result
 
+
 #:tag:Debug
 def ___internal_continue_inferior():
     """
@@ -374,6 +375,7 @@ def ___internal_continue_inferior():
     """
 
     send_command("c")
+
 
 #:tag:Debug
 def ___internal_interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
@@ -386,6 +388,7 @@ def ___internal_interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG)
     send_command("c", control=True)
     wait_for_stop()
     stop_reason = interrupt_reason
+
 
 #:tag:Debug
 def can_attach(pid):
@@ -435,6 +438,7 @@ def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
     wait_for_stop()
     stop_reason = interrupt_reason
 
+
 #:tag:Debug
 def continue_inferior():
     """Continue the inferior"""
@@ -460,13 +464,12 @@ def execute_till_return():
 
 
 #:tag:GDBCommunication
-def init_gdb(additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
+def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH, ignore_sigsegv=False):
     r"""Spawns gdb and initializes/resets some of the global variables
 
     Args:
         gdb_path (str): Path of the gdb binary
-        additional_commands (str): Commands that'll be executed at the gdb initialization process. Commands should be
-        separated with "\n". For instance: "command1\ncommand2\ncommand3"
+        ignore_sigsegv (bool): Ignores SIGSEGV signal if True
 
     Note:
         Calling init_gdb() will reset the current session
@@ -504,8 +507,8 @@ def init_gdb(additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
     set_logging(False)
     send_command("source " + SysUtils.get_user_path(type_defs.USER_PATHS.GDBINIT_PATH))
     SysUtils.execute_script(SysUtils.get_user_path(type_defs.USER_PATHS.PINCEINIT_PATH))
-    if additional_commands:
-        send_command(additional_commands)
+    if ignore_sigsegv:
+        send_command("handle SIGSEGV nostop noprint")
 
 
 #:tag:GDBCommunication
@@ -547,21 +550,19 @@ def init_referenced_dicts(pid):
 
 
 #:tag:Debug
-def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
+def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH, ignore_sigsegv=False):
     r"""Attaches gdb to the target and initializes some of the global variables
 
     Args:
         pid (int,str): PID of the process that'll be attached to
-        additional_commands (str): Commands that'll be executed at the gdb initialization process. Commands should be
-        separated with "\n". For instance: "command1\ncommand2\ncommand3". You can also call init_gdb before attach,
-        instead of using this parameter.
         gdb_path (str): Path of the gdb binary
+        ignore_sigsegv (bool): Ignores SIGSEGV signal if True
 
     Returns:
         tuple: (A member of type_defs.ATTACH_RESULT, result_message)
 
     Note:
-        If gdb is already initialized, parameters gdb_path and additional_commands will be ignored
+        If gdb is already initialized, gdb_path will be ignored
     """
     global currentpid
     pid = int(pid)
@@ -582,7 +583,7 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
             print(error_message)
             return attach_result, error_message
     if currentpid != -1 or not gdb_initialized:
-        init_gdb(additional_commands, gdb_path)
+        init_gdb(gdb_path, ignore_sigsegv)
     global inferior_arch
     global mem_file
     currentpid = pid
@@ -602,8 +603,7 @@ def attach(pid, additional_commands="", gdb_path=type_defs.PATHS.GDB_PATH):
 
 
 #:tag:Debug
-def create_process(process_path, args="", ld_preload_path="", additional_commands="",
-                   gdb_path=type_defs.PATHS.GDB_PATH):
+def create_process(process_path, args="", ld_preload_path="", gdb_path=type_defs.PATHS.GDB_PATH, ignore_sigsegv=False):
     r"""Creates a new process for debugging and initializes some of the global variables
     Current process will be detached even if the create_process call fails
     Make sure to save your data before calling this monstrosity
@@ -612,22 +612,20 @@ def create_process(process_path, args="", ld_preload_path="", additional_command
         process_path (str): Absolute path of the target binary
         args (str): Arguments of the inferior, optional
         ld_preload_path (str): Path of the preloaded .so file, optional
-        additional_commands (str): Commands that'll be executed at the gdb initialization process. Commands should be
-        separated with "\n". For instance: "command1\ncommand2\ncommand3". You can also call init_gdb before
-        create_process, instead of using this parameter.
         gdb_path (str): Path of the gdb binary
+        ignore_sigsegv (bool): Ignores SIGSEGV signal if True
 
     Returns:
         bool: True if the process has been created successfully, False otherwise
 
     Note:
-        If gdb is already initialized, parameters gdb_path and additional_commands will be ignored
+        If gdb is already initialized, gdb_path will be ignored
     """
     global currentpid
     global inferior_arch
     global mem_file
     if currentpid != -1 or not gdb_initialized:
-        init_gdb(additional_commands, gdb_path)
+        init_gdb(gdb_path, ignore_sigsegv)
     output = send_command("file " + process_path)
     if common_regexes.gdb_error.search(output):
         print("An error occurred while trying to create process from the file at " + process_path)
