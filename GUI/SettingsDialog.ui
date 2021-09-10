@@ -635,6 +635,13 @@ Patterns at former positions have higher priority if regex is off</string>
               </widget>
              </item>
              <item>
+              <widget class="QCheckBox" name="checkBox_IgnoreSegfault">
+               <property name="text">
+                <string>Ignore segfault signal</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <spacer name="verticalSpacer_5">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
