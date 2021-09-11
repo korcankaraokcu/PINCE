@@ -516,10 +516,7 @@ class MainForm(QMainWindow, MainWindow):
         ignore_sigsegv = self.settings.value("Debug/ignore_sigsegv", type=bool)
         if GDB_Engine.gdb_initialized:
             GDB_Engine.set_logging(gdb_logging)
-            if ignore_sigsegv:
-                GDB_Engine.send_command("handle SIGSEGV nostop noprint")
-            else:
-                GDB_Engine.send_command("handle SIGSEGV stop print")
+            GDB_Engine.ignore_segfault(ignore_sigsegv)
 
     # Check if any process should be attached to automatically
     # Patterns at former positions have higher priority if regex is off
