@@ -578,7 +578,7 @@ class MainForm(QMainWindow, MainWindow):
         edit_type = edit_menu.addAction("Type[Alt+Enter]")
         edit_value = edit_menu.addAction("Value[Enter]")
         # TODO: Implement toggling of records
-        toggle_record = menu.addAction("Toggle selected records[Space] (not implemented yet)")
+        toggle_record = menu.addAction("Toggle selected records[Space]")
         menu.addSeparator()
         browse_region = menu.addAction("Browse this memory region[Ctrl+B]")
         disassemble = menu.addAction("Disassemble this address[Ctrl+D]")
@@ -1326,7 +1326,6 @@ class ProcessForm(QMainWindow, ProcessWindow):
         self.pushButton_CreateProcess.clicked.connect(self.pushButton_CreateProcess_clicked)
         self.lineEdit_SearchProcess.textChanged.connect(self.generate_new_list)
         self.tableWidget_ProcessTable.itemDoubleClicked.connect(self.pushButton_Open_clicked)
-        print("initialized the form")
 
     # refreshes process list
     def generate_new_list(self):
