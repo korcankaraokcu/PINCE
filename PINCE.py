@@ -913,11 +913,11 @@ class MainForm(QMainWindow, MainWindow):
 
         # none of theese should be possible to be true at the same time
         # TODO refactor later to use current index, and compare to type_defs constant
-        if self.comboBox_ValueType.currentText() == "float":
+        if self.comboBox_ValueType.currentText() == "Float":
             # this is odd, since when searching for floats from command line it uses `.` and not `,`
-            search_for.replace(".", ",")
-            search_for2.replace(".", ",")
-        elif self.comboBox_ValueType.currentText() == "string":
+            search_for = search_for.replace(".", ",")
+            search_for2 = search_for2.replace(".", ",")
+        elif self.comboBox_ValueType.currentText() == "String":
             search_for = "\" " + search_for
         elif self.checkBox_Hex.isChecked():
             if not search_for.startswith("0x"):
