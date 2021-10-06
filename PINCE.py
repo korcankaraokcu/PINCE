@@ -134,9 +134,6 @@ ADDR_COL = 2  # Address
 TYPE_COL = 3  # Type
 VALUE_COL = 4  # Value
 
-# roles used to store hidden information inside address table
-ADDR_EXPR_ROLE = Qt.UserRole
-
 # represents the index of columns in disassemble table
 DISAS_ADDR_COL = 0
 DISAS_BYTES_COL = 1
@@ -799,7 +796,7 @@ class MainForm(QMainWindow, MainWindow):
             if not row:
                 break
             it += 1
-            address_expr_list.append(row.data(ADDR_COL, ADDR_EXPR_ROLE))
+            address_expr_list.append(row.data(ADDR_COL, Qt.UserRole))
             value_type_list.append(row.text(TYPE_COL))
             rows.append(row)
         try:
@@ -1297,7 +1294,7 @@ class MainForm(QMainWindow, MainWindow):
 
         assert isinstance(row, QTreeWidgetItem)
         row.setText(DESC_COL, description)
-        row.setData(ADDR_COL, ADDR_EXPR_ROLE, address_expr)
+        row.setData(ADDR_COL, Qt.UserRole, address_expr)
         row.setText(ADDR_COL, address or address_expr)
         row.setText(TYPE_COL, address_type)
         row.setText(VALUE_COL, "" if value is None else str(value))
@@ -1305,7 +1302,7 @@ class MainForm(QMainWindow, MainWindow):
     # Returns the column values of the given row
     def read_address_table_entries(self, row):
         description = row.text(DESC_COL)
-        address_expr = row.data(ADDR_COL, ADDR_EXPR_ROLE)
+        address_expr = row.data(ADDR_COL, Qt.UserRole)
         value_type = row.text(TYPE_COL)
         return description, address_expr, value_type
 
