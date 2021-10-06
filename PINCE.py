@@ -979,7 +979,7 @@ class MainForm(QMainWindow, MainWindow):
             "int": QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan),  # integers
             "float": QRegExpValidator(QRegExp("-?[0-9]+[.,]?[0-9]*")),
             # floats, should work fine with the small amount of testing I did
-            "bytearray": QRegExpValidator(QRegExp("^(([A-Fa-f0-9]{2} +)+)$"), parent=self.lineEdit_Scan),
+            "bytearray": QRegExpValidator(QRegExp("^(([A-Fa-f0-9?]{2} +)+)$"), parent=self.lineEdit_Scan),
             # array of bytes
             "string": None
         }
