@@ -308,6 +308,16 @@
            <item>
             <widget class="QLineEdit" name="lineEdit_Scan"/>
            </item>
+           <item>
+            <widget class="QLabel" name="label_Between">
+             <property name="text">
+              <string>&lt;-&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="lineEdit_Scan2"/>
+           </item>
           </layout>
          </item>
          <item>
@@ -684,7 +694,7 @@
      <x>0</x>
      <y>0</y>
      <width>768</width>
-     <height>22</height>
+     <height>30</height>
     </rect>
    </property>
   </widget>

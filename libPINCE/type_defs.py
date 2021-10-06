@@ -198,6 +198,38 @@ text_to_index_dict = collections.OrderedDict()
 for key in index_to_text_dict:
     text_to_index_dict[index_to_text_dict[key]] = key
 
+
+class SCAN_TYPE:
+    EXACT = 0
+    INCREASED = 1
+    DECREASED = 2
+    LESS = 3
+    MORE = 4
+    BETWEEN = 5
+    CHANGED = 6
+    UNCHANGED = 7
+    UNKNOWN = 8
+
+
+# Represents the texts at indexes in combobox
+scan_type_to_text_dict = collections.OrderedDict([
+    (SCAN_TYPE.EXACT, "Exact Scan"),
+    (SCAN_TYPE.INCREASED, "Increased"),
+    (SCAN_TYPE.DECREASED, "Decreased"),
+    (SCAN_TYPE.LESS, "Less Than"),
+    (SCAN_TYPE.MORE, "More Than"),
+    (SCAN_TYPE.BETWEEN, "Between"),
+    (SCAN_TYPE.CHANGED, "Changed"),
+    (SCAN_TYPE.UNCHANGED, "Unchanged"),
+    (SCAN_TYPE.UNKNOWN, "Unknown Value")
+])
+
+
+class SCAN_MODE:
+    NEW = 0
+    ONGOING = 1
+
+
 string_index_to_encoding_dict = {
     VALUE_INDEX.INDEX_STRING_UTF8: ["utf-8", "surrogateescape"],
     VALUE_INDEX.INDEX_STRING_UTF16: ["utf-16", "replace"],
