@@ -384,7 +384,7 @@ class MainForm(QMainWindow, MainWindow):
         self.check_status_thread.process_running.connect(self.memory_view_window.process_running)
         self.check_status_thread.start()
         self.update_address_table_thread = Worker(self.update_address_table_loop)
-        global threadpool;
+        global threadpool
         threadpool.start(self.update_address_table_thread)
         self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
         self.shortcut_open_file.activated.connect(self.pushButton_Open_clicked)
@@ -5180,7 +5180,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
 
 
 def exitHandler():
-    global Exiting;
+    global Exiting
     Exiting = 1
 
 
