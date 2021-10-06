@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './GUI/MainWindow.ui'
+# Form implementation generated from reading ui file 'MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -159,6 +159,12 @@ class Ui_MainWindow(object):
         self.lineEdit_Scan = QtWidgets.QLineEdit(self.QWidget_Toolbox)
         self.lineEdit_Scan.setObjectName("lineEdit_Scan")
         self.horizontalLayout_7.addWidget(self.lineEdit_Scan)
+        self.label_Between = QtWidgets.QLabel(self.QWidget_Toolbox)
+        self.label_Between.setObjectName("label_Between")
+        self.horizontalLayout_7.addWidget(self.label_Between)
+        self.lineEdit_Scan2 = QtWidgets.QLineEdit(self.QWidget_Toolbox)
+        self.lineEdit_Scan2.setObjectName("lineEdit_Scan2")
+        self.horizontalLayout_7.addWidget(self.lineEdit_Scan2)
         self.verticalLayout_5.addLayout(self.horizontalLayout_7)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
@@ -278,7 +284,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.treeWidget_AddressTable, 3, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 768, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 768, 30))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
 
@@ -310,6 +316,7 @@ class Ui_MainWindow(object):
         self.radioButton_Bits.setText(_translate("MainWindow", "B&its"))
         self.radioButton_Decimal.setText(_translate("MainWindow", "&Decimal"))
         self.checkBox_Hex.setText(_translate("MainWindow", "Hex"))
+        self.label_Between.setText(_translate("MainWindow", "<->"))
         self.label.setText(_translate("MainWindow", "Scan Type:"))
         self.label_2.setText(_translate("MainWindow", "Value Type:"))
         self.comboBox_ValueType.setItemText(0, _translate("MainWindow", "Byte"))
@@ -344,3 +351,13 @@ class Ui_MainWindow(object):
         self.treeWidget_AddressTable.headerItem().setText(2, _translate("MainWindow", "Address"))
         self.treeWidget_AddressTable.headerItem().setText(3, _translate("MainWindow", "Type"))
         self.treeWidget_AddressTable.headerItem().setText(4, _translate("MainWindow", "Value"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())

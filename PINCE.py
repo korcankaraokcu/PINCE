@@ -404,13 +404,14 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Save.clicked.connect(self.pushButton_Save_clicked)
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
-        self.pushButton_NextScan.setEnabled(False)
+        self.scan_mode = type_defs.SCAN_MODE.ONGOING
+        self.pushButton_NewFirstScan_clicked()
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
         self.comboBox_ValueType.currentTextChanged.connect(self.comboBox_ValueType_textChanged)
         self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan))
-        self.comboBox_ScanType.addItems(
-            ["Exact Match", "Increased", "Decreased", "Less Than", "More than", "Changed", "Unchanged",
-             "Unknown Initial"])
+        self.lineEdit_Scan2.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan2))
+        self.comboBox_ScanType.currentIndexChanged.connect(self.comboBox_ScanType_current_index_changed)
+        self.comboBox_ScanType_current_index_changed()
         self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
         self.pushButton_Console.clicked.connect(self.pushButton_Console_clicked)
         self.pushButton_Wiki.clicked.connect(self.pushButton_Wiki_clicked)
@@ -847,60 +848,101 @@ class MainForm(QMainWindow, MainWindow):
         if state == Qt.Checked:
             # allows only things that are hex, can also start with 0x
             self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("(0x)?[A-Fa-f0-9]*$"), parent=self.lineEdit_Scan))
+            self.lineEdit_Scan2.setValidator(
+                QRegExpValidator(QRegExp("(0x)?[A-Fa-f0-9]*$"), parent=self.lineEdit_Scan2))
         else:
             # sets it back to integers only
             self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan))
+            self.lineEdit_Scan2.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan2))
 
     # TODO add a damn keybind for this...
     def pushButton_NewFirstScan_clicked(self):
-        if self.pushButton_NextScan.isEnabled():
+        if self.scan_mode == type_defs.SCAN_MODE.ONGOING:
+            self.scan_mode = type_defs.SCAN_MODE.NEW
+            self.pushButton_NewFirstScan.setText("First Scan")
             self.backend.send_command("reset")
             self.tableWidget_valuesearchtable.setRowCount(0)
             self.comboBox_ValueType.setEnabled(True)
             self.pushButton_NextScan.setEnabled(False)
             self.progressBar.setValue(0)
+            self.comboBox_ScanType_init()
         else:
-            print(self.lineEdit_Scan.text())
+            self.scan_mode = type_defs.SCAN_MODE.ONGOING
+            self.pushButton_NewFirstScan.setText("New Scan")
             self.comboBox_ValueType.setEnabled(False)
             self.pushButton_NextScan.setEnabled(True)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
-        return
+            self.comboBox_ScanType_init()
+
+    def comboBox_ScanType_current_index_changed(self):
+        if self.comboBox_ScanType.currentData(Qt.UserRole) == type_defs.SCAN_TYPE.BETWEEN:
+            self.label_Between.setVisible(True)
+            self.lineEdit_Scan2.setVisible(True)
+        else:
+            self.label_Between.setVisible(False)
+            self.lineEdit_Scan2.setVisible(False)
+
+    def comboBox_ScanType_init(self):
+        current_type = self.comboBox_ScanType.currentData(Qt.UserRole)
+        self.comboBox_ScanType.clear()
+        if self.scan_mode == type_defs.SCAN_MODE.NEW:
+            items = [type_defs.SCAN_TYPE.EXACT, type_defs.SCAN_TYPE.LESS, type_defs.SCAN_TYPE.MORE,
+                     type_defs.SCAN_TYPE.BETWEEN, type_defs.SCAN_TYPE.UNKNOWN]
+        else:
+            items = [type_defs.SCAN_TYPE.EXACT, type_defs.SCAN_TYPE.INCREASED, type_defs.SCAN_TYPE.DECREASED,
+                     type_defs.SCAN_TYPE.LESS, type_defs.SCAN_TYPE.MORE, type_defs.SCAN_TYPE.BETWEEN,
+                     type_defs.SCAN_TYPE.CHANGED, type_defs.SCAN_TYPE.UNCHANGED]
+        old_index = 0
+        for index, type_index in enumerate(items):
+            if current_type == type_index:
+                old_index = index
+            self.comboBox_ScanType.addItem(type_defs.scan_type_to_text_dict[type_index], type_index)
+        self.comboBox_ScanType.setCurrentIndex(old_index)
 
     # :doc:
     # adds things like 0x when searching for etc, basically just makes the line valid for scanmem
     # this should cover most things, more things might be added later if need be
-    def validate_search(self, search_for):
-        current_index = self.comboBox_ScanType.currentIndex()
-        if current_index != 0:
-            index_to_symbol = {
-                1: "+",  # increased
-                2: "-",  # decreased
-                3: "<",  # less than
-                4: ">",  # more than
-                5: "!=",  # changed
-                6: "=",  # unchanged
-                7: "snapshot"  # unknown initial
-            }
-            return index_to_symbol[current_index]
+    def validate_search(self, search_for, search_for2):
+        type_index = self.comboBox_ScanType.currentData(Qt.UserRole)
+        symbol_map = {
+            type_defs.SCAN_TYPE.INCREASED: "+",
+            type_defs.SCAN_TYPE.DECREASED: "-",
+            type_defs.SCAN_TYPE.CHANGED: "!=",
+            type_defs.SCAN_TYPE.UNCHANGED: "=",
+            type_defs.SCAN_TYPE.UNKNOWN: "snapshot"
+        }
+        if type_index in symbol_map:
+            return symbol_map[type_index]
 
         # none of theese should be possible to be true at the same time
         # TODO refactor later to use current index, and compare to type_defs constant
         if self.comboBox_ValueType.currentText() == "float":
-            search_for.replace(".",
-                               ",")  # this is odd, since when searching for floats from command line it uses `.` and not `,`
+            # this is odd, since when searching for floats from command line it uses `.` and not `,`
+            search_for.replace(".", ",")
+            search_for2.replace(".", ",")
         elif self.comboBox_ValueType.currentText() == "string":
             search_for = "\" " + search_for
         elif self.checkBox_Hex.isChecked():
             if not search_for.startswith("0x"):
                 search_for = "0x" + search_for
+            if not search_for2.startswith("0x"):
+                search_for2 = "0x" + search_for2
+        if type_index == type_defs.SCAN_TYPE.BETWEEN:
+            return search_for + ".." + search_for2
+        cmp_symbols = {
+            type_defs.SCAN_TYPE.LESS: "<",
+            type_defs.SCAN_TYPE.MORE: ">"
+        }
+        if type_index in cmp_symbols:
+            return cmp_symbols[type_index] + " " + search_for
         return search_for
 
     def pushButton_NextScan_clicked(self):
         global ProgressRun
-        line_edit_text = self.lineEdit_Scan.text()
-        search_for = self.validate_search(line_edit_text)
+        search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
+
         # ProgressBar
-        global threadpool;
+        global threadpool
         threadpool.start(Worker(self.update_progress_bar))
         # TODO add some validation for the search command
         self.backend.send_command(search_for)
@@ -959,6 +1001,7 @@ class MainForm(QMainWindow, MainWindow):
             validator_str = "float"
 
         self.lineEdit_Scan.setValidator(validator_map[validator_str])
+        self.lineEdit_Scan2.setValidator(validator_map[validator_str])
         self.backend.send_command("option scan_data_type {}".format(scanmem_type))
         # according to scanmem instructions you should always do `reset` after changing type
         self.backend.send_command("reset")
