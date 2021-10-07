@@ -230,6 +230,18 @@ class SCAN_MODE:
     ONGOING = 1
 
 
+class SCAN_SCOPE:
+    BASIC = 1
+    NORMAL = 2
+    FULL = 3
+
+
+scan_scope_to_text_dict = collections.OrderedDict([
+    (SCAN_SCOPE.BASIC, "Basic"),
+    (SCAN_SCOPE.NORMAL, "Normal"),
+    (SCAN_SCOPE.FULL, "Full")
+])
+
 string_index_to_encoding_dict = {
     VALUE_INDEX.INDEX_STRING_UTF8: ["utf-8", "surrogateescape"],
     VALUE_INDEX.INDEX_STRING_UTF16: ["utf-16", "replace"],

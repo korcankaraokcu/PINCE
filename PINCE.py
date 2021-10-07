@@ -403,6 +403,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
         self.scan_mode = type_defs.SCAN_MODE.ONGOING
         self.pushButton_NewFirstScan_clicked()
+        self.comboBox_ScanScope_init()
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
         self.comboBox_ValueType.currentTextChanged.connect(self.comboBox_ValueType_textChanged)
         self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan))
@@ -861,6 +862,7 @@ class MainForm(QMainWindow, MainWindow):
             self.tableWidget_valuesearchtable.setRowCount(0)
             self.comboBox_ValueType.setEnabled(True)
             self.pushButton_NextScan.setEnabled(False)
+            self.comboBox_ScanScope.setEnabled(True)
             self.progressBar.setValue(0)
             self.comboBox_ScanType_init()
         else:
@@ -868,6 +870,9 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText("New Scan")
             self.comboBox_ValueType.setEnabled(False)
             self.pushButton_NextScan.setEnabled(True)
+            search_scope = self.comboBox_ScanScope.currentData(Qt.UserRole)
+            self.backend.send_command("option region_scan_level " + str(search_scope))
+            self.comboBox_ScanScope.setEnabled(False)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
             self.comboBox_ScanType_init()
 
@@ -895,6 +900,12 @@ class MainForm(QMainWindow, MainWindow):
                 old_index = index
             self.comboBox_ScanType.addItem(type_defs.scan_type_to_text_dict[type_index], type_index)
         self.comboBox_ScanType.setCurrentIndex(old_index)
+
+    def comboBox_ScanScope_init(self):
+        items = [type_defs.SCAN_SCOPE.BASIC, type_defs.SCAN_SCOPE.NORMAL, type_defs.SCAN_SCOPE.FULL]
+        for scope in items:
+            self.comboBox_ScanScope.addItem(type_defs.scan_scope_to_text_dict[scope], scope)
+        self.comboBox_ScanScope.setCurrentIndex(1)  # type_defs.SCAN_SCOPE.NORMAL
 
     # :doc:
     # adds things like 0x when searching for etc, basically just makes the line valid for scanmem
