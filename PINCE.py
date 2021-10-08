@@ -969,15 +969,19 @@ class MainForm(QMainWindow, MainWindow):
         ProgressRun = 0
         self.label_MatchCount.setText("Match count: {}".format(self.backend.get_match_count()))
         self.tableWidget_valuesearchtable.setRowCount(0)
+        current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
+        length = self._scan_to_length(current_type)
 
         for n, address, offset, region_type, value, t in matches:
             n = int(n)
+            address = "0x" + address
             self.tableWidget_valuesearchtable.insertRow(
                 self.tableWidget_valuesearchtable.rowCount())
-            self.tableWidget_valuesearchtable.setItem(n, 0, QTableWidgetItem("0x" + address))
+            self.tableWidget_valuesearchtable.setItem(n, 0, QTableWidgetItem(address))
+            if current_type == type_defs.VALUE_INDEX.INDEX_STRING_UTF8:
+                value = GDB_Engine.read_memory(address, current_type, length)
             self.tableWidget_valuesearchtable.setItem(n, 1, QTableWidgetItem(value))
             self.tableWidget_valuesearchtable.setItem(n, 2, QTableWidgetItem(value))
-        return
 
     def _scan_to_length(self, type_index):
         if type_defs.VALUE_INDEX.has_length(type_index):
