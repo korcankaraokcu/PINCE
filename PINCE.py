@@ -979,16 +979,18 @@ class MainForm(QMainWindow, MainWindow):
             self.tableWidget_valuesearchtable.setItem(n, 2, QTableWidgetItem(value))
         return
 
+    def _scan_to_length(self, type_index):
+        if type_defs.VALUE_INDEX.has_length(type_index):
+            if type_index == type_defs.VALUE_INDEX.INDEX_AOB:
+                return self.lineEdit_Scan.text().count(" ") + 1
+            return len(self.lineEdit_Scan.text())
+        return 0
+
     @GDB_Engine.execute_with_temporary_interruption
     def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
         addr = self.tableWidget_valuesearchtable.item(row, 0).text()
         current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
-        length = 0
-        if type_defs.VALUE_INDEX.has_length(current_type):
-            if current_type == type_defs.VALUE_INDEX.INDEX_AOB:
-                length = self.lineEdit_Scan.text().count(" ") + 1
-            else:
-                length = len(self.lineEdit_Scan.text())
+        length = self._scan_to_length(current_type)
         self.add_entry_to_addresstable("", addr, current_type, length)
 
     def comboBox_ValueType_current_index_changed(self):
@@ -1116,10 +1118,12 @@ class MainForm(QMainWindow, MainWindow):
 
     def copy_to_address_table(self):
         i = -1
+        current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
+        length = self._scan_to_length(current_type)
         for row in self.tableWidget_valuesearchtable.selectedItems():
             i = i + 1
             if i % 3 == 0:
-                self.add_entry_to_addresstable("", row.text(), self.comboBox_ValueType.currentData(Qt.UserRole))
+                self.add_entry_to_addresstable("", row.text(), current_type, length)
 
     def on_inferior_exit(self):
         if GDB_Engine.currentpid == -1:
