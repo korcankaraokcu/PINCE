@@ -404,8 +404,9 @@ class MainForm(QMainWindow, MainWindow):
         self.scan_mode = type_defs.SCAN_MODE.ONGOING
         self.pushButton_NewFirstScan_clicked()
         self.comboBox_ScanScope_init()
+        self.comboBox_ValueType_init()
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
-        self.comboBox_ValueType.currentTextChanged.connect(self.comboBox_ValueType_textChanged)
+        self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan))
         self.lineEdit_Scan2.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan2))
         self.comboBox_ScanType.currentIndexChanged.connect(self.comboBox_ScanType_current_index_changed)
@@ -907,6 +908,16 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_ScanScope.addItem(type_defs.scan_scope_to_text_dict[scope], scope)
         self.comboBox_ScanScope.setCurrentIndex(1)  # type_defs.SCAN_SCOPE.NORMAL
 
+    def comboBox_ValueType_init(self):
+        self.comboBox_ValueType.clear()
+        items = [type_defs.VALUE_INDEX.INDEX_BYTE, type_defs.VALUE_INDEX.INDEX_2BYTES,
+                 type_defs.VALUE_INDEX.INDEX_4BYTES, type_defs.VALUE_INDEX.INDEX_8BYTES,
+                 type_defs.VALUE_INDEX.INDEX_FLOAT, type_defs.VALUE_INDEX.INDEX_DOUBLE,
+                 type_defs.VALUE_INDEX.INDEX_STRING_UTF8, type_defs.VALUE_INDEX.INDEX_AOB]
+        for type_index in items:
+            self.comboBox_ValueType.addItem(type_defs.index_to_text_dict[type_index], type_index)
+        self.comboBox_ValueType.setCurrentIndex(type_defs.VALUE_INDEX.INDEX_4BYTES)
+
     # :doc:
     # adds things like 0x when searching for etc, basically just makes the line valid for scanmem
     # this should cover most things, more things might be added later if need be
@@ -922,13 +933,13 @@ class MainForm(QMainWindow, MainWindow):
         if type_index in symbol_map:
             return symbol_map[type_index]
 
-        # none of theese should be possible to be true at the same time
-        # TODO refactor later to use current index, and compare to type_defs constant
-        if self.comboBox_ValueType.currentText() == "Float":
+        # none of these should be possible to be true at the same time
+        current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
+        if current_type == type_defs.VALUE_INDEX.INDEX_FLOAT:
             # this is odd, since when searching for floats from command line it uses `.` and not `,`
             search_for = search_for.replace(".", ",")
             search_for2 = search_for2.replace(".", ",")
-        elif self.comboBox_ValueType.currentText() == "String":
+        elif type_defs.VALUE_INDEX.is_string(current_type):
             search_for = "\" " + search_for
         elif self.checkBox_Hex.isChecked():
             if not search_for.startswith("0x"):
@@ -971,21 +982,28 @@ class MainForm(QMainWindow, MainWindow):
     @GDB_Engine.execute_with_temporary_interruption
     def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
         addr = self.tableWidget_valuesearchtable.item(row, 0).text()
-        self.add_entry_to_addresstable("", addr, self.comboBox_ValueType.currentIndex())
+        current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
+        length = 0
+        if type_defs.VALUE_INDEX.has_length(current_type):
+            if current_type == type_defs.VALUE_INDEX.INDEX_AOB:
+                length = self.lineEdit_Scan.text().count(" ") + 1
+            else:
+                length = len(self.lineEdit_Scan.text())
+        self.add_entry_to_addresstable("", addr, current_type, length)
 
-    def comboBox_ValueType_textChanged(self, text):
+    def comboBox_ValueType_current_index_changed(self):
         # used for making our types in the combo box into what scanmem uses
         PINCE_TYPES_TO_SCANMEM = {
-            "Byte": "int8",
-            "2 Bytes": "int16",
-            "4 Bytes": "int32",
-            "8 Bytes": "int64",
-            "Float": "float32",
-            "Double": "float64",
-            "String": "string",
-            "Array of bytes": "bytearray"
+            type_defs.VALUE_INDEX.INDEX_BYTE: "int8",
+            type_defs.VALUE_INDEX.INDEX_2BYTES: "int16",
+            type_defs.VALUE_INDEX.INDEX_4BYTES: "int32",
+            type_defs.VALUE_INDEX.INDEX_8BYTES: "int64",
+            type_defs.VALUE_INDEX.INDEX_FLOAT: "float32",
+            type_defs.VALUE_INDEX.INDEX_DOUBLE: "float64",
+            type_defs.VALUE_INDEX.INDEX_STRING_UTF8: "string",
+            type_defs.VALUE_INDEX.INDEX_AOB: "bytearray"
         }
-
+        current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
         validator_map = {
             "int": QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan),  # integers
             "float": QRegExpValidator(QRegExp("-?[0-9]+[.,]?[0-9]*")),
@@ -994,8 +1012,7 @@ class MainForm(QMainWindow, MainWindow):
             # array of bytes
             "string": None
         }
-
-        scanmem_type = PINCE_TYPES_TO_SCANMEM[text]
+        scanmem_type = PINCE_TYPES_TO_SCANMEM[current_type]
         validator_str = scanmem_type  # used to get the correct validator
 
         # TODO this can probably be made to look nicer, though it doesn't really matter
@@ -1102,7 +1119,7 @@ class MainForm(QMainWindow, MainWindow):
         for row in self.tableWidget_valuesearchtable.selectedItems():
             i = i + 1
             if i % 3 == 0:
-                self.add_entry_to_addresstable("", row.text(), self.comboBox_ValueType.currentIndex())
+                self.add_entry_to_addresstable("", row.text(), self.comboBox_ValueType.currentData(Qt.UserRole))
 
     def on_inferior_exit(self):
         if GDB_Engine.currentpid == -1:
@@ -3785,7 +3802,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
     def tableWidget_TrackInfo_item_double_clicked(self, index):
         address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
         self.parent().parent().add_entry_to_addresstable("Accessed by " + self.address, address,
-                                                         self.comboBox_ValueType.currentIndex(), 10, True)
+                                                         self.comboBox_ValueType.currentData(Qt.UserRole), 10, True)
 
     def pushButton_Stop_clicked(self):
         if self.stopped:
