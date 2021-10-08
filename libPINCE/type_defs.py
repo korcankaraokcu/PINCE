@@ -191,7 +191,7 @@ index_to_text_dict = collections.OrderedDict([
     (VALUE_INDEX.INDEX_STRING_UTF8, "String_UTF8"),
     (VALUE_INDEX.INDEX_STRING_UTF16, "String_UTF16"),
     (VALUE_INDEX.INDEX_STRING_UTF32, "String_UTF32"),
-    (VALUE_INDEX.INDEX_AOB, "AoB")
+    (VALUE_INDEX.INDEX_AOB, "Array of Bytes")
 ])
 
 text_to_index_dict = collections.OrderedDict()
