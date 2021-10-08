@@ -86,10 +86,7 @@ def fill_value_combobox(QCombobox, current_index=type_defs.VALUE_INDEX.INDEX_4BY
         current_index (int): Can be a member of type_defs.VALUE_INDEX
     """
     for key in type_defs.index_to_text_dict:
-        if key == type_defs.VALUE_INDEX.INDEX_AOB:
-            QCombobox.addItem("Array of Bytes")
-        else:
-            QCombobox.addItem(type_defs.index_to_text_dict[key])
+        QCombobox.addItem(type_defs.index_to_text_dict[key])
     QCombobox.setCurrentIndex(current_index)
 
 
