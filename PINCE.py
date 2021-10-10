@@ -629,6 +629,7 @@ class MainForm(QMainWindow, MainWindow):
         except KeyError:
             pass
 
+    @GDB_Engine.execute_with_temporary_interruption
     def exec_track_watchpoint_widget(self, watchpoint_type):
         selected_row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if not selected_row:
@@ -3700,23 +3701,19 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
     def pushButton_Stop_clicked(self):
         if self.stopped:
             self.close()
-        if not GDB_Engine.delete_breakpoint(self.address):
+        if not GDB_Engine.execute_func_temporary_interruption(GDB_Engine.delete_breakpoint, self.address):
             QMessageBox.information(self, "Error", "Unable to delete watchpoint at expression " + self.address)
             return
         self.stopped = True
         self.pushButton_Stop.setText("Close")
 
+    @GDB_Engine.execute_with_temporary_interruption
     def closeEvent(self, QCloseEvent):
-        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-            QCloseEvent.ignore()
-            raise type_defs.InferiorRunningException
-        try:
-            self.update_timer.stop()
-        except AttributeError:
-            pass
         global instances
+        self.update_timer.stop()
+        GDB_Engine.delete_breakpoint(self.address)
+        self.deleteLater()
         instances.remove(self)
-        GDB_Engine.execute_func_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
 
 
 class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
