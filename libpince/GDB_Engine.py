@@ -539,7 +539,7 @@ def set_logging(state):
 #:tag:GDBCommunication
 def set_pince_paths():
     """Initializes $PINCE_PATH and $GDBINIT_AA_PATH convenience variables to make commands in GDBCommandExtensions.py
-    and ScriptUtils.py work. GDB scripts need to know libPINCE and .config directories, unfortunately they don't start
+    and ScriptUtils.py work. GDB scripts need to know libpince and .config directories, unfortunately they don't start
     from the place where script exists
     """
     libpince_dir = SysUtils.get_libpince_directory()

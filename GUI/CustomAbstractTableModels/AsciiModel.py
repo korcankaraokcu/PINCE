@@ -18,7 +18,7 @@ from PyQt5.QtCore import QVariant, Qt
 from PyQt5.QtGui import QColor
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 
-from libPINCE import SysUtils, GDB_Engine
+from libpince import SysUtils, GDB_Engine
 
 
 class QAsciiModel(QHexModel):

@@ -35,9 +35,9 @@ install_scanmem() {
     echo "Downloading scanmem"
     git submodule update --init --recursive
     
-    if [ ! -d "libPINCE/libscanmem" ]; then
-        mkdir libPINCE/libscanmem
-        chown -R "${CURRENT_USER}":"${CURRENT_USER}" libPINCE/libscanmem
+    if [ ! -d "libpince/libscanmem" ]; then
+        mkdir libpince/libscanmem
+        chown -R "${CURRENT_USER}":"${CURRENT_USER}" libpince/libscanmem
     fi
     (
         echo "Entering scanmem"
@@ -51,13 +51,13 @@ install_scanmem() {
         else
             compile_scanmem
         fi
-        cp --preserve .libs/libscanmem.so ../libPINCE/libscanmem/libscanmem.so
-        cp --preserve gui/scanmem.py ../libPINCE/libscanmem
-        cp --preserve gui/misc.py ../libPINCE/libscanmem
+        cp --preserve .libs/libscanmem.so ../libpince/libscanmem/libscanmem.so
+        cp --preserve gui/scanmem.py ../libpince/libscanmem
+        cp --preserve gui/misc.py ../libpince/libscanmem
         echo "Exitting scanmem"
     )
     # required for relative import, since it will throw an import error if it's just `import misc`
-    sed -i 's/import misc/from \. import misc/g' libPINCE/libscanmem/scanmem.py
+    sed -i 's/import misc/from \. import misc/g' libpince/libscanmem/scanmem.py
 }
 
 OS_NAME="Debian"

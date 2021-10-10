@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
 from PyQt5.QtGui import QColor
 
-from libPINCE import SysUtils, GDB_Engine
+from libpince import SysUtils, GDB_Engine
 
 
 class QHexModel(QAbstractTableModel):

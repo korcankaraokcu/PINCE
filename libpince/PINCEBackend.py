@@ -38,7 +38,7 @@ class PINCEBackend():
     }
 
     """
-        scans the current dirrectory (PINCE/libPINCE) for libscanmem
+        scans the current dirrectory (PINCE/libpince) for libscanmem
         @param libname
     """
     def __init__(self, libname="scanmem.so"):

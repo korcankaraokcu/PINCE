@@ -23,7 +23,7 @@ PINCE_PATH = gdb.parse_and_eval("$PINCE_PATH").string()
 GDBINIT_AA_PATH = gdb.parse_and_eval("$GDBINIT_AA_PATH").string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
-from libPINCE import type_defs, common_regexes
+from libpince import type_defs, common_regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid

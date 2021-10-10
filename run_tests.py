@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import unittest, argparse, psutil
-from libPINCE import GDB_Engine, SysUtils
+from libpince import GDB_Engine, SysUtils
 
 desc = 'Runs all unit tests by creating or attaching to a process'
 ex = 'Example of Usage:' \

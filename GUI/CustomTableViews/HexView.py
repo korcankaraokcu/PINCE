@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt5.QtWidgets import QTableView, QAbstractItemView
 from PyQt5.QtCore import Qt
 
-from libPINCE import SysUtils, GDB_Engine
+from libpince import SysUtils, GDB_Engine
 
 
 class QHexView(QTableView):

@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import unittest
-from libPINCE import GuiUtils
+from libpince import GuiUtils
 
 
 class GuiUtils_tests(unittest.TestCase):

@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt5.QtWidgets import QLabel, QMenu
 from PyQt5.QtGui import QCursor
 from PyQt5.QtCore import Qt
-from libPINCE import GDB_Engine
-from libPINCE import GuiUtils
+from libpince import GDB_Engine
+from libpince import GuiUtils
 from PINCE import InputDialogForm
 
 

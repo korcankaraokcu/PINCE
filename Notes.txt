@@ -1,5 +1,5 @@
 Code Relocations:
-	--libPINCE
+	--libpince
 		GuiUtils.py is used to contain GUI related utility functions
 		SysUtils.py is used to contain all useful but non-GDB related libraries such as psutil
 		GDB_Engine.py is used to contain all GDB related functions

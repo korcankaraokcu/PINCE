@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import unittest
-from libPINCE import GDB_Engine, type_defs, common_regexes
+from libpince import GDB_Engine, type_defs, common_regexes
 
 
 class GDB_Engine_tests(unittest.TestCase):

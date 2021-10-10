@@ -28,8 +28,8 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, 
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil, pexpect
 
-from libPINCE import GuiUtils, SysUtils, GDB_Engine, type_defs
-from libPINCE.libscanmem.scanmem import Scanmem
+from libpince import GuiUtils, SysUtils, GDB_Engine, type_defs
+from libpince.libscanmem.scanmem import Scanmem
 
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
@@ -55,7 +55,7 @@ from GUI.TraceInstructionsWaitWidget import Ui_Form as TraceInstructionsWaitWidg
 from GUI.TraceInstructionsWindow import Ui_MainWindow as TraceInstructionsWindow
 from GUI.FunctionsInfoWidget import Ui_Form as FunctionsInfoWidget
 from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
-from GUI.LibPINCEReferenceWidget import Ui_Form as LibPINCEReferenceWidget
+from GUI.LibpinceReferenceWidget import Ui_Form as LibpinceReferenceWidget
 from GUI.LogFileWidget import Ui_Form as LogFileWidget
 from GUI.SearchOpcodeWidget import Ui_Form as SearchOpcodeWidget
 from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
@@ -171,7 +171,7 @@ TRACK_BREAKPOINT_SOURCE_COL = 3
 FUNCTIONS_INFO_ADDR_COL = 0
 FUNCTIONS_INFO_SYMBOL_COL = 1
 
-# represents the index of columns in libPINCE reference resources table
+# represents the index of columns in libpince reference resources table
 LIBPINCE_REFERENCE_ITEM_COL = 0
 LIBPINCE_REFERENCE_VALUE_COL = 1
 
@@ -369,7 +369,7 @@ class MainForm(QMainWindow, MainWindow):
         else:
             GDB_Engine.set_logging(gdb_logging)
         # this should be changed, only works if you use the current directory, fails if you for example install it to some place like bin
-        libscanmem_path = os.path.join(os.getcwd(), "libPINCE", "libscanmem", "libscanmem.so")
+        libscanmem_path = os.path.join(os.getcwd(), "libpince", "libscanmem", "libscanmem.so")
         self.backend = Scanmem(libscanmem_path)
         self.backend.send_command("option noptrace 1")
         self.memory_view_window = MemoryViewWindowForm(self)
@@ -2190,7 +2190,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionDissect_Code.triggered.connect(self.actionDissect_Code_triggered)
 
     def initialize_help_context_menu(self):
-        self.actionLibPINCE.triggered.connect(self.actionLibPINCE_triggered)
+        self.actionlibpince.triggered.connect(self.actionlibpince_triggered)
 
     def __init__(self, parent=None):
         super().__init__()
@@ -3316,9 +3316,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.dissect_code_dialog.exec_()
         self.refresh_disassemble_view()
 
-    def actionLibPINCE_triggered(self):
-        libPINCE_widget = LibPINCEReferenceWidgetForm(is_window=True)
-        libPINCE_widget.showMaximized()
+    def actionlibpince_triggered(self):
+        libpince_widget = LibpinceReferenceWidgetForm(is_window=True)
+        libpince_widget.showMaximized()
 
     def pushButton_ShowFloatRegisters_clicked(self):
         self.float_registers_widget = FloatRegisterWidgetForm()
@@ -4225,7 +4225,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
         super(HexEditDialogForm, self).accept()
 
 
-class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
+class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
     def convert_to_modules(self, module_strings):
         return [eval(item) for item in module_strings]
 
@@ -4242,11 +4242,11 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
         self.show_type_defs()
         self.splitter.setStretchFactor(0, 1)
         self.widget_Resources.resize(700, self.widget_Resources.height())
-        libPINCE_directory = SysUtils.get_libpince_directory()
-        self.textBrowser_TypeDefs.setText(open(libPINCE_directory + "/type_defs.py").read())
+        libpince_directory = SysUtils.get_libpince_directory()
+        self.textBrowser_TypeDefs.setText(open(libpince_directory + "/type_defs.py").read())
         source_menu_items = ["(Tagged only)", "(All)"]
-        self.libPINCE_source_files = ["GDB_Engine", "SysUtils", "GuiUtils"]
-        source_menu_items.extend(self.libPINCE_source_files)
+        self.libpince_source_files = ["GDB_Engine", "SysUtils", "GuiUtils"]
+        source_menu_items.extend(self.libpince_source_files)
         self.comboBox_SourceFile.addItems(source_menu_items)
         self.comboBox_SourceFile.setCurrentIndex(0)
         self.fill_resource_tree()
@@ -4349,7 +4349,7 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
         self.stackedWidget_Resources.setCurrentIndex(0)
         self.treeWidget_ResourceTree.clear()
         parent = self.treeWidget_ResourceTree
-        checked_source_files = self.convert_to_modules(self.libPINCE_source_files)
+        checked_source_files = self.convert_to_modules(self.libpince_source_files)
         tag_dict = SysUtils.get_tags(checked_source_files, type_defs.tag_to_string, self.lineEdit_Search.text())
         docstring_dict = SysUtils.get_docstrings(checked_source_files, self.lineEdit_Search.text())
         for tag in tag_dict:
@@ -4375,7 +4375,7 @@ class LibPINCEReferenceWidgetForm(QWidget, LibPINCEReferenceWidget):
         self.tableWidget_ResourceTable.setSortingEnabled(False)
         self.tableWidget_ResourceTable.setRowCount(0)
         if self.comboBox_SourceFile.currentIndex() == 1:  # (All)
-            checked_source_files = self.libPINCE_source_files
+            checked_source_files = self.libpince_source_files
         else:
             checked_source_files = [self.comboBox_SourceFile.currentText()]
         checked_source_files = self.convert_to_modules(checked_source_files)
