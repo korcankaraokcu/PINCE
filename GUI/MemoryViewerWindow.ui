@@ -178,7 +178,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>332</width>
+              <width>331</width>
               <height>336</height>
              </rect>
             </property>
@@ -1262,7 +1262,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>547</width>
+              <width>546</width>
               <height>193</height>
              </rect>
             </property>
@@ -1590,7 +1590,7 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionLibPINCE"/>
+    <addaction name="actionlibpince"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
@@ -1669,9 +1669,9 @@
     <string>&amp;Load Trace</string>
    </property>
   </action>
-  <action name="actionLibPINCE">
+  <action name="actionlibpince">
    <property name="text">
-    <string>&amp;libPINCE</string>
+    <string>&amp;libpince</string>
    </property>
   </action>
   <action name="actionGDB_Log_File">

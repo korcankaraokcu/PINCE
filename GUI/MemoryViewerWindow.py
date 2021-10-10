@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -80,7 +80,7 @@ class Ui_MainWindow_MemoryView(object):
         self.scrollArea_Registers.setWidgetResizable(True)
         self.scrollArea_Registers.setObjectName("scrollArea_Registers")
         self.scrollAreaWidgetContents_Registers = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 332, 336))
+        self.scrollAreaWidgetContents_Registers.setGeometry(QtCore.QRect(0, 0, 331, 336))
         self.scrollAreaWidgetContents_Registers.setObjectName("scrollAreaWidgetContents_Registers")
         self.gridLayout_8 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_Registers)
         self.gridLayout_8.setContentsMargins(0, 0, 0, 0)
@@ -580,7 +580,7 @@ class Ui_MainWindow_MemoryView(object):
         self.scrollArea_Hex.setWidgetResizable(True)
         self.scrollArea_Hex.setObjectName("scrollArea_Hex")
         self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 547, 193))
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 546, 193))
         self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
         self.gridLayout_11 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -748,8 +748,8 @@ class Ui_MainWindow_MemoryView(object):
         self.actionCall_Function.setObjectName("actionCall_Function")
         self.actionLoad_Trace = QtWidgets.QAction(MainWindow_MemoryView)
         self.actionLoad_Trace.setObjectName("actionLoad_Trace")
-        self.actionLibPINCE = QtWidgets.QAction(MainWindow_MemoryView)
-        self.actionLibPINCE.setObjectName("actionLibPINCE")
+        self.actionlibpince = QtWidgets.QAction(MainWindow_MemoryView)
+        self.actionlibpince.setObjectName("actionlibpince")
         self.actionGDB_Log_File = QtWidgets.QAction(MainWindow_MemoryView)
         self.actionGDB_Log_File.setObjectName("actionGDB_Log_File")
         self.actionSearch_Opcode = QtWidgets.QAction(MainWindow_MemoryView)
@@ -788,7 +788,7 @@ class Ui_MainWindow_MemoryView(object):
         self.menuTools.addAction(self.actionSearch_Opcode)
         self.menuTools.addAction(self.actionDissect_Code)
         self.menuFile.addAction(self.actionLoad_Trace)
-        self.menuHelp.addAction(self.actionLibPINCE)
+        self.menuHelp.addAction(self.actionlibpince)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuView.menuAction())
         self.menubar.addAction(self.menuDebug.menuAction())
@@ -896,7 +896,7 @@ class Ui_MainWindow_MemoryView(object):
         self.actionSet_Address.setText(_translate("MainWindow_MemoryView", "Set Address[Shift+F4]"))
         self.actionCall_Function.setText(_translate("MainWindow_MemoryView", "&Call Function"))
         self.actionLoad_Trace.setText(_translate("MainWindow_MemoryView", "&Load Trace"))
-        self.actionLibPINCE.setText(_translate("MainWindow_MemoryView", "&libPINCE"))
+        self.actionlibpince.setText(_translate("MainWindow_MemoryView", "&libpince"))
         self.actionGDB_Log_File.setText(_translate("MainWindow_MemoryView", "&GDB Log File"))
         self.actionSearch_Opcode.setText(_translate("MainWindow_MemoryView", "&Search Opcode"))
         self.actionMemory_Regions.setText(_translate("MainWindow_MemoryView", "&Memory Regions"))
@@ -908,3 +908,13 @@ from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
 from GUI.CustomLabels.RegisterLabel import QRegisterLabel
 from GUI.CustomTableViews.AsciiView import QAsciiView
 from GUI.CustomTableViews.HexView import QHexView
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow_MemoryView = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow_MemoryView()
+    ui.setupUi(MainWindow_MemoryView)
+    MainWindow_MemoryView.show()
+    sys.exit(app.exec_())

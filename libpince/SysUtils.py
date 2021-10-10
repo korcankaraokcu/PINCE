@@ -225,14 +225,14 @@ def get_logo_directory():
 
 #:tag:Utilities
 def get_libpince_directory():
-    """Get libPINCE directory
+    """Get libpince directory
 
     Returns:
-        str: A string pointing to the libPINCE directory
+        str: A string pointing to the libpince directory
 
     Note:
         In fact this function returns the directory where SysUtils in and considering the fact that SysUtils resides in
-        libPINCE, it works. So, please don't move out SysUtils outside of libPINCE folder!
+        libpince, it works. So, please don't move out SysUtils outside of libpince folder!
     """
     return os.path.dirname(os.path.realpath(__file__))
 
@@ -721,7 +721,7 @@ def split_symbol(symbol_string):
     # searching for balanced parentheses works because apparently no demangled symbol can finish with <.*>
     # XXX: run this code to test while attached to a process and open a detailed issue if you get a result
     """
-    from libPINCE import GDB_Engine
+    from libpince import GDB_Engine
     import re
     result=GDB_Engine.search_functions("")
     for address, symbol in result:

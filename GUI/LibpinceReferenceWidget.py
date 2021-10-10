@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'LibPINCEReferenceWidget.ui'
+# Form implementation generated from reading ui file 'LibpinceReferenceWidget.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -23,7 +25,7 @@ class Ui_Form(object):
         self.widget_TypeDefs = QtWidgets.QWidget(self.splitter)
         self.widget_TypeDefs.setObjectName("widget_TypeDefs")
         self.gridLayout = QtWidgets.QGridLayout(self.widget_TypeDefs)
-        self.gridLayout.setContentsMargins(-1, -1, 0, -1)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
@@ -64,7 +66,7 @@ class Ui_Form(object):
         self.widget_Resources = QtWidgets.QWidget(self.splitter)
         self.widget_Resources.setObjectName("widget_Resources")
         self.gridLayout_3 = QtWidgets.QGridLayout(self.widget_Resources)
-        self.gridLayout_3.setContentsMargins(0, -1, -1, -1)
+        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_3.setObjectName("gridLayout_3")
         self.stackedWidget_Resources = QtWidgets.QStackedWidget(self.widget_Resources)
         self.stackedWidget_Resources.setObjectName("stackedWidget_Resources")
@@ -144,7 +146,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "libPINCE Reference"))
+        Form.setWindowTitle(_translate("Form", "libpince Reference"))
         self.label_5.setText(_translate("Form", "Search"))
         self.label_3.setText(_translate("Form", "type_defs(Type Definitions)"))
         self.label_FoundCount.setText(_translate("Form", "0/0"))
@@ -159,3 +161,12 @@ class Ui_Form(object):
         self.label_2.setText(_translate("Form", "Resources(Mouse-over items to see docstrings)"))
         self.pushButton_ShowTypeDefs.setText(_translate("Form", "Hide type_defs"))
 
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    Form = QtWidgets.QWidget()
+    ui = Ui_Form()
+    ui.setupUi(Form)
+    Form.show()
+    sys.exit(app.exec_())

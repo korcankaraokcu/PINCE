@@ -23,8 +23,8 @@ gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
 PINCE_PATH = gdbvalue.string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
-from libPINCE.gdb_python_scripts import ScriptUtils
-from libPINCE import SysUtils, type_defs, common_regexes
+from libpince.gdb_python_scripts import ScriptUtils
+from libpince import SysUtils, type_defs, common_regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
