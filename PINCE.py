@@ -579,7 +579,7 @@ class MainForm(QMainWindow, MainWindow):
         edit_address = edit_menu.addAction("Address[Ctrl+Alt+Enter]")
         edit_type = edit_menu.addAction("Type[Alt+Enter]")
         edit_value = edit_menu.addAction("Value[Enter]")
-        # TODO: Implement toggling of records
+        show_hex = menu.addAction("Show as hexadecimal")
         toggle_record = menu.addAction("Toggle selected records[Space]")
         menu.addSeparator()
         browse_region = menu.addAction("Browse this memory region[Ctrl+B]")
@@ -598,9 +598,16 @@ class MainForm(QMainWindow, MainWindow):
         what_reads = menu.addAction("Find out what reads this address")
         what_accesses = menu.addAction("Find out what accesses this address")
         if current_row is None:
-            deletion_list = [edit_menu.menuAction(), toggle_record, browse_region, disassemble, what_writes, what_reads,
-                             what_accesses]
+            deletion_list = [edit_menu.menuAction(), show_hex, toggle_record, browse_region, disassemble, what_writes,
+                             what_reads, what_accesses]
             GuiUtils.delete_menu_entries(menu, deletion_list)
+        else:
+            current_text = current_row.text(TYPE_COL)
+            index, length, zero_terminate, byte_len, hex_repr = GuiUtils.text_to_valuetype(current_text)
+            if type_defs.VALUE_INDEX.has_length(index):
+                GuiUtils.delete_menu_entries(menu, [show_hex])
+            elif hex_repr:
+                show_hex.setText("Show as decimal")
         font_size = self.treeWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -609,6 +616,7 @@ class MainForm(QMainWindow, MainWindow):
             edit_address: self.treeWidget_AddressTable_edit_address,
             edit_type: self.treeWidget_AddressTable_edit_type,
             edit_value: self.treeWidget_AddressTable_edit_value,
+            show_hex: self.treeWidget_AddressTable_show_hex,
             toggle_record: self.toggle_selected_records,
             browse_region: self.browse_region_for_selected_row,
             disassemble: self.disassemble_selected_row,
@@ -636,7 +644,7 @@ class MainForm(QMainWindow, MainWindow):
             return
         address = selected_row.text(ADDR_COL)
         value_type_text = selected_row.text(TYPE_COL)
-        index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type_text)
+        index, length, zero_terminate, byte_len, hex_repr = GuiUtils.text_to_valuetype(value_type_text)
         if byte_len == -1:
             value_text = selected_row.text(VALUE_COL)
             encoding, option = type_defs.string_index_to_encoding_dict[index]
@@ -793,6 +801,7 @@ class MainForm(QMainWindow, MainWindow):
         table_contents = []
         address_expr_list = []
         value_type_list = []
+        hex_repr_list = []
         rows = []
         while True:
             row = it.value()
@@ -807,12 +816,20 @@ class MainForm(QMainWindow, MainWindow):
         except type_defs.InferiorRunningException:
             address_list = address_expr_list
         for address, value_type in zip(address_list, value_type_list):
-            index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
+            index, length, zero_terminate, byte_len, hex_repr = GuiUtils.text_to_valuetype(value_type)
             table_contents.append((address, index, length, zero_terminate))
+            hex_repr_list.append(hex_repr)
         new_table_contents = GDB_Engine.read_memory_multiple(table_contents)
-        for row, address, address_expr, value in zip(rows, address_list, address_expr_list, new_table_contents):
+        for row, address, address_expr, value, hex_repr in zip(rows, address_list, address_expr_list,
+                                                               new_table_contents, hex_repr_list):
             row.setText(ADDR_COL, address or address_expr)
-            row.setText(VALUE_COL, "" if value is None else str(value))
+            if value is None:
+                value = ""
+            elif hex_repr:
+                value = hex(value)
+            else:
+                value = str(value)
+            row.setText(VALUE_COL, value)
 
     def resize_address_table(self):
         self.treeWidget_AddressTable.resizeColumnToContents(FROZEN_COL)
@@ -821,8 +838,8 @@ class MainForm(QMainWindow, MainWindow):
     def pushButton_AddAddressManually_clicked(self):
         manual_address_dialog = ManualAddressDialogForm()
         if manual_address_dialog.exec_():
-            description, address_expr, address_type, length, zero_terminate = manual_address_dialog.get_values()
-            self.add_entry_to_addresstable(description, address_expr, address_type, length, zero_terminate)
+            desc, address_expr, address_type, length, zero_terminate, hex_repr = manual_address_dialog.get_values()
+            self.add_entry_to_addresstable(desc, address_expr, address_type, length, zero_terminate)
 
     def pushButton_MemoryView_clicked(self):
         self.memory_view_window.showMaximized()
@@ -1247,14 +1264,22 @@ class MainForm(QMainWindow, MainWindow):
                     if (len(FreezeVars) == 0):
                         FreezeStop = 1
 
+    def treeWidget_AddressTable_show_hex(self):
+        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
+        value_text = row.text(TYPE_COL)
+        index, length, zero_terminate, byte_len, hex_repr = GuiUtils.text_to_valuetype(value_text)
+        hex_repr = not hex_repr
+        for row in self.treeWidget_AddressTable.selectedItems():
+            row.setText(TYPE_COL, GuiUtils.valuetype_to_text(index, length, zero_terminate, hex_repr))
+        self.update_address_table()
+
     def treeWidget_AddressTable_edit_value(self):
         global FreezeVars
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if not row:
             return
         value = row.text(VALUE_COL)
-        value_index = GuiUtils.text_to_valuetype(
-            row.text(TYPE_COL))[0]
+        value_index = GuiUtils.text_to_valuetype(row.text(TYPE_COL))[0]
         label_text = "Enter the new value"
         if type_defs.VALUE_INDEX.is_string(value_index):
             label_text += "\nPINCE doesn't automatically insert a null terminated string at the end" \
@@ -1293,24 +1318,23 @@ class MainForm(QMainWindow, MainWindow):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if not row:
             return
-        description, address_expr, value_type = self.read_address_table_entries(row=row)
-        index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(value_type)
-        manual_address_dialog = ManualAddressDialogForm(description=description, address=address_expr, index=index,
-                                                        length=length, zero_terminate=zero_terminate)
+        desc, address_expr, value_type = self.read_address_table_entries(row=row)
+        index, length, zero_terminate, byte_len, hex_repr = GuiUtils.text_to_valuetype(value_type)
+        manual_address_dialog = ManualAddressDialogForm(description=desc, address=address_expr, index=index,
+                                                        length=length, zero_terminate=zero_terminate, hex_repr=hex_repr)
         manual_address_dialog.setWindowTitle("Edit Address")
         if manual_address_dialog.exec_():
-            description, address_expr, address_type, length, zero_terminate = manual_address_dialog.get_values()
-            address_type_text = GuiUtils.valuetype_to_text(value_index=address_type, length=length,
-                                                           zero_terminate=zero_terminate)
-            self.change_address_table_entries(row, description, address_expr, address_type_text)
+            desc, address_expr, address_type, length, zero_terminate, hex_repr = manual_address_dialog.get_values()
+            address_type_text = GuiUtils.valuetype_to_text(address_type, length, zero_terminate, hex_repr)
+            self.change_address_table_entries(row, desc, address_expr, address_type_text)
 
     def treeWidget_AddressTable_edit_type(self):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if not row:
             return
         value_type = row.text(TYPE_COL)
-        value_index, length, zero_terminate = GuiUtils.text_to_valuetype(value_type)[0:3]
-        dialog = EditTypeDialogForm(index=value_index, length=length, zero_terminate=zero_terminate)
+        value_index, length, zero_terminate, byte_len, hex_repr = GuiUtils.text_to_valuetype(value_type)
+        dialog = EditTypeDialogForm(index=value_index, length=length, zero_terminate=zero_terminate, hex_repr=hex_repr)
         if dialog.exec_():
             params = dialog.get_values()
             type_text = GuiUtils.valuetype_to_text(*params)
@@ -1325,7 +1349,7 @@ class MainForm(QMainWindow, MainWindow):
         except type_defs.InferiorRunningException:
             address = address_expr
         value = ''
-        index, length, zero_terminate, byte_len = GuiUtils.text_to_valuetype(address_type)
+        index, length, zero_terminate, byte_len, hex_repr = GuiUtils.text_to_valuetype(address_type)
         if address:
             value = GDB_Engine.read_memory(address, index, length, zero_terminate)
 
@@ -1335,6 +1359,7 @@ class MainForm(QMainWindow, MainWindow):
         row.setText(ADDR_COL, address or address_expr)
         row.setText(TYPE_COL, address_type)
         row.setText(VALUE_COL, "" if value is None else str(value))
+        self.update_address_table()
 
     # Returns the column values of the given row
     def read_address_table_entries(self, row):
@@ -1427,13 +1452,14 @@ class ProcessForm(QMainWindow, ProcessWindow):
 # Add Address Manually Dialog
 class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def __init__(self, parent=None, description="No Description", address="0x",
-                 index=type_defs.VALUE_INDEX.INDEX_4BYTES, length=10, zero_terminate=True):
+                 index=type_defs.VALUE_INDEX.INDEX_4BYTES, length=10, zero_terminate=True, hex_repr=False):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.adjustSize()
         self.setMinimumWidth(300)
         self.setFixedHeight(self.height())
         self.lineEdit_length.setValidator(QHexValidator(999, self))
+        self.hex_repr = hex_repr
         GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
         self.lineEdit_description.setText(description)
         self.lineEdit_address.setText(address)
@@ -1545,15 +1571,17 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         if self.checkBox_zeroterminate.isChecked():
             zero_terminate = True
         address_type = self.comboBox_ValueType.currentIndex()
-        return description, address, address_type, length, zero_terminate
+        return description, address, address_type, length, zero_terminate, self.hex_repr
 
 
 class EditTypeDialogForm(QDialog, EditTypeDialog):
-    def __init__(self, parent=None, index=type_defs.VALUE_INDEX.INDEX_4BYTES, length=10, zero_terminate=True):
+    def __init__(self, parent=None, index=type_defs.VALUE_INDEX.INDEX_4BYTES, length=10, zero_terminate=True,
+                 hex_repr=False):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setMaximumSize(100, 100)
         self.lineEdit_Length.setValidator(QHexValidator(999, self))
+        self.hex_repr = hex_repr
         GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.label_Length.show()
@@ -1620,7 +1648,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         if self.checkBox_ZeroTerminate.isChecked():
             zero_terminate = True
         address_type = self.comboBox_ValueType.currentIndex()
-        return address_type, length, zero_terminate
+        return address_type, length, zero_terminate, self.hex_repr
 
 
 class LoadingDialogForm(QDialog, LoadingDialog):
@@ -2454,8 +2482,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address),
                                                         index=type_defs.VALUE_INDEX.INDEX_AOB)
         if manual_address_dialog.exec_():
-            description, address_expr, address_type, length, zero_terminate = manual_address_dialog.get_values()
-            self.parent().add_entry_to_addresstable(description, address_expr, address_type, length, zero_terminate)
+            desc, address_expr, address_type, length, zero_terminate, hex_repr = manual_address_dialog.get_values()
+            self.parent().add_entry_to_addresstable(desc, address_expr, address_type, length, zero_terminate)
 
     def verticalScrollBar_HexView_mouse_release_event(self, event):
         GuiUtils.center_scroll_bar(self.verticalScrollBar_HexView)
