@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from threading import Lock, Thread, Condition
 from time import sleep, time
 from collections import OrderedDict, defaultdict
-import pexpect, os, ctypes, pickle, json, shelve, re, struct
+import pexpect, os, ctypes, pickle, json, shelve, re, struct, io
 from . import SysUtils, type_defs, common_regexes
 
 self_pid = os.getpid()
@@ -1311,8 +1311,23 @@ def hex_dump(address, offset):
     Examples:
         returned list-->["??","??","??","7f","43","67","40","??","??, ...]
     """
-    return send_command("pince-hex-dump", send_with_file=True, file_contents_send=(address, offset),
-                        recv_with_file=True)
+    hex_byte_list = []
+    with open(mem_file, "rb") as FILE:
+        try:
+            FILE.seek(address)
+        except (OSError, ValueError):
+            pass
+        for item in range(offset):
+            try:
+                current_item = " ".join(format(n, '02x') for n in FILE.read(1))
+            except OSError:
+                current_item = "??"
+                try:
+                    FILE.seek(1, io.SEEK_CUR)  # Necessary since read() failed to execute
+                except (OSError, ValueError):
+                    pass
+            hex_byte_list.append(current_item)
+    return hex_byte_list
 
 
 #:tag:BreakWatchpoints

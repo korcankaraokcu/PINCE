@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import gdb, pickle, json, sys, re, struct, io, ctypes, os, shelve, distorm3
+import gdb, pickle, json, sys, re, struct, ctypes, os, shelve, distorm3
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -228,33 +228,6 @@ class GetFrameInfo(gdb.Command):
             print("Frame " + frame_number + " doesn't exist")
             frame_info = None
         send_to_pince(frame_info)
-
-
-class HexDump(gdb.Command):
-    def __init__(self):
-        super(HexDump, self).__init__("pince-hex-dump", gdb.COMMAND_USER)
-
-    def invoke(self, arg, from_tty):
-        contents_recv = receive_from_pince()
-        hex_byte_list = []
-        address = contents_recv[0]
-        offset = contents_recv[1]
-        with open(ScriptUtils.mem_file, "rb") as FILE:
-            try:
-                FILE.seek(address)
-            except (OSError, ValueError):
-                pass
-            for item in range(offset):
-                try:
-                    current_item = " ".join(format(n, '02x') for n in FILE.read(1))
-                except OSError:
-                    current_item = "??"
-                    try:
-                        FILE.seek(1, io.SEEK_CUR)  # Necessary since read() failed to execute
-                    except (OSError, ValueError):
-                        pass
-                hex_byte_list.append(current_item)
-        send_to_pince(hex_byte_list)
 
 
 class GetTrackWatchpointInfo(gdb.Command):
@@ -642,7 +615,6 @@ GetStackTraceInfo()
 GetStackInfo()
 GetFrameReturnAddresses()
 GetFrameInfo()
-HexDump()
 GetTrackWatchpointInfo()
 GetTrackBreakpointInfo()
 PhaseOut()
