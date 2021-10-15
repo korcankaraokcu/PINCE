@@ -2303,6 +2303,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.itemSelectionChanged.connect(self.tableWidget_Disassemble_item_selection_changed)
 
     def initialize_hex_view(self):
+        self.cached_breakpoint_info = []
         self.hex_view_last_selected_address_int = 0
         self.hex_view_current_region = type_defs.tuple_region_info(0, 0, None)
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
@@ -2559,7 +2560,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.setMaximumWidth(tableWidget_HexView_column_size)
         self.tableWidget_HexView_Address.setMinimumWidth(tableWidget_HexView_column_size)
         self.tableWidget_HexView_Address.setColumnWidth(0, tableWidget_HexView_column_size)
-        data_array, breakpoint_info = GDB_Engine.hex_dump(int_address, offset), GDB_Engine.get_breakpoint_info()
+        data_array = GDB_Engine.hex_dump(int_address, offset)
+
+        # TODO: Use GDB_Engine.breakpoint_on_hit_dict instead of caching breakpoints if possible
+        # Currently, breakpoint_on_hit_dict is not updated if the user manually adds a breakpoint via gdb
+        # A possible fix would be to hook the breakpoint commands but it needs to be tested thoroughly
+        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+            breakpoint_info = self.cached_breakpoint_info
+        else:
+            breakpoint_info = GDB_Engine.get_breakpoint_info()
+            self.cached_breakpoint_info = breakpoint_info
         self.hex_model.refresh(int_address, offset, data_array, breakpoint_info)
         self.ascii_model.refresh(int_address, offset, data_array, breakpoint_info)
         for index in range(offset):
