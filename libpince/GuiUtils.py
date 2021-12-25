@@ -74,7 +74,7 @@ def center_scroll_bar(QScrollBar):
     """
     maximum = QScrollBar.maximum()
     minimum = QScrollBar.minimum()
-    QScrollBar.setValue((maximum + minimum) / 2)
+    QScrollBar.setValue((maximum + minimum) // 2)
 
 
 #:tag:GUI
