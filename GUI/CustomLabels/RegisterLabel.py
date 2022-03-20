@@ -32,7 +32,7 @@ class QRegisterLabel(QLabel):
         if old != new:
             self.setStyleSheet("color: red")
         else:
-            self.setStyleSheet("color: black")
+            self.setStyleSheet("")
         self.setText(new)
 
     def enterEvent(self, QEvent):
