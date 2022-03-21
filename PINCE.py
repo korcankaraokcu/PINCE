@@ -2199,7 +2199,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionStep.triggered.connect(self.step_instruction)
         self.actionStep_Over.triggered.connect(self.step_over_instruction)
         self.actionExecute_Till_Return.triggered.connect(self.execute_till_return)
-        self.actionToggle_Breakpoint.triggered.connect(self.toggle_breakpoint)
+
+        # Ignore the "checked" bool param as we don't make use of it
+        self.actionToggle_Breakpoint.triggered.connect(lambda checked: self.toggle_breakpoint())
         self.actionSet_Address.triggered.connect(self.set_address)
 
     def initialize_view_context_menu(self):
