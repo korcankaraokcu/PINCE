@@ -22,7 +22,7 @@ from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, Q
     QKeyEvent, QRegExpValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, \
-    QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox
+    QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp, QRunnable, QThreadPool, pyqtSlot
 from time import sleep, time
@@ -39,6 +39,7 @@ from GUI.LoadingDialog import Ui_Dialog as LoadingDialog
 from GUI.InputDialog import Ui_Dialog as InputDialog
 from GUI.TextEditDialog import Ui_Dialog as TextEditDialog
 from GUI.SettingsDialog import Ui_Dialog as SettingsDialog
+from GUI.HandleSignalsDialog import Ui_Dialog as HandleSignalsDialog
 from GUI.ConsoleWidget import Ui_Form as ConsoleWidget
 from GUI.AboutWidget import Ui_TabWidget as AboutWidget
 
@@ -71,7 +72,7 @@ from GUI.CustomValidators.HexValidator import QHexValidator
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-20"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-21"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = int
 FreezeInterval = int
@@ -107,7 +108,9 @@ bring_disassemble_to_front = bool
 instructions_per_scroll = int
 gdb_path = str
 gdb_logging = bool
-ignore_sigsegv = bool
+
+ignored_signals = str
+signal_list = ["SIGUSR1", "SIGPWR", "SIGSEGV"]
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -360,14 +363,14 @@ class MainForm(QMainWindow, MainWindow):
             self.settings.clear()
             self.set_default_settings()
         try:
-            GDB_Engine.init_gdb(gdb_path, ignore_sigsegv)
+            GDB_Engine.init_gdb(gdb_path)
         except pexpect.EOF:
             text = "Unable to initialize GDB\n" \
                    "You might want to reinstall GDB or use the system GDB\n" \
                    "To change the current GDB path, check Settings->Debug"
             InputDialogForm(item_list=[(text, None)], buttons=[QDialogButtonBox.Ok]).exec_()
         else:
-            GDB_Engine.set_logging(gdb_logging)
+            self.apply_after_init()
         # this should be changed, only works if you use the current directory, fails if you for example install it to some place like bin
         libscanmem_path = os.path.join(os.getcwd(), "libpince", "libscanmem", "libscanmem.so")
         self.backend = Scanmem(libscanmem_path)
@@ -466,12 +469,25 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.beginGroup("Debug")
         self.settings.setValue("gdb_path", type_defs.PATHS.GDB_PATH)
         self.settings.setValue("gdb_logging", False)
-        self.settings.setValue("ignore_sigsegv", False)
+        self.settings.setValue("ignored_signals", "1,1,0")
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
         self.settings.setValue("version", current_settings_version)
         self.settings.endGroup()
         self.apply_settings()
+
+    def apply_after_init(self):
+        global gdb_logging
+        global ignored_signals
+
+        gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
+        ignored_signals = self.settings.value("Debug/ignored_signals", type=str)
+        GDB_Engine.set_logging(gdb_logging)
+        for index, ignore_status in enumerate(ignored_signals.split(",")):
+            if ignore_status == "1":
+                GDB_Engine.ignore_signal(signal_list[index])
+            else:
+                GDB_Engine.unignore_signal(signal_list[index])
 
     def apply_settings(self):
         global update_table
@@ -486,8 +502,6 @@ class MainForm(QMainWindow, MainWindow):
         global bring_disassemble_to_front
         global instructions_per_scroll
         global gdb_path
-        global gdb_logging
-        global ignore_sigsegv
         global FreezeInterval
 
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
@@ -512,11 +526,8 @@ class MainForm(QMainWindow, MainWindow):
         bring_disassemble_to_front = self.settings.value("Disassemble/bring_disassemble_to_front", type=bool)
         instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
         gdb_path = self.settings.value("Debug/gdb_path", type=str)
-        gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
-        ignore_sigsegv = self.settings.value("Debug/ignore_sigsegv", type=bool)
         if GDB_Engine.gdb_initialized:
-            GDB_Engine.set_logging(gdb_logging)
-            GDB_Engine.ignore_segfault(ignore_sigsegv)
+            self.apply_after_init()
 
     # Check if any process should be attached to automatically
     # Patterns at former positions have higher priority if regex is off
@@ -1094,9 +1105,9 @@ class MainForm(QMainWindow, MainWindow):
 
     # Returns: a bool value indicates whether the operation succeeded.
     def attach_to_pid(self, pid):
-        attach_result = GDB_Engine.attach(pid, gdb_path, ignore_sigsegv)
+        attach_result = GDB_Engine.attach(pid, gdb_path)
         if attach_result[0] == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
-            GDB_Engine.set_logging(gdb_logging)
+            self.apply_after_init()
             self.backend.send_command("pid {}".format(pid))
             self.on_new_process()
 
@@ -1111,8 +1122,8 @@ class MainForm(QMainWindow, MainWindow):
 
     # Returns: a bool value indicates whether the operation succeeded.
     def create_new_process(self, file_path, args, ld_preload_path):
-        if GDB_Engine.create_process(file_path, args, ld_preload_path, ignore_sigsegv):
-            GDB_Engine.set_logging(gdb_logging)
+        if GDB_Engine.create_process(file_path, args, ld_preload_path):
+            self.apply_after_init()
             self.on_new_process()
             return True
         else:
@@ -1150,8 +1161,8 @@ class MainForm(QMainWindow, MainWindow):
     def on_inferior_exit(self):
         if GDB_Engine.currentpid == -1:
             self.on_status_running()
-            GDB_Engine.init_gdb(gdb_path, ignore_sigsegv)
-            GDB_Engine.set_logging(gdb_logging)
+            GDB_Engine.init_gdb(gdb_path)
+            self.apply_after_init()
             self.label_SelectedProcess.setText("No Process Selected")
 
     def on_status_detached(self):
@@ -1799,6 +1810,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
     def __init__(self, set_default_settings_func, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.settings = QSettings()
         self.set_default_settings = set_default_settings_func
         self.hotkey_to_value = {}  # Dict[str:str]-->Dict[Hotkey.name:settings_value]
 
@@ -1816,6 +1828,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.checkBox_AutoUpdateAddressTable.stateChanged.connect(self.checkBox_AutoUpdateAddressTable_state_changed)
         self.checkBox_AutoAttachRegex.stateChanged.connect(self.checkBox_AutoAttachRegex_state_changed)
         self.checkBox_AutoAttachRegex_state_changed()
+        self.pushButton_HandleSignals.clicked.connect(self.pushButton_HandleSignals_clicked)
+        self.handle_signals_data = None
         self.config_gui()
 
     def accept(self):
@@ -1891,11 +1905,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 GDB_Engine.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
-        self.settings.setValue("Debug/ignore_sigsegv", self.checkBox_IgnoreSegfault.isChecked())
+        self.settings.setValue("Debug/ignored_signals", ",".join(self.handle_signals_data))
         super(SettingsDialogForm, self).accept()
 
     def config_gui(self):
-        self.settings = QSettings()
         self.checkBox_AutoUpdateAddressTable.setChecked(
             self.settings.value("General/auto_update_address_table", type=bool))
         self.lineEdit_UpdateInterval.setText(
@@ -1933,7 +1946,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             str(self.settings.value("Disassemble/instructions_per_scroll", type=int)))
         self.lineEdit_GDBPath.setText(str(self.settings.value("Debug/gdb_path", type=str)))
         self.checkBox_GDBLogging.setChecked(self.settings.value("Debug/gdb_logging", type=bool))
-        self.checkBox_IgnoreSegfault.setChecked(self.settings.value("Debug/ignore_sigsegv", type=bool))
 
     def change_display(self, index):
         self.stackedWidget.setCurrentIndex(index)
@@ -1958,6 +1970,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         confirm_dialog = InputDialogForm(item_list=[("This will reset to the default settings\nProceed?",)])
         if confirm_dialog.exec_():
             self.set_default_settings()
+            self.handle_signals_data = None
             self.config_gui()
 
     def checkBox_AutoUpdateAddressTable_state_changed(self):
@@ -1982,6 +1995,44 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         file_path = QFileDialog.getOpenFileName(self, "Select the gdb binary", os.path.dirname(current_path))[0]
         if file_path:
             self.lineEdit_GDBPath.setText(file_path)
+
+    def pushButton_HandleSignals_clicked(self):
+        if self.handle_signals_data is None:
+            self.handle_signals_data = self.settings.value("Debug/ignored_signals", type=str).split(",")
+        signal_dialog = HandleSignalsDialogForm(self.handle_signals_data)
+        if signal_dialog.exec_():
+            self.handle_signals_data = signal_dialog.get_values()
+
+
+class HandleSignalsDialogForm(QDialog, HandleSignalsDialog):
+    def __init__(self, signal_data, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.tableWidget_Signals.setRowCount(len(signal_list))
+        for index, state in enumerate(signal_data):
+            self.tableWidget_Signals.setItem(index, 0, QTableWidgetItem(signal_list[index]))
+            widget = QWidget()
+            checkbox = QCheckBox()
+            layout = QHBoxLayout(widget)
+            layout.addWidget(checkbox)
+            layout.setAlignment(Qt.AlignCenter)
+            layout.setContentsMargins(0, 0, 0, 0)
+            self.tableWidget_Signals.setCellWidget(index, 1, widget)
+            if state == "1":
+                checkbox.setCheckState(Qt.Checked)
+            else:
+                checkbox.setCheckState(Qt.Unchecked)
+
+    def get_values(self):
+        final_state = []
+        for index in range(len(signal_list)):
+            widget = self.tableWidget_Signals.cellWidget(index, 1)
+            checkbox = widget.findChild(QCheckBox)
+            if checkbox.checkState() == Qt.Checked:
+                final_state.append("1")
+            else:
+                final_state.append("0")
+        return final_state
 
 
 class ConsoleWidgetForm(QWidget, ConsoleWidget):
