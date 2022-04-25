@@ -1802,9 +1802,6 @@ class TextEditDialogForm(QDialog, TextEditDialog):
         else:
             super(TextEditDialogForm, self).keyPressEvent(QKeyEvent)
 
-    def accept(self):
-        super(TextEditDialogForm, self).accept()
-
 
 class SettingsDialogForm(QDialog, SettingsDialog):
     def __init__(self, set_default_settings_func, parent=None):
