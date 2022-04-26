@@ -308,10 +308,9 @@ class CheckInferiorStatus(QThread):
         while True:
             with GDB_Engine.status_changed_condition:
                 GDB_Engine.status_changed_condition.wait()
-            if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED and GDB_Engine.temporary_execution_bool != True:
-                print("execute condition: " + str(GDB_Engine.temporary_execution_bool))
+            if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
                 self.process_stopped.emit()
-            elif GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING and GDB_Engine.temporary_execution_bool != True:
+            elif GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
                 self.process_running.emit()
 
 
