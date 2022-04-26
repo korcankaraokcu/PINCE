@@ -82,12 +82,6 @@ status_changed_condition = Condition()
 # See PINCE's AwaitProcessExit class for an example
 process_exited_condition = Condition()
 
-#:tag:bool
-#:doc:
-# Bool for telling CheckInferiorStatus if it's a "real" pause or just for a split 
-# second that it will continue very soon, used in execute_with_temporary_interruption
-temporary_execution_bool = False
-
 #:tag:ConditionsLocks
 #:doc:
 # This condition is notified if gdb starts to wait for the prompt output
@@ -351,8 +345,6 @@ def execute_func_temporary_interruption(func, *args, **kwargs):
     Returns:
         ???: Result of the given function. Return type depends on the given function
     """
-    global temporary_execution_bool
-    temporary_execution_bool = True
     old_status = inferior_status
     if old_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
         ___internal_interrupt_inferior(type_defs.STOP_REASON.PAUSE)
@@ -432,8 +424,6 @@ def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
         interrupt_reason (int): Just changes the global variable stop_reason. Can be a member of type_defs.STOP_REASON
     """
     global stop_reason
-    global temporary_execution_bool
-    temporary_execution_bool = False
     send_command("c", control=True)
     wait_for_stop()
     stop_reason = interrupt_reason
