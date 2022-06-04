@@ -608,6 +608,7 @@ class Ui_MainWindow_MemoryView(object):
         self.line_5.setObjectName("line_5")
         self.horizontalLayout_5.addWidget(self.line_5)
         self.tableView_HexView_Hex = QHexView(self.scrollAreaWidgetContents_2)
+        self.tableView_HexView_Hex.setTextElideMode(QtCore.Qt.ElideNone)
         self.tableView_HexView_Hex.setObjectName("tableView_HexView_Hex")
         self.horizontalLayout_5.addWidget(self.tableView_HexView_Hex)
         self.line_4 = QtWidgets.QFrame(self.scrollAreaWidgetContents_2)
@@ -616,6 +617,7 @@ class Ui_MainWindow_MemoryView(object):
         self.line_4.setObjectName("line_4")
         self.horizontalLayout_5.addWidget(self.line_4)
         self.tableView_HexView_Ascii = QAsciiView(self.scrollAreaWidgetContents_2)
+        self.tableView_HexView_Ascii.setTextElideMode(QtCore.Qt.ElideNone)
         self.tableView_HexView_Ascii.setObjectName("tableView_HexView_Ascii")
         self.horizontalLayout_5.addWidget(self.tableView_HexView_Ascii)
         spacerItem9 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -908,13 +910,3 @@ from GUI.CustomLabels.FlagRegisterLabel import QFlagRegisterLabel
 from GUI.CustomLabels.RegisterLabel import QRegisterLabel
 from GUI.CustomTableViews.AsciiView import QAsciiView
 from GUI.CustomTableViews.HexView import QHexView
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow_MemoryView = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow_MemoryView()
-    ui.setupUi(MainWindow_MemoryView)
-    MainWindow_MemoryView.show()
-    sys.exit(app.exec_())

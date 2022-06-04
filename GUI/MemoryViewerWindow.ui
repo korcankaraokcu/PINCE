@@ -1322,7 +1322,11 @@
                 </widget>
                </item>
                <item>
-                <widget class="QHexView" name="tableView_HexView_Hex"/>
+                <widget class="QHexView" name="tableView_HexView_Hex">
+                 <property name="textElideMode">
+                  <enum>Qt::ElideNone</enum>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="Line" name="line_4">
@@ -1332,7 +1336,11 @@
                 </widget>
                </item>
                <item>
-                <widget class="QAsciiView" name="tableView_HexView_Ascii"/>
+                <widget class="QAsciiView" name="tableView_HexView_Ascii">
+                 <property name="textElideMode">
+                  <enum>Qt::ElideNone</enum>
+                 </property>
+                </widget>
                </item>
                <item>
                 <spacer name="horizontalSpacer_4">
