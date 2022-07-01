@@ -906,6 +906,12 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_ScanType_init()
 
     def comboBox_ScanType_current_index_changed(self):
+        hidden_types = [type_defs.SCAN_TYPE.INCREASED, type_defs.SCAN_TYPE.DECREASED, type_defs.SCAN_TYPE.CHANGED,
+                        type_defs.SCAN_TYPE.UNCHANGED, type_defs.SCAN_TYPE.UNKNOWN]
+        if self.comboBox_ScanType.currentData(Qt.UserRole) in hidden_types:
+            self.widget_Scan.setEnabled(False)
+        else:
+            self.widget_Scan.setEnabled(True)
         if self.comboBox_ScanType.currentData(Qt.UserRole) == type_defs.SCAN_TYPE.BETWEEN:
             self.label_Between.setVisible(True)
             self.lineEdit_Scan2.setVisible(True)
@@ -920,9 +926,10 @@ class MainForm(QMainWindow, MainWindow):
             items = [type_defs.SCAN_TYPE.EXACT, type_defs.SCAN_TYPE.LESS, type_defs.SCAN_TYPE.MORE,
                      type_defs.SCAN_TYPE.BETWEEN, type_defs.SCAN_TYPE.UNKNOWN]
         else:
-            items = [type_defs.SCAN_TYPE.EXACT, type_defs.SCAN_TYPE.INCREASED, type_defs.SCAN_TYPE.DECREASED,
-                     type_defs.SCAN_TYPE.LESS, type_defs.SCAN_TYPE.MORE, type_defs.SCAN_TYPE.BETWEEN,
-                     type_defs.SCAN_TYPE.CHANGED, type_defs.SCAN_TYPE.UNCHANGED]
+            items = [type_defs.SCAN_TYPE.EXACT, type_defs.SCAN_TYPE.INCREASED, type_defs.SCAN_TYPE.INCREASED_BY,
+                     type_defs.SCAN_TYPE.DECREASED, type_defs.SCAN_TYPE.DECREASED_BY, type_defs.SCAN_TYPE.LESS,
+                     type_defs.SCAN_TYPE.MORE, type_defs.SCAN_TYPE.BETWEEN, type_defs.SCAN_TYPE.CHANGED,
+                     type_defs.SCAN_TYPE.UNCHANGED]
         old_index = 0
         for index, type_index in enumerate(items):
             if current_type == type_index:
@@ -977,6 +984,8 @@ class MainForm(QMainWindow, MainWindow):
         if type_index == type_defs.SCAN_TYPE.BETWEEN:
             return search_for + ".." + search_for2
         cmp_symbols = {
+            type_defs.SCAN_TYPE.INCREASED_BY: "+",
+            type_defs.SCAN_TYPE.DECREASED_BY: "-",
             type_defs.SCAN_TYPE.LESS: "<",
             type_defs.SCAN_TYPE.MORE: ">"
         }
