@@ -202,20 +202,24 @@ for key in index_to_text_dict:
 class SCAN_TYPE:
     EXACT = 0
     INCREASED = 1
-    DECREASED = 2
-    LESS = 3
-    MORE = 4
-    BETWEEN = 5
-    CHANGED = 6
-    UNCHANGED = 7
-    UNKNOWN = 8
+    INCREASED_BY = 2
+    DECREASED = 3
+    DECREASED_BY = 4
+    LESS = 5
+    MORE = 6
+    BETWEEN = 7
+    CHANGED = 8
+    UNCHANGED = 9
+    UNKNOWN = 10
 
 
 # Represents the texts at indexes in combobox
 scan_type_to_text_dict = collections.OrderedDict([
     (SCAN_TYPE.EXACT, "Exact Scan"),
     (SCAN_TYPE.INCREASED, "Increased"),
+    (SCAN_TYPE.INCREASED_BY, "Increased by"),
     (SCAN_TYPE.DECREASED, "Decreased"),
+    (SCAN_TYPE.DECREASED_BY, "Decreased by"),
     (SCAN_TYPE.LESS, "Less Than"),
     (SCAN_TYPE.MORE, "More Than"),
     (SCAN_TYPE.BETWEEN, "Between"),

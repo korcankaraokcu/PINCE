@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>768</width>
-    <height>659</height>
+    <width>678</width>
+    <height>636</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -396,69 +396,83 @@
           </layout>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_7">
-           <item>
-            <widget class="QWidget" name="widget" native="true">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <layout class="QVBoxLayout" name="verticalLayout_2">
-              <property name="spacing">
-               <number>0</number>
+          <widget class="QWidget" name="widget_Scan" native="true">
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QWidget" name="widget_3" native="true">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
-              <property name="leftMargin">
-               <number>0</number>
+              <layout class="QVBoxLayout" name="verticalLayout_2">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QRadioButton" name="radioButton_Bits">
+                 <property name="text">
+                  <string>B&amp;its</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="radioButton_Decimal">
+                 <property name="text">
+                  <string>&amp;Decimal</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="checkBox_Hex">
+                 <property name="text">
+                  <string>Hex</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="lineEdit_Scan"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_Between">
+              <property name="text">
+               <string>&lt;-&gt;</string>
               </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QRadioButton" name="radioButton_Bits">
-                <property name="text">
-                 <string>B&amp;its</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="radioButton_Decimal">
-                <property name="text">
-                 <string>&amp;Decimal</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="checkBox_Hex">
-                <property name="text">
-                 <string>Hex</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="lineEdit_Scan"/>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_Between">
-             <property name="text">
-              <string>&lt;-&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="lineEdit_Scan2"/>
-           </item>
-          </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="lineEdit_Scan2"/>
+            </item>
+           </layout>
+          </widget>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -641,9 +655,6 @@
            </item>
           </layout>
          </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_3"/>
-         </item>
         </layout>
        </widget>
       </item>
@@ -656,7 +667,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>768</width>
+     <width>678</width>
      <height>30</height>
     </rect>
    </property>
