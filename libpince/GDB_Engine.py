@@ -1343,7 +1343,7 @@ def nop_instruction(start_address, array_of_bytes):
 
     Args:
         start_address (int): Self-explanatory
-        array_of_bytes (list): List of strings that contain the bytes of the instruction
+        array_of_bytes (str): String that contains the bytes of the instruction
 
     Returns:
         None
@@ -1351,29 +1351,23 @@ def nop_instruction(start_address, array_of_bytes):
     global noped_instructions_dict
     noped_instructions_dict[start_address] = array_of_bytes
 
-    for i in range(0, len(array_of_bytes)):
-        current_address = start_address + i
-        send_command("set *(unsigned char*)" + str(current_address) + " = 0x90")
+    nop_aob = '90 ' * len(array_of_bytes.split())
+    write_memory(start_address, type_defs.VALUE_INDEX.INDEX_AOB, nop_aob)
 
 
 #:tag:MemoryRW
-def restore_instruction(start_address, array_of_bytes):
+def restore_instruction(start_address):
     """Restores a NOP'ed out instruction to it's original opcodes
 
     Args:
         start_address (int): Self-explanatory
-        array_of_bytes (list): List of strings that contain the bytes of the instruction before NOP'ing
 
     Returns:
         None
     """
     global noped_instructions_dict
-    noped_instructions_dict.pop(start_address)
-
-    current_address = start_address
-    for byte in array_of_bytes:
-        send_command("set *(unsigned char*)" + str(current_address) + " = 0x" + byte)
-        current_address = current_address + 1
+    array_of_bytes = noped_instructions_dict.pop(start_address)
+    write_memory(start_address, type_defs.VALUE_INDEX.INDEX_AOB, array_of_bytes)
 
 
 #:tag:BreakWatchpoints
