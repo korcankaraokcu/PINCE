@@ -2441,7 +2441,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
-        array_of_bytes = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text().split()
+        array_of_bytes = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
         GDB_Engine.nop_instruction(current_address_int, array_of_bytes)
         self.refresh_disassemble_view()
 
@@ -3614,10 +3614,8 @@ class InstructionsRestoreWidgetForm(QWidget, InstructionsRestoreWidget):
             selected_address_text = self.tableWidget_Instructions.item(selected_row, INSTR_ADDR_COL).text()
             selected_address = SysUtils.extract_address(selected_address_text)
             selected_address_int = int(selected_address, 16)
-            bytes_to_restore = self.tableWidget_Instructions.item(selected_row, INSTR_AOB_COL).text().split()
         else:
             selected_address_int = None
-            bytes_to_restore = None
 
         if selected_address_int is not None:
             menu = QMenu()
@@ -3627,7 +3625,7 @@ class InstructionsRestoreWidgetForm(QWidget, InstructionsRestoreWidget):
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         actions = {
-            restore_instruction: lambda: GDB_Engine.restore_instruction(selected_address_int, bytes_to_restore),
+            restore_instruction: lambda: GDB_Engine.restore_instruction(selected_address_int)
         }
         try:
             actions[action]()
@@ -3641,7 +3639,7 @@ class InstructionsRestoreWidgetForm(QWidget, InstructionsRestoreWidget):
         self.tableWidget_Instructions.setRowCount(len(noped_instructions))
         for row, (address, aob) in enumerate(noped_instructions.items()):
             self.tableWidget_Instructions.setItem(row, INSTR_ADDR_COL, QTableWidgetItem(hex(address)))
-            self.tableWidget_Instructions.setItem(row, INSTR_AOB_COL, QTableWidgetItem(' '.join(aob)))
+            self.tableWidget_Instructions.setItem(row, INSTR_AOB_COL, QTableWidgetItem(aob))
         self.tableWidget_Instructions.resizeColumnsToContents()
         self.tableWidget_Instructions.horizontalHeader().setStretchLastSection(True)
 
