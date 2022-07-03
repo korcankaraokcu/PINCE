@@ -3605,6 +3605,7 @@ class InstructionsRestoreWidgetForm(QWidget, InstructionsRestoreWidget):
         instances.append(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
+        self.tableWidget_Instructions.horizontalHeader().setStretchLastSection(True)
         self.refresh()
         self.tableWidget_Instructions.contextMenuEvent = self.tableWidget_Instructions_context_menu_event
 
@@ -3640,8 +3641,8 @@ class InstructionsRestoreWidgetForm(QWidget, InstructionsRestoreWidget):
         for row, (address, aob) in enumerate(noped_instructions.items()):
             self.tableWidget_Instructions.setItem(row, INSTR_ADDR_COL, QTableWidgetItem(hex(address)))
             self.tableWidget_Instructions.setItem(row, INSTR_AOB_COL, QTableWidgetItem(aob))
-        self.tableWidget_Instructions.resizeColumnsToContents()
-        self.tableWidget_Instructions.horizontalHeader().setStretchLastSection(True)
+        if len(noped_instructions) != 0:
+            self.tableWidget_Instructions.resizeColumnsToContents()
 
     def refresh_all(self):
         self.parent().refresh_hex_view()
