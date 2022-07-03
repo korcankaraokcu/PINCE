@@ -64,6 +64,7 @@ from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
 from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
+from GUI.InstructionsRestoreWidget import Ui_Form as InstructionsRestoreWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -111,6 +112,10 @@ gdb_logging = bool
 
 ignored_signals = str
 signal_list = ["SIGUSR1", "SIGPWR", "SIGSEGV"]
+
+# represents the index of columns in instructions restore table
+INSTR_ADDR_COL = 0
+INSTR_AOB_COL = 1
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -2267,6 +2272,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionFunctions.triggered.connect(self.actionFunctions_triggered)
         self.actionGDB_Log_File.triggered.connect(self.actionGDB_Log_File_triggered)
         self.actionMemory_Regions.triggered.connect(self.actionMemory_Regions_triggered)
+        self.actionRestore_Instructions.triggered.connect(self.actionRestore_Instructions_triggered)
         self.actionReferenced_Strings.triggered.connect(self.actionReferenced_Strings_triggered)
         self.actionReferenced_Calls.triggered.connect(self.actionReferenced_Calls_triggered)
 
@@ -2428,6 +2434,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         GDB_Engine.set_convenience_variable("pc", current_address)
+        self.refresh_disassemble_view()
+
+    def nop_instruction(self):
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+        current_address_int = int(current_address, 16)
+        array_of_bytes = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text().split()
+        GDB_Engine.nop_instruction(current_address_int, array_of_bytes)
         self.refresh_disassemble_view()
 
     @GDB_Engine.execute_with_temporary_interruption
@@ -3230,6 +3245,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if not GDB_Engine.check_address_in_breakpoints(current_address_int):
             GuiUtils.delete_menu_entries(menu, [add_condition])
         menu.addSeparator()
+        if self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text() != '90':
+            nop_instruction = menu.addAction("Replace instruction with NOPs")
+            menu.addSeparator()
         track_breakpoint = menu.addAction("Find out which addresses this instruction accesses")
         trace_instructions = menu.addAction("Break and trace instructions[Ctrl+T]")
         dissect_region = menu.addAction("Dissect this region[Ctrl+D]")
@@ -3256,6 +3274,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             change_comment: lambda: self.change_bookmark_comment(current_address_int),
             toggle_breakpoint: self.toggle_breakpoint,
             add_condition: lambda: self.add_breakpoint_condition(current_address_int),
+            nop_instruction: self.nop_instruction,
             track_breakpoint: self.exec_track_breakpoint_dialog,
             trace_instructions: self.exec_trace_instructions_dialog,
             dissect_region: self.dissect_current_region,
@@ -3367,6 +3386,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionMemory_Regions_triggered(self):
         memory_regions_widget = MemoryRegionsWidgetForm(self)
         memory_regions_widget.show()
+
+    def actionRestore_Instructions_triggered(self):
+        restore_instructions_widget = InstructionsRestoreWidgetForm(self)
+        restore_instructions_widget.show()
 
     def actionReferenced_Strings_triggered(self):
         ref_str_widget = ReferencedStringsWidgetForm(self)
@@ -3572,6 +3595,64 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
         frame_info = GDB_Engine.get_stack_frame_info(index)
         self.textBrowser_Info.setText(frame_info)
 
+
+class InstructionsRestoreWidgetForm(QWidget, InstructionsRestoreWidget):
+    def __init__(self, parent=None):
+        super().__init__()
+        self.setupUi(self)
+        self.parent = lambda: parent
+        global instances
+        instances.append(self)
+        GuiUtils.center(self)
+        self.setWindowFlags(Qt.Window)
+        self.refresh()
+        self.tableWidget_Instructions.contextMenuEvent = self.tableWidget_Instructions_context_menu_event
+
+    def tableWidget_Instructions_context_menu_event(self, event):
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Instructions)
+        if selected_row != -1:
+            selected_address_text = self.tableWidget_Instructions.item(selected_row, INSTR_ADDR_COL).text()
+            selected_address = SysUtils.extract_address(selected_address_text)
+            selected_address_int = int(selected_address, 16)
+            bytes_to_restore = self.tableWidget_Instructions.item(selected_row, INSTR_AOB_COL).text().split()
+        else:
+            selected_address_int = None
+            bytes_to_restore = None
+
+        if selected_address_int is not None:
+            menu = QMenu()
+            restore_instruction = menu.addAction("Restore this instruction")
+
+        font_size = self.tableWidget_Instructions.font().pointSize()
+        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
+        action = menu.exec_(event.globalPos())
+        actions = {
+            restore_instruction: lambda: GDB_Engine.restore_instruction(selected_address_int, bytes_to_restore),
+        }
+        try:
+            actions[action]()
+        except KeyError:
+            pass
+        if action != -1 and action is not None:
+            self.refresh_all()
+
+    def refresh(self):
+        noped_instructions = GDB_Engine.get_noped_instructions()
+        self.tableWidget_Instructions.setRowCount(len(noped_instructions))
+        for row, (address, aob) in enumerate(noped_instructions.items()):
+            self.tableWidget_Instructions.setItem(row, INSTR_ADDR_COL, QTableWidgetItem(hex(address)))
+            self.tableWidget_Instructions.setItem(row, INSTR_AOB_COL, QTableWidgetItem(' '.join(aob)))
+        self.tableWidget_Instructions.resizeColumnsToContents()
+        self.tableWidget_Instructions.horizontalHeader().setStretchLastSection(True)
+
+    def refresh_all(self):
+        self.parent().refresh_hex_view()
+        self.parent().refresh_disassemble_view()
+        self.refresh()
+
+    def closeEvent(self, QCloseEvent):
+        global instances
+        instances.remove(self)
 
 class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
     def __init__(self, parent=None):

@@ -57,6 +57,12 @@ breakpoint_on_hit_dict = {}
 
 #:tag:GDBInformation
 #:doc:
+# A dictionary. Holds address and aob of instructions that were nop'ed out
+# Format: {address1:orig_instruction1_aob, address2:orig_instruction2_aob, ...}
+noped_instructions_dict = {}
+
+#:tag:GDBInformation
+#:doc:
 # If an action such as deletion or condition modification happens in one of the breakpoints in a list, others in the
 # same list will get affected as well
 # Format: [[[address1, size1], [address2, size2], ...], [[address1, size1], ...], ...]
@@ -1317,6 +1323,57 @@ def hex_dump(address, offset):
                     pass
             hex_byte_list.append(current_item)
     return hex_byte_list
+
+
+#:tag:MemoryRW
+def get_noped_instructions():
+    """Returns currently NOP'ed out instructions
+
+    Returns:
+        dict: A dictionary where the key is the start address of instruction and value is the aob before NOP'ing
+
+    """
+    global noped_instructions_dict
+    return noped_instructions_dict
+
+
+#:tag:MemoryRW
+def nop_instruction(start_address, array_of_bytes):
+    """Replaces an instruction's opcodes with NOPs
+
+    Args:
+        start_address (int): Self-explanatory
+        array_of_bytes (list): List of strings that contain the bytes of the instruction
+
+    Returns:
+        None
+    """
+    global noped_instructions_dict
+    noped_instructions_dict[start_address] = array_of_bytes
+
+    for i in range(0, len(array_of_bytes)):
+        current_address = start_address + i
+        send_command("set *(unsigned char*)" + str(current_address) + " = 0x90")
+
+
+#:tag:MemoryRW
+def restore_instruction(start_address, array_of_bytes):
+    """Restores a NOP'ed out instruction to it's original opcodes
+
+    Args:
+        start_address (int): Self-explanatory
+        array_of_bytes (list): List of strings that contain the bytes of the instruction before NOP'ing
+
+    Returns:
+        None
+    """
+    global noped_instructions_dict
+    noped_instructions_dict.pop(start_address)
+
+    current_address = start_address
+    for byte in array_of_bytes:
+        send_command("set *(unsigned char*)" + str(current_address) + " = 0x" + byte)
+        current_address = current_address + 1
 
 
 #:tag:BreakWatchpoints
