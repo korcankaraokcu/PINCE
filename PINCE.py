@@ -3244,9 +3244,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if not GDB_Engine.check_address_in_breakpoints(current_address_int):
             GuiUtils.delete_menu_entries(menu, [add_condition])
         menu.addSeparator()
-        if self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text() != '90':
-            nop_instruction = menu.addAction("Replace instruction with NOPs")
-            menu.addSeparator()
+        nop_instruction = menu.addAction("Replace instruction with NOPs")
+        if self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text() == '90':
+            GuiUtils.delete_menu_entries(menu, [nop_instruction])
+        menu.addSeparator()
         track_breakpoint = menu.addAction("Find out which addresses this instruction accesses")
         trace_instructions = menu.addAction("Break and trace instructions[Ctrl+T]")
         dissect_region = menu.addAction("Dissect this region[Ctrl+D]")
