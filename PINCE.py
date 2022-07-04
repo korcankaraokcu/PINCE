@@ -2792,7 +2792,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         jmp_dict.close()
         call_dict.close()
         self.handle_colours(row_colour)
-        self.tableWidget_Disassemble.horizontalHeader().setStretchLastSection(True)
 
         # We append the old record to travel history as last action because we wouldn't like to see unnecessary
         # addresses in travel history if any error occurs while displaying the next location
@@ -3605,7 +3604,6 @@ class InstructionsRestoreWidgetForm(QWidget, InstructionsRestoreWidget):
         instances.append(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
-        self.tableWidget_Instructions.horizontalHeader().setStretchLastSection(True)
         self.refresh()
         self.tableWidget_Instructions.contextMenuEvent = self.tableWidget_Instructions_context_menu_event
 
@@ -3641,8 +3639,7 @@ class InstructionsRestoreWidgetForm(QWidget, InstructionsRestoreWidget):
         for row, (address, aob) in enumerate(noped_instructions.items()):
             self.tableWidget_Instructions.setItem(row, INSTR_ADDR_COL, QTableWidgetItem(hex(address)))
             self.tableWidget_Instructions.setItem(row, INSTR_AOB_COL, QTableWidgetItem(aob))
-        if len(noped_instructions) != 0:
-            self.tableWidget_Instructions.resizeColumnsToContents()
+        GuiUtils.resize_to_contents(self.tableWidget_Instructions)
 
     def refresh_all(self):
         self.parent().refresh_hex_view()
@@ -3652,6 +3649,7 @@ class InstructionsRestoreWidgetForm(QWidget, InstructionsRestoreWidget):
     def closeEvent(self, QCloseEvent):
         global instances
         instances.remove(self)
+
 
 class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
     def __init__(self, parent=None):
@@ -3684,8 +3682,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_ON_HIT_COL, QTableWidgetItem(item.on_hit))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_HIT_COUNT_COL, QTableWidgetItem(item.hit_count))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_COND_COL, QTableWidgetItem(item.condition))
-        self.tableWidget_BreakpointInfo.resizeColumnsToContents()
-        self.tableWidget_BreakpointInfo.horizontalHeader().setStretchLastSection(True)
+        GuiUtils.resize_to_contents(self.tableWidget_BreakpointInfo)
         self.textBrowser_BreakpointInfo.clear()
         self.textBrowser_BreakpointInfo.setText(GDB_Engine.send_command("info break", cli_output=True))
 
@@ -3836,9 +3833,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
 
     def update_list(self):
         info = GDB_Engine.get_track_watchpoint_info(self.breakpoints)
-        if not info:
-            return
-        if self.info == info:
+        if not info or self.info == info:
             return
         self.info = info
         self.tableWidget_Opcodes.setRowCount(0)
@@ -3846,8 +3841,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         for row, key in enumerate(info):
             self.tableWidget_Opcodes.setItem(row, TRACK_WATCHPOINT_COUNT_COL, QTableWidgetItem(str(info[key][0])))
             self.tableWidget_Opcodes.setItem(row, TRACK_WATCHPOINT_ADDR_COL, QTableWidgetItem(info[key][1]))
-        self.tableWidget_Opcodes.resizeColumnsToContents()
-        self.tableWidget_Opcodes.horizontalHeader().setStretchLastSection(True)
+        GuiUtils.resize_to_contents(self.tableWidget_Opcodes)
         self.tableWidget_Opcodes.selectRow(self.last_selected_row)
 
     def tableWidget_Opcodes_current_changed(self, QModelIndex_current):
@@ -3957,8 +3951,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
                 self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_ADDR_COL, QTableWidgetItem(address))
                 self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_SOURCE_COL,
                                                    QTableWidgetItem("[" + register_expression + "]"))
-        self.tableWidget_TrackInfo.resizeColumnsToContents()
-        self.tableWidget_TrackInfo.horizontalHeader().setStretchLastSection(True)
+        GuiUtils.resize_to_contents(self.tableWidget_TrackInfo)
         self.tableWidget_TrackInfo.selectRow(self.last_selected_row)
 
     def update_values(self):
@@ -3971,8 +3964,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         for row, value in enumerate(value_list):
             value = "" if value is None else str(value)
             self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(value))
-        self.tableWidget_TrackInfo.resizeColumnsToContents()
-        self.tableWidget_TrackInfo.horizontalHeader().setStretchLastSection(True)
+        GuiUtils.resize_to_contents(self.tableWidget_TrackInfo)
         self.tableWidget_TrackInfo.selectRow(self.last_selected_row)
 
     def tableWidget_TrackInfo_current_changed(self, QModelIndex_current):
@@ -4257,8 +4249,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
             self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_ADDR_COL, address_item)
             self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_SYMBOL_COL, QTableWidgetItem(item[1]))
         self.tableWidget_SymbolInfo.setSortingEnabled(True)
-        self.tableWidget_SymbolInfo.resizeColumnsToContents()
-        self.tableWidget_SymbolInfo.horizontalHeader().setStretchLastSection(True)
+        GuiUtils.resize_to_contents(self.tableWidget_SymbolInfo)
 
     def tableWidget_SymbolInfo_current_changed(self, QModelIndex_current):
         self.textBrowser_AddressInfo.clear()
@@ -4564,8 +4555,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
             self.tableWidget_ResourceTable.setItem(row, LIBPINCE_REFERENCE_VALUE_COL, table_widget_item_value)
         self.tableWidget_ResourceTable.setSortingEnabled(True)
         self.tableWidget_ResourceTable.sortByColumn(LIBPINCE_REFERENCE_ITEM_COL, Qt.AscendingOrder)
-        self.tableWidget_ResourceTable.resizeColumnsToContents()
-        self.tableWidget_ResourceTable.horizontalHeader().setStretchLastSection(True)
+        GuiUtils.resize_to_contents(self.tableWidget_ResourceTable)
 
     def pushButton_TextDown_clicked(self):
         if self.found_count == 0:
@@ -4834,8 +4824,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_ANON_COL,
                                                    QTableWidgetItem(hex(region.anonymous)))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_SWAP_COL, QTableWidgetItem(hex(region.swap)))
-        self.tableWidget_MemoryRegions.resizeColumnsToContents()
-        self.tableWidget_MemoryRegions.horizontalHeader().setStretchLastSection(True)
+        GuiUtils.resize_to_contents(self.tableWidget_MemoryRegions)
 
     def tableWidget_MemoryRegions_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -4957,8 +4946,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         for row, region in enumerate(executable_regions):
             self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_ADDR_COL, QTableWidgetItem(region.addr))
             self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_PATH_COL, QTableWidgetItem(region.path))
-        self.tableWidget_ExecutableMemoryRegions.resizeColumnsToContents()
-        self.tableWidget_ExecutableMemoryRegions.horizontalHeader().setStretchLastSection(True)
+        GuiUtils.resize_to_contents(self.tableWidget_ExecutableMemoryRegions)
 
     def scan_finished(self):
         self.init_pre_scan_gui()

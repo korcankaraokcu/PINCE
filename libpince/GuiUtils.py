@@ -78,6 +78,19 @@ def center_scroll_bar(QScrollBar):
 
 
 #:tag:GUI
+def resize_to_contents(QTableWidget):
+    """Resizes the columns of the given QTableWidget to its contents
+    This also fixes the stretch problem of the last column
+
+    Args:
+        QTableWidget (QTableWidget): Self-explanatory
+    """
+    QTableWidget.resizeColumnsToContents()
+    default_size = QTableWidget.horizontalHeader().defaultSectionSize()
+    QTableWidget.horizontalHeader().resizeSection(QTableWidget.columnCount() - 1, default_size)
+
+
+#:tag:GUI
 def fill_value_combobox(QCombobox, current_index=type_defs.VALUE_INDEX.INDEX_4BYTES):
     """Fills the given QCombobox with value_index strings
 
