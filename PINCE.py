@@ -3605,34 +3605,41 @@ class InstructionsRestoreWidgetForm(QWidget, InstructionsRestoreWidget):
         instances.append(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.Window)
-        self.refresh()
+
+        # Saving the original function because super() doesn't work when we override functions like this
+        self.tableWidget_Instructions.keyPressEvent_original = self.tableWidget_Instructions.keyPressEvent
+        self.tableWidget_Instructions.keyPressEvent = self.tableWidget_Instructions_key_press_event
         self.tableWidget_Instructions.contextMenuEvent = self.tableWidget_Instructions_context_menu_event
+        self.refresh()
 
     def tableWidget_Instructions_context_menu_event(self, event):
         selected_row = GuiUtils.get_current_row(self.tableWidget_Instructions)
+        menu = QMenu()
+        restore_instruction = menu.addAction("Restore this instruction")
         if selected_row != -1:
             selected_address_text = self.tableWidget_Instructions.item(selected_row, INSTR_ADDR_COL).text()
             selected_address = SysUtils.extract_address(selected_address_text)
             selected_address_int = int(selected_address, 16)
         else:
+            GuiUtils.delete_menu_entries(menu, [restore_instruction])
             selected_address_int = None
-
-        if selected_address_int is not None:
-            menu = QMenu()
-            restore_instruction = menu.addAction("Restore this instruction")
-
+        menu.addSeparator()
+        refresh = menu.addAction("Refresh[R]")
         font_size = self.tableWidget_Instructions.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
         actions = {
-            restore_instruction: lambda: GDB_Engine.restore_instruction(selected_address_int)
+            restore_instruction: lambda: self.restore_instruction(selected_address_int),
+            refresh: self.refresh
         }
         try:
             actions[action]()
         except KeyError:
             pass
-        if action != -1 and action is not None:
-            self.refresh_all()
+
+    def restore_instruction(self, selected_address_int):
+        GDB_Engine.restore_instruction(selected_address_int)
+        self.refresh_all()
 
     def refresh(self):
         noped_instructions = GDB_Engine.get_noped_instructions()
@@ -3646,6 +3653,16 @@ class InstructionsRestoreWidgetForm(QWidget, InstructionsRestoreWidget):
         self.parent().refresh_hex_view()
         self.parent().refresh_disassemble_view()
         self.refresh()
+
+    def tableWidget_Instructions_key_press_event(self, event):
+        actions = type_defs.KeyboardModifiersTupleDict([
+            ((Qt.NoModifier, Qt.Key_R), self.refresh)
+        ])
+        try:
+            actions[event.modifiers(), event.key()]()
+        except KeyError:
+            pass
+        self.tableWidget_Instructions.keyPressEvent_original(event)
 
     def closeEvent(self, QCloseEvent):
         global instances
