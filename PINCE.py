@@ -64,7 +64,7 @@ from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
 from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
-from GUI.InstructionsRestoreWidget import Ui_Form as InstructionsRestoreWidget
+from GUI.RestoreInstructionsWidget import Ui_Form as RestoreInstructionsWidget
 
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
@@ -3388,7 +3388,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         memory_regions_widget.show()
 
     def actionRestore_Instructions_triggered(self):
-        restore_instructions_widget = InstructionsRestoreWidgetForm(self)
+        restore_instructions_widget = RestoreInstructionsWidgetForm(self)
         restore_instructions_widget.show()
 
     def actionReferenced_Strings_triggered(self):
@@ -3596,7 +3596,7 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
         self.textBrowser_Info.setText(frame_info)
 
 
-class InstructionsRestoreWidgetForm(QWidget, InstructionsRestoreWidget):
+class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.setupUi(self)
