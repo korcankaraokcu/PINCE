@@ -474,7 +474,7 @@ class DissectCode(gdb.Command):
                     region_finished = True
                 else:
                     offset = buffer
-                status_info = region_info + (hex(start_addr) + "-" + hex(start_addr + offset),
+                status_info = region_info + (hex(start_addr)[2:] + "-" + hex(start_addr + offset)[2:],
                                              ref_str_count, ref_jmp_count, ref_call_count)
                 pickle.dump(status_info, open(dissect_code_status_file, "wb"))
                 try:
