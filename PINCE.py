@@ -5023,7 +5023,11 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         self.listWidget_Referrers.resize(400, self.listWidget_Referrers.height())
         self.hex_len = 16 if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64 else 8
         str_dict, jmp_dict, call_dict = GDB_Engine.get_dissect_code_data()
-        if len(str_dict) == 0 and len(jmp_dict) == 0 and len(call_dict) == 0:
+        str_dict_len, jmp_dict_len, call_dict_len = len(str_dict), len(jmp_dict), len(call_dict)
+        str_dict.close()
+        jmp_dict.close()
+        call_dict.close()
+        if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
             confirm_dialog = InputDialogForm(item_list=[("You need to dissect code first\nProceed?",)])
             if confirm_dialog.exec_():
                 dissect_code_dialog = DissectCodeDialogForm()
@@ -5157,15 +5161,16 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         self.listWidget_Referrers.resize(400, self.listWidget_Referrers.height())
         self.hex_len = 16 if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64 else 8
         str_dict, jmp_dict, call_dict = GDB_Engine.get_dissect_code_data()
-        if len(str_dict) == 0 and len(jmp_dict) == 0 and len(call_dict) == 0:
+        str_dict_len, jmp_dict_len, call_dict_len = len(str_dict), len(jmp_dict), len(call_dict)
+        str_dict.close()
+        jmp_dict.close()
+        call_dict.close()
+        if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
             confirm_dialog = InputDialogForm(item_list=[("You need to dissect code first\nProceed?",)])
             if confirm_dialog.exec_():
                 dissect_code_dialog = DissectCodeDialogForm()
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
                 dissect_code_dialog.exec_()
-        str_dict.close()
-        jmp_dict.close()
-        call_dict.close()
         self.refresh_table()
         self.tableWidget_References.sortByColumn(REF_CALL_ADDR_COL, Qt.AscendingOrder)
         self.tableWidget_References.selectionModel().currentChanged.connect(self.tableWidget_References_current_changed)
