@@ -25,7 +25,7 @@ Pre-release screenshots:
 # Features  
 - **Memory searching:** PINCE uses [libscanmem](https://github.com/scanmem/scanmem) to search the memory efficiently **[Done]**
 - **Variable Inspection&Modification** **[Done/Basic]**
-  * **CheatEngine-like value type support:** Byte to 8 Bytes, Float, Double, Strings(including utf-8, utf-16, utf-32 and zero-terminate strings), Array of Bytes **[Done]**
+  * **CheatEngine-like value type support:** Currently supports all types of CE and scanmem along with extended strings(utf-8, utf-16, utf-32) **[Done]**
   * **Symbol Recognition:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/About-GDB-Expressions) **[Done]**
   * **Automatic Variable Allocation:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/About-GDB-Expressions) **[Done]**
   * **Dynamic Address Table:** Supports drag&drop, recursive copy&pasting&inserting and many more **[Done]**

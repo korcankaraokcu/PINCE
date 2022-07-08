@@ -548,7 +548,7 @@ def parse_string(string, value_index):
     Returns:
         str: If the value_index is INDEX_STRING
         list: If the value_index is INDEX_AOB. A list of ints is returned
-        float: If the value_index is INDEX_FLOAT or INDEX_DOUBLE
+        float: If the value_index is INDEX_FLOAT32 or INDEX_FLOAT64
         int: If the value_index is anything else
         None: If the string is not parsable by using the parameter value_index
 
@@ -580,7 +580,7 @@ def parse_string(string, value_index):
         except:
             print(string + " can't be parsed as array of bytes")
             return
-    elif value_index is type_defs.VALUE_INDEX.INDEX_FLOAT or value_index is type_defs.VALUE_INDEX.INDEX_DOUBLE:
+    elif value_index is type_defs.VALUE_INDEX.INDEX_FLOAT32 or value_index is type_defs.VALUE_INDEX.INDEX_FLOAT64:
         try:
             string = float(string)
         except:
@@ -599,13 +599,13 @@ def parse_string(string, value_index):
             except:
                 print(string + " can't be parsed as integer or hexadecimal")
                 return
-        if value_index is type_defs.VALUE_INDEX.INDEX_BYTE:
+        if value_index is type_defs.VALUE_INDEX.INDEX_INT8:
             string = string % 0x100  # 256
-        elif value_index is type_defs.VALUE_INDEX.INDEX_2BYTES:
+        elif value_index is type_defs.VALUE_INDEX.INDEX_INT16:
             string = string % 0x10000  # 65536
-        elif value_index is type_defs.VALUE_INDEX.INDEX_4BYTES:
+        elif value_index is type_defs.VALUE_INDEX.INDEX_INT32:
             string = string % 0x100000000  # 4294967296
-        elif value_index is type_defs.VALUE_INDEX.INDEX_8BYTES:
+        elif value_index is type_defs.VALUE_INDEX.INDEX_INT64:
             string = string % 0x10000000000000000  # 18446744073709551616
         return string
 
