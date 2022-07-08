@@ -212,9 +212,17 @@ for key in index_to_text_dict:
 
 scanmem_result_to_index_dict = collections.OrderedDict([
     ("I8", VALUE_INDEX.INDEX_INT8),
+    ("I8u", VALUE_INDEX.INDEX_INT8),
+    ("I8s", VALUE_INDEX.INDEX_INT8),
     ("I16", VALUE_INDEX.INDEX_INT16),
+    ("I16u", VALUE_INDEX.INDEX_INT16),
+    ("I16s", VALUE_INDEX.INDEX_INT16),
     ("I32", VALUE_INDEX.INDEX_INT32),
+    ("I32u", VALUE_INDEX.INDEX_INT32),
+    ("I32s", VALUE_INDEX.INDEX_INT32),
     ("I64", VALUE_INDEX.INDEX_INT64),
+    ("I64u", VALUE_INDEX.INDEX_INT64),
+    ("I64s", VALUE_INDEX.INDEX_INT64),
     ("F32", VALUE_INDEX.INDEX_FLOAT32),
     ("F64", VALUE_INDEX.INDEX_FLOAT64),
     ("string", VALUE_INDEX.INDEX_STRING_UTF8),
