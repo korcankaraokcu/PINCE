@@ -757,19 +757,6 @@ def inject_with_dlopen_call(library_path):
     return True
 
 
-#:tag:ValueType
-def value_index_to_gdbcommand(index):
-    """Converts the given value_index to a parameter that'll be used in "x" command of gdb
-
-    Args:
-        index (int): Can be a member of type_defs.VALUE_INDEX
-
-    Returns:
-        str: The str corresponding to the index in type_defs.index_to_gdbcommand_dict
-    """
-    return type_defs.index_to_gdbcommand_dict.get(index, "out of bounds")
-
-
 #:tag:MemoryRW
 def read_memory(address, value_index, length=None, zero_terminate=True, only_bytes=False, mem_handle=None):
     """Reads value from the given address
@@ -788,7 +775,7 @@ def read_memory(address, value_index, length=None, zero_terminate=True, only_byt
 
     Returns:
         str: If the value_index is INDEX_STRING or INDEX_AOB
-        float: If the value_index is INDEX_FLOAT or INDEX_DOUBLE
+        float: If the value_index is INDEX_FLOAT32 or INDEX_FLOAT64
         int: If the value_index is anything else
         bytes: If the only_bytes is True
         None: If an error occurs while reading the given address

@@ -143,22 +143,20 @@ class REGISTERS:
         XMM = ["xmm" + str(i) for i in range(8)]
 
 
-# represents the indexes of value types
-# Also used in PINCE's value comboboxes
 class VALUE_INDEX:
-    INDEX_BYTE = 0
-    INDEX_2BYTES = 1
-    INDEX_4BYTES = 2
-    INDEX_8BYTES = 3
-    INDEX_FLOAT = 4
-    INDEX_DOUBLE = 5
+    INDEX_INT8 = 0
+    INDEX_INT16 = 1
+    INDEX_INT32 = 2
+    INDEX_INT64 = 3
+    INDEX_FLOAT32 = 4
+    INDEX_FLOAT64 = 5
 
     # Beginning of the string indexes, new string indexes should be added between 6 and 9
     INDEX_STRING_ASCII = 6
     INDEX_STRING_UTF8 = 7
     INDEX_STRING_UTF16 = 8
     INDEX_STRING_UTF32 = 9
-    # Ending of the string indexes, 69... not on purpose tho
+    # Ending of the string indexes
 
     INDEX_AOB = 10  # Array of Bytes
 
@@ -172,6 +170,20 @@ class VALUE_INDEX:
                value_index == VALUE_INDEX.INDEX_AOB
 
 
+class SCAN_INDEX:
+    INDEX_INT_ANY = 0
+    INDEX_INT8 = 1
+    INDEX_INT16 = 2
+    INDEX_INT32 = 3
+    INDEX_INT64 = 4
+    INDEX_FLOAT_ANY = 5
+    INDEX_FLOAT32 = 6
+    INDEX_FLOAT64 = 7
+    INDEX_ANY = 8
+    INDEX_STRING = 9
+    INDEX_AOB = 10  # Array of Bytes
+
+
 on_hit_to_text_dict = {
     BREAKPOINT_ON_HIT.BREAK: "Break",
     BREAKPOINT_ON_HIT.FIND_CODE: "Find Code",
@@ -179,14 +191,14 @@ on_hit_to_text_dict = {
     BREAKPOINT_ON_HIT.TRACE: "Trace"
 }
 
-# Represents the texts at indexes in combobox
+# Represents the texts at indexes in the address table
 index_to_text_dict = collections.OrderedDict([
-    (VALUE_INDEX.INDEX_BYTE, "Byte"),
-    (VALUE_INDEX.INDEX_2BYTES, "2 Bytes"),
-    (VALUE_INDEX.INDEX_4BYTES, "4 Bytes"),
-    (VALUE_INDEX.INDEX_8BYTES, "8 Bytes"),
-    (VALUE_INDEX.INDEX_FLOAT, "Float"),
-    (VALUE_INDEX.INDEX_DOUBLE, "Double"),
+    (VALUE_INDEX.INDEX_INT8, "Int8"),
+    (VALUE_INDEX.INDEX_INT16, "Int16"),
+    (VALUE_INDEX.INDEX_INT32, "Int32"),
+    (VALUE_INDEX.INDEX_INT64, "Int64"),
+    (VALUE_INDEX.INDEX_FLOAT32, "Float32"),
+    (VALUE_INDEX.INDEX_FLOAT64, "Float64"),
     (VALUE_INDEX.INDEX_STRING_ASCII, "String_ASCII"),
     (VALUE_INDEX.INDEX_STRING_UTF8, "String_UTF8"),
     (VALUE_INDEX.INDEX_STRING_UTF16, "String_UTF16"),
@@ -197,6 +209,47 @@ index_to_text_dict = collections.OrderedDict([
 text_to_index_dict = collections.OrderedDict()
 for key in index_to_text_dict:
     text_to_index_dict[index_to_text_dict[key]] = key
+
+scanmem_result_to_index_dict = collections.OrderedDict([
+    ("I8", VALUE_INDEX.INDEX_INT8),
+    ("I16", VALUE_INDEX.INDEX_INT16),
+    ("I32", VALUE_INDEX.INDEX_INT32),
+    ("I64", VALUE_INDEX.INDEX_INT64),
+    ("F32", VALUE_INDEX.INDEX_FLOAT32),
+    ("F64", VALUE_INDEX.INDEX_FLOAT64),
+    ("string", VALUE_INDEX.INDEX_STRING_UTF8),
+    ("bytearray", VALUE_INDEX.INDEX_AOB),
+])
+
+# Represents the texts at indexes in scan combobox
+scan_index_to_text_dict = collections.OrderedDict([
+    (SCAN_INDEX.INDEX_INT_ANY, "Int(any)"),
+    (SCAN_INDEX.INDEX_INT8, "Int8"),
+    (SCAN_INDEX.INDEX_INT16, "Int16"),
+    (SCAN_INDEX.INDEX_INT32, "Int32"),
+    (SCAN_INDEX.INDEX_INT64, "Int64"),
+    (SCAN_INDEX.INDEX_FLOAT_ANY, "Float(any)"),
+    (SCAN_INDEX.INDEX_FLOAT32, "Float32"),
+    (SCAN_INDEX.INDEX_FLOAT64, "Float64"),
+    (SCAN_INDEX.INDEX_ANY, "Any(int, float)"),
+    (SCAN_INDEX.INDEX_STRING, "String"),
+    (VALUE_INDEX.INDEX_AOB, "Array of Bytes")
+])
+
+# Used in scan_data_type option of scanmem
+scan_index_to_scanmem_dict = collections.OrderedDict([
+    (SCAN_INDEX.INDEX_INT_ANY, "int"),
+    (SCAN_INDEX.INDEX_INT8, "int8"),
+    (SCAN_INDEX.INDEX_INT16, "int16"),
+    (SCAN_INDEX.INDEX_INT32, "int32"),
+    (SCAN_INDEX.INDEX_INT64, "int64"),
+    (SCAN_INDEX.INDEX_FLOAT_ANY, "float"),
+    (SCAN_INDEX.INDEX_FLOAT32, "float32"),
+    (SCAN_INDEX.INDEX_FLOAT64, "float64"),
+    (SCAN_INDEX.INDEX_ANY, "number"),
+    (SCAN_INDEX.INDEX_STRING, "string"),
+    (VALUE_INDEX.INDEX_AOB, "bytearray")
+])
 
 
 class SCAN_TYPE:
@@ -259,31 +312,15 @@ string_index_to_multiplier_dict = {
     VALUE_INDEX.INDEX_STRING_UTF32: 8,
 }
 
-# A dictionary used to convert value_combobox index to gdb/mi x command
-# Check GDB_Engine for an exemplary usage
-index_to_gdbcommand_dict = {
-    VALUE_INDEX.INDEX_BYTE: "db",
-    VALUE_INDEX.INDEX_2BYTES: "dh",
-    VALUE_INDEX.INDEX_4BYTES: "dw",
-    VALUE_INDEX.INDEX_8BYTES: "dg",
-    VALUE_INDEX.INDEX_FLOAT: "fw",
-    VALUE_INDEX.INDEX_DOUBLE: "fg",
-    VALUE_INDEX.INDEX_STRING_ASCII: "xb",
-    VALUE_INDEX.INDEX_STRING_UTF8: "xb",
-    VALUE_INDEX.INDEX_STRING_UTF16: "xb",
-    VALUE_INDEX.INDEX_STRING_UTF32: "xb",
-    VALUE_INDEX.INDEX_AOB: "xb"
-}
-
 # first value is the length and the second one is the type
 # Check ScriptUtils for an exemplary usage
 index_to_valuetype_dict = {
-    VALUE_INDEX.INDEX_BYTE: [1, "b"],
-    VALUE_INDEX.INDEX_2BYTES: [2, "h"],
-    VALUE_INDEX.INDEX_4BYTES: [4, "i"],
-    VALUE_INDEX.INDEX_8BYTES: [8, "q"],
-    VALUE_INDEX.INDEX_FLOAT: [4, "f"],
-    VALUE_INDEX.INDEX_DOUBLE: [8, "d"],
+    VALUE_INDEX.INDEX_INT8: [1, "b"],
+    VALUE_INDEX.INDEX_INT16: [2, "h"],
+    VALUE_INDEX.INDEX_INT32: [4, "i"],
+    VALUE_INDEX.INDEX_INT64: [8, "q"],
+    VALUE_INDEX.INDEX_FLOAT32: [4, "f"],
+    VALUE_INDEX.INDEX_FLOAT64: [8, "d"],
     VALUE_INDEX.INDEX_STRING_ASCII: [None, None],
     VALUE_INDEX.INDEX_STRING_UTF8: [None, None],
     VALUE_INDEX.INDEX_STRING_UTF16: [None, None],
@@ -293,12 +330,12 @@ index_to_valuetype_dict = {
 
 # Check ScriptUtils for an exemplary usage
 index_to_struct_pack_dict = {
-    VALUE_INDEX.INDEX_BYTE: "B",
-    VALUE_INDEX.INDEX_2BYTES: "H",
-    VALUE_INDEX.INDEX_4BYTES: "I",
-    VALUE_INDEX.INDEX_8BYTES: "Q",
-    VALUE_INDEX.INDEX_FLOAT: "f",
-    VALUE_INDEX.INDEX_DOUBLE: "d"
+    VALUE_INDEX.INDEX_INT8: "B",
+    VALUE_INDEX.INDEX_INT16: "H",
+    VALUE_INDEX.INDEX_INT32: "I",
+    VALUE_INDEX.INDEX_INT64: "Q",
+    VALUE_INDEX.INDEX_FLOAT32: "f",
+    VALUE_INDEX.INDEX_FLOAT64: "d"
 }
 
 # Format: {tag:tag_description}

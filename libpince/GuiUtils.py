@@ -91,7 +91,7 @@ def resize_to_contents(QTableWidget):
 
 
 #:tag:GUI
-def fill_value_combobox(QCombobox, current_index=type_defs.VALUE_INDEX.INDEX_4BYTES):
+def fill_value_combobox(QCombobox, current_index=type_defs.VALUE_INDEX.INDEX_INT32):
     """Fills the given QCombobox with value_index strings
 
     Args:
@@ -271,7 +271,7 @@ def text_to_valuetype(string):
         string="String_UTF8[15],NZT"--▼
         value_index=type_defs.VALUE_INDEX.INDEX_STRING_UTF8, length=15, zero_terminate=False, byte_length=-1
         string="AoB[42]"-->value_index=type_defs.VALUE_INDEX.INDEX_AOB, length=42, None, 42
-        string="Double"-->value_index=type_defs.VALUE_INDEX.INDEX_DOUBLE, length=-1, None, 8
+        string="Double"-->value_index=type_defs.VALUE_INDEX.INDEX_FLOAT64, length=-1, None, 8
     """
     index, length, hex_repr = -1, -1, False
     zero_terminate = None

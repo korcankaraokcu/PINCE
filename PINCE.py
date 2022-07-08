@@ -142,6 +142,11 @@ ADDR_COL = 2  # Address
 TYPE_COL = 3  # Type
 VALUE_COL = 4  # Value
 
+# represents the index of columns in search results table
+SEARCH_TABLE_ADDRESS_COL = 0
+SEARCH_TABLE_VALUE_COL = 1
+SEARCH_TABLE_PREVIOUS_COL = 2
+
 # represents the index of columns in disassemble table
 DISAS_ADDR_COL = 0
 DISAS_BYTES_COL = 1
@@ -343,6 +348,8 @@ class MainForm(QMainWindow, MainWindow):
         self.treeWidget_AddressTable.setColumnWidth(DESC_COL, 150)
         self.treeWidget_AddressTable.setColumnWidth(ADDR_COL, 150)
         self.treeWidget_AddressTable.setColumnWidth(TYPE_COL, 150)
+        self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 110)
+        self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         app.setOrganizationName("PINCE")
         app.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
         app.setApplicationName("PINCE")
@@ -898,7 +905,6 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NextScan.setEnabled(False)
             self.comboBox_ScanScope.setEnabled(True)
             self.progressBar.setValue(0)
-            self.comboBox_ScanType_init()
         else:
             self.scan_mode = type_defs.SCAN_MODE.ONGOING
             self.pushButton_NewFirstScan.setText("New Scan")
@@ -908,7 +914,7 @@ class MainForm(QMainWindow, MainWindow):
             self.backend.send_command("option region_scan_level " + str(search_scope))
             self.comboBox_ScanScope.setEnabled(False)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
-            self.comboBox_ScanType_init()
+        self.comboBox_ScanType_init()
 
     def comboBox_ScanType_current_index_changed(self):
         hidden_types = [type_defs.SCAN_TYPE.INCREASED, type_defs.SCAN_TYPE.DECREASED, type_defs.SCAN_TYPE.CHANGED,
@@ -950,13 +956,10 @@ class MainForm(QMainWindow, MainWindow):
 
     def comboBox_ValueType_init(self):
         self.comboBox_ValueType.clear()
-        items = [type_defs.VALUE_INDEX.INDEX_BYTE, type_defs.VALUE_INDEX.INDEX_2BYTES,
-                 type_defs.VALUE_INDEX.INDEX_4BYTES, type_defs.VALUE_INDEX.INDEX_8BYTES,
-                 type_defs.VALUE_INDEX.INDEX_FLOAT, type_defs.VALUE_INDEX.INDEX_DOUBLE,
-                 type_defs.VALUE_INDEX.INDEX_STRING_UTF8, type_defs.VALUE_INDEX.INDEX_AOB]
-        for type_index in items:
-            self.comboBox_ValueType.addItem(type_defs.index_to_text_dict[type_index], type_index)
-        self.comboBox_ValueType.setCurrentIndex(type_defs.VALUE_INDEX.INDEX_4BYTES)
+        for value_index, value_text in type_defs.scan_index_to_text_dict.items():
+            self.comboBox_ValueType.addItem(value_text, value_index)
+        self.comboBox_ValueType.setCurrentIndex(type_defs.SCAN_INDEX.INDEX_INT32)
+        self.comboBox_ValueType_current_index_changed()
 
     # :doc:
     # adds things like 0x when searching for etc, basically just makes the line valid for scanmem
@@ -974,12 +977,12 @@ class MainForm(QMainWindow, MainWindow):
             return symbol_map[type_index]
 
         # none of these should be possible to be true at the same time
-        current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
-        if current_type == type_defs.VALUE_INDEX.INDEX_FLOAT:
+        scan_index = self.comboBox_ValueType.currentData(Qt.UserRole)
+        if scan_index == type_defs.SCAN_INDEX.INDEX_FLOAT32 or scan_index == type_defs.SCAN_INDEX.INDEX_FLOAT64:
             # this is odd, since when searching for floats from command line it uses `.` and not `,`
             search_for = search_for.replace(".", ",")
             search_for2 = search_for2.replace(".", ",")
-        elif type_defs.VALUE_INDEX.is_string(current_type):
+        elif scan_index == type_defs.SCAN_INDEX.INDEX_STRING:
             search_for = "\" " + search_for
         elif self.checkBox_Hex.isChecked():
             if not search_for.startswith("0x"):
@@ -1005,52 +1008,47 @@ class MainForm(QMainWindow, MainWindow):
         # ProgressBar
         global threadpool
         threadpool.start(Worker(self.update_progress_bar))
-        # TODO add some validation for the search command
         self.backend.send_command(search_for)
         matches = self.backend.matches()
         ProgressRun = 0
-        self.label_MatchCount.setText("Match count: {}".format(self.backend.get_match_count()))
+        match_count = self.backend.get_match_count()
+        if match_count > 10000:
+            self.label_MatchCount.setText("Match count: {} (10000 shown)".format(match_count))
+        else:
+            self.label_MatchCount.setText("Match count: {}".format(match_count))
         self.tableWidget_valuesearchtable.setRowCount(0)
         current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
         length = self._scan_to_length(current_type)
 
-        for n, address, offset, region_type, value, t in matches:
+        for n, address, offset, region_type, value, result_type in matches:
             n = int(n)
             address = "0x" + address
-            self.tableWidget_valuesearchtable.insertRow(
-                self.tableWidget_valuesearchtable.rowCount())
-            self.tableWidget_valuesearchtable.setItem(n, 0, QTableWidgetItem(address))
-            if current_type == type_defs.VALUE_INDEX.INDEX_STRING_UTF8:
-                value = GDB_Engine.read_memory(address, current_type, length)
-            self.tableWidget_valuesearchtable.setItem(n, 1, QTableWidgetItem(value))
-            self.tableWidget_valuesearchtable.setItem(n, 2, QTableWidgetItem(value))
+            current_item = QTableWidgetItem(address)
+            value_index = type_defs.scanmem_result_to_index_dict[result_type.split(" ")[0]]
+            current_item.setData(Qt.UserRole, value_index)
+            self.tableWidget_valuesearchtable.insertRow(self.tableWidget_valuesearchtable.rowCount())
+            self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_ADDRESS_COL, current_item)
+            if current_type == type_defs.SCAN_INDEX.INDEX_STRING:
+                value = GDB_Engine.read_memory(address, type_defs.VALUE_INDEX.INDEX_STRING_UTF8, length)
+            self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
+            self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_PREVIOUS_COL, QTableWidgetItem(value))
+            if n == 10000:
+                break
 
     def _scan_to_length(self, type_index):
-        if type_defs.VALUE_INDEX.has_length(type_index):
-            if type_index == type_defs.VALUE_INDEX.INDEX_AOB:
-                return self.lineEdit_Scan.text().count(" ") + 1
+        if type_index == type_defs.SCAN_INDEX.INDEX_AOB:
+            return self.lineEdit_Scan.text().count(" ") + 1
+        if type_index == type_defs.SCAN_INDEX.INDEX_STRING:
             return len(self.lineEdit_Scan.text())
         return 0
 
     @GDB_Engine.execute_with_temporary_interruption
     def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
-        addr = self.tableWidget_valuesearchtable.item(row, 0).text()
-        current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
-        length = self._scan_to_length(current_type)
-        self.add_entry_to_addresstable("", addr, current_type, length)
+        current_item = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL)
+        length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.UserRole))
+        self.add_entry_to_addresstable("", current_item.text(), current_item.data(Qt.UserRole), length)
 
     def comboBox_ValueType_current_index_changed(self):
-        # used for making our types in the combo box into what scanmem uses
-        PINCE_TYPES_TO_SCANMEM = {
-            type_defs.VALUE_INDEX.INDEX_BYTE: "int8",
-            type_defs.VALUE_INDEX.INDEX_2BYTES: "int16",
-            type_defs.VALUE_INDEX.INDEX_4BYTES: "int32",
-            type_defs.VALUE_INDEX.INDEX_8BYTES: "int64",
-            type_defs.VALUE_INDEX.INDEX_FLOAT: "float32",
-            type_defs.VALUE_INDEX.INDEX_DOUBLE: "float64",
-            type_defs.VALUE_INDEX.INDEX_STRING_UTF8: "string",
-            type_defs.VALUE_INDEX.INDEX_AOB: "bytearray"
-        }
         current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
         validator_map = {
             "int": QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan),  # integers
@@ -1060,7 +1058,7 @@ class MainForm(QMainWindow, MainWindow):
             # array of bytes
             "string": None
         }
-        scanmem_type = PINCE_TYPES_TO_SCANMEM[current_type]
+        scanmem_type = type_defs.scan_index_to_scanmem_dict[current_type]
         validator_str = scanmem_type  # used to get the correct validator
 
         # TODO this can probably be made to look nicer, though it doesn't really matter
@@ -1070,7 +1068,7 @@ class MainForm(QMainWindow, MainWindow):
         else:
             self.checkBox_Hex.setChecked(False)
             self.checkBox_Hex.setEnabled(False)
-        if "float" in validator_str:
+        if "float" in validator_str or validator_str == "number":
             validator_str = "float"
 
         self.lineEdit_Scan.setValidator(validator_map[validator_str])
@@ -1078,8 +1076,6 @@ class MainForm(QMainWindow, MainWindow):
         self.backend.send_command("option scan_data_type {}".format(scanmem_type))
         # according to scanmem instructions you should always do `reset` after changing type
         self.backend.send_command("reset")
-
-        # shows the process select window
 
     def pushButton_AttachProcess_clicked(self):
         self.processwindow = ProcessForm(self)
@@ -1164,12 +1160,11 @@ class MainForm(QMainWindow, MainWindow):
 
     def copy_to_address_table(self):
         i = -1
-        current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
-        length = self._scan_to_length(current_type)
+        length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.UserRole))
         for row in self.tableWidget_valuesearchtable.selectedItems():
             i = i + 1
             if i % 3 == 0:
-                self.add_entry_to_addresstable("", row.text(), current_type, length)
+                self.add_entry_to_addresstable("", row.text(), row.data(Qt.UserRole), length)
 
     def on_inferior_exit(self):
         if GDB_Engine.currentpid == -1:
@@ -1476,7 +1471,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
 # Add Address Manually Dialog
 class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def __init__(self, parent=None, description="No Description", address="0x",
-                 index=type_defs.VALUE_INDEX.INDEX_4BYTES, length=10, zero_terminate=True, hex_repr=False):
+                 index=type_defs.VALUE_INDEX.INDEX_INT32, length=10, zero_terminate=True, hex_repr=False):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.adjustSize()
@@ -1599,7 +1594,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
 
 class EditTypeDialogForm(QDialog, EditTypeDialog):
-    def __init__(self, parent=None, index=type_defs.VALUE_INDEX.INDEX_4BYTES, length=10, zero_terminate=True,
+    def __init__(self, parent=None, index=type_defs.VALUE_INDEX.INDEX_INT32, length=10, zero_terminate=True,
                  hex_repr=False):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -1732,7 +1727,7 @@ class InputDialogForm(QDialog, InputDialog):
     # that points the current index of the QComboBox, for instance: ["0", "1", 1] will create a QCombobox with the items
     # "0" and "1" then will set current index to 1 (which is the item "1")
     # label_alignment is optional
-    def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=type_defs.VALUE_INDEX.INDEX_4BYTES,
+    def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=type_defs.VALUE_INDEX.INDEX_INT32,
                  buttons=(QDialogButtonBox.Ok, QDialogButtonBox.Cancel)):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -2465,7 +2460,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             watchpoint_dialog = InputDialogForm(item_list=[("Enter the watchpoint length in size of bytes", "")])
             if watchpoint_dialog.exec_():
                 user_input = watchpoint_dialog.get_values()
-                user_input_int = SysUtils.parse_string(user_input, type_defs.VALUE_INDEX.INDEX_4BYTES)
+                user_input_int = SysUtils.parse_string(user_input, type_defs.VALUE_INDEX.INDEX_INT32)
                 if user_input_int is None:
                     QMessageBox.information(self, "Error", user_input + " can't be parsed as an integer")
                     return
