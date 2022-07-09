@@ -1910,7 +1910,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 GDB_Engine.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
-        self.settings.setValue("Debug/ignored_signals", ",".join(self.handle_signals_data))
+        if self.handle_signals_data is not None:
+            self.settings.setValue("Debug/ignored_signals", ",".join(self.handle_signals_data))
         super(SettingsDialogForm, self).accept()
 
     def config_gui(self):
