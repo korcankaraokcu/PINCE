@@ -323,10 +323,10 @@ string_index_to_multiplier_dict = {
 # first value is the length and the second one is the type
 # Check ScriptUtils for an exemplary usage
 index_to_valuetype_dict = {
-    VALUE_INDEX.INDEX_INT8: [1, "b"],
-    VALUE_INDEX.INDEX_INT16: [2, "h"],
-    VALUE_INDEX.INDEX_INT32: [4, "i"],
-    VALUE_INDEX.INDEX_INT64: [8, "q"],
+    VALUE_INDEX.INDEX_INT8: [1, "B"],
+    VALUE_INDEX.INDEX_INT16: [2, "H"],
+    VALUE_INDEX.INDEX_INT32: [4, "I"],
+    VALUE_INDEX.INDEX_INT64: [8, "Q"],
     VALUE_INDEX.INDEX_FLOAT32: [4, "f"],
     VALUE_INDEX.INDEX_FLOAT64: [8, "d"],
     VALUE_INDEX.INDEX_STRING_ASCII: [None, None],
