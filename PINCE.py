@@ -1244,22 +1244,22 @@ class MainForm(QMainWindow, MainWindow):
         global Exiting
         self.progressBar.setValue(0)
         ProgressRun = 1
-        while (ProgressRun == 1 and Exiting == 0):
+        while ProgressRun == 1 and Exiting == 0:
             sleep(0.1)
             value = int(round(self.backend.get_scan_progress() * 100))
             self.progressBar.setValue(value)
 
     def update_address_table_loop(self):
-        while (Exiting == 0):
+        while Exiting == 0:
             sleep(table_update_interval / 1000)
-            if (update_table):
+            if update_table:
                 try:
                     self.update_address_table()
                 except:
                     print("Update Table failed :(")
 
     def freeze(self):
-        while (FreezeStop == 0 and Exiting == 0):
+        while FreezeStop == 0 and Exiting == 0:
             sleep(FreezeInterval / 1000)
             for x in FreezeVars:
                 GDB_Engine.write_memory(x, FreezeVars[x][0], FreezeVars[x][1])
@@ -1280,11 +1280,11 @@ class MainForm(QMainWindow, MainWindow):
         global FreezeStop
         global FreezeInterval
         global threadpool
-        if (column == 0):
-            if (row.checkState(0) == Qt.Checked):
+        if column == 0:
+            if row.checkState(0) == Qt.Checked:
                 value = row.text(VALUE_COL)
                 value_index = GuiUtils.text_to_valuetype(row.text(TYPE_COL))[0]
-                if (len(FreezeVars) == 0):
+                if len(FreezeVars) == 0:
                     FreezeStop = 0
                     FreezeThread = Worker(self.freeze)
                     threadpool.start(FreezeThread)
@@ -1294,7 +1294,7 @@ class MainForm(QMainWindow, MainWindow):
                 if row.text(ADDR_COL) in FreezeVars:
                     del FreezeVars[row.text(ADDR_COL)]
                     self.freeze_consistancy(row.text(ADDR_COL), Qt.Unchecked)
-                    if (len(FreezeVars) == 0):
+                    if len(FreezeVars) == 0:
                         FreezeStop = 1
 
     def treeWidget_AddressTable_change_repr(self, new_repr):
