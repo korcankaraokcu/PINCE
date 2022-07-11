@@ -758,7 +758,7 @@ def inject_with_dlopen_call(library_path):
 
 
 #:tag:MemoryRW
-def read_memory(address, value_index, length=None, zero_terminate=True, only_bytes=False, mem_handle=None):
+def read_memory(address, value_index, length=None, zero_terminate=True, signed=False, mem_handle=None):
     """Reads value from the given address
 
     Args:
@@ -768,7 +768,7 @@ def read_memory(address, value_index, length=None, zero_terminate=True, only_byt
         INDEX_STRING or INDEX_AOB. Ignored otherwise
         zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
         value_index is INDEX_STRING. Ignored otherwise
-        only_bytes (bool): Returns only bytes instead of converting it to the according type of value_index
+        signed (bool): Casts the data as signed if True, unsigned if False. Only usable with integer types
         mem_handle (BinaryIO): A file handle that points to the memory file of the current process
         This parameter is used for optimization, intended for internal usage. Check read_memory_multiple for an example
         Don't forget to close the handle after you're done if you use this parameter manually
@@ -777,7 +777,6 @@ def read_memory(address, value_index, length=None, zero_terminate=True, only_byt
         str: If the value_index is INDEX_STRING or INDEX_AOB
         float: If the value_index is INDEX_FLOAT32 or INDEX_FLOAT64
         int: If the value_index is anything else
-        bytes: If the only_bytes is True
         None: If an error occurs while reading the given address
     """
     try:
@@ -826,8 +825,6 @@ def read_memory(address, value_index, length=None, zero_terminate=True, only_byt
         # Maybe creating a function that toggles logging on and off? Other functions could use it too
         # print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return
-    if only_bytes:
-        return data_read
     if type_defs.VALUE_INDEX.is_string(value_index):
         encoding, option = type_defs.string_index_to_encoding_dict[value_index]
         returned_string = data_read.decode(encoding, option)
@@ -840,6 +837,8 @@ def read_memory(address, value_index, length=None, zero_terminate=True, only_byt
     elif value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         return " ".join(format(n, '02x') for n in data_read)
     else:
+        if type_defs.VALUE_INDEX.is_integer(value_index) and signed:
+            data_type = data_type.lower()
         return struct.unpack_from(data_type, data_read)[0]
 
 
@@ -856,7 +855,7 @@ def read_memory_multiple(nested_list):
         parameters are the same with the function read_memory.
 
     Examples:
-        All parameters are passed-->[[address1, value_index1, length1, zero_terminate1, only_bytes], ...]
+        All parameters are passed-->[[address1, value_index1, length1, zero_terminate1, signed], ...]
         Parameters are partially passed--▼
         [[address1, value_index1],[address2, value_index2, length2],[address3, value_index3, length3], ...]
 
@@ -881,10 +880,10 @@ def read_memory_multiple(nested_list):
         except IndexError:
             zero_terminate = True
         try:
-            only_bytes = item[4]
+            signed = item[4]
         except IndexError:
-            only_bytes = False
-        data_read = read_memory(address, index, length, zero_terminate, only_bytes, mem_handle)
+            signed = False
+        data_read = read_memory(address, index, length, zero_terminate, signed, mem_handle)
         data_read_list.append(data_read)
     mem_handle.close()
     return data_read_list
