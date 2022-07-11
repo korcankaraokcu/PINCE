@@ -143,11 +143,20 @@ class REGISTERS:
         XMM = ["xmm" + str(i) for i in range(8)]
 
 
+class VALUE_REPR:
+    UNSIGNED = 0
+    SIGNED = 1
+    HEX = 2
+
+
 class VALUE_INDEX:
+    # Beginning of the integer indexes, new integer indexes should be added between 0 and 3
     INDEX_INT8 = 0
     INDEX_INT16 = 1
     INDEX_INT32 = 2
     INDEX_INT64 = 3
+    # Ending of the integer indexes
+
     INDEX_FLOAT32 = 4
     INDEX_FLOAT64 = 5
 
@@ -159,6 +168,10 @@ class VALUE_INDEX:
     # Ending of the string indexes
 
     INDEX_AOB = 10  # Array of Bytes
+
+    @staticmethod
+    def is_integer(value_index):
+        return VALUE_INDEX.INDEX_INT8 <= value_index <= VALUE_INDEX.INDEX_INT32
 
     @staticmethod
     def is_string(value_index):
