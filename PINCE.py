@@ -1398,7 +1398,6 @@ class MainForm(QMainWindow, MainWindow):
         row.setData(TYPE_COL, Qt.UserRole, value_type)
         row.setText(TYPE_COL, value_type.text())
         row.setText(VALUE_COL, "" if value is None else str(value))
-        self.update_address_table()
 
     # Returns the column values of the given row
     def read_address_table_entries(self, row, serialize=False):
