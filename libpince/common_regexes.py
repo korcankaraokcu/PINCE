@@ -30,7 +30,6 @@ hex_number_grouped = compile(r"(" + hex_number.pattern + r")")
 address_with_symbol = compile(r"(" + hex_number_grouped.pattern + r"\s*(<.+>)?)")  # 0x7f3067f1174d <poll+45>\n
 thread_info = compile(r"\*\s+\d+\s+(.*)\\n")
 inferior_pid = compile(r"process\s+(\d+)")
-numbers = compile(r"\d+")
 hw_breakpoint_count = compile(r"(hw|read|acc)")
 breakpoint_size = compile(r"char\[(\d+)\]")
 breakpoint_created = compile(r"breakpoint-created")
@@ -53,8 +52,6 @@ whitespaces = compile(r"\s+")
 
 # --------------------------------------------GuiUtils------------------------------------------------------------------
 
-valuetype_length = compile(r"\[(\d+)\]")
-valuetype_nzt = compile(r",NZT")
 reference_mark = compile(r"\{\d*\}")
 
 # --------------------------------------------GDBCommandExtensions------------------------------------------------------
