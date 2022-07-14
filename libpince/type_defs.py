@@ -311,12 +311,14 @@ class SCAN_MODE:
 class SCAN_SCOPE:
     BASIC = 1
     NORMAL = 2
-    FULL = 3
+    FULL_RW = 3
+    FULL = 4
 
 
 scan_scope_to_text_dict = collections.OrderedDict([
     (SCAN_SCOPE.BASIC, "Basic"),
     (SCAN_SCOPE.NORMAL, "Normal"),
+    (SCAN_SCOPE.FULL_RW, "Read+Write"),
     (SCAN_SCOPE.FULL, "Full")
 ])
 

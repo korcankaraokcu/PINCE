@@ -968,9 +968,8 @@ class MainForm(QMainWindow, MainWindow):
         self.comboBox_ScanType.setCurrentIndex(old_index)
 
     def comboBox_ScanScope_init(self):
-        items = [type_defs.SCAN_SCOPE.BASIC, type_defs.SCAN_SCOPE.NORMAL, type_defs.SCAN_SCOPE.FULL]
-        for scope in items:
-            self.comboBox_ScanScope.addItem(type_defs.scan_scope_to_text_dict[scope], scope)
+        for scope, text in type_defs.scan_scope_to_text_dict.items():
+            self.comboBox_ScanScope.addItem(text, scope)
         self.comboBox_ScanScope.setCurrentIndex(1)  # type_defs.SCAN_SCOPE.NORMAL
 
     def comboBox_ValueType_init(self):
