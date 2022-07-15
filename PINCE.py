@@ -931,6 +931,7 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NextScan.setEnabled(True)
             search_scope = self.comboBox_ScanScope.currentData(Qt.UserRole)
             self.backend.send_command("option region_scan_level " + str(search_scope))
+            self.backend.send_command("reset")
             self.comboBox_ScanScope.setEnabled(False)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
         self.comboBox_ScanType_init()
