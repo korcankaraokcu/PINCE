@@ -143,6 +143,12 @@ class REGISTERS:
         XMM = ["xmm" + str(i) for i in range(8)]
 
 
+class FREEZE_TYPE:
+    DEFAULT = 0
+    INCREMENT = 1
+    DECREMENT = 2
+
+
 class VALUE_REPR:
     UNSIGNED = 0
     SIGNED = 1

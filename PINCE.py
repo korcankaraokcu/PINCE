@@ -227,6 +227,7 @@ saved_addresses_changed_list = list()
 # vars for communication/storage with the non blocking threads
 # see treeWidget_AddressTable_item_clicked
 Exiting = 0
+# Format: {address:[value_index, value, freeze_type]}
 FreezeVars = {}
 FreezeStop = 0
 ProgressRun = 0
@@ -606,6 +607,10 @@ class MainForm(QMainWindow, MainWindow):
         show_unsigned = menu.addAction("Show as unsigned")
         show_signed = menu.addAction("Show as signed")
         toggle_record = menu.addAction("Toggle selected records[Space]")
+        freeze_menu = menu.addMenu("Freeze")
+        freeze_default = freeze_menu.addAction("Default")
+        freeze_inc = freeze_menu.addAction("Incremental")
+        freeze_dec = freeze_menu.addAction("Decremental")
         menu.addSeparator()
         browse_region = menu.addAction("Browse this memory region[Ctrl+B]")
         disassemble = menu.addAction("Disassemble this address[Ctrl+D]")
@@ -624,7 +629,8 @@ class MainForm(QMainWindow, MainWindow):
         what_accesses = menu.addAction("Find out what accesses this address")
         if current_row is None:
             deletion_list = [edit_menu.menuAction(), show_hex, show_dec, show_unsigned, show_signed, toggle_record,
-                             browse_region, disassemble, what_writes, what_reads, what_accesses]
+                             freeze_menu.menuAction(), browse_region, disassemble, what_writes, what_reads,
+                             what_accesses]
             GuiUtils.delete_menu_entries(menu, deletion_list)
         else:
             value_type = current_row.data(TYPE_COL, Qt.UserRole)
@@ -635,8 +641,11 @@ class MainForm(QMainWindow, MainWindow):
                     GuiUtils.delete_menu_entries(menu, [show_unsigned, show_dec])
                 elif value_type.value_repr is type_defs.VALUE_REPR.SIGNED:
                     GuiUtils.delete_menu_entries(menu, [show_signed, show_dec])
+                if current_row.checkState(FROZEN_COL) == Qt.Unchecked:
+                    GuiUtils.delete_menu_entries(menu, [freeze_menu.menuAction()])
             else:
-                GuiUtils.delete_menu_entries(menu, [show_hex, show_dec, show_unsigned, show_signed])
+                GuiUtils.delete_menu_entries(menu, [show_hex, show_dec, show_unsigned, show_signed,
+                                                    freeze_menu.menuAction()])
         font_size = self.treeWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec_(event.globalPos())
@@ -650,6 +659,9 @@ class MainForm(QMainWindow, MainWindow):
             show_unsigned: lambda: self.treeWidget_AddressTable_change_repr(type_defs.VALUE_REPR.UNSIGNED),
             show_signed: lambda: self.treeWidget_AddressTable_change_repr(type_defs.VALUE_REPR.SIGNED),
             toggle_record: self.toggle_selected_records,
+            freeze_default: lambda: self.change_freeze_type(type_defs.FREEZE_TYPE.DEFAULT),
+            freeze_inc: lambda: self.change_freeze_type(type_defs.FREEZE_TYPE.INCREMENT),
+            freeze_dec: lambda: self.change_freeze_type(type_defs.FREEZE_TYPE.DECREMENT),
             browse_region: self.browse_region_for_selected_row,
             disassemble: self.disassemble_selected_row,
             cut_record: self.cut_selected_records,
@@ -700,6 +712,12 @@ class MainForm(QMainWindow, MainWindow):
                 self.memory_view_window.show()
                 self.memory_view_window.activateWindow()
 
+    def change_freeze_type(self, freeze_type):
+        global FreezeVars
+        for row in self.treeWidget_AddressTable.selectedItems():
+            row.setData(FROZEN_COL, Qt.UserRole, freeze_type)
+            FreezeVars[row.text(ADDR_COL)][2] = freeze_type
+
     def toggle_selected_records(self):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if row:
@@ -707,6 +725,7 @@ class MainForm(QMainWindow, MainWindow):
             new_check_state = Qt.Checked if check_state == Qt.Unchecked else Qt.Unchecked
             for row in self.treeWidget_AddressTable.selectedItems():
                 row.setCheckState(FROZEN_COL, new_check_state)
+                self.treeWidget_AddressTable_item_clicked(row, FROZEN_COL)
 
     def cut_selected_records(self):
         # Flat cut, does not preserve structure
@@ -1225,6 +1244,7 @@ class MainForm(QMainWindow, MainWindow):
     def add_entry_to_addresstable(self, description, address_expr, value_index, length=0, zero_terminate=True):
         current_row = QTreeWidgetItem()
         current_row.setCheckState(FROZEN_COL, self.get_checked_state(address_expr))
+        current_row.setData(FROZEN_COL, Qt.UserRole, type_defs.FREEZE_TYPE.DEFAULT)
         value_type = type_defs.ValueType(value_index, length, zero_terminate)
         self.treeWidget_AddressTable.addTopLevelItem(current_row)
         self.change_address_table_entries(current_row, description, address_expr, value_type)
@@ -1264,10 +1284,18 @@ class MainForm(QMainWindow, MainWindow):
                     print("Update Table failed :(")
 
     def freeze(self):
+        global FreezeVars
         while FreezeStop == 0 and Exiting == 0:
             sleep(FreezeInterval / 1000)
-            for x in FreezeVars:
-                GDB_Engine.write_memory(x, FreezeVars[x][0], FreezeVars[x][1])
+            for address, (value_index, value, freeze_type) in FreezeVars.items():
+                if type_defs.VALUE_INDEX.is_integer(value_index):
+                    new_value = GDB_Engine.read_memory(address, value_index)
+                    if freeze_type == type_defs.FREEZE_TYPE.INCREMENT and new_value > int(value, 0) or \
+                            freeze_type == type_defs.FREEZE_TYPE.DECREMENT and new_value < int(value, 0):
+                        FreezeVars[address][1] = str(new_value)
+                        GDB_Engine.write_memory(address, value_index, new_value)
+                        continue
+                GDB_Engine.write_memory(address, value_index, value)
 
     # ----------------------------------------------------
 
@@ -1285,15 +1313,15 @@ class MainForm(QMainWindow, MainWindow):
         global FreezeStop
         global FreezeInterval
         global threadpool
-        if column == 0:
-            if row.checkState(0) == Qt.Checked:
+        if column == FROZEN_COL:
+            if row.checkState(FROZEN_COL) == Qt.Checked:
                 value = row.text(VALUE_COL)
                 value_index = row.data(TYPE_COL, Qt.UserRole).value_index
                 if len(FreezeVars) == 0:
                     FreezeStop = 0
                     FreezeThread = Worker(self.freeze)
                     threadpool.start(FreezeThread)
-                FreezeVars[row.text(ADDR_COL)] = [value_index, value]
+                FreezeVars[row.text(ADDR_COL)] = [value_index, value, type_defs.FREEZE_TYPE.DEFAULT]
                 self.freeze_consistancy(row.text(ADDR_COL), Qt.Checked)
             else:
                 if row.text(ADDR_COL) in FreezeVars:
@@ -1335,7 +1363,7 @@ class MainForm(QMainWindow, MainWindow):
                         row.setData(TYPE_COL, Qt.UserRole, value_type)
                         row.setText(TYPE_COL, value_type.text())
                 if row.text(ADDR_COL) in FreezeVars:
-                    FreezeVars[row.text(ADDR_COL)] = [value_type.value_index, new_value]
+                    FreezeVars[row.text(ADDR_COL)][1] = new_value
                 table_contents.append((address, value_type.value_index))
             GDB_Engine.write_memory_multiple(table_contents, new_value)
             self.update_address_table()
