@@ -758,6 +758,36 @@ def inject_with_dlopen_call(library_path):
 
 
 #:tag:MemoryRW
+def read_pointer(pointer_type):
+    """Reads the address pointed by this pointer
+
+    Args:
+        pointer_type (PointerType): type_defs.PointerType class containing a base_address and an offsets list
+
+    Returns:
+        int: Final pointed address after dereferencing this pointer and it's offsets list
+    """
+    if not isinstance(pointer_type, type_defs.PointerType):
+        raise TypeError("Passed non-PointerType to read_pointer!")
+
+    if inferior_arch == type_defs.INFERIOR_ARCH.ARCH_32:
+        value_index = type_defs.VALUE_INDEX.INDEX_INT32
+    else:
+        value_index = type_defs.VALUE_INDEX.INDEX_INT64
+
+    try:
+        with open(mem_file, "rb") as mem_handle:
+            deref_address = read_memory(pointer_type.base_address, value_index, mem_handle=mem_handle)
+            for offset in pointer_type.offsets_list:
+                offset_address = deref_address + offset
+                deref_address = read_memory(offset_address, value_index, mem_handle=mem_handle)
+    except OSError:
+        deref_address = pointer_type.base_address
+
+    return deref_address
+
+
+#:tag:MemoryRW
 def read_memory(address, value_index, length=None, zero_terminate=True, signed=False, mem_handle=None):
     """Reads value from the given address
 

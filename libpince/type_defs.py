@@ -463,6 +463,27 @@ class ValueType:
         return returned_string
 
 
+class PointerType:
+    def __init__(self, base_address, offsets_list=None):
+        """
+        Args:
+            base_address (int): The base address of where this pointer starts from.
+            offsets_list (list): List of offsets to reach the final pointed data. Can be None for single-level pointer.
+        """
+        self.base_address = base_address
+        if offsets_list == None:
+            self.offsets_list = []
+
+    def serialize(self):
+        return self.base_address, self.offsets_list
+
+    def get_hex_address(self):
+        """
+        Returns the text hex representation of this pointer's base address
+        """
+        return hex(self.base_address)
+
+
 class RegisterQueue:
     def __init__(self):
         self.queue_list = []
