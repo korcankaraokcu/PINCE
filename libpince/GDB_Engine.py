@@ -935,27 +935,6 @@ def write_memory(address, value_index, value):
         return
 
 
-#:tag:MemoryRW
-def write_memory_multiple(nested_list, value):
-    """Sets the given value to the given addresses
-
-    If any errors occurs while setting values to the according addresses, it'll be ignored but the information about
-    error will be printed to the terminal.
-
-    Args:
-        nested_list (list): List of the address and value_index parameters of the function write_memory
-        Both parameters address and value_index are necessary.
-        value (str): The value that'll be written to the given addresses
-
-    Examples:
-        nested_list-->[[address1, value_index1],[address2, value_index2], ...]
-    """
-    for item in nested_list:
-        address = item[0]
-        index = item[1]
-        write_memory(address, index, value)
-
-
 #:tag:Assembly
 def disassemble(expression, offset_or_address):
     """Disassembles the address evaluated by the given expression
