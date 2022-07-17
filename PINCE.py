@@ -781,6 +781,8 @@ class MainForm(QMainWindow, MainWindow):
         for rec in records:
             row = QTreeWidgetItem()
             row.setCheckState(FROZEN_COL, Qt.Unchecked)
+            frozen = type_defs.Frozen("", type_defs.FREEZE_TYPE.DEFAULT)
+            row.setData(FROZEN_COL, Qt.UserRole, frozen)
 
             # Deserialize the value_type param
             value_type = type_defs.ValueType(*rec[2])
@@ -1288,7 +1290,7 @@ class MainForm(QMainWindow, MainWindow):
                         GDB_Engine.write_memory(address, value_index, frozen.value)
                         continue
                 GDB_Engine.write_memory(address, value_index, value)
-                it += 1
+            it += 1
 
     # ----------------------------------------------------
 
@@ -1316,8 +1318,6 @@ class MainForm(QMainWindow, MainWindow):
         dialog = InputDialogForm(item_list=[(label_text, value)], parsed_index=0, value_index=value_index)
         if dialog.exec_():
             new_value = dialog.get_values()
-            if type_defs.VALUE_INDEX.is_string(value_index):
-                new_value += "\0"
             for row in self.treeWidget_AddressTable.selectedItems():
                 address = row.text(ADDR_COL)
                 value_type = row.data(TYPE_COL, Qt.UserRole)
