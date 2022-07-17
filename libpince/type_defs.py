@@ -413,6 +413,12 @@ class GDBInitializeException(Exception):
         super(GDBInitializeException, self).__init__(message)
 
 
+class Frozen:
+    def __init__(self, value, freeze_type):
+        self.value = value
+        self.freeze_type = freeze_type
+
+
 class ValueType:
     def __init__(self, value_index, length, zero_terminate, value_repr=VALUE_REPR.UNSIGNED):
         """
