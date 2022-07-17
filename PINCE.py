@@ -1313,13 +1313,11 @@ class MainForm(QMainWindow, MainWindow):
         value = row.text(VALUE_COL)
         value_index = row.data(TYPE_COL, Qt.UserRole).value_index
         label_text = "Enter the new value"
-        if type_defs.VALUE_INDEX.is_string(value_index):
-            label_text += "\nPINCE doesn't automatically insert a null terminated string at the end" \
-                          "\nCopy-paste this character(\0) if you need to insert it at somewhere"
         dialog = InputDialogForm(item_list=[(label_text, value)], parsed_index=0, value_index=value_index)
         if dialog.exec_():
-            table_contents = []
             new_value = dialog.get_values()
+            if type_defs.VALUE_INDEX.is_string(value_index):
+                new_value += "\0"
             for row in self.treeWidget_AddressTable.selectedItems():
                 address = row.text(ADDR_COL)
                 value_type = row.data(TYPE_COL, Qt.UserRole)
@@ -1327,13 +1325,11 @@ class MainForm(QMainWindow, MainWindow):
                     unknown_type = SysUtils.parse_string(new_value, value_type.value_index)
                     if unknown_type is not None:
                         value_type.length = len(unknown_type)
-                        row.setData(TYPE_COL, Qt.UserRole, value_type)
                         row.setText(TYPE_COL, value_type.text())
                 frozen = row.data(FROZEN_COL, Qt.UserRole)
                 frozen.value = new_value
                 row.setData(FROZEN_COL, Qt.UserRole, frozen)
-                table_contents.append((address, value_type.value_index))
-            GDB_Engine.write_memory_multiple(table_contents, new_value)
+                GDB_Engine.write_memory(address, value_type.value_index, new_value)
             self.update_address_table()
 
     def treeWidget_AddressTable_edit_desc(self):
