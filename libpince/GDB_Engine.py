@@ -923,7 +923,7 @@ def write_memory(address, value_index, value):
             data_type = type_defs.index_to_struct_pack_dict.get(value_index, -1)
             write_data = struct.pack(data_type, write_data)
     else:
-        write_data = write_data.encode(encoding, option)
+        write_data = write_data.encode(encoding, option) + b"\x00"  # Zero-terminated by default
     FILE = open(mem_file, "rb+")
     try:
         FILE.seek(address)
