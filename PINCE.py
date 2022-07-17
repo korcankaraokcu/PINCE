@@ -225,11 +225,7 @@ REF_CALL_COUNT_COL = 1
 saved_addresses_changed_list = list()
 
 # vars for communication/storage with the non blocking threads
-# see treeWidget_AddressTable_item_clicked
 Exiting = 0
-# Format: {address:[value_index, value, freeze_type]}
-FreezeVars = {}
-FreezeStop = 0
 ProgressRun = 0
 
 threadpool = QThreadPool()
@@ -399,8 +395,10 @@ class MainForm(QMainWindow, MainWindow):
         self.check_status_thread.process_running.connect(self.memory_view_window.process_running)
         self.check_status_thread.start()
         self.update_address_table_thread = Worker(self.update_address_table_loop)
+        self.freeze_thread = Worker(self.freeze_loop)
         global threadpool
         threadpool.start(self.update_address_table_thread)
+        threadpool.start(self.freeze_thread)
         self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
         self.shortcut_open_file.activated.connect(self.pushButton_Open_clicked)
         GuiUtils.append_shortcut_to_tooltip(self.pushButton_Open, self.shortcut_open_file)
@@ -713,10 +711,9 @@ class MainForm(QMainWindow, MainWindow):
                 self.memory_view_window.activateWindow()
 
     def change_freeze_type(self, freeze_type):
-        global FreezeVars
         for row in self.treeWidget_AddressTable.selectedItems():
-            row.setData(FROZEN_COL, Qt.UserRole, freeze_type)
-            FreezeVars[row.text(ADDR_COL)][2] = freeze_type
+            frozen = row.data(FROZEN_COL, Qt.UserRole)
+            frozen.freeze_type = freeze_type
 
     def toggle_selected_records(self):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
@@ -811,21 +808,10 @@ class MainForm(QMainWindow, MainWindow):
             self.insert_records(records, parent, parent.indexOfChild(insert_row) + insert_after)
         self.update_address_table()
 
-    def check_if_address_exists(self, address):
-        root = self.treeWidget_AddressTable.invisibleRootItem()
-        child_count = root.childCount()
-        for i in range(child_count):
-            item = root.child(i)
-            if item.text(ADDR_COL) == address:
-                return True
-        return False
-
     def delete_selected_records(self):
         root = self.treeWidget_AddressTable.invisibleRootItem()
         for item in self.treeWidget_AddressTable.selectedItems():
             (item.parent() or root).removeChild(item)
-        if not self.check_if_address_exists(item.text(ADDR_COL)):
-            del FreezeVars[item.text(ADDR_COL)]
 
     def treeWidget_AddressTable_key_press_event(self, event):
         actions = type_defs.KeyboardModifiersTupleDict([
@@ -1233,18 +1219,11 @@ class MainForm(QMainWindow, MainWindow):
         GDB_Engine.detach()
         app.closeAllWindows()
 
-    # checks if item is a duplicate of something currently being frozen
-    def get_checked_state(self, address):
-        global FreezeVars
-        if address in FreezeVars:
-            return Qt.Checked
-        else:
-            return Qt.Unchecked
-
     def add_entry_to_addresstable(self, description, address_expr, value_index, length=0, zero_terminate=True):
         current_row = QTreeWidgetItem()
-        current_row.setCheckState(FROZEN_COL, self.get_checked_state(address_expr))
-        current_row.setData(FROZEN_COL, Qt.UserRole, type_defs.FREEZE_TYPE.DEFAULT)
+        current_row.setCheckState(FROZEN_COL, Qt.Unchecked)
+        frozen = type_defs.Frozen("", type_defs.FREEZE_TYPE.DEFAULT)
+        current_row.setData(FROZEN_COL, Qt.UserRole, frozen)
         value_type = type_defs.ValueType(value_index, length, zero_terminate)
         self.treeWidget_AddressTable.addTopLevelItem(current_row)
         self.change_address_table_entries(current_row, description, address_expr, value_type)
@@ -1283,52 +1262,41 @@ class MainForm(QMainWindow, MainWindow):
                 except:
                     print("Update Table failed :(")
 
-    def freeze(self):
-        global FreezeVars
-        while FreezeStop == 0 and Exiting == 0:
+    def freeze_loop(self):
+        while Exiting == 0:
             sleep(FreezeInterval / 1000)
-            for address, (value_index, value, freeze_type) in FreezeVars.items():
+            try:
+                self.freeze()
+            except:
+                print("Freeze failed :(")
+
+    def freeze(self):
+        it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
+        while it.value():
+            row = it.value()
+            if row.checkState(FROZEN_COL) == Qt.Checked:
+                value_index = row.data(TYPE_COL, Qt.UserRole).value_index
+                address = row.text(ADDR_COL)
+                frozen = row.data(FROZEN_COL, Qt.UserRole)
+                value = frozen.value
+                freeze_type = frozen.freeze_type
                 if type_defs.VALUE_INDEX.is_integer(value_index):
                     new_value = GDB_Engine.read_memory(address, value_index)
                     if freeze_type == type_defs.FREEZE_TYPE.INCREMENT and new_value > int(value, 0) or \
                             freeze_type == type_defs.FREEZE_TYPE.DECREMENT and new_value < int(value, 0):
-                        FreezeVars[address][1] = str(new_value)
-                        GDB_Engine.write_memory(address, value_index, new_value)
+                        frozen.value = str(new_value)
+                        GDB_Engine.write_memory(address, value_index, frozen.value)
                         continue
                 GDB_Engine.write_memory(address, value_index, value)
+                it += 1
 
     # ----------------------------------------------------
 
-    def freeze_consistancy(self, address, constant):
-        root = self.treeWidget_AddressTable.invisibleRootItem()
-        child_count = root.childCount()
-        for i in range(child_count):
-            item = root.child(i)
-            if item.text(ADDR_COL) == address:
-                if item.checkState(0) != constant:
-                    item.setCheckState(0, constant)
-
     def treeWidget_AddressTable_item_clicked(self, row, column):
-        global FreezeVars
-        global FreezeStop
-        global FreezeInterval
-        global threadpool
         if column == FROZEN_COL:
             if row.checkState(FROZEN_COL) == Qt.Checked:
-                value = row.text(VALUE_COL)
-                value_index = row.data(TYPE_COL, Qt.UserRole).value_index
-                if len(FreezeVars) == 0:
-                    FreezeStop = 0
-                    FreezeThread = Worker(self.freeze)
-                    threadpool.start(FreezeThread)
-                FreezeVars[row.text(ADDR_COL)] = [value_index, value, type_defs.FREEZE_TYPE.DEFAULT]
-                self.freeze_consistancy(row.text(ADDR_COL), Qt.Checked)
-            else:
-                if row.text(ADDR_COL) in FreezeVars:
-                    del FreezeVars[row.text(ADDR_COL)]
-                    self.freeze_consistancy(row.text(ADDR_COL), Qt.Unchecked)
-                    if len(FreezeVars) == 0:
-                        FreezeStop = 1
+                frozen = row.data(FROZEN_COL, Qt.UserRole)
+                frozen.value = row.text(VALUE_COL)
 
     def treeWidget_AddressTable_change_repr(self, new_repr):
         value_type = GuiUtils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.UserRole)
@@ -1339,7 +1307,6 @@ class MainForm(QMainWindow, MainWindow):
         self.update_address_table()
 
     def treeWidget_AddressTable_edit_value(self):
-        global FreezeVars
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if not row:
             return
@@ -1362,8 +1329,9 @@ class MainForm(QMainWindow, MainWindow):
                         value_type.length = len(unknown_type)
                         row.setData(TYPE_COL, Qt.UserRole, value_type)
                         row.setText(TYPE_COL, value_type.text())
-                if row.text(ADDR_COL) in FreezeVars:
-                    FreezeVars[row.text(ADDR_COL)][1] = new_value
+                frozen = row.data(FROZEN_COL, Qt.UserRole)
+                frozen.value = new_value
+                row.setData(FROZEN_COL, Qt.UserRole, frozen)
                 table_contents.append((address, value_type.value_index))
             GDB_Engine.write_memory_multiple(table_contents, new_value)
             self.update_address_table()
