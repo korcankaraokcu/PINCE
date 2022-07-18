@@ -785,8 +785,12 @@ class MainForm(QMainWindow, MainWindow):
             row.setData(FROZEN_COL, Qt.UserRole, frozen)
 
             # Deserialize the value_type param
+            if type(rec[1]) == list:
+                address_expr = type_defs.PointerType(*rec[1])
+            else:
+                address_expr = rec[1]
             value_type = type_defs.ValueType(*rec[2])
-            self.change_address_table_entries(row, *rec[:-2], value_type)
+            self.change_address_table_entries(row, rec[0], address_expr, value_type)
             self.insert_records(rec[-1], row, 0)
             rows.append(row)
 
@@ -1409,10 +1413,15 @@ class MainForm(QMainWindow, MainWindow):
     # Returns the column values of the given row
     def read_address_table_entries(self, row, serialize=False):
         description = row.text(DESC_COL)
-        address_expr = row.data(ADDR_COL, Qt.UserRole)
         if serialize:
+            address_data = row.data(ADDR_COL, Qt.UserRole)
+            if isinstance(address_data, type_defs.PointerType):
+                address_expr = address_data.serialize()
+            else:
+                address_expr = address_data
             value_type = row.data(TYPE_COL, Qt.UserRole).serialize()
         else:
+            address_expr = row.data(ADDR_COL, Qt.UserRole)
             value_type = row.data(TYPE_COL, Qt.UserRole)
         return description, address_expr, value_type
 
