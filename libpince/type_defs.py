@@ -473,6 +473,8 @@ class PointerType:
         self.base_address = base_address
         if offsets_list == None:
             self.offsets_list = []
+        else:
+            self.offsets_list = offsets_list
 
     def serialize(self):
         return self.base_address, self.offsets_list
