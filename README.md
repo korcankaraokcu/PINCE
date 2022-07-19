@@ -67,7 +67,7 @@ If you like to uninstall PINCE, just delete this folder, almost everything is in
 ***Notes:***
 - GDB enhancements (peda, pwndbg, etc) that use a global gdbinit file might cause PINCE to misfunction at times. Please disable them or use them locally before starting PINCE
 - If you are having problems with your default gdb version, you can use the `install_gdb.sh` script to install another version locally. Read the comments in it for more information
-- Check #116 for a possible fix if you encounter `'GtkSettings' has no property named 'gtk-fallback-icon-theme'`
+- Check https://github.com/korcankaraokcu/PINCE/issues/116 for a possible fix if you encounter `'GtkSettings' has no property named 'gtk-fallback-icon-theme'`
 
 # Running PINCE  
 Just run ```sh PINCE.sh``` in the PINCE directory
