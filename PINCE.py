@@ -715,6 +715,15 @@ class MainForm(QMainWindow, MainWindow):
             frozen = row.data(FROZEN_COL, Qt.UserRole)
             frozen.freeze_type = freeze_type
 
+            # TODO: Create a QWidget subclass with signals so freeze type can be changed by clicking on the cell
+            # This also helps it to accept rich text, colors for arrows would be nice
+            if freeze_type == type_defs.FREEZE_TYPE.DEFAULT:
+                row.setText(FROZEN_COL, "")
+            elif freeze_type == type_defs.FREEZE_TYPE.INCREMENT:
+                row.setText(FROZEN_COL, "▲")
+            elif freeze_type == type_defs.FREEZE_TYPE.DECREMENT:
+                row.setText(FROZEN_COL, "▼")
+
     def toggle_selected_records(self):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if row:
@@ -1299,6 +1308,8 @@ class MainForm(QMainWindow, MainWindow):
             if row.checkState(FROZEN_COL) == Qt.Checked:
                 frozen = row.data(FROZEN_COL, Qt.UserRole)
                 frozen.value = row.text(VALUE_COL)
+            else:
+                row.setText(FROZEN_COL, "")
 
     def treeWidget_AddressTable_change_repr(self, new_repr):
         value_type = GuiUtils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.UserRole)
