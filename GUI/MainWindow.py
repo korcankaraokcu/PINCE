@@ -23,6 +23,7 @@ class Ui_MainWindow(object):
         self.treeWidget_AddressTable.setDragDropMode(QtWidgets.QAbstractItemView.DragDrop)
         self.treeWidget_AddressTable.setDefaultDropAction(QtCore.Qt.MoveAction)
         self.treeWidget_AddressTable.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.treeWidget_AddressTable.setIndentation(12)
         self.treeWidget_AddressTable.setExpandsOnDoubleClick(False)
         self.treeWidget_AddressTable.setObjectName("treeWidget_AddressTable")
         self.gridLayout.addWidget(self.treeWidget_AddressTable, 3, 0, 1, 1)
