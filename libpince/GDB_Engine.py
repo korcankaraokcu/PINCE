@@ -758,6 +758,17 @@ def inject_with_dlopen_call(library_path):
 
 
 #:tag:MemoryRW
+def memory_handle():
+    """
+    Acquire the handle of the currently attached process
+
+    Returns:
+        BinaryIO: A file handle that points to the memory file of the current process
+    """
+    return open(mem_file, "rb")
+
+
+#:tag:MemoryRW
 def read_memory(address, value_index, length=None, zero_terminate=True, signed=False, mem_handle=None):
     """Reads value from the given address
 
@@ -770,7 +781,7 @@ def read_memory(address, value_index, length=None, zero_terminate=True, signed=F
         value_index is INDEX_STRING. Ignored otherwise
         signed (bool): Casts the data as signed if True, unsigned if False. Only usable with integer types
         mem_handle (BinaryIO): A file handle that points to the memory file of the current process
-        This parameter is used for optimization, intended for internal usage. Check read_memory_multiple for an example
+        This parameter is used for optimization, See memory_handle
         Don't forget to close the handle after you're done if you use this parameter manually
 
     Returns:
@@ -840,53 +851,6 @@ def read_memory(address, value_index, length=None, zero_terminate=True, signed=F
         if type_defs.VALUE_INDEX.is_integer(value_index) and signed:
             data_type = data_type.lower()
         return struct.unpack_from(data_type, data_read)[0]
-
-
-#:tag:MemoryRW
-def read_memory_multiple(nested_list):
-    """Reads multiple values from the given addresses
-
-    Optimized version of the function read_memory. This function is significantly faster after 100 addresses compared
-    to using read_memory in a for loop.
-
-    Args:
-        nested_list (list): List of *args of the function read_memory. You don't have to pass all of the parameters for
-        each list in the nested_list, only parameters address and value_index are obligatory. Defaults of the other
-        parameters are the same with the function read_memory.
-
-    Examples:
-        All parameters are passed-->[[address1, value_index1, length1, zero_terminate1, signed], ...]
-        Parameters are partially passed--▼
-        [[address1, value_index1],[address2, value_index2, length2],[address3, value_index3, length3], ...]
-
-    Returns:
-        list: A list of the values read.
-        If any errors occurs while reading addresses, it's ignored and the belonging address is returned as None
-        For instance; If 4 addresses has been read and 3rd one is problematic, the returned list will be
-        [returned_value1,returned_value2,None,returned_value4]
-    """
-    data_read_list = []
-    mem_handle = open(mem_file, "rb")
-
-    for item in nested_list:
-        address = item[0]
-        index = item[1]
-        try:
-            length = item[2]
-        except IndexError:
-            length = 0
-        try:
-            zero_terminate = item[3]
-        except IndexError:
-            zero_terminate = True
-        try:
-            signed = item[4]
-        except IndexError:
-            signed = False
-        data_read = read_memory(address, index, length, zero_terminate, signed, mem_handle)
-        data_read_list.append(data_read)
-    mem_handle.close()
-    return data_read_list
 
 
 #:tag:MemoryRW
@@ -2051,14 +2015,10 @@ def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.IN
             print("An exception occurred while trying to compile the given regex\n", str(e))
             return
     str_dict = get_dissect_code_data(True, False, False)[0]
-    nested_list = []
-    referenced_list = []
+    mem_handle = memory_handle()
     returned_list = []
-    for item in str_dict:
-        nested_list.append((int(item, 16), value_index, 100))
-        referenced_list.append(item)
-    value_list = read_memory_multiple(nested_list)
-    for index, value in enumerate(value_list):
+    for address, refs in str_dict.items():
+        value = read_memory(int(address, 16), value_index, 100, mem_handle=mem_handle)
         value_str = "" if value is None else str(value)
         if not value_str:
             continue
@@ -2072,9 +2032,9 @@ def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.IN
             else:
                 if value_str.lower().find(searched_str.lower()) == -1:
                     continue
-        ref_addr = referenced_list[index]
-        returned_list.append((ref_addr, len(str_dict[ref_addr]), value))
+        returned_list.append((address, len(refs), value))
     str_dict.close()
+    mem_handle.close()
     return returned_list
 
 
