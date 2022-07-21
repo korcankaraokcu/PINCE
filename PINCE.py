@@ -852,10 +852,8 @@ class MainForm(QMainWindow, MainWindow):
         if GDB_Engine.currentpid == -1 or self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
-        table_contents = []
+        mem_handle = GDB_Engine.memory_handle()
         address_expr_list = []
-        value_type_list = []
-        value_repr_list = []
         rows = []
         while True:
             row = it.value()
@@ -863,26 +861,21 @@ class MainForm(QMainWindow, MainWindow):
                 break
             it += 1
             address_expr_list.append(row.data(ADDR_COL, Qt.UserRole))
-            value_type_list.append(row.data(TYPE_COL, Qt.UserRole))
             rows.append(row)
         try:
             address_list = [item.address for item in GDB_Engine.examine_expressions(address_expr_list)]
         except type_defs.InferiorRunningException:
             address_list = address_expr_list
-        for address, value_type in zip(address_list, value_type_list):
-            signed = False
-            if value_type.value_repr == type_defs.VALUE_REPR.SIGNED:
-                signed = True
-            current_item = (address, value_type.value_index, value_type.length, value_type.zero_terminate, signed)
-            table_contents.append(current_item)
-            value_repr_list.append(value_type.value_repr)
-        new_table_contents = GDB_Engine.read_memory_multiple(table_contents)
-        for row, address, address_expr, value, value_repr in zip(rows, address_list, address_expr_list,
-                                                                 new_table_contents, value_repr_list):
-            row.setText(ADDR_COL, address or address_expr)
+        for index, row in enumerate(rows):
+            value_type = row.data(TYPE_COL, Qt.UserRole)
+            address = address_list[index]
+            signed = True if value_type.value_repr == type_defs.VALUE_REPR.SIGNED else False
+            value = GDB_Engine.read_memory(address, value_type.value_index, value_type.length,
+                                           value_type.zero_terminate, signed, mem_handle=mem_handle)
+            row.setText(ADDR_COL, address or address_expr_list[index])
             if value is None:
                 value = ""
-            elif value_repr == type_defs.VALUE_REPR.HEX:
+            elif value_type.value_repr == type_defs.VALUE_REPR.HEX:
                 value = hex(value)
             else:
                 value = str(value)
@@ -3991,13 +3984,11 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.tableWidget_TrackInfo.selectRow(self.last_selected_row)
 
     def update_values(self):
-        param_list = []
+        mem_handle = GDB_Engine.memory_handle()
         value_type = self.comboBox_ValueType.currentIndex()
         for row in range(self.tableWidget_TrackInfo.rowCount()):
             address = self.tableWidget_TrackInfo.item(row, TRACK_BREAKPOINT_ADDR_COL).text()
-            param_list.append((address, value_type, 10))
-        value_list = GDB_Engine.read_memory_multiple(param_list)
-        for row, value in enumerate(value_list):
+            value = GDB_Engine.read_memory(address, value_type, 10, mem_handle=mem_handle)
             value = "" if value is None else str(value)
             self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(value))
         GuiUtils.resize_to_contents(self.tableWidget_TrackInfo)
