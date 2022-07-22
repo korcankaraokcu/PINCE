@@ -718,7 +718,6 @@ class MainForm(QMainWindow, MainWindow):
             frozen.freeze_type = freeze_type
 
             # TODO: Create a QWidget subclass with signals so freeze type can be changed by clicking on the cell
-            # This also helps it to accept rich text, colors for arrows would be nice
             if freeze_type == type_defs.FREEZE_TYPE.DEFAULT:
                 row.setText(FROZEN_COL, "")
                 row.setForeground(FROZEN_COL, QBrush(QColor(0, 0, 0)))
