@@ -67,7 +67,7 @@ If you like to uninstall PINCE, just delete this folder, almost everything is in
 ***Notes:***
 - GDB enhancements (peda, pwndbg, etc) that use a global gdbinit file might cause PINCE to misfunction at times. Please disable them or use them locally before starting PINCE
 - If you are having problems with your default gdb version, you can use the `install_gdb.sh` script to install another version locally. Read the comments in it for more information
-- Check #116 for a possible fix if you encounter `'GtkSettings' has no property named 'gtk-fallback-icon-theme'`
+- Check https://github.com/korcankaraokcu/PINCE/issues/116 for a possible fix if you encounter `'GtkSettings' has no property named 'gtk-fallback-icon-theme'`
 
 # Running PINCE  
 Just run ```sh PINCE.sh``` in the PINCE directory
@@ -95,12 +95,10 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 # Current Roadmap
 - Refactor file naming conventions(decide on snake_case or camelCase for modules etc)
 - Create ```CONTRIBUTING.md``` and combine all non-tutorial notes within it
-- Consider replacing read_memory_multiple function with mem_handle&read_memory functions, this fixes the "read_memory_multiple follows a bad design pattern" step
 - Refactorize memory write/read functions
 - - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k. Only update the visible rows to prevent this(check ```disassemble_check_viewport``` for an example)
 - - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
 - - Consider using a class instead of primitive return types to store the raw bytes. This class should also include a method to display None type as red '??' text for Qt
-- - read_memory_multiple follows a bad design pattern, use named tuples or something like that
 - - Provide an option to cut BOM bytes when writing to memory with the types UTF-16 and UTF-32
 - - Put a warning for users about replacement bytes for non UTF-8 types
 - - Extend string types with LE and BE variants of UTF-16 and UTF-32
