@@ -721,10 +721,13 @@ class MainForm(QMainWindow, MainWindow):
             # This also helps it to accept rich text, colors for arrows would be nice
             if freeze_type == type_defs.FREEZE_TYPE.DEFAULT:
                 row.setText(FROZEN_COL, "")
+                row.setForeground(FROZEN_COL, QBrush(QColor(0, 0, 0)))
             elif freeze_type == type_defs.FREEZE_TYPE.INCREMENT:
                 row.setText(FROZEN_COL, "▲")
+                row.setForeground(FROZEN_COL, QBrush(QColor(0, 255, 0)))
             elif freeze_type == type_defs.FREEZE_TYPE.DECREMENT:
                 row.setText(FROZEN_COL, "▼")
+                row.setForeground(FROZEN_COL, QBrush(QColor(255, 0, 0)))
 
     def toggle_selected_records(self):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
@@ -1334,6 +1337,7 @@ class MainForm(QMainWindow, MainWindow):
                 frozen.value = row.text(VALUE_COL)
             else:
                 row.setText(FROZEN_COL, "")
+                row.setForeground(FROZEN_COL, QBrush(QColor(0, 0, 0)))
 
     def treeWidget_AddressTable_change_repr(self, new_repr):
         value_type = GuiUtils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.UserRole)
