@@ -157,11 +157,9 @@ Gibus <lilac66.dev@gmail.com>
 
 # Supported platforms
 - Ubuntu and its flavors, actively tested on Kubuntu
-- Debian
-- Kali Linux
-- Parrot OS
-- Linux Mint (install the package "python3-psutil" if you encounter ImportError or NameError, thanks Gibus)
+- Debian and Debian-based (Kali, Mint etc.)
 - Archlinux(tag [cagriulas](https://github.com/cagriulas) or [TsarFox](https://github.com/TsarFox) when creating an issue)
+- SUSE
 
 # Trusted Sources
   * [Official github page](https://github.com/korcankaraokcu/PINCE)
