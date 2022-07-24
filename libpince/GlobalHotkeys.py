@@ -34,8 +34,8 @@ class GlobalHotKey:
         
 
 #you can find your event(number) with this command, just add the prefix /dev/input
-#grep "keyboard" <( ls -l /dev/input/by-id/) | grep -Eo "[^.]+$"
-#if there is multiple of them, just try them i haven't figured else.
+# grep -E  'Handlers|EV=' /proc/bus/input/devices | grep -B1 'EV=120013' | grep -Eo 'event[0-9]+'
+
 filename="/dev/input/event3"
 
 
