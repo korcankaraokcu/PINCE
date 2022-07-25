@@ -718,13 +718,15 @@ class MainForm(QMainWindow, MainWindow):
             frozen.freeze_type = freeze_type
 
             # TODO: Create a QWidget subclass with signals so freeze type can be changed by clicking on the cell
-            # This also helps it to accept rich text, colors for arrows would be nice
             if freeze_type == type_defs.FREEZE_TYPE.DEFAULT:
                 row.setText(FROZEN_COL, "")
+                row.setForeground(FROZEN_COL, QBrush(QColor(0, 0, 0)))
             elif freeze_type == type_defs.FREEZE_TYPE.INCREMENT:
                 row.setText(FROZEN_COL, "▲")
+                row.setForeground(FROZEN_COL, QBrush(QColor(0, 255, 0)))
             elif freeze_type == type_defs.FREEZE_TYPE.DECREMENT:
                 row.setText(FROZEN_COL, "▼")
+                row.setForeground(FROZEN_COL, QBrush(QColor(255, 0, 0)))
 
     def toggle_selected_records(self):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
@@ -1065,8 +1067,8 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setRowCount(0)
         current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
         length = self._scan_to_length(current_type)
-
-        for n, address, offset, region_type, value, result_type in matches:
+        mem_handle = GDB_Engine.memory_handle()
+        for n, address, offset, region_type, val, result_type in matches:
             n = int(n)
             address = "0x" + address
             current_item = QTableWidgetItem(address)
@@ -1076,10 +1078,9 @@ class MainForm(QMainWindow, MainWindow):
             if type_defs.VALUE_INDEX.is_integer(value_index) and result.endswith("s"):
                 signed = True
             current_item.setData(Qt.UserRole, (value_index, signed))
+            value = str(GDB_Engine.read_memory(address, value_index, length, signed=signed, mem_handle=mem_handle))
             self.tableWidget_valuesearchtable.insertRow(self.tableWidget_valuesearchtable.rowCount())
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_ADDRESS_COL, current_item)
-            if current_type == type_defs.SCAN_INDEX.INDEX_STRING:
-                value = GDB_Engine.read_memory(address, type_defs.VALUE_INDEX.INDEX_STRING_UTF8, length)
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_PREVIOUS_COL, QTableWidgetItem(value))
             if n == 10000:
@@ -1350,6 +1351,7 @@ class MainForm(QMainWindow, MainWindow):
                 frozen.value = row.text(VALUE_COL)
             else:
                 row.setText(FROZEN_COL, "")
+                row.setForeground(FROZEN_COL, QBrush(QColor(0, 0, 0)))
 
     def treeWidget_AddressTable_change_repr(self, new_repr):
         value_type = GuiUtils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.UserRole)
