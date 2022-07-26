@@ -467,8 +467,9 @@ class PointerType:
     def __init__(self, base_address, offsets_list=None):
         """
         Args:
-            base_address (int): The base address of where this pointer starts from.
-            offsets_list (list): List of offsets to reach the final pointed data. Can be None for single-level pointer.
+            base_address (str, int): The base address of where this pointer starts from. Can be str expression or int.
+            offsets_list (list): List of offsets to reach the final pointed data. Can be None for no offsets.
+            Last offset in list won't be dereferenced to emulate CE behaviour.
         """
         self.base_address = base_address
         if offsets_list == None:
@@ -479,11 +480,11 @@ class PointerType:
     def serialize(self):
         return self.base_address, self.offsets_list
 
-    def get_hex_address(self):
+    def get_base_address(self):
         """
-        Returns the text hex representation of this pointer's base address
+        Returns the text representation of this pointer's base address
         """
-        return hex(self.base_address)
+        return hex(self.base_address) if type(self.base_address) != str else self.base_address
 
 
 class RegisterQueue:
