@@ -871,6 +871,8 @@ class MainForm(QMainWindow, MainWindow):
             address_data = row.data(ADDR_COL, Qt.UserRole)
             if isinstance(address_data, type_defs.PointerType):
                 pointer_address = GDB_Engine.read_pointer(address_data)
+                if pointer_address == None:
+                    continue
                 address_expr_list.append(hex(pointer_address))
             else:
                 address_expr_list.append(address_data)
@@ -1429,7 +1431,7 @@ class MainForm(QMainWindow, MainWindow):
     def change_address_table_entries(self, row, description="No Description", address_expr="", value_type=None):
         if isinstance(address_expr, type_defs.PointerType):
             address = GDB_Engine.read_pointer(address_expr)
-            address_text = f'P->{hex(address)}'
+            address_text = f'P->{hex(address)}' if address != None else address_expr.get_base_address()
         else:
             try:
                 address = GDB_Engine.examine_expression(address_expr).address
@@ -1562,7 +1564,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.widget_Pointer.hide()
         else:
             self.lineEdit_address.setEnabled(False)
-            self.lineEdit_PtrStartAddress.setText(address.get_hex_address())
+            self.lineEdit_PtrStartAddress.setText(address.get_base_address())
             self.checkBox_IsPointer.setChecked(True)
             self.widget_Pointer.show()
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
@@ -1613,15 +1615,11 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def update_value_of_address(self):
         if self.checkBox_IsPointer.isChecked():
-            try:
-                ptr_base_address = int(self.lineEdit_PtrStartAddress.text(), 16)
-            except ValueError:  # if text empty or 0x
-                ptr_base_address = 0
-            address = GDB_Engine.read_pointer(type_defs.PointerType(ptr_base_address))
+            address = GDB_Engine.read_pointer(type_defs.PointerType(self.lineEdit_PtrStartAddress.text()))
             if address != None:
                 address_text = hex(address)
             else:
-                address_text = hex(0)
+                address_text = "??"
             self.lineEdit_address.setText(address_text)
         else:
             address = self.lineEdit_address.text()
@@ -1697,11 +1695,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             zero_terminate = True
         value_index = self.comboBox_ValueType.currentIndex()
         if self.checkBox_IsPointer.isChecked():
-            try:
-                ptr_base_address = int(self.lineEdit_PtrStartAddress.text(), 16)
-            except ValueError:
-                ptr_base_address = 0
-            address = type_defs.PointerType(ptr_base_address)
+            address = type_defs.PointerType(self.lineEdit_PtrStartAddress.text())
         return description, address, value_index, length, zero_terminate
 
 

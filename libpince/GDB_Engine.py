@@ -776,15 +776,29 @@ def read_pointer(pointer_type):
         value_index = type_defs.VALUE_INDEX.INDEX_INT64
 
     try:
-        with open(mem_file, "rb") as mem_handle:
-            deref_address = read_memory(pointer_type.base_address, value_index, mem_handle=mem_handle)
+        start_address = examine_expression(pointer_type.base_address).address
+    except type_defs.InferiorRunningException:
+        if type(pointer_type.base_address) == str:
+            try:
+                start_address = int(pointer_type.base_address, 16)
+            except ValueError:
+                start_address = 0
+        else:
+            start_address = pointer_type.base_address
+
+    try:
+        with memory_handle() as mem_handle:
+            final_address = deref_address = read_memory(start_address, value_index, mem_handle=mem_handle)
             for offset in pointer_type.offsets_list:
                 offset_address = deref_address + offset
-                deref_address = read_memory(offset_address, value_index, mem_handle=mem_handle)
+                if offset != pointer_type.offsets_list[-1]:  # CE derefs every offset except for the last one
+                    deref_address = read_memory(offset_address, value_index, mem_handle=mem_handle)
+                else:
+                    final_address = offset_address
     except OSError:
-        deref_address = pointer_type.base_address
+        final_address = start_address
 
-    return deref_address
+    return final_address
 
 
 def memory_handle():
