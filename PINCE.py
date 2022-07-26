@@ -70,6 +70,8 @@ from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
 from GUI.CustomValidators.HexValidator import QHexValidator
 
+from keyboard import add_hotkey
+
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
@@ -328,18 +330,11 @@ class MainForm(QMainWindow, MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.hotkey_to_shortcut = {}  # Dict[str:QShortcut]-->Dict[Hotkey.name:QShortcut(QKeySequence(Hotkey.value)]
-        hotkey_to_func = {
-            Hotkeys.pause_hotkey: self.pause_hotkey_pressed,
-            Hotkeys.break_hotkey: self.break_hotkey_pressed,
-            Hotkeys.continue_hotkey: self.continue_hotkey_pressed,
-            Hotkeys.toggle_attach_hotkey: self.toggle_attach_hotkey_pressed
-        }
-        for hotkey, func in hotkey_to_func.items():
-            current_shortcut = QShortcut(QKeySequence(hotkey.value), self)
-            current_shortcut.activated.connect(func)
-            current_shortcut.setContext(hotkey.context)
-            self.hotkey_to_shortcut[hotkey.name] = current_shortcut
+        #setting up the Global hotkeys
+        add_hotkey(Hotkeys.pause_hotkey.default, self.pause_hotkey_pressed)
+        add_hotkey(Hotkeys.break_hotkey.default, self.break_hotkey_pressed)
+        add_hotkey(Hotkeys.continue_hotkey.default, self.continue_hotkey_pressed)
+        add_hotkey(Hotkeys.toggle_attach_hotkey.default, self.toggle_attach_hotkey_pressed)
         GuiUtils.center(self)
         self.treeWidget_AddressTable.setColumnWidth(FROZEN_COL, 50)
         self.treeWidget_AddressTable.setColumnWidth(DESC_COL, 150)
@@ -527,9 +522,7 @@ class MainForm(QMainWindow, MainWindow):
         app.setWindowIcon(QIcon(os.path.join(SysUtils.get_logo_directory(), logo_path)))
         auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
         GDB_Engine.set_gdb_output_mode(gdb_output_mode)
-        for hotkey in Hotkeys.get_hotkeys():
-            hotkey.value = self.settings.value("Hotkeys/" + hotkey.name)
-            self.hotkey_to_shortcut[hotkey.name].setKey(QKeySequence(hotkey.value))
+
         try:
             self.memory_view_window.set_dynamic_debug_hotkeys()
         except AttributeError:
