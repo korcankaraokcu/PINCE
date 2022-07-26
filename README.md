@@ -95,12 +95,10 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 # Current Roadmap
 - Refactor file naming conventions(decide on snake_case or camelCase for modules etc)
 - Create ```CONTRIBUTING.md``` and combine all non-tutorial notes within it
-- Consider replacing read_memory_multiple function with mem_handle&read_memory functions, this fixes the "read_memory_multiple follows a bad design pattern" step
 - Refactorize memory write/read functions
 - - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k. Only update the visible rows to prevent this(check ```disassemble_check_viewport``` for an example)
 - - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
 - - Consider using a class instead of primitive return types to store the raw bytes. This class should also include a method to display None type as red '??' text for Qt
-- - read_memory_multiple follows a bad design pattern, use named tuples or something like that
 - - Provide an option to cut BOM bytes when writing to memory with the types UTF-16 and UTF-32
 - - Put a warning for users about replacement bytes for non UTF-8 types
 - - Extend string types with LE and BE variants of UTF-16 and UTF-32
@@ -159,11 +157,9 @@ Gibus <lilac66.dev@gmail.com>
 
 # Supported platforms
 - Ubuntu and its flavors, actively tested on Kubuntu
-- Debian
-- Kali Linux
-- Parrot OS
-- Linux Mint (install the package "python3-psutil" if you encounter ImportError or NameError, thanks Gibus)
+- Debian and Debian-based (Kali, Mint etc.)
 - Archlinux(tag [cagriulas](https://github.com/cagriulas) or [TsarFox](https://github.com/TsarFox) when creating an issue)
+- SUSE
 
 # Trusted Sources
   * [Official github page](https://github.com/korcankaraokcu/PINCE)

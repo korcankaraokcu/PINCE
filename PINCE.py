@@ -395,9 +395,11 @@ class MainForm(QMainWindow, MainWindow):
         self.check_status_thread.process_running.connect(self.memory_view_window.process_running)
         self.check_status_thread.start()
         self.update_address_table_thread = Worker(self.update_address_table_loop)
+        self.update_search_table_thread = Worker(self.update_search_table_loop)
         self.freeze_thread = Worker(self.freeze_loop)
         global threadpool
         threadpool.start(self.update_address_table_thread)
+        threadpool.start(self.update_search_table_thread)
         threadpool.start(self.freeze_thread)
         self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
         self.shortcut_open_file.activated.connect(self.pushButton_Open_clicked)
@@ -716,13 +718,15 @@ class MainForm(QMainWindow, MainWindow):
             frozen.freeze_type = freeze_type
 
             # TODO: Create a QWidget subclass with signals so freeze type can be changed by clicking on the cell
-            # This also helps it to accept rich text, colors for arrows would be nice
             if freeze_type == type_defs.FREEZE_TYPE.DEFAULT:
                 row.setText(FROZEN_COL, "")
+                row.setForeground(FROZEN_COL, QBrush(QColor(0, 0, 0)))
             elif freeze_type == type_defs.FREEZE_TYPE.INCREMENT:
                 row.setText(FROZEN_COL, "▲")
+                row.setForeground(FROZEN_COL, QBrush(QColor(0, 255, 0)))
             elif freeze_type == type_defs.FREEZE_TYPE.DECREMENT:
                 row.setText(FROZEN_COL, "▼")
+                row.setForeground(FROZEN_COL, QBrush(QColor(255, 0, 0)))
 
     def toggle_selected_records(self):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
@@ -852,10 +856,8 @@ class MainForm(QMainWindow, MainWindow):
         if GDB_Engine.currentpid == -1 or self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
-        table_contents = []
+        mem_handle = GDB_Engine.memory_handle()
         address_expr_list = []
-        value_type_list = []
-        value_repr_list = []
         rows = []
         while True:
             row = it.value()
@@ -863,26 +865,21 @@ class MainForm(QMainWindow, MainWindow):
                 break
             it += 1
             address_expr_list.append(row.data(ADDR_COL, Qt.UserRole))
-            value_type_list.append(row.data(TYPE_COL, Qt.UserRole))
             rows.append(row)
         try:
             address_list = [item.address for item in GDB_Engine.examine_expressions(address_expr_list)]
         except type_defs.InferiorRunningException:
             address_list = address_expr_list
-        for address, value_type in zip(address_list, value_type_list):
-            signed = False
-            if value_type.value_repr == type_defs.VALUE_REPR.SIGNED:
-                signed = True
-            current_item = (address, value_type.value_index, value_type.length, value_type.zero_terminate, signed)
-            table_contents.append(current_item)
-            value_repr_list.append(value_type.value_repr)
-        new_table_contents = GDB_Engine.read_memory_multiple(table_contents)
-        for row, address, address_expr, value, value_repr in zip(rows, address_list, address_expr_list,
-                                                                 new_table_contents, value_repr_list):
-            row.setText(ADDR_COL, address or address_expr)
+        for index, row in enumerate(rows):
+            value_type = row.data(TYPE_COL, Qt.UserRole)
+            address = address_list[index]
+            signed = True if value_type.value_repr == type_defs.VALUE_REPR.SIGNED else False
+            value = GDB_Engine.read_memory(address, value_type.value_index, value_type.length,
+                                           value_type.zero_terminate, signed, mem_handle=mem_handle)
+            row.setText(ADDR_COL, address or address_expr_list[index])
             if value is None:
                 value = ""
-            elif value_repr == type_defs.VALUE_REPR.HEX:
+            elif value_type.value_repr == type_defs.VALUE_REPR.HEX:
                 value = hex(value)
             else:
                 value = str(value)
@@ -1054,17 +1051,20 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setRowCount(0)
         current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
         length = self._scan_to_length(current_type)
-
-        for n, address, offset, region_type, value, result_type in matches:
+        mem_handle = GDB_Engine.memory_handle()
+        for n, address, offset, region_type, val, result_type in matches:
             n = int(n)
             address = "0x" + address
             current_item = QTableWidgetItem(address)
-            value_index = type_defs.scanmem_result_to_index_dict[result_type.split(" ")[0]]
-            current_item.setData(Qt.UserRole, value_index)
+            result = result_type.split(" ")[0]
+            value_index = type_defs.scanmem_result_to_index_dict[result]
+            signed = False
+            if type_defs.VALUE_INDEX.is_integer(value_index) and result.endswith("s"):
+                signed = True
+            current_item.setData(Qt.UserRole, (value_index, signed))
+            value = str(GDB_Engine.read_memory(address, value_index, length, signed=signed, mem_handle=mem_handle))
             self.tableWidget_valuesearchtable.insertRow(self.tableWidget_valuesearchtable.rowCount())
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_ADDRESS_COL, current_item)
-            if current_type == type_defs.SCAN_INDEX.INDEX_STRING:
-                value = GDB_Engine.read_memory(address, type_defs.VALUE_INDEX.INDEX_STRING_UTF8, length)
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_PREVIOUS_COL, QTableWidgetItem(value))
             if n == 10000:
@@ -1081,7 +1081,7 @@ class MainForm(QMainWindow, MainWindow):
     def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
         current_item = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL)
         length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.UserRole))
-        self.add_entry_to_addresstable("", current_item.text(), current_item.data(Qt.UserRole), length)
+        self.add_entry_to_addresstable("", current_item.text(), current_item.data(Qt.UserRole)[0], length)
 
     def comboBox_ValueType_current_index_changed(self):
         current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
@@ -1199,7 +1199,7 @@ class MainForm(QMainWindow, MainWindow):
         for row in self.tableWidget_valuesearchtable.selectedItems():
             i = i + 1
             if i % 3 == 0:
-                self.add_entry_to_addresstable("", row.text(), row.data(Qt.UserRole), length)
+                self.add_entry_to_addresstable("", row.text(), row.data(Qt.UserRole)[0], length)
 
     def on_inferior_exit(self):
         if GDB_Engine.currentpid == -1:
@@ -1271,7 +1271,15 @@ class MainForm(QMainWindow, MainWindow):
                 try:
                     self.update_address_table()
                 except:
-                    print("Update Table failed :(")
+                    print("Update Address Table failed :(")
+
+    def update_search_table_loop(self):
+        while Exiting == 0:
+            sleep(0.5)
+            try:
+                self.update_search_table()
+            except:
+                print("Update Search Table failed :(")
 
     def freeze_loop(self):
         while Exiting == 0:
@@ -1280,6 +1288,25 @@ class MainForm(QMainWindow, MainWindow):
                 self.freeze()
             except:
                 print("Freeze failed :(")
+
+    # ----------------------------------------------------
+
+    def update_search_table(self):
+        row_count = self.tableWidget_valuesearchtable.rowCount()
+        if row_count > 0:
+            length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.UserRole))
+            mem_handle = GDB_Engine.memory_handle()
+            for row_index in range(row_count):
+                address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
+                previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
+                value_index, signed = address_item.data(Qt.UserRole)
+                address = address_item.text()
+                new_value = str(GDB_Engine.read_memory(address, value_index, length, signed=signed,
+                                                       mem_handle=mem_handle))
+                value_item = QTableWidgetItem(new_value)
+                if new_value != previous_text:
+                    value_item.setForeground(QBrush(QColor(255, 0, 0)))
+                self.tableWidget_valuesearchtable.setItem(row_index, SEARCH_TABLE_VALUE_COL, value_item)
 
     def freeze(self):
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
@@ -1301,8 +1328,6 @@ class MainForm(QMainWindow, MainWindow):
                 GDB_Engine.write_memory(address, value_index, value)
             it += 1
 
-    # ----------------------------------------------------
-
     def treeWidget_AddressTable_item_clicked(self, row, column):
         if column == FROZEN_COL:
             if row.checkState(FROZEN_COL) == Qt.Checked:
@@ -1310,6 +1335,7 @@ class MainForm(QMainWindow, MainWindow):
                 frozen.value = row.text(VALUE_COL)
             else:
                 row.setText(FROZEN_COL, "")
+                row.setForeground(FROZEN_COL, QBrush(QColor(0, 0, 0)))
 
     def treeWidget_AddressTable_change_repr(self, new_repr):
         value_type = GuiUtils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.UserRole)
@@ -3991,13 +4017,11 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.tableWidget_TrackInfo.selectRow(self.last_selected_row)
 
     def update_values(self):
-        param_list = []
+        mem_handle = GDB_Engine.memory_handle()
         value_type = self.comboBox_ValueType.currentIndex()
         for row in range(self.tableWidget_TrackInfo.rowCount()):
             address = self.tableWidget_TrackInfo.item(row, TRACK_BREAKPOINT_ADDR_COL).text()
-            param_list.append((address, value_type, 10))
-        value_list = GDB_Engine.read_memory_multiple(param_list)
-        for row, value in enumerate(value_list):
+            value = GDB_Engine.read_memory(address, value_type, 10, mem_handle=mem_handle)
             value = "" if value is None else str(value)
             self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(value))
         GuiUtils.resize_to_contents(self.tableWidget_TrackInfo)
