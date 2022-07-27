@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>224</width>
-    <height>360</height>
+    <height>348</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -25,7 +25,7 @@
   <property name="maximumSize">
    <size>
     <width>224</width>
-    <height>360</height>
+    <height>348</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -37,12 +37,6 @@
      <property name="enabled">
       <bool>true</bool>
      </property>
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
      <property name="minimumSize">
       <size>
        <width>0</width>
@@ -50,6 +44,21 @@
       </size>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_Pointers">
         <item>
