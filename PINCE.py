@@ -70,7 +70,7 @@ from GUI.CustomAbstractTableModels.HexModel import QHexModel
 from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
 from GUI.CustomValidators.HexValidator import QHexValidator
 
-from keyboard import add_hotkey
+from keyboard import add_hotkey, remove_hotkey
 
 instances = []  # Holds temporary instances that will be deleted later on
 
@@ -89,12 +89,36 @@ logo_path = str
 
 class Hotkeys:
     class Hotkey:
-        def __init__(self, name="", desc="", default="", value="", context=Qt.ApplicationShortcut):
-            self.name = name
-            self.desc = desc
-            self.default = default
-            self.value = value
-            self.context = context
+        def __init__(self, name="", desc="", default="", func=None, custom="", handle=None):
+           self.name = name
+           self.desc = desc
+           self.default = default
+           self.func = func
+           self.custom = custom
+           if default == "" or func is None:
+               self.handle = handle
+           else:
+               self.handle = add_hotkey(default, func)
+
+        def change_key(self, custom):
+            print(self.func)
+            if self.handle is not None:
+                remove_hotkey(self.handle)
+            self.handle = add_hotkey(custom.lower(), self.func)
+        
+        def change_func(self, func):
+            self.func = func
+            if self.handle is not None:
+                remove_hotkey(self.handle)
+            if self.custom != "":
+                self.handle = add_hotkey(self.custom, func)
+            else:
+                self.handle = add_hotkey(self.default, func)
+                
+        def get_active_key(self):
+            if self.custom == "":
+                return self.default
+            return self.custom
 
     pause_hotkey = Hotkey("pause_hotkey", "Pause the process", "F1")
     break_hotkey = Hotkey("break_hotkey", "Break the process", "F2")
@@ -256,7 +280,7 @@ def except_hook(exception_type, value, tb):
                 QMessageBox.information(focused_widget, "Error", "GDB isn't initialized yet")
             elif exception_type == type_defs.InferiorRunningException:
                 error_dialog = InputDialogForm(item_list=[(
-                    "Process is running" + "\nPress " + Hotkeys.break_hotkey.value + " to stop process" +
+                    "Process is running" + "\nPress " + Hotkeys.break_hotkey.get_active_key() + " to stop process" +
                     "\n\nGo to Settings->General to disable this dialog",)], buttons=[QDialogButtonBox.Ok])
                 error_dialog.exec_()
     traceback.print_exception(exception_type, value, tb)
@@ -330,11 +354,15 @@ class MainForm(QMainWindow, MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        #setting up the Global hotkeys
-        add_hotkey(Hotkeys.pause_hotkey.default, self.pause_hotkey_pressed)
-        add_hotkey(Hotkeys.break_hotkey.default, self.break_hotkey_pressed)
-        add_hotkey(Hotkeys.continue_hotkey.default, self.continue_hotkey_pressed)
-        add_hotkey(Hotkeys.toggle_attach_hotkey.default, self.toggle_attach_hotkey_pressed)
+        self.hotkey_to_shortcut = {} 
+        hotkey_to_func = {
+            Hotkeys.pause_hotkey: self.pause_hotkey_pressed,
+            Hotkeys.break_hotkey: self.break_hotkey_pressed,
+            Hotkeys.continue_hotkey: self.continue_hotkey_pressed,
+            Hotkeys.toggle_attach_hotkey: self.toggle_attach_hotkey_pressed
+        }
+        for hotkey, func in hotkey_to_func.items():
+            hotkey.change_func(func)
         GuiUtils.center(self)
         self.treeWidget_AddressTable.setColumnWidth(FROZEN_COL, 50)
         self.treeWidget_AddressTable.setColumnWidth(DESC_COL, 150)
@@ -522,7 +550,8 @@ class MainForm(QMainWindow, MainWindow):
         app.setWindowIcon(QIcon(os.path.join(SysUtils.get_logo_directory(), logo_path)))
         auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
         GDB_Engine.set_gdb_output_mode(gdb_output_mode)
-
+        for hotkey in Hotkeys.get_hotkeys():
+            hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
         try:
             self.memory_view_window.set_dynamic_debug_hotkeys()
         except AttributeError:
@@ -2271,9 +2300,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     process_running = pyqtSignal()
 
     def set_dynamic_debug_hotkeys(self):
-        self.actionBreak.setText("Break[" + Hotkeys.break_hotkey.value + "]")
-        self.actionRun.setText("Run[" + Hotkeys.continue_hotkey.value + "]")
-        self.actionToggle_Attach.setText("Toggle Attach[" + Hotkeys.toggle_attach_hotkey.value + "]")
+        self.actionBreak.setText("Break[" + Hotkeys.break_hotkey.get_active_key() + "]")
+        self.actionRun.setText("Run[" + Hotkeys.continue_hotkey.get_active_key() + "]")
+        self.actionToggle_Attach.setText("Toggle Attach[" + Hotkeys.toggle_attach_hotkey.get_active_key() + "]")
 
     def set_debug_menu_shortcuts(self):
         self.shortcut_step = QShortcut(QKeySequence("F7"), self)
@@ -3971,7 +4000,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
             QMessageBox.information(self, "Error", "Unable to track breakpoint at expression " + address)
             return
         self.label_Info.setText("Pause the process to refresh 'Value' part of the table(" +
-                                Hotkeys.pause_hotkey.value + " or " + Hotkeys.break_hotkey.value + ")")
+                                Hotkeys.pause_hotkey.get_active_key() + " or " + Hotkeys.break_hotkey.get_active_key() + ")")
         self.address = address
         self.breakpoint = breakpoint
         self.info = {}
