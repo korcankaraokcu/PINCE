@@ -101,9 +101,11 @@ class Hotkeys:
                self.handle = add_hotkey(default, func)
 
         def change_key(self, custom):
-            print(self.func)
             if self.handle is not None:
                 remove_hotkey(self.handle)
+                self.handle = None
+            if custom == '':
+        	    return
             self.handle = add_hotkey(custom.lower(), self.func)
         
         def change_func(self, func):
