@@ -60,7 +60,12 @@ Pre-release screenshots:
   * PINCE provides a trainer auto-generated from current address table on demand by using libpince and PyQT5 together
 
 # Installing
-Clone this repo by running `git clone --recursive https://github.com/korcankaraokcu/PINCE` then run ```sudo sh install_pince.sh``` in the PINCE directory. For Archlinux, you can also use the [AUR package](https://aur.archlinux.org/packages/pince-git/) as an alternative.
+```
+git clone --recursive https://github.com/korcankaraokcu/PINCE
+cd PINCE
+sudo sh install_pince.sh
+```
+For Archlinux, you can also use the [AUR package](https://aur.archlinux.org/packages/pince-git/) as an alternative.
 
 If you like to uninstall PINCE, just delete this folder, almost everything is installed locally. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them if you want.
 
