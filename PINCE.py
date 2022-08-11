@@ -1643,7 +1643,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         except KeyError:
             pass
 
-    def createOffsetLayout(self):
+    def addOffsetLayout(self, should_update=True):
         offsetFrame = QFrame(self.widget_Pointer)
         offsetLayout = QHBoxLayout(offsetFrame)
         offsetFrame.setLayout(offsetLayout)
@@ -1657,10 +1657,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         buttonRight = QPushButton(">", offsetFrame)
         buttonRight.setGeometry(QRect(100,5,20,20))
         offsetLayout.addWidget(buttonRight)
-        return offsetFrame
 
-    def addOffsetLayout(self, should_update=True):
-        self.offsetsList.append(self.createOffsetLayout())
+        self.offsetsList.append(offsetFrame)
         self.verticalLayout_Pointers.insertWidget(0, self.offsetsList[-1])
         if should_update:
             self.update_value_of_address()
