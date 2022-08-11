@@ -75,7 +75,7 @@ from keyboard import add_hotkey, remove_hotkey
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-21"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "master-22"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = int
 FreezeInterval = int
@@ -90,24 +90,24 @@ logo_path = str
 class Hotkeys:
     class Hotkey:
         def __init__(self, name="", desc="", default="", func=None, custom="", handle=None):
-           self.name = name
-           self.desc = desc
-           self.default = default
-           self.func = func
-           self.custom = custom
-           if default == "" or func is None:
-               self.handle = handle
-           else:
-               self.handle = add_hotkey(default, func)
+            self.name = name
+            self.desc = desc
+            self.default = default
+            self.func = func
+            self.custom = custom
+            if default == "" or func is None:
+                self.handle = handle
+            else:
+                self.handle = add_hotkey(default, func)
 
         def change_key(self, custom):
             if self.handle is not None:
                 remove_hotkey(self.handle)
                 self.handle = None
             if custom == '':
-        	    return
+                return
             self.handle = add_hotkey(custom.lower(), self.func)
-        
+
         def change_func(self, func):
             self.func = func
             if self.handle is not None:
@@ -116,7 +116,7 @@ class Hotkeys:
                 self.handle = add_hotkey(self.custom, func)
             else:
                 self.handle = add_hotkey(self.default, func)
-                
+
         def get_active_key(self):
             if self.custom == "":
                 return self.default
@@ -356,7 +356,7 @@ class MainForm(QMainWindow, MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.hotkey_to_shortcut = {} 
+        self.hotkey_to_shortcut = {}
         hotkey_to_func = {
             Hotkeys.pause_hotkey: self.pause_hotkey_pressed,
             Hotkeys.break_hotkey: self.break_hotkey_pressed,
@@ -513,6 +513,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.endGroup()
         self.apply_settings()
 
+    @GDB_Engine.execute_with_temporary_interruption
     def apply_after_init(self):
         global gdb_logging
         global ignored_signals
