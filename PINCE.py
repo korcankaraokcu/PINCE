@@ -711,7 +711,7 @@ class MainForm(QMainWindow, MainWindow):
         selected_row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if not selected_row:
             return
-        address = selected_row.text(ADDR_COL)
+        address = selected_row.text(ADDR_COL).strip("P->")
         value_type = selected_row.data(TYPE_COL, Qt.UserRole)
         if type_defs.VALUE_INDEX.is_string(value_type.value_index):
             value_text = selected_row.text(VALUE_COL)
@@ -726,14 +726,14 @@ class MainForm(QMainWindow, MainWindow):
     def browse_region_for_selected_row(self):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if row:
-            self.memory_view_window.hex_dump_address(int(row.text(ADDR_COL), 16))
+            self.memory_view_window.hex_dump_address(int(row.text(ADDR_COL).strip("P->"), 16))
             self.memory_view_window.show()
             self.memory_view_window.activateWindow()
 
     def disassemble_selected_row(self):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if row:
-            if self.memory_view_window.disassemble_expression(row.text(ADDR_COL), append_to_travel_history=True):
+            if self.memory_view_window.disassemble_expression(row.text(ADDR_COL).strip("P->"), append_to_travel_history=True):
                 self.memory_view_window.show()
                 self.memory_view_window.activateWindow()
 
@@ -823,8 +823,12 @@ class MainForm(QMainWindow, MainWindow):
             row.setData(FROZEN_COL, Qt.UserRole, frozen)
 
             # Deserialize the value_type param
+            if type(rec[1]) == list:
+                address_expr = type_defs.PointerType(*rec[1])
+            else:
+                address_expr = rec[1]
             value_type = type_defs.ValueType(*rec[2])
-            self.change_address_table_entries(row, *rec[:-2], value_type)
+            self.change_address_table_entries(row, rec[0], address_expr, value_type)
             self.insert_records(rec[-1], row, 0)
             rows.append(row)
 
@@ -889,7 +893,14 @@ class MainForm(QMainWindow, MainWindow):
             if not row:
                 break
             it += 1
-            address_expr_list.append(row.data(ADDR_COL, Qt.UserRole))
+            address_data = row.data(ADDR_COL, Qt.UserRole)
+            if isinstance(address_data, type_defs.PointerType):
+                pointer_address = GDB_Engine.read_pointer(address_data)
+                if pointer_address == None:
+                    continue
+                address_expr_list.append(hex(pointer_address))
+            else:
+                address_expr_list.append(address_data)
             rows.append(row)
         try:
             address_list = [item.address for item in GDB_Engine.examine_expressions(address_expr_list)]
@@ -901,7 +912,14 @@ class MainForm(QMainWindow, MainWindow):
             signed = True if value_type.value_repr == type_defs.VALUE_REPR.SIGNED else False
             value = GDB_Engine.read_memory(address, value_type.value_index, value_type.length,
                                            value_type.zero_terminate, signed, mem_handle=mem_handle)
-            row.setText(ADDR_COL, address or address_expr_list[index])
+
+            address_data = row.data(ADDR_COL, Qt.UserRole)
+            if isinstance(address_data, type_defs.PointerType):
+                address_text = f'P->{address}'
+            else:
+                address_text = address
+            row.setText(ADDR_COL, address_text or address_expr_list[index])
+
             if value is None:
                 value = ""
             elif value_type.value_repr == type_defs.VALUE_REPR.HEX:
@@ -1106,7 +1124,7 @@ class MainForm(QMainWindow, MainWindow):
     def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
         current_item = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL)
         length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.UserRole))
-        self.add_entry_to_addresstable("", current_item.text(), current_item.data(Qt.UserRole)[0], length)
+        self.add_entry_to_addresstable("No Description", current_item.text(), current_item.data(Qt.UserRole)[0], length)
 
     def comboBox_ValueType_current_index_changed(self):
         current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
@@ -1339,7 +1357,7 @@ class MainForm(QMainWindow, MainWindow):
             row = it.value()
             if row.checkState(FROZEN_COL) == Qt.Checked:
                 value_index = row.data(TYPE_COL, Qt.UserRole).value_index
-                address = row.text(ADDR_COL)
+                address = row.text(ADDR_COL).strip("P->")
                 frozen = row.data(FROZEN_COL, Qt.UserRole)
                 value = frozen.value
                 freeze_type = frozen.freeze_type
@@ -1381,7 +1399,7 @@ class MainForm(QMainWindow, MainWindow):
         if dialog.exec_():
             new_value = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
-                address = row.text(ADDR_COL)
+                address = row.text(ADDR_COL).strip("P->")  # strip leading pointer text if pointer
                 value_type = row.data(TYPE_COL, Qt.UserRole)
                 if type_defs.VALUE_INDEX.has_length(value_type.value_index):
                     unknown_type = SysUtils.parse_string(new_value, value_type.value_index)
@@ -1435,11 +1453,16 @@ class MainForm(QMainWindow, MainWindow):
             self.update_address_table()
 
     # Changes the column values of the given row
-    def change_address_table_entries(self, row, description="", address_expr="", value_type=None):
-        try:
-            address = GDB_Engine.examine_expression(address_expr).address
-        except type_defs.InferiorRunningException:
-            address = address_expr
+    def change_address_table_entries(self, row, description="No Description", address_expr="", value_type=None):
+        if isinstance(address_expr, type_defs.PointerType):
+            address = GDB_Engine.read_pointer(address_expr)
+            address_text = f'P->{hex(address)}' if address != None else address_expr.get_base_address()
+        else:
+            try:
+                address = GDB_Engine.examine_expression(address_expr).address
+            except type_defs.InferiorRunningException:
+                address = address_expr
+            address_text = hex(address) if type(address) != str else address
         value = ''
         if address:
             value = GDB_Engine.read_memory(address, value_type.value_index, value_type.length,
@@ -1448,7 +1471,7 @@ class MainForm(QMainWindow, MainWindow):
         assert isinstance(row, QTreeWidgetItem)
         row.setText(DESC_COL, description)
         row.setData(ADDR_COL, Qt.UserRole, address_expr)
-        row.setText(ADDR_COL, address or address_expr)
+        row.setText(ADDR_COL, address_text or address_expr)
         row.setData(TYPE_COL, Qt.UserRole, value_type)
         row.setText(TYPE_COL, value_type.text())
         row.setText(VALUE_COL, "" if value is None else str(value))
@@ -1456,10 +1479,15 @@ class MainForm(QMainWindow, MainWindow):
     # Returns the column values of the given row
     def read_address_table_entries(self, row, serialize=False):
         description = row.text(DESC_COL)
-        address_expr = row.data(ADDR_COL, Qt.UserRole)
         if serialize:
+            address_data = row.data(ADDR_COL, Qt.UserRole)
+            if isinstance(address_data, type_defs.PointerType):
+                address_expr = address_data.serialize()
+            else:
+                address_expr = address_data
             value_type = row.data(TYPE_COL, Qt.UserRole).serialize()
         else:
+            address_expr = row.data(ADDR_COL, Qt.UserRole)
             value_type = row.data(TYPE_COL, Qt.UserRole)
         return description, address_expr, value_type
 
@@ -1556,7 +1584,14 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.lineEdit_length.setValidator(QHexValidator(999, self))
         GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
         self.lineEdit_description.setText(description)
-        self.lineEdit_address.setText(address)
+        if not isinstance(address, type_defs.PointerType):
+            self.lineEdit_address.setText(address)
+            self.widget_Pointer.hide()
+        else:
+            self.lineEdit_address.setEnabled(False)
+            self.lineEdit_PtrStartAddress.setText(address.get_base_address())
+            self.checkBox_IsPointer.setChecked(True)
+            self.widget_Pointer.show()
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.label_length.show()
             self.lineEdit_length.show()
@@ -1583,6 +1618,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.lineEdit_length.textChanged.connect(self.update_value_of_address)
         self.checkBox_zeroterminate.stateChanged.connect(self.update_value_of_address)
+        self.checkBox_IsPointer.stateChanged.connect(self.comboBox_ValueType_current_index_changed)
+        self.lineEdit_PtrStartAddress.textChanged.connect(self.update_value_of_address)
         self.lineEdit_address.textChanged.connect(self.update_value_of_address)
         self.label_valueofaddress.contextMenuEvent = self.label_valueofaddress_context_menu_event
         self.update_value_of_address()
@@ -1602,14 +1639,23 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             pass
 
     def update_value_of_address(self):
-        address = self.lineEdit_address.text()
-        try:
-            address = GDB_Engine.examine_expression(address).address
-        except type_defs.InferiorRunningException:
-            pass
+        if self.checkBox_IsPointer.isChecked():
+            address = GDB_Engine.read_pointer(type_defs.PointerType(self.lineEdit_PtrStartAddress.text()))
+            if address != None:
+                address_text = hex(address)
+            else:
+                address_text = "??"
+            self.lineEdit_address.setText(address_text)
+        else:
+            address = self.lineEdit_address.text()
+            try:
+                address = GDB_Engine.examine_expression(address).address
+            except type_defs.InferiorRunningException:
+                pass
         if not address:
             self.label_valueofaddress.setText("<font color=red>??</font>")
             return
+
         address_type = self.comboBox_ValueType.currentIndex()
         if address_type == type_defs.VALUE_INDEX.INDEX_AOB:
             length = self.lineEdit_length.text()
@@ -1635,6 +1681,14 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.label_length.hide()
             self.lineEdit_length.hide()
             self.checkBox_zeroterminate.hide()
+        if self.checkBox_IsPointer.isChecked():
+            self.lineEdit_address.setEnabled(False)
+            if self.lineEdit_PtrStartAddress.text() == "":
+                self.lineEdit_PtrStartAddress.setText(self.lineEdit_address.text())
+            self.widget_Pointer.show()
+        else:
+            self.lineEdit_address.setEnabled(True)
+            self.widget_Pointer.hide()
         self.update_value_of_address()
 
     def reject(self):
@@ -1665,6 +1719,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         if self.checkBox_zeroterminate.isChecked():
             zero_terminate = True
         value_index = self.comboBox_ValueType.currentIndex()
+        if self.checkBox_IsPointer.isChecked():
+            address = type_defs.PointerType(self.lineEdit_PtrStartAddress.text())
         return description, address, value_index, length, zero_terminate
 
 
