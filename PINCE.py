@@ -22,9 +22,10 @@ from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, Q
     QKeyEvent, QRegExpValidator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, \
     QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, \
-    QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout
+    QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, \
+    QPushButton, QFrame
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
-    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp, QRunnable, QThreadPool, pyqtSlot
+    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp, QRunnable, QThreadPool, QRect, pyqtSlot
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil, pexpect
 
@@ -1584,13 +1585,15 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.lineEdit_length.setValidator(QHexValidator(999, self))
         GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
         self.lineEdit_description.setText(description)
+        self.offsetsList = []
         if not isinstance(address, type_defs.PointerType):
             self.lineEdit_address.setText(address)
             self.widget_Pointer.hide()
         else:
+            self.checkBox_IsPointer.setChecked(True)
             self.lineEdit_address.setEnabled(False)
             self.lineEdit_PtrStartAddress.setText(address.get_base_address())
-            self.checkBox_IsPointer.setChecked(True)
+            self.create_offsets_list(address)
             self.widget_Pointer.show()
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.label_length.show()
@@ -1621,6 +1624,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.checkBox_IsPointer.stateChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.lineEdit_PtrStartAddress.textChanged.connect(self.update_value_of_address)
         self.lineEdit_address.textChanged.connect(self.update_value_of_address)
+        self.addOffsetButton.clicked.connect(lambda: self.addOffsetLayout(True))
+        self.removeOffsetButton.clicked.connect(self.removeOffsetLayout)
         self.label_valueofaddress.contextMenuEvent = self.label_valueofaddress_context_menu_event
         self.update_value_of_address()
 
@@ -1638,9 +1643,39 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         except KeyError:
             pass
 
+    def createOffsetLayout(self):
+        offsetFrame = QFrame(self.widget_Pointer)
+        offsetLayout = QHBoxLayout(offsetFrame)
+        offsetFrame.setLayout(offsetLayout)
+        buttonLeft = QPushButton("<", offsetFrame)
+        buttonLeft.setGeometry(QRect(10,5,20,20))
+        offsetLayout.addWidget(buttonLeft)
+        offsetText = QLineEdit(offsetFrame)
+        offsetText.setGeometry(QRect(35,5,60,20))
+        offsetText.textChanged.connect(self.update_value_of_address)
+        offsetLayout.addWidget(offsetText)
+        buttonRight = QPushButton(">", offsetFrame)
+        buttonRight.setGeometry(QRect(100,5,20,20))
+        offsetLayout.addWidget(buttonRight)
+        return offsetFrame
+
+    def addOffsetLayout(self, should_update=True):
+        self.offsetsList.append(self.createOffsetLayout())
+        self.verticalLayout_Pointers.insertWidget(0, self.offsetsList[-1])
+        if should_update:
+            self.update_value_of_address()
+
+    def removeOffsetLayout(self):
+        frame = self.offsetsList[-1]
+        frame.deleteLater()
+        self.verticalLayout_Pointers.removeWidget(frame)
+        del self.offsetsList[-1]
+        self.update_value_of_address()
+
     def update_value_of_address(self):
         if self.checkBox_IsPointer.isChecked():
-            address = GDB_Engine.read_pointer(type_defs.PointerType(self.lineEdit_PtrStartAddress.text()))
+            pointer_type = type_defs.PointerType(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
+            address = GDB_Engine.read_pointer(pointer_type)
             if address != None:
                 address_text = hex(address)
             else:
@@ -1720,8 +1755,32 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             zero_terminate = True
         value_index = self.comboBox_ValueType.currentIndex()
         if self.checkBox_IsPointer.isChecked():
-            address = type_defs.PointerType(self.lineEdit_PtrStartAddress.text())
+            address = type_defs.PointerType(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
         return description, address, value_index, length, zero_terminate
+
+    def get_offsets_int_list(self):
+        offsetsIntList = []
+        for i in range(0, len(self.offsetsList)):
+            offsetsIntList.append(None)
+        for idx, frame in enumerate(self.offsetsList):
+            layout = frame.layout()
+            offsetText = layout.itemAt(1).widget().text()
+            try:
+                offsetValue = int(offsetText, 16)
+            except ValueError:
+                offsetValue = 0
+            offsetsIntList[idx] = offsetValue
+        return offsetsIntList
+
+    def create_offsets_list(self, address):
+        if not isinstance(address, type_defs.PointerType):
+            raise TypeError("Passed non-pointer type to create_offsets_list!")
+
+        for offset in address.offsets_list:
+            self.addOffsetLayout(False)
+            frame = self.offsetsList[-1]
+            layout = frame.layout()
+            offsetText = layout.itemAt(1).widget().setText(hex(offset))
 
 
 class EditTypeDialogForm(QDialog, EditTypeDialog):
