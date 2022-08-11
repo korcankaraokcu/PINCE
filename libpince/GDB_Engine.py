@@ -758,6 +758,49 @@ def inject_with_dlopen_call(library_path):
 
 
 #:tag:MemoryRW
+def read_pointer(pointer_type):
+    """Reads the address pointed by this pointer
+
+    Args:
+        pointer_type (PointerType): type_defs.PointerType class containing a base_address and an offsets list
+
+    Returns:
+        int: Final pointed address after dereferencing this pointer and it's offsets list
+    """
+    if not isinstance(pointer_type, type_defs.PointerType):
+        raise TypeError("Passed non-PointerType to read_pointer!")
+
+    if inferior_arch == type_defs.INFERIOR_ARCH.ARCH_32:
+        value_index = type_defs.VALUE_INDEX.INDEX_INT32
+    else:
+        value_index = type_defs.VALUE_INDEX.INDEX_INT64
+
+    try:
+        start_address = examine_expression(pointer_type.base_address).address
+    except type_defs.InferiorRunningException:
+        if type(pointer_type.base_address) == str:
+            try:
+                start_address = int(pointer_type.base_address, 16)
+            except ValueError:
+                start_address = 0
+        else:
+            start_address = pointer_type.base_address
+
+    try:
+        with memory_handle() as mem_handle:
+            final_address = deref_address = read_memory(start_address, value_index, mem_handle=mem_handle)
+            for offset in pointer_type.offsets_list:
+                offset_address = deref_address + offset
+                if offset != pointer_type.offsets_list[-1]:  # CE derefs every offset except for the last one
+                    deref_address = read_memory(offset_address, value_index, mem_handle=mem_handle)
+                else:
+                    final_address = offset_address
+    except OSError:
+        final_address = start_address
+
+    return final_address
+
+
 def memory_handle():
     """
     Acquire the handle of the currently attached process
