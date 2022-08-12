@@ -1667,6 +1667,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.update_value_of_address()
 
     def removeOffsetLayout(self):
+        if len(self.offsetsList) == 0:
+            return
         frame = self.offsetsList[-1]
         frame.deleteLater()
         self.verticalLayout_Pointers.removeWidget(frame)
