@@ -72,6 +72,7 @@ from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
 from GUI.CustomValidators.HexValidator import QHexValidator
 
 from keyboard import add_hotkey, remove_hotkey
+from operator import add as opAdd, sub as opSub
 
 instances = []  # Holds temporary instances that will be deleted later on
 
@@ -1657,6 +1658,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         buttonRight = QPushButton(">", offsetFrame)
         buttonRight.setGeometry(QRect(100,5,20,20))
         offsetLayout.addWidget(buttonRight)
+        buttonLeft.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opSub))
+        buttonRight.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opAdd))
 
         self.offsetsList.append(offsetFrame)
         self.verticalLayout_Pointers.insertWidget(0, self.offsetsList[-1])
@@ -1758,16 +1761,14 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def get_offsets_int_list(self):
         offsetsIntList = []
-        for i in range(0, len(self.offsetsList)):
-            offsetsIntList.append(None)
-        for idx, frame in enumerate(self.offsetsList):
+        for frame in self.offsetsList:
             layout = frame.layout()
             offsetText = layout.itemAt(1).widget().text()
             try:
                 offsetValue = int(offsetText, 16)
             except ValueError:
                 offsetValue = 0
-            offsetsIntList[idx] = offsetValue
+            offsetsIntList.append(offsetValue)
         return offsetsIntList
 
     def create_offsets_list(self, address):
@@ -1779,6 +1780,16 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             frame = self.offsetsList[-1]
             layout = frame.layout()
             offsetText = layout.itemAt(1).widget().setText(hex(offset))
+
+    def on_offset_arrow_clicked(self, offsetTextWidget, operator_func):
+        offsetText = offsetTextWidget.text()
+        try:
+            offsetValue = int(offsetText, 16)
+        except ValueError:
+            offsetValue = 0
+        sizeVal = type_defs.index_to_valuetype_dict[self.comboBox_ValueType.currentIndex()][0]
+        offsetValue = operator_func(offsetValue, sizeVal)
+        offsetTextWidget.setText(hex(offsetValue))
 
 
 class EditTypeDialogForm(QDialog, EditTypeDialog):
