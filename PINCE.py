@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
     QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, \
     QPushButton, QFrame
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
-    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp, QRunnable, QThreadPool, QRect, pyqtSlot
+    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp, QRunnable, QThreadPool, pyqtSlot
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil, pexpect
 
@@ -1619,6 +1619,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.label_length.hide()
             self.lineEdit_length.hide()
             self.checkBox_zeroterminate.hide()
+        self.setFixedSize(self.layout().sizeHint())
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.lineEdit_length.textChanged.connect(self.update_value_of_address)
         self.checkBox_zeroterminate.stateChanged.connect(self.update_value_of_address)
@@ -1649,14 +1650,14 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         offsetLayout = QHBoxLayout(offsetFrame)
         offsetFrame.setLayout(offsetLayout)
         buttonLeft = QPushButton("<", offsetFrame)
-        buttonLeft.setGeometry(QRect(10,5,20,20))
+        buttonLeft.setFixedSize(70,30)
         offsetLayout.addWidget(buttonLeft)
         offsetText = QLineEdit(offsetFrame)
-        offsetText.setGeometry(QRect(35,5,60,20))
+        offsetText.setFixedSize(70,30)
         offsetText.textChanged.connect(self.update_value_of_address)
         offsetLayout.addWidget(offsetText)
         buttonRight = QPushButton(">", offsetFrame)
-        buttonRight.setGeometry(QRect(100,5,20,20))
+        buttonRight.setFixedSize(70,30)
         offsetLayout.addWidget(buttonRight)
         buttonLeft.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opSub))
         buttonRight.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opAdd))
@@ -1664,6 +1665,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.offsetsList.append(offsetFrame)
         self.verticalLayout_Pointers.insertWidget(0, self.offsetsList[-1])
         if should_update:
+            app.processEvents()  # @todo should probably change this once we can properly resize right after creation
+            self.setFixedSize(self.layout().sizeHint())
             self.update_value_of_address()
 
     def removeOffsetLayout(self):
@@ -1673,6 +1676,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         frame.deleteLater()
         self.verticalLayout_Pointers.removeWidget(frame)
         del self.offsetsList[-1]
+        app.processEvents()  # @todo should probably change this once we can properly resize right after delete
+        self.setFixedSize(self.layout().sizeHint())
         self.update_value_of_address()
 
     def update_value_of_address(self):
@@ -1727,6 +1732,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         else:
             self.lineEdit_address.setEnabled(True)
             self.widget_Pointer.hide()
+        self.setFixedSize(self.layout().sizeHint())
         self.update_value_of_address()
 
     def reject(self):
