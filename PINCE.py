@@ -713,7 +713,7 @@ class MainForm(QMainWindow, MainWindow):
         selected_row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if not selected_row:
             return
-        address = selected_row.text(ADDR_COL).strip("P->")
+        address = selected_row.text(ADDR_COL).strip("P->")  # @todo Maybe rework address grabbing logic in the future
         value_type = selected_row.data(TYPE_COL, Qt.UserRole)
         if type_defs.VALUE_INDEX.is_string(value_type.value_index):
             value_text = selected_row.text(VALUE_COL)
@@ -1401,7 +1401,7 @@ class MainForm(QMainWindow, MainWindow):
         if dialog.exec_():
             new_value = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
-                address = row.text(ADDR_COL).strip("P->")  # strip leading pointer text if pointer
+                address = row.text(ADDR_COL).strip("P->")
                 value_type = row.data(TYPE_COL, Qt.UserRole)
                 if type_defs.VALUE_INDEX.has_length(value_type.value_index):
                     unknown_type = SysUtils.parse_string(new_value, value_type.value_index)
@@ -1648,6 +1648,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def addOffsetLayout(self, should_update=True):
         offsetFrame = QFrame(self.widget_Pointer)
         offsetLayout = QHBoxLayout(offsetFrame)
+        offsetLayout.setContentsMargins(0,3,0,3)
         offsetFrame.setLayout(offsetLayout)
         buttonLeft = QPushButton("<", offsetFrame)
         buttonLeft.setFixedSize(70,30)
