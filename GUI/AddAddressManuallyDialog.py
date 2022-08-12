@@ -75,7 +75,7 @@ class Ui_Dialog(object):
         self.checkBox_IsPointer = QtWidgets.QCheckBox(Dialog)
         self.checkBox_IsPointer.setObjectName("checkBox_IsPointer")
         self.gridLayout.addWidget(self.checkBox_IsPointer, 3, 0, 1, 1)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 120, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.gridLayout.addItem(spacerItem1, 8, 0, 1, 1)
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setObjectName("verticalLayout_3")
