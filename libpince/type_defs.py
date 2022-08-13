@@ -177,7 +177,7 @@ class VALUE_INDEX:
 
     @staticmethod
     def is_integer(value_index):
-        return VALUE_INDEX.INDEX_INT8 <= value_index <= VALUE_INDEX.INDEX_INT32
+        return VALUE_INDEX.INDEX_INT8 <= value_index <= VALUE_INDEX.INDEX_INT64
 
     @staticmethod
     def is_string(value_index):
