@@ -825,7 +825,7 @@ class MainForm(QMainWindow, MainWindow):
             row.setData(FROZEN_COL, Qt.UserRole, frozen)
 
             # Deserialize the address_expr & value_type param
-            if hasattr(rec[1], "__iter__"):
+            if type(rec[1]) in [list, tuple]:
                 address_expr = type_defs.PointerType(*rec[1])
             else:
                 address_expr = rec[1]
