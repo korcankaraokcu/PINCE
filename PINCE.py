@@ -824,8 +824,8 @@ class MainForm(QMainWindow, MainWindow):
             frozen = type_defs.Frozen("", type_defs.FREEZE_TYPE.DEFAULT)
             row.setData(FROZEN_COL, Qt.UserRole, frozen)
 
-            # Deserialize the value_type param
-            if type(rec[1]) == list:
+            # Deserialize the address_expr & value_type param
+            if hasattr(rec[1], "__iter__"):
                 address_expr = type_defs.PointerType(*rec[1])
             else:
                 address_expr = rec[1]
