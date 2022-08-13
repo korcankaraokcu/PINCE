@@ -766,6 +766,7 @@ def read_pointer(pointer_type):
 
     Returns:
         int: Final pointed address after dereferencing this pointer and it's offsets list
+        None: If an error occurs while reading the given pointer
     """
     if not isinstance(pointer_type, type_defs.PointerType):
         raise TypeError("Passed non-PointerType to read_pointer!")
@@ -789,10 +790,15 @@ def read_pointer(pointer_type):
     try:
         with memory_handle() as mem_handle:
             final_address = deref_address = read_memory(start_address, value_index, mem_handle=mem_handle)
+            if deref_address is None:  # deref would be None if read an invalid address region
+                return None
+
             for index, offset in enumerate(pointer_type.offsets_list):
                 offset_address = deref_address + offset
                 if index != len(pointer_type.offsets_list) - 1:  # CE derefs every offset except for the last one
                     deref_address = read_memory(offset_address, value_index, mem_handle=mem_handle)
+                    if deref_address is None:
+                        return None
                 else:
                     final_address = offset_address
     except OSError:
