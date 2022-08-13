@@ -1655,6 +1655,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         offsetLayout.addWidget(buttonLeft)
         offsetText = QLineEdit(offsetFrame)
         offsetText.setFixedSize(70,30)
+        offsetText.setText(hex(0))
         offsetText.textChanged.connect(self.update_value_of_address)
         offsetLayout.addWidget(offsetText)
         buttonRight = QPushButton(">", offsetFrame)
