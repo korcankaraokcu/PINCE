@@ -598,15 +598,21 @@ class MainForm(QMainWindow, MainWindow):
                         self.attach_to_pid(process.pid)
                         return
 
+    # Keyboard package has an issue with exceptions, any trigger function that throws an exception stops the event loop
+    # Writing a custom event loop instead of ignoring exceptions could work as well but honestly, this looks cleaner
+    @SysUtils.ignore_exceptions
     def pause_hotkey_pressed(self):
         GDB_Engine.interrupt_inferior(type_defs.STOP_REASON.PAUSE)
 
+    @SysUtils.ignore_exceptions
     def break_hotkey_pressed(self):
         GDB_Engine.interrupt_inferior()
 
+    @SysUtils.ignore_exceptions
     def continue_hotkey_pressed(self):
         GDB_Engine.continue_inferior()
 
+    @SysUtils.ignore_exceptions
     def toggle_attach_hotkey_pressed(self):
         result = GDB_Engine.toggle_attach()
         if not result:
@@ -735,7 +741,8 @@ class MainForm(QMainWindow, MainWindow):
     def disassemble_selected_row(self):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if row:
-            if self.memory_view_window.disassemble_expression(row.text(ADDR_COL).strip("P->"), append_to_travel_history=True):
+            if self.memory_view_window.disassemble_expression(row.text(ADDR_COL).strip("P->"),
+                                                              append_to_travel_history=True):
                 self.memory_view_window.show()
                 self.memory_view_window.activateWindow()
 
@@ -1648,18 +1655,18 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def addOffsetLayout(self, should_update=True):
         offsetFrame = QFrame(self.widget_Pointer)
         offsetLayout = QHBoxLayout(offsetFrame)
-        offsetLayout.setContentsMargins(0,3,0,3)
+        offsetLayout.setContentsMargins(0, 3, 0, 3)
         offsetFrame.setLayout(offsetLayout)
         buttonLeft = QPushButton("<", offsetFrame)
-        buttonLeft.setFixedSize(70,30)
+        buttonLeft.setFixedSize(70, 30)
         offsetLayout.addWidget(buttonLeft)
         offsetText = QLineEdit(offsetFrame)
-        offsetText.setFixedSize(70,30)
+        offsetText.setFixedSize(70, 30)
         offsetText.setText(hex(0))
         offsetText.textChanged.connect(self.update_value_of_address)
         offsetLayout.addWidget(offsetText)
         buttonRight = QPushButton(">", offsetFrame)
-        buttonRight.setFixedSize(70,30)
+        buttonRight.setFixedSize(70, 30)
         offsetLayout.addWidget(buttonRight)
         buttonLeft.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opSub))
         buttonRight.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opAdd))
