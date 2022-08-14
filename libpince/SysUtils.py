@@ -1058,3 +1058,16 @@ def search_files(directory, regex):
         if result:
             file_list.append(str(file.relative_to(directory)))
     return sorted(file_list)
+
+
+#:tag:Utilities
+def ignore_exceptions(func):
+    """A decorator to ignore exceptions"""
+
+    def wrapper(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except:
+            traceback.print_exc()
+
+    return wrapper
