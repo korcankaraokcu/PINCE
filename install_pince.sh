@@ -67,6 +67,7 @@ INSTALL_COMMAND="install"
 PKG_NAMES_ALL="python3-pip gdb"
 PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-pyqt5 libtool libreadline-dev intltool"
 PKG_NAMES_SUSE="$PKG_NAMES_ALL python3-qt5"
+PKG_NAMES_FEDORA="$PKG_NAMES_ALL python3-qt5 libtool readline-devel intltool"
 PKG_NAMES_ARCH="python-pip python-pyqt5 readline intltool gdb lsb-release" # arch defaults to py3 nowadays
 PKG_NAMES="$PKG_NAMES_DEBIAN"
 PKG_NAMES_PIP="psutil pexpect distorm3 pygdbmi keyboard"
@@ -90,6 +91,10 @@ case "$OS_NAME" in
     PKG_NAMES="$PKG_NAMES_ARCH"
     INSTALL_COMMAND="-S"
     PIP_COMMAND="pip"
+    ;;
+*Fedora*)
+    PKG_MGR="dnf -y"
+    PKG_NAMES="$PKG_NAMES_FEDORA"
     ;;
 esac
 
