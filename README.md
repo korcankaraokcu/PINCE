@@ -165,6 +165,7 @@ Gibus <lilac66.dev@gmail.com>
 - Debian and Debian-based (Kali, Mint etc.)
 - Archlinux(tag [cagriulas](https://github.com/cagriulas) or [TsarFox](https://github.com/TsarFox) when creating an issue)
 - SUSE
+- Fedora
 
 # Trusted Sources
   * [Official github page](https://github.com/korcankaraokcu/PINCE)
