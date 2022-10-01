@@ -18,14 +18,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt5.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
-    QKeyEvent, QRegExpValidator
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, \
-    QShortcut, QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, \
+from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
+    QKeyEvent, QRegularExpressionValidator, QShortcut, QColorConstants
+from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, \
+    QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, \
     QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, \
     QPushButton, QFrame
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, \
-    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegExp, QRunnable, QThreadPool, pyqtSlot
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, \
+    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QThreadPool, pyqtSlot
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil, pexpect
 
@@ -159,11 +159,11 @@ BREAK_HIT_COUNT_COL = 7
 BREAK_COND_COL = 8
 
 # row colours for disassemble qtablewidget
-PC_COLOUR = Qt.blue
-BOOKMARK_COLOUR = Qt.cyan
-DEFAULT_COLOUR = Qt.white
-BREAKPOINT_COLOUR = Qt.red
-REF_COLOUR = Qt.lightGray
+PC_COLOUR = QColorConstants.Blue
+BOOKMARK_COLOUR = QColorConstants.Cyan
+DEFAULT_COLOUR = QColorConstants.White
+BREAKPOINT_COLOUR = QColorConstants.Red
+REF_COLOUR = QColorConstants.LightGray
 
 # represents the index of columns in address table
 FROZEN_COL = 0  # Frozen
@@ -286,7 +286,7 @@ def except_hook(exception_type, value, tb):
                 error_dialog = InputDialogForm(item_list=[(
                     "Process is running" + "\nPress " + Hotkeys.break_hotkey.get_active_key() + " to stop process" +
                     "\n\nGo to Settings->General to disable this dialog",)], buttons=[QDialogButtonBox.Ok])
-                error_dialog.exec_()
+                error_dialog.exec()
     traceback.print_exception(exception_type, value, tb)
 
 
@@ -377,7 +377,7 @@ class MainForm(QMainWindow, MainWindow):
         app.setOrganizationName("PINCE")
         app.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
         app.setApplicationName("PINCE")
-        QSettings.setPath(QSettings.NativeFormat, QSettings.UserScope,
+        QSettings.setPath(QSettings.Format.NativeFormat, QSettings.Scope.UserScope,
                           SysUtils.get_user_path(type_defs.USER_PATHS.CONFIG_PATH))
         self.settings = QSettings()
         if not SysUtils.is_path_valid(self.settings.fileName()):
@@ -403,7 +403,7 @@ class MainForm(QMainWindow, MainWindow):
             text = "Unable to initialize GDB\n" \
                    "You might want to reinstall GDB or use the system GDB\n" \
                    "To change the current GDB path, check Settings->Debug"
-            InputDialogForm(item_list=[(text, None)], buttons=[QDialogButtonBox.Ok]).exec_()
+            InputDialogForm(item_list=[(text, None)], buttons=[QDialogButtonBox.Ok]).exec()
         else:
             self.apply_after_init()
         # this should be changed, only works if you use the current directory, fails if you for example install it to some place like bin
@@ -449,8 +449,8 @@ class MainForm(QMainWindow, MainWindow):
         self.comboBox_ValueType_init()
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
-        self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan))
-        self.lineEdit_Scan2.setValidator(QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan2))
+        self.lineEdit_Scan.setValidator(QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan))
+        self.lineEdit_Scan2.setValidator(QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan2))
         self.comboBox_ScanType.currentIndexChanged.connect(self.comboBox_ScanType_current_index_changed)
         self.comboBox_ScanType_current_index_changed()
         self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
@@ -625,7 +625,7 @@ class MainForm(QMainWindow, MainWindow):
         if show_messagebox_on_toggle_attach:
             dialog = InputDialogForm(item_list=[(
                 dialog_text + "\n\nGo to Settings->General to disable this dialog",)], buttons=[QDialogButtonBox.Ok])
-            dialog.exec_()
+            dialog.exec()
 
     def treeWidget_AddressTable_context_menu_event(self, event):
         current_row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
@@ -666,7 +666,7 @@ class MainForm(QMainWindow, MainWindow):
                              what_accesses]
             GuiUtils.delete_menu_entries(menu, deletion_list)
         else:
-            value_type = current_row.data(TYPE_COL, Qt.UserRole)
+            value_type = current_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
             if type_defs.VALUE_INDEX.is_integer(value_type.value_index):
                 if value_type.value_repr is type_defs.VALUE_REPR.HEX:
                     GuiUtils.delete_menu_entries(menu, [show_unsigned, show_signed, show_hex])
@@ -674,14 +674,14 @@ class MainForm(QMainWindow, MainWindow):
                     GuiUtils.delete_menu_entries(menu, [show_unsigned, show_dec])
                 elif value_type.value_repr is type_defs.VALUE_REPR.SIGNED:
                     GuiUtils.delete_menu_entries(menu, [show_signed, show_dec])
-                if current_row.checkState(FROZEN_COL) == Qt.Unchecked:
+                if current_row.checkState(FROZEN_COL) == Qt.CheckState.Unchecked:
                     GuiUtils.delete_menu_entries(menu, [freeze_menu.menuAction()])
             else:
                 GuiUtils.delete_menu_entries(menu, [show_hex, show_dec, show_unsigned, show_signed,
                                                     freeze_menu.menuAction()])
         font_size = self.treeWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             edit_desc: self.treeWidget_AddressTable_edit_desc,
             edit_address: self.treeWidget_AddressTable_edit_address,
@@ -720,7 +720,7 @@ class MainForm(QMainWindow, MainWindow):
         if not selected_row:
             return
         address = selected_row.text(ADDR_COL).strip("P->")  # @todo Maybe rework address grabbing logic in the future
-        value_type = selected_row.data(TYPE_COL, Qt.UserRole)
+        value_type = selected_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
         if type_defs.VALUE_INDEX.is_string(value_type.value_index):
             value_text = selected_row.text(VALUE_COL)
             encoding, option = type_defs.string_index_to_encoding_dict[value_type.value_index]
@@ -748,7 +748,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def change_freeze_type(self, freeze_type):
         for row in self.treeWidget_AddressTable.selectedItems():
-            frozen = row.data(FROZEN_COL, Qt.UserRole)
+            frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
             frozen.freeze_type = freeze_type
 
             # TODO: Create a QWidget subclass with signals so freeze type can be changed by clicking on the cell
@@ -766,7 +766,7 @@ class MainForm(QMainWindow, MainWindow):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if row:
             check_state = row.checkState(FROZEN_COL)
-            new_check_state = Qt.Checked if check_state == Qt.Unchecked else Qt.Unchecked
+            new_check_state = Qt.CheckState.Checked if check_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
             for row in self.treeWidget_AddressTable.selectedItems():
                 row.setCheckState(FROZEN_COL, new_check_state)
                 self.treeWidget_AddressTable_item_clicked(row, FROZEN_COL)
@@ -827,9 +827,9 @@ class MainForm(QMainWindow, MainWindow):
         rows = []
         for rec in records:
             row = QTreeWidgetItem()
-            row.setCheckState(FROZEN_COL, Qt.Unchecked)
+            row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
             frozen = type_defs.Frozen("", type_defs.FREEZE_TYPE.DEFAULT)
-            row.setData(FROZEN_COL, Qt.UserRole, frozen)
+            row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
 
             # Deserialize the address_expr & value_type param
             if type(rec[1]) in [list, tuple]:
@@ -868,25 +868,25 @@ class MainForm(QMainWindow, MainWindow):
 
     def treeWidget_AddressTable_key_press_event(self, event):
         actions = type_defs.KeyboardModifiersTupleDict([
-            ((Qt.NoModifier, Qt.Key_Delete), self.delete_selected_records),
-            ((Qt.ControlModifier, Qt.Key_B), self.browse_region_for_selected_row),
-            ((Qt.ControlModifier, Qt.Key_D), self.disassemble_selected_row),
-            ((Qt.NoModifier, Qt.Key_R), self.update_address_table),
-            ((Qt.NoModifier, Qt.Key_Space), self.toggle_selected_records),
-            ((Qt.ControlModifier, Qt.Key_X), self.cut_selected_records),
-            ((Qt.ControlModifier, Qt.Key_C), self.copy_selected_records),
-            ((Qt.NoModifier, Qt.Key_X), self.cut_selected_records_recursively),
-            ((Qt.NoModifier, Qt.Key_C), self.copy_selected_records_recursively),
-            ((Qt.ControlModifier, Qt.Key_V), lambda: self.paste_records(insert_after=False)),
-            ((Qt.NoModifier, Qt.Key_V), lambda: self.paste_records(insert_after=True)),
-            ((Qt.NoModifier, Qt.Key_I), lambda: self.paste_records(insert_inside=True)),
-            ((Qt.NoModifier, Qt.Key_Return), self.treeWidget_AddressTable_edit_value),
-            ((Qt.ControlModifier, Qt.Key_Return), self.treeWidget_AddressTable_edit_desc),
-            ((Qt.ControlModifier | Qt.AltModifier, Qt.Key_Return), self.treeWidget_AddressTable_edit_address),
-            ((Qt.AltModifier, Qt.Key_Return), self.treeWidget_AddressTable_edit_type)
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete), self.delete_selected_records),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B), self.browse_region_for_selected_row),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D), self.disassemble_selected_row),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_address_table),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space), self.toggle_selected_records),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_X), self.cut_selected_records),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C), self.copy_selected_records),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_X), self.cut_selected_records_recursively),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_C), self.copy_selected_records_recursively),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_V), lambda: self.paste_records(insert_after=False)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_V), lambda: self.paste_records(insert_after=True)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_I), lambda: self.paste_records(insert_inside=True)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Return), self.treeWidget_AddressTable_edit_value),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Return), self.treeWidget_AddressTable_edit_desc),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return), self.treeWidget_AddressTable_edit_address),
+            (QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return), self.treeWidget_AddressTable_edit_type)
         ])
         try:
-            actions[event.modifiers(), event.key()]()
+            actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             self.treeWidget_AddressTable.keyPressEvent_original(event)
 
@@ -902,7 +902,7 @@ class MainForm(QMainWindow, MainWindow):
             if not row:
                 break
             it += 1
-            address_data = row.data(ADDR_COL, Qt.UserRole)
+            address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
             if isinstance(address_data, type_defs.PointerType):
                 pointer_address = GDB_Engine.read_pointer(address_data)
                 if pointer_address == None:
@@ -916,13 +916,13 @@ class MainForm(QMainWindow, MainWindow):
         except type_defs.InferiorRunningException:
             address_list = address_expr_list
         for index, row in enumerate(rows):
-            value_type = row.data(TYPE_COL, Qt.UserRole)
+            value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
             address = address_list[index]
             signed = True if value_type.value_repr == type_defs.VALUE_REPR.SIGNED else False
             value = GDB_Engine.read_memory(address, value_type.value_index, value_type.length,
                                            value_type.zero_terminate, signed, mem_handle=mem_handle)
 
-            address_data = row.data(ADDR_COL, Qt.UserRole)
+            address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
             if isinstance(address_data, type_defs.PointerType):
                 address_text = f'P->{address}'
             else:
@@ -943,7 +943,7 @@ class MainForm(QMainWindow, MainWindow):
     # gets the information from the dialog then adds it to addresstable
     def pushButton_AddAddressManually_clicked(self):
         manual_address_dialog = ManualAddressDialogForm()
-        if manual_address_dialog.exec_():
+        if manual_address_dialog.exec():
             desc, address_expr, value_index, length, zero_terminate = manual_address_dialog.get_values()
             self.add_entry_to_addresstable(desc, address_expr, value_index, length, zero_terminate)
 
@@ -960,7 +960,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def pushButton_Settings_clicked(self):
         settings_dialog = SettingsDialogForm(self.set_default_settings)
-        if settings_dialog.exec_():
+        if settings_dialog.exec():
             self.apply_settings()
 
     def pushButton_Console_clicked(self):
@@ -968,7 +968,7 @@ class MainForm(QMainWindow, MainWindow):
         console_widget.showMaximized()
 
     def checkBox_Hex_stateChanged(self, state):
-        if state == Qt.Checked:
+        if state == Qt.CheckState.Checked:
             # allows only things that are hex, can also start with 0x
             self.lineEdit_Scan.setValidator(QRegExpValidator(QRegExp("(0x)?[A-Fa-f0-9]*$"), parent=self.lineEdit_Scan))
             self.lineEdit_Scan2.setValidator(
@@ -994,7 +994,7 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText("New Scan")
             self.comboBox_ValueType.setEnabled(False)
             self.pushButton_NextScan.setEnabled(True)
-            search_scope = self.comboBox_ScanScope.currentData(Qt.UserRole)
+            search_scope = self.comboBox_ScanScope.currentData(Qt.ItemDataRole.UserRole)
             self.backend.send_command("option region_scan_level " + str(search_scope))
             self.backend.send_command("reset")
             self.comboBox_ScanScope.setEnabled(False)
@@ -1004,11 +1004,11 @@ class MainForm(QMainWindow, MainWindow):
     def comboBox_ScanType_current_index_changed(self):
         hidden_types = [type_defs.SCAN_TYPE.INCREASED, type_defs.SCAN_TYPE.DECREASED, type_defs.SCAN_TYPE.CHANGED,
                         type_defs.SCAN_TYPE.UNCHANGED, type_defs.SCAN_TYPE.UNKNOWN]
-        if self.comboBox_ScanType.currentData(Qt.UserRole) in hidden_types:
+        if self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole) in hidden_types:
             self.widget_Scan.setEnabled(False)
         else:
             self.widget_Scan.setEnabled(True)
-        if self.comboBox_ScanType.currentData(Qt.UserRole) == type_defs.SCAN_TYPE.BETWEEN:
+        if self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole) == type_defs.SCAN_TYPE.BETWEEN:
             self.label_Between.setVisible(True)
             self.lineEdit_Scan2.setVisible(True)
         else:
@@ -1016,7 +1016,7 @@ class MainForm(QMainWindow, MainWindow):
             self.lineEdit_Scan2.setVisible(False)
 
     def comboBox_ScanType_init(self):
-        current_type = self.comboBox_ScanType.currentData(Qt.UserRole)
+        current_type = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
         self.comboBox_ScanType.clear()
         if self.scan_mode == type_defs.SCAN_MODE.NEW:
             items = [type_defs.SCAN_TYPE.EXACT, type_defs.SCAN_TYPE.LESS, type_defs.SCAN_TYPE.MORE,
@@ -1049,7 +1049,7 @@ class MainForm(QMainWindow, MainWindow):
     # adds things like 0x when searching for etc, basically just makes the line valid for scanmem
     # this should cover most things, more things might be added later if need be
     def validate_search(self, search_for, search_for2):
-        type_index = self.comboBox_ScanType.currentData(Qt.UserRole)
+        type_index = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
         symbol_map = {
             type_defs.SCAN_TYPE.INCREASED: "+",
             type_defs.SCAN_TYPE.DECREASED: "-",
@@ -1061,7 +1061,7 @@ class MainForm(QMainWindow, MainWindow):
             return symbol_map[type_index]
 
         # none of these should be possible to be true at the same time
-        scan_index = self.comboBox_ValueType.currentData(Qt.UserRole)
+        scan_index = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         if scan_index == type_defs.SCAN_INDEX.INDEX_FLOAT32 or scan_index == type_defs.SCAN_INDEX.INDEX_FLOAT64:
             # this is odd, since when searching for floats from command line it uses `.` and not `,`
             search_for = search_for.replace(".", ",")
@@ -1101,7 +1101,7 @@ class MainForm(QMainWindow, MainWindow):
         else:
             self.label_MatchCount.setText("Match count: {}".format(match_count))
         self.tableWidget_valuesearchtable.setRowCount(0)
-        current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
+        current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         length = self._scan_to_length(current_type)
         mem_handle = GDB_Engine.memory_handle()
         for n, address, offset, region_type, val, result_type in matches:
@@ -1113,7 +1113,7 @@ class MainForm(QMainWindow, MainWindow):
             signed = False
             if type_defs.VALUE_INDEX.is_integer(value_index) and result.endswith("s"):
                 signed = True
-            current_item.setData(Qt.UserRole, (value_index, signed))
+            current_item.setData(Qt.ItemDataRole.UserRole, (value_index, signed))
             value = str(GDB_Engine.read_memory(address, value_index, length, signed=signed, mem_handle=mem_handle))
             self.tableWidget_valuesearchtable.insertRow(self.tableWidget_valuesearchtable.rowCount())
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_ADDRESS_COL, current_item)
@@ -1132,16 +1132,16 @@ class MainForm(QMainWindow, MainWindow):
     @GDB_Engine.execute_with_temporary_interruption
     def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
         current_item = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL)
-        length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.UserRole))
-        self.add_entry_to_addresstable("No Description", current_item.text(), current_item.data(Qt.UserRole)[0], length)
+        length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
+        self.add_entry_to_addresstable("No Description", current_item.text(), current_item.data(Qt.ItemDataRole.UserRole)[0], length)
 
     def comboBox_ValueType_current_index_changed(self):
-        current_type = self.comboBox_ValueType.currentData(Qt.UserRole)
+        current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         validator_map = {
-            "int": QRegExpValidator(QRegExp("-?[0-9]*"), parent=self.lineEdit_Scan),  # integers
-            "float": QRegExpValidator(QRegExp("-?[0-9]+[.,]?[0-9]*")),
+            "int": QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan),  # integers
+            "float": QRegularExpressionValidator(QRegularExpression("-?[0-9]+[.,]?[0-9]*")),
             # floats, should work fine with the small amount of testing I did
-            "bytearray": QRegExpValidator(QRegExp("^(([A-Fa-f0-9?]{2} +)+)$"), parent=self.lineEdit_Scan),
+            "bytearray": QRegularExpressionValidator(QRegularExpression("^(([A-Fa-f0-9?]{2} +)+)$"), parent=self.lineEdit_Scan),
             # array of bytes
             "string": None
         }
@@ -1175,7 +1175,7 @@ class MainForm(QMainWindow, MainWindow):
         if not file_paths:
             return
         if self.treeWidget_AddressTable.topLevelItemCount() > 0:
-            if InputDialogForm(item_list=[("Clear existing address table?",)]).exec_():
+            if InputDialogForm(item_list=[("Clear existing address table?",)]).exec():
                 self.treeWidget_AddressTable.clear()
 
         for file_path in file_paths:
@@ -1242,16 +1242,16 @@ class MainForm(QMainWindow, MainWindow):
 
     def delete_address_table_contents(self):
         confirm_dialog = InputDialogForm(item_list=[("This will clear the contents of address table\nProceed?",)])
-        if confirm_dialog.exec_():
+        if confirm_dialog.exec():
             self.treeWidget_AddressTable.clear()
 
     def copy_to_address_table(self):
         i = -1
-        length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.UserRole))
+        length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
         for row in self.tableWidget_valuesearchtable.selectedItems():
             i = i + 1
             if i % 3 == 0:
-                self.add_entry_to_addresstable("", row.text(), row.data(Qt.UserRole)[0], length)
+                self.add_entry_to_addresstable("", row.text(), row.data(Qt.ItemDataRole.UserRole)[0], length)
 
     def on_inferior_exit(self):
         if GDB_Engine.currentpid == -1:
@@ -1284,9 +1284,9 @@ class MainForm(QMainWindow, MainWindow):
 
     def add_entry_to_addresstable(self, description, address_expr, value_index, length=0, zero_terminate=True):
         current_row = QTreeWidgetItem()
-        current_row.setCheckState(FROZEN_COL, Qt.Unchecked)
+        current_row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
         frozen = type_defs.Frozen("", type_defs.FREEZE_TYPE.DEFAULT)
-        current_row.setData(FROZEN_COL, Qt.UserRole, frozen)
+        current_row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
         value_type = type_defs.ValueType(value_index, length, zero_terminate)
         self.treeWidget_AddressTable.addTopLevelItem(current_row)
         self.change_address_table_entries(current_row, description, address_expr, value_type)
@@ -1346,12 +1346,12 @@ class MainForm(QMainWindow, MainWindow):
     def update_search_table(self):
         row_count = self.tableWidget_valuesearchtable.rowCount()
         if row_count > 0:
-            length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.UserRole))
+            length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
             mem_handle = GDB_Engine.memory_handle()
             for row_index in range(row_count):
                 address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
                 previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
-                value_index, signed = address_item.data(Qt.UserRole)
+                value_index, signed = address_item.data(Qt.ItemDataRole.UserRole)
                 address = address_item.text()
                 new_value = str(GDB_Engine.read_memory(address, value_index, length, signed=signed,
                                                        mem_handle=mem_handle))
@@ -1364,10 +1364,10 @@ class MainForm(QMainWindow, MainWindow):
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
         while it.value():
             row = it.value()
-            if row.checkState(FROZEN_COL) == Qt.Checked:
-                value_index = row.data(TYPE_COL, Qt.UserRole).value_index
+            if row.checkState(FROZEN_COL) == Qt.CheckState.Checked:
+                value_index = row.data(TYPE_COL, Qt.ItemDataRole.UserRole).value_index
                 address = row.text(ADDR_COL).strip("P->")
-                frozen = row.data(FROZEN_COL, Qt.UserRole)
+                frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 value = frozen.value
                 freeze_type = frozen.freeze_type
                 if type_defs.VALUE_INDEX.is_integer(value_index):
@@ -1382,18 +1382,18 @@ class MainForm(QMainWindow, MainWindow):
 
     def treeWidget_AddressTable_item_clicked(self, row, column):
         if column == FROZEN_COL:
-            if row.checkState(FROZEN_COL) == Qt.Checked:
-                frozen = row.data(FROZEN_COL, Qt.UserRole)
+            if row.checkState(FROZEN_COL) == Qt.CheckState.Checked:
+                frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 frozen.value = row.text(VALUE_COL)
             else:
                 row.setText(FROZEN_COL, "")
                 row.setForeground(FROZEN_COL, QBrush(QColor(0, 0, 0)))
 
     def treeWidget_AddressTable_change_repr(self, new_repr):
-        value_type = GuiUtils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.UserRole)
+        value_type = GuiUtils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.ItemDataRole.UserRole)
         value_type.value_repr = new_repr
         for row in self.treeWidget_AddressTable.selectedItems():
-            row.setData(TYPE_COL, Qt.UserRole, value_type)
+            row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, value_type)
             row.setText(TYPE_COL, value_type.text())
         self.update_address_table()
 
@@ -1402,22 +1402,22 @@ class MainForm(QMainWindow, MainWindow):
         if not row:
             return
         value = row.text(VALUE_COL)
-        value_index = row.data(TYPE_COL, Qt.UserRole).value_index
+        value_index = row.data(TYPE_COL, Qt.ItemDataRole.UserRole).value_index
         label_text = "Enter the new value"
         dialog = InputDialogForm(item_list=[(label_text, value)], parsed_index=0, value_index=value_index)
-        if dialog.exec_():
+        if dialog.exec():
             new_value = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
                 address = row.text(ADDR_COL).strip("P->")
-                value_type = row.data(TYPE_COL, Qt.UserRole)
+                value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 if type_defs.VALUE_INDEX.has_length(value_type.value_index):
                     unknown_type = SysUtils.parse_string(new_value, value_type.value_index)
                     if unknown_type is not None:
                         value_type.length = len(unknown_type)
                         row.setText(TYPE_COL, value_type.text())
-                frozen = row.data(FROZEN_COL, Qt.UserRole)
+                frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 frozen.value = new_value
-                row.setData(FROZEN_COL, Qt.UserRole, frozen)
+                row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
                 GDB_Engine.write_memory(address, value_type.value_index, new_value)
             self.update_address_table()
 
@@ -1427,7 +1427,7 @@ class MainForm(QMainWindow, MainWindow):
             return
         description = row.text(DESC_COL)
         dialog = InputDialogForm(item_list=[("Enter the new description", description)])
-        if dialog.exec_():
+        if dialog.exec():
             description_text = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
                 row.setText(DESC_COL, description_text)
@@ -1441,7 +1441,7 @@ class MainForm(QMainWindow, MainWindow):
                                                         index=value_type.value_index, length=value_type.length,
                                                         zero_terminate=value_type.zero_terminate)
         manual_address_dialog.setWindowTitle("Edit Address")
-        if manual_address_dialog.exec_():
+        if manual_address_dialog.exec():
             desc, address_expr, value_index, length, zero_terminate = manual_address_dialog.get_values()
             value_type = type_defs.ValueType(value_index, length, zero_terminate, value_type.value_repr)
             self.change_address_table_entries(row, desc, address_expr, value_type)
@@ -1450,14 +1450,14 @@ class MainForm(QMainWindow, MainWindow):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if not row:
             return
-        value_type = row.data(TYPE_COL, Qt.UserRole)
+        value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
         dialog = EditTypeDialogForm(index=value_type.value_index, length=value_type.length,
                                     zero_terminate=value_type.zero_terminate)
-        if dialog.exec_():
+        if dialog.exec():
             value_index, length, zero_terminate = dialog.get_values()
             value_type = type_defs.ValueType(value_index, length, zero_terminate, value_type.value_repr)
             for row in self.treeWidget_AddressTable.selectedItems():
-                row.setData(TYPE_COL, Qt.UserRole, value_type)
+                row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, value_type)
                 row.setText(TYPE_COL, value_type.text())
             self.update_address_table()
 
@@ -1479,9 +1479,9 @@ class MainForm(QMainWindow, MainWindow):
 
         assert isinstance(row, QTreeWidgetItem)
         row.setText(DESC_COL, description)
-        row.setData(ADDR_COL, Qt.UserRole, address_expr)
+        row.setData(ADDR_COL, Qt.ItemDataRole.UserRole, address_expr)
         row.setText(ADDR_COL, address_text or address_expr)
-        row.setData(TYPE_COL, Qt.UserRole, value_type)
+        row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, value_type)
         row.setText(TYPE_COL, value_type.text())
         row.setText(VALUE_COL, "" if value is None else str(value))
 
@@ -1489,15 +1489,15 @@ class MainForm(QMainWindow, MainWindow):
     def read_address_table_entries(self, row, serialize=False):
         description = row.text(DESC_COL)
         if serialize:
-            address_data = row.data(ADDR_COL, Qt.UserRole)
+            address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
             if isinstance(address_data, type_defs.PointerType):
                 address_expr = address_data.serialize()
             else:
                 address_expr = address_data
-            value_type = row.data(TYPE_COL, Qt.UserRole).serialize()
+            value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole).serialize()
         else:
-            address_expr = row.data(ADDR_COL, Qt.UserRole)
-            value_type = row.data(TYPE_COL, Qt.UserRole)
+            address_expr = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
+            value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
         return description, address_expr, value_type
 
     # Returns the values inside the given row and all of its descendants.
@@ -1528,14 +1528,14 @@ class ProcessForm(QMainWindow, ProcessWindow):
         self.refresh_process_table(self.tableWidget_ProcessTable, processlist)
 
     def keyPressEvent(self, e):
-        if e.key() == Qt.Key_Escape:
+        if e.key() == Qt.Key.Key_Escape:
             # closes the window whenever ESC key is pressed
             self.close()
-        elif e.key() == Qt.Key_Return:
+        elif e.key() == Qt.Key.Key_Return:
             self.pushButton_Open_clicked()
-        elif e.key() == Qt.Key_F1:
+        elif e.key() == Qt.Key.Key_F1:
             self.pushButton_CreateProcess_clicked()
-        elif e.key() == Qt.Key_Down or e.key() == Qt.Key_Up:
+        elif e.key() == Qt.Key.Key_Down or e.key() == Qt.Key.Key_Up:
             self.tableWidget_ProcessTable.keyPressEvent(QKeyEvent(QEvent.KeyPress, e.key(), Qt.NoModifier))
 
     # lists currently working processes to table
@@ -1561,24 +1561,24 @@ class ProcessForm(QMainWindow, ProcessWindow):
             QMessageBox.information(self, "Error", "Please select a process first")
         else:
             pid = int(current_item.text())
-            self.setCursor(QCursor(Qt.WaitCursor))
+            self.setCursor(QCursor(Qt.CursorShape.WaitCursor))
             if self.parent().attach_to_pid(pid):
                 self.close()
-            self.setCursor(QCursor(Qt.ArrowCursor))
+            self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
 
     def pushButton_CreateProcess_clicked(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the target binary")[0]
         if file_path:
             items = [("Enter the optional arguments", ""), ("LD_PRELOAD .so path (optional)", "")]
             arg_dialog = InputDialogForm(item_list=items)
-            if arg_dialog.exec_():
+            if arg_dialog.exec():
                 args, ld_preload_path = arg_dialog.get_values()
             else:
                 return
-            self.setCursor(QCursor(Qt.WaitCursor))
+            self.setCursor(QCursor(Qt.CursorShape.WaitCursor))
             if self.parent().create_new_process(file_path, args, ld_preload_path):
                 self.close()
-            self.setCursor(QCursor(Qt.ArrowCursor))
+            self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
 
 
 # Add Address Manually Dialog
@@ -1643,7 +1643,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         refresh = menu.addAction("Refresh")
         font_size = self.label_valueofaddress.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             refresh: self.update_value_of_address
         }
@@ -1914,9 +1914,9 @@ class LoadingDialogForm(QDialog, LoadingDialog):
     def cancel_thread(self):
         GDB_Engine.cancel_last_command()
 
-    def exec_(self):
+    def exec(self):
         self.background_thread.start()
-        super(LoadingDialogForm, self).exec_()
+        super(LoadingDialogForm, self).exec()
 
     class BackgroundThread(QThread):
         output_ready = pyqtSignal(object)
@@ -1942,7 +1942,7 @@ class InputDialogForm(QDialog, InputDialog):
     # "0" and "1" then will set current index to 1 (which is the item "1")
     # label_alignment is optional
     def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=type_defs.VALUE_INDEX.INDEX_INT32,
-                 buttons=(QDialogButtonBox.Ok, QDialogButtonBox.Cancel)):
+                 buttons=(QDialogButtonBox.StandardButton.Ok, QDialogButtonBox.StandardButton.Cancel)):
         super().__init__(parent=parent)
         self.setupUi(self)
         for button in buttons:
@@ -1954,9 +1954,9 @@ class InputDialogForm(QDialog, InputDialog):
                 try:
                     label.setAlignment(item[2])
                 except IndexError:
-                    label.setAlignment(Qt.AlignCenter)
+                    label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 label.setText(item[0])
-                label.setTextInteractionFlags(Qt.LinksAccessibleByMouse | Qt.TextSelectableByMouse)
+                label.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse | Qt.TextInteractionFlag.TextSelectableByMouse)
                 self.verticalLayout.addWidget(label)
             try:
                 item_data = item[1]
@@ -2019,7 +2019,7 @@ class TextEditDialogForm(QDialog, TextEditDialog):
         return self.textEdit.toPlainText()
 
     def keyPressEvent(self, QKeyEvent):
-        if QKeyEvent.key() == Qt.Key_Enter:
+        if QKeyEvent.key() == Qt.Key.Key_Enter:
             pass
         else:
             super(TextEditDialogForm, self).keyPressEvent(QKeyEvent)
@@ -2079,12 +2079,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         elif current_table_update_interval == 0 or freezeinterval == 0:
 
             # Easter egg #2
-            if not InputDialogForm(item_list=[("You are asking for it, aren't you?",)]).exec_():
+            if not InputDialogForm(item_list=[("You are asking for it, aren't you?",)]).exec():
                 return
         elif current_table_update_interval < 100:
             if not InputDialogForm(item_list=[("Update interval should be bigger than 100 ms" +
                                                "\nSetting update interval less than 100 ms may cause slowdown"
-                                               "\nProceed?",)]).exec_():
+                                               "\nProceed?",)]).exec():
                 return
 
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
@@ -2120,7 +2120,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         selected_gdb_path = self.lineEdit_GDBPath.text()
         current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
         if selected_gdb_path != current_gdb_path:
-            if InputDialogForm(item_list=[("You have changed the GDB path, reset GDB now?",)]).exec_():
+            if InputDialogForm(item_list=[("You have changed the GDB path, reset GDB now?",)]).exec():
                 GDB_Engine.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
@@ -2188,7 +2188,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
     def pushButton_ResetSettings_clicked(self):
         confirm_dialog = InputDialogForm(item_list=[("This will reset to the default settings\nProceed?",)])
-        if confirm_dialog.exec_():
+        if confirm_dialog.exec():
             self.set_default_settings()
             self.handle_signals_data = None
             self.config_gui()
@@ -2220,7 +2220,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if self.handle_signals_data is None:
             self.handle_signals_data = self.settings.value("Debug/ignored_signals", type=str).split(",")
         signal_dialog = HandleSignalsDialogForm(self.handle_signals_data)
-        if signal_dialog.exec_():
+        if signal_dialog.exec():
             self.handle_signals_data = signal_dialog.get_values()
 
 
@@ -2235,20 +2235,20 @@ class HandleSignalsDialogForm(QDialog, HandleSignalsDialog):
             checkbox = QCheckBox()
             layout = QHBoxLayout(widget)
             layout.addWidget(checkbox)
-            layout.setAlignment(Qt.AlignCenter)
+            layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.setContentsMargins(0, 0, 0, 0)
             self.tableWidget_Signals.setCellWidget(index, 1, widget)
             if state == "1":
-                checkbox.setCheckState(Qt.Checked)
+                checkbox.setCheckState(Qt.CheckState.Checked)
             else:
-                checkbox.setCheckState(Qt.Unchecked)
+                checkbox.setCheckState(Qt.CheckState.Unchecked)
 
     def get_values(self):
         final_state = []
         for index in range(len(signal_list)):
             widget = self.tableWidget_Signals.cellWidget(index, 1)
             checkbox = widget.findChild(QCheckBox)
-            if checkbox.checkState() == Qt.Checked:
+            if checkbox.checkState() == Qt.CheckState.Checked:
                 final_state.append("1")
             else:
                 final_state.append("0")
@@ -2366,7 +2366,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
 
     def enter_multiline_mode(self):
         multiline_dialog = TextEditDialogForm(text=self.lineEdit.text())
-        if multiline_dialog.exec_():
+        if multiline_dialog.exec():
             self.lineEdit.setText(multiline_dialog.get_values())
             self.communicate()
 
@@ -2392,8 +2392,8 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
 
     def lineEdit_key_press_event(self, event):
         actions = type_defs.KeyboardModifiersTupleDict([
-            ((Qt.NoModifier, Qt.Key_Up), self.scroll_backwards_history),
-            ((Qt.NoModifier, Qt.Key_Down), self.scroll_forwards_history)
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Up), self.scroll_backwards_history),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Down), self.scroll_forwards_history)
         ])
         try:
             actions[event.modifiers(), event.key()]()
@@ -2596,7 +2596,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.scrollArea_Hex.keyPressEvent = QEvent.ignore
         self.tableWidget_HexView_Address.setAutoScroll(False)
         self.tableWidget_HexView_Address.setStyleSheet("QTableWidget {background-color: transparent;}")
-        self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.NoSelection)
+        self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
         self.hex_model = QHexModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
         self.ascii_model = QAsciiModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
@@ -2606,10 +2606,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableView_HexView_Hex.selectionModel().currentChanged.connect(self.on_hex_view_current_changed)
         self.tableView_HexView_Ascii.selectionModel().currentChanged.connect(self.on_ascii_view_current_changed)
 
-        self.scrollArea_Hex.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.scrollArea_Hex.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.tableWidget_HexView_Address.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.tableWidget_HexView_Address.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scrollArea_Hex.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scrollArea_Hex.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.tableWidget_HexView_Address.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.tableWidget_HexView_Address.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.tableWidget_HexView_Address.verticalHeader().setDefaultSectionSize(
             self.tableView_HexView_Hex.verticalHeader().defaultSectionSize())
 
@@ -2673,7 +2673,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             GDB_Engine.delete_breakpoint(hex(address))
         else:
             watchpoint_dialog = InputDialogForm(item_list=[("Enter the watchpoint length in size of bytes", "")])
-            if watchpoint_dialog.exec_():
+            if watchpoint_dialog.exec():
                 user_input = watchpoint_dialog.get_values()
                 user_input_int = SysUtils.parse_string(user_input, type_defs.VALUE_INDEX.INDEX_INT32)
                 if user_input_int is None:
@@ -2694,7 +2694,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         copy_label = menu.addAction("Copy to Clipboard")
         font_size = self.label_HexView_Information.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             copy_label: copy_to_clipboard
         }
@@ -2727,7 +2727,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             GuiUtils.delete_menu_entries(menu, [watchpoint_menu.menuAction()])
         font_size = self.widget_HexView.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             edit: self.exec_hex_view_edit_dialog,
             go_to: self.exec_hex_view_go_to_dialog,
@@ -2747,13 +2747,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def exec_hex_view_edit_dialog(self):
         selected_address = self.tableView_HexView_Hex.get_selected_address()
-        HexEditDialogForm(hex(selected_address)).exec_()
+        HexEditDialogForm(hex(selected_address)).exec()
         self.refresh_hex_view()
 
     def exec_hex_view_go_to_dialog(self):
         current_address = hex(self.tableView_HexView_Hex.get_selected_address())
         go_to_dialog = InputDialogForm(item_list=[("Enter the expression", current_address)])
-        if go_to_dialog.exec_():
+        if go_to_dialog.exec():
             expression = go_to_dialog.get_values()
             dest_address = GDB_Engine.examine_expression(expression).address
             if not dest_address:
@@ -2765,7 +2765,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_address = self.tableView_HexView_Hex.get_selected_address()
         manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address),
                                                         index=type_defs.VALUE_INDEX.INDEX_AOB)
-        if manual_address_dialog.exec_():
+        if manual_address_dialog.exec():
             desc, address_expr, value_index, length, zero_terminate = manual_address_dialog.get_values()
             self.parent().add_entry_to_addresstable(desc, address_expr, value_index, length, zero_terminate)
 
@@ -3042,7 +3042,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     # color parameter should be Qt.colour
     def set_row_colour(self, row, colour):
         for col in range(self.tableWidget_Disassemble.columnCount()):
-            self.tableWidget_Disassemble.item(row, col).setData(Qt.BackgroundColorRole, QColor(colour))
+            self.tableWidget_Disassemble.item(row, col).setData(Qt.ItemDataRole.BackgroundRole, QColor(colour))
 
     def on_process_stop(self):
         if GDB_Engine.stop_reason == type_defs.STOP_REASON.PAUSE:
@@ -3094,8 +3094,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             condition_line_edit_text = breakpoint.condition
         else:
             condition_line_edit_text = ""
-        condition_dialog = InputDialogForm(item_list=[(condition_text, condition_line_edit_text, Qt.AlignLeft)])
-        if condition_dialog.exec_():
+        condition_dialog = InputDialogForm(item_list=[(condition_text, condition_line_edit_text, Qt.AlignmentFlag.AlignLeft)])
+        if condition_dialog.exec():
             condition = condition_dialog.get_values()
             if not GDB_Engine.modify_breakpoint(hex(int_address), type_defs.BREAKPOINT_MODIFY.CONDITION,
                                                 condition=condition):
@@ -3182,7 +3182,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         refresh = menu.addAction("Refresh[R]")
         font_size = self.tableWidget_StackTrace.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             switch_to_stack: lambda: self.set_stack_widget(self.Stack),
             copy_return: lambda: copy_to_clipboard(selected_row, STACKTRACE_RETURN_ADDRESS_COL),
@@ -3211,10 +3211,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address = SysUtils.extract_address(current_address_text)
 
         actions = type_defs.KeyboardModifiersTupleDict([
-            ((Qt.NoModifier, Qt.Key_R), self.update_stack),
-            ((Qt.ControlModifier, Qt.Key_D),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
              lambda: self.disassemble_expression(current_address, append_to_travel_history=True)),
-            ((Qt.ControlModifier, Qt.Key_H), lambda: self.hex_dump_address(int(current_address, 16)))
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H), lambda: self.hex_dump_address(int(current_address, 16)))
         ])
         try:
             actions[event.modifiers(), event.key()]()
@@ -3245,7 +3245,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             GuiUtils.delete_menu_entries(menu, [clipboard_menu.menuAction(), show_in_disas, show_in_hex])
         font_size = self.tableWidget_Stack.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             switch_to_stacktrace: lambda: self.set_stack_widget(self.StackTrace),
             copy_address: lambda: copy_to_clipboard(selected_row, STACK_POINTER_ADDRESS_COL),
@@ -3288,7 +3288,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def tableWidget_StackTrace_key_press_event(self, event):
         actions = type_defs.KeyboardModifiersTupleDict([
-            ((Qt.NoModifier, Qt.Key_R), self.update_stacktrace)
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stacktrace)
         ])
         try:
             actions[event.modifiers(), event.key()]()
@@ -3341,11 +3341,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_address = self.tableView_HexView_Hex.get_selected_address()
 
         actions = type_defs.KeyboardModifiersTupleDict([
-            ((Qt.ControlModifier, Qt.Key_G), self.exec_hex_view_go_to_dialog),
-            ((Qt.ControlModifier, Qt.Key_D),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_G), self.exec_hex_view_go_to_dialog),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
              lambda: self.disassemble_expression(hex(selected_address), append_to_travel_history=True)),
-            ((Qt.ControlModifier, Qt.Key_A), self.exec_hex_view_add_address_dialog),
-            ((Qt.NoModifier, Qt.Key_R), self.refresh_hex_view)
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_A), self.exec_hex_view_add_address_dialog),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh_hex_view)
         ])
         try:
             actions[event.modifiers(), event.key()]()
@@ -3360,16 +3360,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_int = int(current_address, 16)
 
         actions = type_defs.KeyboardModifiersTupleDict([
-            ((Qt.NoModifier, Qt.Key_Space), lambda: self.follow_instruction(selected_row)),
-            ((Qt.ControlModifier, Qt.Key_E), lambda: self.exec_examine_referrers_widget(current_address_text)),
-            ((Qt.ControlModifier, Qt.Key_G), self.exec_disassemble_go_to_dialog),
-            ((Qt.ControlModifier, Qt.Key_H), lambda: self.hex_dump_address(current_address_int)),
-            ((Qt.ControlModifier, Qt.Key_B), lambda: self.bookmark_address(current_address_int)),
-            ((Qt.ControlModifier, Qt.Key_D), self.dissect_current_region),
-            ((Qt.ControlModifier, Qt.Key_T), self.exec_trace_instructions_dialog),
-            ((Qt.NoModifier, Qt.Key_R), self.refresh_disassemble_view),
-            ((Qt.NoModifier, Qt.Key_Down), lambda: self.disassemble_check_viewport("next", 1)),
-            ((Qt.NoModifier, Qt.Key_Up), lambda: self.disassemble_check_viewport("previous", 1))
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space), lambda: self.follow_instruction(selected_row)),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_E), lambda: self.exec_examine_referrers_widget(current_address_text)),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_G), self.exec_disassemble_go_to_dialog),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H), lambda: self.hex_dump_address(current_address_int)),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B), lambda: self.bookmark_address(current_address_int)),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D), self.dissect_current_region),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_T), self.exec_trace_instructions_dialog),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh_disassemble_view),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Down), lambda: self.disassemble_check_viewport("next", 1)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Up), lambda: self.disassemble_check_viewport("previous", 1))
         ])
         try:
             actions[event.modifiers(), event.key()]()
@@ -3472,7 +3472,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         copy_all = clipboard_menu.addAction("Copy All")
         font_size = self.tableWidget_Disassemble.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             go_to: self.exec_disassemble_go_to_dialog,
             back: self.disassemble_go_back,
@@ -3508,7 +3508,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address = SysUtils.extract_address(current_address_text)
         dissect_code_dialog = DissectCodeDialogForm(int_address=int(current_address, 16))
         dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
-        dissect_code_dialog.exec_()
+        dissect_code_dialog.exec()
         self.refresh_disassemble_view()
 
     def exec_examine_referrers_widget(self, current_address_text):
@@ -3540,7 +3540,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address = SysUtils.extract_address(current_address_text)
 
         go_to_dialog = InputDialogForm(item_list=[("Enter the expression", current_address)])
-        if go_to_dialog.exec_():
+        if go_to_dialog.exec():
             traveled_exp = go_to_dialog.get_values()
             self.disassemble_expression(traveled_exp, append_to_travel_history=True)
 
@@ -3549,7 +3549,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             QMessageBox.information(app.focusWidget(), "Error", "This address has already been bookmarked")
             return
         comment_dialog = InputDialogForm(item_list=[("Enter the comment for bookmarked address", "")])
-        if comment_dialog.exec_():
+        if comment_dialog.exec():
             comment = comment_dialog.get_values()
         else:
             return
@@ -3559,7 +3559,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def change_bookmark_comment(self, int_address):
         current_comment = self.tableWidget_Disassemble.bookmarks[int_address]
         comment_dialog = InputDialogForm(item_list=[("Enter the comment for bookmarked address", current_comment)])
-        if comment_dialog.exec_():
+        if comment_dialog.exec():
             new_comment = comment_dialog.get_values()
         else:
             return
@@ -3628,7 +3628,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                      '\n4 is the result' \
                      '\nYou can use the assigned variable from the GDB Console'
         call_dialog = InputDialogForm(item_list=[(label_text, "")])
-        if call_dialog.exec_():
+        if call_dialog.exec():
             result = GDB_Engine.call_function_from_inferior(call_dialog.get_values())
             if result[0]:
                 QMessageBox.information(self, "Success!", result[0] + " = " + result[1])
@@ -3643,7 +3643,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def actionDissect_Code_triggered(self):
         self.dissect_code_dialog = DissectCodeDialogForm()
-        self.dissect_code_dialog.exec_()
+        self.dissect_code_dialog.exec()
         self.refresh_disassemble_view()
 
     def actionlibpince_triggered(self):
@@ -3689,7 +3689,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
 
     def exec_add_entry_dialog(self):
         entry_dialog = InputDialogForm(item_list=[("Enter the expression", "")])
-        if entry_dialog.exec_():
+        if entry_dialog.exec():
             text = entry_dialog.get_values()
             address = GDB_Engine.examine_expression(text).address
             if not address:
@@ -3722,7 +3722,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         refresh = menu.addAction("Refresh[R]")
         font_size = self.listWidget.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             add_entry: self.exec_add_entry_dialog,
             change_comment: lambda: self.exec_change_comment_dialog(current_address),
@@ -3780,7 +3780,7 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         current_value = current_table_widget.item(current_row, FLOAT_REGISTERS_VALUE_COL).text()
         label_text = "Enter the new value of register " + current_register.upper()
         register_dialog = InputDialogForm(item_list=[(label_text, current_value)])
-        if register_dialog.exec_():
+        if register_dialog.exec():
             if self.currentWidget() == self.XMM:
                 current_register += ".v4_float"
             GDB_Engine.set_convenience_variable(current_register, register_dialog.get_values())
@@ -3837,7 +3837,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         refresh = menu.addAction("Refresh[R]")
         font_size = self.tableWidget_Instructions.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             restore_instruction: lambda: self.restore_instruction(selected_address_int),
             refresh: self.refresh
@@ -3866,7 +3866,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
 
     def tableWidget_Instructions_key_press_event(self, event):
         actions = type_defs.KeyboardModifiersTupleDict([
-            ((Qt.NoModifier, Qt.Key_R), self.refresh)
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh)
         ])
         try:
             actions[event.modifiers(), event.key()]()
@@ -3928,8 +3928,8 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
             current_address = None
 
         actions = type_defs.KeyboardModifiersTupleDict([
-            ((Qt.NoModifier, Qt.Key_Delete), lambda: self.delete_breakpoint(current_address)),
-            ((Qt.NoModifier, Qt.Key_R), self.refresh)
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete), lambda: self.delete_breakpoint(current_address)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh)
         ])
         try:
             actions[event.modifiers(), event.key()]()
@@ -3939,7 +3939,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
 
     def exec_enable_count_dialog(self, current_address):
         hit_count_dialog = InputDialogForm(item_list=[("Enter the hit count(1 or higher)", "")])
-        if hit_count_dialog.exec_():
+        if hit_count_dialog.exec():
             count = hit_count_dialog.get_values()
             try:
                 count = int(count)
@@ -3979,7 +3979,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         refresh = menu.addAction("Refresh[R]")
         font_size = self.tableWidget_BreakpointInfo.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             change_condition: lambda: self.parent().add_breakpoint_condition(current_address_int),
             enable: lambda: GDB_Engine.modify_breakpoint(current_address, type_defs.BREAKPOINT_MODIFY.ENABLE),
@@ -4135,7 +4135,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
                      "\nIf you enter '$rax,$rbx*$rcx+4,$rbp'(without quotes)" \
                      "\nPINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]"
         register_expression_dialog = InputDialogForm(item_list=[(label_text, "")])
-        if register_expression_dialog.exec_():
+        if register_expression_dialog.exec():
             register_expressions = register_expression_dialog.get_values()
         else:
             return
@@ -4201,7 +4201,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
     def tableWidget_TrackInfo_item_double_clicked(self, index):
         address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
         self.parent().parent().add_entry_to_addresstable("Accessed by " + self.address, address,
-                                                         self.comboBox_ValueType.currentData(Qt.UserRole), 10, True)
+                                                         self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole), 10, True)
 
     def pushButton_Stop_clicked(self):
         if self.stopped:
@@ -4328,7 +4328,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         if not prompt_dialog:
             return
         prompt_dialog = TraceInstructionsPromptDialogForm()
-        if prompt_dialog.exec_():
+        if prompt_dialog.exec():
             params = (address,) + prompt_dialog.get_values()
             breakpoint = GDB_Engine.trace_instructions(*params)
             if not breakpoint:
@@ -4406,7 +4406,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         collapse_all = menu.addAction("Collapse All")
         font_size = self.treeWidget_InstructionInfo.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             expand_all: self.treeWidget_InstructionInfo.expandAll,
             collapse_all: self.treeWidget_InstructionInfo.collapseAll
@@ -4456,7 +4456,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.background_thread = self.loading_dialog.background_thread
         self.background_thread.overrided_func = lambda: self.process_data(input_text, case_sensitive)
         self.background_thread.output_ready.connect(self.apply_data)
-        self.loading_dialog.exec_()
+        self.loading_dialog.exec()
 
     def process_data(self, gdb_input, case_sensitive):
         return GDB_Engine.search_functions(gdb_input, case_sensitive)
@@ -4503,7 +4503,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
             GuiUtils.delete_menu_entries(menu, [copy_address, copy_symbol])
         font_size = self.tableWidget_SymbolInfo.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             copy_address: lambda: copy_to_clipboard(selected_row, FUNCTIONS_INFO_ADDR_COL),
             copy_symbol: lambda: copy_to_clipboard(selected_row, FUNCTIONS_INFO_SYMBOL_COL)
@@ -4528,7 +4528,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
                "\n@plt means this function is a subroutine for the original one" \
                "\nThere can be more than one of the same function" \
                "\nIt means that the function is overloaded"
-        InputDialogForm(item_list=[(text, None, Qt.AlignLeft)], buttons=[QDialogButtonBox.Ok]).exec_()
+        InputDialogForm(item_list=[(text, None, Qt.AlignmentFlag.AlignLeft)], buttons=[QDialogButtonBox.Ok]).exec()
 
     def closeEvent(self, QCloseEvent):
         global instances
@@ -4669,7 +4669,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
             GuiUtils.delete_menu_entries(menu, [copy_item, copy_value])
         font_size = self.tableWidget_ResourceTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             refresh: self.fill_resource_table,
             copy_item: lambda: copy_to_clipboard(selected_row, LIBPINCE_REFERENCE_ITEM_COL),
@@ -4708,7 +4708,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         collapse_all_items = menu.addAction("Collapse All")
         font_size = self.treeWidget_ResourceTree.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             refresh: self.fill_resource_tree,
             copy_item: lambda: copy_to_clipboard(LIBPINCE_REFERENCE_ITEM_COL),
@@ -4953,7 +4953,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         self.background_thread.overrided_func = lambda: self.process_data(regex, start_address, end_address,
                                                                           case_sensitive, enable_regex)
         self.background_thread.output_ready.connect(self.apply_data)
-        self.loading_dialog.exec_()
+        self.loading_dialog.exec()
 
     def process_data(self, regex, start_address, end_address, case_sensitive, enable_regex):
         return GDB_Engine.search_opcode(regex, start_address, end_address, case_sensitive, enable_regex)
@@ -4976,7 +4976,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
                "\n'[re]cx' searches for both 'rcx' and 'ecx'" \
                "\nUse the char '\\' to escape special chars such as '['" \
                "\n'\[rsp\]' searches for opcodes that contain '[rsp]'"
-        InputDialogForm(item_list=[(text, None, Qt.AlignLeft)], buttons=[QDialogButtonBox.Ok]).exec_()
+        InputDialogForm(item_list=[(text, None, Qt.AlignmentFlag.AlignLeft)], buttons=[QDialogButtonBox.Ok]).exec()
 
     def tableWidget_Opcodes_item_double_clicked(self, index):
         row = index.row()
@@ -4996,7 +4996,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
             GuiUtils.delete_menu_entries(menu, [copy_address, copy_opcode])
         font_size = self.tableWidget_Opcodes.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             copy_address: lambda: copy_to_clipboard(selected_row, SEARCH_OPCODE_ADDR_COL),
             copy_opcode: lambda: copy_to_clipboard(selected_row, SEARCH_OPCODE_OPCODES_COL)
@@ -5068,7 +5068,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
             GuiUtils.delete_menu_entries(menu, [copy_addresses, copy_size, copy_path])
         font_size = self.tableWidget_MemoryRegions.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             refresh: self.refresh_table,
             copy_addresses: lambda: copy_to_clipboard(selected_row, MEMORY_REGIONS_ADDR_COL),
@@ -5237,10 +5237,10 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         call_dict.close()
         if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
             confirm_dialog = InputDialogForm(item_list=[("You need to dissect code first\nProceed?",)])
-            if confirm_dialog.exec_():
+            if confirm_dialog.exec():
                 dissect_code_dialog = DissectCodeDialogForm()
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
-                dissect_code_dialog.exec_()
+                dissect_code_dialog.exec()
         self.refresh_table()
         self.tableWidget_References.sortByColumn(REF_STR_ADDR_COL, Qt.AscendingOrder)
         self.tableWidget_References.selectionModel().currentChanged.connect(self.tableWidget_References_current_changed)
@@ -5316,7 +5316,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
             GuiUtils.delete_menu_entries(menu, [copy_address, copy_value])
         font_size = self.tableWidget_References.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             copy_address: lambda: copy_to_clipboard(selected_row, REF_STR_ADDR_COL),
             copy_value: lambda: copy_to_clipboard(selected_row, REF_STR_VAL_COL)
@@ -5338,7 +5338,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
             GuiUtils.delete_menu_entries(menu, [copy_address])
         font_size = self.listWidget_Referrers.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             copy_address: lambda: copy_to_clipboard(selected_row)
         }
@@ -5372,10 +5372,10 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         call_dict.close()
         if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
             confirm_dialog = InputDialogForm(item_list=[("You need to dissect code first\nProceed?",)])
-            if confirm_dialog.exec_():
+            if confirm_dialog.exec():
                 dissect_code_dialog = DissectCodeDialogForm()
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
-                dissect_code_dialog.exec_()
+                dissect_code_dialog.exec()
         self.refresh_table()
         self.tableWidget_References.sortByColumn(REF_CALL_ADDR_COL, Qt.AscendingOrder)
         self.tableWidget_References.selectionModel().currentChanged.connect(self.tableWidget_References_current_changed)
@@ -5445,7 +5445,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
             GuiUtils.delete_menu_entries(menu, [copy_address])
         font_size = self.tableWidget_References.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             copy_address: lambda: copy_to_clipboard(selected_row, REF_CALL_ADDR_COL)
         }
@@ -5466,7 +5466,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
             GuiUtils.delete_menu_entries(menu, [copy_address])
         font_size = self.listWidget_Referrers.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             copy_address: lambda: copy_to_clipboard(selected_row)
         }
@@ -5590,7 +5590,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
             GuiUtils.delete_menu_entries(menu, [copy_address])
         font_size = self.listWidget_Referrers.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec_(event.globalPos())
+        action = menu.exec(event.globalPos())
         actions = {
             copy_address: lambda: copy_to_clipboard(selected_row)
         }
@@ -5614,4 +5614,4 @@ if __name__ == "__main__":
     app.aboutToQuit.connect(exitHandler)
     window = MainForm()
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

@@ -14,8 +14,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt5.QtWidgets import QTableView, QAbstractItemView
-from PyQt5.QtCore import Qt
+from PyQt6.QtWidgets import QTableView, QAbstractItemView
+from PyQt6.QtCore import Qt
 
 from libpince import SysUtils, GDB_Engine
 
@@ -29,9 +29,9 @@ class QHexView(QTableView):
         self.horizontalHeader().setDefaultSectionSize(self.horizontalHeader().minimumSectionSize())
         self.setStyleSheet("QTableView {background-color: transparent;}")
         self.setShowGrid(False)
-        self.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setAutoScroll(False)
 
     def wheelEvent(self, QWheelEvent):
