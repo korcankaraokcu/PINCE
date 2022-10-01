@@ -51,10 +51,10 @@ install_scanmem() {
         else
             compile_scanmem
         fi
-        cp --preserve .libs/libscanmem.so ../libpince/libscanmem/libscanmem.so
+        cp --preserve .libs/libscanmem.so ../libpince/libscanmem/
         cp --preserve gui/scanmem.py ../libpince/libscanmem
         cp --preserve gui/misc.py ../libpince/libscanmem
-        echo "Exitting scanmem"
+        echo "Exiting scanmem"
     )
     # required for relative import, since it will throw an import error if it's just `import misc`
     sed -i 's/import misc/from \. import misc/g' libpince/libscanmem/scanmem.py
@@ -65,10 +65,10 @@ PKG_MGR="apt-get"
 INSTALL_COMMAND="install"
 
 PKG_NAMES_ALL="python3-pip gdb"
-PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-pyqt5 libtool libreadline-dev intltool"
-PKG_NAMES_SUSE="$PKG_NAMES_ALL python3-qt5"
-PKG_NAMES_FEDORA="$PKG_NAMES_ALL python3-qt5 libtool readline-devel python3-devel intltool"
-PKG_NAMES_ARCH="python-pip python-pyqt5 readline intltool gdb lsb-release" # arch defaults to py3 nowadays
+PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-pyqt6 libtool libreadline-dev intltool"
+PKG_NAMES_SUSE="$PKG_NAMES_ALL python3-qt6"
+PKG_NAMES_FEDORA="$PKG_NAMES_ALL python3-qt6 libtool readline-devel python3-devel intltool"
+PKG_NAMES_ARCH="python-pip python-pyqt6 readline intltool gdb lsb-release" # arch defaults to py3 nowadays
 PKG_NAMES="$PKG_NAMES_DEBIAN"
 PKG_NAMES_PIP="psutil pexpect distorm3 pygdbmi keyboard"
 PIP_COMMAND="pip3"

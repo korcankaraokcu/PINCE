@@ -14,9 +14,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt5.QtWidgets import QLabel
-from PyQt5.QtGui import QCursor
-from PyQt5.QtCore import Qt
+from PyQt6.QtWidgets import QLabel
+from PyQt6.QtGui import QCursor
+from PyQt6.QtCore import Qt
 from libpince import GDB_Engine
 from PINCE import InputDialogForm
 
@@ -42,6 +42,6 @@ class QFlagRegisterLabel(QLabel):
         current_flag = self.objectName().lower()
         label_text = "Enter the new value of flag " + self.objectName()
         register_dialog = InputDialogForm(item_list=[(label_text, ["0", "1", int(registers[current_flag])])])
-        if register_dialog.exec_():
+        if register_dialog.exec():
             GDB_Engine.set_register_flag(current_flag, register_dialog.get_values())
             self.set_value(GDB_Engine.read_registers()[current_flag])
