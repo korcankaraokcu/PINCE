@@ -3664,7 +3664,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         global instances
         instances.append(self)
         GuiUtils.center(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.listWidget.contextMenuEvent = self.listWidget_context_menu_event
         self.listWidget.currentRowChanged.connect(self.change_display)
         self.listWidget.itemDoubleClicked.connect(self.listWidget_item_double_clicked)
@@ -3751,7 +3751,7 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.update_registers()
         self.tableWidget_FPU.itemDoubleClicked.connect(self.set_register)
         self.tableWidget_XMM.itemDoubleClicked.connect(self.set_register)
@@ -3792,7 +3792,7 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.listWidget_ReturnAddresses.currentRowChanged.connect(self.update_frame_info)
         self.update_stacktrace()
 
@@ -3814,7 +3814,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         global instances
         instances.append(self)
         GuiUtils.center(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.tableWidget_Instructions.keyPressEvent_original = self.tableWidget_Instructions.keyPressEvent
@@ -3887,7 +3887,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         global instances
         instances.append(self)
         GuiUtils.center(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.tableWidget_BreakpointInfo.contextMenuEvent = self.tableWidget_BreakpointInfo_context_menu_event
 
         # Saving the original function because super() doesn't work when we override functions like this
@@ -4031,7 +4031,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         global instances
         instances.append(self)
         GuiUtils.center(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         if watchpoint_type == type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
             string = "writing to"
         elif watchpoint_type == type_defs.WATCHPOINT_TYPE.READ_ONLY:
@@ -4121,7 +4121,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.parent = lambda: parent
         global instances
         instances.append(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         GuiUtils.center_to_parent(self)
         self.setWindowTitle("Addresses accessed by instruction '" + instruction + "'")
         label_text = "Enter the register expression(s) you want to track" \
@@ -4437,7 +4437,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         global instances
         instances.append(self)
         GuiUtils.center(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.textBrowser_AddressInfo.setFixedHeight(100)
         self.pushButton_Search.clicked.connect(self.refresh_table)
         self.shortcut_search = QShortcut(QKeySequence("Return"), self)
@@ -4628,7 +4628,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         instances.append(self)
         if is_window:
             GuiUtils.center(self)
-            self.setWindowFlags(Qt.Window)
+            self.setWindowFlags(Qt.WindowType.Window)
         self.show_type_defs()
         self.splitter.setStretchFactor(0, 1)
         self.widget_Resources.resize(700, self.widget_Resources.height())
@@ -4873,7 +4873,7 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         GuiUtils.center(self)
         global instances
         instances.append(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.contents = ""
         self.refresh_contents()
         self.refresh_timer = QTimer()
@@ -4929,7 +4929,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         global instances
         instances.append(self)
         GuiUtils.center(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.lineEdit_Start.setText(start)
         self.lineEdit_End.setText(end)
         self.tableWidget_Opcodes.setColumnWidth(SEARCH_OPCODE_ADDR_COL, 250)
@@ -5019,7 +5019,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         global instances
         instances.append(self)
         GuiUtils.center(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.refresh_table()
         self.tableWidget_MemoryRegions.contextMenuEvent = self.tableWidget_MemoryRegions_context_menu_event
         self.tableWidget_MemoryRegions.itemDoubleClicked.connect(self.tableWidget_MemoryRegions_item_double_clicked)
@@ -5224,7 +5224,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         global instances
         instances.append(self)
         GuiUtils.center_to_parent(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.tableWidget_References.setColumnWidth(REF_STR_ADDR_COL, 150)
         self.tableWidget_References.setColumnWidth(REF_STR_COUNT_COL, 80)
         self.splitter.setStretchFactor(0, 1)
@@ -5360,7 +5360,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         global instances
         instances.append(self)
         GuiUtils.center_to_parent(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.tableWidget_References.setColumnWidth(REF_CALL_ADDR_COL, 480)
         self.splitter.setStretchFactor(0, 1)
         self.listWidget_Referrers.resize(400, self.listWidget_Referrers.height())
@@ -5488,7 +5488,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         global instances
         instances.append(self)
         GuiUtils.center_to_parent(self)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.splitter.setStretchFactor(0, 1)
         self.textBrowser_DisasInfo.resize(600, self.textBrowser_DisasInfo.height())
         self.referenced_hex = hex(int_address)
