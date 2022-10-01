@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QValidator
+from PyQt6.QtGui import QValidator
 
 
 class QHexValidator(QValidator):
