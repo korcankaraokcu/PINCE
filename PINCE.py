@@ -4575,7 +4575,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
         aob_array = aob_string.split()
         try:
             self.lineEdit_AsciiView.setText(SysUtils.aob_to_str(aob_array, "utf-8"))
-            self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: white;}")
+            self.lineEdit_HexView.setStyleSheet("")  # This should set background color back to QT default
         except ValueError:
             self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: red;}")
 
@@ -4583,7 +4583,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
         ascii_str = self.lineEdit_AsciiView.text()
         try:
             self.lineEdit_HexView.setText(SysUtils.str_to_aob(ascii_str, "utf-8"))
-            self.lineEdit_AsciiView.setStyleSheet("QLineEdit {background-color: white;}")
+            self.lineEdit_AsciiView.setStyleSheet("")
         except ValueError:
             self.lineEdit_AsciiView.setStyleSheet("QLineEdit {background-color: red;}")
 
