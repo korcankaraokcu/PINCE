@@ -57,6 +57,7 @@ from GUI.TraceInstructionsWaitWidget import Ui_Form as TraceInstructionsWaitWidg
 from GUI.TraceInstructionsWindow import Ui_MainWindow as TraceInstructionsWindow
 from GUI.FunctionsInfoWidget import Ui_Form as FunctionsInfoWidget
 from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
+from GUI.EditInstructionDialog import Ui_Dialog as EditInstructionDialog
 from GUI.LibpinceReferenceWidget import Ui_Form as LibpinceReferenceWidget
 from GUI.LogFileWidget import Ui_Form as LogFileWidget
 from GUI.SearchOpcodeWidget import Ui_Form as SearchOpcodeWidget
@@ -146,6 +147,7 @@ signal_list = ["SIGUSR1", "SIGPWR", "SIGSEGV"]
 # represents the index of columns in instructions restore table
 INSTR_ADDR_COL = 0
 INSTR_AOB_COL = 1
+INSTR_NAME_COL = 2
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -2646,6 +2648,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         GDB_Engine.set_convenience_variable("pc", current_address)
         self.refresh_disassemble_view()
 
+    def edit_instruction(self):
+        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+        opcode = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
+        EditInstructionDialogForm(current_address, opcode, self).exec_()
+
     def nop_instruction(self):
         selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -3454,6 +3463,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if not GDB_Engine.check_address_in_breakpoints(current_address_int):
             GuiUtils.delete_menu_entries(menu, [add_condition])
         menu.addSeparator()
+        edit_instruction = menu.addAction("Edit instruction")
         nop_instruction = menu.addAction("Replace instruction with NOPs")
         if self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text() == '90':
             GuiUtils.delete_menu_entries(menu, [nop_instruction])
@@ -3484,6 +3494,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             change_comment: lambda: self.change_bookmark_comment(current_address_int),
             toggle_breakpoint: self.toggle_breakpoint,
             add_condition: lambda: self.add_breakpoint_condition(current_address_int),
+            edit_instruction: self.edit_instruction,
             nop_instruction: self.nop_instruction,
             track_breakpoint: self.exec_track_breakpoint_dialog,
             trace_instructions: self.exec_trace_instructions_dialog,
@@ -3857,6 +3868,8 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         for row, (address, aob) in enumerate(modified_instructions.items()):
             self.tableWidget_Instructions.setItem(row, INSTR_ADDR_COL, QTableWidgetItem(hex(address)))
             self.tableWidget_Instructions.setItem(row, INSTR_AOB_COL, QTableWidgetItem(aob))
+            instr_name = SysUtils.get_opcode_name(address, aob, GDB_Engine.get_inferior_arch())
+            self.tableWidget_Instructions.setItem(row, INSTR_NAME_COL, QTableWidgetItem(instr_name))
         GuiUtils.resize_to_contents(self.tableWidget_Instructions)
 
     def refresh_all(self):
@@ -4533,6 +4546,67 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
     def closeEvent(self, QCloseEvent):
         global instances
         instances.remove(self)
+
+
+class EditInstructionDialogForm(QDialog, EditInstructionDialog):
+    def __init__(self, address, opcode, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.orig_opcode = opcode
+        self.orig_instr = SysUtils.get_opcode_name(int(address, 0), opcode, GDB_Engine.get_inferior_arch())
+        self.is_valid = False
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.lineEdit_Address.setText(address)
+        self.lineEdit_OpCodes.setText(opcode)
+        self.lineEdit_Instruction.setText(self.orig_instr)
+        self.lineEdit_OpCodes.textEdited.connect(self.lineEdit_OpCodes_text_edited)
+
+    def set_not_valid(self, instruction, is_original_opcode):
+        if is_original_opcode:
+            self.lineEdit_OpCodes.setStyleSheet("")
+        else:
+            self.lineEdit_OpCodes.setStyleSheet("QLineEdit {background-color: red;}")
+        self.lineEdit_Instruction.setText(instruction)
+        self.is_valid = False
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+    def lineEdit_OpCodes_text_edited(self):
+        aob_string = self.lineEdit_OpCodes.text()
+        if not SysUtils.parse_string(aob_string, type_defs.VALUE_INDEX.INDEX_AOB):
+            self.set_not_valid("???", False)
+            return
+
+        if len(aob_string) != len(self.orig_opcode):
+            self.set_not_valid("???", False)
+            return
+
+        if aob_string == self.orig_opcode:
+            self.set_not_valid(self.orig_instr, True)
+            return
+
+        self.lineEdit_OpCodes.setStyleSheet("")
+        self.is_valid = True
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        self.refresh_view()
+
+    def refresh_view(self):
+        self.lineEdit_Instruction.clear()
+        address = int(self.lineEdit_Address.text(), 0)
+        opcode = self.lineEdit_OpCodes.text()
+        instr_str = SysUtils.get_opcode_name(address, opcode, GDB_Engine.get_inferior_arch())
+        self.lineEdit_Instruction.setText(instr_str)
+
+    def accept(self):
+        if not self.is_valid:
+            return
+
+        # No need to check for validity since address is not editable and opcode is checked in text_edited
+        address = int(self.lineEdit_Address.text(), 0)
+        opcode = self.lineEdit_OpCodes.text()
+        GDB_Engine.modify_instruction(address, opcode)
+        self.parent().refresh_hex_view()
+        self.parent().refresh_disassemble_view()
+        super(EditInstructionDialogForm, self).accept()
 
 
 class HexEditDialogForm(QDialog, HexEditDialog):
