@@ -1328,7 +1328,8 @@ def nop_instruction(start_address, length_of_instr):
     """
     old_aob = " ".join(hex_dump(start_address, length_of_instr))
     global modified_instructions_dict
-    modified_instructions_dict[start_address] = old_aob
+    if start_address not in modified_instructions_dict:
+        modified_instructions_dict[start_address] = old_aob
 
     nop_aob = '90 ' * length_of_instr
     write_memory(start_address, type_defs.VALUE_INDEX.INDEX_AOB, nop_aob)
@@ -1349,7 +1350,8 @@ def modify_instruction(start_address, array_of_bytes):
     old_aob = " ".join(hex_dump(start_address, length))
 
     global modified_instructions_dict
-    modified_instructions_dict[start_address] = old_aob
+    if start_address not in modified_instructions_dict:
+        modified_instructions_dict[start_address] = old_aob
     write_memory(start_address, type_defs.VALUE_INDEX.INDEX_AOB, array_of_bytes)
 
 
