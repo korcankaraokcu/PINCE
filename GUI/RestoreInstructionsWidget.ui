@@ -47,6 +47,11 @@
      </column>
      <column>
       <property name="text">
+       <string>Original OpCode</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
        <string>Original Instruction</string>
       </property>
      </column>
