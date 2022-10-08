@@ -1316,20 +1316,21 @@ def get_modified_instructions():
 
 
 #:tag:MemoryRW
-def nop_instruction(start_address, array_of_bytes):
+def nop_instruction(start_address, length_of_instr):
     """Replaces an instruction's opcodes with NOPs
 
     Args:
         start_address (int): Self-explanatory
-        array_of_bytes (str): String that contains the bytes of the instruction
+        length_of_instr (int): Length of the instruction that'll be NOP'ed
 
     Returns:
         None
     """
+    old_aob = " ".join(hex_dump(start_address, length_of_instr))
     global modified_instructions_dict
-    modified_instructions_dict[start_address] = array_of_bytes
+    modified_instructions_dict[start_address] = old_aob
 
-    nop_aob = '90 ' * len(array_of_bytes.split())
+    nop_aob = '90 ' * length_of_instr
     write_memory(start_address, type_defs.VALUE_INDEX.INDEX_AOB, nop_aob)
 
 
