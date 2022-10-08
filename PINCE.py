@@ -2652,7 +2652,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
         array_of_bytes = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
-        GDB_Engine.nop_instruction(current_address_int, array_of_bytes)
+        GDB_Engine.nop_instruction(current_address_int, len(array_of_bytes.split()))
         self.refresh_disassemble_view()
 
     @GDB_Engine.execute_with_temporary_interruption
