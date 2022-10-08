@@ -3852,9 +3852,9 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         self.refresh_all()
 
     def refresh(self):
-        noped_instructions = GDB_Engine.get_noped_instructions()
-        self.tableWidget_Instructions.setRowCount(len(noped_instructions))
-        for row, (address, aob) in enumerate(noped_instructions.items()):
+        modified_instructions = GDB_Engine.get_modified_instructions()
+        self.tableWidget_Instructions.setRowCount(len(modified_instructions))
+        for row, (address, aob) in enumerate(modified_instructions.items()):
             self.tableWidget_Instructions.setItem(row, INSTR_ADDR_COL, QTableWidgetItem(hex(address)))
             self.tableWidget_Instructions.setItem(row, INSTR_AOB_COL, QTableWidgetItem(aob))
         GuiUtils.resize_to_contents(self.tableWidget_Instructions)
@@ -4611,7 +4611,12 @@ class HexEditDialogForm(QDialog, HexEditDialog):
             QMessageBox.information(self, "Error", expression + " isn't a valid expression")
             return
         value = self.lineEdit_HexView.text()
-        GDB_Engine.write_memory(address, type_defs.VALUE_INDEX.INDEX_AOB, value)
+
+        try:
+            address = int(address, 0)
+        except ValueError:
+            return
+        GDB_Engine.modify_instruction(address, value)
         super(HexEditDialogForm, self).accept()
 
 
