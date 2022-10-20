@@ -27,14 +27,14 @@ CURRENT_USER="$(who mom likes | awk '{print $1}')"
 compile_scanmem() {
     sh autogen.sh
     ./configure --prefix="$(pwd)"
-    make -j $(grep -m 1 "cpu cores" /proc/cpuinfo | cut -d: -f 2 | xargs) libscanmem.la
+    make -j libscanmem.la
     chown -R "${CURRENT_USER}":"${CURRENT_USER}" . # give permissions for normal user to change file
 }
 
 install_scanmem() {
     echo "Downloading scanmem"
     git submodule update --init --recursive
-    
+
     if [ ! -d "libpince/libscanmem" ]; then
         mkdir libpince/libscanmem
         chown -R "${CURRENT_USER}":"${CURRENT_USER}" libpince/libscanmem
@@ -42,7 +42,7 @@ install_scanmem() {
     (
         echo "Entering scanmem"
         cd scanmem || exit
-        if [ -d "./.libs" ]; then 
+        if [ -d "./.libs" ]; then
             echo "Recompile scanmem? [y/n]"
             read -r answer
             if echo "$answer" | grep -iq "^[Yy]"; then
@@ -77,6 +77,7 @@ LSB_RELEASE="$(command -v lsb_release)"
 if [ -n "$LSB_RELEASE" ] ; then
     OS_NAME="$(${LSB_RELEASE} -d -s)"
 else
+    # shellcheck disable=SC1091
     . /etc/os-release
     OS_NAME="$NAME"
 fi
@@ -98,7 +99,9 @@ case "$OS_NAME" in
     ;;
 esac
 
+# shellcheck disable=SC2086
 sudo ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES}
+# shellcheck disable=SC2086
 sudo ${PIP_COMMAND} install ${PKG_NAMES_PIP}
 
 install_scanmem
