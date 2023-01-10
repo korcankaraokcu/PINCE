@@ -65,9 +65,9 @@ git clone --recursive https://github.com/korcankaraokcu/PINCE
 cd PINCE
 sudo sh install_pince.sh
 ```
-For Archlinux, you can also use the [AUR package](https://aur.archlinux.org/packages/pince-git/) as an alternative.
+~~For Archlinux, you can also use the [AUR package](https://aur.archlinux.org/packages/pince-git/) as an alternative~~ Currently outdated, use the installation script
 
-If you like to uninstall PINCE, just delete this folder, almost everything is installed locally. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them if you want.
+If you like to uninstall PINCE, just delete this folder, almost everything is installed locally. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them if you want
 
 ***Notes:***
 - GDB enhancements (peda, pwndbg, etc) that use a global gdbinit file might cause PINCE to misfunction at times. Please disable them or use them locally before starting PINCE
@@ -80,7 +80,7 @@ In some cases, ```sudo sh PINCE.sh``` works too, as reported in https://github.c
 
 ### For developers:  
 ```
-sudo apt-get install qt6-base-dev (designer and pyuic6)
+sudo apt-get install qt6-tools-dev (designer and pyuic6)
 sudo pip3 install line_profiler (for performance testing)
 ```
 How to use line_profiler: Add ```@profile``` tag to the desired function and run PINCE with ```sudo kernprof -l -v PINCE.py```
