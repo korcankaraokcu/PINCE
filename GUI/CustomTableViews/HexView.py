@@ -14,9 +14,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt5.QtWidgets import QTableView, QAbstractItemView
-from PyQt5.QtCore import Qt
-
+from PyQt6.QtWidgets import QTableView, QAbstractItemView
+from PyQt6.QtCore import Qt
 from libpince import SysUtils, GDB_Engine
 
 
@@ -29,18 +28,24 @@ class QHexView(QTableView):
         self.horizontalHeader().setDefaultSectionSize(self.horizontalHeader().minimumSectionSize())
         self.setStyleSheet("QTableView {background-color: transparent;}")
         self.setShowGrid(False)
-        self.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setAutoScroll(False)
 
     def wheelEvent(self, QWheelEvent):
         QWheelEvent.ignore()
 
     def resize_to_contents(self):
+        _self_name=self.__class__.__name__
         size = self.columnWidth(0) * self.model().columnCount()
-        self.setMinimumWidth(size)
-        self.setMaximumWidth(size)
+        if (_self_name == "QHexView"):
+            self.setMinimumWidth(int(size*1.875))
+            self.setMaximumWidth(int(size*1.875))
+            self.resizeColumnsToContents()
+        else:
+            self.setMinimumWidth(int(size))
+            self.setMaximumWidth(int(size))
 
     def get_selected_address(self):
         ci = self.currentIndex()
