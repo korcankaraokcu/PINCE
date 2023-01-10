@@ -27,14 +27,14 @@ CURRENT_USER="$(who mom likes | awk '{print $1}')"
 compile_scanmem() {
     sh autogen.sh
     ./configure --prefix="$(pwd)"
-    make -j $(grep -m 1 "cpu cores" /proc/cpuinfo | cut -d: -f 2 | xargs) libscanmem.la
+    make -j libscanmem.la
     chown -R "${CURRENT_USER}":"${CURRENT_USER}" . # give permissions for normal user to change file
 }
 
 install_scanmem() {
     echo "Downloading scanmem"
     git submodule update --init --recursive
-    
+
     if [ ! -d "libpince/libscanmem" ]; then
         mkdir libpince/libscanmem
         chown -R "${CURRENT_USER}":"${CURRENT_USER}" libpince/libscanmem
@@ -42,7 +42,7 @@ install_scanmem() {
     (
         echo "Entering scanmem"
         cd scanmem || exit
-        if [ -d "./.libs" ]; then 
+        if [ -d "./.libs" ]; then
             echo "Recompile scanmem? [y/n]"
             read -r answer
             if echo "$answer" | grep -iq "^[Yy]"; then
@@ -64,19 +64,21 @@ OS_NAME="Debian"
 PKG_MGR="apt-get"
 INSTALL_COMMAND="install"
 
-PKG_NAMES_ALL="python3-pip gdb"
-PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-pyqt6 libtool libreadline-dev intltool"
-PKG_NAMES_SUSE="$PKG_NAMES_ALL python3-qt6"
-PKG_NAMES_FEDORA="$PKG_NAMES_ALL python3-qt6 libtool readline-devel python3-devel intltool"
-PKG_NAMES_ARCH="python-pip python-pyqt6 readline intltool gdb lsb-release" # arch defaults to py3 nowadays
+
+PKG_NAMES_ALL="python3-pip gdb libtool intltool"
+PKG_NAMES_DEBIAN="$PKG_NAMES_ALL libreadline-dev"
+PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc readline-devel python3-devel typelib-1_0-Gtk-3_0 make"
+PKG_NAMES_FEDORA="$PKG_NAMES_ALL readline-devel python3-devel"
+PKG_NAMES_ARCH="python-pip readline intltool gdb lsb-release" # arch defaults to py3 nowadays
 PKG_NAMES="$PKG_NAMES_DEBIAN"
-PKG_NAMES_PIP="psutil pexpect distorm3 pygdbmi keyboard"
+PKG_NAMES_PIP="pyqt6 psutil pexpect distorm3 pygdbmi keyboard"
 PIP_COMMAND="pip3"
 
 LSB_RELEASE="$(command -v lsb_release)"
 if [ -n "$LSB_RELEASE" ] ; then
     OS_NAME="$(${LSB_RELEASE} -d -s)"
 else
+    # shellcheck disable=SC1091
     . /etc/os-release
     OS_NAME="$NAME"
 fi
@@ -98,7 +100,9 @@ case "$OS_NAME" in
     ;;
 esac
 
+# shellcheck disable=SC2086
 sudo ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES}
+# shellcheck disable=SC2086
 sudo ${PIP_COMMAND} install ${PKG_NAMES_PIP}
 
 install_scanmem

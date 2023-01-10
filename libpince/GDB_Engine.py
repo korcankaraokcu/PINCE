@@ -353,39 +353,14 @@ def execute_func_temporary_interruption(func, *args, **kwargs):
     """
     old_status = inferior_status
     if old_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-        ___internal_interrupt_inferior(type_defs.STOP_REASON.PAUSE)
+        interrupt_inferior(type_defs.STOP_REASON.PAUSE)
     result = func(*args, **kwargs)
     if old_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
         try:
-            ___internal_continue_inferior()
+            continue_inferior()
         except type_defs.InferiorRunningException:
             pass
     return result
-
-
-#:tag:Debug
-def ___internal_continue_inferior():
-    """
-        Continue the inferior
-        DOES NOT TOGGLE temporary_execution_condition
-        you should always use the real one
-        if you don't toggle the temporary_execution_condition it will never be able to break
-    """
-
-    send_command("c")
-
-
-#:tag:Debug
-def ___internal_interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
-    """Interrupt the inferior
-    see notes on ___internal_continue_inferior
-    Args:
-        interrupt_reason (int): Just changes the global variable stop_reason. Can be a member of type_defs.STOP_REASON
-    """
-    global stop_reason
-    send_command("c", control=True)
-    wait_for_stop()
-    stop_reason = interrupt_reason
 
 
 #:tag:Debug

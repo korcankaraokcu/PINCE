@@ -20,7 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 OS=$(lsb_release -si)
 # Get rid of gksudo when Debian 8 support drops or polkit gets implemented
 if [ $OS = "Debian" ] && [ -x "$(command -v gksudo)" ]; then
-  gksudo python3 PINCE.py
+  gksudo env PYTHONDONTWRITEBYTECODE=1 python3 PINCE.py
 else
-  sudo -E python3 PINCE.py
+  # Preserve env vars to keep settings like theme preferences
+  sudo -E PYTHONDONTWRITEBYTECODE=1 python3 PINCE.py
 fi
