@@ -80,8 +80,7 @@ In some cases, ```sudo sh PINCE.sh``` works too, as reported in https://github.c
 
 ### For developers:  
 ```
-sudo apt-get install qttools5-dev-tools (qt6 form designer)
-sudo apt-get install pyqt6-dev-tools (pyuic5)
+sudo apt-get install qt6-base-dev (designer and pyuic6)
 sudo pip3 install line_profiler (for performance testing)
 ```
 How to use line_profiler: Add ```@profile``` tag to the desired function and run PINCE with ```sudo kernprof -l -v PINCE.py```
