@@ -2680,7 +2680,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         opcode = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
-        EditInstructionDialogForm(current_address, opcode, self).exec_()
+        EditInstructionDialogForm(current_address, opcode, self).exec()
 
     def nop_instruction(self):
         if GDB_Engine.currentpid == -1:
@@ -4726,7 +4726,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
         self.orig_opcode = opcode
         self.orig_instr = SysUtils.get_opcode_name(int(address, 0), opcode, GDB_Engine.get_inferior_arch())
         self.is_valid = False
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
         self.lineEdit_Address.setText(address)
         self.lineEdit_OpCodes.setText(opcode)
         self.lineEdit_Instruction.setText(self.orig_instr)
@@ -4739,7 +4739,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
             self.lineEdit_OpCodes.setStyleSheet("QLineEdit {background-color: red;}")
         self.lineEdit_Instruction.setText(instruction)
         self.is_valid = False
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
 
     def lineEdit_OpCodes_text_edited(self):
         aob_string = self.lineEdit_OpCodes.text()
@@ -4757,7 +4757,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
 
         self.lineEdit_OpCodes.setStyleSheet("")
         self.is_valid = True
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
         self.refresh_view()
 
     def refresh_view(self):
