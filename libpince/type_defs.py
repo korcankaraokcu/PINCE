@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import collections.abc, queue, sys
 
-
 class CONST_TIME:
     GDB_INPUT_SLEEP = sys.float_info.min
 
@@ -508,20 +507,18 @@ class RegisterQueue:
 
 
 class KeyboardModifiersTupleDict(collections.abc.Mapping):
-    def _convert_to_int(self, tuple_key):
-        return tuple(int(x) for x in tuple_key)
-
     def __init__(self, OrderedDict_like_list):
         new_dict = {}
-        for tuple_key, value in OrderedDict_like_list:
-            new_dict[self._convert_to_int(tuple_key)] = value
+        for keycomb, value in OrderedDict_like_list:
+            new_dict[keycomb] = value
         self._storage = new_dict
 
-    def __getitem__(self, tuple_key):
-        return self._storage[self._convert_to_int(tuple_key)]
+    def __getitem__(self, keycomb):
+        return self._storage[keycomb]
 
     def __iter__(self):
         return iter(self._storage)
 
     def __len__(self):
         return len(self._storage)
+

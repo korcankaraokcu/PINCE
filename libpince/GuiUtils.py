@@ -15,12 +15,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-# PyQt5 isn't needed to run tests with travis. To reduce the testing time and complexity, we ignore the PyQt5 imports
-# There'll be no tests for PyQt5 related functions in GuiUtils.py
-try:
-    from PyQt5.QtWidgets import QDesktopWidget
-except ImportError:
-    pass
 from . import SysUtils, type_defs, common_regexes
 
 
@@ -41,7 +35,7 @@ def center(window):
     Args:
         window (QMainWindow, QWidget etc.): The window that'll be centered to desktop
     """
-    window.move(QDesktopWidget().availableGeometry().center() - window.frameGeometry().center())
+    window.frameGeometry().moveCenter(window.screen().availableGeometry().center())
 
 
 #:tag:GUI
@@ -169,18 +163,13 @@ def delete_menu_entries(QMenu, QAction_list):
             try:
                 QAction_list.index(action)
             except ValueError:
-                if action.menu():
-                    remove_entries(action.menu())
+                pass
             else:
                 menu.removeAction(action)
 
     def clean_entries(menu):
         for action in menu.actions():
-            if action.menu():
-                clean_entries(action.menu())
-                if not action.menu().actions():
-                    menu.removeAction(action.menu().menuAction())
-            elif action.isSeparator():
+            if action.isSeparator():
                 actions = menu.actions()
                 current_index = actions.index(action)
                 if len(actions) == 1 or (current_index == 0 and actions[1].isSeparator()) or \
