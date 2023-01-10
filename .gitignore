@@ -8,3 +8,4 @@ libpince/libscanmem/*
 *.py[cod]
 *$py.class
 gdb_pince/*
+*.gnbs.conf

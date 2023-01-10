@@ -510,14 +510,15 @@ class KeyboardModifiersTupleDict(collections.abc.Mapping):
     def __init__(self, OrderedDict_like_list):
         new_dict = {}
         for keycomb, value in OrderedDict_like_list:
-            new_dict[keycomb.toCombined()] = value
+            new_dict[keycomb] = value
         self._storage = new_dict
 
     def __getitem__(self, keycomb):
-        return self._storage[keycomb.toCombined()]
+        return self._storage[keycomb]
 
     def __iter__(self):
         return iter(self._storage)
 
     def __len__(self):
         return len(self._storage)
+
