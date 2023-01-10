@@ -36,9 +36,11 @@ class QRegisterLabel(QLabel):
         self.setText(new)
 
     def enterEvent(self, QEvent):
-        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
     def mouseDoubleClickEvent(self, QMouseEvent):
+        if GDB_Engine.currentpid == -1:
+            return
         registers = GDB_Engine.read_registers()
         current_register = self.objectName().lower()
         register_dialog = InputDialogForm(
@@ -48,6 +50,8 @@ class QRegisterLabel(QLabel):
             self.set_value(GDB_Engine.read_registers()[current_register])
 
     def contextMenuEvent(self, QContextMenuEvent):
+        if GDB_Engine.currentpid == -1:
+            return
         menu = QMenu()
         show_in_hex_view = menu.addAction("Show in HexView")
         show_in_disassembler = menu.addAction("Show in Disassembler")

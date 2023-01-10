@@ -11,6 +11,13 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 
 class Ui_MainWindow_MemoryView(object):
     def setupUi(self, MainWindow_MemoryView):
+        """
+            Setup flag(s) to be used by hexview and dissabemly scrolling, so
+            that while scrolling, new scroll requests are disabled.
+        """
+        self.bHexViewScrolling = False
+        self.bDisassemblyScrolling = False
+
         MainWindow_MemoryView.setObjectName("MainWindow_MemoryView")
         MainWindow_MemoryView.resize(800, 600)
         self.centralwidget = QtWidgets.QWidget(MainWindow_MemoryView)
