@@ -35,9 +35,11 @@ class QFlagRegisterLabel(QLabel):
         self.setText(new)
 
     def enterEvent(self, QEvent):
-        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
     def mouseDoubleClickEvent(self, QMouseEvent):
+        if GDB_Engine.currentpid == -1:
+            return
         registers = GDB_Engine.read_registers()
         current_flag = self.objectName().lower()
         label_text = "Enter the new value of flag " + self.objectName()

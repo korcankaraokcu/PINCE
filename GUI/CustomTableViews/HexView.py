@@ -16,7 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt6.QtWidgets import QTableView, QAbstractItemView
 from PyQt6.QtCore import Qt
-
 from libpince import SysUtils, GDB_Engine
 
 
@@ -38,9 +37,15 @@ class QHexView(QTableView):
         QWheelEvent.ignore()
 
     def resize_to_contents(self):
+        _self_name=self.__class__.__name__
         size = self.columnWidth(0) * self.model().columnCount()
-        self.setMinimumWidth(size)
-        self.setMaximumWidth(size)
+        if (_self_name == "QHexView"):
+            self.setMinimumWidth(int(size*1.875))
+            self.setMaximumWidth(int(size*1.875))
+            self.resizeColumnsToContents()
+        else:
+            self.setMinimumWidth(int(size))
+            self.setMaximumWidth(int(size))
 
     def get_selected_address(self):
         ci = self.currentIndex()
