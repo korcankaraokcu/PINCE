@@ -57,7 +57,7 @@ Pre-release screenshots:
 - **Extendable with .so files at runtime**
   * See [here](https://github.com/korcankaraokcu/PINCE/wiki/Extending-PINCE-with-.so-files)
 - **Automatic Trainer Generation:** **[Planned]**  
-  * PINCE provides a trainer auto-generated from current address table on demand by using libpince and PyQT5 together
+  * PINCE provides a trainer auto-generated from current address table on demand by using libpince and PyQT6 together
 
 # Installing
 ```
@@ -80,14 +80,14 @@ In some cases, ```sudo sh PINCE.sh``` works too, as reported in https://github.c
 
 ### For developers:  
 ```
-sudo apt-get install qttools5-dev-tools (qt5 form designer)
-sudo apt-get install pyqt5-dev-tools (pyuic5)
+sudo apt-get install qttools5-dev-tools (qt6 form designer)
+sudo apt-get install pyqt6-dev-tools (pyuic5)
 sudo pip3 install line_profiler (for performance testing)
 ```
 How to use line_profiler: Add ```@profile``` tag to the desired function and run PINCE with ```sudo kernprof -l -v PINCE.py```
 # History
 - A few weeks till 17/01/2016 : Learned GDB, process of analysis
-- 17/01/2016-22/01/2016 : Basic design, grasping of Python3 and Pyqt5, proof-testing
+- 17/01/2016-22/01/2016 : Basic design, grasping of Python3 and Pyqt6, proof-testing
 - 22/01/2016 : First commit
 - 19/02/2016 : Moved to Github from Bitbucket
 - 25/02/2016 : First successful implementation of thread injection[Update-08/05/2016 : PINCE now uses ```linux-inject``` as a secondary injection method]  
