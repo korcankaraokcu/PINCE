@@ -404,6 +404,8 @@ def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
     Args:
         interrupt_reason (int): Just changes the global variable stop_reason. Can be a member of type_defs.STOP_REASON
     """
+    if currentpid == -1:
+        return
     global stop_reason
     send_command("c", control=True)
     wait_for_stop()
@@ -413,6 +415,8 @@ def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
 #:tag:Debug
 def continue_inferior():
     """Continue the inferior"""
+    if currentpid == -1:
+        return
     send_command("c")
 
 
@@ -671,6 +675,8 @@ def toggle_attach():
         int: The new state of the process as a member of type_defs.TOGGLE_ATTACH
         None: If detaching or attaching fails
     """
+    if currentpid == -1:
+        return
     if is_attached():
         if common_regexes.gdb_error.search(send_command("phase-out")):
             return

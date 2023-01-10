@@ -674,9 +674,40 @@ def aob_to_str(list_of_bytes, encoding="ascii"):
         str: str equivalent of array
     """
 
-    # 3f is ascii hex representation of char "?"
-    return bytes.fromhex("".join(list_of_bytes).replace("??", "3f")).decode(encoding, "surrogateescape")
+    ### make an actual list of bytes
+    hexString = ""
+    byteList = list_of_bytes
+    if (isinstance(list_of_bytes, list)):
+        byteList = list_of_bytes
+    else:
+        byteList = []
+        byteList.append(list_of_bytes)
 
+    newByte=0
+
+    for sByte in byteList:
+        if (sByte == "??"):
+            hexString += f'{63:02x}' # replace ?? with a single ?
+        else:
+            if (isinstance(sByte, int)):
+                byte=sByte
+            else:
+                byte=int(sByte,16)
+            """NOTE: replacing non-printable chars with a period will
+            have an adverse effect on the ability to edit hex/ASCII data
+            since the editor dialog will replace the hex bytes with 2e rather
+            than replacing only the edited bytes.
+
+            So for now, don't replace them -- but be aware that this clutters
+            the ascii text in the memory view and does not look 'neat'
+            """
+            #if ( (byte < 32) or (byte > 126) ):
+            #    hexString += f'{46:02x}' # replace non-printable chars with a period (.)
+            #else:
+            hexString += f'{byte:02x}'
+
+    hexBytes=bytes.fromhex(hexString)
+    return hexBytes.decode(encoding, "surrogateescape")
 
 #:tag:ValueType
 def str_to_aob(string, encoding="ascii"):
@@ -689,7 +720,7 @@ def str_to_aob(string, encoding="ascii"):
     Returns:
         str: AoB equivalent of the given string
     """
-    s = str(binascii.hexlify(string.encode(encoding, "surrogateescape")), "ascii")
+    s = str(binascii.hexlify(string.encode(encoding, "surrogateescape")), encoding)
     return " ".join(s[i:i + 2] for i in range(0, len(s), 2))
 
 
@@ -1068,6 +1099,8 @@ def ignore_exceptions(func):
         try:
             func(*args, **kwargs)
         except:
+            #print(f' Args: {args}' )
+            #print(f' Kwargs: {kwargs}' )
             traceback.print_exc()
 
     return wrapper
