@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 GDB_VERSION="gdb-10.2"
 
 mkdir -p gdb_pince
-cd gdb_pince
+cd gdb_pince || exit
 
 # clean the directory if another installation happened
 rm -rf $GDB_VERSION
@@ -31,29 +31,32 @@ if [ ! -e ${GDB_VERSION}.tar.gz ] ; then
     wget "http://ftp.gnu.org/gnu/gdb/${GDB_VERSION}.tar.gz"
 fi
 tar -zxvf ${GDB_VERSION}.tar.gz
-cd $GDB_VERSION
+cd $GDB_VERSION || exit
 echo "-------------------------------------------------------------------------"
 echo "DISCLAIMER"
 echo "-------------------------------------------------------------------------"
 echo "If you're not on debian or a similar distro with the 'apt' package manager the follow will not work if you don't have gcc and g++ installed"
 echo "Please install them manually for this to work, this issue will be addressed at a later date"
-command -v gcc g++ # extremely lazy fix for other distros, if gcc&g++ is available it will work, if not it won't
-if [ $? -gt 0 ]; then
+
+ # extremely lazy fix for other distros, if gcc&g++ is available it will work, if not it won't
+if ! command -v gcc g++; then
     # Dependencies required for compiling GDB
     sudo apt-get install python3-dev
-    sudo apt-get install gcc g++
-    if [ $? -gt 0 ]; then
+
+    if ! sudo apt-get install gcc g++; then
         sudo apt-get install software-properties-common
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
         sudo apt-get update
-        sudo apt-get install gcc g++
-        if [ $? -gt 0 ]; then
+
+        if ! sudo apt-get install gcc g++; then
             echo "Failed to install gcc or g++, aborting..."
             exit 1
         fi
     fi
 fi
-CC=gcc CXX=g++ ./configure --prefix="$(pwd)" --with-python=python3 && make -j $(grep -m 1 "cpu cores" /proc/cpuinfo | cut -d: -f 2 | xargs) MAKEINFO=true && sudo make -C gdb install
+
+CC=gcc CXX=g++ ./configure --prefix="$(pwd)" --with-python=python3 && make -j MAKEINFO=true && sudo make -C gdb install
+
 if [ ! -e bin/gdb ] ; then
     echo "Failed to install GDB, restart the installation process"
     exit 1
