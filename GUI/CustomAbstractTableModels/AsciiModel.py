@@ -14,8 +14,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt5.QtCore import QVariant, Qt
-from PyQt5.QtGui import QColor
+from PyQt6.QtCore import QVariant, Qt
+from PyQt6.QtGui import QColor
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 
 from libpince import SysUtils, GDB_Engine
@@ -26,15 +26,11 @@ class QAsciiModel(QHexModel):
         super().__init__(row_count, column_count, parent)
 
     def data(self, QModelIndex, int_role=None):
-        if not QModelIndex.isValid():
-            return QVariant()
-        if int_role == Qt.BackgroundColorRole:
-            address = self.current_address + QModelIndex.row() * self.column_count + QModelIndex.column()
-            if SysUtils.modulo_address(address, GDB_Engine.inferior_arch) in self.breakpoint_list:
-                return QVariant(QColor(Qt.red))
-        elif int_role != Qt.DisplayRole:
-            return QVariant()
-        if self.data_array is None:
-            return QVariant()
-        return QVariant(
-            SysUtils.aob_to_str(self.data_array[QModelIndex.row() * self.column_count + QModelIndex.column()]))
+        if (not self.data_array is None and len(self.data_array) > 0 and QModelIndex.isValid()):
+            if int_role == Qt.ItemDataRole.BackgroundRole:
+                address = self.current_address + QModelIndex.row() * self.column_count + QModelIndex.column()
+                if SysUtils.modulo_address(address, GDB_Engine.inferior_arch) in self.breakpoint_list:
+                    return QVariant(QColor.red)
+            elif int_role == Qt.ItemDataRole.DisplayRole:
+                return QVariant(SysUtils.aob_to_str(self.data_array[QModelIndex.row() * self.column_count + QModelIndex.column()]))
+        return QVariant()
