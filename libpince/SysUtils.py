@@ -25,7 +25,7 @@ try:
 except ImportError:
     print("WARNING: GDB couldn't locate the package psutil, psutil based user-defined functions won't work\n" +
           "If you are getting this message without invoking GDB, it means that installation has failed, well, sort of")
-import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib
+import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib, distorm3
 from . import type_defs, common_regexes
 from collections import OrderedDict
 from importlib.machinery import SourceFileLoader
@@ -660,6 +660,30 @@ def modulo_address(int_address, arch_type):
     elif arch_type == type_defs.INFERIOR_ARCH.ARCH_64:
         return int_address % 0x10000000000000000
     raise Exception("arch_type must be a member of type_defs.INFERIOR_ARCH")
+
+
+#:tag:Utilities
+def get_opcode_name(address, opcode_aob, arch_type):
+    """Returns the instruction name from the opcode
+
+    Args:
+        address (int): The address where the opcode starts from
+        opcode_aob (str): String that contains an opcode written as an array of bytes
+        arch_type (int): Architecture type (x86, x64). Can be a member of type_defs.INFERIOR_ARCH
+
+    Returns:
+        str: Assembly instruction name that decodes to the supplied OpCode
+    """
+    if arch_type == type_defs.INFERIOR_ARCH.ARCH_64:
+        disas_option = distorm3.Decode64Bits
+    elif arch_type == type_defs.INFERIOR_ARCH.ARCH_32:
+        disas_option = distorm3.Decode32Bits
+    try:
+        bytecode = bytes.fromhex(opcode_aob.replace(" ", ""))
+    except ValueError:
+        return "???"
+    disas_data = distorm3.Decode(address, bytecode, disas_option)
+    return disas_data[0][2]
 
 
 #:tag:ValueType
