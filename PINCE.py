@@ -4856,12 +4856,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
             QMessageBox.information(self, "Error", expression + " isn't a valid expression")
             return
         value = self.lineEdit_HexView.text()
-
-        try:
-            address = int(address, 0)
-        except ValueError:
-            return
-        GDB_Engine.modify_instruction(address, value)
+        GDB_Engine.write_memory(address, type_defs.VALUE_INDEX.INDEX_AOB, value)
         super(HexEditDialogForm, self).accept()
 
 
