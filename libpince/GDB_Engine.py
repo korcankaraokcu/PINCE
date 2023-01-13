@@ -59,7 +59,7 @@ breakpoint_on_hit_dict = {}
 #:doc:
 # A dictionary. Holds address and aob of instructions that were nop'ed out
 # Format: {address1:orig_instruction1_aob, address2:orig_instruction2_aob, ...}
-noped_instructions_dict = {}
+modified_instructions_dict = {}
 
 #:tag:GDBInformation
 #:doc:
@@ -1285,38 +1285,60 @@ def hex_dump(address, offset):
 
 
 #:tag:MemoryRW
-def get_noped_instructions():
-    """Returns currently NOP'ed out instructions
+def get_modified_instructions():
+    """Returns currently modified instructions
 
     Returns:
-        dict: A dictionary where the key is the start address of instruction and value is the aob before NOP'ing
+        dict: A dictionary where the key is the start address of instruction and value is the aob before modifying
 
     """
-    global noped_instructions_dict
-    return noped_instructions_dict
+    global modified_instructions_dict
+    return modified_instructions_dict
 
 
 #:tag:MemoryRW
-def nop_instruction(start_address, array_of_bytes):
+def nop_instruction(start_address, length_of_instr):
     """Replaces an instruction's opcodes with NOPs
 
     Args:
         start_address (int): Self-explanatory
-        array_of_bytes (str): String that contains the bytes of the instruction
+        length_of_instr (int): Length of the instruction that'll be NOP'ed
 
     Returns:
         None
     """
-    global noped_instructions_dict
-    noped_instructions_dict[start_address] = array_of_bytes
+    old_aob = " ".join(hex_dump(start_address, length_of_instr))
+    global modified_instructions_dict
+    if start_address not in modified_instructions_dict:
+        modified_instructions_dict[start_address] = old_aob
 
-    nop_aob = '90 ' * len(array_of_bytes.split())
+    nop_aob = '90 ' * length_of_instr
     write_memory(start_address, type_defs.VALUE_INDEX.INDEX_AOB, nop_aob)
 
 
 #:tag:MemoryRW
+def modify_instruction(start_address, array_of_bytes):
+    """Replaces an instruction's opcodes with a new AOB
+
+    Args:
+        start_address (int): Self-explanatory
+        array_of_bytes (str): String that contains the replacement bytes of the instruction
+
+    Returns:
+        None
+    """
+    length = len(array_of_bytes.split())
+    old_aob = " ".join(hex_dump(start_address, length))
+
+    global modified_instructions_dict
+    if start_address not in modified_instructions_dict:
+        modified_instructions_dict[start_address] = old_aob
+    write_memory(start_address, type_defs.VALUE_INDEX.INDEX_AOB, array_of_bytes)
+
+
+#:tag:MemoryRW
 def restore_instruction(start_address):
-    """Restores a NOP'ed out instruction to it's original opcodes
+    """Restores a modified instruction to it's original opcodes
 
     Args:
         start_address (int): Self-explanatory
@@ -1324,8 +1346,8 @@ def restore_instruction(start_address):
     Returns:
         None
     """
-    global noped_instructions_dict
-    array_of_bytes = noped_instructions_dict.pop(start_address)
+    global modified_instructions_dict
+    array_of_bytes = modified_instructions_dict.pop(start_address)
     write_memory(start_address, type_defs.VALUE_INDEX.INDEX_AOB, array_of_bytes)
 
 
