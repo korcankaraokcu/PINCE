@@ -4002,6 +4002,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         self.tableWidget_Instructions.keyPressEvent_original = self.tableWidget_Instructions.keyPressEvent
         self.tableWidget_Instructions.keyPressEvent = self.tableWidget_Instructions_key_press_event
         self.tableWidget_Instructions.contextMenuEvent = self.tableWidget_Instructions_context_menu_event
+        self.tableWidget_Instructions.itemDoubleClicked.connect(self.tableWidget_Instructions_double_clicked)
         self.refresh()
 
     def tableWidget_Instructions_context_menu_event(self, event):
@@ -4057,6 +4058,11 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         except KeyError:
             pass
         self.tableWidget_Instructions.keyPressEvent_original(event)
+
+    def tableWidget_Instructions_double_clicked(self, index):
+        current_address_text = self.tableWidget_Instructions.item(index.row(), INSTR_ADDR_COL).text()
+        current_address = SysUtils.extract_address(current_address_text)
+        self.parent().disassemble_expression(current_address, append_to_travel_history=True)
 
     def closeEvent(self, QCloseEvent):
         global instances
