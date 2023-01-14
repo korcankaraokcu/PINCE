@@ -289,7 +289,8 @@ def except_hook(exception_type, value, tb):
             elif exception_type == type_defs.InferiorRunningException:
                 error_dialog = InputDialogForm(item_list=[(
                     "Process is running" + "\nPress " + Hotkeys.break_hotkey.get_active_key() + " to stop process" +
-                    "\n\nGo to Settings->General to disable this dialog",)], buttons=[QDialogButtonBox.StandardButton.Ok])
+                    "\n\nGo to Settings->General to disable this dialog",)],
+                    buttons=[QDialogButtonBox.StandardButton.Ok])
                 error_dialog.exec()
     traceback.print_exception(exception_type, value, tb)
 
@@ -462,8 +463,10 @@ class MainForm(QMainWindow, MainWindow):
         self.comboBox_ValueType_init()
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
-        self.lineEdit_Scan.setValidator(QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan))
-        self.lineEdit_Scan2.setValidator(QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan2))
+        self.lineEdit_Scan.setValidator(
+            QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan))
+        self.lineEdit_Scan2.setValidator(
+            QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan2))
         self.comboBox_ScanType.currentIndexChanged.connect(self.comboBox_ScanType_current_index_changed)
         self.comboBox_ScanType_current_index_changed()
         self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
@@ -640,7 +643,8 @@ class MainForm(QMainWindow, MainWindow):
             dialog_text = "GDB is attached back to the process"
         if show_messagebox_on_toggle_attach:
             dialog = InputDialogForm(item_list=[(
-                dialog_text + "\n\nGo to Settings->General to disable this dialog",)], buttons=[QDialogButtonBox.StandardButton.Ok])
+                dialog_text + "\n\nGo to Settings->General to disable this dialog",)],
+                buttons=[QDialogButtonBox.StandardButton.Ok])
             dialog.exec()
 
     def treeWidget_AddressTable_context_menu_event(self, event):
@@ -895,13 +899,20 @@ class MainForm(QMainWindow, MainWindow):
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C), self.copy_selected_records),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_X), self.cut_selected_records_recursively),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_C), self.copy_selected_records_recursively),
-            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_V), lambda: self.paste_records(insert_after=False)),
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_V), lambda: self.paste_records(insert_after=True)),
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_I), lambda: self.paste_records(insert_inside=True)),
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Return), self.treeWidget_AddressTable_edit_value),
-            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Return), self.treeWidget_AddressTable_edit_desc),
-            (QKeyCombination(Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return), self.treeWidget_AddressTable_edit_address),
-            (QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return), self.treeWidget_AddressTable_edit_type)
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_V),
+             lambda: self.paste_records(insert_after=False)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_V),
+             lambda: self.paste_records(insert_after=True)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_I),
+             lambda: self.paste_records(insert_inside=True)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Return),
+             self.treeWidget_AddressTable_edit_value),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Return),
+             self.treeWidget_AddressTable_edit_desc),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return),
+             self.treeWidget_AddressTable_edit_address),
+            (
+            QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return), self.treeWidget_AddressTable_edit_type)
         ])
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
@@ -1019,7 +1030,6 @@ class MainForm(QMainWindow, MainWindow):
             self.backend.send_command("reset")
             self.comboBox_ScanScope.setEnabled(False)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
-
 
     def comboBox_ScanType_current_index_changed(self):
         hidden_types = [type_defs.SCAN_TYPE.INCREASED, type_defs.SCAN_TYPE.DECREASED, type_defs.SCAN_TYPE.CHANGED,
@@ -1155,7 +1165,8 @@ class MainForm(QMainWindow, MainWindow):
     def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
         current_item = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL)
         length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
-        self.add_entry_to_addresstable("No Description", current_item.text(), current_item.data(Qt.ItemDataRole.UserRole)[0], length)
+        self.add_entry_to_addresstable("No Description", current_item.text(),
+                                       current_item.data(Qt.ItemDataRole.UserRole)[0], length)
 
     def comboBox_ValueType_current_index_changed(self):
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
@@ -1163,7 +1174,8 @@ class MainForm(QMainWindow, MainWindow):
             "int": QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan),  # integers
             "float": QRegularExpressionValidator(QRegularExpression("-?[0-9]+[.,]?[0-9]*")),
             # floats, should work fine with the small amount of testing I did
-            "bytearray": QRegularExpressionValidator(QRegularExpression("^(([A-Fa-f0-9?]{2} +)+)$"), parent=self.lineEdit_Scan),
+            "bytearray": QRegularExpressionValidator(QRegularExpression("^(([A-Fa-f0-9?]{2} +)+)$"),
+                                                     parent=self.lineEdit_Scan),
             # array of bytes
             "string": None
         }
@@ -1980,7 +1992,8 @@ class InputDialogForm(QDialog, InputDialog):
                 except IndexError:
                     label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 label.setText(item[0])
-                label.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse | Qt.TextInteractionFlag.TextSelectableByMouse)
+                label.setTextInteractionFlags(
+                    Qt.TextInteractionFlag.LinksAccessibleByMouse | Qt.TextInteractionFlag.TextSelectableByMouse)
                 self.verticalLayout.addWidget(label)
             try:
                 item_data = item[1]
@@ -2420,7 +2433,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Down), self.scroll_forwards_history)
         ])
         try:
-            actions[QKeyCombination(event.modifiers(),Qt.Key(event.key()))]()
+            actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             self.lineEdit.keyPressEvent_original(event)
 
@@ -2638,7 +2651,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         GuiUtils.center_scroll_bar(self.verticalScrollBar_HexView)
 
-
     def show_trace_window(self):
         if GDB_Engine.currentpid == -1:
             return
@@ -2731,6 +2743,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def label_HexView_Information_context_menu_event(self, event):
         if GDB_Engine.currentpid == -1:
             return
+
         def copy_to_clipboard():
             app.clipboard().setText(self.label_HexView_Information.text())
 
@@ -2823,20 +2836,21 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def hex_view_scroll_up(self):
         self.verticalScrollBar_HexView.setValue(1)
+
     def hex_view_scroll_down(self):
         self.verticalScrollBar_HexView.setValue(-1)
 
     def hex_view_scrollbar_sliderchanged(self, event):
         if self.bHexViewScrolling:
-                return;
-        self.bHexViewScrolling=True
-        #if GDB_Engine.inferior_status != type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+            return
+        self.bHexViewScrolling = True
+        # if GDB_Engine.inferior_status != type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
         #    return
         maximum = self.verticalScrollBar_HexView.maximum()
         minimum = self.verticalScrollBar_HexView.minimum()
         midst = (maximum + minimum) / 2
         current_value = self.verticalScrollBar_HexView.value()
-        #if midst - 10 < current_value < midst + 10:
+        # if midst - 10 < current_value < midst + 10:
         #    self.bHexViewScrolling = False
         #    return
         current_address = self.hex_model.current_address
@@ -2850,20 +2864,21 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def disassemble_scroll_up(self):
         self.verticalScrollBar_Disassemble.setValue(1)
+
     def disassemble_scroll_down(self):
         self.verticalScrollBar_Disassemble.setValue(-1)
 
     def disassemble_scrollbar_sliderchanged(self, even):
         if self.bDisassemblyScrolling:
-                return;
+            return
         self.bDisassemblyScrolling = True
-        #if GDB_Engine.inferior_status != type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+        # if GDB_Engine.inferior_status != type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
         #    return
         maximum = self.verticalScrollBar_Disassemble.maximum()
         minimum = self.verticalScrollBar_Disassemble.minimum()
         midst = (maximum + minimum) / 2
         current_value = self.verticalScrollBar_Disassemble.value()
-        #if midst - 10 < current_value < midst + 10:
+        # if midst - 10 < current_value < midst + 10:
         #    self.bDisassemblyScrolling = False
         #    return
         if current_value < midst:
@@ -3180,7 +3195,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             condition_line_edit_text = breakpoint.condition
         else:
             condition_line_edit_text = ""
-        condition_dialog = InputDialogForm(item_list=[(condition_text, condition_line_edit_text, Qt.AlignmentFlag.AlignLeft)])
+        condition_dialog = InputDialogForm(
+            item_list=[(condition_text, condition_line_edit_text, Qt.AlignmentFlag.AlignLeft)])
         if condition_dialog.exec():
             condition = condition_dialog.get_values()
             if not GDB_Engine.modify_breakpoint(hex(int_address), type_defs.BREAKPOINT_MODIFY.CONDITION,
@@ -3260,6 +3276,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def tableWidget_StackTrace_context_menu_event(self, event):
         if GDB_Engine.currentpid == -1:
             return
+
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_StackTrace.item(row, column).text())
 
@@ -3312,10 +3329,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
              lambda: self.disassemble_expression(current_address, append_to_travel_history=True)),
-            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H), lambda: self.hex_dump_address(int(current_address, 16)))
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H),
+             lambda: self.hex_dump_address(int(current_address, 16)))
         ])
         try:
-            actions[QKeyCombination(event.modifiers(),Qt.Key(event.key()))]()
+            actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             pass
         self.tableWidget_Stack.keyPressEvent_original(event)
@@ -3398,7 +3416,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stacktrace)
         ])
         try:
-            actions[QKeyCombination(event.modifiers(),Qt.Key(event.key()))]()
+            actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             pass
         self.tableWidget_StackTrace.keyPressEvent_original(event)
@@ -3467,7 +3485,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageDown), self.hex_view_scroll_down),
         ])
         try:
-            actions[QKeyCombination(event.modifiers(),Qt.Key(event.key()))]()
+            actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             pass
         self.tableView_HexView_Hex.keyPressEvent_original(event)
@@ -3481,21 +3499,27 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_int = int(current_address, 16)
 
         actions = type_defs.KeyboardModifiersTupleDict([
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space), lambda: self.follow_instruction(selected_row)),
-            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_E), lambda: self.exec_examine_referrers_widget(current_address_text)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space),
+             lambda: self.follow_instruction(selected_row)),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_E),
+             lambda: self.exec_examine_referrers_widget(current_address_text)),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_G), self.exec_disassemble_go_to_dialog),
-            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H), lambda: self.hex_dump_address(current_address_int)),
-            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B), lambda: self.bookmark_address(current_address_int)),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H),
+             lambda: self.hex_dump_address(current_address_int)),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B),
+             lambda: self.bookmark_address(current_address_int)),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D), self.dissect_current_region),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_T), self.exec_trace_instructions_dialog),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh_disassemble_view),
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Down), lambda: self.disassemble_check_viewport("next", 1)),
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Up), lambda: self.disassemble_check_viewport("previous", 1)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Down),
+             lambda: self.disassemble_check_viewport("next", 1)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Up),
+             lambda: self.disassemble_check_viewport("previous", 1)),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageUp), self.disassemble_scroll_up),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageDown), self.disassemble_scroll_down)
         ])
         try:
-            actions[QKeyCombination(event.modifiers(),Qt.Key(event.key()))]()
+            actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             pass
         self.tableWidget_Disassemble.keyPressEvent_original(event)
@@ -4054,7 +4078,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh)
         ])
         try:
-            actions[QKeyCombination(event.modifiers(),Qt.Key(event.key()))]()
+            actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             pass
         self.tableWidget_Instructions.keyPressEvent_original(event)
@@ -4118,11 +4142,12 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
             current_address = None
 
         actions = type_defs.KeyboardModifiersTupleDict([
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete), lambda: self.delete_breakpoint(current_address)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete),
+             lambda: self.delete_breakpoint(current_address)),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh)
         ])
         try:
-            actions[QKeyCombination(event.modifiers(),Qt.Key(event.key()))]()
+            actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             pass
         self.tableWidget_BreakpointInfo.keyPressEvent_original(event)
@@ -4391,7 +4416,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
     def tableWidget_TrackInfo_item_double_clicked(self, index):
         address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
         self.parent().parent().add_entry_to_addresstable("Accessed by " + self.address, address,
-                                                         self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole), 10, True)
+                                                         self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole),
+                                                         10, True)
 
     def pushButton_Stop_clicked(self):
         if self.stopped:
@@ -4718,7 +4744,8 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
                "\n@plt means this function is a subroutine for the original one" \
                "\nThere can be more than one of the same function" \
                "\nIt means that the function is overloaded"
-        InputDialogForm(item_list=[(text, None, Qt.AlignmentFlag.AlignLeft)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
+        InputDialogForm(item_list=[(text, None, Qt.AlignmentFlag.AlignLeft)],
+                        buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
 
     def closeEvent(self, QCloseEvent):
         global instances
@@ -5227,7 +5254,8 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
                "\n'[re]cx' searches for both 'rcx' and 'ecx'" \
                "\nUse the char '\\' to escape special chars such as '['" \
                "\n'\[rsp\]' searches for opcodes that contain '[rsp]'"
-        InputDialogForm(item_list=[(text, None, Qt.AlignmentFlag.AlignLeft)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
+        InputDialogForm(item_list=[(text, None, Qt.AlignmentFlag.AlignLeft)],
+                        buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
 
     def tableWidget_Opcodes_item_double_clicked(self, index):
         row = index.row()
