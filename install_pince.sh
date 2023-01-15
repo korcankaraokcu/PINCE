@@ -97,7 +97,7 @@ case "$OS_NAME" in
     PKG_MGR="zypper"
     PKG_NAMES="$PKG_NAMES_SUSE"
     ;;
-*Arch*)
+*Arch* | *SteamOS*)
     PKG_MGR="pacman"
     PKG_NAMES="$PKG_NAMES_ARCH"
     INSTALL_COMMAND="-S"
