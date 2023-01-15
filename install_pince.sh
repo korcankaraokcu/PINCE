@@ -25,6 +25,7 @@ CURRENT_USER="$(who mom likes | awk '{print $1}')"
 
 exit_on_error() {
     if [ "$?" -ne 0 ]; then
+        echo
         echo "Error occured while installing PINCE, check the output above for more information"
         echo "Installation failed."
         exit 1
@@ -33,15 +34,16 @@ exit_on_error() {
 
 # assumes you're in scanmem directory
 compile_scanmem() {
-    sh autogen.sh || exit_on_error
-    ./configure --prefix="$(pwd)" || exit_on_error
-    make -j libscanmem.la || exit_on_error
+    sh autogen.sh || return 1
+    ./configure --prefix="$(pwd)" || return 1
+    make -j libscanmem.la || return 1
     chown -R "${CURRENT_USER}":"${CURRENT_USER}" . # give permissions for normal user to change file
+    return 0
 }
 
 install_scanmem() {
     echo "Downloading scanmem"
-    git submodule update --init --recursive || exit_on_error
+    git submodule update --init --recursive || return 1
 
     if [ ! -d "libpince/libscanmem" ]; then
         mkdir libpince/libscanmem
@@ -49,15 +51,15 @@ install_scanmem() {
     fi
     (
         echo "Entering scanmem"
-        cd scanmem || exit_on_error
+        cd scanmem || return 1
         if [ -d "./.libs" ]; then
             echo "Recompile scanmem? [y/n]"
             read -r answer
             if echo "$answer" | grep -iq "^[Yy]"; then
-                compile_scanmem
+                compile_scanmem || return 1
             fi
         else
-            compile_scanmem
+            compile_scanmem || return 1
         fi
         cp --preserve .libs/libscanmem.so ../libpince/libscanmem/
         cp --preserve gui/scanmem.py ../libpince/libscanmem
@@ -110,11 +112,12 @@ case "$OS_NAME" in
 esac
 
 # shellcheck disable=SC2086
-sudo ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES}
+sudo ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES} || exit_on_error
 # shellcheck disable=SC2086
-sudo ${PIP_COMMAND} install ${PKG_NAMES_PIP}
+sudo ${PIP_COMMAND} install ${PKG_NAMES_PIP} || exit_on_error
 
-install_scanmem
+install_scanmem || exit_on_error
 
+echo
 echo "PINCE has been installed successfully!"
 echo "Now, just run 'sh PINCE.sh' from terminal"
