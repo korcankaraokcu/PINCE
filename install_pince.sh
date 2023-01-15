@@ -65,7 +65,7 @@ install_scanmem() {
         cp --preserve gui/scanmem.py ../libpince/libscanmem
         cp --preserve gui/misc.py ../libpince/libscanmem
         echo "Exiting scanmem"
-    )
+    ) || return 1
     # required for relative import, since it will throw an import error if it's just `import misc`
     sed -i 's/import misc/from \. import misc/g' libpince/libscanmem/scanmem.py
     return 0
