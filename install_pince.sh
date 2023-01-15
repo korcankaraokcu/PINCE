@@ -23,17 +23,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 CURRENT_USER="$(who mom likes | awk '{print $1}')"
 
+exit_on_error() {
+    if [ "$?" -ne 0 ]; then
+        echo "Error occured while installing PINCE, check the output above for more information"
+        echo "Installation failed."
+        exit 1
+    fi
+}
+
 # assumes you're in scanmem directory
 compile_scanmem() {
-    sh autogen.sh
-    ./configure --prefix="$(pwd)"
-    make -j libscanmem.la
+    sh autogen.sh || exit_on_error
+    ./configure --prefix="$(pwd)" || exit_on_error
+    make -j libscanmem.la || exit_on_error
     chown -R "${CURRENT_USER}":"${CURRENT_USER}" . # give permissions for normal user to change file
 }
 
 install_scanmem() {
     echo "Downloading scanmem"
-    git submodule update --init --recursive
+    git submodule update --init --recursive || exit_on_error
 
     if [ ! -d "libpince/libscanmem" ]; then
         mkdir libpince/libscanmem
@@ -41,7 +49,7 @@ install_scanmem() {
     fi
     (
         echo "Entering scanmem"
-        cd scanmem || exit
+        cd scanmem || exit_on_error
         if [ -d "./.libs" ]; then
             echo "Recompile scanmem? [y/n]"
             read -r answer
@@ -58,6 +66,7 @@ install_scanmem() {
     )
     # required for relative import, since it will throw an import error if it's just `import misc`
     sed -i 's/import misc/from \. import misc/g' libpince/libscanmem/scanmem.py
+    return 0
 }
 
 OS_NAME="Debian"
