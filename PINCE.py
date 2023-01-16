@@ -1008,8 +1008,8 @@ class MainForm(QMainWindow, MainWindow):
 
     # TODO add a damn keybind for this...
     def pushButton_NewFirstScan_clicked(self):
-        self.comboBox_ScanType_init()
         if GDB_Engine.currentpid == -1:
+            self.comboBox_ScanType_init()
             return
         if self.scan_mode == type_defs.SCAN_MODE.ONGOING:
             self.scan_mode = type_defs.SCAN_MODE.NEW
@@ -1030,6 +1030,8 @@ class MainForm(QMainWindow, MainWindow):
             self.backend.send_command("reset")
             self.comboBox_ScanScope.setEnabled(False)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
+
+        self.comboBox_ScanType_init()
 
     def comboBox_ScanType_current_index_changed(self):
         hidden_types = [type_defs.SCAN_TYPE.INCREASED, type_defs.SCAN_TYPE.DECREASED, type_defs.SCAN_TYPE.CHANGED,
