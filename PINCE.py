@@ -457,7 +457,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Save.clicked.connect(self.pushButton_Save_clicked)
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
-        self.scan_mode = type_defs.SCAN_MODE.ONGOING
+        self.scan_mode = type_defs.SCAN_MODE.NEW
         self.pushButton_NewFirstScan_clicked()
         self.comboBox_ScanScope_init()
         self.comboBox_ValueType_init()
