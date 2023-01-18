@@ -1019,7 +1019,7 @@ class MainForm(QMainWindow, MainWindow):
             msg_box.setText("Create a new scan ?")
             msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel)
             ret_val = msg_box.exec()
-            # if user cancel just exist
+            # if user cancel just exit
             if ret_val == QMessageBox.StandardButton.Cancel:
                 return
             # reset scan results
