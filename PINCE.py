@@ -1012,6 +1012,17 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_ScanType_init()
             return
         if self.scan_mode == type_defs.SCAN_MODE.ONGOING:
+            # ask user for confirmation via confirmation dialog
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Icon.Question)
+            msg_box.setWindowTitle("New Scan")
+            msg_box.setText("Create a new scan ?")
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel)
+            ret_val = msg_box.exec()
+            # if user cancel just exist
+            if ret_val == QMessageBox.StandardButton.Cancel:
+                return
+            # reset scan results
             self.scan_mode = type_defs.SCAN_MODE.NEW
             self.pushButton_NewFirstScan.setText("First Scan")
             self.backend.send_command("reset")
