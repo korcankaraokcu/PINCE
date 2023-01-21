@@ -458,7 +458,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
         self.scan_mode = type_defs.SCAN_MODE.NEW
-        self.comboBox_ScanType_init(self.scan_mode)
+        self.comboBox_ScanType_init()
         self.comboBox_ScanScope_init()
         self.comboBox_ValueType_init()
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
@@ -1044,7 +1044,7 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_ScanScope.setEnabled(False)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
 
-        self.comboBox_ScanType_init(self.scan_mode)
+        self.comboBox_ScanType_init()
 
     def comboBox_ScanType_current_index_changed(self):
         hidden_types = [type_defs.SCAN_TYPE.INCREASED, type_defs.SCAN_TYPE.DECREASED, type_defs.SCAN_TYPE.CHANGED,
@@ -1060,10 +1060,10 @@ class MainForm(QMainWindow, MainWindow):
             self.label_Between.setVisible(False)
             self.lineEdit_Scan2.setVisible(False)
 
-    def comboBox_ScanType_init(self, _scan_mode: type_defs.SCAN_MODE):
+    def comboBox_ScanType_init(self):
         current_type = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
         self.comboBox_ScanType.clear()
-        if _scan_mode == type_defs.SCAN_MODE.NEW:
+        if self.scan_mode == type_defs.SCAN_MODE.NEW:
             items = [type_defs.SCAN_TYPE.EXACT, type_defs.SCAN_TYPE.LESS, type_defs.SCAN_TYPE.MORE,
                      type_defs.SCAN_TYPE.BETWEEN, type_defs.SCAN_TYPE.UNKNOWN]
         else:
