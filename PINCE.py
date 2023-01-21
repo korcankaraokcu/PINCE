@@ -591,11 +591,11 @@ class MainForm(QMainWindow, MainWindow):
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Icon.Warning)
         msg_box.setWindowTitle("No process selected")
-        msg_box.setText("process need to be selected to do this operation, select one?")
-        msg_box.setStandardButtons(QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes)
+        msg_box.setText("No process is selected! Do you want to select one now?")
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Ok)
         ret_val = msg_box.exec()
         # if user want to select process
-        if ret_val == QMessageBox.StandardButton.Yes:
+        if ret_val == QMessageBox.StandardButton.Ok:
             self.processwindow = ProcessForm(self)
             self.processwindow.show()
     
