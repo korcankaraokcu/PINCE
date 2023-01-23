@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file './MainWindow.ui'
+# Form implementation generated from reading ui file 'MainWindow.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.0
 #
@@ -284,7 +284,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addLayout(self.horizontalLayout_9, 1, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 678, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 678, 30))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
 
