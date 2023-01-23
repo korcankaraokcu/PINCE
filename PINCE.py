@@ -458,7 +458,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
         self.scan_mode = type_defs.SCAN_MODE.NEW
-        self.comboBox_ScanType_init()
+        self.pushButton_NewFirstScan_clicked()
         self.comboBox_ScanScope_init()
         self.comboBox_ValueType_init()
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
@@ -587,18 +587,6 @@ class MainForm(QMainWindow, MainWindow):
         if GDB_Engine.gdb_initialized:
             self.apply_after_init()
 
-    def no_selected_proc_warning(self):
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Icon.Warning)
-        msg_box.setWindowTitle("No process selected")
-        msg_box.setText("No process is selected! Do you want to select one now?")
-        msg_box.setStandardButtons(QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Ok)
-        ret_val = msg_box.exec()
-        # if user want to select process
-        if ret_val == QMessageBox.StandardButton.Ok:
-            self.processwindow = ProcessForm(self)
-            self.processwindow.show()
-    
     # Check if any process should be attached to automatically
     # Patterns at former positions have higher priority if regex is off
     def auto_attach(self):
@@ -1021,9 +1009,8 @@ class MainForm(QMainWindow, MainWindow):
     # TODO add a damn keybind for this...
     def pushButton_NewFirstScan_clicked(self):
         if GDB_Engine.currentpid == -1:
-            self.no_selected_proc_warning()
+            self.comboBox_ScanType_init()
             return
-
         if self.scan_mode == type_defs.SCAN_MODE.ONGOING:
             self.scan_mode = type_defs.SCAN_MODE.NEW
             self.pushButton_NewFirstScan.setText("First Scan")
