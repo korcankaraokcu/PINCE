@@ -496,7 +496,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Console.setIcon(QIcon(QPixmap(icons_directory + "/application_xp_terminal.png")))
         self.pushButton_Wiki.setIcon(QIcon(QPixmap(icons_directory + "/book_open.png")))
         self.pushButton_About.setIcon(QIcon(QPixmap(icons_directory + "/information.png")))
-        self.QWidget_Toolbox.setEnabled(False)
+        #self.QWidget_Toolbox.setEnabled(False)
         self.pushButton_NextScan.setEnabled(False)
         self.pushButton_UndoScan.setEnabled(False)
         self.auto_attach()
@@ -1275,6 +1275,8 @@ class MainForm(QMainWindow, MainWindow):
         self.QWidget_Toolbox.setEnabled(True)
         self.pushButton_NextScan.setEnabled(False)
         self.pushButton_UndoScan.setEnabled(False)
+        self.pushButton_AddAddressManually.setEnabled(True)
+        self.pushButton_MemoryView.setEnabled(True)
 
     def delete_address_table_contents(self):
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
@@ -1604,7 +1606,6 @@ class ProcessForm(QMainWindow, ProcessWindow):
                 self.close()
             self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
             # a process has been selected re-enable main gui
-            self.QWidget_Toolbox.setEnabled(True)
 
     def pushButton_CreateProcess_clicked(self):
         file_path = QFileDialog.getOpenFileName(self, "Select the target binary")[0]

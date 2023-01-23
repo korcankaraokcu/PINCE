@@ -72,6 +72,9 @@
       </property>
       <item>
        <widget class="QPushButton" name="pushButton_MemoryView">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Memory View</string>
         </property>
@@ -151,6 +154,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="pushButton_AddAddressManually">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Add Address Manually</string>
         </property>
@@ -357,7 +363,7 @@
       <item>
        <widget class="QWidget" name="QWidget_Toolbox" native="true">
         <property name="enabled">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_5">
          <item>
@@ -671,7 +677,7 @@
      <x>0</x>
      <y>0</y>
      <width>678</width>
-     <height>30</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
