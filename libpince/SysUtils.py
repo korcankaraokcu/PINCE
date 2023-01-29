@@ -210,7 +210,7 @@ def get_media_directory():
     Returns:
         str: A string pointing to the media directory
     """
-    return sys.path[0] + "/media"
+    return get_current_script_directory() + "/media"
 
 
 #:tag:Utilities
@@ -220,7 +220,7 @@ def get_logo_directory():
     Returns:
         str: A string pointing to the logo directory
     """
-    return sys.path[0] + "/media/logo"
+    return get_current_script_directory() + "/media/logo"
 
 
 #:tag:Utilities
