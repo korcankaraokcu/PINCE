@@ -13,7 +13,7 @@
             "justMyCode": false,
             "sudo": true,
             "console": "integratedTerminal",
-            "program": "PINCE.py"
+            "program": "${workspaceFolder}/PINCE.py"
         }
     ]
 }
