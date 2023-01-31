@@ -300,31 +300,34 @@ def state_observe_thread():
     global child
     global gdb_output
     stored_output = ""
-    while True:
-        child.expect_exact("\r\n")  # A new line for TTY devices
-        child.before = child.before.strip()
-        if not child.before:
-            continue
-        stored_output += "\n" + child.before
-        if child.before == "(gdb)":
-            check_inferior_status(stored_output)
-            stored_output = ""
-            continue
-        command_file = re.escape(SysUtils.get_gdb_command_file(currentpid))
-        if common_regexes.gdb_command_source(command_file).search(child.before):
-            child.expect_exact("(gdb)")
+    try:
+        while True:
+            child.expect_exact("\r\n")  # A new line for TTY devices
             child.before = child.before.strip()
-            check_inferior_status()
-            gdb_output = child.before
-            stored_output = ""
-            with gdb_waiting_for_prompt_condition:
-                gdb_waiting_for_prompt_condition.notify_all()
-            if gdb_output_mode.command_output:
-                print(child.before)
-        else:
-            if gdb_output_mode.async_output:
-                print(child.before)
-            gdb_async_output.broadcast_message(child.before)
+            if not child.before:
+                continue
+            stored_output += "\n" + child.before
+            if child.before == "(gdb)":
+                check_inferior_status(stored_output)
+                stored_output = ""
+                continue
+            command_file = re.escape(SysUtils.get_gdb_command_file(currentpid))
+            if common_regexes.gdb_command_source(command_file).search(child.before):
+                child.expect_exact("(gdb)")
+                child.before = child.before.strip()
+                check_inferior_status()
+                gdb_output = child.before
+                stored_output = ""
+                with gdb_waiting_for_prompt_condition:
+                    gdb_waiting_for_prompt_condition.notify_all()
+                if gdb_output_mode.command_output:
+                    print(child.before)
+            else:
+                if gdb_output_mode.async_output:
+                    print(child.before)
+                gdb_async_output.broadcast_message(child.before)
+    except OSError:
+        pass
 
 
 def execute_with_temporary_interruption(func):
