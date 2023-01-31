@@ -327,7 +327,7 @@ def state_observe_thread():
                     print(child.before)
                 gdb_async_output.broadcast_message(child.before)
     except OSError:
-        pass
+        print("Exiting state_observe_thread")
 
 
 def execute_with_temporary_interruption(func):
