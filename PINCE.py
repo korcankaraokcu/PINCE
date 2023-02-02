@@ -92,7 +92,6 @@ update_table = bool
 table_update_interval = int
 FreezeInterval = int
 show_messagebox_on_exception = bool
-show_messagebox_on_toggle_attach = bool
 gdb_output_mode = tuple
 auto_attach_list = str
 auto_attach_regex = bool
@@ -513,7 +512,6 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("address_table_update_interval", 500)
         self.settings.setValue("freeze_interval", 100)
         self.settings.setValue("show_messagebox_on_exception", True)
-        self.settings.setValue("show_messagebox_on_toggle_attach", True)
         self.settings.setValue("gdb_output_mode", type_defs.gdb_output_mode(True, True, True))
         self.settings.setValue("auto_attach_list", "")
         self.settings.setValue("logo_path", "ozgurozbek/pince_small_transparent.png")
@@ -558,7 +556,6 @@ class MainForm(QMainWindow, MainWindow):
         global update_table
         global table_update_interval
         global show_messagebox_on_exception
-        global show_messagebox_on_toggle_attach
         global gdb_output_mode
         global auto_attach_list
         global logo_path
@@ -573,7 +570,6 @@ class MainForm(QMainWindow, MainWindow):
         table_update_interval = self.settings.value("General/address_table_update_interval", type=int)
         FreezeInterval = self.settings.value("General/freeze_interval", type=int)
         show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
-        show_messagebox_on_toggle_attach = self.settings.value("General/show_messagebox_on_toggle_attach", type=bool)
         gdb_output_mode = self.settings.value("General/gdb_output_mode", type=tuple)
         auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
         logo_path = self.settings.value("General/logo_path", type=str)
@@ -625,6 +621,8 @@ class MainForm(QMainWindow, MainWindow):
 
     # Keyboard package has an issue with exceptions, any trigger function that throws an exception stops the event loop
     # Writing a custom event loop instead of ignoring exceptions could work as well but honestly, this looks cleaner
+    # Keyboard package does not play well with Qt, do not use anything Qt related with hotkeys
+    # Using any Qt functionality with the hotkeys will freeze the process or just crash it
     @SysUtils.ignore_exceptions
     def pause_hotkey_pressed(self):
         GDB_Engine.interrupt_inferior(type_defs.STOP_REASON.PAUSE)
@@ -639,19 +637,13 @@ class MainForm(QMainWindow, MainWindow):
 
     @SysUtils.ignore_exceptions
     def toggle_attach_hotkey_pressed(self):
+        if GDB_Engine.inferior_status==type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+            GDB_Engine.interrupt_inferior(type_defs.STOP_REASON.PAUSE)
         result = GDB_Engine.toggle_attach()
         if not result:
-            dialog_text = "Unable to toggle attach"
+            print("Unable to toggle attach")
         elif result == type_defs.TOGGLE_ATTACH.DETACHED:
             self.on_status_detached()
-            dialog_text = "GDB is detached from the process"
-        else:
-            dialog_text = "GDB is attached back to the process"
-        if show_messagebox_on_toggle_attach:
-            dialog = InputDialogForm(item_list=[(
-                dialog_text + "\n\nGo to Settings->General to disable this dialog",)],
-                buttons=[QDialogButtonBox.StandardButton.Ok])
-            dialog.exec()
 
     def treeWidget_AddressTable_context_menu_event(self, event):
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
@@ -2139,8 +2131,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
         self.settings.setValue("General/freeze_interval", freezeinterval)
         self.settings.setValue("General/show_messagebox_on_exception", self.checkBox_MessageBoxOnException.isChecked())
-        self.settings.setValue("General/show_messagebox_on_toggle_attach",
-                               self.checkBox_MessageBoxOnToggleAttach.isChecked())
         current_gdb_output_mode = type_defs.gdb_output_mode(self.checkBox_OutputModeAsync.isChecked(),
                                                             self.checkBox_OutputModeCommand.isChecked(),
                                                             self.checkBox_OutputModeCommandInfo.isChecked())
@@ -2184,8 +2174,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             str(self.settings.value("General/freeze_interval", type=int)))
         self.checkBox_MessageBoxOnException.setChecked(
             self.settings.value("General/show_messagebox_on_exception", type=bool))
-        self.checkBox_MessageBoxOnToggleAttach.setChecked(
-            self.settings.value("General/show_messagebox_on_toggle_attach", type=bool))
         self.checkBox_OutputModeAsync.setChecked(self.settings.value("General/gdb_output_mode").async_output)
         self.checkBox_OutputModeCommand.setChecked(self.settings.value("General/gdb_output_mode").command_output)
         self.checkBox_OutputModeCommandInfo.setChecked(self.settings.value("General/gdb_output_mode").command_info)
