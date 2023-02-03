@@ -637,8 +637,6 @@ class MainForm(QMainWindow, MainWindow):
 
     @SysUtils.ignore_exceptions
     def toggle_attach_hotkey_pressed(self):
-        if GDB_Engine.inferior_status==type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-            GDB_Engine.interrupt_inferior(type_defs.STOP_REASON.PAUSE)
         result = GDB_Engine.toggle_attach()
         if not result:
             print("Unable to toggle attach")
