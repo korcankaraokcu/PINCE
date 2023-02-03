@@ -60,7 +60,7 @@ def get_process_information(pid):
 
 
 #:tag:Processes
-def search_in_processes_by_name(process_name):
+def search_processes(process_name):
     """Searches currently running processes and returns a list of psutil.Process objects corresponding to processes that
     has the str process_name in them
 
@@ -815,7 +815,7 @@ def execute_shell_command_as_user(command):
 def get_docstrings(modules, search_for=""):
     """Gathers docstrings from a list of modules
     For now, this function only supports variables and functions
-    See get_comments_of_variables function to learn documenting variables in PINCE style
+    See get_variable_comments function to learn documenting variables in PINCE style
 
     Args:
         modules (list): A list of modules
@@ -826,7 +826,7 @@ def get_docstrings(modules, search_for=""):
         Format-->{variable1:docstring1, variable2:docstring2, ...}
     """
     element_dict = {}
-    variable_comment_dict = get_comments_of_variables(modules)
+    variable_comment_dict = get_variable_comments(modules)
     for item in modules:
         for key, value in item.__dict__.items():
             name_with_module = get_module_name(item) + "." + key
@@ -841,7 +841,7 @@ def get_docstrings(modules, search_for=""):
 
 
 #:tag:Utilities
-def get_comments_of_variables(modules, search_for=""):
+def get_variable_comments(modules, search_for=""):
     r"""Gathers comments from a list of modules
     Python normally doesn't allow modifying __doc__ variable of the variables
     This function is designed to bring a solution to this problem

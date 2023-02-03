@@ -1562,7 +1562,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
     # refreshes process list
     def generate_new_list(self):
         text = self.lineEdit_SearchProcess.text()
-        processlist = SysUtils.search_in_processes_by_name(text)
+        processlist = SysUtils.search_processes(text)
         self.refresh_process_table(self.tableWidget_ProcessTable, processlist)
 
     def keyPressEvent(self, e):
@@ -3445,7 +3445,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 last_visible_row += 1
             current_address = SysUtils.extract_address(
                 self.tableWidget_Disassemble.item(current_row, DISAS_ADDR_COL).text())
-            new_address = GDB_Engine.find_address_of_closest_instruction(current_address, "previous", last_visible_row)
+            new_address = GDB_Engine.find_closest_instruction_address(current_address, "previous", last_visible_row)
             self.disassemble_expression(new_address)
         elif (where == "previous" and current_row == 0) or (where == "next" and current_row_height > height):
             self.tableWidget_Disassemble_scroll(where, instruction_count)
@@ -3454,7 +3454,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.currentpid == -1:
             return
         current_address = self.disassemble_currently_displayed_address
-        new_address = GDB_Engine.find_address_of_closest_instruction(current_address, where, instruction_count)
+        new_address = GDB_Engine.find_closest_instruction_address(current_address, where, instruction_count)
         self.disassemble_expression(new_address)
 
     def widget_HexView_wheel_event(self, event):
