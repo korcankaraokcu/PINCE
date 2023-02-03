@@ -34,7 +34,7 @@ parser.add_argument("-l", metavar="ld_preload_path", type=str, default="",
 
 args = parser.parse_args()
 if args.a:
-    process_list = SysUtils.search_in_processes_by_name(args.a)
+    process_list = SysUtils.search_processes(args.a)
     if not process_list:
         parser.error("There's no process with the name " + args.a)
     if len(process_list) > 1:

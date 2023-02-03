@@ -1013,7 +1013,7 @@ def get_current_thread_information():
 
 
 #:tag:Assembly
-def find_address_of_closest_instruction(address, instruction_location="next", instruction_count=1):
+def find_closest_instruction_address(address, instruction_location="next", instruction_count=1):
     """Finds address of the closest instruction next to the given address, assuming that the given address is valid
 
     Args:
