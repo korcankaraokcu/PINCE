@@ -680,6 +680,8 @@ def toggle_attach():
     """
     if currentpid == -1:
         return
+    if inferior_status==type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        interrupt_inferior(type_defs.STOP_REASON.PAUSE)
     if is_attached():
         if common_regexes.gdb_error.search(send_command("phase-out")):
             return
