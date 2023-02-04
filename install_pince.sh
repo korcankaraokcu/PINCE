@@ -71,22 +71,79 @@ install_scanmem() {
     return 0
 }
 
-OS_NAME="Debian"
-PKG_MGR="apt-get"
-INSTALL_COMMAND="install"
+ask_pkg_mgr() {
+	shopt -s nocasematch
+	echo
+	echo "Your distro is not officially supported! Trying to install anyway."
+	echo "Please choose your package manager."
+	echo "1) APT"
+	echo "2) Pacman"
+	echo "3) DNF"
+	echo "4) Zypper"
+	echo "5) None of the above"
+	read -r -p "Choose: " OPTION
 
+	case $OPTION in
+	1|*APT*)
+		OS_NAME="Debian"
+		;;
+	2|*PACMAN*)
+		OS_NAME="Arch"
+		;;
+	3|*DNF*)
+		OS_NAME="Fedora"
+		;;
+	4|*ZYPPER*)
+		OS_NAME="SUSE"
+		;;
+	*)
+		return 1
+		;;
+	esac
+
+	return 0
+}
 
 PKG_NAMES_ALL="python3-pip gdb libtool intltool"
 PKG_NAMES_DEBIAN="$PKG_NAMES_ALL libreadline-dev"
 PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc readline-devel python3-devel typelib-1_0-Gtk-3_0 make"
 PKG_NAMES_FEDORA="$PKG_NAMES_ALL readline-devel python3-devel"
 PKG_NAMES_ARCH="python-pip readline intltool gdb lsb-release" # arch defaults to py3 nowadays
-PKG_NAMES="$PKG_NAMES_DEBIAN"
 PKG_NAMES_PIP="pyqt6 psutil pexpect distorm3 pygdbmi keyboard"
 PIP_COMMAND="pip3"
 
+INSTALL_COMMAND="install"
+
+set_install_vars() {
+	case $1 in
+	*SUSE*)
+		PKG_MGR="zypper"
+		PKG_NAMES="$PKG_NAMES_SUSE"
+		;;
+	*Arch*)
+		PKG_MGR="pacman"
+		PKG_NAMES="$PKG_NAMES_ARCH"
+		INSTALL_COMMAND="-S --needed"
+		PIP_COMMAND="pip"
+		;;
+	*Fedora*)
+		PKG_MGR="dnf -y"
+		PKG_NAMES="$PKG_NAMES_FEDORA"
+		;;
+	*Debian*|*Ubuntu*)
+		PKG_MGR="apt -y"
+		PKG_NAMES="$PKG_NAMES_DEBIAN"
+		;;
+	*)
+		return 1
+		;;
+	esac
+
+	return 0
+}
+
 LSB_RELEASE="$(command -v lsb_release)"
-if [ -n "$LSB_RELEASE" ] ; then
+if [ -n "$LSB_RELEASE" ]; then
     OS_NAME="$(${LSB_RELEASE} -d -s)"
 else
     # shellcheck disable=SC1091
@@ -94,22 +151,18 @@ else
     OS_NAME="$NAME"
 fi
 
-case "$OS_NAME" in
-*SUSE*)
-    PKG_MGR="zypper"
-    PKG_NAMES="$PKG_NAMES_SUSE"
-    ;;
-*Arch*)
-    PKG_MGR="pacman"
-    PKG_NAMES="$PKG_NAMES_ARCH"
-    INSTALL_COMMAND="-S"
-    PIP_COMMAND="pip"
-    ;;
-*Fedora*)
-    PKG_MGR="dnf -y"
-    PKG_NAMES="$PKG_NAMES_FEDORA"
-    ;;
-esac
+set_install_vars $OS_NAME
+
+if [ "$?" -ne 0  ]; then
+	ask_pkg_mgr
+	if [ "$?" -ne 0 ]; then
+		echo
+		echo "Sorry, your distro is not supported!"
+		exit 1
+	fi
+
+	set_install_vars $OS_NAME
+fi
 
 # shellcheck disable=SC2086
 sudo ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES} || exit_on_error
