@@ -72,7 +72,6 @@ install_scanmem() {
 }
 
 ask_pkg_mgr() {
-	shopt -s nocasematch
 	echo
 	echo "Your distro is not officially supported! Trying to install anyway."
 	echo "Please choose your package manager."
@@ -81,7 +80,9 @@ ask_pkg_mgr() {
 	echo "3) DNF"
 	echo "4) Zypper"
 	echo "5) None of the above"
+
 	read -r -p "Choose: " OPTION
+	OPTION=$(echo $OPTION | tr '[:lower:]' '[:upper:]')
 
 	case $OPTION in
 	1|*APT*)
