@@ -45,6 +45,7 @@ from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
 from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
 from GUI.EditTypeDialog import Ui_Dialog as EditTypeDialog
+from GUI.TrackSelectorDialog import Ui_Dialog as TrackSelectorDialog
 from GUI.LoadingDialog import Ui_Dialog as LoadingDialog
 from GUI.InputDialog import Ui_Dialog as InputDialog
 from GUI.TextEditDialog import Ui_Dialog as TextEditDialog
@@ -738,6 +739,14 @@ class MainForm(QMainWindow, MainWindow):
         if not selected_row:
             return
         address = selected_row.text(ADDR_COL).strip("P->")  # @todo Maybe rework address grabbing logic in the future
+        address_data = selected_row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
+        if isinstance(address_data, type_defs.PointerType):
+            selection_dialog = TrackSelectorDialogForm()
+            selection_dialog.exec()
+            if not selection_dialog.selection:
+                return
+            if selection_dialog.selection == "pointer":
+                address = address_data.get_base_address()
         value_type = selected_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
         if type_defs.VALUE_INDEX.is_string(value_type.value_index):
             value_text = selected_row.text(VALUE_COL)
@@ -1918,6 +1927,19 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             zero_terminate = True
         address_type = self.comboBox_ValueType.currentIndex()
         return address_type, length, zero_terminate
+
+
+class TrackSelectorDialogForm(QDialog, TrackSelectorDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setupUi(self)
+        self.selection = None
+        self.pushButton_Pointer.clicked.connect(lambda: self.change_selection("pointer"))
+        self.pushButton_Pointed.clicked.connect(lambda: self.change_selection("pointed"))
+
+    def change_selection(self, selection):
+        self.selection = selection
+        self.close()
 
 
 class LoadingDialogForm(QDialog, LoadingDialog):
