@@ -565,71 +565,6 @@
                <number>0</number>
               </property>
               <item>
-               <widget class="QRadioButton" name="radioButton_RoundedDefault">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="toolTip">
-                 <string>Not currently supported</string>
-                </property>
-                <property name="text">
-                 <string>Ro&amp;unded (Default)</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="radioButton_RoundedExtreme">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="toolTip">
-                 <string>Not currently supported</string>
-                </property>
-                <property name="text">
-                 <string>Rou&amp;nded (Extreme)</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="radioButton_Truncated">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="toolTip">
-                 <string>Not currently supported</string>
-                </property>
-                <property name="text">
-                 <string>Truncated</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="checkBox_Unicode">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="toolTip">
-                 <string>Not currently supported</string>
-                </property>
-                <property name="text">
-                 <string>Unicode</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="checkBox_CaseSensitive">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="toolTip">
-                 <string>Not currently supported</string>
-                </property>
-                <property name="text">
-                 <string>Case Sensitive</string>
-                </property>
-               </widget>
-              </item>
-              <item>
                <layout class="QVBoxLayout" name="verticalLayout_3">
                 <item>
                  <spacer name="verticalSpacer_2">
@@ -643,19 +578,6 @@
                    </size>
                   </property>
                  </spacer>
-                </item>
-                <item>
-                 <widget class="QCheckBox" name="checkBox_Unrandomizer">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="toolTip">
-                   <string>Not currently supported</string>
-                  </property>
-                  <property name="text">
-                   <string>Unrandomizer</string>
-                  </property>
-                 </widget>
                 </item>
                </layout>
               </item>
@@ -677,7 +599,7 @@
      <x>0</x>
      <y>0</y>
      <width>678</width>
-     <height>30</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
