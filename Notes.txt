@@ -34,7 +34,7 @@ If you need to pass self as a parameter, please don't use 'super().__init__(pare
 
 28/8/2018 - All QMessageBoxes that's called from outside of their classes(via parent() etc.) must use 'QApplication.focusWidget()' instead of 'self' in their first parameter. Refer to issue #57 for more information
 
-14/11/2018 - All logo requests should be posted in media/logo/your_username. Instead of opening a new issue, PR your logo files to that folder. Your PR must include at least one png file named pince_small, pince_medium or pince_big, according to its size. Optionally, you can also post your design files
+14/11/2018 - All logo requests should be posted in media/logo/your_username. Instead of opening a new issue, PR your logo files to that folder. Your PR must include at least one png file named pince_small, pince_medium or pince_big, according to its size
 So, a minimal PR will look like this:
 
 /media/logo/your_username/pince_big.png
@@ -45,10 +45,5 @@ A full PR will look like this:
 /media/logo/your_username/pince_big.png
 /media/logo/your_username/pince_medium.png
 /media/logo/your_username/pince_small.png
-/media/logo/your_username/pince_big.ai
-/media/logo/your_username/pince_medium.ai
-/media/logo/your_username/pince_small.ai
-
-It doesn't have to be ai extension, I just picked Adobe Illustrator for the example above
 
 23/11/2018 - Don't use get_current_item or get_current_row within currentItemChanged or currentChanged signals. Qt doesn't update selected rows on first currentChanged or currentItemChanged calls
