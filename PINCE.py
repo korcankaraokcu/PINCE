@@ -116,6 +116,7 @@ class Hotkeys:
             if self.handle is not None:
                 remove_hotkey(self.handle)
                 self.handle = None
+            self.custom = custom
             if custom == '':
                 return
             self.handle = add_hotkey(custom.lower(), self.func)
@@ -126,7 +127,7 @@ class Hotkeys:
                 remove_hotkey(self.handle)
             if self.custom != "":
                 self.handle = add_hotkey(self.custom, func)
-            else:
+            elif self.default != "":
                 self.handle = add_hotkey(self.default, func)
 
         def get_active_key(self):
@@ -138,10 +139,17 @@ class Hotkeys:
     break_hotkey = Hotkey("break_hotkey", "Break the process", "F2")
     continue_hotkey = Hotkey("continue_hotkey", "Continue the process", "F3")
     toggle_attach_hotkey = Hotkey("toggle_attach_hotkey", "Toggle attach/detach", "Shift+F10")
+    exact_scan_hotkey = Hotkey("exact_scan_hotkey", "Next Scan - Exact", "")
+    increased_scan_hotkey = Hotkey("increased_scan_hotkey", "Next Scan - Increased", "")
+    decreased_scan_hotkey = Hotkey("decreased_scan_hotkey", "Next Scan - Decreased", "")
+    changed_scan_hotkey = Hotkey("changed_scan_hotkey", "Next Scan - Changed", "")
+    unchanged_scan_hotkey = Hotkey("unchanged_scan_hotkey", "Next Scan - Unchanged", "")
 
     @staticmethod
     def get_hotkeys():
-        return Hotkeys.pause_hotkey, Hotkeys.break_hotkey, Hotkeys.continue_hotkey, Hotkeys.toggle_attach_hotkey
+        return Hotkeys.pause_hotkey, Hotkeys.break_hotkey, Hotkeys.continue_hotkey, Hotkeys.toggle_attach_hotkey, \
+            Hotkeys.exact_scan_hotkey, Hotkeys.increased_scan_hotkey, Hotkeys.decreased_scan_hotkey, \
+            Hotkeys.changed_scan_hotkey, Hotkeys.unchanged_scan_hotkey
 
 
 code_injection_method = int
@@ -384,7 +392,12 @@ class MainForm(QMainWindow, MainWindow):
             Hotkeys.pause_hotkey: self.pause_hotkey_pressed,
             Hotkeys.break_hotkey: self.break_hotkey_pressed,
             Hotkeys.continue_hotkey: self.continue_hotkey_pressed,
-            Hotkeys.toggle_attach_hotkey: self.toggle_attach_hotkey_pressed
+            Hotkeys.toggle_attach_hotkey: self.toggle_attach_hotkey_pressed,
+            Hotkeys.exact_scan_hotkey: lambda: self.nextscan_hotkey_pressed(type_defs.SCAN_TYPE.EXACT),
+            Hotkeys.increased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(type_defs.SCAN_TYPE.INCREASED),
+            Hotkeys.decreased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(type_defs.SCAN_TYPE.DECREASED),
+            Hotkeys.changed_scan_hotkey: lambda: self.nextscan_hotkey_pressed(type_defs.SCAN_TYPE.CHANGED),
+            Hotkeys.unchanged_scan_hotkey: lambda: self.nextscan_hotkey_pressed(type_defs.SCAN_TYPE.UNCHANGED)
         }
         for hotkey, func in hotkey_to_func.items():
             hotkey.change_func(func)
@@ -643,6 +656,13 @@ class MainForm(QMainWindow, MainWindow):
             print("Unable to toggle attach")
         elif result == type_defs.TOGGLE_ATTACH.DETACHED:
             self.on_status_detached()
+
+    @SysUtils.ignore_exceptions
+    def nextscan_hotkey_pressed(self, index):
+        if self.scan_mode == type_defs.SCAN_MODE.NEW:
+            return
+        self.comboBox_ScanType.setCurrentIndex(index)
+        self.pushButton_NextScan_clicked()
 
     def treeWidget_AddressTable_context_menu_event(self, event):
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
@@ -1055,14 +1075,7 @@ class MainForm(QMainWindow, MainWindow):
     def comboBox_ScanType_init(self):
         current_type = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
         self.comboBox_ScanType.clear()
-        if self.scan_mode == type_defs.SCAN_MODE.NEW:
-            items = [type_defs.SCAN_TYPE.EXACT, type_defs.SCAN_TYPE.LESS, type_defs.SCAN_TYPE.MORE,
-                     type_defs.SCAN_TYPE.BETWEEN, type_defs.SCAN_TYPE.UNKNOWN]
-        else:
-            items = [type_defs.SCAN_TYPE.EXACT, type_defs.SCAN_TYPE.INCREASED, type_defs.SCAN_TYPE.INCREASED_BY,
-                     type_defs.SCAN_TYPE.DECREASED, type_defs.SCAN_TYPE.DECREASED_BY, type_defs.SCAN_TYPE.LESS,
-                     type_defs.SCAN_TYPE.MORE, type_defs.SCAN_TYPE.BETWEEN, type_defs.SCAN_TYPE.CHANGED,
-                     type_defs.SCAN_TYPE.UNCHANGED]
+        items = type_defs.SCAN_TYPE.get_list(self.scan_mode)
         old_index = 0
         for index, type_index in enumerate(items):
             if current_type == type_index:

@@ -291,10 +291,19 @@ class SCAN_TYPE:
     UNCHANGED = 9
     UNKNOWN = 10
 
+    @staticmethod
+    def get_list(scan_mode):
+        if scan_mode == SCAN_MODE.NEW:
+            return [SCAN_TYPE.EXACT, SCAN_TYPE.LESS, SCAN_TYPE.MORE, SCAN_TYPE.BETWEEN, SCAN_TYPE.UNKNOWN]
+        else:
+            return [SCAN_TYPE.EXACT, SCAN_TYPE.INCREASED, SCAN_TYPE.INCREASED_BY, SCAN_TYPE.DECREASED,
+                    SCAN_TYPE.DECREASED_BY, SCAN_TYPE.LESS, SCAN_TYPE.MORE, SCAN_TYPE.BETWEEN,
+                    SCAN_TYPE.CHANGED, SCAN_TYPE.UNCHANGED]
+
 
 # Represents the texts at indexes in combobox
 scan_type_to_text_dict = collections.OrderedDict([
-    (SCAN_TYPE.EXACT, "Exact Scan"),
+    (SCAN_TYPE.EXACT, "Exact"),
     (SCAN_TYPE.INCREASED, "Increased"),
     (SCAN_TYPE.INCREASED_BY, "Increased by"),
     (SCAN_TYPE.DECREASED, "Decreased"),
