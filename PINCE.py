@@ -636,7 +636,7 @@ class MainForm(QMainWindow, MainWindow):
     # Keyboard package has an issue with exceptions, any trigger function that throws an exception stops the event loop
     # Writing a custom event loop instead of ignoring exceptions could work as well but honestly, this looks cleaner
     # Keyboard package does not play well with Qt, do not use anything Qt related with hotkeys
-    # Using any Qt functionality with the hotkeys will freeze the process or just crash it
+    # Instead of using Qt functions, try to use their signals to prevent crashes
     @SysUtils.ignore_exceptions
     def pause_hotkey_pressed(self):
         GDB_Engine.interrupt_inferior(type_defs.STOP_REASON.PAUSE)
@@ -662,7 +662,7 @@ class MainForm(QMainWindow, MainWindow):
         if self.scan_mode == type_defs.SCAN_MODE.NEW:
             return
         self.comboBox_ScanType.setCurrentIndex(index)
-        self.pushButton_NextScan_clicked()
+        self.pushButton_NextScan.clicked.emit()
 
     def treeWidget_AddressTable_context_menu_event(self, event):
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
