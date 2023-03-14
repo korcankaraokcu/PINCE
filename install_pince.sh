@@ -108,7 +108,7 @@ ask_pkg_mgr() {
 PKG_NAMES_ALL="python3-pip gdb libtool intltool"
 PKG_NAMES_DEBIAN="$PKG_NAMES_ALL libreadline-dev python3-dev"
 PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc readline-devel python3-devel typelib-1_0-Gtk-3_0 make"
-PKG_NAMES_FEDORA="$PKG_NAMES_ALL readline-devel python3-devel"
+PKG_NAMES_FEDORA="$PKG_NAMES_ALL readline-devel python3-devel redhat-lsb"
 PKG_NAMES_ARCH="python-pip readline intltool gdb lsb-release" # arch defaults to py3 nowadays
 PKG_NAMES_PIP="pyqt6 psutil pexpect distorm3 pygdbmi keyboard pygobject"
 PIP_COMMAND="pip3"
