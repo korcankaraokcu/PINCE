@@ -65,7 +65,7 @@ Pre-release screenshots:
 ```
 git clone --recursive https://github.com/korcankaraokcu/PINCE
 cd PINCE
-sudo sh install_pince.sh
+sh install_pince.sh
 ```
 ~~For Archlinux, you can also use the [AUR package](https://aur.archlinux.org/packages/pince-git/) as an alternative~~ Currently outdated, use the installation script
 
