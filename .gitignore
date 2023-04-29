@@ -10,3 +10,4 @@ libpince/libscanmem/*
 *$py.class
 gdb_pince/*
 *.gnbs.conf
+.venv/*
