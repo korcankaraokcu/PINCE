@@ -20,6 +20,7 @@ if [ ! -d ".venv/PINCE" ]; then
 	echo "Please run \"sh install_pince.sh\" first!"
 	exit 1
 fi
+source .venv/PINCE/bin/activate
 
 # Change this bullcrap when polkit is implemented
 OS=$(lsb_release -si)
@@ -28,6 +29,5 @@ if [ $OS = "Debian" ] && [ -x "$(command -v gksudo)" ]; then
   gksudo env PYTHONDONTWRITEBYTECODE=1 python3 PINCE.py
 else
   # Preserve env vars to keep settings like theme preferences
-  source .venv/PINCE/bin/activate
   sudo -E PYTHONDONTWRITEBYTECODE=1 python3 PINCE.py
 fi
