@@ -16,6 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
 
+if [ ! -d ".venv/PINCE" ]; then
+	echo "Please run \"sh install_pince.sh\" first!"
+	exit 1
+fi
+
 # Change this bullcrap when polkit is implemented
 OS=$(lsb_release -si)
 # Get rid of gksudo when Debian 8 support drops or polkit gets implemented
@@ -23,5 +28,6 @@ if [ $OS = "Debian" ] && [ -x "$(command -v gksudo)" ]; then
   gksudo env PYTHONDONTWRITEBYTECODE=1 python3 PINCE.py
 else
   # Preserve env vars to keep settings like theme preferences
+  source .venv/PINCE/bin/activate
   sudo -E PYTHONDONTWRITEBYTECODE=1 python3 PINCE.py
 fi

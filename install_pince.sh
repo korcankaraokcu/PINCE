@@ -111,7 +111,6 @@ PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc readline-devel python3-devel typelib-1_0-Gtk-
 PKG_NAMES_FEDORA="$PKG_NAMES_ALL readline-devel python3-devel redhat-lsb"
 PKG_NAMES_ARCH="python-pip readline intltool gdb lsb-release" # arch defaults to py3 nowadays
 PKG_NAMES_PIP="pyqt6 psutil pexpect distorm3 pygdbmi keyboard pygobject"
-PIP_COMMAND="pip3"
 
 INSTALL_COMMAND="install"
 
@@ -125,7 +124,6 @@ set_install_vars() {
 		PKG_MGR="pacman"
 		PKG_NAMES="$PKG_NAMES_ARCH"
 		INSTALL_COMMAND="-S --needed"
-		PIP_COMMAND="pip"
 		;;
 	*Fedora*)
 		PKG_MGR="dnf -y"
@@ -167,8 +165,15 @@ fi
 
 # shellcheck disable=SC2086
 sudo ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES} || exit_on_error
+
+# Prepare Python virtual environment
+if [ ! -d ".venv/PINCE" ]; then
+	python3 -m venv .venv/PINCE
+fi
+source .venv/PINCE/bin/activate
+
 # shellcheck disable=SC2086
-sudo ${PIP_COMMAND} install ${PKG_NAMES_PIP} || exit_on_error
+pip3 install ${PKG_NAMES_PIP} || exit_on_error
 
 install_scanmem || exit_on_error
 
