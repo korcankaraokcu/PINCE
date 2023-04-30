@@ -170,7 +170,7 @@ sudo ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES} || exit_on_error
 if [ ! -d ".venv/PINCE" ]; then
 	python3 -m venv .venv/PINCE
 fi
-source .venv/PINCE/bin/activate
+. .venv/PINCE/bin/activate
 
 # shellcheck disable=SC2086
 pip3 install ${PKG_NAMES_PIP} || exit_on_error
