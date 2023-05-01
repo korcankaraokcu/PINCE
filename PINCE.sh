@@ -22,12 +22,7 @@ if [ ! -d ".venv/PINCE" ]; then
 fi
 . .venv/PINCE/bin/activate
 
-# Change this bullcrap when polkit is implemented
-OS=$(lsb_release -si)
-# Get rid of gksudo when Debian 8 support drops or polkit gets implemented
-if [ $OS = "Debian" ] && [ -x "$(command -v gksudo)" ]; then
-  gksudo env PYTHONDONTWRITEBYTECODE=1 python3 PINCE.py
-else
-  # Preserve env vars to keep settings like theme preferences
-  sudo -E PYTHONDONTWRITEBYTECODE=1 python3 PINCE.py
-fi
+# Preserve env vars to keep settings like theme preferences.
+# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
+# so we need to force PATH preservation with venv activated user's PATH.
+sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 python3 PINCE.py
