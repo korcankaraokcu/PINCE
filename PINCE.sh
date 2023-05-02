@@ -16,6 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
 
+if [ "$(id -u)" = "0" ]; then
+	echo "Please do not run this script as root!"
+	exit 1
+fi
+
 if [ ! -d ".venv/PINCE" ]; then
 	echo "Please run \"sh install_pince.sh\" first!"
 	exit 1
