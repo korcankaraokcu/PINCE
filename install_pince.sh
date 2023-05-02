@@ -20,6 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # it will create the necessary files in PINCEs directory instead of scanmems, which will result in having to run `sh autogen.sh`
 # twice, see this link https://github.com/protocolbuffers/protobuf/issues/149#issuecomment-473092810
 
+if [ "$(id -u)" = "0" ]; then
+	echo "Please do not run this script as root!"
+	exit 1
+fi
 
 CURRENT_USER="$(who mom likes | awk '{print $1}')"
 
