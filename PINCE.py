@@ -3147,16 +3147,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             current_row = row_colour[row]
             if PC_COLOUR in current_row:
                 if BREAKPOINT_COLOUR in current_row:
-                    colour = Qt.green
+                    colour = QColorConstants.Green
                 elif BOOKMARK_COLOUR in current_row:
-                    colour = Qt.yellow
+                    colour = QColorConstants.Yellow
                 else:
                     colour = PC_COLOUR
                 self.set_row_colour(row, colour)
                 continue
             if BREAKPOINT_COLOUR in current_row:
                 if BOOKMARK_COLOUR in current_row:
-                    colour = Qt.magenta
+                    colour = QColorConstants.Magenta
                 else:
                     colour = BREAKPOINT_COLOUR
                 self.set_row_colour(row, colour)
@@ -3167,12 +3167,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             if REF_COLOUR in current_row:
                 self.set_row_colour(row, REF_COLOUR)
 
-    # color parameter should be Qt.colour
     def set_row_colour(self, row, colour):
         if GDB_Engine.currentpid == -1:
             return
         for col in range(self.tableWidget_Disassemble.columnCount()):
-            self.tableWidget_Disassemble.item(row, col).setData(Qt.ItemDataRole.BackgroundRole, QColor(colour))
+            self.tableWidget_Disassemble.item(row, col).setData(Qt.ItemDataRole.BackgroundRole, colour)
 
     def on_process_stop(self):
         if GDB_Engine.stop_reason == type_defs.STOP_REASON.PAUSE:
@@ -4718,7 +4717,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
                 address_item = QTableWidgetItem(address)
             else:
                 address_item = QTableWidgetItem("DEFINED")
-                address_item.setBackground(Qt.green)
+                address_item.setBackground(QColorConstants.Green)
             self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_ADDR_COL, address_item)
             self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_SYMBOL_COL, QTableWidgetItem(item[1]))
         self.tableWidget_SymbolInfo.setSortingEnabled(True)
@@ -5126,14 +5125,14 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
 
     def highlight_text(self):
         self.textBrowser_TypeDefs.selectAll()
-        self.textBrowser_TypeDefs.setTextBackgroundColor(QColor("white"))
+        self.textBrowser_TypeDefs.setTextBackgroundColor(QColorConstants.White)
         cursor = self.textBrowser_TypeDefs.textCursor()
         cursor.clearSelection()
         cursor.movePosition(QTextCursor.MoveOperation.Start)
         self.textBrowser_TypeDefs.setTextCursor(cursor)
 
         highlight_format = QTextCharFormat()
-        highlight_format.setBackground(QBrush(QColor("red")))
+        highlight_format.setBackground(QColorConstants.LightGray)
         pattern = self.lineEdit_SearchText.text()
         found_count = 0
         while True:
