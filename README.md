@@ -77,8 +77,7 @@ If you like to uninstall PINCE, just delete this folder, almost everything is in
 - Check https://github.com/korcankaraokcu/PINCE/issues/116 for a possible fix if you encounter `'GtkSettings' has no property named 'gtk-fallback-icon-theme'`
 
 # Running PINCE  
-Just run ```sh PINCE.sh``` in the PINCE directory  
-In some cases, ```sudo sh PINCE.sh``` works too, as reported in https://github.com/korcankaraokcu/PINCE/issues/138
+Just run ```sh PINCE.sh``` in the PINCE directory
 
 ### For developers:  
 ```
