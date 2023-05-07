@@ -4761,6 +4761,8 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
 
     def tableWidget_SymbolInfo_item_double_clicked(self, index):
         address = self.tableWidget_SymbolInfo.item(index.row(), FUNCTIONS_INFO_ADDR_COL).text()
+        if address == "DEFINED":
+            return
         self.parent().disassemble_expression(address, append_to_travel_history=True)
 
     def pushButton_Help_clicked(self):
