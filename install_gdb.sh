@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # This script installs a specific gdb version locally, the default installation script doesn't need this anymore, you can use it as a fallback if system gdb is being problematic
 # After installing a local gdb, you must specify its binary location via the Settings->Debug
 
-GDB_VERSION="gdb-10.2"
+GDB_VERSION="gdb-11.2"
 
 mkdir -p gdb_pince
 cd gdb_pince || exit
@@ -38,22 +38,7 @@ echo "-------------------------------------------------------------------------"
 echo "If you're not on debian or a similar distro with the 'apt' package manager the follow will not work if you don't have gcc and g++ installed"
 echo "Please install them manually for this to work, this issue will be addressed at a later date"
 
- # extremely lazy fix for other distros, if gcc&g++ is available it will work, if not it won't
-if ! command -v gcc g++; then
-    # Dependencies required for compiling GDB
-    sudo apt-get install python3-dev
-
-    if ! sudo apt-get install gcc g++; then
-        sudo apt-get install software-properties-common
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-        sudo apt-get update
-
-        if ! sudo apt-get install gcc g++; then
-            echo "Failed to install gcc or g++, aborting..."
-            exit 1
-        fi
-    fi
-fi
+sudo apt-get install python3-dev libgmp3-dev
 
 CC=gcc CXX=g++ ./configure --prefix="$(pwd)" --with-python=python3 && make -j MAKEINFO=true && sudo make -C gdb install
 
