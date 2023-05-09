@@ -2619,6 +2619,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.disassemble_currently_displayed_address = "0"
         self.widget_Disassemble.wheelEvent = self.widget_Disassemble_wheel_event
 
+        self.bDisassemblyScrolling = False  # rejects new scroll requests while scrolling
         self.tableWidget_Disassemble.wheelEvent = QEvent.ignore
         self.verticalScrollBar_Disassemble.wheelEvent = QEvent.ignore
 
@@ -2655,6 +2656,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableView_HexView_Hex.keyPressEvent = self.widget_HexView_key_press_event
         self.tableView_HexView_Ascii.keyPressEvent = self.widget_HexView_key_press_event
 
+        self.bHexViewScrolling = False  # rejects new scroll requests while scrolling
         self.verticalScrollBar_HexView.wheelEvent = QEvent.ignore
 
         self.verticalScrollBar_HexView.sliderChange = self.hex_view_scrollbar_sliderchanged
