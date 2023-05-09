@@ -5605,7 +5605,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         referrers = str_dict[hex(int(addr, 16))]
         addrs = [hex(address) for address in referrers]
         self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in GDB_Engine.examine_expressions(addrs)])
-        self.listWidget_Referrers.sortItems(Qt.AscendingOrder)
+        self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
         str_dict.close()
 
     def tableWidget_References_item_double_clicked(self, index):
@@ -5735,7 +5735,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         referrers = call_dict[hex(int(SysUtils.extract_address(addr), 16))]
         addrs = [hex(address) for address in referrers]
         self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in GDB_Engine.examine_expressions(addrs)])
-        self.listWidget_Referrers.sortItems(Qt.AscendingOrder)
+        self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
         call_dict.close()
 
     def tableWidget_References_item_double_clicked(self, index):
@@ -5808,7 +5808,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         self.hex_len = 16 if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64 else 8
         self.collect_referrer_data()
         self.refresh_table()
-        self.listWidget_Referrers.sortItems(Qt.AscendingOrder)
+        self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
         self.listWidget_Referrers.selectionModel().currentChanged.connect(self.listWidget_Referrers_current_changed)
         self.listWidget_Referrers.itemDoubleClicked.connect(self.listWidget_Referrers_item_double_clicked)
         self.listWidget_Referrers.contextMenuEvent = self.listWidget_Referrers_context_menu_event
@@ -5873,7 +5873,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
                         continue
             self.listWidget_Referrers.addItem(item)
         self.listWidget_Referrers.setSortingEnabled(True)
-        self.listWidget_Referrers.sortItems(Qt.AscendingOrder)
+        self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
 
     def listWidget_Referrers_current_changed(self, QModelIndex_current):
         if QModelIndex_current.row() < 0:
