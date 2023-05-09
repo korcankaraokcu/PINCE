@@ -1995,8 +1995,13 @@ class LoadingDialogForm(QDialog, LoadingDialog):
         def __init__(self):
             super().__init__()
 
+        # Unhandled exceptions in this thread freezes PINCE
         def run(self):
-            output = self.overrided_func()
+            try:
+                output = self.overrided_func()
+            except:
+                print(traceback.format_exc())
+                output = None
             self.output_ready.emit(output)
 
         def overrided_func(self):
@@ -4698,6 +4703,8 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.pushButton_Help.clicked.connect(self.pushButton_Help_clicked)
 
     def refresh_table(self):
+        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+            raise type_defs.InferiorRunningException
         input_text = self.lineEdit_SearchInput.text()
         case_sensitive = self.checkBox_CaseSensitive.isChecked()
         self.loading_dialog = LoadingDialogForm(self)
@@ -5255,6 +5262,8 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         self.tableWidget_Opcodes.contextMenuEvent = self.tableWidget_Opcodes_context_menu_event
 
     def refresh_table(self):
+        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+            raise type_defs.InferiorRunningException
         start_address = self.lineEdit_Start.text()
         end_address = self.lineEdit_End.text()
         regex = self.lineEdit_Regex.text()
