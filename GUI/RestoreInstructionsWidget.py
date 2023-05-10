@@ -19,6 +19,7 @@ class Ui_Form(object):
         self.tableWidget_Instructions.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tableWidget_Instructions.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         self.tableWidget_Instructions.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableWidget_Instructions.setWordWrap(False)
         self.tableWidget_Instructions.setObjectName("tableWidget_Instructions")
         self.tableWidget_Instructions.setColumnCount(3)
         self.tableWidget_Instructions.setRowCount(0)

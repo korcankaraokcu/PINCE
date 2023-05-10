@@ -58,6 +58,9 @@
       <property name="sortingEnabled">
        <bool>true</bool>
       </property>
+      <property name="wordWrap">
+       <bool>false</bool>
+      </property>
       <attribute name="horizontalHeaderDefaultSectionSize">
        <number>70</number>
       </attribute>
