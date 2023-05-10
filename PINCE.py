@@ -2012,7 +2012,7 @@ class LoadingDialogForm(QDialog, LoadingDialog):
             try:
                 output = self.overrided_func()
             except:
-                print(traceback.format_exc())
+                traceback.print_exc()
                 output = None
             self.output_ready.emit(output)
 
