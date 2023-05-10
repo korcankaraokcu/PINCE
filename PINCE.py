@@ -1037,14 +1037,7 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_ScanType_init()
             return
         if self.scan_mode == type_defs.SCAN_MODE.ONGOING:
-            self.scan_mode = type_defs.SCAN_MODE.NEW
-            self.pushButton_NewFirstScan.setText("First Scan")
-            self.backend.send_command("reset")
-            self.tableWidget_valuesearchtable.setRowCount(0)
-            self.comboBox_ValueType.setEnabled(True)
-            self.pushButton_NextScan.setEnabled(False)
-            self.comboBox_ScanScope.setEnabled(True)
-            self.progressBar.setValue(0)
+            self.reset_scan()
         else:
             self.scan_mode = type_defs.SCAN_MODE.ONGOING
             self.pushButton_NewFirstScan.setText("New Scan")
@@ -1311,12 +1304,27 @@ class MainForm(QMainWindow, MainWindow):
             if i % 3 == 0:
                 self.add_entry_to_addresstable("", row.text(), row.data(Qt.ItemDataRole.UserRole)[0], length)
 
+    def reset_scan(self):
+        self.scan_mode = type_defs.SCAN_MODE.NEW
+        self.pushButton_NewFirstScan.setText("First Scan")
+        self.backend.send_command("reset")
+        self.tableWidget_valuesearchtable.setRowCount(0)
+        self.comboBox_ValueType.setEnabled(True)
+        self.pushButton_NextScan.setEnabled(False)
+        self.comboBox_ScanScope.setEnabled(True)
+        self.progressBar.setValue(0)
+        self.label_MatchCount.setText("Match count: 0")
+
     def on_inferior_exit(self):
-        if GDB_Engine.currentpid == -1:
-            self.on_status_running()
-            GDB_Engine.init_gdb(gdb_path)
-            self.apply_after_init()
-            self.label_SelectedProcess.setText("No Process Selected")
+        self.pushButton_MemoryView.setEnabled(False)
+        self.pushButton_AddAddressManually.setEnabled(False)
+        self.QWidget_Toolbox.setEnabled(False)
+        self.lineEdit_Scan.setText("")
+        self.reset_scan()
+        self.on_status_running()
+        GDB_Engine.init_gdb(gdb_path)
+        self.apply_after_init()
+        self.label_SelectedProcess.setText("No Process Selected")
 
     def on_status_detached(self):
         self.label_SelectedProcess.setStyleSheet("color: blue")
@@ -1402,6 +1410,8 @@ class MainForm(QMainWindow, MainWindow):
     # ----------------------------------------------------
 
     def update_search_table(self):
+        if GDB_Engine.currentpid == -1:
+            return
         row_count = self.tableWidget_valuesearchtable.rowCount()
         if row_count > 0:
             length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
@@ -1419,6 +1429,8 @@ class MainForm(QMainWindow, MainWindow):
                 self.tableWidget_valuesearchtable.setItem(row_index, SEARCH_TABLE_VALUE_COL, value_item)
 
     def freeze(self):
+        if GDB_Engine.currentpid == -1:
+            return
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
         while it.value():
             row = it.value()
