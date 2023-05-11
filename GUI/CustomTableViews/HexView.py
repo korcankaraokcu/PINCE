@@ -37,15 +37,9 @@ class QHexView(QTableView):
         QWheelEvent.ignore()
 
     def resize_to_contents(self):
-        _self_name=self.__class__.__name__
         size = self.columnWidth(0) * self.model().columnCount()
-        if (_self_name == "QHexView"):
-            self.setMinimumWidth(int(size*1.875))
-            self.setMaximumWidth(int(size*1.875))
-            self.resizeColumnsToContents()
-        else:
-            self.setMinimumWidth(int(size))
-            self.setMaximumWidth(int(size))
+        self.setMinimumWidth(size)
+        self.setMaximumWidth(size)
 
     def get_selected_address(self):
         ci = self.currentIndex()
