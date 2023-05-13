@@ -2604,7 +2604,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
         self.splitter_MainMiddle.setStretchFactor(1, 1)
-        self.widget_StackView.resize(420, self.widget_StackView.height())  # blaze it
+        self.widget_StackView.resize(660, self.widget_StackView.height())
         self.widget_Registers.resize(330, self.widget_Registers.height())
 
     def initialize_register_view(self):

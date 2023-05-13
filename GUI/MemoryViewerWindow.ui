@@ -1326,8 +1326,8 @@
                </item>
                <item>
                 <widget class="QHexView" name="tableView_HexView_Hex">
-                 <property name="textElideMode">
-                  <enum>Qt::ElideNone</enum>
+                 <property name="sizeAdjustPolicy">
+                  <enum>QAbstractScrollArea::AdjustToContents</enum>
                  </property>
                 </widget>
                </item>
@@ -1340,8 +1340,8 @@
                </item>
                <item>
                 <widget class="QAsciiView" name="tableView_HexView_Ascii">
-                 <property name="textElideMode">
-                  <enum>Qt::ElideNone</enum>
+                 <property name="sizeAdjustPolicy">
+                  <enum>QAbstractScrollArea::AdjustToContents</enum>
                  </property>
                 </widget>
                </item>
