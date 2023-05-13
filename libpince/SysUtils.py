@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # This makes any psutil based function that's called from GDB unusable for Archlinux
 # Currently there's none but we can't take it for granted, can we?
 # TODO: Research the reason behind it or at least find a workaround
+# TODO: psutil is a bit slow for what it is, replace if this slight overhead becomes a problem
+# It takes about 30ms for get_region_set to run, a bit too slow innit, not really critical but slow indeed
 try:
     import psutil
 except ImportError:
@@ -96,6 +98,33 @@ def get_memory_regions(pid):
         list: List of psutil._pslinux.pmmap_ext objects corresponding to the given pid
     """
     return psutil.Process(pid).memory_maps(grouped=False)
+
+
+# :tag:Processes
+def get_region_set(pid):
+    """Returns memory regions as a list. Removes path duplicates and empty paths
+
+    Args:
+        pid (int): PID of the process
+
+    Returns:
+        list: List of str lists -> [[addr1, file_name1], [addr2, file_name2], ...]
+    
+    Note:
+        grouped=True could be used for this functionality but we might also get rid of psutil in the future due to
+        performance issues
+    """
+    region_set = []
+    current_file = ""
+    for item in get_memory_regions(pid):
+        if not item.path:
+            continue
+        head, tail = os.path.split(item.path)
+        if not head or tail == current_file:
+            continue
+        current_file = tail
+        region_set.append(["0x"+item.addr.split("-")[0], tail])
+    return region_set
 
 
 #:tag:Processes
