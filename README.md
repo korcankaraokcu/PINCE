@@ -110,6 +110,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - - Extend string types with LE and BE variants of UTF-16 and UTF-32
 - - Change comboBox_ValueType string order to be ... String_UTF-8 String_Others Array of Bytes
 - - Implement a custom combobox class for comboBox_ValueType and create a context menu for String_Others item
+- Having to stop the process to resolve symbols sucks, we already resolve base addresses of libs by ourselves, try to replace this gdb functionality with something else, maybe the output of nm or manual parsing
 - Indent docstrings properly like GDB_Engine.get_breakpoint_info does(independent from other steps)
 - Implement "Investigate Registers" button to gather information about the addresses registers point to(independent from other steps)
 - Implement selectionChanged signal of lineEdit_HexView
