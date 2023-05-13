@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import gdb, sys, traceback, functools
+import gdb, sys, os, traceback, functools
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -27,6 +27,7 @@ from libpince import type_defs, common_regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
+inferior_name = os.path.split(inferior.progspace.filename)[1]
 mem_file = "/proc/" + str(pid) + "/mem"
 
 void_ptr = gdb.lookup_type("void").pointer()
@@ -117,7 +118,7 @@ def examine_expression(expression, regions=None):
     try:
         value = gdb.parse_and_eval(expression).cast(void_ptr)
     except Exception as e:
-        if regions and common_regexes.file_with_extension.search(expression):
+        if regions and (expression == inferior_name or common_regexes.file_with_extension.search(expression)):
             for region in regions:
                 address, file_name = region
                 if expression in file_name:
