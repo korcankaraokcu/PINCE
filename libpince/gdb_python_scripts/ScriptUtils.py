@@ -118,12 +118,22 @@ def examine_expression(expression, regions=None):
     try:
         value = gdb.parse_and_eval(expression).cast(void_ptr)
     except Exception as e:
-        if regions and (expression == inferior_name or common_regexes.file_with_extension.search(expression)):
+        if "+" in expression:
+            expression, offset = expression.split("+")
+        else:
+            offset = "0"
+        if regions and common_regexes.simple_math_exp.search(offset) and \
+                (expression == inferior_name or common_regexes.file_with_extension.search(expression)):
             for region in regions:
                 address, file_name = region
                 if expression in file_name:
+                    try:
+                        address = hex(eval(address+"+"+offset))
+                    except Exception as e:
+                        print(e)
+                        return type_defs.tuple_examine_expression(None, None, None)
                     return type_defs.tuple_examine_expression(address+" "+file_name, address, file_name)
-        print(e, "for expression " + expression)
+        print(e)
         return type_defs.tuple_examine_expression(None, None, None)
     result = common_regexes.address_with_symbol.search(str(value))
     return type_defs.tuple_examine_expression(*result.groups())
