@@ -118,21 +118,23 @@ def examine_expression(expression, regions=None):
     try:
         value = gdb.parse_and_eval(expression).cast(void_ptr)
     except Exception as e:
-        if "+" in expression:
-            expression, offset = expression.split("+")
-        else:
-            offset = "0"
-        if regions and common_regexes.simple_math_exp.search(offset) and \
-                (expression == inferior_name or common_regexes.file_with_extension.search(expression)):
-            for region in regions:
-                address, file_name = region
-                if expression in file_name:
-                    try:
-                        address = hex(eval(address+"+"+offset))
-                    except Exception as e:
-                        print(e)
-                        return type_defs.tuple_examine_expression(None, None, None)
-                    return type_defs.tuple_examine_expression(address+" "+file_name, address, file_name)
+        if regions:  # this check comes first for optimization
+            offset = common_regexes.offset_expression.search(expression)
+            if offset:
+                offset = offset.group(0)
+                expression = expression.split(offset[0])[0]
+            else:
+                offset = "+0"
+            if expression == inferior_name or common_regexes.file_with_extension.search(expression):
+                for region in regions:
+                    address, file_name = region
+                    if expression in file_name:
+                        try:
+                            address = hex(eval(address+offset))
+                        except Exception as e:
+                            print(e)
+                            return type_defs.tuple_examine_expression(None, None, None)
+                        return type_defs.tuple_examine_expression(address+file_name, address, file_name)
         print(e)
         return type_defs.tuple_examine_expression(None, None, None)
     result = common_regexes.address_with_symbol.search(str(value))
