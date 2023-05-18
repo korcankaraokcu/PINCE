@@ -518,6 +518,11 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_About.setIcon(QIcon(QPixmap(icons_directory + "/information.png")))
         self.pushButton_NextScan.setEnabled(False)
         self.pushButton_UndoScan.setEnabled(False)
+        self.flashAttachButton = True
+        self.flashAttachButtonTimer = QTimer()
+        self.flashAttachButtonTimer.timeout.connect(self.flash_attach_button)
+        self.flashAttachButton_gradiantState = 0
+        self.flashAttachButtonTimer.start(100)
         self.auto_attach()
 
     def set_default_settings(self):
@@ -621,6 +626,7 @@ class MainForm(QMainWindow, MainWindow):
                     continue
                 if compiled_re.search(name):
                     self.attach_to_pid(process.pid)
+                    self.flashAttachButton = False
                     return
         else:
             for target in auto_attach_list.split(";"):
@@ -631,6 +637,7 @@ class MainForm(QMainWindow, MainWindow):
                         continue
                     if name.find(target) != -1:
                         self.attach_to_pid(process.pid)
+                        self.flashAttachButton = False
                         return
 
     # Keyboard package has an issue with exceptions, any trigger function that throws an exception stops the event loop
@@ -1289,6 +1296,9 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_AddAddressManually.setEnabled(True)
         self.pushButton_MemoryView.setEnabled(True)
 
+        # stop flashing attach button, timer will stop automatically on false value
+        self.flashAttachButton = False
+
     def delete_address_table_contents(self):
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
@@ -1324,6 +1334,8 @@ class MainForm(QMainWindow, MainWindow):
         self.on_status_running()
         GDB_Engine.init_gdb(gdb_path)
         self.apply_after_init()
+        self.flashAttachButton = True
+        self.flashAttachButtonTimer.start(100)
         self.label_SelectedProcess.setText("No Process Selected")
 
     def on_status_detached(self):
@@ -1576,6 +1588,39 @@ class MainForm(QMainWindow, MainWindow):
     def read_address_table_recursively(self, row):
         return self.read_address_table_entries(row, True) + \
                ([self.read_address_table_recursively(row.child(i)) for i in range(row.childCount())],)
+    
+    # Flashing Attach Button when the process is not attached
+    def flash_attach_button(self):
+        if not self.flashAttachButton:
+            self.flashAttachButtonTimer.stop()
+            self.pushButton_AttachProcess.setStyleSheet("")
+            return
+        gradiant0 = "qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 0, 0, 255), stop:0.166 rgba(255, 255, 0, 255), stop:0.333 rgba(0, 255, 0, 255), stop:0.5 rgba(0, 255, 255, 255), stop:0.666 rgba(0, 0, 255, 255), stop:0.833 rgba(255, 0, 255, 255), stop:1 rgba(255, 0, 0, 255));"
+        gradiant1 = "qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 0, 255, 255), stop:0.166 rgba(255, 0, 0, 255), stop:0.333 rgba(255, 255, 0, 255), stop:0.5 rgba(0, 255, 0, 255), stop:0.666 rgba(0, 255, 255, 255), stop:0.833 rgba(0, 0, 255, 255), stop:1 rgba(255, 0, 255, 255));"
+        gradiant2 = "qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 0, 255, 255), stop:0.166 rgba(255, 0, 255, 255), stop:0.333 rgba(255, 0, 0, 255), stop:0.5 rgba(255, 255, 0, 255), stop:0.666 rgba(0, 255, 0, 255), stop:0.833 rgba(0, 255, 255, 255), stop:1 rgba(0, 0, 255, 255));"
+        gradiant3 = "qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 255, 255, 255), stop:0.166 rgba(0, 0, 255, 255), stop:0.333 rgba(255, 0, 255, 255), stop:0.5 rgba(255, 0, 0, 255), stop:0.666 rgba(255, 255, 0, 255), stop:0.833 rgba(0, 255, 0, 255), stop:1 rgba(0, 255, 255, 255));"
+        gradiant4 = "qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 255, 0, 255), stop:0.166 rgba(0, 255, 255, 255), stop:0.333 rgba(0, 0, 255, 255), stop:0.5 rgba(255, 0, 255, 255), stop:0.666 rgba(255, 0, 0, 255), stop:0.833 rgba(255, 255, 0, 255), stop:1 rgba(0, 255, 0, 255));"
+        gradiant5 = "qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 0, 255), stop:0.166 rgba(0, 255, 0, 255), stop:0.333 rgba(0, 255, 255, 255), stop:0.5 rgba(0, 0, 255, 255), stop:0.666 rgba(255, 0, 255, 255), stop:0.833 rgba(255, 0, 0, 255), stop:1 rgba(255, 255, 0, 255));"
+
+
+        case = self.flashAttachButton_gradiantState % 6
+
+        if case == 0:
+            self.pushButton_AttachProcess.setStyleSheet("border: 2px solid " + gradiant0)
+        elif case == 1:
+            self.pushButton_AttachProcess.setStyleSheet("border: 2px solid " + gradiant1)
+        elif case == 2:
+            self.pushButton_AttachProcess.setStyleSheet("border: 2px solid " + gradiant2)
+        elif case == 3:
+            self.pushButton_AttachProcess.setStyleSheet("border: 2px solid " + gradiant3)
+        elif case == 4:
+            self.pushButton_AttachProcess.setStyleSheet("border: 2px solid " + gradiant4)
+        elif case == 5:
+            self.pushButton_AttachProcess.setStyleSheet("border: 2px solid " + gradiant5)
+
+        self.flashAttachButton_gradiantState += 1
+        if self.flashAttachButton_gradiantState > 399:
+            self.flashAttachButton_gradiantState = 0
 
 
 # process select window
