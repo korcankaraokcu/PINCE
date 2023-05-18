@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import gdb, sys, os, traceback, functools
+import gdb, sys, traceback, functools
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -23,11 +23,11 @@ PINCE_PATH = gdb.parse_and_eval("$PINCE_PATH").string()
 GDBINIT_AA_PATH = gdb.parse_and_eval("$GDBINIT_AA_PATH").string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
-from libpince import type_defs, common_regexes
+from libpince import SysUtils, type_defs, common_regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
-inferior_name = os.path.split(inferior.progspace.filename)[1]
+inferior_name = SysUtils.get_process_name(pid)
 mem_file = "/proc/" + str(pid) + "/mem"
 
 void_ptr = gdb.lookup_type("void").pointer()
