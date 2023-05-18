@@ -1595,31 +1595,17 @@ class MainForm(QMainWindow, MainWindow):
             self.flashAttachButtonTimer.stop()
             self.pushButton_AttachProcess.setStyleSheet("")
             return
-        gradiant0 = "qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 0, 0, 255), stop:0.166 rgba(255, 255, 0, 255), stop:0.333 rgba(0, 255, 0, 255), stop:0.5 rgba(0, 255, 255, 255), stop:0.666 rgba(0, 0, 255, 255), stop:0.833 rgba(255, 0, 255, 255), stop:1 rgba(255, 0, 0, 255));"
-        gradiant1 = "qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 0, 255, 255), stop:0.166 rgba(255, 0, 0, 255), stop:0.333 rgba(255, 255, 0, 255), stop:0.5 rgba(0, 255, 0, 255), stop:0.666 rgba(0, 255, 255, 255), stop:0.833 rgba(0, 0, 255, 255), stop:1 rgba(255, 0, 255, 255));"
-        gradiant2 = "qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 0, 255, 255), stop:0.166 rgba(255, 0, 255, 255), stop:0.333 rgba(255, 0, 0, 255), stop:0.5 rgba(255, 255, 0, 255), stop:0.666 rgba(0, 255, 0, 255), stop:0.833 rgba(0, 255, 255, 255), stop:1 rgba(0, 0, 255, 255));"
-        gradiant3 = "qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 255, 255, 255), stop:0.166 rgba(0, 0, 255, 255), stop:0.333 rgba(255, 0, 255, 255), stop:0.5 rgba(255, 0, 0, 255), stop:0.666 rgba(255, 255, 0, 255), stop:0.833 rgba(0, 255, 0, 255), stop:1 rgba(0, 255, 255, 255));"
-        gradiant4 = "qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 255, 0, 255), stop:0.166 rgba(0, 255, 255, 255), stop:0.333 rgba(0, 0, 255, 255), stop:0.5 rgba(255, 0, 255, 255), stop:0.666 rgba(255, 0, 0, 255), stop:0.833 rgba(255, 255, 0, 255), stop:1 rgba(0, 255, 0, 255));"
-        gradiant5 = "qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 0, 255), stop:0.166 rgba(0, 255, 0, 255), stop:0.333 rgba(0, 255, 255, 255), stop:0.5 rgba(0, 0, 255, 255), stop:0.666 rgba(255, 0, 255, 255), stop:0.833 rgba(255, 0, 0, 255), stop:1 rgba(255, 255, 0, 255));"
 
+        case = self.flashAttachButton_gradiantState % 64
 
-        case = self.flashAttachButton_gradiantState % 6
+        if case < 32:
+            borderstring = "border: 2px solid rgba(0,255,0," + str(case / 32) + ");"
+        else:
+            borderstring = "border: 2px solid rgba(0,255,0," + str((64 - case) / 32) + ");"
 
-        if case == 0:
-            self.pushButton_AttachProcess.setStyleSheet("border: 2px solid " + gradiant0)
-        elif case == 1:
-            self.pushButton_AttachProcess.setStyleSheet("border: 2px solid " + gradiant1)
-        elif case == 2:
-            self.pushButton_AttachProcess.setStyleSheet("border: 2px solid " + gradiant2)
-        elif case == 3:
-            self.pushButton_AttachProcess.setStyleSheet("border: 2px solid " + gradiant3)
-        elif case == 4:
-            self.pushButton_AttachProcess.setStyleSheet("border: 2px solid " + gradiant4)
-        elif case == 5:
-            self.pushButton_AttachProcess.setStyleSheet("border: 2px solid " + gradiant5)
-
+        self.pushButton_AttachProcess.setStyleSheet(borderstring)
         self.flashAttachButton_gradiantState += 1
-        if self.flashAttachButton_gradiantState > 399:
+        if self.flashAttachButton_gradiantState > 7000:
             self.flashAttachButton_gradiantState = 0
 
 
