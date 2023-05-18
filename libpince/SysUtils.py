@@ -62,6 +62,20 @@ def get_process_information(pid):
 
 
 #:tag:Processes
+def get_process_name(pid):
+    """Returns the process name of given pid
+
+    Args:
+        pid (int): PID of the process
+
+    Returns:
+        str: Process name
+    """
+    with open("/proc/"+str(pid)+"/comm") as f:
+        return f.read()[:-1]
+
+
+#:tag:Processes
 def search_processes(process_name):
     """Searches currently running processes and returns a list of psutil.Process objects corresponding to processes that
     has the str process_name in them
