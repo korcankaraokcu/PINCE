@@ -1599,13 +1599,13 @@ class MainForm(QMainWindow, MainWindow):
         case = self.flashAttachButton_gradiantState % 32
 
         if case < 16:
-            borderstring = "QPushButton {border: 2px solid rgba(0,255,0," + str(case / 16) + ");}"
+            borderstring = "QPushButton {border: 3px solid rgba(0,255,0," + str(case / 16) + ");}"
         else:
-            borderstring = "QPushButton {border: 2px solid rgba(0,255,0," + str((32 - case) / 16) + ");}"
+            borderstring = "QPushButton {border: 3px solid rgba(0,255,0," + str((32 - case) / 16) + ");}"
 
         self.pushButton_AttachProcess.setStyleSheet(borderstring)
         self.flashAttachButton_gradiantState += 1
-        if self.flashAttachButton_gradiantState > 7000:
+        if self.flashAttachButton_gradiantState > 768:  # 32*24
             self.flashAttachButton_gradiantState = 0
 
 
