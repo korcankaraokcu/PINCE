@@ -2975,7 +2975,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             if information:
                 self.hex_view_current_region = information
                 self.label_HexView_Information.setText("Protection:" + information.perms + " | Base:" +
-                                                       hex(information.start) + "-" + hex(information.end))
+                                                       hex(information.start) + "-" + hex(information.end) +
+                                                       " | Module:" + information.file_name)
             else:
                 self.hex_view_current_region = type_defs.tuple_region_info(0, 0, None, None)
                 self.label_HexView_Information.setText("This region is invalid")
