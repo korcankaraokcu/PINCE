@@ -36,7 +36,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QThreadPool, pyqtSlot
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, psutil, pexpect
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect
 
 from libpince import GuiUtils, SysUtils, GDB_Engine, type_defs
 from libpince.libscanmem.scanmem import Scanmem
@@ -244,17 +244,8 @@ SEARCH_OPCODE_OPCODES_COL = 1
 # represents the index of columns in memory regions table
 MEMORY_REGIONS_ADDR_COL = 0
 MEMORY_REGIONS_PERM_COL = 1
-MEMORY_REGIONS_SIZE_COL = 2
+MEMORY_REGIONS_OFFSET_COL = 2
 MEMORY_REGIONS_PATH_COL = 3
-MEMORY_REGIONS_RSS_COL = 4
-MEMORY_REGIONS_PSS_COL = 5
-MEMORY_REGIONS_SHRCLN_COL = 6
-MEMORY_REGIONS_SHRDRTY_COL = 7
-MEMORY_REGIONS_PRIVCLN_COL = 8
-MEMORY_REGIONS_PRIVDRTY_COL = 9
-MEMORY_REGIONS_REF_COL = 10
-MEMORY_REGIONS_ANON_COL = 11
-MEMORY_REGIONS_SWAP_COL = 12
 
 # represents the index of columns in dissect code table
 DISSECT_CODE_ADDR_COL = 0
@@ -619,24 +610,16 @@ class MainForm(QMainWindow, MainWindow):
             except:
                 print("Auto-attach failed: " + auto_attach_list + " isn't a valid regex")
                 return
-            for process in SysUtils.iterate_processes():
-                try:
-                    name = process.name()
-                except psutil.NoSuchProcess:
-                    continue
+            for pid, _, name in SysUtils.get_process_list():
                 if compiled_re.search(name):
-                    self.attach_to_pid(process.pid)
+                    self.attach_to_pid(pid)
                     self.flashAttachButton = False
                     return
         else:
             for target in auto_attach_list.split(";"):
-                for process in SysUtils.iterate_processes():
-                    try:
-                        name = process.name()
-                    except psutil.NoSuchProcess:
-                        continue
+                for pid, _, name in SysUtils.get_process_list():
                     if name.find(target) != -1:
-                        self.attach_to_pid(process.pid)
+                        self.attach_to_pid(pid)
                         self.flashAttachButton = False
                         return
 
@@ -1281,12 +1264,10 @@ class MainForm(QMainWindow, MainWindow):
             self.on_inferior_exit()
             return False
 
-    # This is called whenever a new process is created/attached to by PINCE
-    # in order to change the form appearance
+    # Changes appearance whenever a new process is created or attached
     def on_new_process(self):
-        # TODO add scanmem attachment here
-        p = SysUtils.get_process_information(GDB_Engine.currentpid)
-        self.label_SelectedProcess.setText(str(p.pid) + " - " + p.name())
+        name = SysUtils.get_process_name(GDB_Engine.currentpid)
+        self.label_SelectedProcess.setText(str(GDB_Engine.currentpid) + " - " + name)
 
         # enable scan GUI
         self.lineEdit_Scan.setPlaceholderText("Scan for")
@@ -1615,7 +1596,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         GuiUtils.center_to_parent(self)
-        self.refresh_process_table(self.tableWidget_ProcessTable, SysUtils.iterate_processes())
+        self.refresh_process_table(self.tableWidget_ProcessTable, SysUtils.get_process_list())
         self.pushButton_Close.clicked.connect(self.close)
         self.pushButton_Open.clicked.connect(self.pushButton_Open_clicked)
         self.pushButton_CreateProcess.clicked.connect(self.pushButton_CreateProcess_clicked)
@@ -1642,17 +1623,11 @@ class ProcessForm(QMainWindow, ProcessWindow):
     # lists currently working processes to table
     def refresh_process_table(self, tablewidget, processlist):
         tablewidget.setRowCount(0)
-        for process in processlist:
-            pid = str(process.pid)
-            try:
-                username = process.username()
-                name = process.name()
-            except psutil.NoSuchProcess:
-                continue
+        for pid, user, name in processlist:
             current_row = tablewidget.rowCount()
             tablewidget.insertRow(current_row)
             tablewidget.setItem(current_row, 0, QTableWidgetItem(pid))
-            tablewidget.setItem(current_row, 1, QTableWidgetItem(username))
+            tablewidget.setItem(current_row, 1, QTableWidgetItem(user))
             tablewidget.setItem(current_row, 2, QTableWidgetItem(name))
 
     # gets the pid out of the selection to attach
@@ -2692,7 +2667,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def initialize_hex_view(self):
         self.cached_breakpoint_info = []
         self.hex_view_last_selected_address_int = 0
-        self.hex_view_current_region = type_defs.tuple_region_info(0, 0, None)
+        self.hex_view_current_region = type_defs.tuple_region_info(0, 0, None, None)
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
         self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
         self.tableView_HexView_Ascii.contextMenuEvent = self.widget_HexView_context_menu_event
@@ -2999,10 +2974,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             information = SysUtils.get_region_info(GDB_Engine.currentpid, int_address)
             if information:
                 self.hex_view_current_region = information
-                self.label_HexView_Information.setText("Protection:" + information.region.perms + " | Base:" +
+                self.label_HexView_Information.setText("Protection:" + information.perms + " | Base:" +
                                                        hex(information.start) + "-" + hex(information.end))
             else:
-                self.hex_view_current_region = type_defs.tuple_region_info(0, 0, None)
+                self.hex_view_current_region = type_defs.tuple_region_info(0, 0, None, None)
                 self.label_HexView_Information.setText("This region is invalid")
         self.tableWidget_HexView_Address.setRowCount(0)
         self.tableWidget_HexView_Address.setRowCount(HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
@@ -5392,29 +5367,15 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         self.shortcut_refresh.activated.connect(self.refresh_table)
 
     def refresh_table(self):
-        memory_regions = SysUtils.get_memory_regions(GDB_Engine.currentpid)
+        memory_regions = SysUtils.get_regions(GDB_Engine.currentpid)
         self.tableWidget_MemoryRegions.setRowCount(0)
         self.tableWidget_MemoryRegions.setRowCount(len(memory_regions))
-        for row, region in enumerate(memory_regions):
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_ADDR_COL, QTableWidgetItem(region.addr))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PERM_COL, QTableWidgetItem(region.perms))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_SIZE_COL, QTableWidgetItem(hex(region.size)))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PATH_COL, QTableWidgetItem(region.path))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_RSS_COL, QTableWidgetItem(hex(region.rss)))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PSS_COL, QTableWidgetItem(hex(region.pss)))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_SHRCLN_COL,
-                                                   QTableWidgetItem(hex(region.shared_clean)))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_SHRDRTY_COL,
-                                                   QTableWidgetItem(hex(region.shared_dirty)))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PRIVCLN_COL,
-                                                   QTableWidgetItem(hex(region.private_clean)))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PRIVDRTY_COL,
-                                                   QTableWidgetItem(hex(region.private_dirty)))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_REF_COL,
-                                                   QTableWidgetItem(hex(region.referenced)))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_ANON_COL,
-                                                   QTableWidgetItem(hex(region.anonymous)))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_SWAP_COL, QTableWidgetItem(hex(region.swap)))
+        for row, (start, end, perms, offset, _, _, path) in enumerate(memory_regions):
+            address = start+"-"+end
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_ADDR_COL, QTableWidgetItem(address))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PERM_COL, QTableWidgetItem(perms))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_OFFSET_COL, QTableWidgetItem(offset))
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PATH_COL, QTableWidgetItem(path))
         GuiUtils.resize_to_contents(self.tableWidget_MemoryRegions)
 
     def tableWidget_MemoryRegions_context_menu_event(self, event):
@@ -5427,17 +5388,17 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         refresh = menu.addAction("Refresh[R]")
         menu.addSeparator()
         copy_addresses = menu.addAction("Copy Addresses")
-        copy_size = menu.addAction("Copy Size")
+        copy_offset = menu.addAction("Copy Offset")
         copy_path = menu.addAction("Copy Path")
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_addresses, copy_size, copy_path])
+            GuiUtils.delete_menu_entries(menu, [copy_addresses, copy_offset, copy_path])
         font_size = self.tableWidget_MemoryRegions.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
         actions = {
             refresh: self.refresh_table,
             copy_addresses: lambda: copy_to_clipboard(selected_row, MEMORY_REGIONS_ADDR_COL),
-            copy_size: lambda: copy_to_clipboard(selected_row, MEMORY_REGIONS_SIZE_COL),
+            copy_offset: lambda: copy_to_clipboard(selected_row, MEMORY_REGIONS_OFFSET_COL),
             copy_path: lambda: copy_to_clipboard(selected_row, MEMORY_REGIONS_PATH_COL)
         }
         try:
@@ -5530,13 +5491,15 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         self.label_CallReferenceCount.setText(str(len(referenced_calls)))
 
     def show_memory_regions(self):
-        executable_regions = SysUtils.filter_memory_regions(GDB_Engine.currentpid, "perms", "..x.")
-        self.region_list = executable_regions
+        executable_regions = SysUtils.filter_regions(GDB_Engine.currentpid, "permissions", "..x.")
+        self.region_list = []
         self.tableWidget_ExecutableMemoryRegions.setRowCount(0)
         self.tableWidget_ExecutableMemoryRegions.setRowCount(len(executable_regions))
-        for row, region in enumerate(executable_regions):
-            self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_ADDR_COL, QTableWidgetItem(region.addr))
-            self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_PATH_COL, QTableWidgetItem(region.path))
+        for row, (start, end, _, _, _, _, path) in enumerate(executable_regions):
+            address = start+"-"+end
+            self.region_list.append((start, end))
+            self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_ADDR_COL, QTableWidgetItem(address))
+            self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_PATH_COL, QTableWidgetItem(path))
         GuiUtils.resize_to_contents(self.tableWidget_ExecutableMemoryRegions)
 
     def scan_finished(self):

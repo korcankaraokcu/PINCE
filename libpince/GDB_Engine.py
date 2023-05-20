@@ -1971,8 +1971,8 @@ def dissect_code(region_list, discard_invalid_strings=True):
     Use function get_dissect_code_data() to gather the results
 
     Args:
-        region_list (list): A list of psutil._pslinux.pmmap_ext objects
-        Can be returned from functions like SysUtils.filter_memory_regions
+        region_list (list): A list of (start_address, end_address) -> (str, str)
+        Can be returned from functions like SysUtils.filter_regions
         discard_invalid_strings (bool): Entries that can't be decoded as utf-8 won't be included in referenced strings
     """
     send_command("pince-dissect-code", send_with_file=True, file_contents_send=(region_list, discard_invalid_strings))

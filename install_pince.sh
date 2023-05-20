@@ -108,13 +108,14 @@ ask_pkg_mgr() {
 
 	return 0
 }
+
 # About xcb packages -> https://github.com/cdgriffith/FastFlix/wiki/Common-questions-and-problems
 PKG_NAMES_ALL="python3-pip gdb libtool intltool"
 PKG_NAMES_DEBIAN="$PKG_NAMES_ALL libreadline-dev python3-dev python3-venv pkg-config libcairo2-dev libgirepository1.0-dev libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev libxcb-cursor0"
 PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc readline-devel python3-devel typelib-1_0-Gtk-3_0 cairo-devel gobject-introspection-devel make"
 PKG_NAMES_FEDORA="$PKG_NAMES_ALL readline-devel python3-devel redhat-lsb cairo-devel gobject-introspection-devel cairo-gobject-devel"
 PKG_NAMES_ARCH="python-pip readline intltool gdb lsb-release" # arch defaults to py3 nowadays
-PKG_NAMES_PIP="pyqt6 psutil pexpect distorm3 pygdbmi keyboard pygobject"
+PKG_NAMES_PIP="pyqt6 pexpect distorm3 pygdbmi keyboard pygobject"
 
 INSTALL_COMMAND="install"
 

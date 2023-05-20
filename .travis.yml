@@ -34,7 +34,7 @@ before_install:
 
   - wget https://bootstrap.pypa.io/get-pip.py
   - sudo python3 get-pip.py
-  - sudo pip3 install psutil pexpect distorm3 pygdbmi
+  - sudo pip3 install pexpect distorm3 pygdbmi
 
   - sudo mv /usr/bin/lsb_release_masked /usr/bin/lsb_release
 

@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from re import compile
+from re import compile, VERBOSE
 
 # The comments near regular expressions shows the expected gdb output, hope it helps to the future developers
 
@@ -49,6 +49,19 @@ instruction_follow = compile(r"(j|call|loop).*\s+" + hex_number_grouped.pattern)
 docstring_variable = compile(r"(\w+)\s*=")
 docstring_function_or_variable = compile(r"def\s+(\w+)|" + docstring_variable.pattern)
 whitespaces = compile(r"\s+")
+ps = compile(r"""
+    (\d+)\s+                                # PID
+    (\S+)\s+                                # Username
+    (.*)\s+                                 # Process name
+""", VERBOSE)
+maps = compile(r"""
+    ([0-9a-f]+)-([0-9a-f]+)\s+              # Address (start-end)
+    (\S+)\s+                                # Permissions
+    ([0-9a-f]+)\s+                          # Map offset
+    (\S+)\s+                                # Device node
+    (\d+)\s+                                # Inode
+    (.*)\s+                                 # Pathname
+""", VERBOSE)
 
 # --------------------------------------------GuiUtils------------------------------------------------------------------
 

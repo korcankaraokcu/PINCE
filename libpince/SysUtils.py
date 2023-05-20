@@ -16,17 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# Fixes the ImportError problem in GDBCommandExtensions.py for Archlinux
-# This makes any psutil based function that's called from GDB unusable for Archlinux
-# Currently there's none but we can't take it for granted, can we?
-# TODO: Research the reason behind it or at least find a workaround
-# TODO: psutil is a bit slow for what it is, replace if this slight overhead becomes a problem
-# It takes about 30ms for get_region_set to run, a bit too slow innit, not really critical but slow indeed
-try:
-    import psutil
-except ImportError:
-    print("WARNING: GDB couldn't locate the package psutil, psutil based user-defined functions won't work\n" +
-          "If you are getting this message without invoking GDB, it means that installation has failed, well, sort of")
 import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib, distorm3
 from . import type_defs, common_regexes
 from collections import OrderedDict
@@ -35,30 +24,13 @@ from pygdbmi import gdbmiparser
 
 
 #:tag:Processes
-def iterate_processes():
-    """Returns a generator of psutil.Process objects corresponding to currently running processes
+def get_process_list():
+    """Returns a list of processes
 
     Returns:
-        generator: Generator of psutil.Process objects
-
-    Note:
-        Calling any function from the iterated processes will give the psutil.NoSuchProcess exception if the iterated
-        process doesn't exist anymore. Use functions in a try/except block for safety
+        list: List of (pid, user, process_name) -> (str, str, str)
     """
-    return psutil.process_iter()
-
-
-#:tag:Processes
-def get_process_information(pid):
-    """Returns a psutil.Process object corresponding to given pid
-
-    Args:
-        pid (int): PID of the process
-
-    Returns:
-        psutil.Process: psutil.Process object corresponding to the given pid
-    """
-    return psutil.Process(pid)
+    return common_regexes.ps.findall(os.popen("ps -eo pid,user,comm").read())
 
 
 #:tag:Processes
@@ -77,67 +49,56 @@ def get_process_name(pid):
 
 #:tag:Processes
 def search_processes(process_name):
-    """Searches currently running processes and returns a list of psutil.Process objects corresponding to processes that
-    has the str process_name in them
+    """Searches processes and returns a list of the ones that contain process_name
 
     Args:
         process_name (str): Name of the process that'll be searched for
 
     Returns:
-        list: List of psutil.Process objects corresponding to the filtered processes
-
-    Note:
-        Calling any function from the iterated processes will give the psutil.NoSuchProcess exception if the iterated
-        process doesn't exist anymore. Use functions in a try/except block for safety
+        list: List of (pid, user, process_name) -> (str, str, str)
     """
     processlist = []
-    for p in psutil.process_iter():
-        try:
-            name = p.name()
-        except psutil.NoSuchProcess:
-            continue
-        if re.search(process_name, name, re.IGNORECASE):
-            processlist.append(p)
+    for pid, user, name in get_process_list():
+        if process_name.lower() in name.lower():
+            processlist.append((pid, user, name))
     return processlist
 
 
 #:tag:Processes
-def get_memory_regions(pid):
-    """Returns memory regions as a list of psutil._pslinux.pmmap_ext objects
+def get_regions(pid):
+    """Returns memory regions of a process
 
     Args:
         pid (int): PID of the process
 
     Returns:
-        list: List of psutil._pslinux.pmmap_ext objects corresponding to the given pid
+        list: List of (start_address, end_address, permissions, map_offset, device_node, inode, path) -> all str
     """
-    return psutil.Process(pid).memory_maps(grouped=False)
+    with open("/proc/"+str(pid)+"/maps") as f:
+        return common_regexes.maps.findall(f.read())
 
 
 # :tag:Processes
 def get_region_set(pid):
-    """Returns memory regions as a list. Removes path duplicates and empty paths
+    """Returns memory regions of a process, removes path duplicates and empty paths
 
     Args:
         pid (int): PID of the process
 
     Returns:
-        list: List of str lists -> [[addr1, file_name1], [addr2, file_name2], ...]
-    
-    Note:
-        grouped=True could be used for this functionality but we might also get rid of psutil in the future due to
-        performance issues
+        list: List of (start_address, file_name) -> (str, str)
     """
     region_set = []
     current_file = ""
-    for item in get_memory_regions(pid):
-        if not item.path:
+    for item in get_regions(pid):
+        start_addr, _, _, _, _, _, path = item
+        if not path:
             continue
-        head, tail = os.path.split(item.path)
+        head, tail = os.path.split(path)
         if not head or tail == current_file:
             continue
         current_file = tail
-        region_set.append(["0x"+item.addr.split("-")[0], tail])
+        region_set.append(("0x"+start_addr, tail))
     return region_set
 
 
@@ -151,51 +112,48 @@ def get_region_info(pid, address):
         address (int,str): Can be an int or a hex str
 
     Returns:
-        type_defs.tuple_region_info: Starting address as int, ending address as int and region corresponding to
-        the given address as psutil._pslinux.pmmap_ext object
+        list: List of (start_address, end_address, permissions, file_name) -> (int, int, str, str)
         None: If the given address isn't in any valid address range
-
-    Note:
-        This function is very slow because of the poor performance on psutil's part. You might want to optimize your
-        code while using this function. Check MemoryViewWindowForm.hex_dump_address() for an optimization example
     """
     if type(pid) != int:
         pid = int(pid)
     if type(address) != int:
         address = int(address, 0)
-    region_list = get_memory_regions(pid)
-    for item in region_list:
-        splitted_address = item.addr.split("-")
-        start = int(splitted_address[0], 16)
-        end = int(splitted_address[1], 16)
+    region_list = get_regions(pid)
+    for start, end, perms, _, _, _, path in region_list:
+        start = int(start, 16)
+        end = int(end, 16)
+        file_name = os.path.split(path)[1]
         if start <= address < end:
-            return type_defs.tuple_region_info(start, end, item)
+            return type_defs.tuple_region_info(start, end, perms, file_name)
 
 
 #:tag:Processes
-def filter_memory_regions(pid, attribute, regex, case_sensitive=False):
+def filter_regions(pid, attribute, regex, case_sensitive=False):
     """Filters memory regions by searching for the given regex within the given attribute
 
     Args:
         pid (int): PID of the process
-        attribute (str): The attribute that'll be filtered. Can be "addr", "perms" or "path"
+        attribute (str): The attribute that'll be filtered. Can be one of the below
+        start_address, end_address, permissions, map_offset, device_node, inode, path
         regex (str): Regex statement that'll be searched
         case_sensitive (bool): If True, search will be case sensitive
 
     Returns:
-        list: A list of psutil._pslinux.pmmap_ext objects
+        list: List of (start_address, end_address, permissions, map_offset, device_node, inode, path) -> all str
     """
-    assert attribute in ["addr", "perms", "path"], "invalid attribute"
+    index = ["start_address", "end_address", "permissions",
+             "map_offset", "device_node", "inode", "path"].index(attribute)
+    if index == -1:
+        raise Exception("Invalid attribute")
     if case_sensitive:
         compiled_regex = re.compile(regex)
     else:
         compiled_regex = re.compile(regex, re.IGNORECASE)
     filtered_regions = []
-    p = psutil.Process(pid)
-    for m in p.memory_maps(grouped=False):
-        current_attribute = getattr(m, attribute)
-        if compiled_regex.search(current_attribute):
-            filtered_regions.append(m)
+    for region in get_regions(pid):
+        if compiled_regex.search(region[index]):
+            filtered_regions.append(region)
     return filtered_regions
 
 
@@ -220,7 +178,7 @@ def is_traced(pid):
             if tracer_pid == "0":
                 return False
             else:
-                return psutil.Process(int(tracer_pid)).name()
+                return get_process_name(tracer_pid)
 
 
 #:tag:Processes

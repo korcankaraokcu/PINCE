@@ -461,9 +461,8 @@ class DissectCode(gdb.Command):
         ref_str_count = len(referenced_strings_dict)
         ref_jmp_count = len(referenced_jumps_dict)
         ref_call_count = len(referenced_calls_dict)
-        for region_index, region in enumerate(region_list):
-            region_info = region.addr, "Region " + str(region_index + 1) + " of " + str(region_count)
-            start_addr, end_addr = region.addr.split("-")
+        for region_index, (start_addr, end_addr) in enumerate(region_list):
+            region_info = start_addr+"-"+end_addr, "Region " + str(region_index + 1) + " of " + str(region_count)
             start_addr = int(start_addr, 16)  # Becomes address of the last disassembled instruction later on
             end_addr = int(end_addr, 16)
             region_finished = False
