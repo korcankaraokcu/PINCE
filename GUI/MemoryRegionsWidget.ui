@@ -55,57 +55,12 @@
      </column>
      <column>
       <property name="text">
-       <string>Size</string>
+       <string>Offset</string>
       </property>
      </column>
      <column>
       <property name="text">
        <string>Path</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>RSS</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>PSS</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Shared_Clean</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Shared_Dirty</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Private_Clean</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Private_Dirty</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Referenced</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Anonymous</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Swap</string>
       </property>
      </column>
     </widget>

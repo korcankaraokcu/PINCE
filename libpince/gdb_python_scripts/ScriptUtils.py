@@ -126,8 +126,7 @@ def examine_expression(expression, regions=None):
             else:
                 offset = "+0"
             if expression == inferior_name or common_regexes.file_with_extension.search(expression):
-                for region in regions:
-                    address, file_name = region
+                for address, file_name in regions:
                     if expression in file_name:
                         try:
                             address = hex(eval(address+offset))

@@ -401,8 +401,8 @@ tag_to_string = collections.OrderedDict([
 tuple_breakpoint_info = collections.namedtuple("tuple_breakpoint_info", "number breakpoint_type \
                                                 disp enabled address size on_hit hit_count enable_count condition")
 
-# start, end-->int, region-->psutil.Process.memory_maps()[item]
-tuple_region_info = collections.namedtuple("tuple_region_info", "start end region")
+# start, end-->int, perms-->str, file_name-->str
+tuple_region_info = collections.namedtuple("tuple_region_info", "start end perms file_name")
 
 # all fields-->str/None
 tuple_examine_expression = collections.namedtuple("tuple_examine_expression", "all address symbol")
