@@ -514,10 +514,10 @@ def set_logging(state):
     Args:
         state (bool): Sets logging on if True, off if False
     """
-    send_command("set logging off")
+    send_command("set logging enabled off")
     send_command("set logging file " + SysUtils.get_logging_file(currentpid))
     if state:
-        send_command("set logging on")
+        send_command("set logging enabled on")
 
 
 #:tag:GDBCommunication
