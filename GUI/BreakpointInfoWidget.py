@@ -21,6 +21,7 @@ class Ui_TabWidget(object):
         self.tableWidget_BreakpointInfo.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tableWidget_BreakpointInfo.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         self.tableWidget_BreakpointInfo.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableWidget_BreakpointInfo.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.tableWidget_BreakpointInfo.setWordWrap(False)
         self.tableWidget_BreakpointInfo.setObjectName("tableWidget_BreakpointInfo")
         self.tableWidget_BreakpointInfo.setColumnCount(9)
