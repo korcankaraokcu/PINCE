@@ -19,6 +19,7 @@ class Ui_Form(object):
         self.tableWidget_MemoryRegions.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tableWidget_MemoryRegions.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         self.tableWidget_MemoryRegions.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableWidget_MemoryRegions.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.tableWidget_MemoryRegions.setWordWrap(False)
         self.tableWidget_MemoryRegions.setObjectName("tableWidget_MemoryRegions")
         self.tableWidget_MemoryRegions.setColumnCount(4)

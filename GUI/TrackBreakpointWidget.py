@@ -32,6 +32,7 @@ class Ui_Form(object):
         self.tableWidget_TrackInfo.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tableWidget_TrackInfo.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         self.tableWidget_TrackInfo.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableWidget_TrackInfo.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.tableWidget_TrackInfo.setWordWrap(False)
         self.tableWidget_TrackInfo.setObjectName("tableWidget_TrackInfo")
         self.tableWidget_TrackInfo.setColumnCount(4)

@@ -96,6 +96,9 @@
            <property name="selectionBehavior">
             <enum>QAbstractItemView::SelectRows</enum>
            </property>
+           <property name="horizontalScrollMode">
+            <enum>QAbstractItemView::ScrollPerPixel</enum>
+           </property>
            <property name="showGrid">
             <bool>false</bool>
            </property>
@@ -1265,7 +1268,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>545</width>
+              <width>524</width>
               <height>200</height>
              </rect>
             </property>
