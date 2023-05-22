@@ -2293,10 +2293,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
     def checkBox_AutoAttachRegex_state_changed(self):
         if self.checkBox_AutoAttachRegex.isChecked():
             self.lineEdit_AutoAttachList.setPlaceholderText("Mouse over on this text for examples")
-            self.lineEdit_AutoAttachList.setToolTip("'asdf|qwer' searches for asdf or qwer\n" +
-                                                    "'[as]df' searches for both adf and sdf\n" +
-                                                    "Use the char '\\' to escape special chars such as '['\n" +
-                                                    "'\[asdf\]' searches for opcodes that contain '[asdf]'")
+            self.lineEdit_AutoAttachList.setToolTip("asdf|qwer --> search for asdf or qwer\n" +
+                                                    "[as]df --> search for both adf and sdf\n" +
+                                                    "Use the char \\ to escape special chars such as [\n" +
+                                                    "\[asdf\] --> search for opcodes that contain [asdf]")
         else:
             self.lineEdit_AutoAttachList.setPlaceholderText("Separate processes with ;")
             self.lineEdit_AutoAttachList.setToolTip("")
@@ -4396,14 +4396,14 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         GuiUtils.center_to_parent(self)
         self.setWindowTitle("Addresses accessed by instruction '" + instruction + "'")
         label_text = "Enter the register expression(s) you want to track" \
-                     "\nRegister names should start with a '$' sign" \
-                     "\nEach expression should be separated with a comma" \
+                     "\nRegister names must start with $" \
+                     "\nEach expression must be separated with a comma" \
                      "\n\nFor instance:" \
-                     "\nLet's say the instruction is 'mov [rax+rbx],30'" \
-                     "\nThen you should enter '$rax+$rbx'(without quotes)" \
+                     "\nLet's say the instruction is mov [rax+rbx],30" \
+                     "\nThen you should enter $rax+$rbx" \
                      "\nSo PINCE can track address [rax+rbx]" \
                      "\n\nAnother example:" \
-                     "\nIf you enter '$rax,$rbx*$rcx+4,$rbp'(without quotes)" \
+                     "\nIf you enter $rax,$rbx*$rcx+4,$rbp" \
                      "\nPINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]"
         register_expression_dialog = InputDialogForm(item_list=[(label_text, "")])
         if register_expression_dialog.exec():
@@ -4795,8 +4795,8 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
 
     def pushButton_Help_clicked(self):
         text = "\tHere's some useful regex tips:" \
-               "\n'^string' searches for everything that starts with 'string'" \
-               "\n'[ab]cd' searches for both 'acd' and 'bcd'" \
+               "\n^quaso --> search for everything that starts with quaso" \
+               "\n[ab]cd --> search for both acd and bcd" \
                "\n\n\tHow to interpret symbols:" \
                "\nA symbol that looks like 'func(param)@plt' consists of 3 pieces" \
                "\nfunc, func(param), func(param)@plt" \
@@ -5312,10 +5312,10 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
 
     def pushButton_Help_clicked(self):
         text = "\tHere's some useful regex examples:" \
-               "\n'call|rax' searches for opcodes that contain 'call' or 'rax'" \
-               "\n'[re]cx' searches for both 'rcx' and 'ecx'" \
-               "\nUse the char '\\' to escape special chars such as '['" \
-               "\n'\[rsp\]' searches for opcodes that contain '[rsp]'"
+               "\ncall|rax --> search for opcodes that contain call or rax" \
+               "\n[re]cx --> search for both rcx and ecx" \
+               "\nUse the char \\ to escape special chars such as [" \
+               "\n\[rsp\] --> search for opcodes that contain [rsp]"
         InputDialogForm(item_list=[(text, None, Qt.AlignmentFlag.AlignLeft)],
                         buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
 
