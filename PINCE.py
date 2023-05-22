@@ -3755,8 +3755,21 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
-        track_breakpoint_widget = TrackBreakpointWidgetForm(current_address, current_instruction, self)
-        track_breakpoint_widget.show()
+        label_text = "Enter the register expression(s) you want to track" \
+                     "\nRegister names must start with $" \
+                     "\nEach expression must be separated with a comma" \
+                     "\n\nFor instance:" \
+                     "\nLet's say the instruction is mov [rax+rbx],30" \
+                     "\nThen you should enter $rax+$rbx" \
+                     "\nSo PINCE can track address [rax+rbx]" \
+                     "\n\nAnother example:" \
+                     "\nIf you enter $rax,$rbx*$rcx+4,$rbp" \
+                     "\nPINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]"
+        register_expression_dialog = InputDialogForm(item_list=[(label_text, "")])
+        if register_expression_dialog.exec():
+            exp = register_expression_dialog.get_values()
+            track_breakpoint_widget = TrackBreakpointWidgetForm(current_address, current_instruction, exp, self)
+            track_breakpoint_widget.show()
 
     def exec_disassemble_go_to_dialog(self):
         if GDB_Engine.currentpid == -1:
@@ -4386,7 +4399,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
 
 
 class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
-    def __init__(self, address, instruction, parent=None):
+    def __init__(self, address, instruction, register_expressions, parent=None):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
@@ -4395,27 +4408,13 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.setWindowFlags(Qt.WindowType.Window)
         GuiUtils.center_to_parent(self)
         self.setWindowTitle("Addresses accessed by instruction '" + instruction + "'")
-        label_text = "Enter the register expression(s) you want to track" \
-                     "\nRegister names must start with $" \
-                     "\nEach expression must be separated with a comma" \
-                     "\n\nFor instance:" \
-                     "\nLet's say the instruction is mov [rax+rbx],30" \
-                     "\nThen you should enter $rax+$rbx" \
-                     "\nSo PINCE can track address [rax+rbx]" \
-                     "\n\nAnother example:" \
-                     "\nIf you enter $rax,$rbx*$rcx+4,$rbp" \
-                     "\nPINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]"
-        register_expression_dialog = InputDialogForm(item_list=[(label_text, "")])
-        if register_expression_dialog.exec():
-            register_expressions = register_expression_dialog.get_values()
-        else:
-            return
         breakpoint = GDB_Engine.track_breakpoint(address, register_expressions)
         if not breakpoint:
             QMessageBox.information(self, "Error", "Unable to track breakpoint at expression " + address)
             return
         self.label_Info.setText("Pause the process to refresh 'Value' part of the table(" +
-                                Hotkeys.pause_hotkey.get_active_key() + " or " + Hotkeys.break_hotkey.get_active_key() + ")")
+                                Hotkeys.pause_hotkey.get_active_key() + " or " +
+                                Hotkeys.break_hotkey.get_active_key() + ")")
         self.address = address
         self.breakpoint = breakpoint
         self.info = {}
