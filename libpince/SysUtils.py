@@ -30,7 +30,12 @@ def get_process_list():
     Returns:
         list: List of (pid, user, process_name) -> (str, str, str)
     """
-    return common_regexes.ps.findall(os.popen("ps -eo pid,user,comm").read())
+    process_list = []
+    for line in os.popen("ps -eo pid,user,comm").read().splitlines():
+        info = common_regexes.ps.match(line)
+        if info:
+            process_list.append(common_regexes.ps.match(line).groups())
+    return process_list
 
 
 #:tag:Processes
@@ -75,7 +80,10 @@ def get_regions(pid):
         list: List of (start_address, end_address, permissions, map_offset, device_node, inode, path) -> all str
     """
     with open("/proc/"+str(pid)+"/maps") as f:
-        return common_regexes.maps.findall(f.read())
+        regions = []
+        for line in f.read().splitlines():
+            regions.append(common_regexes.maps.match(line).groups())
+        return regions
 
 
 # :tag:Processes

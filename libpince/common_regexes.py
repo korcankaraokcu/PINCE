@@ -50,9 +50,9 @@ docstring_variable = compile(r"(\w+)\s*=")
 docstring_function_or_variable = compile(r"def\s+(\w+)|" + docstring_variable.pattern)
 whitespaces = compile(r"\s+")
 ps = compile(r"""
-    (\d+)\s+                                # PID
+    \s+(\d+)\s+                             # PID
     (\S+)\s+                                # Username
-    (.*)\s+                                 # Process name
+    (.*)$                                   # Process name
 """, VERBOSE)
 maps = compile(r"""
     ([0-9a-f]+)-([0-9a-f]+)\s+              # Address (start-end)
@@ -60,7 +60,7 @@ maps = compile(r"""
     ([0-9a-f]+)\s+                          # Map offset
     (\S+)\s+                                # Device node
     (\d+)\s+                                # Inode
-    (.*)\s+                                 # Pathname
+    (.*)$                                   # Pathname
 """, VERBOSE)
 
 # --------------------------------------------GuiUtils------------------------------------------------------------------
