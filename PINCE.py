@@ -2710,8 +2710,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def show_trace_window(self):
         if GDB_Engine.currentpid == -1:
             return
-        trace_instructions_window = TraceInstructionsWindowForm(prompt_dialog=False)
-        trace_instructions_window.showMaximized()
+        TraceInstructionsWindowForm(prompt_dialog=False)
 
     def step_instruction(self):
         if GDB_Engine.currentpid == -1:
@@ -3745,8 +3744,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
-        trace_instructions_window = TraceInstructionsWindowForm(current_address, parent=self)
-        trace_instructions_window.showMaximized()
+        TraceInstructionsWindowForm(current_address, parent=self)
 
     def exec_track_breakpoint_dialog(self):
         if GDB_Engine.currentpid == -1:
@@ -4604,11 +4602,15 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             breakpoint = GDB_Engine.trace_instructions(*params)
             if not breakpoint:
                 QMessageBox.information(self, "Error", "Failed to set breakpoint at address " + address)
+                self.close()
                 return
+            self.showMaximized()
             self.breakpoint = breakpoint
             self.wait_dialog = TraceInstructionsWaitWidgetForm(address, breakpoint, self)
             self.wait_dialog.widget_closed.connect(self.show_trace_info)
             self.wait_dialog.show()
+        else:
+            self.close()
 
     def display_collected_data(self, QTreeWidgetItem_current):
         self.textBrowser_RegisterInfo.clear()
