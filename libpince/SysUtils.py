@@ -817,7 +817,7 @@ def execute_shell_command_as_user(command):
         command (str): Command that'll be invoked from the shell
     """
     uid, gid = get_user_ids()
-    os.system("sudo -u '#" + uid + "' " + command)
+    os.system("sudo -Eu '#" + uid + "' " + command)
 
 
 #:tag:Utilities
