@@ -25,7 +25,7 @@ Pre-release screenshots:
 ![pince9](https://user-images.githubusercontent.com/5638719/219640522-85cac1a9-e425-4b4f-abeb-a61104caa618.png)
 
 # Features  
-- **Memory searching:** PINCE uses [libscanmem](https://github.com/scanmem/scanmem) to search the memory efficiently **[Done]**
+- **Memory searching:** PINCE uses a specialized fork of [libscanmem](https://github.com/brkzlr/scanmem-PINCE) to search the memory efficiently **[Done]**
 - **Variable Inspection&Modification** **[Done/Basic]**
   * **CheatEngine-like value type support:** Currently supports all types of CE and scanmem along with extended strings(utf-8, utf-16, utf-32) **[Done]**
   * **Symbol Recognition:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/About-GDB-Expressions) **[Done]**

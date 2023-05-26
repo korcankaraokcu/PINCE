@@ -66,8 +66,8 @@ install_scanmem() {
             compile_scanmem || return 1
         fi
         cp --preserve .libs/libscanmem.so ../libpince/libscanmem/
-        cp --preserve gui/scanmem.py ../libpince/libscanmem
-        cp --preserve gui/misc.py ../libpince/libscanmem
+        cp --preserve wrappers/scanmem.py ../libpince/libscanmem
+        cp --preserve wrappers/misc.py ../libpince/libscanmem
         echo "Exiting scanmem"
     ) || return 1
     # required for relative import, since it will throw an import error if it's just `import misc`
