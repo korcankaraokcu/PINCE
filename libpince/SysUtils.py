@@ -31,7 +31,7 @@ def get_process_list():
         list: List of (pid, user, process_name) -> (str, str, str)
     """
     process_list = []
-    for line in os.popen("ps -eo pid,user,comm").read().splitlines():
+    for line in os.popen("ps -eo pid:11,user,comm").read().splitlines():
         info = common_regexes.ps.match(line)
         if info:
             process_list.append(common_regexes.ps.match(line).groups())
