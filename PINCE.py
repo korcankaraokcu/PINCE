@@ -362,11 +362,7 @@ class CheckInferiorStatus(QThread):
                 self.process_running.emit()
 
 
-# TODO undo scan, we would probably need to make some data structure we
-# could pass to scanmem which then would set the current matches
-# the mainwindow
 class MainForm(QMainWindow, MainWindow):
-
     def __init__(self):
         """
             Declare regular expressions for hexadecimal and decimal input
@@ -435,6 +431,7 @@ class MainForm(QMainWindow, MainWindow):
         libscanmem_path = os.path.join(os.getcwd(), "libpince", "libscanmem", "libscanmem.so")
         self.backend = Scanmem(libscanmem_path)
         self.backend.send_command("option noptrace 1")
+        self.backend.send_command("option undo_limit 5")
         self.memory_view_window = MemoryViewWindowForm(self)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
@@ -467,6 +464,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Open.clicked.connect(self.pushButton_Open_clicked)
         self.pushButton_Save.clicked.connect(self.pushButton_Save_clicked)
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
+        self.pushButton_UndoScan.clicked.connect(self.pushButton_UndoScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
         self.scan_mode = type_defs.SCAN_MODE.NEW
         self.pushButton_NewFirstScan_clicked()
@@ -1033,13 +1031,16 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText("New Scan")
             self.comboBox_ValueType.setEnabled(False)
             self.pushButton_NextScan.setEnabled(True)
+            self.pushButton_UndoScan.setEnabled(True)
             search_scope = self.comboBox_ScanScope.currentData(Qt.ItemDataRole.UserRole)
             self.backend.send_command("option region_scan_level " + str(search_scope))
             self.backend.send_command("reset")
             self.comboBox_ScanScope.setEnabled(False)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
-
         self.comboBox_ScanType_init()
+
+    def pushButton_UndoScan_clicked(self):
+        self.pushButton_NextScan_clicked("undo")
 
     def comboBox_ScanType_current_index_changed(self):
         hidden_types = [type_defs.SCAN_TYPE.INCREASED, type_defs.SCAN_TYPE.DECREASED, type_defs.SCAN_TYPE.CHANGED,
@@ -1118,11 +1119,12 @@ class MainForm(QMainWindow, MainWindow):
             return cmp_symbols[type_index] + " " + search_for
         return search_for
 
-    def pushButton_NextScan_clicked(self):
+    def pushButton_NextScan_clicked(self, search_for=None):
         if GDB_Engine.currentpid == -1:
             return
         global ProgressRun
-        search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
+        if not search_for:
+            search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
 
         # ProgressBar
         global threadpool
@@ -1301,8 +1303,9 @@ class MainForm(QMainWindow, MainWindow):
         self.backend.send_command("reset")
         self.tableWidget_valuesearchtable.setRowCount(0)
         self.comboBox_ValueType.setEnabled(True)
-        self.pushButton_NextScan.setEnabled(False)
         self.comboBox_ScanScope.setEnabled(True)
+        self.pushButton_NextScan.setEnabled(False)
+        self.pushButton_UndoScan.setEnabled(False)
         self.progressBar.setValue(0)
         self.label_MatchCount.setText("Match count: 0")
 
