@@ -18,10 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib, distorm3
 from . import type_defs, common_regexes
+from keystone import Ks, KsError, KS_ARCH_X86, KS_MODE_32, KS_MODE_64
 from collections import OrderedDict
 from importlib.machinery import SourceFileLoader
 from pygdbmi import gdbmiparser
 
+# Keystone initialization
+ks_32 = Ks(KS_ARCH_X86, KS_MODE_32)
+ks_64 = Ks(KS_ARCH_X86, KS_MODE_64)
 
 #:tag:Processes
 def get_process_list():
@@ -86,7 +90,7 @@ def get_regions(pid):
         return regions
 
 
-# :tag:Processes
+#:tag:Processes
 def get_region_set(pid):
     """Returns memory regions of a process, removes path duplicates and empty paths
 
@@ -682,6 +686,7 @@ def get_opcode_name(address, opcode_aob, arch_type):
 
     Returns:
         str: Assembly instruction name that decodes to the supplied OpCode
+        None: If there was an error
     """
     if arch_type == type_defs.INFERIOR_ARCH.ARCH_64:
         disas_option = distorm3.Decode64Bits
@@ -690,9 +695,31 @@ def get_opcode_name(address, opcode_aob, arch_type):
     try:
         bytecode = bytes.fromhex(opcode_aob.replace(" ", ""))
     except ValueError:
-        return "???"
+        return
     disas_data = distorm3.Decode(address, bytecode, disas_option)
     return disas_data[0][2]
+
+
+#:tag:Utilities
+def assemble(instructions, address, inferior_arch):
+    """Assembles the given instructions
+
+    Args:
+        instructions (str): A string of instructions, multiple entries separated by ;
+        address (int): Address of the instruction
+        inferior_arch (int): Can be a member of type_defs.INFERIOR_ARCH
+
+    Returns:
+        tuple: A tuple of (list, int) --> Assembled bytes (list of int) and instruction count (int)
+        None: If there was an error
+    """
+    try:
+        if inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+            return ks_64.asm(instructions, address)
+        else:
+            return ks_32.asm(instructions, address)
+    except KsError as e:
+        print(e)
 
 
 #:tag:ValueType
@@ -741,6 +768,7 @@ def aob_to_str(list_of_bytes, encoding="ascii"):
 
     hexBytes=bytes.fromhex(hexString)
     return hexBytes.decode(encoding, "surrogateescape")
+
 
 #:tag:ValueType
 def str_to_aob(string, encoding="ascii"):
