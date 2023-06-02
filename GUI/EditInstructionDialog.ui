@@ -24,7 +24,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="1" column="0">
-    <widget class="QLineEdit" name="lineEdit_OpCodes"/>
+    <widget class="QLineEdit" name="lineEdit_Bytes"/>
    </item>
    <item row="2" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
@@ -67,11 +67,8 @@
      </item>
      <item>
       <widget class="QLineEdit" name="lineEdit_Instruction">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="readOnly">
-        <bool>true</bool>
+       <property name="toolTip">
+        <string>Multiple entries are separated with ;</string>
        </property>
       </widget>
      </item>

@@ -2749,8 +2749,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
-        opcode = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
-        EditInstructionDialogForm(current_address, opcode, self).exec()
+        bytes_aob = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
+        EditInstructionDialogForm(current_address, bytes_aob, self).exec()
 
     def nop_instruction(self):
         if GDB_Engine.currentpid == -1:
@@ -4135,6 +4135,8 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
             self.tableWidget_Instructions.setItem(row, INSTR_ADDR_COL, QTableWidgetItem(hex(address)))
             self.tableWidget_Instructions.setItem(row, INSTR_AOB_COL, QTableWidgetItem(aob))
             instr_name = SysUtils.get_opcode_name(address, aob, GDB_Engine.get_inferior_arch())
+            if not instr_name:
+                instr_name = "??"
             self.tableWidget_Instructions.setItem(row, INSTR_NAME_COL, QTableWidgetItem(instr_name))
         GuiUtils.resize_to_contents(self.tableWidget_Instructions)
 
@@ -4817,52 +4819,48 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
 
 
 class EditInstructionDialogForm(QDialog, EditInstructionDialog):
-    def __init__(self, address, opcode, parent=None):
+    def __init__(self, address, bytes_aob, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.orig_opcode = opcode
-        self.orig_instr = SysUtils.get_opcode_name(int(address, 0), opcode, GDB_Engine.get_inferior_arch())
-        self.is_valid = False
-        self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
+        self.orig_bytes = bytes_aob
         self.lineEdit_Address.setText(address)
-        self.lineEdit_OpCodes.setText(opcode)
-        self.lineEdit_Instruction.setText(self.orig_instr)
-        self.lineEdit_OpCodes.textEdited.connect(self.lineEdit_OpCodes_text_edited)
+        self.lineEdit_Bytes.setText(bytes_aob)
+        self.lineEdit_Bytes_text_edited()
+        self.lineEdit_Bytes.textEdited.connect(self.lineEdit_Bytes_text_edited)
+        self.lineEdit_Instruction.textEdited.connect(self.lineEdit_Instruction_text_edited)
 
-    def set_not_valid(self, instruction, is_original_opcode):
-        if is_original_opcode:
-            self.lineEdit_OpCodes.setStyleSheet("")
+    def set_valid(self, valid):
+        if valid:
+            self.is_valid = True
+            self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
         else:
-            self.lineEdit_OpCodes.setStyleSheet("QLineEdit {background-color: red;}")
-        self.lineEdit_Instruction.setText(instruction)
-        self.is_valid = False
-        self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
+            self.is_valid = False
+            self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
 
-    def lineEdit_OpCodes_text_edited(self):
-        aob_string = self.lineEdit_OpCodes.text()
-        if not SysUtils.parse_string(aob_string, type_defs.VALUE_INDEX.INDEX_AOB):
-            self.set_not_valid("???", False)
-            return
+    def lineEdit_Bytes_text_edited(self):
+        bytes_aob = self.lineEdit_Bytes.text()
+        if SysUtils.parse_string(bytes_aob, type_defs.VALUE_INDEX.INDEX_AOB):
+            address = int(self.lineEdit_Address.text(), 0)
+            instruction = SysUtils.get_opcode_name(address, bytes_aob, GDB_Engine.inferior_arch)
+            if instruction:
+                self.set_valid(True)
+                self.lineEdit_Instruction.setText(instruction)
+                return
+        self.set_valid(False)
+        self.lineEdit_Instruction.setText("??")
 
-        if len(aob_string) != len(self.orig_opcode):
-            self.set_not_valid("???", False)
-            return
-
-        if aob_string == self.orig_opcode:
-            self.set_not_valid(self.orig_instr, True)
-            return
-
-        self.lineEdit_OpCodes.setStyleSheet("")
-        self.is_valid = True
-        self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
-        self.refresh_view()
-
-    def refresh_view(self):
-        self.lineEdit_Instruction.clear()
+    def lineEdit_Instruction_text_edited(self):
+        instruction = self.lineEdit_Instruction.text()
         address = int(self.lineEdit_Address.text(), 0)
-        opcode = self.lineEdit_OpCodes.text()
-        instr_str = SysUtils.get_opcode_name(address, opcode, GDB_Engine.get_inferior_arch())
-        self.lineEdit_Instruction.setText(instr_str)
+        result = SysUtils.assemble(instruction, address, GDB_Engine.inferior_arch)
+        if result:
+            byte_list = result[0]
+            self.set_valid(True)
+            bytes_str = " ".join([format(num, '02x') for num in byte_list])
+            self.lineEdit_Bytes.setText(bytes_str)
+        else:
+            self.set_valid(False)
+            self.lineEdit_Bytes.setText("??")
 
     def accept(self):
         if not self.is_valid:
@@ -4870,8 +4868,18 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
 
         # No need to check for validity since address is not editable and opcode is checked in text_edited
         address = int(self.lineEdit_Address.text(), 0)
-        opcode = self.lineEdit_OpCodes.text()
-        GDB_Engine.modify_instruction(address, opcode)
+        bytes_aob = self.lineEdit_Bytes.text()
+        if bytes_aob != self.orig_bytes:
+            new_length = len(bytes_aob.split())
+            old_length = len(self.orig_bytes.split())
+            if new_length < old_length:
+                bytes_aob += " 90"*(old_length-new_length)  # Append NOPs if we are short on bytes
+            elif new_length > old_length:
+                if not InputDialogForm(
+                    item_list=[("New opcode is " + str(new_length) + " bytes long but old opcode is only " +
+                                str(old_length) + " bytes long\nThis will cause an overflow, proceed?",)]).exec():
+                    return
+            GDB_Engine.modify_instruction(address, bytes_aob)
         self.parent().refresh_hex_view()
         self.parent().refresh_disassemble_view()
         super(EditInstructionDialogForm, self).accept()
