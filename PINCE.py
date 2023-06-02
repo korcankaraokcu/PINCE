@@ -4134,7 +4134,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         for row, (address, aob) in enumerate(modified_instructions.items()):
             self.tableWidget_Instructions.setItem(row, INSTR_ADDR_COL, QTableWidgetItem(hex(address)))
             self.tableWidget_Instructions.setItem(row, INSTR_AOB_COL, QTableWidgetItem(aob))
-            instr_name = SysUtils.get_opcode_name(address, aob, GDB_Engine.get_inferior_arch())
+            instr_name = SysUtils.get_opcodes(address, aob, GDB_Engine.get_inferior_arch())
             if not instr_name:
                 instr_name = "??"
             self.tableWidget_Instructions.setItem(row, INSTR_NAME_COL, QTableWidgetItem(instr_name))
@@ -4841,7 +4841,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
         bytes_aob = self.lineEdit_Bytes.text()
         if SysUtils.parse_string(bytes_aob, type_defs.VALUE_INDEX.INDEX_AOB):
             address = int(self.lineEdit_Address.text(), 0)
-            instruction = SysUtils.get_opcode_name(address, bytes_aob, GDB_Engine.inferior_arch)
+            instruction = SysUtils.get_opcodes(address, bytes_aob, GDB_Engine.inferior_arch)
             if instruction:
                 self.set_valid(True)
                 self.lineEdit_Instruction.setText(instruction)

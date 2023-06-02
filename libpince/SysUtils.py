@@ -676,28 +676,28 @@ def modulo_address(int_address, arch_type):
 
 
 #:tag:Utilities
-def get_opcode_name(address, opcode_aob, arch_type):
-    """Returns the instruction name from the opcode
+def get_opcodes(address, aob, inferior_arch):
+    """Returns the instructions from the given array of bytes
 
     Args:
         address (int): The address where the opcode starts from
-        opcode_aob (str): String that contains an opcode written as an array of bytes
-        arch_type (int): Architecture type (x86, x64). Can be a member of type_defs.INFERIOR_ARCH
+        aob (str): Bytes of the opcode as an array of bytes
+        inferior_arch (int): Architecture type (x86, x64). Can be a member of type_defs.INFERIOR_ARCH
 
     Returns:
-        str: Assembly instruction name that decodes to the supplied OpCode
+        str: Opcodes, multiple entries are separated with ;
         None: If there was an error
     """
-    if arch_type == type_defs.INFERIOR_ARCH.ARCH_64:
+    if inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64:
         disas_option = distorm3.Decode64Bits
-    elif arch_type == type_defs.INFERIOR_ARCH.ARCH_32:
+    elif inferior_arch == type_defs.INFERIOR_ARCH.ARCH_32:
         disas_option = distorm3.Decode32Bits
     try:
-        bytecode = bytes.fromhex(opcode_aob.replace(" ", ""))
+        bytecode = bytes.fromhex(aob.replace(" ", ""))
     except ValueError:
         return
     disas_data = distorm3.Decode(address, bytecode, disas_option)
-    return disas_data[0][2]
+    return "; ".join([data[2] for data in disas_data])
 
 
 #:tag:Utilities
