@@ -49,7 +49,7 @@ echo "-------------------------------------------------------------------------"
 echo "If you're not on debian or a similar distro with the 'apt' package manager the follow will not work if you don't have gcc and g++ installed"
 echo "Please install them manually for this to work, this issue will be addressed at a later date"
 
-apt-get install python3-dev libgmp3-dev
+sudo apt-get install python3-dev libgmp3-dev
 
 CC=gcc CXX=g++ ./configure --prefix="$(pwd)" --with-python=python3 && make -j"$NUM_MAKE_JOBS" MAKEINFO=true && sudo make -C gdb install
 
