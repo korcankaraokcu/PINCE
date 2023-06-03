@@ -27,6 +27,17 @@ fi
 
 CURRENT_USER="$(whoami)"
 
+if [ -z "$NUM_MAKE_JOBS" ]; then
+    NUM_MAKE_JOBS=$(lscpu -p=core | uniq | awk '!/#/' | wc -l)
+    MAX_NUM_MAKE_JOBS=8
+    if (( NUM_MAKE_JOBS > MAX_NUM_MAKE_JOBS )); then # set an upper limit to prevent Out-Of-Memory
+        NUM_MAKE_JOBS=$MAX_NUM_MAKE_JOBS
+    fi
+    if ! echo "$NUM_MAKE_JOBS" | grep -Eq '^[0-9]+$'; then # fallback
+        NUM_MAKE_JOBS=$MAX_NUM_MAKE_JOBS
+    fi
+fi
+
 exit_on_error() {
     if [ "$?" -ne 0 ]; then
         echo
@@ -40,7 +51,7 @@ exit_on_error() {
 compile_scanmem() {
     sh autogen.sh || return 1
     ./configure --prefix="$(pwd)" || return 1
-    make -j4 libscanmem.la || return 1
+    make -j"$NUM_MAKE_JOBS" libscanmem.la || return 1
     chown -R "${CURRENT_USER}":"${CURRENT_USER}" . # give permissions for normal user to change file
     return 0
 }
