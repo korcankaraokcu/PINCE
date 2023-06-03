@@ -40,7 +40,7 @@ echo "Please install them manually for this to work, this issue will be addresse
 
 sudo apt-get install python3-dev libgmp3-dev
 
-CC=gcc CXX=g++ ./configure --prefix="$(pwd)" --with-python=python3 && make -j MAKEINFO=true && sudo make -C gdb install
+CC=gcc CXX=g++ ./configure --prefix="$(pwd)" --with-python=python3 && make -j4 MAKEINFO=true && sudo make -j4 -C gdb install
 
 if [ ! -e bin/gdb ] ; then
     echo "Failed to install GDB, restart the installation process"
