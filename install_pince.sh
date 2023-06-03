@@ -40,7 +40,7 @@ exit_on_error() {
 compile_scanmem() {
     sh autogen.sh || return 1
     ./configure --prefix="$(pwd)" || return 1
-    make -j libscanmem.la || return 1
+    make -j4 libscanmem.la || return 1
     chown -R "${CURRENT_USER}":"${CURRENT_USER}" . # give permissions for normal user to change file
     return 0
 }
