@@ -25,7 +25,7 @@ if [ "$(id -u)" = "0" ]; then
 	exit 1
 fi
 
-CURRENT_USER="$(who mom likes | awk '{print $1}')"
+CURRENT_USER="$(whoami)"
 
 exit_on_error() {
     if [ "$?" -ne 0 ]; then
