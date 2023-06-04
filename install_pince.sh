@@ -30,7 +30,7 @@ CURRENT_USER="$(whoami)"
 if [ -z "$NUM_MAKE_JOBS" ]; then
     NUM_MAKE_JOBS=$(lscpu -p=core | uniq | awk '!/#/' | wc -l)
     MAX_NUM_MAKE_JOBS=8
-    if (( NUM_MAKE_JOBS > MAX_NUM_MAKE_JOBS )); then # set an upper limit to prevent Out-Of-Memory
+    if [ "$NUM_MAKE_JOBS" -gt "$MAX_NUM_MAKE_JOBS" ]; then # set an upper limit to prevent Out-Of-Memory
         NUM_MAKE_JOBS=$MAX_NUM_MAKE_JOBS
     fi
     if ! echo "$NUM_MAKE_JOBS" | grep -Eq '^[0-9]+$'; then # fallback
