@@ -207,11 +207,11 @@ def is_process_valid(pid):
 
 
 #:tag:Utilities
-def get_current_script_directory():
-    """Get current working directory
+def get_script_directory():
+    """Get main script directory
 
     Returns:
-        str: A string pointing to the current working directory
+        str: A string pointing to the main script directory
     """
     return sys.path[0]
 
@@ -223,7 +223,7 @@ def get_media_directory():
     Returns:
         str: A string pointing to the media directory
     """
-    return get_current_script_directory() + "/media"
+    return get_script_directory() + "/media"
 
 
 #:tag:Utilities
@@ -233,7 +233,7 @@ def get_logo_directory():
     Returns:
         str: A string pointing to the logo directory
     """
-    return get_current_script_directory() + "/media/logo"
+    return get_script_directory() + "/media/logo"
 
 
 #:tag:Utilities
@@ -273,24 +273,24 @@ def is_path_valid(dest_path, issue_path=""):
 
 
 #:tag:GDBCommunication
-def delete_PINCE_IPC_PATH(pid):
+def delete_ipc_path(pid):
     """Deletes the IPC directory of given pid
 
     Args:
         pid (int,str): PID of the process
     """
-    is_path_valid(get_PINCE_IPC_directory(pid), "delete")
+    is_path_valid(get_ipc_path(pid), "delete")
 
 
 #:tag:GDBCommunication
-def create_PINCE_IPC_PATH(pid):
+def create_ipc_path(pid):
     """Creates the IPC directory of given pid
 
     Args:
         pid (int,str): PID of the process
     """
-    delete_PINCE_IPC_PATH(pid)
-    is_path_valid(get_PINCE_IPC_directory(pid), "create")
+    delete_ipc_path(pid)
+    is_path_valid(get_ipc_path(pid), "create")
 
     # Opening the command file with 'w' each time GDB_Engine.send_command() gets invoked slows down the process
     # Instead, here we create the command file for only once when IPC path gets initialized
@@ -300,7 +300,7 @@ def create_PINCE_IPC_PATH(pid):
 
 
 #:tag:GDBCommunication
-def get_PINCE_IPC_directory(pid):
+def get_ipc_path(pid):
     """Get the IPC directory of given pid
 
     Args:
@@ -322,7 +322,7 @@ def get_logging_file(pid):
     Returns:
         str: Path of gdb logfile
     """
-    return get_PINCE_IPC_directory(pid) + "/gdb_log.txt"
+    return get_ipc_path(pid) + "/gdb_log.txt"
 
 
 #:tag:GDBCommunication
@@ -335,7 +335,7 @@ def get_gdb_command_file(pid):
     Returns:
         str: Path of gdb command file
     """
-    return get_PINCE_IPC_directory(pid) + "/gdb_command.txt"
+    return get_ipc_path(pid) + "/gdb_command.txt"
 
 
 #:tag:BreakWatchpoints
@@ -349,7 +349,7 @@ def get_track_watchpoint_file(pid, watchpoint_list):
     Returns:
         str: Path of track watchpoint file
     """
-    return get_PINCE_IPC_directory(pid) + "/" + str(watchpoint_list) + "_track_watchpoint.txt"
+    return get_ipc_path(pid) + "/" + str(watchpoint_list) + "_track_watchpoint.txt"
 
 
 #:tag:BreakWatchpoints
@@ -363,7 +363,7 @@ def get_track_breakpoint_file(pid, breakpoint):
     Returns:
         str: Path of track breakpoint file
     """
-    return get_PINCE_IPC_directory(pid) + "/" + breakpoint + "_track_breakpoint.txt"
+    return get_ipc_path(pid) + "/" + breakpoint + "_track_breakpoint.txt"
 
 
 #:tag:Tools
@@ -377,7 +377,7 @@ def get_trace_instructions_file(pid, breakpoint):
     Returns:
         str: Path of trace instructions file
     """
-    return get_PINCE_IPC_directory(pid) + "/" + breakpoint + "_trace.txt"
+    return get_ipc_path(pid) + "/" + breakpoint + "_trace.txt"
 
 
 #:tag:Utilities
@@ -469,7 +469,7 @@ def get_trace_instructions_status_file(pid, breakpoint):
     Returns:
         str: Path of trace instructions status file
     """
-    return get_PINCE_IPC_directory(pid) + "/" + breakpoint + "_trace_status.txt"
+    return get_ipc_path(pid) + "/" + breakpoint + "_trace_status.txt"
 
 
 #:tag:Tools
@@ -482,7 +482,7 @@ def get_dissect_code_status_file(pid):
     Returns:
         str: Path of dissect code status file
     """
-    return get_PINCE_IPC_directory(pid) + "/dissect_code_status.txt"
+    return get_ipc_path(pid) + "/dissect_code_status.txt"
 
 
 #:tag:Tools
@@ -495,7 +495,7 @@ def get_referenced_strings_file(pid):
     Returns:
         str: Path of referenced strings dict file
     """
-    return get_PINCE_IPC_directory(pid) + "/referenced_strings_dict.txt"
+    return get_ipc_path(pid) + "/referenced_strings_dict.txt"
 
 
 #:tag:Tools
@@ -508,7 +508,7 @@ def get_referenced_jumps_file(pid):
     Returns:
         str: Path of referenced jumps dict file
     """
-    return get_PINCE_IPC_directory(pid) + "/referenced_jumps_dict.txt"
+    return get_ipc_path(pid) + "/referenced_jumps_dict.txt"
 
 
 #:tag:Tools
@@ -521,11 +521,11 @@ def get_referenced_calls_file(pid):
     Returns:
         str: Path of referenced calls dict file
     """
-    return get_PINCE_IPC_directory(pid) + "/referenced_calls_dict.txt"
+    return get_ipc_path(pid) + "/referenced_calls_dict.txt"
 
 
 #:tag:GDBCommunication
-def get_IPC_from_PINCE_file(pid):
+def get_ipc_from_pince_file(pid):
     """Get the path of IPC file sent to custom gdb commands from PINCE for given pid
 
     Args:
@@ -534,11 +534,11 @@ def get_IPC_from_PINCE_file(pid):
     Returns:
         str: Path of IPC file
     """
-    return get_PINCE_IPC_directory(pid) + type_defs.IPC_PATHS.IPC_FROM_PINCE_PATH
+    return get_ipc_path(pid) + type_defs.IPC_PATHS.IPC_FROM_PINCE_PATH
 
 
 #:tag:GDBCommunication
-def get_IPC_to_PINCE_file(pid):
+def get_ipc_to_pince_file(pid):
     """Get the path of IPC file sent to PINCE from custom gdb commands for given pid
 
     Args:
@@ -547,7 +547,7 @@ def get_IPC_to_PINCE_file(pid):
     Returns:
         str: Path of IPC file
     """
-    return get_PINCE_IPC_directory(pid) + type_defs.IPC_PATHS.IPC_TO_PINCE_PATH
+    return get_ipc_path(pid) + type_defs.IPC_PATHS.IPC_TO_PINCE_PATH
 
 
 #:tag:ValueType
@@ -838,7 +838,7 @@ def split_symbol(symbol_string):
 
 
 #:tag:Utilities
-def execute_shell_command_as_user(command):
+def execute_command_as_user(command):
     """Executes given command as user
 
     Args:

@@ -29,9 +29,9 @@ class PATHS:
 
 
 class IPC_PATHS:
-    PINCE_IPC_PATH = "/dev/shm/PINCE-connection/"  # Use SysUtils.get_PINCE_IPC_directory()
-    IPC_FROM_PINCE_PATH = "/from_PINCE_file"  # Use SysUtils.get_IPC_from_PINCE_file()
-    IPC_TO_PINCE_PATH = "/to_PINCE_file"  # Use SysUtils.get_IPC_to_PINCE_file()
+    PINCE_IPC_PATH = "/dev/shm/PINCE-connection/"  # Use SysUtils.get_ipc_path()
+    IPC_FROM_PINCE_PATH = "/from_PINCE_file"  # Use SysUtils.get_ipc_from_pince_file()
+    IPC_TO_PINCE_PATH = "/to_PINCE_file"  # Use SysUtils.get_ipc_to_pince_file()
 
 
 class USER_PATHS:
