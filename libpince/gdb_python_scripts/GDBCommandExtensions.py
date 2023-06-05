@@ -28,8 +28,8 @@ from libpince import SysUtils, type_defs, common_regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
-recv_file = SysUtils.get_IPC_from_PINCE_file(pid)
-send_file = SysUtils.get_IPC_to_PINCE_file(pid)
+recv_file = SysUtils.get_ipc_from_pince_file(pid)
+send_file = SysUtils.get_ipc_to_pince_file(pid)
 
 lib = None
 

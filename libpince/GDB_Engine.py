@@ -204,10 +204,10 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             raise type_defs.InferiorRunningException
         gdb_output = ""
         if send_with_file:
-            send_file = SysUtils.get_IPC_from_PINCE_file(currentpid)
+            send_file = SysUtils.get_ipc_from_pince_file(currentpid)
             pickle.dump(file_contents_send, open(send_file, "wb"))
         if recv_with_file or cli_output:
-            recv_file = SysUtils.get_IPC_to_PINCE_file(currentpid)
+            recv_file = SysUtils.get_ipc_to_pince_file(currentpid)
 
             # Truncating the recv_file because we wouldn't like to see output of previous command in case of errors
             open(recv_file, "w").close()
@@ -463,7 +463,7 @@ def unignore_signal(signal_name):
 
 #:tag:GDBCommunication
 def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
-    r"""Spawns gdb and initializes/resets some of the global variables
+    """Spawns gdb and initializes/resets some of the global variables
 
     Args:
         gdb_path (str): Path of the gdb binary
@@ -482,7 +482,7 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     detach()
 
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
-    SysUtils.create_PINCE_IPC_PATH(currentpid)
+    SysUtils.create_ipc_path(currentpid)
 
     breakpoint_on_hit_dict.clear()
     chained_breakpoints.clear()
@@ -547,7 +547,7 @@ def init_referenced_dicts(pid):
 
 #:tag:Debug
 def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
-    r"""Attaches gdb to the target and initializes some of the global variables
+    """Attaches gdb to the target and initializes some of the global variables
 
     Args:
         pid (int,str): PID of the process that'll be attached to
@@ -583,7 +583,7 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
     global mem_file
     currentpid = pid
     mem_file = "/proc/" + str(currentpid) + "/mem"
-    SysUtils.create_PINCE_IPC_PATH(pid)
+    SysUtils.create_ipc_path(pid)
     send_command("attach " + str(pid))
     set_pince_paths()
     init_referenced_dicts(pid)
@@ -599,7 +599,7 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
 
 #:tag:Debug
 def create_process(process_path, args="", ld_preload_path="", gdb_path=type_defs.PATHS.GDB_PATH):
-    r"""Creates a new process for debugging and initializes some of the global variables
+    """Creates a new process for debugging and initializes some of the global variables
     Current process will be detached even if the create_process call fails
     Make sure to save your data before calling this monstrosity
 
@@ -642,7 +642,7 @@ def create_process(process_path, args="", ld_preload_path="", gdb_path=type_defs
     pid = get_inferior_pid()
     currentpid = int(pid)
     mem_file = "/proc/" + str(currentpid) + "/mem"
-    SysUtils.create_PINCE_IPC_PATH(pid)
+    SysUtils.create_ipc_path(pid)
     set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
@@ -667,7 +667,7 @@ def detach():
         gdb_initialized = False
         child.close()
     if old_pid != -1:
-        SysUtils.delete_PINCE_IPC_PATH(old_pid)
+        SysUtils.delete_ipc_path(old_pid)
     print("Detached from the process with PID:" + str(old_pid))
 
 
@@ -1004,7 +1004,7 @@ def parse_and_eval(expression, cast=str):
 
 
 #:tag:Threads
-def get_current_thread_information():
+def get_thread_info():
     """Invokes "info threads" command and returns the line corresponding to the current thread
 
     Returns:

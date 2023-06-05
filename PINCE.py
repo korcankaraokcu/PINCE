@@ -494,7 +494,6 @@ class MainForm(QMainWindow, MainWindow):
         self.treeWidget_AddressTable.expanded.connect(self.resize_address_table)
         self.treeWidget_AddressTable.collapsed.connect(self.resize_address_table)
         icons_directory = GuiUtils.get_icons_directory()
-        current_dir = SysUtils.get_current_script_directory()
         self.pushButton_AttachProcess.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
         self.pushButton_Save.setIcon(QIcon(QPixmap(icons_directory + "/disk.png")))
@@ -994,7 +993,7 @@ class MainForm(QMainWindow, MainWindow):
         self.memory_view_window.activateWindow()
 
     def pushButton_Wiki_clicked(self):
-        SysUtils.execute_shell_command_as_user('python3 -m webbrowser "https://github.com/korcankaraokcu/PINCE/wiki"')
+        SysUtils.execute_command_as_user('python3 -m webbrowser "https://github.com/korcankaraokcu/PINCE/wiki"')
 
     def pushButton_About_clicked(self):
         self.about_widget.show()
@@ -3207,7 +3206,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         self.updating_memoryview = True
         time0 = time()
-        thread_info = GDB_Engine.get_current_thread_information()
+        thread_info = GDB_Engine.get_thread_info()
         if thread_info:
             self.setWindowTitle("Memory Viewer - Currently debugging " + thread_info)
         else:
