@@ -39,7 +39,11 @@ entry_point = compile(r"Entry\s+point:\s+" + hex_number_grouped.pattern)
 # The command will always start with the word "source", check GDB_Engine.send_command function for the cause
 gdb_command_source = lambda command_file: compile(r"&\".*source\s" + command_file + r"\\n\"")  # &"command\n"
 # 0x00007fd81d4c7400 <__printf+0>:\t48 81 ec d8 00 00 00\tsub    rsp,0xd8\n
-disassemble_output = compile(r"(" + hex_number.pattern + r".*)\\t(.+)\\t(.+)\\n")
+disassemble_output = compile(r"""
+    ([0-9a-fA-F]+.*)\\t                     # Address with symbol
+    (.*?[0-9a-fA-F]{2})\s*\\t               # Bytes, ignore padding
+    (.+)\\n                                 # Opcode
+""", VERBOSE)
 info_functions_non_debugging = compile(hex_number_grouped.pattern + r"\s+(.*)")
 max_completions_reached = compile(r"\*\*\*\s+List\s+may\s+be\s+truncated,\s+max-completions\s+reached\.\s+\*\*\*")
 

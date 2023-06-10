@@ -3057,9 +3057,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         jmp_dict, call_dict = GDB_Engine.get_dissect_code_data(False, True, True)
-        for row, item in enumerate(disas_data):
+        for row, (address_info, bytes_aob, opcode) in enumerate(disas_data):
             comment = ""
-            current_address = int(SysUtils.extract_address(item[0]), 16)
+            current_address = int(SysUtils.extract_address(address_info), 16)
             current_address_str = hex(current_address)
             jmp_ref_exists = False
             call_ref_exists = False
@@ -3100,9 +3100,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     real_ref_count += len(jmp_referrers)
                 if call_ref_exists:
                     real_ref_count += len(call_referrers)
-                item[0] = "{" + str(real_ref_count) + "}" + item[0]
+                address_info = "{" + str(real_ref_count) + "}" + address_info
             if current_address == program_counter_int:
-                item[0] = ">>>" + item[0]
+                address_info = ">>>" + address_info
                 try:
                     row_colour[row].append(PC_COLOUR)
                 except KeyError:
@@ -3113,7 +3113,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                         row_colour[row].append(BOOKMARK_COLOUR)
                     except KeyError:
                         row_colour[row] = [BOOKMARK_COLOUR]
-                    item[0] = "(M)" + item[0]
+                    address_info = "(M)" + address_info
                     comment = self.tableWidget_Disassemble.bookmarks[bookmark_item]
                     break
             for breakpoint in breakpoint_info:
@@ -3132,13 +3132,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                         if breakpoint.enable_count:
                             breakpoint_mark += "-" + breakpoint.enable_count
                     breakpoint_mark += ")"
-                    item[0] = breakpoint_mark + item[0]
+                    address_info = breakpoint_mark + address_info
                     break
             if current_address == self.disassemble_last_selected_address_int:
                 self.tableWidget_Disassemble.selectRow(row)
-            addr_item = QTableWidgetItem(item[0])
-            bytes_item = QTableWidgetItem(item[1])
-            opcodes_item = QTableWidgetItem(item[2])
+            addr_item = QTableWidgetItem(address_info)
+            bytes_item = QTableWidgetItem(bytes_aob)
+            opcodes_item = QTableWidgetItem(opcode)
             comment_item = QTableWidgetItem(comment)
             if jmp_ref_exists or call_ref_exists:
                 addr_item.setToolTip(tooltip_text)
@@ -5907,8 +5907,8 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         self.textBrowser_DisasInfo.clear()
         disas_data = GDB_Engine.disassemble(
             SysUtils.extract_address(self.listWidget_Referrers.item(QModelIndex_current.row()).text()), "+200")
-        for item in disas_data:
-            self.textBrowser_DisasInfo.append(item[0] + item[2])
+        for address_info, _, opcode in disas_data:
+            self.textBrowser_DisasInfo.append(address_info + opcode)
         cursor = self.textBrowser_DisasInfo.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.Start)
         self.textBrowser_DisasInfo.setTextCursor(cursor)
