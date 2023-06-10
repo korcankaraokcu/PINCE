@@ -3378,6 +3378,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.currentpid == -1:
             return
         selected_row = GuiUtils.get_current_row(self.tableWidget_Stack)
+        if selected_row == -1:
+            return
         current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
 
@@ -3550,6 +3552,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.currentpid == -1:
             return
         selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        if selected_row == -1:
+            selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
