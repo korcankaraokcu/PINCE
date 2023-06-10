@@ -943,14 +943,19 @@ def disassemble(expression, offset_or_address):
         expression (str): Any gdb expression
         offset_or_address (str): If you pass this parameter as an offset, you should add "+" in front of it
         (e.g "+42" or "+0x42"). If you pass this parameter as an hex address, the address range between the expression
-        and the secondary address is disassembled.
-        If the second parameter is an address. it always should be bigger than the first address.
+        and the secondary address is disassembled
+        If the second parameter is an address, it always should be bigger than the first address
 
     Returns:
-        list: A list of str values in this format-->[[address1,bytes1,opcodes1],[address2, ...], ...]
+        list: A list of str values in this format-->[(address1, bytes1, opcodes1), (address2, ...), ...]
     """
     output = send_command("disas /r " + expression + "," + offset_or_address)
-    return [list(item) for item in common_regexes.disassemble_output.findall(output)]
+    disas_data = []
+    for line in output.splitlines():
+        result = common_regexes.disassemble_output.search(line)
+        if result:
+            disas_data.append(result.groups())
+    return disas_data
 
 
 #:tag:GDBExpressions
