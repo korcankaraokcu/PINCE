@@ -2948,10 +2948,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.currentpid == -1:
             return
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.hex_view_last_selected_address_int = self.tableView_HexView_Hex.get_selected_address()
         self.tableView_HexView_Ascii.selectionModel().setCurrentIndex(QModelIndex_current,
                                                                       QItemSelectionModel.SelectionFlag.ClearAndSelect)
         self.tableWidget_HexView_Address.selectRow(QModelIndex_current.row())
+        self.hex_view_last_selected_address_int = self.tableView_HexView_Hex.get_selected_address()
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
     def on_ascii_view_current_changed(self, QModelIndex_current):
