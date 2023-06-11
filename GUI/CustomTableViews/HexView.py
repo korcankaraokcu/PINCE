@@ -44,6 +44,9 @@ class QHexView(QTableView):
         self.setMaximumWidth(size)
 
     def get_selected_address(self):
-        ci = self.currentIndex()
-        current_address = self.model().current_address + ci.row() * self.model().columnCount() + ci.column()
+        index_list = self.selectionModel().selectedIndexes()  # Use selectionModel instead of currentIndex
+        current_address = self.model().current_address
+        if index_list:
+            cell = index_list[0]
+            current_address = current_address + cell.row() * self.model().columnCount() + cell.column()
         return SysUtils.modulo_address(current_address, GDB_Engine.inferior_arch)
