@@ -3726,6 +3726,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.currentpid == -1:
             return
         selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        if selected_row == -1:
+            selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         dissect_code_dialog = DissectCodeDialogForm(int_address=int(current_address, 16))
@@ -3747,6 +3749,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.currentpid == -1:
             return
         selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        if selected_row == -1:
+            selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         TraceInstructionsWindowForm(current_address, parent=self)
@@ -3778,6 +3782,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.currentpid == -1:
             return
         selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        if selected_row == -1:
+            selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
 
