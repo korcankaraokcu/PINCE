@@ -34,7 +34,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
     QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, \
     QPushButton, QFrame
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, \
-    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QThreadPool, pyqtSlot
+    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QThreadPool, pyqtSlot, QTranslator, QLocale
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect
 
@@ -5959,10 +5959,17 @@ def handle_exit():
     global exiting
     exiting = 1
 
+def load_translation(app):
+    translator = QTranslator(app)
+    locale = QLocale.system().name()
+    translator.load(f'i18n/qm/{locale}.qm')
+    app.installTranslator(translator)    
 
+    
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(handle_exit)
+    load_translation(app)
     window = MainForm()
     window.show()
     sys.exit(app.exec())
