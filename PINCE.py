@@ -2670,15 +2670,19 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_view_last_selected_address_int = 0
         self.hex_view_current_region = type_defs.tuple_region_info(0, 0, None, None)
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
+        
+        # Saving the original function because super() doesn't work when we override functions like this
+        self.widget_HexView.keyPressEvent_original = self.widget_HexView.keyPressEvent
+        self.widget_HexView.keyPressEvent = self.widget_HexView_key_press_event
+
         self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
         self.tableView_HexView_Ascii.contextMenuEvent = self.widget_HexView_context_menu_event
         self.tableView_HexView_Hex.doubleClicked.connect(self.exec_hex_view_edit_dialog)
         self.tableView_HexView_Ascii.doubleClicked.connect(self.exec_hex_view_edit_dialog)
 
-        # Saving the original function because super() doesn't work when we override functions like this
-        self.tableView_HexView_Hex.keyPressEvent_original = self.tableView_HexView_Hex.keyPressEvent
-        self.tableView_HexView_Hex.keyPressEvent = self.widget_HexView_key_press_event
-        self.tableView_HexView_Ascii.keyPressEvent = self.widget_HexView_key_press_event
+        # Ignoring the event sends it directly to the parent, which is widget_HexView
+        self.tableView_HexView_Hex.keyPressEvent = QEvent.ignore
+        self.tableView_HexView_Ascii.keyPressEvent = QEvent.ignore
 
         self.bHexViewScrolling = False  # rejects new scroll requests while scrolling
         self.verticalScrollBar_HexView.wheelEvent = QEvent.ignore
@@ -2686,7 +2690,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.verticalScrollBar_HexView.sliderChange = self.hex_view_scrollbar_sliderchanged
 
         self.tableWidget_HexView_Address.wheelEvent = QEvent.ignore
-        self.scrollArea_Hex.keyPressEvent = self.widget_HexView_key_press_event
         self.tableWidget_HexView_Address.setAutoScroll(False)
         self.tableWidget_HexView_Address.setStyleSheet("QTableWidget {background-color: transparent;}")
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
@@ -3546,7 +3549,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             pass
-        self.tableView_HexView_Hex.keyPressEvent_original(event)
+        self.widget_HexView.keyPressEvent_original(event)
 
     def tableWidget_Disassemble_key_press_event(self, event):
         if GDB_Engine.currentpid == -1:
