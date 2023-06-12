@@ -91,7 +91,7 @@ instances = []  # Holds temporary instances that will be deleted later on
 current_settings_version = "master-22"  # Increase version by one if you change settings. Format: branch_name-version
 update_table = bool
 table_update_interval = int
-FreezeInterval = int
+freeze_interval = int
 show_messagebox_on_exception = bool
 gdb_output_mode = tuple
 auto_attach_list = str
@@ -265,8 +265,8 @@ REF_CALL_COUNT_COL = 1
 saved_addresses_changed_list = list()
 
 # vars for communication/storage with the non blocking threads
-Exiting = 0
-ProgressRun = 0
+exiting = 0
+progress_running = 0
 
 threadpool = QThreadPool()
 # Placeholder number, may have to be changed in the future
@@ -570,11 +570,11 @@ class MainForm(QMainWindow, MainWindow):
         global bring_disassemble_to_front
         global instructions_per_scroll
         global gdb_path
-        global FreezeInterval
+        global freeze_interval
 
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
         table_update_interval = self.settings.value("General/address_table_update_interval", type=int)
-        FreezeInterval = self.settings.value("General/freeze_interval", type=int)
+        freeze_interval = self.settings.value("General/freeze_interval", type=int)
         show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
         gdb_output_mode = self.settings.value("General/gdb_output_mode", type=tuple)
         auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
@@ -1120,7 +1120,7 @@ class MainForm(QMainWindow, MainWindow):
     def pushButton_NextScan_clicked(self, search_for=None):
         if GDB_Engine.currentpid == -1:
             return
-        global ProgressRun
+        global progress_running
         if not search_for:
             search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
 
@@ -1129,7 +1129,7 @@ class MainForm(QMainWindow, MainWindow):
         threadpool.start(Worker(self.update_progress_bar))
         self.backend.send_command(search_for)
         matches = self.backend.matches()
-        ProgressRun = 0
+        progress_running = 0
         match_count = self.backend.get_match_count()
         if match_count > 10000:
             self.label_MatchCount.setText("Match count: {} (10000 shown)".format(match_count))
@@ -1367,17 +1367,17 @@ class MainForm(QMainWindow, MainWindow):
     # Async Functions
 
     def update_progress_bar(self):
-        global ProgressRun
-        global Exiting
+        global progress_running
+        global exiting
         self.progressBar.setValue(0)
-        ProgressRun = 1
-        while ProgressRun == 1 and Exiting == 0:
+        progress_running = 1
+        while progress_running == 1 and exiting == 0:
             sleep(0.1)
             value = int(round(self.backend.get_scan_progress() * 100))
             self.progressBar.setValue(value)
 
     def update_address_table_loop(self):
-        while Exiting == 0:
+        while exiting == 0:
             sleep(table_update_interval / 1000)
             if update_table:
                 try:
@@ -1386,7 +1386,7 @@ class MainForm(QMainWindow, MainWindow):
                     print("Update Address Table failed :(")
 
     def update_search_table_loop(self):
-        while Exiting == 0:
+        while exiting == 0:
             sleep(0.5)
             try:
                 self.update_search_table()
@@ -1394,8 +1394,8 @@ class MainForm(QMainWindow, MainWindow):
                 print("Update Search Table failed :(")
 
     def freeze_loop(self):
-        while Exiting == 0:
-            sleep(FreezeInterval / 1000)
+        while exiting == 0:
+            sleep(freeze_interval / 1000)
             try:
                 self.freeze()
             except:
@@ -2154,7 +2154,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             QMessageBox.information(self, "Error", "Update interval must be an int")
             return
         try:
-            freezeinterval = int(self.lineEdit_FreezeInterval.text())
+            current_freeze_interval = int(self.lineEdit_FreezeInterval.text())
         except:
             QMessageBox.information(self, "Error", "Freeze interval must be an int")
             return
@@ -2169,10 +2169,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             return
         if not self.checkBox_AutoUpdateAddressTable.isChecked():
             pass
-        elif current_table_update_interval < 0 or freezeinterval < 0:
+        elif current_table_update_interval < 0 or current_freeze_interval < 0:
             QMessageBox.information(self, "Error", "Interval cannot be a negative number")
             return
-        elif current_table_update_interval == 0 or freezeinterval == 0:
+        elif current_table_update_interval == 0 or current_freeze_interval == 0:
 
             # Easter egg #2
             if not InputDialogForm(item_list=[("You are asking for it, aren't you?",)]).exec():
@@ -2186,7 +2186,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
-        self.settings.setValue("General/freeze_interval", freezeinterval)
+        self.settings.setValue("General/freeze_interval", current_freeze_interval)
         self.settings.setValue("General/show_messagebox_on_exception", self.checkBox_MessageBoxOnException.isChecked())
         current_gdb_output_mode = type_defs.gdb_output_mode(self.checkBox_OutputModeAsync.isChecked(),
                                                             self.checkBox_OutputModeCommand.isChecked(),
@@ -2227,8 +2227,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.settings.value("General/auto_update_address_table", type=bool))
         self.lineEdit_UpdateInterval.setText(
             str(self.settings.value("General/address_table_update_interval", type=int)))
-        self.lineEdit_FreezeInterval.setText(
-            str(self.settings.value("General/freeze_interval", type=int)))
+        self.lineEdit_FreezeInterval.setText(str(self.settings.value("General/freeze_interval", type=int)))
         self.checkBox_MessageBoxOnException.setChecked(
             self.settings.value("General/show_messagebox_on_exception", type=bool))
         self.checkBox_OutputModeAsync.setChecked(self.settings.value("General/gdb_output_mode").async_output)
@@ -5956,14 +5955,14 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         instances.remove(self)
 
 
-def exitHandler():
-    global Exiting
-    Exiting = 1
+def handle_exit():
+    global exiting
+    exiting = 1
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.aboutToQuit.connect(exitHandler)
+    app.aboutToQuit.connect(handle_exit)
     window = MainForm()
     window.show()
     sys.exit(app.exec())
