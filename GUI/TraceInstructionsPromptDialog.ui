@@ -29,7 +29,7 @@
      <item>
       <widget class="QLineEdit" name="lineEdit_MaxTraceCount">
        <property name="text">
-        <string>1000</string>
+        <string notr="true">1000</string>
        </property>
       </widget>
      </item>

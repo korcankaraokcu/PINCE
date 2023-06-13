@@ -1,1542 +1,1261 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="it_IT">
-<context>
+<TS version="2.1">
+  <context>
     <name>Dialog</name>
     <message>
-        <location filename="../../GUI/EditTypeDialog.ui" line="0"/>
-        <source>Type</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <source>Type</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/EditTypeDialog.ui" line="0"/>
-        <source>Select the new type</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <source>Select the new type</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0"/>
-        <location filename="../../GUI/EditTypeDialog.ui" line="0"/>
-        <source>Length</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <source>Length</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0"/>
-        <location filename="../../GUI/EditTypeDialog.ui" line="0"/>
-        <source>10</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <source>Zero-Terminated</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0"/>
-        <location filename="../../GUI/EditTypeDialog.ui" line="0"/>
-        <source>Zero-Terminated</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
+      <source>Dissect Code</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <source>Dissect Code</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
+      <source>Regions</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <source>Regions</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
+      <source>Path</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <source>Path</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
+      <source>Selected regions will be scanned</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <source>Selected regions will be scanned</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
+      <source>Currently scanning range:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <source>-</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
+      <source>String references found:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <source>Currently scanning range:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
+      <source>Jumps found:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <source>String references found:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
+      <source>Calls found:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <source>Jumps found:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <source>Calls found:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <source>Entries that can&apos;t be decoded as utf-8 won&apos;t be included in referenced strings
+      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
+      <source>Entries that can't be decoded as utf-8 won't be included in referenced strings
 Unchecking it makes ReferencedStringsWidget load slower but allows you to examine non-string pointers on it</source>
-        <translation type="unfinished"></translation>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0"/>
-        <source>Discard invalid strings</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
+      <source>Discard invalid strings</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/HexEditDialog.ui" line="0"/>
-        <source>Hex Edit</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/HexEditDialog.ui" line="0" />
+      <source>Hex Edit</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/EditInstructionDialog.ui" line="0"/>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0"/>
-        <location filename="../../GUI/HexEditDialog.ui" line="0"/>
-        <source>Address:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <location filename="../../GUI/HexEditDialog.ui" line="0" />
+      <source>Address:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/HexEditDialog.ui" line="0"/>
-        <source>Length:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/HexEditDialog.ui" line="0" />
+      <source>Length:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/HexEditDialog.ui" line="0"/>
-        <source>Refresh</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/HexEditDialog.ui" line="0" />
+      <source>Refresh</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TrackSelectorDialog.ui" line="0"/>
-        <source>Select an address to track</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
+      <source>Select an address to track</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0"/>
-        <location filename="../../GUI/TrackSelectorDialog.ui" line="0"/>
-        <source>Pointer</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
+      <source>Pointer</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TrackSelectorDialog.ui" line="0"/>
-        <source>Pointed Address</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
+      <source>Pointed Address</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <location filename="../../GUI/HandleSignalsDialog.ui" line="0"/>
-        <source>Handle Signals</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <location filename="../../GUI/HandleSignalsDialog.ui" line="0" />
+      <source>Handle Signals</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/HandleSignalsDialog.ui" line="0"/>
-        <source>Signal</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/HandleSignalsDialog.ui" line="0" />
+      <source>Signal</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/HandleSignalsDialog.ui" line="0"/>
-        <source>Ignore</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/HandleSignalsDialog.ui" line="0" />
+      <source>Ignore</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LoadingDialog.ui" line="0"/>
-        <location filename="../../GUI/TextEditDialog.ui" line="0"/>
-        <source>Dialog</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/LoadingDialog.ui" line="0" />
+      <location filename="../../GUI/TextEditDialog.ui" line="0" />
+      <source>Dialog</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TextEditDialog.ui" line="0"/>
-        <source>Hit Esc to cancel and Ctrl+Enter to accept</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TextEditDialog.ui" line="0" />
+      <source>Hit Esc to cancel and Ctrl+Enter to accept</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0"/>
-        <source>Add Address Manually</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Add Address Manually</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0"/>
-        <source>Base Address:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Base Address:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0"/>
-        <source>Add Offset</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Add Offset</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0"/>
-        <source>Remove Offset</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Remove Offset</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0"/>
-        <source>Type:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Type:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0"/>
-        <source>=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Description:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0"/>
-        <source>Description:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
+      <source>Edit Instruction</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/EditInstructionDialog.ui" line="0"/>
-        <source>Edit Instruction</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
+      <source>Instruction:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/EditInstructionDialog.ui" line="0"/>
-        <source>Instruction:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
+      <source>Multiple entries are separated with ;</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/EditInstructionDialog.ui" line="0"/>
-        <source>Multiple entries are separated with ;</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Settings</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Settings</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>General</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>General</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Hotkeys</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Hotkeys</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Code Injection</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Code Injection</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Disassemble</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Disassemble</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Debug</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Debug</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Auto-update address table</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Auto-update address table</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Update Interval</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Update Interval</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Freeze Interval</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>500</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Show a MessageBox on InferiorRunning and GDBInitialize exceptions</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>ms</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>GDB output:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Freeze Interval</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Async</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>100</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Command</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Show a MessageBox on InferiorRunning and GDBInitialize exceptions</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Command info</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>GDB output:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Async</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Command</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Command info</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>On start, automatically attach to processes with name matching one of the entries
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>On start, automatically attach to processes with name matching one of the entries
 Patterns at former positions have higher priority if regex is off</source>
-        <translation type="unfinished"></translation>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Auto-attach on start</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Auto-attach on start</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Regex</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Regex</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Logo</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Logo</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Functions</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Functions</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Hotkey</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Hotkey</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Clear</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Clear</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Code injection method:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Code injection method:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Simp&amp;le dlopen call</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Simp&amp;le dlopen call</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Advanced In&amp;jection</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Advanced In&amp;jection</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Bring disassemble screen to front when the inferior is stopped</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Bring disassemble screen to front when the inferior is stopped</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Instructions shown per scroll</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Instructions shown per scroll</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>GDB Path</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>GDB Path</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>GDB Logging</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>GDB Logging</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SettingsDialog.ui" line="0"/>
-        <source>Reset Settings</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Reset Settings</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LoadingDialog.ui" line="0"/>
-        <source>Processing</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/LoadingDialog.ui" line="0" />
+      <source>Processing</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LoadingDialog.ui" line="0"/>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/LoadingDialog.ui" line="0" />
+      <source>Cancel</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Parameters for tracing</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Parameters for tracing</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Number of the instructions that&apos;ll be traced</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Number of the instructions that'll be traced</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Max trace count(1 or greater):</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Max trace count(1 or greater):</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>1000</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Tracing will start if this condition is met</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Tracing will start if this condition is met</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Trigger condition(Optional, gdb expression):</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Trigger condition(Optional, gdb expression):</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Tracing will stop whenever this condition is met</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Tracing will stop whenever this condition is met</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Stop condition(Optional, gdb expression):</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Stop condition(Optional, gdb expression):</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Step over instead of single step</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Step over instead of single step</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Stop when tracing ends</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Stop when tracing ends</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Collect general registers</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Collect general registers</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Collect flag registers</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Collect flag registers</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Collect segment registers</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Collect segment registers</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
+      <source>Collect float registers</source>
+      <translation type="unfinished" />
     </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0"/>
-        <source>Collect float registers</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
+  </context>
+  <context>
     <name>Form</name>
     <message>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0"/>
-        <source>Functions</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
+      <source>Functions</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0"/>
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0"/>
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0"/>
-        <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0"/>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0"/>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0"/>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0"/>
-        <source>Address</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+      <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+      <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+      <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
+      <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
+      <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+      <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
+      <source>Address</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0"/>
-        <source>Symbol</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
+      <source>Symbol</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0"/>
-        <source>Enter the regex. Leave blank to see all functions</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
+      <source>Enter the regex. Leave blank to see all functions</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0"/>
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0"/>
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0"/>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0"/>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0"/>
-        <source>Ignore case if checked</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+      <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
+      <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+      <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+      <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
+      <source>Ignore case if checked</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0"/>
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0"/>
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0"/>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0"/>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0"/>
-        <source>Case sensitive</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+      <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
+      <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+      <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+      <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
+      <source>Case sensitive</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0"/>
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0"/>
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0"/>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0"/>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0"/>
-        <source>Search(Enter)</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+      <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
+      <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+      <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+      <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
+      <source>Search(Enter)</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0"/>
-        <source>Search for Opcodes</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+      <source>Search for Opcodes</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0"/>
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0"/>
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0"/>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0"/>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0"/>
-        <source>Regex</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+      <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
+      <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+      <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+      <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+      <source>Regex</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0"/>
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0"/>
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0"/>
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0"/>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0"/>
-        <source>Enter a string or a python regex</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+      <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
+      <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
+      <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+      <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+      <source>Enter a string or a python regex</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0"/>
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0"/>
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0"/>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0"/>
-        <source>Your string will be treated as a regex if checked</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+      <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
+      <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+      <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+      <source>Your string will be treated as a regex if checked</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0"/>
-        <source>Start</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+      <source>Start</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0"/>
-        <source>End</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+      <source>End</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0"/>
-        <source>Opcodes</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+      <source>Opcodes</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/StackTraceInfoWidget.ui" line="0"/>
-        <source>StackTrace Information</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
+      <source>StackTrace Information</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/StackTraceInfoWidget.ui" line="0"/>
-        <source>Return Address</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
+      <source>Return Address</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BookmarkWidget.ui" line="0"/>
-        <location filename="../../GUI/StackTraceInfoWidget.ui" line="0"/>
-        <source>Info</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BookmarkWidget.ui" line="0" />
+      <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
+      <source>Info</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0"/>
-        <location filename="../../GUI/LogFileWidget.ui" line="0"/>
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0"/>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0"/>
-        <source>Form</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
+      <location filename="../../GUI/LogFileWidget.ui" line="0" />
+      <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+      <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
+      <source>Form</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0"/>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0"/>
-        <source>Count</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+      <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
+      <source>Count</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0"/>
-        <source>Refresh</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
+      <source>Refresh</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0"/>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0"/>
-        <source>Stop</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+      <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
+      <source>Stop</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BookmarkWidget.ui" line="0"/>
-        <source>Bookmarks</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BookmarkWidget.ui" line="0" />
+      <source>Bookmarks</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BookmarkWidget.ui" line="0"/>
-        <source>Bookmarked Addresses</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BookmarkWidget.ui" line="0" />
+      <source>Bookmarked Addresses</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BookmarkWidget.ui" line="0"/>
-        <source>Comment</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BookmarkWidget.ui" line="0" />
+      <source>Comment</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0"/>
-        <source>Restore Instructions</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
+      <source>Restore Instructions</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0"/>
-        <source>Original OpCode</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
+      <source>Original OpCode</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0"/>
-        <source>Original Instruction</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
+      <source>Original Instruction</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0"/>
-        <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0"/>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0"/>
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0"/>
-        <source>Value</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
+      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
+      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+      <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+      <source>Value</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0"/>
-        <source>Source</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+      <source>Source</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0"/>
-        <source>Try changing combobox index if the &apos;Value&apos; part of table still isn&apos;t updated</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+      <source>Try changing combobox index if the 'Value' part of table still isn't updated</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0"/>
-        <source>Referenced Calls</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+      <source>Referenced Calls</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0"/>
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0"/>
-        <source>Refcount</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+      <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+      <source>Refcount</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0"/>
-        <source>GDB Console</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ConsoleWidget.ui" line="0" />
+      <source>GDB Console</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0"/>
-        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Monospace&apos;; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ConsoleWidget.ui" line="0" />
+      <source>Send</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0"/>
-        <source>Send</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ConsoleWidget.ui" line="0" />
+      <source>Send ctrl+c</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0"/>
-        <source>Send ctrl+c</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ConsoleWidget.ui" line="0" />
+      <source>CLI</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0"/>
-        <source>CLI</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ConsoleWidget.ui" line="0" />
+      <source>MI</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0"/>
-        <source>MI</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/LogFileWidget.ui" line="0" />
+      <location filename="../../GUI/LogFileWidget.ui" line="0" />
+      <source>TextLabel</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LogFileWidget.ui" line="0"/>
-        <location filename="../../GUI/LogFileWidget.ui" line="0"/>
-        <source>TextLabel</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
+      <source>Examine Referrers</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0"/>
-        <source>Examine Referrers</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+      <source>Referenced Strings and Values</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0"/>
-        <source>Referenced Strings and Values</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
+      <source>Memory Regions</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0"/>
-        <source>Memory Regions</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
+      <source>Regions</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0"/>
-        <source>Regions</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
+      <source>Perms</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0"/>
-        <source>Perms</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
+      <source>Offset</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0"/>
-        <source>Offset</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
+      <source>Path</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0"/>
-        <source>Path</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
+      <source>libpince Reference</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0"/>
-        <source>libpince Reference</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
+      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
+      <source>Search</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0"/>
-        <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0"/>
-        <source>Search</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
+      <source>type_defs(Type Definitions)</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0"/>
-        <source>type_defs(Type Definitions)</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
+      <source>Item Name</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0"/>
-        <source>0/0</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
+      <source>Source File</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0"/>
-        <source>Item Name</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
+      <source>Resources(Mouse-over items to see docstrings)</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0"/>
-        <source>Source File</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
+      <source>Hide type_defs</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0"/>
-        <source>Resources(Mouse-over items to see docstrings)</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
+      <source>Cancel</source>
+      <translation type="unfinished" />
     </message>
-    <message>
-        <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0"/>
-        <source>Hide type_defs</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0"/>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
+  </context>
+  <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>PINCE</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Freeze</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Freeze</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Freeze the value</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Freeze the value</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Description</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Description</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Address</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Address</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Type</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Type</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Value</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Value</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Memory View</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Memory View</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Copy selected items to the address table</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Copy selected items to the address table</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Erase all the table contents</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Erase all the table contents</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Refresh the address table[R]</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Refresh the address table[R]</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Add Address Manually</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Add Address Manually</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Create or attach to a process</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Create or attach to a process</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Open a cheat table</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Open a cheat table</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Save current table to a file</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Save current table to a file</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Wiki</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Wiki</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>About</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>About</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>No Process Selected</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>No Process Selected</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Open a gdb console</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Open a gdb console</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Configure options</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Configure options</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Match count: 0</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Match count: 0</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Previous</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Previous</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>First Scan</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>First Scan</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Next Scan</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Next Scan</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Undo Scan</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Undo Scan</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>B&amp;its</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>B&amp;its</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>&amp;Decimal</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>&amp;Decimal</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Hex</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Hex</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Scan Type:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>&lt;-&gt;</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Value Type:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Scan Type:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Scan Scope:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Value Type:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SelectProcess.ui" line="0" />
+      <source>Please select a Process</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0"/>
-        <source>Scan Scope:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SelectProcess.ui" line="0" />
+      <source>Name of the Process:</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0"/>
-        <source>Please select a Process</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SelectProcess.ui" line="0" />
+      <source>PID</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0"/>
-        <source>Name of the Process:</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SelectProcess.ui" line="0" />
+      <source>Username</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0"/>
-        <source>PID</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SelectProcess.ui" line="0" />
+      <source>Process Name</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0"/>
-        <source>Username</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SelectProcess.ui" line="0" />
+      <source>Attach to the selected process</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0"/>
-        <source>Process Name</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
+      <location filename="../../GUI/SelectProcess.ui" line="0" />
+      <source>Open</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0"/>
-        <source>Attach to the selected process</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SelectProcess.ui" line="0" />
+      <source>Cancel</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0"/>
-        <location filename="../../GUI/SelectProcess.ui" line="0"/>
-        <source>Open</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SelectProcess.ui" line="0" />
+      <source>Open an executable</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0"/>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/SelectProcess.ui" line="0" />
+      <source>Create Process[F1]</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0"/>
-        <source>Open an executable</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
+      <source>Tracer</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0"/>
-        <source>Create Process[F1]</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
+      <source>File</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0"/>
-        <source>Tracer</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
+      <source>Save</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0"/>
-        <source>File</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
+      <source>Save as a text file</source>
+      <translation type="unfinished" />
     </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0"/>
-        <source>Save</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0"/>
-        <source>Save as a text file</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
+  </context>
+  <context>
     <name>MainWindow_MemoryView</name>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Memory Viewer</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Memory Viewer</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Address</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Address</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Bytes</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Bytes</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Opcodes</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Opcodes</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Comment</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Comment</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Registers</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Registers</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>RAX=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Flags</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>RBX=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Segment Registers</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>RCX=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Show Float Registers</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>RDX=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Return Address</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>RSI=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Frame Address</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>RDI=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Value</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>RBP=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Points to</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>RSP=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>V&amp;iew</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>R8=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Debug</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>R9=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Tools</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>R10=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Fi&amp;le</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>R11=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Help</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>R12=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Bookmarks</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>R13=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;StackTrace Info</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>R14=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Inject .so file</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>R15=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Break</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>RIP=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Run</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>EAX=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Step[F7]</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>EBX=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Step &amp;Over[F8]</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>ECX=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Execute Till Return[Shift+F8]</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>EDX=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Toggle Breakpoint[F5]</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>ESI=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>B&amp;reakpoints</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>EDI=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Functions</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>EBP=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Set Address[Shift+F4]</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>ESP=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Call Function</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>EIP=</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Load Trace</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Flags</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;libpince</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>CF</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;GDB Log File</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>0</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Search Opcode</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>PF</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Memory Regions</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>AF</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>&amp;Dissect Code</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>ZF</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>R&amp;eferenced Strings</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>SF</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Referenced &amp;Calls</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>TF</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>To&amp;ggle Attach</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>IF</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Restore Instructions</source>
+      <translation type="unfinished" />
     </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>DF</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>OF</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Segment Registers</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>CS=</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>ES=</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>SS=</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>GS=</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>DS=</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>FS=</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Show Float Registers</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Return Address</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Frame Address</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Value</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Points to</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>V&amp;iew</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Debug</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Tools</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Fi&amp;le</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Help</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Bookmarks</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;StackTrace Info</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Inject .so file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Break</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Run</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Step[F7]</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Step &amp;Over[F8]</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Execute Till Return[Shift+F8]</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Toggle Breakpoint[F5]</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>B&amp;reakpoints</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Functions</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Set Address[Shift+F4]</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Call Function</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Load Trace</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;libpince</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;GDB Log File</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Search Opcode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Memory Regions</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>&amp;Dissect Code</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>R&amp;eferenced Strings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Referenced &amp;Calls</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>To&amp;ggle Attach</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0"/>
-        <source>Restore Instructions</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
+  </context>
+  <context>
     <name>TabWidget</name>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0"/>
-        <source>Breakpoints</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
+      <source>Breakpoints</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0"/>
-        <source>Interactive</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
+      <source>Interactive</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0"/>
-        <source>No</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
+      <source>No</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0"/>
-        <source>Type</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
+      <source>Type</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0"/>
-        <source>Disp</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
+      <source>Disp</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0"/>
-        <source>Enabled</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
+      <source>Enabled</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0"/>
-        <source>Address</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
+      <source>Address</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0"/>
-        <source>Size</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
+      <source>Size</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0"/>
-        <source>On Hit</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
+      <source>On Hit</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0"/>
-        <source>Hit Count</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
+      <source>Hit Count</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0"/>
-        <source>Condition</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
+      <source>Condition</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0"/>
-        <source>Raw</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
+      <source>Raw</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AboutWidget.ui" line="0"/>
-        <source>About PINCE</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/AboutWidget.ui" line="0" />
+      <source>About PINCE</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AboutWidget.ui" line="0"/>
-        <source>Contributors</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/AboutWidget.ui" line="0" />
+      <source>Contributors</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/AboutWidget.ui" line="0"/>
-        <source>License</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/AboutWidget.ui" line="0" />
+      <source>License</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0"/>
-        <source>Floating Point Registers</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
+      <source>Floating Point Registers</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0"/>
-        <source>FPU</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
+      <source>FPU</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0"/>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0"/>
-        <source>Register</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
+      <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
+      <source>Register</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0"/>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0"/>
-        <source>Value</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
+      <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
+      <source>Value</source>
+      <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0"/>
-        <source>XMM</source>
-        <translation type="unfinished"></translation>
+      <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
+      <source>XMM</source>
+      <translation type="unfinished" />
     </message>
-</context>
+  </context>
 </TS>
