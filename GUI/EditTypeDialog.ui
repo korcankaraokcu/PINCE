@@ -50,7 +50,7 @@
          <item>
           <widget class="QLineEdit" name="lineEdit_Length">
            <property name="text">
-            <string>10</string>
+            <string notr="true">10</string>
            </property>
           </widget>
          </item>

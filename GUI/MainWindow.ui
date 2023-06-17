@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>PINCE</string>
+   <string notr="true">PINCE</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -476,7 +476,7 @@
             <item>
              <widget class="QLabel" name="label_Between">
               <property name="text">
-               <string>&lt;-&gt;</string>
+               <string notr="true">&lt;-&gt;</string>
               </property>
              </widget>
             </item>

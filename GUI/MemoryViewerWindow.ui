@@ -296,7 +296,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>RAX=</string>
+                              <string notr="true">RAX=</string>
                              </property>
                             </widget>
                            </item>
@@ -308,7 +308,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>RBX=</string>
+                              <string notr="true">RBX=</string>
                              </property>
                             </widget>
                            </item>
@@ -320,7 +320,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>RCX=</string>
+                              <string notr="true">RCX=</string>
                              </property>
                             </widget>
                            </item>
@@ -332,7 +332,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>RDX=</string>
+                              <string notr="true">RDX=</string>
                              </property>
                             </widget>
                            </item>
@@ -344,7 +344,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>RSI=</string>
+                              <string notr="true">RSI=</string>
                              </property>
                             </widget>
                            </item>
@@ -356,7 +356,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>RDI=</string>
+                              <string notr="true">RDI=</string>
                              </property>
                             </widget>
                            </item>
@@ -368,7 +368,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>RBP=</string>
+                              <string notr="true">RBP=</string>
                              </property>
                             </widget>
                            </item>
@@ -380,7 +380,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>RSP=</string>
+                              <string notr="true">RSP=</string>
                              </property>
                             </widget>
                            </item>
@@ -412,7 +412,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>R8=</string>
+                              <string notr="true">R8=</string>
                              </property>
                             </widget>
                            </item>
@@ -424,7 +424,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>R9=</string>
+                              <string notr="true">R9=</string>
                              </property>
                             </widget>
                            </item>
@@ -436,7 +436,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>R10=</string>
+                              <string notr="true">R10=</string>
                              </property>
                             </widget>
                            </item>
@@ -448,7 +448,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>R11=</string>
+                              <string notr="true">R11=</string>
                              </property>
                             </widget>
                            </item>
@@ -460,7 +460,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>R12=</string>
+                              <string notr="true">R12=</string>
                              </property>
                             </widget>
                            </item>
@@ -472,7 +472,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>R13=</string>
+                              <string notr="true">R13=</string>
                              </property>
                             </widget>
                            </item>
@@ -484,7 +484,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>R14=</string>
+                              <string notr="true">R14=</string>
                              </property>
                             </widget>
                            </item>
@@ -496,7 +496,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>R15=</string>
+                              <string notr="true">R15=</string>
                              </property>
                             </widget>
                            </item>
@@ -517,7 +517,7 @@
                             </font>
                            </property>
                            <property name="text">
-                            <string>RIP=</string>
+                            <string notr="true">RIP=</string>
                            </property>
                           </widget>
                          </item>
@@ -593,7 +593,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>EAX=</string>
+                              <string notr="true">EAX=</string>
                              </property>
                             </widget>
                            </item>
@@ -605,7 +605,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>EBX=</string>
+                              <string notr="true">EBX=</string>
                              </property>
                             </widget>
                            </item>
@@ -617,7 +617,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>ECX=</string>
+                              <string notr="true">ECX=</string>
                              </property>
                             </widget>
                            </item>
@@ -629,7 +629,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>EDX=</string>
+                              <string notr="true">EDX=</string>
                              </property>
                             </widget>
                            </item>
@@ -641,7 +641,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>ESI=</string>
+                              <string notr="true">ESI=</string>
                              </property>
                             </widget>
                            </item>
@@ -653,7 +653,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>EDI=</string>
+                              <string notr="true">EDI=</string>
                              </property>
                             </widget>
                            </item>
@@ -665,7 +665,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>EBP=</string>
+                              <string notr="true">EBP=</string>
                              </property>
                             </widget>
                            </item>
@@ -677,7 +677,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>ESP=</string>
+                              <string notr="true">ESP=</string>
                              </property>
                             </widget>
                            </item>
@@ -689,7 +689,7 @@
                               </font>
                              </property>
                              <property name="text">
-                              <string>EIP=</string>
+                              <string notr="true">EIP=</string>
                              </property>
                             </widget>
                            </item>
@@ -753,7 +753,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>CF</string>
+                        <string notr="true">CF</string>
                        </property>
                       </widget>
                      </item>
@@ -765,7 +765,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>0</string>
+                        <string notr="true">0</string>
                        </property>
                       </widget>
                      </item>
@@ -784,7 +784,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>PF</string>
+                        <string notr="true">PF</string>
                        </property>
                       </widget>
                      </item>
@@ -796,7 +796,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>0</string>
+                        <string notr="true">0</string>
                        </property>
                       </widget>
                      </item>
@@ -815,7 +815,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>AF</string>
+                        <string notr="true">AF</string>
                        </property>
                       </widget>
                      </item>
@@ -827,7 +827,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>0</string>
+                        <string notr="true">0</string>
                        </property>
                       </widget>
                      </item>
@@ -846,7 +846,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>ZF</string>
+                        <string notr="true">ZF</string>
                        </property>
                       </widget>
                      </item>
@@ -858,7 +858,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>0</string>
+                        <string notr="true">0</string>
                        </property>
                       </widget>
                      </item>
@@ -877,7 +877,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>SF</string>
+                        <string notr="true">SF</string>
                        </property>
                       </widget>
                      </item>
@@ -889,7 +889,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>0</string>
+                        <string notr="true">0</string>
                        </property>
                       </widget>
                      </item>
@@ -908,7 +908,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>TF</string>
+                        <string notr="true">TF</string>
                        </property>
                       </widget>
                      </item>
@@ -920,7 +920,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>0</string>
+                        <string notr="true">0</string>
                        </property>
                       </widget>
                      </item>
@@ -939,7 +939,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>IF</string>
+                        <string notr="true">IF</string>
                        </property>
                       </widget>
                      </item>
@@ -951,7 +951,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>0</string>
+                        <string notr="true">0</string>
                        </property>
                       </widget>
                      </item>
@@ -970,7 +970,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>DF</string>
+                        <string notr="true">DF</string>
                        </property>
                       </widget>
                      </item>
@@ -982,7 +982,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>0</string>
+                        <string notr="true">0</string>
                        </property>
                       </widget>
                      </item>
@@ -1001,7 +1001,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>OF</string>
+                        <string notr="true">OF</string>
                        </property>
                       </widget>
                      </item>
@@ -1013,7 +1013,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>0</string>
+                        <string notr="true">0</string>
                        </property>
                       </widget>
                      </item>
@@ -1074,7 +1074,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>CS=</string>
+                        <string notr="true">CS=</string>
                        </property>
                       </widget>
                      </item>
@@ -1086,7 +1086,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>ES=</string>
+                        <string notr="true">ES=</string>
                        </property>
                       </widget>
                      </item>
@@ -1118,7 +1118,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>SS=</string>
+                        <string notr="true">SS=</string>
                        </property>
                       </widget>
                      </item>
@@ -1130,7 +1130,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>GS=</string>
+                        <string notr="true">GS=</string>
                        </property>
                       </widget>
                      </item>
@@ -1162,7 +1162,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>DS=</string>
+                        <string notr="true">DS=</string>
                        </property>
                       </widget>
                      </item>
@@ -1174,7 +1174,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>FS=</string>
+                        <string notr="true">FS=</string>
                        </property>
                       </widget>
                      </item>

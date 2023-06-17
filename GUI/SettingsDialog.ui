@@ -114,14 +114,14 @@
                     <item>
                      <widget class="QLineEdit" name="lineEdit_UpdateInterval">
                       <property name="text">
-                       <string>500</string>
+                       <string notr="true">500</string>
                       </property>
                      </widget>
                     </item>
                     <item>
                      <widget class="QLabel" name="label_2">
                       <property name="text">
-                       <string>ms</string>
+                       <string notr="true">ms</string>
                       </property>
                      </widget>
                     </item>
@@ -174,14 +174,14 @@
                        </size>
                       </property>
                       <property name="text">
-                       <string>100</string>
+                       <string notr="true">100</string>
                       </property>
                      </widget>
                     </item>
                     <item>
                      <widget class="QLabel" name="label_10">
                       <property name="text">
-                       <string>ms</string>
+                       <string notr="true">ms</string>
                       </property>
                      </widget>
                     </item>

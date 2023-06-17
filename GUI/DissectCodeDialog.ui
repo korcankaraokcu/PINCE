@@ -72,7 +72,7 @@
          <item>
           <widget class="QLabel" name="label_RegionInfo">
            <property name="text">
-            <string>-</string>
+            <string notr="true">-</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -85,7 +85,7 @@
          <item>
           <widget class="QLabel" name="label_RegionCountInfo">
            <property name="text">
-            <string>-</string>
+            <string notr="true">-</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -111,7 +111,7 @@
          <item>
           <widget class="QLabel" name="label_CurrentRange">
            <property name="text">
-            <string>-</string>
+            <string notr="true">-</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>

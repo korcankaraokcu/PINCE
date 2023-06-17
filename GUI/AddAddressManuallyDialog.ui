@@ -255,7 +255,7 @@
           <string/>
          </property>
          <property name="text">
-          <string>10</string>
+          <string notr="true">10</string>
          </property>
         </widget>
        </item>
@@ -296,7 +296,7 @@
        <item>
         <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>=</string>
+          <string notr="true">=</string>
          </property>
         </widget>
        </item>
