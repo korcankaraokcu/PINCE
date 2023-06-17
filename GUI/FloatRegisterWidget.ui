@@ -18,7 +18,7 @@
   </property>
   <widget class="QWidget" name="FPU">
    <attribute name="title">
-    <string>FPU</string>
+    <string notr="true">FPU</string>
    </attribute>
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
@@ -57,7 +57,7 @@
   </widget>
   <widget class="QWidget" name="XMM">
    <attribute name="title">
-    <string>XMM</string>
+    <string notr="true">XMM</string>
    </attribute>
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
