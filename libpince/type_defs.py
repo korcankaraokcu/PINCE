@@ -202,6 +202,7 @@ class SCAN_INDEX:
     INDEX_AOB = 10  # Array of Bytes
 
 
+# GDB already provides breakpoint info in english, no need to make these translatable
 on_hit_to_text_dict = {
     BREAKPOINT_ON_HIT.BREAK: "Break",
     BREAKPOINT_ON_HIT.FIND_CODE: "Find Code",
@@ -210,6 +211,7 @@ on_hit_to_text_dict = {
 }
 
 # Represents the texts at indexes in the address table
+# TODO: This class is mostly an UI helper, maybe integrate it into the the UI completely in the future?
 index_to_text_dict = collections.OrderedDict([
     (VALUE_INDEX.INDEX_INT8, "Int8"),
     (VALUE_INDEX.INDEX_INT16, "Int16"),
@@ -221,7 +223,7 @@ index_to_text_dict = collections.OrderedDict([
     (VALUE_INDEX.INDEX_STRING_UTF8, "String_UTF8"),
     (VALUE_INDEX.INDEX_STRING_UTF16, "String_UTF16"),
     (VALUE_INDEX.INDEX_STRING_UTF32, "String_UTF32"),
-    (VALUE_INDEX.INDEX_AOB, "Array of Bytes")
+    (VALUE_INDEX.INDEX_AOB, "ByteArray")
 ])
 
 text_to_index_dict = collections.OrderedDict()
@@ -248,6 +250,7 @@ scanmem_result_to_index_dict = collections.OrderedDict([
 ])
 
 # Represents the texts at indexes in scan combobox
+# TODO: Same as index_to_text_dict, consider integrating into UI completely
 scan_index_to_text_dict = collections.OrderedDict([
     (SCAN_INDEX.INDEX_INT_ANY, "Int(any)"),
     (SCAN_INDEX.INDEX_INT8, "Int8"),
@@ -259,7 +262,7 @@ scan_index_to_text_dict = collections.OrderedDict([
     (SCAN_INDEX.INDEX_FLOAT64, "Float64"),
     (SCAN_INDEX.INDEX_ANY, "Any(int, float)"),
     (SCAN_INDEX.INDEX_STRING, "String"),
-    (VALUE_INDEX.INDEX_AOB, "Array of Bytes")
+    (VALUE_INDEX.INDEX_AOB, "ByteArray")
 ])
 
 # Used in scan_data_type option of scanmem
@@ -278,6 +281,7 @@ scan_index_to_scanmem_dict = collections.OrderedDict([
 ])
 
 
+# TODO: Same as index_to_text_dict, consider integrating into UI completely
 class SCAN_TYPE:
     EXACT = 0
     INCREASED = 1
@@ -301,22 +305,6 @@ class SCAN_TYPE:
                     SCAN_TYPE.CHANGED, SCAN_TYPE.UNCHANGED]
 
 
-# Represents the texts at indexes in combobox
-scan_type_to_text_dict = collections.OrderedDict([
-    (SCAN_TYPE.EXACT, "Exact"),
-    (SCAN_TYPE.INCREASED, "Increased"),
-    (SCAN_TYPE.INCREASED_BY, "Increased by"),
-    (SCAN_TYPE.DECREASED, "Decreased"),
-    (SCAN_TYPE.DECREASED_BY, "Decreased by"),
-    (SCAN_TYPE.LESS, "Less Than"),
-    (SCAN_TYPE.MORE, "More Than"),
-    (SCAN_TYPE.BETWEEN, "Between"),
-    (SCAN_TYPE.CHANGED, "Changed"),
-    (SCAN_TYPE.UNCHANGED, "Unchanged"),
-    (SCAN_TYPE.UNKNOWN, "Unknown Value")
-])
-
-
 class SCAN_MODE:
     NEW = 0
     ONGOING = 1
@@ -328,13 +316,6 @@ class SCAN_SCOPE:
     FULL_RW = 3
     FULL = 4
 
-
-scan_scope_to_text_dict = collections.OrderedDict([
-    (SCAN_SCOPE.BASIC, "Basic"),
-    (SCAN_SCOPE.NORMAL, "Normal"),
-    (SCAN_SCOPE.FULL_RW, "Read+Write"),
-    (SCAN_SCOPE.FULL, "Full")
-])
 
 string_index_to_encoding_dict = {
     VALUE_INDEX.INDEX_STRING_UTF8: ["utf-8", "surrogateescape"],

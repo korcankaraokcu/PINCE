@@ -94,7 +94,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - - Provide an option to cut BOM bytes when writing to memory with the types UTF-16 and UTF-32
 - - Put a warning for users about replacement bytes for non UTF-8 types
 - - Extend string types with LE and BE variants of UTF-16 and UTF-32
-- - Change comboBox_ValueType string order to be ... String_UTF-8 String_Others Array of Bytes
+- - Change comboBox_ValueType string order to be ... String_UTF-8 String_Others
 - - Implement a custom combobox class for comboBox_ValueType and create a context menu for String_Others item
 - Having to stop the process to resolve symbols sucks, we already resolve base addresses of libs by ourselves, try to replace this gdb functionality with something else, like parsing from the memory
 - Implement "Investigate Registers" button to gather information about the addresses registers point to(independent from other steps)
