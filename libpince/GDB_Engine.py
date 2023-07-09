@@ -554,7 +554,7 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
         gdb_path (str): Path of the gdb binary
 
     Returns:
-        tuple: (A member of type_defs.ATTACH_RESULT, result_message)
+        int: A member of type_defs.ATTACH_RESULT
 
     Note:
         If gdb is already initialized, gdb_path will be ignored
@@ -564,19 +564,15 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
     traced_by = SysUtils.is_traced(pid)
     pid_control_list = [
         # Attaching PINCE to itself makes PINCE freeze immediately because gdb freezes the target on attach
-        (lambda: pid == self_pid, type_defs.ATTACH_RESULT.ATTACH_SELF, "Nice try, smartass"),  # planned easter egg
-        (lambda: not SysUtils.is_process_valid(pid), type_defs.ATTACH_RESULT.PROCESS_NOT_VALID,
-         "Selected process is not valid"),
-        (lambda: pid == currentpid, type_defs.ATTACH_RESULT.ALREADY_DEBUGGING, "You're debugging this process already"),
-        (lambda: traced_by is not False, type_defs.ATTACH_RESULT.ALREADY_TRACED,
-         "That process is already being traced by " + str(traced_by) + ", could not attach to the process"),
-        (lambda: not can_attach(pid), type_defs.ATTACH_RESULT.PERM_DENIED,
-         "Permission denied, could not attach to the process")
+        (lambda: pid == self_pid, type_defs.ATTACH_RESULT.ATTACH_SELF),
+        (lambda: not SysUtils.is_process_valid(pid), type_defs.ATTACH_RESULT.PROCESS_NOT_VALID),
+        (lambda: pid == currentpid, type_defs.ATTACH_RESULT.ALREADY_DEBUGGING),
+        (lambda: traced_by is not None, type_defs.ATTACH_RESULT.ALREADY_TRACED),
+        (lambda: not can_attach(pid), type_defs.ATTACH_RESULT.PERM_DENIED)
     ]
-    for control_func, attach_result, error_message in pid_control_list:
+    for control_func, attach_result in pid_control_list:
         if control_func():
-            print(error_message)
-            return attach_result, error_message
+            return attach_result
     if currentpid != -1 or not gdb_initialized:
         init_gdb(gdb_path)
     global inferior_arch
@@ -591,10 +587,8 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
     await_exit_thread = Thread(target=await_process_exit)
     await_exit_thread.daemon = True
     await_exit_thread.start()
-    result_message = "Successfully attached to the process with PID " + str(currentpid)
-    print(result_message)
     SysUtils.execute_script(SysUtils.get_user_path(type_defs.USER_PATHS.PINCEINIT_AA_PATH))
-    return type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL, result_message
+    return type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL
 
 
 #:tag:Debug
@@ -1816,7 +1810,7 @@ def trace_instructions(expression, max_trace_count=1000, trigger_condition="", s
     if not breakpoint:
         return
     modify_breakpoint(expression, type_defs.BREAKPOINT_MODIFY.CONDITION, condition=trigger_condition)
-    contents_send = (type_defs.TRACE_STATUS.STATUS_IDLE, "Waiting for breakpoint to trigger")
+    contents_send = (type_defs.TRACE_STATUS.STATUS_IDLE, "")
     trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)
     pickle.dump(contents_send, open(trace_status_file, "wb"))
     param_str = (
@@ -1865,15 +1859,15 @@ def get_trace_instructions_status(breakpoint):
         tuple:(status_id, status_str)
 
         status_id-->(int) A member of type_defs.TRACE_STATUS
-        status_str-->(str) Status string
+        status_str-->(str) Status string, only used with type_defs.TRACE_STATUS.STATUS_TRACING
 
-        Returns a tuple of (False, "") if fails to gather info
+        Returns a tuple of (None, "") if fails to gather info
     """
     trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)
     try:
         output = pickle.load(open(trace_status_file, "rb"))
     except:
-        output = False, ""
+        output = None, ""
     return output
 
 
@@ -1884,7 +1878,7 @@ def cancel_trace_instructions(breakpoint):
     Args:
         breakpoint (str): breakpoint number, must be returned from trace_instructions()
     """
-    status_info = (type_defs.TRACE_STATUS.STATUS_CANCELED, "Tracing has been canceled")
+    status_info = (type_defs.TRACE_STATUS.STATUS_CANCELED, "")
     trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)
     pickle.dump(status_info, open(trace_status_file, "wb"))
 

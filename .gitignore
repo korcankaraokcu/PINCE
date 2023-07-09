@@ -6,6 +6,7 @@ libscanmem.so*
 libpince/libscanmem/*
 *.directory
 *.lprof
+*.qm
 *.py[cod]
 *$py.class
 gdb_pince/*

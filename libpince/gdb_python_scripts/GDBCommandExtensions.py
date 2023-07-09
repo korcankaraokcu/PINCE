@@ -140,7 +140,7 @@ class GetStackTraceInfo(gdb.Command):
             if return_address:
                 return_address_with_info = ScriptUtils.examine_expression(return_address.group(1)).all
             else:
-                return_address_with_info = "<unavailable>"
+                return_address_with_info = "<>"
             stacktrace_info_list.append([return_address_with_info, frame_address_with_difference])
         send_to_pince(stacktrace_info_list)
 
@@ -209,7 +209,7 @@ class GetFrameReturnAddresses(gdb.Command):
             if return_address:
                 return_address_with_info = ScriptUtils.examine_expression(return_address.group(1)).all
             else:
-                return_address_with_info = "<unavailable>"
+                return_address_with_info = "<>"
             return_address_list.append(return_address_with_info)
         send_to_pince(return_address_list)
 
@@ -375,11 +375,11 @@ class TraceInstructions(gdb.Command):
                 gdb.execute("stepi", to_string=True)
             elif step_mode == type_defs.STEP_MODE.STEP_OVER:
                 gdb.execute("nexti", to_string=True)
-        status_info = (type_defs.TRACE_STATUS.STATUS_PROCESSING, "Processing the collected data")
+        status_info = (type_defs.TRACE_STATUS.STATUS_PROCESSING, "")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         trace_instructions_file = SysUtils.get_trace_instructions_file(pid, breakpoint)
         json.dump((tree, root_index), open(trace_instructions_file, "w"))
-        status_info = (type_defs.TRACE_STATUS.STATUS_FINISHED, "Tracing has been completed")
+        status_info = (type_defs.TRACE_STATUS.STATUS_FINISHED, "")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         if not stop_after_trace:
             gdb.execute("c")
@@ -462,7 +462,7 @@ class DissectCode(gdb.Command):
         ref_jmp_count = len(referenced_jumps_dict)
         ref_call_count = len(referenced_calls_dict)
         for region_index, (start_addr, end_addr) in enumerate(region_list):
-            region_info = start_addr+"-"+end_addr, "Region " + str(region_index + 1) + " of " + str(region_count)
+            region_info = start_addr+"-"+end_addr, str(region_index + 1) + " / " + str(region_count)
             start_addr = int(start_addr, 16)  # Becomes address of the last disassembled instruction later on
             end_addr = int(end_addr, 16)
             region_finished = False
