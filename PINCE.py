@@ -4455,8 +4455,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
     def tableWidget_TrackInfo_item_double_clicked(self, index):
         address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
         self.parent().parent().add_entry_to_addresstable(tr.ACCESSED_BY.format(self.address), address,
-                                                         self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole),
-                                                         10, True)
+                                                         self.comboBox_ValueType.currentIndex(), 10, True)
 
     def pushButton_Stop_clicked(self):
         if self.stopped:
