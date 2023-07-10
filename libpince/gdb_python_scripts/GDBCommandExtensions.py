@@ -595,9 +595,13 @@ class SearchFunctions(gdb.Command):
             gdb.execute("set case-sensitive on")
         else:
             gdb.execute("set case-sensitive off")
-        output = gdb.execute("info functions " + expression, to_string=True).splitlines()
+        try:
+            output = gdb.execute("info functions " + expression, to_string=True)
+        except Exception as e:
+            print("An exception occurred while trying to search functions:\n", e)
+            output = ""
         gdb.execute("set case-sensitive auto")
-        for line in output:
+        for line in output.splitlines():
             non_debugging = common_regexes.info_functions_non_debugging.search(line)
             if non_debugging:
                 function_list.append((non_debugging.group(1), non_debugging.group(2)))
