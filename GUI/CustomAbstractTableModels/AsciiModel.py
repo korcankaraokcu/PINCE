@@ -15,11 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt6.QtCore import QVariant, Qt
-from PyQt6.QtGui import QColorConstants
+from PyQt6.QtGui import QColor, QColorConstants
 from GUI.CustomAbstractTableModels.HexModel import QHexModel
 
 from libpince import SysUtils, GDB_Engine
 
+breakpoint_red = QColor(QColorConstants.Red)
+breakpoint_red.setAlpha(96)
 
 class QAsciiModel(QHexModel):
     def __init__(self, row_count, column_count, parent=None):
@@ -30,7 +32,7 @@ class QAsciiModel(QHexModel):
             if int_role == Qt.ItemDataRole.BackgroundRole:
                 address = self.current_address + QModelIndex.row() * self.column_count + QModelIndex.column()
                 if SysUtils.modulo_address(address, GDB_Engine.inferior_arch) in self.breakpoint_list:
-                    return QVariant(QColorConstants.Red)
+                    return QVariant(breakpoint_red)
             elif int_role == Qt.ItemDataRole.DisplayRole:
                 return QVariant(SysUtils.aob_to_str(self.data_array[QModelIndex.row() * self.column_count + QModelIndex.column()]))
         return QVariant()

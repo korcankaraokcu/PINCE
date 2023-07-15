@@ -195,7 +195,6 @@ BREAK_COND_COL = 8
 # row colours for disassemble qtablewidget
 PC_COLOUR = QColorConstants.Blue
 BOOKMARK_COLOUR = QColorConstants.Cyan
-DEFAULT_COLOUR = QColorConstants.White
 BREAKPOINT_COLOUR = QColorConstants.Red
 REF_COLOUR = QColorConstants.LightGray
 
@@ -800,7 +799,7 @@ class MainForm(QMainWindow, MainWindow):
             # TODO: Create a QWidget subclass with signals so freeze type can be changed by clicking on the cell
             if freeze_type == type_defs.FREEZE_TYPE.DEFAULT:
                 row.setText(FROZEN_COL, "")
-                row.setForeground(FROZEN_COL, QBrush(QColor(0, 0, 0)))
+                row.setForeground(FROZEN_COL, QBrush())
             elif freeze_type == type_defs.FREEZE_TYPE.INCREMENT:
                 row.setText(FROZEN_COL, "▲")
                 row.setForeground(FROZEN_COL, QBrush(QColor(0, 255, 0)))
@@ -1487,7 +1486,7 @@ class MainForm(QMainWindow, MainWindow):
                 frozen.value = row.text(VALUE_COL)
             else:
                 row.setText(FROZEN_COL, "")
-                row.setForeground(FROZEN_COL, QBrush(QColor(0, 0, 0)))
+                row.setForeground(FROZEN_COL, QBrush())
 
     def treeWidget_AddressTable_change_repr(self, new_repr):
         value_type = GuiUtils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.ItemDataRole.UserRole)
@@ -3199,6 +3198,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.currentpid == -1:
             return
         for col in range(self.tableWidget_Disassemble.columnCount()):
+            colour = QColor(colour)
+            colour.setAlpha(96)
             self.tableWidget_Disassemble.item(row, col).setData(Qt.ItemDataRole.BackgroundRole, colour)
 
     def on_process_stop(self):
@@ -4731,13 +4732,15 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.tableWidget_SymbolInfo.setSortingEnabled(False)
         self.tableWidget_SymbolInfo.setRowCount(0)
         self.tableWidget_SymbolInfo.setRowCount(len(output))
+        defined_color = QColor(QColorConstants.Green)
+        defined_color.setAlpha(96)
         for row, item in enumerate(output):
             address = item[0]
             if address:
                 address_item = QTableWidgetItem(address)
             else:
                 address_item = QTableWidgetItem(tr.DEFINED)
-                address_item.setBackground(QColorConstants.Green)
+                address_item.setBackground(defined_color)
             self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_ADDR_COL, address_item)
             self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_SYMBOL_COL, QTableWidgetItem(item[1]))
         self.tableWidget_SymbolInfo.setSortingEnabled(True)
@@ -4892,14 +4895,14 @@ class HexEditDialogForm(QDialog, HexEditDialog):
     def lineEdit_HexView_text_edited(self):
         aob_string = self.lineEdit_HexView.text()
         if not SysUtils.parse_string(aob_string, type_defs.VALUE_INDEX.INDEX_AOB):
-            self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: red;}")
+            self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
             return
         aob_array = aob_string.split()
         try:
             self.lineEdit_AsciiView.setText(SysUtils.aob_to_str(aob_array, "utf-8"))
             self.lineEdit_HexView.setStyleSheet("")  # This should set background color back to QT default
         except ValueError:
-            self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: red;}")
+            self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
 
     def lineEdit_AsciiView_text_edited(self):
         ascii_str = self.lineEdit_AsciiView.text()
@@ -4907,7 +4910,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
             self.lineEdit_HexView.setText(SysUtils.str_to_aob(ascii_str, "utf-8"))
             self.lineEdit_AsciiView.setStyleSheet("")
         except ValueError:
-            self.lineEdit_AsciiView.setStyleSheet("QLineEdit {background-color: red;}")
+            self.lineEdit_AsciiView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
 
     def refresh_view(self):
         self.lineEdit_AsciiView.clear()
@@ -5139,15 +5142,14 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         self.label_FoundCount.setText(str(self.current_found) + "/" + str(self.found_count))
 
     def highlight_text(self):
-        self.textBrowser_TypeDefs.selectAll()
-        self.textBrowser_TypeDefs.setTextBackgroundColor(QColorConstants.White)
         cursor = self.textBrowser_TypeDefs.textCursor()
         cursor.clearSelection()
         cursor.movePosition(QTextCursor.MoveOperation.Start)
         self.textBrowser_TypeDefs.setTextCursor(cursor)
-
         highlight_format = QTextCharFormat()
-        highlight_format.setBackground(QColorConstants.LightGray)
+        color = QColor(QColorConstants.LightGray)
+        color.setAlpha(96)
+        highlight_format.setBackground(color)
         pattern = self.lineEdit_SearchText.text()
         found_count = 0
         while True:
@@ -5159,14 +5161,14 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         self.found_count = found_count
         if found_count == 0:
             self.label_FoundCount.setText("0/0")
-            return
+        else:
+            self.label_FoundCount.setText("1/" + str(found_count))
         cursor = self.textBrowser_TypeDefs.textCursor()
         cursor.clearSelection()
         cursor.movePosition(QTextCursor.MoveOperation.Start)
         self.textBrowser_TypeDefs.setTextCursor(cursor)
         self.textBrowser_TypeDefs.find(pattern)
         self.current_found = 1
-        self.label_FoundCount.setText("1/" + str(found_count))
 
     def toggle_type_defs(self):
         if self.type_defs_shown:
