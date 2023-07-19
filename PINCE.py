@@ -192,11 +192,11 @@ BREAK_ON_HIT_COL = 6
 BREAK_HIT_COUNT_COL = 7
 BREAK_COND_COL = 8
 
-# row colours for disassemble qtablewidget
-PC_COLOUR = QColorConstants.Blue
-BOOKMARK_COLOUR = QColorConstants.Cyan
-BREAKPOINT_COLOUR = QColorConstants.Red
-REF_COLOUR = QColorConstants.LightGray
+# row colors for disassemble qtablewidget
+PC_COLOR = QColorConstants.Blue
+BOOKMARK_COLOR = QColorConstants.Cyan
+BREAKPOINT_COLOR = QColorConstants.Red
+REF_COLOR = QColorConstants.LightGray
 
 # represents the index of columns in address table
 FROZEN_COL = 0  # Frozen
@@ -3044,7 +3044,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return False
         program_counter = GDB_Engine.examine_expression("$pc").address
         program_counter_int = int(program_counter, 16)
-        row_colour = {}
+        row_color = {}
         breakpoint_info = GDB_Engine.get_breakpoint_info()
 
         # TODO: Change this nonsense when the huge refactorization happens
@@ -3093,9 +3093,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     tooltip_text += "\n..."
                 tooltip_text += f"\n\n{tr.SEE_REFERRERS}"
                 try:
-                    row_colour[row].append(REF_COLOUR)
+                    row_color[row].append(REF_COLOR)
                 except KeyError:
-                    row_colour[row] = [REF_COLOUR]
+                    row_color[row] = [REF_COLOR]
                 real_ref_count = 0
                 if jmp_ref_exists:
                     real_ref_count += len(jmp_referrers)
@@ -3105,15 +3105,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             if current_address == program_counter_int:
                 address_info = ">>>" + address_info
                 try:
-                    row_colour[row].append(PC_COLOUR)
+                    row_color[row].append(PC_COLOR)
                 except KeyError:
-                    row_colour[row] = [PC_COLOUR]
+                    row_color[row] = [PC_COLOR]
             for bookmark_item in self.tableWidget_Disassemble.bookmarks.keys():
                 if current_address == bookmark_item:
                     try:
-                        row_colour[row].append(BOOKMARK_COLOUR)
+                        row_color[row].append(BOOKMARK_COLOR)
                     except KeyError:
-                        row_colour[row] = [BOOKMARK_COLOUR]
+                        row_color[row] = [BOOKMARK_COLOR]
                     address_info = "(M)" + address_info
                     comment = self.tableWidget_Disassemble.bookmarks[bookmark_item]
                     break
@@ -3121,9 +3121,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 int_breakpoint_address = int(breakpoint.address, 16)
                 if current_address == int_breakpoint_address:
                     try:
-                        row_colour[row].append(BREAKPOINT_COLOUR)
+                        row_color[row].append(BREAKPOINT_COLOR)
                     except KeyError:
-                        row_colour[row] = [BREAKPOINT_COLOUR]
+                        row_color[row] = [BREAKPOINT_COLOR]
                     breakpoint_mark = "(B"
                     if breakpoint.enabled == "n":
                         breakpoint_mark += "-disabled"
@@ -3152,7 +3152,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, comment_item)
         jmp_dict.close()
         call_dict.close()
-        self.handle_colours(row_colour)
+        self.handle_colors(row_color)
 
         # We append the old record to travel history as last action because we wouldn't like to see unnecessary
         # addresses in travel history if any error occurs while displaying the next location
@@ -3166,41 +3166,41 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         self.disassemble_expression(self.disassemble_currently_displayed_address)
 
-    # Set colour of a row if a specific address is encountered(e.g $pc, a bookmarked address etc.)
-    def handle_colours(self, row_colour):
+    # Set color of a row if a specific address is encountered(e.g $pc, a bookmarked address etc.)
+    def handle_colors(self, row_color):
         if GDB_Engine.currentpid == -1:
             return
-        for row in row_colour:
-            current_row = row_colour[row]
-            if PC_COLOUR in current_row:
-                if BREAKPOINT_COLOUR in current_row:
-                    colour = QColorConstants.Green
-                elif BOOKMARK_COLOUR in current_row:
-                    colour = QColorConstants.Yellow
+        for row in row_color:
+            current_row = row_color[row]
+            if PC_COLOR in current_row:
+                if BREAKPOINT_COLOR in current_row:
+                    color = QColorConstants.Green
+                elif BOOKMARK_COLOR in current_row:
+                    color = QColorConstants.Yellow
                 else:
-                    colour = PC_COLOUR
-                self.set_row_colour(row, colour)
+                    color = PC_COLOR
+                self.set_row_color(row, color)
                 continue
-            if BREAKPOINT_COLOUR in current_row:
-                if BOOKMARK_COLOUR in current_row:
-                    colour = QColorConstants.Magenta
+            if BREAKPOINT_COLOR in current_row:
+                if BOOKMARK_COLOR in current_row:
+                    color = QColorConstants.Magenta
                 else:
-                    colour = BREAKPOINT_COLOUR
-                self.set_row_colour(row, colour)
+                    color = BREAKPOINT_COLOR
+                self.set_row_color(row, color)
                 continue
-            if BOOKMARK_COLOUR in current_row:
-                self.set_row_colour(row, BOOKMARK_COLOUR)
+            if BOOKMARK_COLOR in current_row:
+                self.set_row_color(row, BOOKMARK_COLOR)
                 continue
-            if REF_COLOUR in current_row:
-                self.set_row_colour(row, REF_COLOUR)
+            if REF_COLOR in current_row:
+                self.set_row_color(row, REF_COLOR)
 
-    def set_row_colour(self, row, colour):
+    def set_row_color(self, row, color):
         if GDB_Engine.currentpid == -1:
             return
         for col in range(self.tableWidget_Disassemble.columnCount()):
-            colour = QColor(colour)
-            colour.setAlpha(96)
-            self.tableWidget_Disassemble.item(row, col).setData(Qt.ItemDataRole.BackgroundRole, colour)
+            color = QColor(color)
+            color.setAlpha(96)
+            self.tableWidget_Disassemble.item(row, col).setData(Qt.ItemDataRole.BackgroundRole, color)
 
     def on_process_stop(self):
         if GDB_Engine.stop_reason == type_defs.STOP_REASON.PAUSE:
