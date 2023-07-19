@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1">
+<TS version="2.1" language="it">
   <context>
     <name>Dialog</name>
     <message>
@@ -44,25 +44,14 @@
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
       <source>Length</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>10</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Lunghezza</translation>
     </message>
     <message>
       <location filename="../../GUI/HexEditDialog.ui" line="0" />
       <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
       <source>Address:</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>=</source>
-      <translation type="unfinished" />
+      <translation>Indirizzo:</translation>
     </message>
     <message>
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
@@ -87,13 +76,6 @@
     <message>
       <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
       <source>Selected regions will be scanned</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-      <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-      <source>-</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -197,12 +179,12 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
       <location filename="../../GUI/LoadingDialog.ui" line="0" />
       <source>Cancel</source>
-      <translation type="unfinished" />
+      <translation>Annulla</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Settings</source>
-      <translation type="unfinished" />
+      <translation>Impostazioni</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -241,23 +223,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>500</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>ms</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Freeze Interval</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>100</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -383,11 +349,6 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-      <source>1000</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
       <source>Tracing will start if this condition is met</source>
       <translation type="unfinished" />
     </message>
@@ -473,15 +434,6 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/ConsoleWidget.ui" line="0" />
       <source>GDB Console</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/ConsoleWidget.ui" line="0" />
-      <source>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;style type="text/css"&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'Monospace'; font-size:9pt; font-weight:400; font-style:normal;"&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -576,7 +528,7 @@ p, li { white-space: pre-wrap; }
       <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
       <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
       <source>Address</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Indirizzo</translation>
     </message>
     <message>
       <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
@@ -605,17 +557,12 @@ p, li { white-space: pre-wrap; }
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>0/0</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
       <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
       <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
       <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
       <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
       <source>Value</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Valore</translation>
     </message>
     <message>
       <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
@@ -715,12 +662,12 @@ p, li { white-space: pre-wrap; }
     <message>
       <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
       <source>Start</source>
-      <translation type="unfinished" />
+      <translation>Inizio</translation>
     </message>
     <message>
       <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
       <source>End</source>
-      <translation type="unfinished" />
+      <translation>Fine</translation>
     </message>
     <message>
       <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
@@ -740,7 +687,7 @@ p, li { white-space: pre-wrap; }
     <message>
       <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
       <source>Cancel</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Annulla</translation>
     </message>
     <message>
       <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
@@ -774,11 +721,6 @@ p, li { white-space: pre-wrap; }
     <name>MainWindow</name>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>PINCE</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Freeze</source>
       <translation type="unfinished" />
     </message>
@@ -796,7 +738,7 @@ p, li { white-space: pre-wrap; }
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Address</source>
-      <translation type="unfinished" />
+      <translation>Indirizzo</translation>
     </message>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
@@ -807,7 +749,7 @@ p, li { white-space: pre-wrap; }
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Value</source>
-      <translation type="unfinished" />
+      <translation>Valore</translation>
     </message>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
@@ -862,7 +804,7 @@ p, li { white-space: pre-wrap; }
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>No Process Selected</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Nessun Processo Selezionato</translation>
     </message>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
@@ -882,12 +824,12 @@ p, li { white-space: pre-wrap; }
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Previous</source>
-      <translation type="unfinished" />
+      <translation>Precedente</translation>
     </message>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>First Scan</source>
-      <translation type="unfinished" />
+      <translation>Prima Ricerca</translation>
     </message>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
@@ -907,16 +849,11 @@ p, li { white-space: pre-wrap; }
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>&amp;Decimal</source>
-      <translation type="unfinished" />
+      <translation>&amp;Decimale</translation>
     </message>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Hex</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>&lt;-&gt;</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -942,7 +879,7 @@ p, li { white-space: pre-wrap; }
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />
       <source>Name of the Process:</source>
-      <translation type="unfinished" />
+      <translation>Nome del Processo:</translation>
     </message>
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />
@@ -952,12 +889,12 @@ p, li { white-space: pre-wrap; }
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />
       <source>Username</source>
-      <translation type="unfinished" />
+      <translation>Nome Utente</translation>
     </message>
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />
       <source>Process Name</source>
-      <translation type="unfinished" />
+      <translation>Nome Processo</translation>
     </message>
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />
@@ -973,7 +910,7 @@ p, li { white-space: pre-wrap; }
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />
       <source>Cancel</source>
-      <translation type="unfinished" />
+      <translation>Annulla</translation>
     </message>
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />
@@ -1018,7 +955,7 @@ p, li { white-space: pre-wrap; }
       <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
       <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
       <source>Address</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Indirizzo</translation>
     </message>
     <message>
       <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
@@ -1042,230 +979,12 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>RAX=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>RBX=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>RCX=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>RDX=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>RSI=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>RDI=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>RBP=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>RSP=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>R8=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>R9=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>R10=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>R11=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>R12=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>R13=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>R14=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>R15=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>RIP=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>EAX=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>EBX=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>ECX=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>EDX=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>ESI=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>EDI=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>EBP=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>ESP=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>EIP=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
       <source>Flags</source>
       <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>CF</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>0</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>PF</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>AF</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>ZF</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>SF</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>TF</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>IF</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>DF</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>OF</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
       <source>Segment Registers</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>CS=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>ES=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>SS=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>GS=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>DS=</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>FS=</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -1286,7 +1005,7 @@ p, li { white-space: pre-wrap; }
     <message>
       <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
       <source>Value</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Valore</translation>
     </message>
     <message>
       <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
@@ -1484,7 +1203,7 @@ p, li { white-space: pre-wrap; }
     <message>
       <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
       <source>Address</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Indirizzo</translation>
     </message>
     <message>
       <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
@@ -1518,11 +1237,6 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
-      <source>FPU</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
       <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
       <source>Register</source>
       <translation type="unfinished" />
@@ -1531,12 +1245,7 @@ p, li { white-space: pre-wrap; }
       <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
       <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
       <source>Value</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
-      <source>XMM</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Valore</translation>
     </message>
   </context>
   <context>
@@ -1819,12 +1528,12 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
       <location filename="../../tr/tr.py" line="73" />
       <source>First Scan</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Prima Ricerca</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="74" />
       <source>No Process Selected</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Nessun Processo Selezionato</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="75" />
@@ -2628,7 +2337,7 @@ Use the char \ to escape special chars such as [
     <message>
       <location filename="../../tr/tr.py" line="289" />
       <source>Start</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Inizio</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="290" />
@@ -2638,7 +2347,7 @@ Use the char \ to escape special chars such as [
     <message>
       <location filename="../../tr/tr.py" line="291" />
       <source>Cancel</source>
-      <translation type="unfinished" />
+      <translation type="unfinished">Annulla</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="292" />
