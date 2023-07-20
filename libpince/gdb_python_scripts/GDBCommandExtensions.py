@@ -337,7 +337,7 @@ class TraceInstructions(gdb.Command):
                     break
             except:
                 pass
-            line_info = gdb.execute("x/i $pc", to_string=True).split(maxsplit=1)[1]
+            line_info = gdb.execute("x/i $pc", to_string=True).splitlines()[0].split(maxsplit=1)[1]
             collect_dict = OrderedDict()
             if collect_general_registers:
                 collect_dict.update(ScriptUtils.get_general_registers())
@@ -351,7 +351,7 @@ class TraceInstructions(gdb.Command):
             tree.append([(line_info, collect_dict), current_root_index, []])
             tree[current_root_index][2].append(current_index)  # Add a child
             status_info = (type_defs.TRACE_STATUS.STATUS_TRACING,
-                           line_info + " (" + str(x + 1) + "/" + str(max_trace_count) + ")")
+                           line_info + "\n(" + str(x + 1) + "/" + str(max_trace_count) + ")")
             pickle.dump(status_info, open(trace_status_file, "wb"))
             if common_regexes.trace_instructions_ret.search(line_info):
                 if tree[current_root_index][1] is None:  # If no parents exist
