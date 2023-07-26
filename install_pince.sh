@@ -122,10 +122,10 @@ ask_pkg_mgr() {
 
 # About xcb packages -> https://github.com/cdgriffith/FastFlix/wiki/Common-questions-and-problems
 PKG_NAMES_ALL="python3-pip gdb libtool intltool"
-PKG_NAMES_DEBIAN="$PKG_NAMES_ALL libreadline-dev python3-dev python3-venv pkg-config libcairo2-dev libgirepository1.0-dev libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev libxcb-cursor0"
-PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc readline-devel python3-devel typelib-1_0-Gtk-3_0 cairo-devel gobject-introspection-devel make"
-PKG_NAMES_FEDORA="$PKG_NAMES_ALL readline-devel python3-devel redhat-lsb cairo-devel gobject-introspection-devel cairo-gobject-devel"
-PKG_NAMES_ARCH="python-pip readline intltool gdb lsb-release" # arch defaults to py3 nowadays
+PKG_NAMES_DEBIAN="$PKG_NAMES_ALL libreadline-dev python3-dev python3-venv pkg-config qt6-l10n-tools libcairo2-dev libgirepository1.0-dev libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev libxcb-cursor0"
+PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc readline-devel python3-devel qt6-tools-linguist typelib-1_0-Gtk-3_0 cairo-devel gobject-introspection-devel make"
+PKG_NAMES_FEDORA="$PKG_NAMES_ALL readline-devel python3-devel qt6-linguist redhat-lsb cairo-devel gobject-introspection-devel cairo-gobject-devel"
+PKG_NAMES_ARCH="python-pip qt6-tools readline intltool gdb lsb-release" # arch defaults to py3 nowadays
 PKG_NAMES_PIP="pyqt6 pexpect distorm3 keystone-engine pygdbmi keyboard pygobject"
 
 INSTALL_COMMAND="install"
@@ -135,19 +135,23 @@ set_install_vars() {
 	*SUSE*)
 		PKG_MGR="zypper"
 		PKG_NAMES="$PKG_NAMES_SUSE"
+		LRELEASE_CMD="lrelease6"
 		;;
 	*Arch*)
 		PKG_MGR="pacman"
 		PKG_NAMES="$PKG_NAMES_ARCH"
 		INSTALL_COMMAND="-S --needed"
+		LRELEASE_CMD="usr/lib/qt6/bin/lrelease"
 		;;
 	*Fedora*)
 		PKG_MGR="dnf -y"
 		PKG_NAMES="$PKG_NAMES_FEDORA"
+		LRELEASE_CMD="lrelease-qt6"
 		;;
 	*Debian*|*Ubuntu*)
 		PKG_MGR="apt -y"
 		PKG_NAMES="$PKG_NAMES_DEBIAN"
+		LRELEASE_CMD="/usr/lib/qt6/bin/lrelease"
 		;;
 	*)
 		return 1
@@ -155,6 +159,12 @@ set_install_vars() {
 	esac
 
 	return 0
+}
+
+compile_translations() {
+	${LRELEASE_CMD} i18n/ts/*
+	mkdir -p i18n/qm
+	mv i18n/ts/*.qm i18n/qm/
 }
 
 LSB_RELEASE="$(command -v lsb_release)"
@@ -192,6 +202,8 @@ fi
 pip3 install ${PKG_NAMES_PIP} || exit_on_error
 
 install_scanmem || exit_on_error
+
+compile_translations || exit_on_error
 
 echo
 echo "PINCE has been installed successfully!"
