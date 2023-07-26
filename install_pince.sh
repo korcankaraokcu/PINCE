@@ -141,7 +141,7 @@ set_install_vars() {
 		PKG_MGR="pacman"
 		PKG_NAMES="$PKG_NAMES_ARCH"
 		INSTALL_COMMAND="-S --needed"
-		LRELEASE_CMD="usr/lib/qt6/bin/lrelease"
+		LRELEASE_CMD="/usr/lib/qt6/bin/lrelease"
 		;;
 	*Fedora*)
 		PKG_MGR="dnf -y"
