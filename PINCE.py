@@ -306,11 +306,6 @@ def except_hook(exception_type, value, tb):
         if focused_widget:
             if exception_type == type_defs.GDBInitializeException:
                 QMessageBox.information(focused_widget, tr.ERROR, tr.GDB_INIT)
-            elif exception_type == type_defs.InferiorRunningException:
-                error_dialog = InputDialogForm(
-                    item_list=[(tr.PROCESS_RUNNING.format(Hotkeys.break_hotkey.get_active_key()),)],
-                    buttons=[QDialogButtonBox.StandardButton.Ok])
-                error_dialog.exec()
     traceback.print_exception(exception_type, value, tb)
 
 
@@ -555,7 +550,6 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.endGroup()
         self.apply_settings()
 
-    @GDB_Engine.execute_with_temporary_interruption
     def apply_after_init(self):
         global gdb_logging
         global ignored_signals
@@ -751,7 +745,6 @@ class MainForm(QMainWindow, MainWindow):
         except KeyError:
             pass
 
-    @GDB_Engine.execute_with_temporary_interruption
     def exec_track_watchpoint_widget(self, watchpoint_type):
         selected_row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if not selected_row:
@@ -963,10 +956,7 @@ class MainForm(QMainWindow, MainWindow):
             else:
                 address_expr_list.append(address_data)
             rows.append(row)
-        try:
-            address_list = [item.address for item in GDB_Engine.examine_expressions(address_expr_list)]
-        except type_defs.InferiorRunningException:
-            address_list = address_expr_list
+        address_list = [item.address for item in GDB_Engine.examine_expressions(address_expr_list)]
         for index, row in enumerate(rows):
             value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
             address = address_list[index]
@@ -1195,7 +1185,6 @@ class MainForm(QMainWindow, MainWindow):
             return len(self.lineEdit_Scan.text())
         return 0
 
-    @GDB_Engine.execute_with_temporary_interruption
     def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
         current_item = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL)
         length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
@@ -1565,11 +1554,8 @@ class MainForm(QMainWindow, MainWindow):
             address = GDB_Engine.read_pointer(address_expr)
             address_text = f'P->{hex(address)}' if address != None else address_expr.get_base_address()
         else:
-            try:
-                address = GDB_Engine.examine_expression(address_expr).address
-            except type_defs.InferiorRunningException:
-                address = address_expr
-            address_text = hex(address) if type(address) != str else address
+            address = GDB_Engine.examine_expression(address_expr).address
+            address_text = address
         value = ''
         if address:
             value = GDB_Engine.read_memory(address, value_type.value_index, value_type.length,
@@ -1578,7 +1564,7 @@ class MainForm(QMainWindow, MainWindow):
         assert isinstance(row, QTreeWidgetItem)
         row.setText(DESC_COL, description)
         row.setData(ADDR_COL, Qt.ItemDataRole.UserRole, address_expr)
-        row.setText(ADDR_COL, address_text or address_expr)
+        row.setText(ADDR_COL, address_text)
         row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, value_type)
         row.setText(TYPE_COL, value_type.text())
         row.setText(VALUE_COL, "" if value is None else str(value))
@@ -1810,11 +1796,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                 address_text = "??"
             self.lineEdit_address.setText(address_text)
         else:
-            address = self.lineEdit_address.text()
-            try:
-                address = GDB_Engine.examine_expression(address).address
-            except type_defs.InferiorRunningException:
-                pass
+            address = GDB_Engine.examine_expression(self.lineEdit_address.text()).address
         if not address:
             self.label_valueofaddress.setText("<font color=red>??</font>")
             return
@@ -2386,19 +2368,17 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.completer.setMaxVisibleItems(8)
         self.lineEdit.setCompleter(self.completer)
         self.quit_commands = ("q", "quit", "-gdb-exit")
+        self.continue_commands = ("c", "continue", "-exec-continue")
         self.input_history = [""]
         self.current_history_index = -1
         self.await_async_output_thread = AwaitAsyncOutput()
         self.await_async_output_thread.async_output_ready.connect(self.on_async_output)
         self.await_async_output_thread.start()
         self.pushButton_Send.clicked.connect(self.communicate)
-        self.pushButton_SendCtrl.clicked.connect(lambda: self.communicate(control=True))
         self.shortcut_send = QShortcut(QKeySequence("Return"), self)
         self.shortcut_send.activated.connect(self.communicate)
         self.shortcut_complete_command = QShortcut(QKeySequence("Tab"), self)
         self.shortcut_complete_command.activated.connect(self.complete_command)
-        self.shortcut_send_ctrl = QShortcut(QKeySequence("Ctrl+C"), self)
-        self.shortcut_send_ctrl.activated.connect(lambda: self.communicate(control=True))
         self.shortcut_multiline_mode = QShortcut(QKeySequence("Ctrl+Return"), self)
         self.shortcut_multiline_mode.activated.connect(self.enter_multiline_mode)
         self.lineEdit.textEdited.connect(self.finish_completion)
@@ -2408,17 +2388,14 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.lineEdit.keyPressEvent = self.lineEdit_key_press_event
         self.reset_console_text()
 
-    def communicate(self, control=False):
+    def communicate(self):
         self.current_history_index = -1
         self.input_history[-1] = ""
-        if control:
-            console_input = "/Ctrl+C"
-        else:
-            console_input = self.lineEdit.text()
-            last_input = self.input_history[-2] if len(self.input_history) > 1 else ""
-            if console_input != last_input and console_input != "":
-                self.input_history[-1] = console_input
-                self.input_history.append("")
+        console_input = self.lineEdit.text()
+        last_input = self.input_history[-2] if len(self.input_history) > 1 else ""
+        if console_input != last_input and console_input != "":
+            self.input_history[-1] = console_input
+            self.input_history.append("")
         if console_input.lower() == "/clear":
             self.lineEdit.clear()
             self.reset_console_text()
@@ -2426,18 +2403,13 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.lineEdit.clear()
         if console_input.strip().lower() in self.quit_commands:
             console_output = tr.QUIT_SESSION_CRASH
+        if console_input.strip().lower() in self.continue_commands:
+            console_output = tr.CONT_SESSION_CRASH
         else:
-            if not control:
-                if self.radioButton_CLI.isChecked():
-                    console_output = GDB_Engine.send_command(console_input, cli_output=True)
-                else:
-                    console_output = GDB_Engine.send_command(console_input)
-                if not console_output:
-                    if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-                        console_output = tr.INFERIOR_RUNNING
+            if self.radioButton_CLI.isChecked():
+                console_output = GDB_Engine.send_command(console_input, cli_output=True)
             else:
-                GDB_Engine.interrupt_inferior()
-                console_output = ""
+                console_output = GDB_Engine.send_command(console_input)
         self.textBrowser.append("-->" + console_input)
         if console_output:
             self.textBrowser.append(console_output)
@@ -2493,8 +2465,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.completion_model.setStringList([])
 
     def complete_command(self):
-        if GDB_Engine.gdb_initialized and GDB_Engine.currentpid != -1 and self.lineEdit.text() and \
-                GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+        if GDB_Engine.gdb_initialized and GDB_Engine.currentpid != -1 and self.lineEdit.text():
             self.completion_model.setStringList(GDB_Engine.complete_command(self.lineEdit.text()))
             self.completer.complete()
         else:
@@ -2665,7 +2636,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.itemSelectionChanged.connect(self.tableWidget_Disassemble_item_selection_changed)
 
     def initialize_hex_view(self):
-        self.cached_breakpoint_info = []
         self.hex_view_last_selected_address_int = 0
         self.hex_view_current_region = type_defs.tuple_region_info(0, 0, None, None)
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
@@ -2763,7 +2733,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         GDB_Engine.nop_instruction(current_address_int, len(array_of_bytes.split()))
         self.refresh_disassemble_view()
 
-    @GDB_Engine.execute_with_temporary_interruption
     def toggle_breakpoint(self):
         if GDB_Engine.currentpid == -1:
             return
@@ -2902,8 +2871,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if self.bHexViewScrolling:
             return
         self.bHexViewScrolling = True
-        # if GDB_Engine.inferior_status != type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
-        #    return
         maximum = self.verticalScrollBar_HexView.maximum()
         minimum = self.verticalScrollBar_HexView.minimum()
         midst = (maximum + minimum) / 2
@@ -2930,8 +2897,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if self.bDisassemblyScrolling:
             return
         self.bDisassemblyScrolling = True
-        # if GDB_Engine.inferior_status != type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
-        #    return
         maximum = self.verticalScrollBar_Disassemble.maximum()
         minimum = self.verticalScrollBar_Disassemble.minimum()
         midst = (maximum + minimum) / 2
@@ -2991,15 +2956,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.setMinimumWidth(tableWidget_HexView_column_size)
         self.tableWidget_HexView_Address.setColumnWidth(0, tableWidget_HexView_column_size)
         data_array = GDB_Engine.hex_dump(int_address, offset)
-
-        # TODO: Use GDB_Engine.breakpoint_on_hit_dict instead of caching breakpoints if possible
-        # Currently, breakpoint_on_hit_dict is not updated if the user manually adds a breakpoint via gdb
-        # A possible fix would be to hook the breakpoint commands but it needs to be tested thoroughly
-        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-            breakpoint_info = self.cached_breakpoint_info
-        else:
-            breakpoint_info = GDB_Engine.get_breakpoint_info()
-            self.cached_breakpoint_info = breakpoint_info
+        breakpoint_info = GDB_Engine.get_breakpoint_info()
         self.hex_model.refresh(int_address, offset, data_array, breakpoint_info)
         self.ascii_model.refresh(int_address, offset, data_array, breakpoint_info)
         for index in range(offset):
@@ -3043,7 +3000,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             QMessageBox.information(app.focusWidget(), tr.ERROR, tr.EXPRESSION_ACCESS_ERROR.format(expression))
             return False
         program_counter = GDB_Engine.examine_expression("$pc").address
-        program_counter_int = int(program_counter, 16)
+        program_counter_int = int(program_counter, 16) if program_counter else None
         row_color = {}
         breakpoint_info = GDB_Engine.get_breakpoint_info()
 
@@ -4301,6 +4258,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         instances.append(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
+        self.update_timer = QTimer()
         if watchpoint_type == type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
             string = tr.OPCODE_WRITING_TO.format(address)
         elif watchpoint_type == type_defs.WATCHPOINT_TYPE.READ_ONLY:
@@ -4323,7 +4281,6 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.pushButton_Refresh.clicked.connect(self.update_list)
         self.tableWidget_Opcodes.itemDoubleClicked.connect(self.tableWidget_Opcodes_item_double_clicked)
         self.tableWidget_Opcodes.selectionModel().currentChanged.connect(self.tableWidget_Opcodes_current_changed)
-        self.update_timer = QTimer()
         self.update_timer.setInterval(100)
         self.update_timer.timeout.connect(self.update_list)
         self.update_timer.start()
@@ -4368,17 +4325,18 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
     def pushButton_Stop_clicked(self):
         if self.stopped:
             self.close()
-        if not GDB_Engine.execute_func_temporary_interruption(GDB_Engine.delete_breakpoint, self.address):
+            return
+        if not GDB_Engine.delete_breakpoint(self.address):
             QMessageBox.information(self, tr.ERROR, tr.DELETE_WATCHPOINT_FAILED.format(self.address))
             return
         self.stopped = True
         self.pushButton_Stop.setText(tr.CLOSE)
 
-    @GDB_Engine.execute_with_temporary_interruption
     def closeEvent(self, QCloseEvent):
         global instances
         self.update_timer.stop()
-        GDB_Engine.delete_breakpoint(self.address)
+        if not self.stopped:
+            GDB_Engine.delete_breakpoint(self.address)
         self.deleteLater()
         instances.remove(self)
 
@@ -4397,10 +4355,6 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         if not breakpoint:
             QMessageBox.information(self, tr.ERROR, tr.TRACK_BREAKPOINT_FAILED.format(address))
             return
-        # This part will be deleted after non-pause patch, not translating
-        self.label_Info.setText("Pause the process to refresh 'Value' part of the table(" +
-                                Hotkeys.pause_hotkey.get_active_key() + " or " +
-                                Hotkeys.break_hotkey.get_active_key() + ")")
         self.address = address
         self.breakpoint = breakpoint
         self.info = {}
@@ -4461,6 +4415,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
     def pushButton_Stop_clicked(self):
         if self.stopped:
             self.close()
+            return
         if not GDB_Engine.delete_breakpoint(self.address):
             QMessageBox.information(self, tr.ERROR, tr.DELETE_BREAKPOINT_FAILED.format(self.address))
             return
@@ -4469,17 +4424,13 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.parent().refresh_disassemble_view()
 
     def closeEvent(self, QCloseEvent):
-        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-            QCloseEvent.ignore()
-            raise type_defs.InferiorRunningException
-        try:
-            self.update_timer.stop()
-        except AttributeError:
-            pass
         global instances
-        instances.remove(self)
-        GDB_Engine.execute_func_temporary_interruption(GDB_Engine.delete_breakpoint, self.address)
+        self.update_timer.stop()
+        if not self.stopped:
+            GDB_Engine.delete_breakpoint(self.address)
         self.parent().refresh_disassemble_view()
+        self.deleteLater()
+        instances.remove(self)
 
 
 class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
@@ -4566,10 +4517,7 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
                     != type_defs.TRACE_STATUS.STATUS_FINISHED:
                 sleep(0.1)
                 app.processEvents()
-        try:
-            GDB_Engine.delete_breakpoint(self.address)
-        except type_defs.InferiorRunningException:
-            pass
+        GDB_Engine.delete_breakpoint(self.address)
         self.widget_closed.emit()
 
 
@@ -4715,8 +4663,6 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.pushButton_Help.clicked.connect(self.pushButton_Help_clicked)
 
     def refresh_table(self):
-        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-            raise type_defs.InferiorRunningException
         input_text = self.lineEdit_SearchInput.text()
         case_sensitive = self.checkBox_CaseSensitive.isChecked()
         self.loading_dialog = LoadingDialogForm(self)
@@ -5268,8 +5214,6 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         self.tableWidget_Opcodes.contextMenuEvent = self.tableWidget_Opcodes_context_menu_event
 
     def refresh_table(self):
-        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-            raise type_defs.InferiorRunningException
         start_address = self.lineEdit_Start.text()
         end_address = self.lineEdit_End.text()
         regex = self.lineEdit_Regex.text()

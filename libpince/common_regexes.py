@@ -15,14 +15,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from re import compile, VERBOSE
+from re import compile, VERBOSE, MULTILINE
 
 # The comments near regular expressions shows the expected gdb output, hope it helps to the future developers
 
 # --------------------------------------------GDB_Engine----------------------------------------------------------------
 
-# stopped-threads="all"  # *running,thread-id="all"
-gdb_state_observe = compile(r"(stopped)-threads=\"all\"|\*(running),thread-id=\"all\"")
+gdb_state_observe = compile(r"^\*(stopped.+)|^\*(running)", MULTILINE)
 gdb_error = compile(r"\^error")
 hex_plain = compile(r"[0-9a-fA-F]+")
 hex_number = compile(r"0x" + hex_plain.pattern)

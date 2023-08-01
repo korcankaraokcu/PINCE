@@ -19,9 +19,6 @@ class TranslationConstants(QObject):
     UNCHANGED_SCAN_HOTKEY = QT_TR_NOOP("Next Scan - Unchanged")
     ERROR = QT_TR_NOOP("Error")
     GDB_INIT = QT_TR_NOOP("GDB isn't initialized yet")
-    PROCESS_RUNNING = QT_TR_NOOP("Process is running\n"
-                                 "Press {} to stop process\n"
-                                 "\nGo to Settings->General to disable this dialog")
     GDB_INIT_ERROR = QT_TR_NOOP("Unable to initialize GDB\n"
                                 "You might want to reinstall GDB or use the system GDB\n"
                                 "To change the current GDB path, check Settings->Debug")
@@ -106,15 +103,14 @@ class TranslationConstants(QObject):
     SEPARATE_PROCESSES_WITH = QT_TR_NOOP("Separate processes with {}")
     SELECT_GDB_BINARY = QT_TR_NOOP("Select the gdb binary")
     QUIT_SESSION_CRASH = QT_TR_NOOP("Quitting current session will crash PINCE")
-    INFERIOR_RUNNING = QT_TR_NOOP("Inferior is running")
+    CONT_SESSION_CRASH = QT_TR_NOOP("Use global hotkeys or the commands 'interrupt' and 'c&' to stop/run the inferior")
     GDB_CONSOLE_INIT = QT_TR_NOOP(
         "Hotkeys:\n"
-        "----------------------------\n"
-        "Send=Enter                 |\n"
-        "Send ctrl+c=Ctrl+C         |\n"
-        "Multi-line mode=Ctrl+Enter |\n"
-        "Complete command=Tab       |\n"
-        "----------------------------\n"
+        "-----------------------------\n"
+        "Send: Enter                 |\n"
+        "Multi-line mode: Ctrl+Enter |\n"
+        "Complete command: Tab       |\n"
+        "-----------------------------\n"
         "Commands:\n"
         "----------------------------------------------------------\n"
         "/clear: Clear the console                                |\n"
@@ -128,8 +124,8 @@ class TranslationConstants(QObject):
         "# CLI output mode doesn't work very well with .so extensions, use MI output mode instead          |\n"
         "---------------------------------------------------------------------------------------------------\n"
         "You can change the output mode from bottom right\n"
-        "Note: Changing output mode only affects commands sent. Any other output coming from "
-        "external sources(e.g async output) will be shown in MI format")
+        "Changing output mode only affects commands sent. Any other output coming from external sources"
+        "(e.g async output) will be shown in MI format")
     BREAK = QT_TR_NOOP("Break[{}]")
     RUN = QT_TR_NOOP("Run[{}]")
     TOGGLE_ATTACH = QT_TR_NOOP("Toggle Attach[{}]")

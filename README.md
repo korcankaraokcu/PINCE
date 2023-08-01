@@ -26,13 +26,13 @@ Pre-release screenshots:
 
 # Features  
 - **Memory searching:** PINCE uses a specialized fork of [libscanmem](https://github.com/brkzlr/scanmem-PINCE) to search the memory efficiently
+- **Background Execution:** PINCE uses background execution by default, allowing users to run GDB commands while process is running
 - **Variable Inspection&Modification**
   * **CheatEngine-like value type support:** Currently supports all types of CE and scanmem along with extended strings(utf-8, utf-16, utf-32)
   * **Symbol Recognition:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/About-GDB-Expressions)
   * **Automatic Variable Allocation:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/About-GDB-Expressions)
   * **Dynamic Address Table:** Supports drag&drop, recursive copy&pasting&inserting and many more
   * **Smart casting:** PINCE lets you modify multiple different-type values together as long as the input is parsable. All parsing/memory errors are directed to the terminal
-  * **Continuous Address Table Update:** You can adjust update timer or cancel updating by modifying settings
   * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables
 - **Memory View**
   * **Assembler:** PINCE uses keystone engine to assemble code on the fly
@@ -96,7 +96,6 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - - Extend string types with LE and BE variants of UTF-16 and UTF-32
 - - Change comboBox_ValueType string order to be ... String_UTF-8 String_Others
 - - Implement a custom combobox class for comboBox_ValueType and create a context menu for String_Others item
-- Having to stop the process to resolve symbols sucks, we already resolve base addresses of libs by ourselves, try to replace this gdb functionality with something else, like parsing from the memory
 - Implement "Investigate Registers" button to gather information about the addresses registers point to(independent from other steps)
 - Implement selectionChanged signal of lineEdit_HexView
 - Implement multi selection for HexView
@@ -105,7 +104,7 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 - Extend search_referenced_strings with relative search
 - Consider adding type guessing for the StackView(independent from other steps)
 - Move GUI classes of PINCE.py to their own files
-- Use gdb python API breakpoints instead of breakpoint commands for optimization, also find a way to eliminate output coming from stepping commands such as ```stepi``` or ```nexti```(independent from other steps)
+- Use gdb python API breakpoints instead of breakpoint commands for optimization, also find a way to eliminate output coming from stepping commands such as ```stepi&``` or ```nexti&```(independent from other steps)
 - Implement a psuedo-terminal for the inferior like edb does(independent from other steps)
 - Implement libpince engine
 - Implement auto-ESP&aimbot (depends on libpince engine)

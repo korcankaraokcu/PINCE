@@ -392,11 +392,6 @@ tuple_examine_expression = collections.namedtuple("tuple_examine_expression", "a
 gdb_output_mode = collections.namedtuple("gdb_output_mode", "async_output command_output command_info")
 
 
-class InferiorRunningException(Exception):
-    def __init__(self, message="Inferior is running"):
-        super(InferiorRunningException, self).__init__(message)
-
-
 class GDBInitializeException(Exception):
     def __init__(self, message="GDB not initialized"):
         super(GDBInitializeException, self).__init__(message)
