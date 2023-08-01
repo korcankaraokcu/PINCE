@@ -21,11 +21,13 @@ if [ "$(id -u)" = "0" ]; then
 	exit 1
 fi
 
-if [ ! -d ".venv/PINCE" ]; then
-	echo "Please run \"sh install_pince.sh\" first!"
-	exit 1
+if [[ -z $USE_SYSTEM_PYTHON ]]; then
+	if [ ! -d ".venv/PINCE" ]; then
+		echo "Please run \"sh install_pince.sh\" first!"
+		exit 1
+	fi
+	. .venv/PINCE/bin/activate
 fi
-. .venv/PINCE/bin/activate
 
 # Preserve env vars to keep settings like theme preferences.
 # Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
