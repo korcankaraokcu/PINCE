@@ -382,7 +382,7 @@ class TraceInstructions(gdb.Command):
         status_info = (type_defs.TRACE_STATUS.STATUS_FINISHED, "")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         if not stop_after_trace:
-            gdb.execute("c")
+            gdb.execute("c&")
 
 
 class InitSoFile(gdb.Command):

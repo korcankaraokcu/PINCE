@@ -51,8 +51,8 @@ stop_reason = int
 
 #:tag:GDBInformation
 #:doc:
-# A dictionary. Holds breakpoint addresses and what to do on hit
-# Format: {address1:on_hit1, address2:on_hit2, ...}
+# A dictionary. Holds breakpoint numbers and what to do on hit
+# Format: {bp_num1:on_hit1, bp_num2:on_hit2, ...}
 breakpoint_on_hit_dict = {}
 
 #:tag:GDBInformation
@@ -200,8 +200,6 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             time0 = time()
         if not gdb_initialized:
             raise type_defs.GDBInitializeException
-        if inferior_status is type_defs.INFERIOR_STATUS.INFERIOR_RUNNING and not control:
-            raise type_defs.InferiorRunningException
         gdb_output = ""
         if send_with_file:
             send_file = SysUtils.get_ipc_from_pince_file(currentpid)
@@ -279,45 +277,40 @@ def state_observe_thread():
     Should be called by creating a thread. Usually called in initialization process by attach function
     """
 
-    def check_inferior_status(cache=None):
-        if cache:
-            data = cache
-        else:
-            data = child.before
-        matches = common_regexes.gdb_state_observe.findall(data)
+    def check_inferior_status():
+        matches = common_regexes.gdb_state_observe.findall(child.before)
         if len(matches) > 0:
             global stop_reason
             global inferior_status
-
-            if matches[-1][0]:  # stopped
+            old_status = inferior_status
+            stop_info = matches[-1][0]
+            if stop_info:
+                bp_num = common_regexes.breakpoint_number.search(stop_info)
+                if bp_num and breakpoint_on_hit_dict[bp_num.group(1)] != type_defs.BREAKPOINT_ON_HIT.BREAK:
+                    return
                 stop_reason = type_defs.STOP_REASON.DEBUG
                 inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
             else:
                 inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
-            with status_changed_condition:
-                status_changed_condition.notify_all()
+            if old_status != inferior_status:
+                with status_changed_condition:
+                    status_changed_condition.notify_all()
 
     global child
     global gdb_output
-    stored_output = ""
     try:
         while True:
             child.expect_exact("\r\n")  # A new line for TTY devices
             child.before = child.before.strip()
             if not child.before:
                 continue
-            stored_output += "\n" + child.before
-            if child.before == "(gdb)":
-                check_inferior_status(stored_output)
-                stored_output = ""
-                continue
+            check_inferior_status()
             command_file = re.escape(SysUtils.get_gdb_command_file(currentpid))
             if common_regexes.gdb_command_source(command_file).search(child.before):
                 child.expect_exact("(gdb)")
                 child.before = child.before.strip()
                 check_inferior_status()
                 gdb_output = child.before
-                stored_output = ""
                 with gdb_waiting_for_prompt_condition:
                     gdb_waiting_for_prompt_condition.notify_all()
                 if gdb_output_mode.command_output:
@@ -328,15 +321,6 @@ def state_observe_thread():
                 gdb_async_output.broadcast_message(child.before)
     except OSError:
         print("Exiting state_observe_thread")
-
-
-def execute_with_temporary_interruption(func):
-    """Decorator version of execute_func_temporary_interruption"""
-
-    def wrapper(*args, **kwargs):
-        execute_func_temporary_interruption(func, *args, **kwargs)
-
-    return wrapper
 
 
 #:tag:GDBCommunication
@@ -357,12 +341,10 @@ def execute_func_temporary_interruption(func, *args, **kwargs):
     old_status = inferior_status
     if old_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
         interrupt_inferior(type_defs.STOP_REASON.PAUSE)
+        wait_for_stop()
     result = func(*args, **kwargs)
     if old_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-        try:
-            continue_inferior()
-        except type_defs.InferiorRunningException:
-            pass
+        continue_inferior()
     return result
 
 
@@ -410,7 +392,7 @@ def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
     if currentpid == -1:
         return
     global stop_reason
-    send_command("c", control=True)
+    send_command("interrupt")
     wait_for_stop()
     stop_reason = interrupt_reason
 
@@ -420,25 +402,25 @@ def continue_inferior():
     """Continue the inferior"""
     if currentpid == -1:
         return
-    send_command("c")
+    send_command("c&")
 
 
 #:tag:Debug
 def step_instruction():
     """Step one assembly instruction"""
-    send_command("stepi")
+    send_command("stepi&")
 
 
 #:tag:Debug
 def step_over_instruction():
     """Step over one assembly instruction"""
-    send_command("nexti")
+    send_command("nexti&")
 
 
 #:tag:Debug
 def execute_till_return():
     """Continues inferior till current stack frame returns"""
-    send_command("finish")
+    send_command("finish&")
 
 
 #:tag:Debug
@@ -675,8 +657,6 @@ def toggle_attach():
     """
     if currentpid == -1:
         return
-    if inferior_status==type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-        interrupt_inferior(type_defs.STOP_REASON.PAUSE)
     if is_attached():
         if common_regexes.gdb_error.search(send_command("phase-out")):
             return
@@ -756,18 +736,7 @@ def read_pointer(pointer_type):
         value_index = type_defs.VALUE_INDEX.INDEX_INT32
     else:
         value_index = type_defs.VALUE_INDEX.INDEX_INT64
-
-    try:
-        start_address = examine_expression(pointer_type.base_address).address
-    except type_defs.InferiorRunningException:
-        if type(pointer_type.base_address) == str:
-            try:
-                start_address = int(pointer_type.base_address, 16)
-            except ValueError:
-                start_address = 0
-        else:
-            start_address = pointer_type.base_address
-
+    start_address = examine_expression(pointer_type.base_address).address
     try:
         with memory_handle() as mem_handle:
             final_address = deref_address = read_memory(start_address, value_index, mem_handle=mem_handle)
@@ -784,7 +753,6 @@ def read_pointer(pointer_type):
                     final_address = offset_address
     except OSError:
         final_address = start_address
-
     return final_address
 
 
@@ -1400,13 +1368,8 @@ def get_breakpoint_info():
             address = SysUtils.extract_address(what)
             if not address:
                 address = examine_expression(what).address
-        try:
-            int_address = int(address, 16)
-        except ValueError:
-            on_hit = type_defs.on_hit_to_text_dict.get(type_defs.BREAKPOINT_ON_HIT.BREAK)
-        else:
-            on_hit_dict_value = breakpoint_on_hit_dict.get(int_address, type_defs.BREAKPOINT_ON_HIT.BREAK)
-            on_hit = type_defs.on_hit_to_text_dict.get(on_hit_dict_value, "Unknown")
+        on_hit_dict_value = breakpoint_on_hit_dict.get(number, type_defs.BREAKPOINT_ON_HIT.BREAK)
+        on_hit = type_defs.on_hit_to_text_dict.get(on_hit_dict_value, "Unknown")
         if breakpoint_type.find("breakpoint") >= 0:
             size = 1
         else:
@@ -1499,8 +1462,9 @@ def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWAR
         output = send_command("break *" + str_address)
     if common_regexes.breakpoint_created.search(output):
         global breakpoint_on_hit_dict
-        breakpoint_on_hit_dict[int(str_address, 16)] = on_hit
-        return common_regexes.breakpoint_number.search(output).group(1)
+        number = common_regexes.breakpoint_number.search(output).group(1)
+        breakpoint_on_hit_dict[number] = on_hit
+        return number
     else:
         return
 
@@ -1549,7 +1513,8 @@ def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TY
             breakpoint_length = max_length
         else:
             breakpoint_length = remaining_length
-        output = send_command(watch_command + " * (char[" + str(breakpoint_length) + "] *) " + hex(str_address_int))
+        cmd = f"{watch_command} * (char[{breakpoint_length}] *) {hex(str_address_int)}"
+        output = execute_func_temporary_interruption(send_command, cmd)
         if common_regexes.breakpoint_created.search(output):
             breakpoint_addresses.append([str_address_int, breakpoint_length])
         else:
@@ -1558,7 +1523,7 @@ def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TY
         breakpoint_number = common_regexes.breakpoint_number.search(output).group(1)
         breakpoints_set.append(breakpoint_number)
         global breakpoint_on_hit_dict
-        breakpoint_on_hit_dict[str_address_int] = on_hit
+        breakpoint_on_hit_dict[breakpoint_number] = on_hit
         remaining_length -= max_length
         str_address_int += max_length
     global chained_breakpoints
@@ -1668,10 +1633,10 @@ def delete_breakpoint(expression):
             breakpoint_number = found_breakpoint.number
         global breakpoint_on_hit_dict
         try:
-            del breakpoint_on_hit_dict[breakpoint[0]]
+            del breakpoint_on_hit_dict[breakpoint_number]
         except KeyError:
             pass
-        send_command("delete " + str(breakpoint_number))
+        send_command("delete " + breakpoint_number)
     return True
 
 
@@ -1695,7 +1660,7 @@ def track_watchpoint(expression, length, watchpoint_type):
     for breakpoint in breakpoints:
         send_command("commands " + breakpoint
                      + "\npince-get-track-watchpoint-info " + str(breakpoints)
-                     + "\nc"
+                     + "\nc&"
                      + "\nend")
     return breakpoints
 
@@ -1746,7 +1711,7 @@ def track_breakpoint(expression, register_expressions):
         return
     send_command("commands " + breakpoint
                  + "\npince-get-track-breakpoint-info " + register_expressions.replace(" ", "") + "," + breakpoint
-                 + "\nc"
+                 + "\nc&"
                  + "\nend")
     return breakpoint
 
