@@ -5449,9 +5449,6 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
             self.label_ScanInfo.setText(tr.SCAN_CANCELED)
             self.init_pre_scan_gui()
         else:
-            if not GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
-                QMessageBox.information(self, tr.ERROR, tr.STOP_PROCESS)
-                return
             selected_rows = self.tableWidget_ExecutableMemoryRegions.selectionModel().selectedRows()
             if not selected_rows:
                 QMessageBox.information(self, tr.ERROR, tr.SELECT_ONE_REGION)

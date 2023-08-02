@@ -2342,107 +2342,102 @@ Use the char \ to escape special chars such as [
     </message>
     <message>
       <location filename="../../tr/tr.py" line="290" />
-      <source>Please stop the process first</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="291" />
       <source>Select at least one region</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="292" />
+      <location filename="../../tr/tr.py" line="291" />
       <source>You need to dissect code first
 Proceed?</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="294" />
+      <location filename="../../tr/tr.py" line="293" />
       <source>Waiting for breakpoint to trigger</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="295" />
+      <location filename="../../tr/tr.py" line="294" />
       <source>Tracing has been canceled</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="296" />
+      <location filename="../../tr/tr.py" line="295" />
       <source>Tracing has been completed</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="297" />
+      <location filename="../../tr/tr.py" line="296" />
       <source>Exact</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="298" />
+      <location filename="../../tr/tr.py" line="297" />
       <source>Increased</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="299" />
+      <location filename="../../tr/tr.py" line="298" />
       <source>Increased by</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="300" />
+      <location filename="../../tr/tr.py" line="299" />
       <source>Decreased</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="301" />
+      <location filename="../../tr/tr.py" line="300" />
       <source>Decreased by</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="302" />
+      <location filename="../../tr/tr.py" line="301" />
       <source>Less Than</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="303" />
+      <location filename="../../tr/tr.py" line="302" />
       <source>More Than</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="304" />
+      <location filename="../../tr/tr.py" line="303" />
       <source>Between</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="305" />
+      <location filename="../../tr/tr.py" line="304" />
       <source>Changed</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="306" />
+      <location filename="../../tr/tr.py" line="305" />
       <source>Unchanged</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="307" />
+      <location filename="../../tr/tr.py" line="306" />
       <source>Unknown Value</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="308" />
+      <location filename="../../tr/tr.py" line="307" />
       <source>Basic</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="309" />
+      <location filename="../../tr/tr.py" line="308" />
       <source>Normal</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="310" />
+      <location filename="../../tr/tr.py" line="309" />
       <source>Read+Write</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="311" />
+      <location filename="../../tr/tr.py" line="310" />
       <source>Full</source>
       <translation type="unfinished" />
     </message>
