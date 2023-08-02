@@ -16,20 +16,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
 
-if [ "$(id -u)" = "0" ]; then
-	echo "Please do not run this script as root!"
-	exit 1
-fi
-
-if [[ -z $USE_SYSTEM_PYTHON ]]; then
+function check_apply_venv {
 	if [ ! -d ".venv/PINCE" ]; then
 		echo "Please run \"sh install_pince.sh\" first!"
 		exit 1
 	fi
 	. .venv/PINCE/bin/activate
+}
+
+function start {
+	# Preserve env vars to keep settings like theme preferences.
+	# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
+	# so we need to force PATH preservation with venv activated user's PATH.
+	sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 python3 PINCE.py
+}
+
+if [ "$(id -u)" = "0" ]; then
+	echo "Please do not run this script as root!"
+	exit 1
 fi
 
-# Preserve env vars to keep settings like theme preferences.
-# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
-# so we need to force PATH preservation with venv activated user's PATH.
-sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 python3 PINCE.py
+[[ -z $USE_SYSTEM_PYTHON ]] && check_apply_venv
+
+# If exit code not 0, apply venv and try again
+start || (check_apply_venv && start)
