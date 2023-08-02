@@ -287,7 +287,6 @@ class TranslationConstants(QObject):
     CANCEL = QT_TR_NOOP("Cancel")
     SCAN_FINISHED = QT_TR_NOOP("Scan finished")
     SCAN_CANCELED = QT_TR_NOOP("Scan was canceled")
-    STOP_PROCESS = QT_TR_NOOP("Please stop the process first")
     SELECT_ONE_REGION = QT_TR_NOOP("Select at least one region")
     DISSECT_CODE = QT_TR_NOOP("You need to dissect code first\n"
                               "Proceed?")
