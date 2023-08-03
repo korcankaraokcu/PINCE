@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
 
 # this file cannot (or any file) be named `install.sh` since libtoolize(automake) will not work properly if it does
-# it will create the necessary files in PINCEs directory instead of scanmems, which will result in having to run `sh autogen.sh`
+# it will create the necessary files in PINCEs directory instead of libscanmem's, which will result in having to run `sh autogen.sh`
 # twice, see this link https://github.com/protocolbuffers/protobuf/issues/149#issuecomment-473092810
 
 if [ "$(id -u)" = "0" ]; then
@@ -47,8 +47,8 @@ exit_on_error() {
     fi
 }
 
-# assumes you're in scanmem directory
-compile_scanmem() {
+# assumes you're in libscanmem directory
+compile_libscanmem() {
     sh autogen.sh || return 1
     ./configure --prefix="$(pwd)" || return 1
     make -j"$NUM_MAKE_JOBS" || return 1
@@ -56,8 +56,8 @@ compile_scanmem() {
     return 0
 }
 
-install_scanmem() {
-    echo "Downloading scanmem"
+install_libscanmem() {
+    echo "Downloading libscanmem"
     git submodule update --init --recursive || return 1
 
     if [ ! -d "libpince/libscanmem" ]; then
@@ -65,20 +65,20 @@ install_scanmem() {
         chown -R "${CURRENT_USER}":"${CURRENT_USER}" libpince/libscanmem
     fi
     (
-        echo "Entering scanmem"
-        cd scanmem || return 1
+        echo "Entering libscanmem directory"
+        cd libscanmem-PINCE || return 1
         if [ -d "./.libs" ]; then
-            echo "Recompile scanmem? [y/n]"
+            echo "Recompile libscanmem? [y/n]"
             read -r answer
             if echo "$answer" | grep -iq "^[Yy]"; then
-                compile_scanmem || return 1
+                compile_libscanmem || return 1
             fi
         else
-            compile_scanmem || return 1
+            compile_libscanmem || return 1
         fi
         cp --preserve .libs/libscanmem.so ../libpince/libscanmem/
         cp --preserve wrappers/scanmem.py ../libpince/libscanmem
-        echo "Exiting scanmem"
+        echo "Exiting libscanmem directory"
     ) || return 1
     return 0
 }
@@ -198,7 +198,7 @@ fi
 # shellcheck disable=SC2086
 pip3 install ${PKG_NAMES_PIP} || exit_on_error
 
-install_scanmem || exit_on_error
+install_libscanmem || exit_on_error
 
 compile_translations || exit_on_error
 
