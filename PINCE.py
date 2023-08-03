@@ -435,7 +435,6 @@ class MainForm(QMainWindow, MainWindow):
         # Fails if you for example install it to some place like bin
         libscanmem_path = os.path.join(os.getcwd(), "libpince", "libscanmem", "libscanmem.so")
         self.backend = Scanmem(libscanmem_path)
-        self.backend.send_command("option noptrace 1")
         self.memory_view_window = MemoryViewWindowForm(self)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
