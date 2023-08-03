@@ -51,7 +51,7 @@ exit_on_error() {
 compile_scanmem() {
     sh autogen.sh || return 1
     ./configure --prefix="$(pwd)" || return 1
-    make -j"$NUM_MAKE_JOBS" libscanmem.la || return 1
+    make -j"$NUM_MAKE_JOBS" || return 1
     chown -R "${CURRENT_USER}":"${CURRENT_USER}" . # give permissions for normal user to change file
     return 0
 }
@@ -118,11 +118,11 @@ ask_pkg_mgr() {
 }
 
 # About xcb packages -> https://github.com/cdgriffith/FastFlix/wiki/Common-questions-and-problems
-PKG_NAMES_ALL="python3-pip gdb libtool intltool"
-PKG_NAMES_DEBIAN="$PKG_NAMES_ALL libreadline-dev python3-dev python3-venv pkg-config qt6-l10n-tools libcairo2-dev libgirepository1.0-dev libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev libxcb-cursor0"
-PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc readline-devel python3-devel qt6-tools-linguist typelib-1_0-Gtk-3_0 cairo-devel gobject-introspection-devel make"
-PKG_NAMES_FEDORA="$PKG_NAMES_ALL readline-devel python3-devel qt6-linguist redhat-lsb cairo-devel gobject-introspection-devel cairo-gobject-devel"
-PKG_NAMES_ARCH="python-pip qt6-tools readline intltool gdb lsb-release" # arch defaults to py3 nowadays
+PKG_NAMES_ALL="python3-pip gdb libtool"
+PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-dev python3-venv pkg-config qt6-l10n-tools libcairo2-dev libgirepository1.0-dev libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev libxcb-cursor0"
+PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc python3-devel qt6-tools-linguist typelib-1_0-Gtk-3_0 cairo-devel gobject-introspection-devel make"
+PKG_NAMES_FEDORA="$PKG_NAMES_ALL python3-devel qt6-linguist redhat-lsb cairo-devel gobject-introspection-devel cairo-gobject-devel"
+PKG_NAMES_ARCH="python-pip qt6-tools gdb lsb-release" # arch defaults to py3 nowadays
 PKG_NAMES_PIP="pyqt6 pexpect distorm3 keystone-engine pygdbmi keyboard pygobject"
 
 INSTALL_COMMAND="install"
