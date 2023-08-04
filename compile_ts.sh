@@ -10,6 +10,7 @@ if [ -e "$file_supportlocale" ]; then
 			# "invalid translation file: no element found: line 1, column 0"
 			[ -s "$ts" ] || rm "$ts"
 			pylupdate6 GUI/*.ui tr/tr.py --no-obsolete --ts "$ts"
+			python3 fix_ts.py "$ts"
 		else
 			list_invalidts="$list_invalidts $ts"
 		fi
