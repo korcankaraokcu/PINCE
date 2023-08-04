@@ -21,11 +21,10 @@ if [ "$(id -u)" = "0" ]; then
 	exit 1
 fi
 
-if [[ -z $USE_SYSTEM_PYTHON ]]; then
-	if [ ! -d ".venv/PINCE" ]; then
-		echo "Please run \"sh install_pince.sh\" first!"
-		exit 1
-	fi
+if [ ! -e '.installed' ]; then
+	echo "Please run \"sh install_pince.sh\" first!"
+	exit 1
+elif [ -z "$USE_SYSTEM_PYTHON" ]; then
 	. .venv/PINCE/bin/activate
 fi
 

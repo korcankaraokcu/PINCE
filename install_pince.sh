@@ -202,6 +202,8 @@ install_scanmem || exit_on_error
 
 compile_translations || exit_on_error
 
+rm -rf .installed && touch .installed
+
 echo
 echo "PINCE has been installed successfully!"
 echo "Now, just run 'sh PINCE.sh' from terminal"
