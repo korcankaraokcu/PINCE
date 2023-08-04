@@ -104,6 +104,10 @@ class TranslationConstants(QObject):
     SELECT_GDB_BINARY = QT_TR_NOOP("Select the gdb binary")
     QUIT_SESSION_CRASH = QT_TR_NOOP("Quitting current session will crash PINCE")
     CONT_SESSION_CRASH = QT_TR_NOOP("Use global hotkeys or the commands 'interrupt' and 'c&' to stop/run the inferior")
+
+    # For some languages, it might be hard to keep the pipe characters balanced
+    # You are free to modify pipes and dashes as you like when translating
+    # Check Chinese translation for an example
     GDB_CONSOLE_INIT = QT_TR_NOOP(
         "Hotkeys:\n"
         "-----------------------------\n"
