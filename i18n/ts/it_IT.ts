@@ -1241,407 +1241,407 @@ Patterns at former positions have higher priority if regex is off</source>
   <context>
     <name>TranslationConstants</name>
     <message>
-      <location filename="../../tr/tr.py" line="11" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Pause the process</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="12" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Break the process</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="13" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Continue the process</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="14" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Toggle attach/detach</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="15" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Next Scan - Exact</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="16" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Next Scan - Increased</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="17" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Next Scan - Decreased</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="18" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Next Scan - Changed</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="19" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Next Scan - Unchanged</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="20" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Error</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="21" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>GDB isn't initialized yet</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="22" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Unable to initialize GDB
 You might want to reinstall GDB or use the system GDB
 To change the current GDB path, check Settings-&gt;Debug</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="25" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Edit</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="26" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Show as hexadecimal</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="27" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Show as decimal</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="28" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Show as unsigned</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="29" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Show as signed</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="30" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Toggle selected records</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="31" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Freeze</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="32" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Default</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="33" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Incremental</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="34" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Decremental</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="35" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Browse this memory region</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="36" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Disassemble this address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="37" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Cut selected records</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="38" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy selected records</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="39" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Cut selected records (recursive)</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="40" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy selected records (recursive)</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="41" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Paste selected records before</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="42" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Paste selected records after</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="43" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Paste selected records inside</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="44" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Delete selected records</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="45" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Find out what writes to this address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="46" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Find out what reads this address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="47" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Find out what accesses this address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="48" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Invalid clipboard content</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="49" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>New Scan</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="50" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Match count: {} ({} shown)</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="51" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Match count: {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="52" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>No Description</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="53" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Open PCT file(s)</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="58" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>PINCE Cheat Table (*.pct);;All files (*)</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="59" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Clear address table?</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="60" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>File {} is inaccessible or contains invalid content</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="61" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Save PCT file</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="62" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Cannot save to file</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="63" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Nice try, smartass</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="64" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Selected process is not valid</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="65" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>You're debugging this process already</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="66" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>That process is already being traced by {}, could not attach to the process</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="67" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Permission denied, could not attach to the process</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="68" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>An error occurred while trying to create process</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="69" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Scan for</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="70" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>First Scan</source>
       <translation type="unfinished">Prima Ricerca</translation>
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="71" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>No Process Selected</source>
       <translation type="unfinished">Nessun Processo Selezionato</translation>
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="72" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>[detached]</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="73" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>[stopped]</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="74" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enter the new value</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="75" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enter the new description</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="76" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Edit Address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="77" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Please select a process first</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="78" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Select the target binary</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="79" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enter the optional arguments</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="80" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>LD_PRELOAD .so path (optional)</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="81" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Refresh</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="82" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Length is not valid</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="83" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Length must be greater than 0</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="84" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Can't parse the input</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="85" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Update interval must be an int</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="86" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Freeze interval must be an int</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="87" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Instruction count must be an int</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="88" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Instruction count cannot be lower than {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="89" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Interval cannot be a negative number</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="90" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>You are asking for it, aren't you?</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="91" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Update interval should be bigger than {} ms
 Setting update interval less than {} ms may cause slowdown
 Proceed?</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="94" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>{} isn't a valid regex</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="95" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>You have changed the GDB path, reset GDB now?</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="96" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>This will reset to the default settings
 Proceed?</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="98" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Mouse over on this text for examples</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="99" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>asdf|qwer --&gt; search for asdf or qwer
 [as]df --&gt; search for both adf and sdf
 Use the char \ to escape special chars such as [
@@ -1649,27 +1649,27 @@ Use the char \ to escape special chars such as [
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="103" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Separate processes with {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="104" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Select the gdb binary</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="105" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Quitting current session will crash PINCE</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="106" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Use global hotkeys or the commands 'interrupt' and 'c&amp;' to stop/run the inferior</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="107" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Hotkeys:
 -----------------------------
 Send: Enter                 |
@@ -1693,142 +1693,142 @@ Changing output mode only affects commands sent. Any other output coming from ex
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="129" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Break[{}]</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="130" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Run[{}]</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="131" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Toggle Attach[{}]</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="132" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Failed to set breakpoint at address {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="133" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enter the watchpoint length in size of bytes</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="134" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>{} can't be parsed as an integer</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="135" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Breakpoint length can't be lower than {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="136" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Failed to set watchpoint at address {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="137" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy to Clipboard</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="138" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Go to expression</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="139" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Add this address to address list</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="140" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Set Watchpoint</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="141" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Write Only</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="142" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Read Only</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="143" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Both</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="144" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Add/Change condition for breakpoint</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="145" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Delete Breakpoint</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="146" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enter the expression</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="147" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>{} is invalid</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="148" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Protection:{} | Base:{}-{} | Module:{}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="149" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Invalid Region</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="150" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Cannot access memory at expression {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="151" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Referenced by:</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="152" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Press 'Ctrl+E' to see a detailed list of referrers</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="153" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Memory Viewer - Paused</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="154" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Memory Viewer - Currently debugging {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="155" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Memory Viewer - Running</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="156" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enter the expression for condition, for instance:
 
 $eax==0x523
@@ -1837,148 +1837,148 @@ printf($r10)==3</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="160" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Failed to set condition for address {}
 Check terminal for details</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="162" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Full Stack</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="163" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Return Address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="164" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Frame Address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="165" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Stacktrace</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="166" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="167" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Value</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="168" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Points to</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="169" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Disassemble 'value' pointer address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="170" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Show 'value' pointer in HexView</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="171" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Back</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="172" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Show this address in HexView</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="173" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Follow</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="174" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Examine Referrers</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="175" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Bookmark this address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="176" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Delete this bookmark</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="177" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Change comment</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="178" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Go to bookmarked address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="179" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Toggle Breakpoint</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="180" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Edit instruction</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="181" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Replace instruction with NOPs</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="182" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Find out which addresses this instruction accesses</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="183" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Break and trace instructions</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="184" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Dissect this region</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="185" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Bytes</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="186" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Opcode</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="187" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Comment</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="188" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy All</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="189" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enter the register expression(s) you want to track
 Register names must start with $
 Each expression must be separated with a comma
@@ -1994,42 +1994,42 @@ PINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="199" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>This address has already been bookmarked</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="200" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enter the comment for bookmarked address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="201" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Select the .so file</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="204" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Shared object library (*.so)</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="205" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Success</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="206" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>The file has been injected</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="207" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Failed to inject the .so file</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="208" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enter the expression for the function that'll be called from the inferior
 You can view functions list from View-&gt;Functions
 
@@ -2044,189 +2044,189 @@ You can use the assigned variable from the GDB Console</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="217" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Failed to call the expression {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="218" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Invalid expression or address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="219" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Invalid entries detected, refreshing the page</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="220" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Add new entry</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="221" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Delete</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="222" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enter the new value of register {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="223" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Restore this instruction</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="224" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enter the hit count({} or higher)</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="225" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Hit count must be an integer</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="226" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Hit count can't be lower than {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="227" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Change condition</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="228" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enable</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="229" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Disable</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="230" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Disable after hit</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="231" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Disable after X hits</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="232" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Delete after hit</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="233" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Opcodes writing to the address {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="234" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Opcodes reading from the address {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="235" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Opcodes accessing to the address {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="236" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Unable to track watchpoint at expression {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="237" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Unable to delete watchpoint at expression {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="238" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Close</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="239" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Addresses accessed by instruction {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="240" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Unable to track breakpoint at expression {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="241" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Accessed by {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="242" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Unable to delete breakpoint at expression {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="243" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Max trace count must be greater than or equal to {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="244" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Processing the collected data</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="245" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Save trace file</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="248" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Trace File (*.trace);;All Files (*)</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="249" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Open trace file</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="250" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Expand All</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="251" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Collapse All</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="252" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>DEFINED</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="253" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>This symbol is defined. You can use its body as a gdb expression. For instance:
 
 void func(param) can be used as 'func' as a gdb expression</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="255" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Symbol</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="256" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>	Here's some useful regex tips:
 ^quaso --&gt; search for everything that starts with quaso
 [ab]cd --&gt; search for both acd and bcd
@@ -2241,58 +2241,58 @@ It means that the function is overloaded</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="266" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>New opcode is {} bytes long but old opcode is only {} bytes long
 This will cause an overflow, proceed?</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="268" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>{} isn't a valid expression</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="269" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Log File of PID {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="270" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Contents of {} (only last {} bytes are shown)</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="271" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>ON</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="272" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>OFF</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="273" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>LOGGING: {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="274" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Unable to read log file at {}</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="275" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Go to Settings-&gt;Debug to enable logging</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="276" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Invalid Regex</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="277" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>	Here's some useful regex examples:
 call|rax --&gt; search for opcodes that contain call or rax
 [re]cx --&gt; search for both rcx and ecx
@@ -2301,143 +2301,143 @@ Use the char \ to escape special chars such as [
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="282" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Addresses</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="283" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Offset</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="284" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Path</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="285" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Start</source>
       <translation type="unfinished">Inizio</translation>
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="286" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Currently scanning region:</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="287" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Cancel</source>
       <translation type="unfinished">Annulla</translation>
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="288" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Scan finished</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="289" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Scan was canceled</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="290" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Select at least one region</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="291" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>You need to dissect code first
 Proceed?</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="293" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Waiting for breakpoint to trigger</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="294" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Tracing has been canceled</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="295" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Tracing has been completed</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="296" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Exact</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="297" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Increased</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="298" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Increased by</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="299" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Decreased</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="300" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Decreased by</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="301" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Less Than</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="302" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>More Than</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="303" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Between</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="304" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Changed</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="305" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Unchanged</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="306" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Unknown Value</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="307" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Basic</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="308" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Normal</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="309" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Read+Write</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../tr/tr.py" line="310" />
+      <location filename="../../tr/tr.py" line="0" />
       <source>Full</source>
       <translation type="unfinished" />
     </message>
