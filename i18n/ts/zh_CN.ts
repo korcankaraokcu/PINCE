@@ -271,6 +271,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Language</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Logo</source>
       <translation>图标</translation>
     </message>
@@ -1294,6 +1299,16 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Success</source>
+      <translation>成功</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Information</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>GDB isn't initialized yet</source>
       <translation>GDB 尚未初始化</translation>
     </message>
@@ -1629,6 +1644,11 @@ Proceed?</source>
       <location filename="../../tr/tr.py" line="0" />
       <source>{} isn't a valid regex</source>
       <translation>{} 非有效正则表达式</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Language settings will take effect upon the next restart</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -2057,11 +2077,6 @@ PINCE 将追踪地址 [rax]，[rbx*rcx+4] 和 [rbp]</translation>
       <location filename="../../tr/tr.py" line="0" />
       <source>Shared object library (*.so)</source>
       <translation>共享对象库 (*.so)</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Success</source>
-      <translation>成功</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />

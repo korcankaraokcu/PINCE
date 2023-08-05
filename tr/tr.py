@@ -18,6 +18,8 @@ class TranslationConstants(QObject):
     CHANGED_SCAN_HOTKEY = QT_TR_NOOP("Next Scan - Changed")
     UNCHANGED_SCAN_HOTKEY = QT_TR_NOOP("Next Scan - Unchanged")
     ERROR = QT_TR_NOOP("Error")
+    SUCCESS = QT_TR_NOOP("Success")
+    INFO = QT_TR_NOOP("Information")
     GDB_INIT = QT_TR_NOOP("GDB isn't initialized yet")
     GDB_INIT_ERROR = QT_TR_NOOP("Unable to initialize GDB\n"
                                 "You might want to reinstall GDB or use the system GDB\n"
@@ -92,6 +94,7 @@ class TranslationConstants(QObject):
                                   "Setting update interval less than {} ms may cause slowdown\n"
                                   "Proceed?")
     IS_INVALID_REGEX = QT_TR_NOOP("{} isn't a valid regex")
+    LANG_RESET = QT_TR_NOOP("Language settings will take effect upon the next restart")
     GDB_RESET = QT_TR_NOOP("You have changed the GDB path, reset GDB now?")
     RESET_DEFAULT_SETTINGS = QT_TR_NOOP("This will reset to the default settings\n"
                                         "Proceed?")
@@ -206,7 +209,6 @@ class TranslationConstants(QObject):
 
     # Same applies here, keep (*.so)
     SHARED_OBJECT_TYPE = QT_TR_NOOP("Shared object library (*.so)")
-    SUCCESS = QT_TR_NOOP("Success")
     FILE_INJECTED = QT_TR_NOOP("The file has been injected")
     FILE_INJECT_FAILED = QT_TR_NOOP("Failed to inject the .so file")
     ENTER_CALL_EXPRESSION = QT_TR_NOOP("Enter the expression for the function that'll be called from the inferior\n"

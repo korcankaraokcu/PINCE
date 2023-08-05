@@ -87,15 +87,32 @@ from GUI.CustomValidators.HexValidator import QHexValidator
 from keyboard import add_hotkey, remove_hotkey
 from operator import add as opAdd, sub as opSub
 
+# TODO: Carry all settings related things to their own script if possible
+language_list = [
+    ("English", "en_US"),
+    ("Italiano", "it_IT"),
+    ("简体中文", "zh_CN")
+]
+
+def get_locale():
+    system_locale = QLocale.system().name()
+    for _, locale in language_list:
+        if system_locale == locale:
+            return locale
+    return language_list[0][1]
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    app.setOrganizationName("PINCE")
+    app.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
+    app.setApplicationName("PINCE")
     QSettings.setPath(QSettings.Format.NativeFormat, QSettings.Scope.UserScope,
-                SysUtils.get_user_path(type_defs.USER_PATHS.CONFIG_PATH))
+                      SysUtils.get_user_path(type_defs.USER_PATHS.CONFIG_PATH))
     settings = QSettings()
     translator = QTranslator()
     locale = settings.value("General/locale", type=str)
     if not locale:
-        locale = QLocale.system().name()
+        locale = get_locale()
     translator.load(f'i18n/qm/{locale}.qm')
     app.installTranslator(translator)
     tr.translate()
@@ -103,7 +120,7 @@ if __name__ == '__main__':
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "master-22"  # Increase version by one if you change settings. Format: branch_name-version
+current_settings_version = "23"  # Increase version by one if you change settings
 update_table = bool
 table_update_interval = int
 freeze_interval = int
@@ -111,6 +128,7 @@ show_messagebox_on_exception = bool
 gdb_output_mode = tuple
 auto_attach_list = str
 auto_attach_regex = bool
+locale = str
 logo_path = str
 
 
@@ -403,9 +421,6 @@ class MainForm(QMainWindow, MainWindow):
         self.treeWidget_AddressTable.setColumnWidth(TYPE_COL, 150)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 110)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
-        app.setOrganizationName("PINCE")
-        app.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
-        app.setApplicationName("PINCE")
         self.settings = QSettings()
         if not SysUtils.is_path_valid(self.settings.fileName()):
             self.set_default_settings()
@@ -525,8 +540,9 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("show_messagebox_on_exception", True)
         self.settings.setValue("gdb_output_mode", type_defs.gdb_output_mode(True, True, True))
         self.settings.setValue("auto_attach_list", "")
-        self.settings.setValue("logo_path", "ozgurozbek/pince_small_transparent.png")
         self.settings.setValue("auto_attach_regex", False)
+        self.settings.setValue("locale", get_locale())
+        self.settings.setValue("logo_path", "ozgurozbek/pince_small_transparent.png")
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
         for hotkey in Hotkeys.get_hotkeys():
@@ -568,8 +584,9 @@ class MainForm(QMainWindow, MainWindow):
         global show_messagebox_on_exception
         global gdb_output_mode
         global auto_attach_list
-        global logo_path
         global auto_attach_regex
+        global locale
+        global logo_path
         global code_injection_method
         global bring_disassemble_to_front
         global instructions_per_scroll
@@ -582,9 +599,10 @@ class MainForm(QMainWindow, MainWindow):
         show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
         gdb_output_mode = self.settings.value("General/gdb_output_mode", type=tuple)
         auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
+        auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
+        locale = self.settings.value("General/locale", type=str)
         logo_path = self.settings.value("General/logo_path", type=str)
         app.setWindowIcon(QIcon(os.path.join(SysUtils.get_logo_directory(), logo_path)))
-        auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
         GDB_Engine.set_gdb_output_mode(gdb_output_mode)
         for hotkey in Hotkeys.get_hotkeys():
             hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
@@ -2209,8 +2227,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 QMessageBox.information(self, tr.ERROR, tr.IS_INVALID_REGEX.format(self.lineEdit_AutoAttachList.text()))
                 return
         self.settings.setValue("General/auto_attach_list", self.lineEdit_AutoAttachList.text())
-        self.settings.setValue("General/logo_path", self.comboBox_Logo.currentText())
         self.settings.setValue("General/auto_attach_regex", self.checkBox_AutoAttachRegex.isChecked())
+        new_locale = language_list[self.comboBox_Language.currentIndex()][1]
+        self.settings.setValue("General/locale", new_locale)
+        if locale != new_locale:
+            QMessageBox.information(self, tr.INFO, tr.LANG_RESET)
+        self.settings.setValue("General/logo_path", self.comboBox_Logo.currentText())
         for hotkey in Hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
         if self.radioButton_SimpleDLopenCall.isChecked():
@@ -2244,13 +2266,19 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.checkBox_OutputModeCommand.setChecked(self.settings.value("General/gdb_output_mode").command_output)
         self.checkBox_OutputModeCommandInfo.setChecked(self.settings.value("General/gdb_output_mode").command_info)
         self.lineEdit_AutoAttachList.setText(self.settings.value("General/auto_attach_list", type=str))
+        self.checkBox_AutoAttachRegex.setChecked(self.settings.value("General/auto_attach_regex", type=bool))
+        self.comboBox_Language.clear()
+        cur_loc = self.settings.value("General/locale", type=str)
+        for lang, loc in language_list:
+            self.comboBox_Language.addItem(lang)
+            if loc == cur_loc:
+                self.comboBox_Language.setCurrentIndex(self.comboBox_Language.count()-1)
         logo_directory = SysUtils.get_logo_directory()
         logo_list = SysUtils.search_files(logo_directory, "\.(png|jpg|jpeg|svg)$")
         self.comboBox_Logo.clear()
         for logo in logo_list:
             self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
         self.comboBox_Logo.setCurrentIndex(logo_list.index(self.settings.value("General/logo_path", type=str)))
-        self.checkBox_AutoAttachRegex.setChecked(self.settings.value("General/auto_attach_regex", type=bool))
         self.listWidget_Functions.clear()
         self.hotkey_to_value.clear()
         for hotkey in Hotkeys.get_hotkeys():
