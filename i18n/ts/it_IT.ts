@@ -269,6 +269,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Language</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Logo</source>
       <translation type="unfinished" />
     </message>
@@ -1292,6 +1297,16 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Success</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Information</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>GDB isn't initialized yet</source>
       <translation type="unfinished" />
     </message>
@@ -1622,6 +1637,11 @@ Proceed?</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>{} isn't a valid regex</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Language settings will take effect upon the next restart</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -2011,11 +2031,6 @@ PINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Shared object library (*.so)</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Success</source>
       <translation type="unfinished" />
     </message>
     <message>
