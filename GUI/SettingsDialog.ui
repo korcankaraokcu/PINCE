@@ -398,6 +398,9 @@ Patterns at former positions have higher priority if regex is off</string>
                    </property>
                   </widget>
                  </item>
+                 <item>
+                  <widget class="QKeySequenceEdit" name="keySequenceEdit_Hotkey"/>
+                 </item>
                 </layout>
                </item>
                <item>
