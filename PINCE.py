@@ -29,10 +29,9 @@ from typing import Final
 
 from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
     QKeyEvent, QRegularExpressionValidator, QShortcut, QColorConstants
-from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, \
-    QKeySequenceEdit, QTabWidget, QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, \
-    QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, \
-    QPushButton, QFrame
+from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
+    QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
+    QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QThreadPool, \
     QTranslator, QLocale, pyqtSlot
@@ -2161,15 +2160,11 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings = QSettings()
         self.set_default_settings = set_default_settings_func
         self.hotkey_to_value = {}  # Dict[str:str]-->Dict[Hotkey.name:settings_value]
-
-        # Yet another retarded hack, thanks to pyuic5 not supporting QKeySequenceEdit
-        self.keySequenceEdit = QKeySequenceEdit()
-        self.verticalLayout_Hotkey.addWidget(self.keySequenceEdit)
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
         icons_directory = GuiUtils.get_icons_directory()
         self.pushButton_GDBPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
         self.listWidget_Functions.currentRowChanged.connect(self.listWidget_Functions_current_row_changed)
-        self.keySequenceEdit.keySequenceChanged.connect(self.keySequenceEdit_key_sequence_changed)
+        self.keySequenceEdit_Hotkey.keySequenceChanged.connect(self.keySequenceEdit_Hotkey_key_sequence_changed)
         self.pushButton_ClearHotkey.clicked.connect(self.pushButton_ClearHotkey_clicked)
         self.pushButton_ResetSettings.clicked.connect(self.pushButton_ResetSettings_clicked)
         self.pushButton_GDBPath.clicked.connect(self.pushButton_GDBPath_clicked)
@@ -2301,19 +2296,19 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
     def listWidget_Functions_current_row_changed(self, index):
         if index == -1:
-            self.keySequenceEdit.clear()
+            self.keySequenceEdit_Hotkey.clear()
         else:
-            self.keySequenceEdit.setKeySequence(self.hotkey_to_value[Hotkeys.get_hotkeys()[index].name])
+            self.keySequenceEdit_Hotkey.setKeySequence(self.hotkey_to_value[Hotkeys.get_hotkeys()[index].name])
 
-    def keySequenceEdit_key_sequence_changed(self):
+    def keySequenceEdit_Hotkey_key_sequence_changed(self):
         index = self.listWidget_Functions.currentIndex().row()
         if index == -1:
-            self.keySequenceEdit.clear()
+            self.keySequenceEdit_Hotkey.clear()
         else:
-            self.hotkey_to_value[Hotkeys.get_hotkeys()[index].name] = self.keySequenceEdit.keySequence().toString()
+            self.hotkey_to_value[Hotkeys.get_hotkeys()[index].name] = self.keySequenceEdit_Hotkey.keySequence().toString()
 
     def pushButton_ClearHotkey_clicked(self):
-        self.keySequenceEdit.clear()
+        self.keySequenceEdit_Hotkey.clear()
 
     def pushButton_ResetSettings_clicked(self):
         confirm_dialog = InputDialogForm(item_list=[(tr.RESET_DEFAULT_SETTINGS,)])
