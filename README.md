@@ -70,7 +70,6 @@ sh install_pince.sh
 If you like to uninstall PINCE, just delete this folder, almost everything is installed locally. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them if you want
 
 ***Notes:***
-- GDB enhancements (peda, pwndbg, etc) that use a global gdbinit file might cause PINCE to misfunction at times. Please disable them or use them locally before starting PINCE
 - If you are having problems with your default gdb version, you can use the `install_gdb.sh` script to install another version locally. Read the comments in it for more information
 - Check https://github.com/korcankaraokcu/PINCE/issues/116 for a possible fix if you encounter `'GtkSettings' has no property named 'gtk-fallback-icon-theme'`
 
