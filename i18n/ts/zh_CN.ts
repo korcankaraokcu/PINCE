@@ -272,7 +272,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Language</source>
-      <translation type="unfinished" />
+      <translation>语言</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -1305,7 +1305,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Information</source>
-      <translation type="unfinished" />
+      <translation>信息</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -1648,7 +1648,7 @@ Proceed?</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Language settings will take effect upon the next restart</source>
-      <translation type="unfinished" />
+      <translation>语言设置会在下次重启时生效</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -1696,7 +1696,7 @@ Use the char \ to escape special chars such as [
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Use global hotkeys or the commands 'interrupt' and 'c&amp;' to stop/run the inferior</source>
-      <translation type="unfinished" />
+      <translation>使用全局快捷键或者命令 'interrupt' 和 'c&amp;' 停止/运行被调试程序（inferior）</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
