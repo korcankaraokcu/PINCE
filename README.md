@@ -134,12 +134,6 @@ How to use line_profiler: Add ```@profile``` tag to the desired function and run
 # License
 GPLv3+. See COPYING file for details
 
-# Contact Information
-Korcan Karaokçu([korcankaraokcu](https://github.com/korcankaraokcu)) <korcankaraokcu@gmail.com>  
-Çağrı Ulaş([cagriulas](https://github.com/cagriulas)) <cagriulas@gmail.com>  
-Jakob Kreuze([TsarFox](https://github.com/TsarFox)) <jakob@memeware.net>  
-Gibus <lilac66.dev@gmail.com>  
-
 # Supported platforms
 - Ubuntu and its flavors, actively tested on Kubuntu
 - Debian and Debian-based (Kali, Mint etc.)
