@@ -119,7 +119,7 @@ if __name__ == '__main__':
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "23"  # Increase version by one if you change settings
+current_settings_version = "24"  # Increase version by one if you change settings
 update_table = bool
 table_update_interval = int
 freeze_interval = int
@@ -191,7 +191,7 @@ gdb_path = str
 gdb_logging = bool
 
 ignored_signals = str
-signal_list = ["SIGUSR1", "SIGPWR", "SIGSEGV"]
+signal_list = ["SIGUSR1", "SIGPWR", "SIGXCPU", "SIGSEGV"]
 
 # represents the index of columns in instructions restore table
 INSTR_ADDR_COL = 0
@@ -557,7 +557,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.beginGroup("Debug")
         self.settings.setValue("gdb_path", type_defs.PATHS.GDB_PATH)
         self.settings.setValue("gdb_logging", False)
-        self.settings.setValue("ignored_signals", "1,1,0")
+        self.settings.setValue("ignored_signals", "1,1,1,0")
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
         self.settings.setValue("version", current_settings_version)
