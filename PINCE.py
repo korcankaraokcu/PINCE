@@ -1044,7 +1044,7 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_UndoScan.setEnabled(True)
             search_scope = self.comboBox_ScanScope.currentData(Qt.ItemDataRole.UserRole)
             self.backend.send_command("option region_scan_level " + str(search_scope))
-            self.backend.send_command("reset")
+            self.backend.reset()
             self.comboBox_ScanScope.setEnabled(False)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
         self.comboBox_ScanType_init()
@@ -1158,7 +1158,10 @@ class MainForm(QMainWindow, MainWindow):
         # ProgressBar
         global threadpool
         threadpool.start(Worker(self.update_progress_bar))
-        self.backend.send_command(search_for)
+        if search_for == "undo":
+            self.backend.undo_scan()
+        else:
+            self.backend.send_command(search_for)
         matches = self.backend.matches()
         progress_running = 0
         match_count = self.backend.get_match_count()
@@ -1229,7 +1232,7 @@ class MainForm(QMainWindow, MainWindow):
         self.lineEdit_Scan2.setValidator(validator_map[validator_str])
         self.backend.send_command("option scan_data_type {}".format(scanmem_type))
         # according to scanmem instructions you should always do `reset` after changing type
-        self.backend.send_command("reset")
+        self.backend.reset()
 
     def pushButton_AttachProcess_clicked(self):
         self.processwindow = ProcessForm(self)
@@ -1268,7 +1271,7 @@ class MainForm(QMainWindow, MainWindow):
         attach_result = GDB_Engine.attach(pid, gdb_path)
         if attach_result == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
             self.apply_after_init()
-            self.backend.send_command("pid {}".format(pid))
+            self.backend.pid(pid)
             self.on_new_process()
 
             # TODO: This makes PINCE call on_process_stop twice when attaching
@@ -1332,7 +1335,7 @@ class MainForm(QMainWindow, MainWindow):
     def reset_scan(self):
         self.scan_mode = type_defs.SCAN_MODE.NEW
         self.pushButton_NewFirstScan.setText(tr.FIRST_SCAN)
-        self.backend.send_command("reset")
+        self.backend.reset()
         self.tableWidget_valuesearchtable.setRowCount(0)
         self.comboBox_ValueType.setEnabled(True)
         self.comboBox_ScanScope.setEnabled(True)
