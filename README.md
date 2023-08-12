@@ -76,61 +76,6 @@ If you like to uninstall PINCE, just delete this folder, almost everything is in
 # Running PINCE  
 Just run ```sh PINCE.sh``` in the PINCE directory
 
-### For developers:  
-```
-sudo apt-get install qt6-tools-dev (designer and pyuic6)
-sudo pip3 install line_profiler (for performance testing)
-```
-How to use line_profiler: Add ```@profile``` tag to the desired function and run PINCE with ```sudo kernprof -l -v PINCE.py```
-
-# Current Roadmap
-- Refactor file naming conventions(decide on snake_case or camelCase for modules etc)
-- Create ```CONTRIBUTING.md``` and combine all non-tutorial notes within it
-- Refactorize memory write/read functions
-- - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k. Only update the visible rows to prevent this(check ```disassemble_check_viewport``` for an example)
-- - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
-- - Consider using a class instead of primitive return types to store the raw bytes. This class should also include a method to display None type as red '??' text for Qt
-- - Provide an option to cut BOM bytes when writing to memory with the types UTF-16 and UTF-32
-- - Put a warning for users about replacement bytes for non UTF-8 types
-- - Extend string types with LE and BE variants of UTF-16 and UTF-32
-- - Change comboBox_ValueType string order to be ... String_UTF-8 String_Others
-- - Implement a custom combobox class for comboBox_ValueType and create a context menu for String_Others item
-- Implement "Investigate Registers" button to gather information about the addresses registers point to(independent from other steps)
-- Implement selectionChanged signal of lineEdit_HexView
-- Implement multi selection for HexView
-- Add the ability to track down registers and addresses in tracer(unsure)(independent from other steps)
-- Implement CE's Ultimap-like feature for tracing data, dissect code data and raw instruction list. Search for calls and store their hit counts to filter out the functions that haven't or have executed specific number of times. Implement a flexible input field for the execution count. For instance, 2^x only searches for hit counts 2, 4, 8 and so on, 3x only searches for 3, 6, 9 etc.(independent from other steps)([CE#358](https://github.com/cheat-engine/cheat-engine/issues/358))
-- Extend search_referenced_strings with relative search
-- Consider adding type guessing for the StackView(independent from other steps)
-- Move GUI classes of PINCE.py to their own files
-- Use gdb python API breakpoints instead of breakpoint commands for optimization, also find a way to eliminate output coming from stepping commands such as ```stepi&``` or ```nexti&```(independent from other steps)
-- Implement a psuedo-terminal for the inferior like edb does(independent from other steps)
-- Implement libpince engine
-- Implement auto-ESP&aimbot (depends on libpince engine)
-- Try to optimize TrackBreakpoint and TrackWatchpoint return data structures further, adding an id field might simplify traversing of the tree, performance tests are required(independent from other steps)
-- Extend tagging system to PINCE GUI functions
-- Implement multi-line code injection, this will also help with previously dropped inject_with_advanced_injection
-- Break on/Catch signals and syscalls
-- Flowcharts based on disassembled output
-- Automatic function bypassing(make it return the desired value, hook specific parts etc.)
-- Implement speedhack(independent from other steps)
-- Implement unrandomizer(independent from other steps)
-- Implement pointer-scan
-- Write at least one test for each function in libpince
-- Migrate to Sphinx documentation from the custom libpince documentation(independent from other steps)
-- Embedded tutorial videos
-- Super-Uber-Rad credits roll with chiptune tunes
-- Implement extra MemoryViewerWindow tabs(independent from other steps)
-- ~~Consider removing the command file layer of IPC system for GDB_Engine.send_command to speed up things~~(independent from other steps)[Update-29/04/2018 : Delaying this until GDB/MI implements a native multiline command feature or improves ```interpreter-exec``` command to cover every single multiline command type(including ```define``` commands)]
-- Implement thread info widget
-- Implement developer mode in settings. Developer mode will include features like dissection of GUI elements on events such as mouse-over(independent from other steps)
-- Add ability to include non-absolute calls for dissect code feature(i.e call rax). Should be considered after the first version release. Might be useful for multi-breakpoint related features
-- Implement toggling of arrows for easier navigation for dissected regions(independent from other steps)
-- Provide information about absolute addresses in disassemble screen(independent from other steps)
-- Use type hints(py 3.5) and variable annotations(py 3.6) when support drops for older systems(independent from other steps)
-- All tables that hold large amount of data should only update the visible rows(check ```disassemble_check_viewport``` for an example)(independent from other steps)
-- Add different kinds of themes and the ability to change between them on runtime. Implement dark theme first. Also add the ability to create a custom theme and modify the existing ones(independent from other steps)
-
 # License
 GPLv3+. See COPYING file for details
 
