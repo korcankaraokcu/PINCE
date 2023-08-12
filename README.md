@@ -76,8 +76,11 @@ If you like to uninstall PINCE, just delete this folder, almost everything is in
 # Running PINCE  
 Just run ```sh PINCE.sh``` in the PINCE directory
 
+# Contributing
+Want to help? Check out [CONTRIBUTING.md](CONTRIBUTING.md)
+
 # License
-GPLv3+. See COPYING file for details
+GPLv3+. See [COPYING](COPYING) file for details
 
 # Supported platforms
 - Ubuntu and its flavors, actively tested on Kubuntu
