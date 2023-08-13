@@ -119,11 +119,10 @@ if __name__ == '__main__':
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "24"  # Increase version by one if you change settings
+current_settings_version = "25"  # Increase version by one if you change settings
 update_table = bool
 table_update_interval = int
 freeze_interval = int
-show_messagebox_on_exception = bool
 gdb_output_mode = tuple
 auto_attach_list = str
 auto_attach_regex = bool
@@ -318,11 +317,9 @@ class Worker(QRunnable):
 
 
 def except_hook(exception_type, value, tb):
-    if show_messagebox_on_exception:
-        focused_widget = app.focusWidget()
-        if focused_widget:
-            if exception_type == type_defs.GDBInitializeException:
-                QMessageBox.information(focused_widget, tr.ERROR, tr.GDB_INIT)
+    focused_widget = app.focusWidget()
+    if focused_widget and exception_type == type_defs.GDBInitializeException:
+        QMessageBox.information(focused_widget, tr.ERROR, tr.GDB_INIT)
     traceback.print_exception(exception_type, value, tb)
 
 
@@ -536,7 +533,6 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("auto_update_address_table", True)
         self.settings.setValue("address_table_update_interval", 500)
         self.settings.setValue("freeze_interval", 100)
-        self.settings.setValue("show_messagebox_on_exception", True)
         self.settings.setValue("gdb_output_mode", type_defs.gdb_output_mode(True, True, True))
         self.settings.setValue("auto_attach_list", "")
         self.settings.setValue("auto_attach_regex", False)
@@ -580,7 +576,6 @@ class MainForm(QMainWindow, MainWindow):
     def apply_settings(self):
         global update_table
         global table_update_interval
-        global show_messagebox_on_exception
         global gdb_output_mode
         global auto_attach_list
         global auto_attach_regex
@@ -595,7 +590,6 @@ class MainForm(QMainWindow, MainWindow):
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
         table_update_interval = self.settings.value("General/address_table_update_interval", type=int)
         freeze_interval = self.settings.value("General/freeze_interval", type=int)
-        show_messagebox_on_exception = self.settings.value("General/show_messagebox_on_exception", type=bool)
         gdb_output_mode = self.settings.value("General/gdb_output_mode", type=tuple)
         auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
         auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
@@ -2210,7 +2204,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
         self.settings.setValue("General/freeze_interval", current_freeze_interval)
-        self.settings.setValue("General/show_messagebox_on_exception", self.checkBox_MessageBoxOnException.isChecked())
         current_gdb_output_mode = type_defs.gdb_output_mode(self.checkBox_OutputModeAsync.isChecked(),
                                                             self.checkBox_OutputModeCommand.isChecked(),
                                                             self.checkBox_OutputModeCommandInfo.isChecked())
@@ -2255,8 +2248,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.lineEdit_UpdateInterval.setText(
             str(self.settings.value("General/address_table_update_interval", type=int)))
         self.lineEdit_FreezeInterval.setText(str(self.settings.value("General/freeze_interval", type=int)))
-        self.checkBox_MessageBoxOnException.setChecked(
-            self.settings.value("General/show_messagebox_on_exception", type=bool))
         self.checkBox_OutputModeAsync.setChecked(self.settings.value("General/gdb_output_mode").async_output)
         self.checkBox_OutputModeCommand.setChecked(self.settings.value("General/gdb_output_mode").command_output)
         self.checkBox_OutputModeCommandInfo.setChecked(self.settings.value("General/gdb_output_mode").command_info)

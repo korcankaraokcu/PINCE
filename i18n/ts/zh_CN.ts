@@ -229,11 +229,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Show a MessageBox on InferiorRunning and GDBInitialize exceptions</source>
-      <translation>出现 "InferiorRunning" 和 "GDBInitialize" 异常时显示一个消息框</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>GDB output:</source>
       <translation>GDB 输出：</translation>
     </message>
