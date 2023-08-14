@@ -6,6 +6,7 @@ file = sys.argv[1]
 tree = ET.parse(file, parser=ET.XMLParser(encoding="utf-8"))
 root = tree.getroot()
 
+# pylupdate6 doesn't set locale on creation, make sure it's there
 locale = os.path.splitext(os.path.basename(file))[0]
 root.set('language', locale)
 
