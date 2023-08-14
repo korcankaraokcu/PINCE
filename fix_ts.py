@@ -1,9 +1,13 @@
 import xml.etree.ElementTree as ET
 import sys
+import os
 
 file = sys.argv[1]
 tree = ET.parse(file, parser=ET.XMLParser(encoding="utf-8"))
 root = tree.getroot()
+
+locale = os.path.splitext(os.path.basename(file))[0]
+root.set('language', locale)
 
 # Removing line info so updating tr.py affects git history much less
 for location in root.findall('.//location'):

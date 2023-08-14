@@ -2,13 +2,15 @@
 file_supportlocale='/usr/share/i18n/SUPPORTED'
 list_ts=$(find i18n/ts -maxdepth 1 -type f -name '*.ts')
 
+# If there's a user parameter, create a new locale based on it
+if [ -n "$1" ]; then
+    list_ts="$list_ts i18n/ts/$1.ts"
+fi
+
 if [ -e "$file_supportlocale" ]; then
 	for ts in $list_ts; do
 		# Check if the locale is valid
 		if grep -E "^$(basename "$ts" .ts)(.)?.*\s.*" "$file_supportlocale" > /dev/null 2>&1; then
-			# Remove empty file to prevent error
-			# "invalid translation file: no element found: line 1, column 0"
-			[ -s "$ts" ] || rm "$ts"
 			pylupdate6 GUI/*.ui tr/tr.py --no-obsolete --ts "$ts"
 			python3 fix_ts.py "$ts"
 		else
