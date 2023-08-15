@@ -60,20 +60,29 @@ I've quit using PyCharm eventually but I think the limit makes the code look qui
 So I think it's good to keep this old habit. This limit however, is not strict at all. A few characters passing the limit is ok, sometimes going for a newline
 messes up the readability, trust your guts and decide for yourself
 
-# UI files
-You need to have [Qt6 Designer](https://pkgs.org/search/?q=designer&on=files) and [pyuic6](https://pkgs.org/search/?q=pyuic6&on=files) installed.
-Edit or create ui files with the designer and then save them. After saving the files, use pyuic6 to convert them into py files: `pyuic6 SomeDialog.ui -o SomeDialog.py`.
+# UI Files
+You need to have [Qt6 Designer](https://pkgs.org/search/?q=designer&on=files) and [pyuic6](https://pkgs.org/search/?q=pyuic6&on=files) installed. Here are the steps:
+- Edit or create ui files with the designer and then save them
+- After saving the files, use pyuic6 to convert them into py files: `pyuic6 SomeDialog.ui -o SomeDialog.py`
+
 The py files that contains the same name with the ui files are auto-generated, please edit the ui files with designer instead of messing with the py files
 
 # Translation
-You need to have [Qt6 Linguist](https://pkgs.org/search/?q=linguist&on=files) and [pylupdate6](https://pkgs.org/search/?q=pylupdate6&on=files) installed.
-Edit ts files in [/i18n/ts](./i18n/ts) with the linguist and then save them. After saving the files, run the [compile_ts.sh](./compile_ts.sh) script.
+You need to have [Qt6 Linguist](https://pkgs.org/search/?q=linguist&on=files) and [pylupdate6](https://pkgs.org/search/?q=pylupdate6&on=files) installed. Here are the steps:
+- (Optional) To create a new translation file, use [compile_ts.sh](./compile_ts.sh) with the locale as the parameter, such as `sh compile.sh ja_JP`. This will create a ts file with the locale you entered
+- Edit ts files in [/i18n/ts](./i18n/ts) with the linguist and then save them. After saving the files, run the [compile_ts.sh](./compile_ts.sh) script.
 This script fixes inconsistencies between Qt6 Linguist and pylupdate6, also removes line information so the git history stays cleaner
+- To test your translations, use [install_pince.sh](./install_pince.sh). The last part of the installation script also compiles ts files to qm files so PINCE can process them.
+When asked to recompile libscanmem, enter no
 
 Make sure that you read the comments in [tr.py](./tr/tr.py). Some of the translations have caveats that might interest you
 
 About the untranslated parts of the code, such as context menus of libpince reference widget. You'll see that some of the code serves as a placeholder that'll be
 removed or replaced in the future. These are not marked as translatable as translating them would be a waste of time
+
+**ATTENTION:** Make sure you read this part even if you aren't a translator:  
+If you create or delete any Qt related string (for example, ui forms or translation constants in [tr.py](./tr/tr.py)), you must run [compile_ts.sh](./compile_ts.sh) so it updates the translations.
+Not every string has to be translatable, if it's only printed on console, it can stay as is, in English. If it's shown to the user within a form, it should be translatable
 
 # Logo
 All logo requests should be posted in `/media/logo/your_username`. Instead of opening a new issue, pull request your logo files to that folder.
