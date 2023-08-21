@@ -950,8 +950,11 @@ class MainForm(QMainWindow, MainWindow):
             return
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
         mem_handle = GDB_Engine.memory_handle()
-        address_expr_list = []
         rows = []
+        address_list = []
+        examine_indices = []
+        examine_list = []
+        index = 0
         while True:
             row = it.value()
             if not row:
@@ -959,28 +962,46 @@ class MainForm(QMainWindow, MainWindow):
             it += 1
             address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
             if isinstance(address_data, type_defs.PointerType):
-                pointer_address = GDB_Engine.read_pointer(address_data)
-                if pointer_address == None:
-                    continue
-                address_expr_list.append(hex(pointer_address))
+                address = address_data.base_address
             else:
-                address_expr_list.append(address_data)
+                address = address_data
+            # Simple addresses first, examine_expression takes much longer time, especially for larger tables
+            try:
+                int(address, 0)
+            except (ValueError, TypeError):
+                examine_list.append(address)
+                examine_indices.append(index)
+            address_list.append(address)
             rows.append(row)
-        address_list = [item.address for item in GDB_Engine.examine_expressions(address_expr_list)]
+            index += 1
+        examine_list = [item.address for item in GDB_Engine.examine_expressions(examine_list)]
+        for index, address in enumerate(examine_list):
+            address_list[examine_indices[index]] = address
         for index, row in enumerate(rows):
             value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-            address = address_list[index]
+            address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
+            current_address = address_list[index]
+            if isinstance(address_data, type_defs.PointerType):
+                # The original base could be a symbol so we have to save it
+                # This little hack makes it possible to call examine_expressions only once
+                if current_address:
+                    old_base = address_data.base_address  # save the old base
+                    address_data.base_address = current_address
+                    address = GDB_Engine.read_pointer(address_data)
+                    address_data.base_address = old_base  # then set it back
+                    if address:
+                        row.setText(ADDR_COL, f'P->{hex(address)}')
+                    else:
+                        row.setText(ADDR_COL, f'P->??')
+                else:
+                    address = None
+                    row.setText(ADDR_COL, f'P->??')
+            else:
+                address = current_address
+                row.setText(ADDR_COL, address or address_data)
             signed = True if value_type.value_repr == type_defs.VALUE_REPR.SIGNED else False
             value = GDB_Engine.read_memory(address, value_type.value_index, value_type.length,
                                            value_type.zero_terminate, signed, mem_handle=mem_handle)
-
-            address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
-            if isinstance(address_data, type_defs.PointerType):
-                address_text = f'P->{address}'
-            else:
-                address_text = address
-            row.setText(ADDR_COL, address_text or address_expr_list[index])
-
             if value is None:
                 value = ""
             elif value_type.value_repr == type_defs.VALUE_REPR.HEX:
@@ -1368,7 +1389,6 @@ class MainForm(QMainWindow, MainWindow):
         self.label_InferiorStatus.setText(tr.STATUS_STOPPED)
         self.label_InferiorStatus.setVisible(True)
         self.label_InferiorStatus.setStyleSheet("color: red")
-        self.update_address_table()
 
     def on_status_running(self):
         self.label_SelectedProcess.setStyleSheet("")
@@ -1420,7 +1440,7 @@ class MainForm(QMainWindow, MainWindow):
                 try:
                     self.update_address_table()
                 except:
-                    print("Update Address Table failed")
+                    traceback.print_exc()
 
     def update_search_table_loop(self):
         while exiting == 0:
@@ -1428,7 +1448,7 @@ class MainForm(QMainWindow, MainWindow):
             try:
                 self.update_search_table()
             except:
-                print("Update Search Table failed")
+                traceback.print_exc()
 
     def freeze_loop(self):
         while exiting == 0:
@@ -1436,7 +1456,7 @@ class MainForm(QMainWindow, MainWindow):
             try:
                 self.freeze()
             except:
-                print("Freeze failed")
+                traceback.print_exc()
 
     # ----------------------------------------------------
 
@@ -1567,8 +1587,13 @@ class MainForm(QMainWindow, MainWindow):
             address = GDB_Engine.read_pointer(address_expr)
             address_text = f'P->{hex(address)}' if address != None else address_expr.get_base_address()
         else:
-            address = GDB_Engine.examine_expression(address_expr).address
-            address_text = address
+            # Simple addresses first, examine_expression takes much longer time, especially for larger tables
+            try:
+                address = int(address_expr, 0)
+                address_text = hex(address)
+            except (ValueError, TypeError):
+                address = GDB_Engine.examine_expression(address_expr).address
+                address_text = address
         value = ''
         if address:
             value = GDB_Engine.read_memory(address, value_type.value_index, value_type.length,

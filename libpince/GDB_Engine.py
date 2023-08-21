@@ -736,7 +736,12 @@ def read_pointer(pointer_type):
         value_index = type_defs.VALUE_INDEX.INDEX_INT32
     else:
         value_index = type_defs.VALUE_INDEX.INDEX_INT64
-    start_address = examine_expression(pointer_type.base_address).address
+
+    # Simple addresses first, examine_expression takes much longer time, especially for larger tables
+    try:
+        start_address = int(pointer_type.base_address, 0)
+    except (ValueError, TypeError):
+        start_address = examine_expression(pointer_type.base_address).address
     try:
         with memory_handle() as mem_handle:
             final_address = deref_address = read_memory(start_address, value_index, mem_handle=mem_handle)
@@ -944,6 +949,8 @@ def examine_expressions(expression_list):
     Returns:
         list: List of type_defs.tuple_examine_expression
     """
+    if not expression_list:
+        return []
     return send_command("pince-examine-expressions", send_with_file=True, file_contents_send=expression_list,
                         recv_with_file=True)
 
