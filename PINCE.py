@@ -992,10 +992,11 @@ class MainForm(QMainWindow, MainWindow):
                     if address:
                         row.setText(ADDR_COL, f'P->{hex(address)}')
                     else:
-                        row.setText(ADDR_COL, f'P->??')
+                        row.setText(ADDR_COL, 'P->??')
                 else:
+                    # We already know that base address is an invalid symbol, skip the read_pointer call
                     address = None
-                    row.setText(ADDR_COL, f'P->??')
+                    row.setText(ADDR_COL, 'P->??')
             else:
                 address = current_address
                 row.setText(ADDR_COL, address or address_data)
@@ -1585,7 +1586,7 @@ class MainForm(QMainWindow, MainWindow):
     def change_address_table_entries(self, row, description=tr.NO_DESCRIPTION, address_expr="", value_type=None):
         if isinstance(address_expr, type_defs.PointerType):
             address = GDB_Engine.read_pointer(address_expr)
-            address_text = f'P->{hex(address)}' if address != None else address_expr.get_base_address()
+            address_text = f'P->{hex(address)}' if address != None else 'P->??'
         else:
             # Simple addresses first, examine_expression takes much longer time, especially for larger tables
             try:
