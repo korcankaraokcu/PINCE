@@ -3371,17 +3371,20 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         selected_row = GuiUtils.get_current_row(self.tableWidget_Stack)
         if selected_row == -1:
-            return
-        current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
+            actions = type_defs.KeyboardModifiersTupleDict([
+                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack)
+            ])
+        else:
+            current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
+            current_address = SysUtils.extract_address(current_address_text)
 
-        actions = type_defs.KeyboardModifiersTupleDict([
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack),
-            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
-             lambda: self.disassemble_expression(current_address, append_to_travel_history=True)),
-            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H),
-             lambda: self.hex_dump_address(int(current_address, 16)))
-        ])
+            actions = type_defs.KeyboardModifiersTupleDict([
+                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack),
+                (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
+                 lambda: self.disassemble_expression(current_address, append_to_travel_history=True)),
+                (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H),
+                 lambda: self.hex_dump_address(int(current_address, 16)))
+            ])
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
