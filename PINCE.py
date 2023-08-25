@@ -3303,7 +3303,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.FS.set_value(registers["fs"])
 
     def update_stacktrace(self):
-        if GDB_Engine.currentpid == -1:
+        if GDB_Engine.currentpid == -1 or GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
             return
         stack_trace_info = GDB_Engine.get_stacktrace_info()
         self.tableWidget_StackTrace.setRowCount(0)
@@ -3354,7 +3354,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             pass
 
     def update_stack(self):
-        if GDB_Engine.currentpid == -1:
+        if GDB_Engine.currentpid == -1 or GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
             return
         stack_info = GDB_Engine.get_stack_info()
         self.tableWidget_Stack.setRowCount(0)
@@ -3389,16 +3389,17 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Stack.keyPressEvent_original(event)
 
     def tableWidget_Stack_context_menu_event(self, event):
-        if GDB_Engine.currentpid == -1:
-            return
-
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_Stack.item(row, column).text())
 
+        if GDB_Engine.currentpid == -1:
+            return
         selected_row = GuiUtils.get_current_row(self.tableWidget_Stack)
-        current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
-
+        if selected_row == -1:
+            current_address = None
+        else:
+            current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
+            current_address = SysUtils.extract_address(current_address_text)
         menu = QMenu()
         switch_to_stacktrace = menu.addAction(tr.STACKTRACE)
         menu.addSeparator()
