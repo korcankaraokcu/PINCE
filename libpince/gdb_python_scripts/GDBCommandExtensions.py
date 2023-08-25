@@ -126,7 +126,12 @@ class GetStackTraceInfo(gdb.Command):
             sp_register = "rsp"
         else:
             sp_register = "esp"
-        stack_pointer_int = int(ScriptUtils.examine_expression("$" + sp_register).address, 16)
+        stack_pointer = ScriptUtils.examine_expression(f"${sp_register}").address
+        if not stack_pointer:
+            print(f"Cannot get the value of ${sp_register}")
+            send_to_pince(stacktrace_info_list)
+            return
+        stack_pointer = int(stack_pointer, 16)
         result = gdb.execute("bt", from_tty, to_string=True)
         max_frame = common_regexes.max_frame_count.findall(result)[-1]
 
@@ -134,7 +139,7 @@ class GetStackTraceInfo(gdb.Command):
         for item in range(int(max_frame) + 1):
             result = gdb.execute("info frame " + str(item), from_tty, to_string=True)
             frame_address = common_regexes.frame_address.search(result).group(1)
-            difference = hex(int(frame_address, 16) - stack_pointer_int)
+            difference = hex(int(frame_address, 16) - stack_pointer)
             frame_address_with_difference = frame_address + "(" + sp_register + "+" + difference + ")"
             return_address = common_regexes.return_address.search(result)
             if return_address:
@@ -159,11 +164,17 @@ class GetStackInfo(gdb.Command):
             chunk_size = 4
             int_format = "I"
             sp_register = "esp"
-        sp_address = int(ScriptUtils.examine_expression("$" + sp_register).address, 16)
+        sp_address = ScriptUtils.examine_expression(f"${sp_register}").address
+        if not sp_address:
+            print(f"Cannot get the value of ${sp_register}")
+            send_to_pince(stack_info_list)
+            return
+        sp_address = int(sp_address, 16)
         with open(ScriptUtils.mem_file, "rb") as FILE:
             try:
                 old_position = FILE.seek(sp_address)
             except (OSError, ValueError):
+                print(f"Cannot accesss the memory at {hex(sp_address)}")
                 send_to_pince(stack_info_list)
                 return
             for index in range(int(4096 / chunk_size)):
