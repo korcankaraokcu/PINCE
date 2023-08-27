@@ -137,7 +137,10 @@ class GetStackTraceInfo(gdb.Command):
 
         # +1 because frame numbers start from 0
         for item in range(int(max_frame) + 1):
-            result = gdb.execute("info frame " + str(item), from_tty, to_string=True)
+            try:
+                result = gdb.execute(f"info frame {item}", from_tty, to_string=True)
+            except:
+                break
             frame_address = common_regexes.frame_address.search(result).group(1)
             difference = hex(int(frame_address, 16) - stack_pointer)
             frame_address_with_difference = frame_address + "(" + sp_register + "+" + difference + ")"
@@ -215,7 +218,10 @@ class GetFrameReturnAddresses(gdb.Command):
 
         # +1 because frame numbers start from 0
         for item in range(int(max_frame) + 1):
-            result = gdb.execute("info frame " + str(item), from_tty, to_string=True)
+            try:
+                result = gdb.execute(f"info frame {item}", from_tty, to_string=True)
+            except:
+                break
             return_address = common_regexes.return_address.search(result)
             if return_address:
                 return_address_with_info = ScriptUtils.examine_expression(return_address.group(1)).all

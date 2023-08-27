@@ -73,6 +73,7 @@ class TranslationConstants(QObject):
     NO_PROCESS_SELECTED = QT_TR_NOOP("No Process Selected")
     STATUS_DETACHED = QT_TR_NOOP("[detached]")
     STATUS_STOPPED = QT_TR_NOOP("[stopped]")
+    PROCESS_RUNNING = QT_TR_NOOP("Process is running")
     ENTER_VALUE = QT_TR_NOOP("Enter the new value")
     ENTER_DESCRIPTION = QT_TR_NOOP("Enter the new description")
     EDIT_ADDRESS = QT_TR_NOOP("Edit Address")

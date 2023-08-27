@@ -1543,6 +1543,11 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Process is running</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Enter the new value</source>
       <translation>输入新值</translation>
     </message>

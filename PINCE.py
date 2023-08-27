@@ -3214,6 +3214,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.update_stacktrace()
         elif self.stackedWidget_StackScreens.currentWidget() == self.Stack:
             self.update_stack()
+
+        # These tableWidgets are never emptied but initially both are empty, so this runs only once
+        if self.tableWidget_StackTrace.rowCount() == 0:
+            self.update_stacktrace()
+        if self.tableWidget_Stack.rowCount() == 0:
+            self.update_stack()
         self.refresh_hex_view()
         if bring_disassemble_to_front:
             self.showMaximized()
@@ -4059,10 +4065,15 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
 
     def update_stacktrace(self):
         self.listWidget_ReturnAddresses.clear()
+        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+            return
         return_addresses = GDB_Engine.get_stack_frame_return_addresses()
         self.listWidget_ReturnAddresses.addItems(return_addresses)
 
     def update_frame_info(self, index):
+        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+            self.textBrowser_Info.setText(tr.PROCESS_RUNNING)
+            return
         frame_info = GDB_Engine.get_stack_frame_info(index)
         self.textBrowser_Info.setText(frame_info)
 
