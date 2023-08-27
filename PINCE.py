@@ -1378,6 +1378,7 @@ class MainForm(QMainWindow, MainWindow):
         self.flashAttachButton = True
         self.flashAttachButtonTimer.start(100)
         self.label_SelectedProcess.setText(tr.NO_PROCESS_SELECTED)
+        self.memory_view_window.setWindowTitle(tr.NO_PROCESS_SELECTED)
 
     def on_status_detached(self):
         self.label_SelectedProcess.setStyleSheet("color: blue")

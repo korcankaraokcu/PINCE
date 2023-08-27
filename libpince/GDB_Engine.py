@@ -253,23 +253,6 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         return output
 
 
-def await_process_exit():
-    """
-    Checks if the current inferior is alive, uses conditions to inform other functions and threads about inferiors state
-    Detaches if the current inferior dies while attached
-    Should be called by creating a thread. Usually called in initialization process by attach function
-    """
-    while True:
-        if currentpid == -1 or SysUtils.is_process_valid(currentpid):
-            sleep(0.1)
-        else:
-            with process_exited_condition:
-                print("Process terminated (PID:" + str(currentpid) + ")")
-                process_exited_condition.notify_all()
-                detach()
-                break
-
-
 def state_observe_thread():
     """
     Observes the state of gdb, uses conditions to inform other functions and threads about gdb's state
@@ -283,6 +266,16 @@ def state_observe_thread():
             global stop_reason
             global inferior_status
             old_status = inferior_status
+            for match in matches:
+                if match[0].startswith('stopped,reason="exited'):
+                    with process_exited_condition:
+                        detach()
+                        print(f"Process terminated (PID:{currentpid})")
+                        process_exited_condition.notify_all()
+                        return
+            
+            # For multiline outputs, only the last async event is important
+            # Get the last match only to optimize parsing
             stop_info = matches[-1][0]
             if stop_info:
                 bp_num = common_regexes.breakpoint_number.search(stop_info)
@@ -319,7 +312,7 @@ def state_observe_thread():
                 if gdb_output_mode.async_output:
                     print(child.before)
                 gdb_async_output.broadcast_message(child.before)
-    except OSError:
+    except (OSError, ValueError):
         print("Exiting state_observe_thread")
 
 
@@ -566,9 +559,6 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
     set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
-    await_exit_thread = Thread(target=await_process_exit)
-    await_exit_thread.daemon = True
-    await_exit_thread.start()
     SysUtils.execute_script(SysUtils.get_user_path(type_defs.USER_PATHS.PINCEINIT_AA_PATH))
     return type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL
 
@@ -622,9 +612,6 @@ def create_process(process_path, args="", ld_preload_path="", gdb_path=type_defs
     set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
-    await_exit_thread = Thread(target=await_process_exit)
-    await_exit_thread.daemon = True
-    await_exit_thread.start()
     SysUtils.execute_script(SysUtils.get_user_path(type_defs.USER_PATHS.PINCEINIT_AA_PATH))
     return True
 
