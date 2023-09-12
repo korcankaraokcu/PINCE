@@ -457,13 +457,12 @@ class MainForm(QMainWindow, MainWindow):
         self.check_status_thread.process_stopped.connect(self.memory_view_window.process_stopped)
         self.check_status_thread.process_running.connect(self.memory_view_window.process_running)
         self.check_status_thread.start()
-        self.update_address_table_thread = Worker(self.update_address_table_loop)
-        self.update_search_table_thread = Worker(self.update_search_table_loop)
-        self.freeze_thread = Worker(self.freeze_loop)
-        global threadpool
-        threadpool.start(self.update_address_table_thread)
-        threadpool.start(self.update_search_table_thread)
-        threadpool.start(self.freeze_thread)
+        self.address_table_timer = QTimer(timeout=self.address_table_loop, singleShot=True)
+        self.address_table_timer.start()
+        self.search_table_timer = QTimer(timeout=self.search_table_loop, singleShot=True)
+        self.search_table_timer.start()
+        self.freeze_timer = QTimer(timeout=self.freeze_loop, singleShot=True)
+        self.freeze_timer.start()
         self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
         self.shortcut_open_file.activated.connect(self.pushButton_Open_clicked)
         GuiUtils.append_shortcut_to_tooltip(self.pushButton_Open, self.shortcut_open_file)
@@ -1187,8 +1186,8 @@ class MainForm(QMainWindow, MainWindow):
         matches = self.backend.matches()
         progress_running = 0
         match_count = self.backend.get_match_count()
-        if match_count > 10000:
-            self.label_MatchCount.setText(tr.MATCH_COUNT_LIMITED.format(match_count, 10000))
+        if match_count > 1000:
+            self.label_MatchCount.setText(tr.MATCH_COUNT_LIMITED.format(match_count, 1000))
         else:
             self.label_MatchCount.setText(tr.MATCH_COUNT.format(match_count))
         self.tableWidget_valuesearchtable.setRowCount(0)
@@ -1210,7 +1209,7 @@ class MainForm(QMainWindow, MainWindow):
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_ADDRESS_COL, current_item)
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_PREVIOUS_COL, QTableWidgetItem(value))
-            if n == 10000:
+            if n == 1000:
                 break
 
     def _scan_to_length(self, type_index):
@@ -1435,30 +1434,30 @@ class MainForm(QMainWindow, MainWindow):
             value = int(round(self.backend.get_scan_progress() * 100))
             self.progressBar.setValue(value)
 
-    def update_address_table_loop(self):
-        while exiting == 0:
-            sleep(table_update_interval / 1000)
-            if update_table:
-                try:
-                    self.update_address_table()
-                except:
-                    traceback.print_exc()
+    # Loop restarts itself to wait for function execution, same for the functions below
+    def address_table_loop(self):
+        if update_table and not exiting:
+            try:
+                self.update_address_table()
+            except:
+                traceback.print_exc()
+        self.address_table_timer.start(table_update_interval)
 
-    def update_search_table_loop(self):
-        while exiting == 0:
-            sleep(0.5)
+    def search_table_loop(self):
+        if not exiting:
             try:
                 self.update_search_table()
             except:
                 traceback.print_exc()
+        self.search_table_timer.start(500)
 
     def freeze_loop(self):
-        while exiting == 0:
-            sleep(freeze_interval / 1000)
+        if not exiting:
             try:
                 self.freeze()
             except:
                 traceback.print_exc()
+        self.freeze_timer.start(freeze_interval)
 
     # ----------------------------------------------------
 
