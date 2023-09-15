@@ -294,6 +294,13 @@ REF_CALL_COUNT_COL = 1
 # see UpdateAddressTableThread
 saved_addresses_changed_list = list()
 
+# GDB expression cache
+# TODO: Try to find a fast and non-gdb way to calculate symbols so we don't need this
+# This is one of the few tricks we do to minimize examine_expressions calls
+# This solution might bring problems if the symbols are changing frequently
+# Currently only address_table_loop uses this so user can refresh symbols with a button press
+exp_cache = {}
+
 # vars for communication/storage with the non blocking threads
 exiting = 0
 progress_running = 0
@@ -562,7 +569,9 @@ class MainForm(QMainWindow, MainWindow):
     def apply_after_init(self):
         global gdb_logging
         global ignored_signals
+        global exp_cache
 
+        exp_cache.clear()
         gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
         ignored_signals = self.settings.value("Debug/ignored_signals", type=str)
         GDB_Engine.set_logging(gdb_logging)
@@ -944,7 +953,8 @@ class MainForm(QMainWindow, MainWindow):
         except KeyError:
             self.treeWidget_AddressTable.keyPressEvent_original(event)
 
-    def update_address_table(self):
+    def update_address_table(self, use_cache=False):
+        global exp_cache
         if GDB_Engine.currentpid == -1 or self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
@@ -968,14 +978,17 @@ class MainForm(QMainWindow, MainWindow):
             try:
                 int(address, 0)
             except (ValueError, TypeError):
-                examine_list.append(address)
-                examine_indices.append(index)
+                if use_cache and address in exp_cache:
+                    address = exp_cache[address]
+                else:
+                    examine_list.append(address)
+                    examine_indices.append(index)
             address_list.append(address)
             rows.append(row)
             index += 1
-        examine_list = [item.address for item in GDB_Engine.examine_expressions(examine_list)]
-        for index, address in enumerate(examine_list):
-            address_list[examine_indices[index]] = address
+        for index, item in enumerate(GDB_Engine.examine_expressions(examine_list)):
+            exp_cache[examine_list[index]] = item.address
+            address_list[examine_indices[index]] = item.address
         for index, row in enumerate(rows):
             value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
             address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
@@ -1438,7 +1451,7 @@ class MainForm(QMainWindow, MainWindow):
     def address_table_loop(self):
         if update_table and not exiting:
             try:
-                self.update_address_table()
+                self.update_address_table(use_cache=True)
             except:
                 traceback.print_exc()
         self.address_table_timer.start(table_update_interval)
