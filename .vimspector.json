@@ -19,7 +19,10 @@
         "justMyCode": false,
         "sudo": true,
         "console": "integratedTerminal",
-        "program": "${workspaceFolder}/PINCE.py"
+        "program": "${workspaceFolder}/PINCE.py",
+        "env": {
+          "PATH": "${PATH}"
+        }
       },
       "breakpoints": {
         "exception": {
