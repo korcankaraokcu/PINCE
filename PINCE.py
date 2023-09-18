@@ -304,6 +304,8 @@ exp_cache = {}
 # vars for communication with the non blocking threads
 exiting = 0
 
+scanmem = Scanmem(os.path.join(SysUtils.get_libpince_directory(), "libscanmem", "libscanmem.so"))
+
 threadpool = QThreadPool()
 # Placeholder number, may have to be changed in the future
 threadpool.setMaxThreadCount(10)
@@ -449,11 +451,6 @@ class MainForm(QMainWindow, MainWindow):
             InputDialogForm(item_list=[(tr.GDB_INIT_ERROR, None)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
         else:
             self.apply_after_init()
-
-        # This should be changed, only works if you use the current directory
-        # Fails if you for example install it to some place like bin
-        libscanmem_path = os.path.join(os.getcwd(), "libpince", "libscanmem", "libscanmem.so")
-        self.backend = Scanmem(libscanmem_path)
         self.memory_view_window = MemoryViewWindowForm(self)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
@@ -1078,8 +1075,8 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NextScan.setEnabled(True)
             self.pushButton_UndoScan.setEnabled(True)
             search_scope = self.comboBox_ScanScope.currentData(Qt.ItemDataRole.UserRole)
-            self.backend.send_command("option region_scan_level " + str(search_scope))
-            self.backend.reset()
+            scanmem.send_command("option region_scan_level " + str(search_scope))
+            scanmem.reset()
             self.comboBox_ScanScope.setEnabled(False)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
         self.comboBox_ScanType_init()
@@ -1194,16 +1191,16 @@ class MainForm(QMainWindow, MainWindow):
         self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
         self.progress_bar_timer.start(100)
         if search_for == "undo":
-            scan_thread = Worker(self.backend.undo_scan)
+            scan_thread = Worker(scanmem.undo_scan)
         else:
-            scan_thread = Worker(self.backend.send_command, search_for)
+            scan_thread = Worker(scanmem.send_command, search_for)
         scan_thread.signals.finished.connect(self.scan_callback)
         threadpool.start(scan_thread)
 
     def scan_callback(self):
         self.progress_bar_timer.stop()
-        matches = self.backend.matches()
-        match_count = self.backend.get_match_count()
+        matches = scanmem.matches()
+        match_count = scanmem.get_match_count()
         if match_count > 1000:
             self.label_MatchCount.setText(tr.MATCH_COUNT_LIMITED.format(match_count, 1000))
         else:
@@ -1270,9 +1267,9 @@ class MainForm(QMainWindow, MainWindow):
 
         self.lineEdit_Scan.setValidator(validator_map[validator_str])
         self.lineEdit_Scan2.setValidator(validator_map[validator_str])
-        self.backend.send_command("option scan_data_type {}".format(scanmem_type))
+        scanmem.send_command("option scan_data_type {}".format(scanmem_type))
         # according to scanmem instructions you should always do `reset` after changing type
-        self.backend.reset()
+        scanmem.reset()
 
     def pushButton_AttachProcess_clicked(self):
         self.processwindow = ProcessForm(self)
@@ -1311,7 +1308,7 @@ class MainForm(QMainWindow, MainWindow):
         attach_result = GDB_Engine.attach(pid, gdb_path)
         if attach_result == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
             self.apply_after_init()
-            self.backend.pid(pid)
+            scanmem.pid(pid)
             self.on_new_process()
 
             # TODO: This makes PINCE call on_process_stop twice when attaching
@@ -1375,7 +1372,7 @@ class MainForm(QMainWindow, MainWindow):
     def reset_scan(self):
         self.scan_mode = type_defs.SCAN_MODE.NEW
         self.pushButton_NewFirstScan.setText(tr.FIRST_SCAN)
-        self.backend.reset()
+        scanmem.reset()
         self.tableWidget_valuesearchtable.setRowCount(0)
         self.comboBox_ValueType.setEnabled(True)
         self.comboBox_ScanScope.setEnabled(True)
@@ -1444,7 +1441,7 @@ class MainForm(QMainWindow, MainWindow):
     # QTimer loops
 
     def update_progress_bar(self):
-        value = int(round(self.backend.get_scan_progress() * 100))
+        value = int(round(scanmem.get_scan_progress() * 100))
         self.progressBar.setValue(value)
 
     # Loop restarts itself to wait for function execution, same for the functions below
