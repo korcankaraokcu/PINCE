@@ -32,9 +32,9 @@ from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, Q
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
     QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
     QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, \
-    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QThreadPool, \
-    QTranslator, QLocale, pyqtSlot
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
+    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
+    QLocale
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect
 
@@ -301,26 +301,27 @@ saved_addresses_changed_list = list()
 # Currently only address_table_loop uses this so user can refresh symbols with a button press
 exp_cache = {}
 
-# vars for communication/storage with the non blocking threads
+# vars for communication with the non blocking threads
 exiting = 0
-progress_running = 0
 
 threadpool = QThreadPool()
 # Placeholder number, may have to be changed in the future
 threadpool.setMaxThreadCount(10)
 
+class WorkerSignals(QObject):
+    finished = pyqtSignal()
 
 class Worker(QRunnable):
     def __init__(self, fn, *args, **kwargs):
         super(Worker, self).__init__()
-
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
+        self.signals = WorkerSignals()
 
-    @pyqtSlot()
     def run(self):
         self.fn(*self.args, **self.kwargs)
+        self.signals.finished.emit()
 
 
 def except_hook(exception_type, value, tb):
@@ -1183,21 +1184,25 @@ class MainForm(QMainWindow, MainWindow):
         return search_for
 
     def pushButton_NextScan_clicked(self, search_for=None):
+        global threadpool
         if GDB_Engine.currentpid == -1:
             return
-        global progress_running
         if not search_for:
             search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
-
-        # ProgressBar
-        global threadpool
-        threadpool.start(Worker(self.update_progress_bar))
+        self.QWidget_Toolbox.setEnabled(False)
+        self.progressBar.setValue(0)
+        self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
+        self.progress_bar_timer.start(100)
         if search_for == "undo":
-            self.backend.undo_scan()
+            scan_thread = Worker(self.backend.undo_scan)
         else:
-            self.backend.send_command(search_for)
+            scan_thread = Worker(self.backend.send_command, search_for)
+        scan_thread.signals.finished.connect(self.scan_callback)
+        threadpool.start(scan_thread)
+
+    def scan_callback(self):
+        self.progress_bar_timer.stop()
         matches = self.backend.matches()
-        progress_running = 0
         match_count = self.backend.get_match_count()
         if match_count > 1000:
             self.label_MatchCount.setText(tr.MATCH_COUNT_LIMITED.format(match_count, 1000))
@@ -1224,6 +1229,7 @@ class MainForm(QMainWindow, MainWindow):
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_PREVIOUS_COL, QTableWidgetItem(value))
             if n == 1000:
                 break
+        self.QWidget_Toolbox.setEnabled(True)
 
     def _scan_to_length(self, type_index):
         if type_index == type_defs.SCAN_INDEX.INDEX_AOB:
@@ -1435,17 +1441,11 @@ class MainForm(QMainWindow, MainWindow):
         action_for_column[column]()
 
     # ----------------------------------------------------
-    # Async Functions
+    # QTimer loops
 
     def update_progress_bar(self):
-        global progress_running
-        global exiting
-        self.progressBar.setValue(0)
-        progress_running = 1
-        while progress_running == 1 and exiting == 0:
-            sleep(0.1)
-            value = int(round(self.backend.get_scan_progress() * 100))
-            self.progressBar.setValue(value)
+        value = int(round(self.backend.get_scan_progress() * 100))
+        self.progressBar.setValue(value)
 
     # Loop restarts itself to wait for function execution, same for the functions below
     def address_table_loop(self):
