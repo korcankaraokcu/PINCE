@@ -4760,16 +4760,17 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
 
     def tableWidget_SymbolInfo_current_changed(self, QModelIndex_current):
         self.textBrowser_AddressInfo.clear()
-        current_item = self.tableWidget_SymbolInfo.item(QModelIndex_current.row(), FUNCTIONS_INFO_ADDR_COL)
-        if current_item:
-            address = current_item.text()
-            if SysUtils.extract_address(address):
-                symbol = self.tableWidget_SymbolInfo.item(QModelIndex_current.row(), FUNCTIONS_INFO_SYMBOL_COL).text()
-                for item in SysUtils.split_symbol(symbol):
-                    info = GDB_Engine.get_symbol_info(item)
-                    self.textBrowser_AddressInfo.append(info)
-            else:
-                self.textBrowser_AddressInfo.append(tr.DEFINED_SYMBOL)
+        current_row = QModelIndex_current.row()
+        if current_row < 0:
+            return
+        address = self.tableWidget_SymbolInfo.item(current_row, FUNCTIONS_INFO_ADDR_COL).text()
+        if SysUtils.extract_address(address):
+            symbol = self.tableWidget_SymbolInfo.item(current_row, FUNCTIONS_INFO_SYMBOL_COL).text()
+            for item in SysUtils.split_symbol(symbol):
+                info = GDB_Engine.get_symbol_info(item)
+                self.textBrowser_AddressInfo.append(info)
+        else:
+            self.textBrowser_AddressInfo.append(tr.DEFINED_SYMBOL)
 
     def tableWidget_SymbolInfo_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
