@@ -340,7 +340,6 @@ sys.excepthook = except_hook
 
 def signal_handler(signal, frame):
     GDB_Engine.cancel_last_command()
-    raise KeyboardInterrupt
 
 
 signal.signal(signal.SIGINT, signal_handler)
