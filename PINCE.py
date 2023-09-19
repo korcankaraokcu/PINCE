@@ -1198,6 +1198,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def scan_callback(self):
         self.progress_bar_timer.stop()
+        self.progressBar.setValue(100)
         matches = scanmem.matches()
         match_count = scanmem.get_match_count()
         if match_count > 1000:
