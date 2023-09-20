@@ -339,7 +339,17 @@ sys.excepthook = except_hook
 
 
 def signal_handler(signal, frame):
-    GDB_Engine.cancel_last_command()
+    if GDB_Engine.lock_send_command.locked():
+        print("\nCancelling the last GDB command")
+        GDB_Engine.cancel_last_command()
+    else:
+        try:
+            text = input("\nNo GDB command to cancel, quit PINCE? (y/n)")
+            if text.lower().startswith("y"):
+                quit()
+        except RuntimeError:
+            print()  # Prints a newline so the terminal looks nicer when we quit
+            quit()
 
 
 signal.signal(signal.SIGINT, signal_handler)
