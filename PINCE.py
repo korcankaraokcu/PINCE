@@ -4336,7 +4336,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         instances.append(self)
         GuiUtils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
-        self.update_timer = QTimer()
+        self.update_timer = QTimer(timeout=self.update_list)
         if watchpoint_type == type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
             string = tr.OPCODE_WRITING_TO.format(address)
         elif watchpoint_type == type_defs.WATCHPOINT_TYPE.READ_ONLY:
@@ -4359,9 +4359,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.pushButton_Refresh.clicked.connect(self.update_list)
         self.tableWidget_Opcodes.itemDoubleClicked.connect(self.tableWidget_Opcodes_item_double_clicked)
         self.tableWidget_Opcodes.selectionModel().currentChanged.connect(self.tableWidget_Opcodes_current_changed)
-        self.update_timer.setInterval(100)
-        self.update_timer.timeout.connect(self.update_list)
-        self.update_timer.start()
+        self.update_timer.start(100)
 
     def update_list(self):
         info = GDB_Engine.get_track_watchpoint_info(self.breakpoints)
@@ -4426,6 +4424,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.parent = lambda: parent
         global instances
         instances.append(self)
+        self.update_list_timer = QTimer(timeout=self.update_list)
+        self.update_values_timer = QTimer(timeout=self.update_values)
         self.setWindowFlags(Qt.WindowType.Window)
         GuiUtils.center_to_parent(self)
         self.setWindowTitle(tr.ACCESSED_BY_INSTRUCTION.format(instruction))
@@ -4443,11 +4443,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.tableWidget_TrackInfo.itemDoubleClicked.connect(self.tableWidget_TrackInfo_item_double_clicked)
         self.tableWidget_TrackInfo.selectionModel().currentChanged.connect(self.tableWidget_TrackInfo_current_changed)
         self.comboBox_ValueType.currentIndexChanged.connect(self.update_values)
-        self.update_timer = QTimer()
-        self.update_timer.setInterval(100)
-        self.update_timer.timeout.connect(self.update_list)
-        self.update_timer.start()
-        self.parent().process_stopped.connect(self.update_values)
+        self.update_list_timer.start(100)
+        self.update_values_timer.start(500)
         self.parent().refresh_disassemble_view()
 
     def update_list(self):
@@ -4466,8 +4463,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
                 self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_ADDR_COL, QTableWidgetItem(address))
                 self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_SOURCE_COL,
                                                    QTableWidgetItem("[" + register_expression + "]"))
-        GuiUtils.resize_to_contents(self.tableWidget_TrackInfo)
-        self.tableWidget_TrackInfo.selectRow(self.last_selected_row)
+        self.update_values()
 
     def update_values(self):
         mem_handle = GDB_Engine.memory_handle()
@@ -4503,7 +4499,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
 
     def closeEvent(self, QCloseEvent):
         global instances
-        self.update_timer.stop()
+        self.update_list_timer.stop()
+        self.update_values_timer.stop()
         if not self.stopped:
             GDB_Engine.delete_breakpoint(self.address)
         self.parent().refresh_disassemble_view()
