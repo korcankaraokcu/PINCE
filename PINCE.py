@@ -1835,7 +1835,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.update_value_of_address()
 
     def removeOffsetLayout(self):
-        if len(self.offsetsList) == 0:
+        if len(self.offsetsList) == 1:
             return
         frame = self.offsetsList[-1]
         frame.deleteLater()
@@ -1887,10 +1887,13 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.checkBox_zeroterminate.hide()
         if self.checkBox_IsPointer.isChecked():
             self.lineEdit_address.setEnabled(False)
-            if self.lineEdit_PtrStartAddress.text() == "":
-                self.lineEdit_PtrStartAddress.setText(self.lineEdit_address.text())
+            self.lineEdit_PtrStartAddress.setText(self.lineEdit_address.text())
+            if len(self.offsetsList) == 0:
+                self.addOffsetLayout(False)
             self.widget_Pointer.show()
         else:
+            self.lineEdit_address.setText(self.lineEdit_PtrStartAddress.text())
+            self.lineEdit_PtrStartAddress.setText("")
             self.lineEdit_address.setEnabled(True)
             self.widget_Pointer.hide()
         self.setFixedSize(self.layout().sizeHint())
@@ -1931,8 +1934,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def get_offsets_int_list(self):
         offsetsIntList = []
         for frame in self.offsetsList:
-            layout = frame.layout()
-            offsetText = layout.itemAt(1).widget().text()
+            offsetText = frame.layout().itemAt(1).widget().text()
             try:
                 offsetValue = int(offsetText, 16)
             except ValueError:
@@ -1947,8 +1949,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         for offset in address.offsets_list:
             self.addOffsetLayout(False)
             frame = self.offsetsList[-1]
-            layout = frame.layout()
-            offsetText = layout.itemAt(1).widget().setText(hex(offset))
+            frame.layout().itemAt(1).widget().setText(hex(offset))
 
     def on_offset_arrow_clicked(self, offsetTextWidget, operator_func):
         offsetText = offsetTextWidget.text()
