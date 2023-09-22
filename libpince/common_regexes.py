@@ -32,7 +32,7 @@ inferior_pid = compile(r"process\s+(\d+)")
 hw_breakpoint_count = compile(r"(hw|read|acc)")
 breakpoint_size = compile(r"char\[(\d+)\]")
 breakpoint_created = compile(r"breakpoint-created")
-breakpoint_number = compile(r"number=\"(\d+)\"")
+breakpoint_number = compile(r"(?:number|bkptno)=\"(\d+)\"")
 convenience_variable = compile(r'"(\$\d+)\s+=\s+(.*)"')  # "$26 = 3"
 entry_point = compile(r"Entry\s+point:\s+" + hex_number_grouped.pattern)
 # The command will always start with the word "source", check GDB_Engine.send_command function for the cause
