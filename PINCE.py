@@ -2591,7 +2591,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def initialize_debug_context_menu(self):
         self.actionBreak.triggered.connect(GDB_Engine.interrupt_inferior)
         self.actionRun.triggered.connect(GDB_Engine.continue_inferior)
-        self.actionToggle_Attach.triggered.connect(self.parent().toggle_attach_hotkey_pressed)
+        self.actionToggle_Attach.triggered.connect(lambda: self.parent().toggle_attach_hotkey_pressed())
         self.actionStep.triggered.connect(self.step_instruction)
         self.actionStep_Over.triggered.connect(self.step_over_instruction)
         self.actionExecute_Till_Return.triggered.connect(self.execute_till_return)
