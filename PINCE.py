@@ -4337,6 +4337,8 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         GuiUtils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.update_timer = QTimer(timeout=self.update_list)
+        self.stopped = False
+        self.address = address
         if watchpoint_type == type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
             string = tr.OPCODE_WRITING_TO.format(address)
         elif watchpoint_type == type_defs.WATCHPOINT_TYPE.READ_ONLY:
@@ -4350,11 +4352,9 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         if not breakpoints:
             QMessageBox.information(self, tr.ERROR, tr.TRACK_WATCHPOINT_FAILED.format(address))
             return
-        self.address = address
         self.breakpoints = breakpoints
         self.info = {}
         self.last_selected_row = 0
-        self.stopped = False
         self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
         self.pushButton_Refresh.clicked.connect(self.update_list)
         self.tableWidget_Opcodes.itemDoubleClicked.connect(self.tableWidget_Opcodes_item_double_clicked)
@@ -4426,6 +4426,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         instances.append(self)
         self.update_list_timer = QTimer(timeout=self.update_list)
         self.update_values_timer = QTimer(timeout=self.update_values)
+        self.stopped = False
+        self.address = address
         self.setWindowFlags(Qt.WindowType.Window)
         GuiUtils.center_to_parent(self)
         self.setWindowTitle(tr.ACCESSED_BY_INSTRUCTION.format(instruction))
@@ -4433,11 +4435,9 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         if not breakpoint:
             QMessageBox.information(self, tr.ERROR, tr.TRACK_BREAKPOINT_FAILED.format(address))
             return
-        self.address = address
         self.breakpoint = breakpoint
         self.info = {}
         self.last_selected_row = 0
-        self.stopped = False
         GuiUtils.fill_value_combobox(self.comboBox_ValueType)
         self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
         self.tableWidget_TrackInfo.itemDoubleClicked.connect(self.tableWidget_TrackInfo_item_double_clicked)
