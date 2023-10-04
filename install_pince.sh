@@ -145,7 +145,7 @@ set_install_vars() {
 		PKG_NAMES="$PKG_NAMES_FEDORA"
 		LRELEASE_CMD="lrelease-qt6"
 		;;
-	*Debian*|*Ubuntu*)
+	*Debian*|*Ubuntu*|*Pop!_OS*)
 		PKG_MGR="apt -y"
 		PKG_NAMES="$PKG_NAMES_DEBIAN"
 		LRELEASE_CMD="/usr/lib/qt6/bin/lrelease"
