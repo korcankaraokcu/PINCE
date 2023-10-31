@@ -355,6 +355,24 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
+def fill_endianness_combobox(QCombobox, current_index=type_defs.ENDIANNESS.HOST):
+    """Fills the given QCombobox with endianness strings
+    TODO: Carry this function to the GuiUtils.py when it gets separated from libpince
+
+    Args:
+        QCombobox (QCombobox): The combobox that'll be filled
+        current_index (int): Can be a member of type_defs.ENDIANNESS
+    """
+    endianness_text = [
+        (type_defs.ENDIANNESS.HOST, tr.HOST),
+        (type_defs.ENDIANNESS.LITTLE, tr.LITTLE),
+        (type_defs.ENDIANNESS.BIG, tr.BIG)
+    ]
+    for endian, text in endianness_text:
+        QCombobox.addItem(text, endian)
+    QCombobox.setCurrentIndex(current_index)
+
+
 # Checks if the inferior has been terminated
 class AwaitProcessExit(QThread):
     process_exited = pyqtSignal()
@@ -498,6 +516,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NewFirstScan_clicked()
         self.comboBox_ScanScope_init()
         self.comboBox_ValueType_init()
+        fill_endianness_combobox(self.comboBox_Endianness)
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.lineEdit_Scan.setValidator(
@@ -997,7 +1016,7 @@ class MainForm(QMainWindow, MainWindow):
             exp_cache[examine_list[index]] = item.address
             address_list[examine_indices[index]] = item.address
         for index, row in enumerate(rows):
-            value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+            vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
             address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
             current_address = address_list[index]
             if isinstance(address_data, type_defs.PointerType):
@@ -1019,13 +1038,10 @@ class MainForm(QMainWindow, MainWindow):
             else:
                 address = current_address
                 row.setText(ADDR_COL, address or address_data)
-            signed = True if value_type.value_repr == type_defs.VALUE_REPR.SIGNED else False
-            value = GDB_Engine.read_memory(address, value_type.value_index, value_type.length,
-                                           value_type.zero_terminate, signed, mem_handle=mem_handle)
+            value = GDB_Engine.read_memory(address, vt.value_index, vt.length, vt.zero_terminate,
+                                           vt.value_repr, vt.endian, mem_handle=mem_handle)
             if value is None:
                 value = ""
-            elif value_type.value_repr == type_defs.VALUE_REPR.HEX:
-                value = hex(value)
             else:
                 value = str(value)
             row.setText(VALUE_COL, value)
@@ -1037,8 +1053,8 @@ class MainForm(QMainWindow, MainWindow):
     def pushButton_AddAddressManually_clicked(self):
         manual_address_dialog = ManualAddressDialogForm()
         if manual_address_dialog.exec():
-            desc, address_expr, value_index, length, zero_terminate = manual_address_dialog.get_values()
-            self.add_entry_to_addresstable(desc, address_expr, value_index, length, zero_terminate)
+            desc, address_expr, value_index, length, zero_terminate, endian = manual_address_dialog.get_values()
+            self.add_entry_to_addresstable(desc, address_expr, value_index, length, zero_terminate, endian=endian)
 
     def pushButton_MemoryView_clicked(self):
         self.memory_view_window.showMaximized()
@@ -1084,9 +1100,12 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NextScan.setEnabled(True)
             self.pushButton_UndoScan.setEnabled(True)
             search_scope = self.comboBox_ScanScope.currentData(Qt.ItemDataRole.UserRole)
-            scanmem.send_command("option region_scan_level " + str(search_scope))
+            endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
+            scanmem.send_command(f"option region_scan_level {search_scope}")
+            scanmem.send_command(f"option endianness {endian}")
             scanmem.reset()
             self.comboBox_ScanScope.setEnabled(False)
+            self.comboBox_Endianness.setEnabled(False)
             self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
         self.comboBox_ScanType_init()
 
@@ -1225,11 +1244,15 @@ class MainForm(QMainWindow, MainWindow):
             current_item = QTableWidgetItem(address)
             result = result_type.split(" ")[0]
             value_index = type_defs.scanmem_result_to_index_dict[result]
-            signed = False
-            if type_defs.VALUE_INDEX.is_integer(value_index) and result.endswith("s"):
-                signed = True
-            current_item.setData(Qt.ItemDataRole.UserRole, (value_index, signed))
-            value = str(GDB_Engine.read_memory(address, value_index, length, signed=signed, mem_handle=mem_handle))
+            if self.checkBox_Hex.isChecked():
+                value_repr = type_defs.VALUE_REPR.HEX
+            elif type_defs.VALUE_INDEX.is_integer(value_index) and result.endswith("s"):
+                value_repr = type_defs.VALUE_REPR.SIGNED
+            else:
+                value_repr = type_defs.VALUE_REPR.UNSIGNED
+            endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
+            current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian))
+            value = str(GDB_Engine.read_memory(address, value_index, length, True, value_repr, endian, mem_handle))
             self.tableWidget_valuesearchtable.insertRow(self.tableWidget_valuesearchtable.rowCount())
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_ADDRESS_COL, current_item)
             self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
@@ -1247,9 +1270,10 @@ class MainForm(QMainWindow, MainWindow):
 
     def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
         current_item = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL)
+        value_index, value_repr, endian = current_item.data(Qt.ItemDataRole.UserRole)
         length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
-        self.add_entry_to_addresstable(tr.NO_DESCRIPTION, current_item.text(),
-                                       current_item.data(Qt.ItemDataRole.UserRole)[0], length)
+        self.add_entry_to_addresstable(tr.NO_DESCRIPTION, current_item.text(), value_index, length,
+                                       value_repr=value_repr, endian=endian)
 
     def comboBox_ValueType_current_index_changed(self):
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
@@ -1377,7 +1401,8 @@ class MainForm(QMainWindow, MainWindow):
         for row in self.tableWidget_valuesearchtable.selectedItems():
             i = i + 1
             if i % 3 == 0:
-                self.add_entry_to_addresstable("", row.text(), row.data(Qt.ItemDataRole.UserRole)[0], length)
+                value_index, value_repr, endian = row.data(Qt.ItemDataRole.UserRole)
+                self.add_entry_to_addresstable("", row.text(), value_index, length, True, value_repr, endian)
 
     def reset_scan(self):
         self.scan_mode = type_defs.SCAN_MODE.NEW
@@ -1386,6 +1411,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setRowCount(0)
         self.comboBox_ValueType.setEnabled(True)
         self.comboBox_ScanScope.setEnabled(True)
+        self.comboBox_Endianness.setEnabled(True)
         self.pushButton_NextScan.setEnabled(False)
         self.pushButton_UndoScan.setEnabled(False)
         self.progressBar.setValue(0)
@@ -1426,12 +1452,13 @@ class MainForm(QMainWindow, MainWindow):
         GDB_Engine.detach()
         app.closeAllWindows()
 
-    def add_entry_to_addresstable(self, description, address_expr, value_index, length=0, zero_terminate=True):
+    def add_entry_to_addresstable(self, description, address_expr, value_index, length=0, zero_terminate=True,
+                                  value_repr=type_defs.VALUE_REPR.UNSIGNED, endian=type_defs.ENDIANNESS.HOST):
         current_row = QTreeWidgetItem()
         current_row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
         frozen = type_defs.Frozen("", type_defs.FREEZE_TYPE.DEFAULT)
         current_row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
-        value_type = type_defs.ValueType(value_index, length, zero_terminate)
+        value_type = type_defs.ValueType(value_index, length, zero_terminate, value_repr, endian)
         self.treeWidget_AddressTable.addTopLevelItem(current_row)
         self.change_address_table_entries(current_row, description, address_expr, value_type)
         self.show()  # In case of getting called from elsewhere
@@ -1491,10 +1518,10 @@ class MainForm(QMainWindow, MainWindow):
             for row_index in range(row_count):
                 address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
                 previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
-                value_index, signed = address_item.data(Qt.ItemDataRole.UserRole)
+                value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
                 address = address_item.text()
-                new_value = str(GDB_Engine.read_memory(address, value_index, length, signed=signed,
-                                                       mem_handle=mem_handle))
+                new_value = str(GDB_Engine.read_memory(address, value_index, length, value_repr=value_repr,
+                                                       endian=endian, mem_handle=mem_handle))
                 value_item = QTableWidgetItem(new_value)
                 if new_value != previous_text:
                     value_item.setForeground(QBrush(QColor(255, 0, 0)))
@@ -1507,19 +1534,20 @@ class MainForm(QMainWindow, MainWindow):
         while it.value():
             row = it.value()
             if row.checkState(FROZEN_COL) == Qt.CheckState.Checked:
-                value_index = row.data(TYPE_COL, Qt.ItemDataRole.UserRole).value_index
+                vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 address = row.text(ADDR_COL).strip("P->")
                 frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 value = frozen.value
                 freeze_type = frozen.freeze_type
-                if type_defs.VALUE_INDEX.is_integer(value_index):
-                    new_value = GDB_Engine.read_memory(address, value_index)
+                if type_defs.VALUE_INDEX.is_integer(vt.value_index):
+                    new_value = GDB_Engine.read_memory(address, vt.value_index, endian=vt.endian)
+                    new_value = int(new_value, 0) if isinstance(new_value, str) else new_value
                     if freeze_type == type_defs.FREEZE_TYPE.INCREMENT and new_value > int(value, 0) or \
                             freeze_type == type_defs.FREEZE_TYPE.DECREMENT and new_value < int(value, 0):
                         frozen.value = str(new_value)
-                        GDB_Engine.write_memory(address, value_index, frozen.value)
+                        GDB_Engine.write_memory(address, vt.value_index, frozen.value, vt.endian)
                         continue
-                GDB_Engine.write_memory(address, value_index, value)
+                GDB_Engine.write_memory(address, vt.value_index, value, vt.endian)
             it += 1
 
     def treeWidget_AddressTable_item_clicked(self, row, column):
@@ -1559,7 +1587,7 @@ class MainForm(QMainWindow, MainWindow):
                 frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 frozen.value = new_value
                 row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
-                GDB_Engine.write_memory(address, value_type.value_index, new_value)
+                GDB_Engine.write_memory(address, value_type.value_index, new_value, value_type.endian)
             self.update_address_table()
 
     def treeWidget_AddressTable_edit_desc(self):
@@ -1577,33 +1605,32 @@ class MainForm(QMainWindow, MainWindow):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if not row:
             return
-        desc, address_expr, value_type = self.read_address_table_entries(row)
-        manual_address_dialog = ManualAddressDialogForm(description=desc, address=address_expr,
-                                                        index=value_type.value_index, length=value_type.length,
-                                                        zero_terminate=value_type.zero_terminate)
+        desc, address_expr, vt = self.read_address_table_entries(row)
+        manual_address_dialog = ManualAddressDialogForm(description=desc, address=address_expr, index=vt.value_index,
+                                                        length=vt.length, zero_terminate=vt.zero_terminate,
+                                                        endian=vt.endian)
         manual_address_dialog.setWindowTitle(tr.EDIT_ADDRESS)
         if manual_address_dialog.exec():
-            desc, address_expr, value_index, length, zero_terminate = manual_address_dialog.get_values()
-            value_type = type_defs.ValueType(value_index, length, zero_terminate, value_type.value_repr)
-            self.change_address_table_entries(row, desc, address_expr, value_type)
+            desc, address_expr, value_index, length, zero_terminate, endian = manual_address_dialog.get_values()
+            vt = type_defs.ValueType(value_index, length, zero_terminate, vt.value_repr, endian)
+            self.change_address_table_entries(row, desc, address_expr, vt)
 
     def treeWidget_AddressTable_edit_type(self):
         row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
         if not row:
             return
-        value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-        dialog = EditTypeDialogForm(index=value_type.value_index, length=value_type.length,
-                                    zero_terminate=value_type.zero_terminate)
+        vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+        dialog = EditTypeDialogForm(index=vt.value_index, length=vt.length, zero_terminate=vt.zero_terminate)
         if dialog.exec():
             value_index, length, zero_terminate = dialog.get_values()
-            value_type = type_defs.ValueType(value_index, length, zero_terminate, value_type.value_repr)
+            vt = type_defs.ValueType(value_index, length, zero_terminate, vt.value_repr, vt.endian)
             for row in self.treeWidget_AddressTable.selectedItems():
-                row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, value_type)
-                row.setText(TYPE_COL, value_type.text())
+                row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, vt)
+                row.setText(TYPE_COL, vt.text())
             self.update_address_table()
 
     # Changes the column values of the given row
-    def change_address_table_entries(self, row, description=tr.NO_DESCRIPTION, address_expr="", value_type=None):
+    def change_address_table_entries(self, row, description=tr.NO_DESCRIPTION, address_expr="", vt=None):
         if isinstance(address_expr, type_defs.PointerType):
             address = GDB_Engine.read_pointer(address_expr)
             address_text = f'P->{hex(address)}' if address != None else 'P->??'
@@ -1617,15 +1644,15 @@ class MainForm(QMainWindow, MainWindow):
                 address_text = address
         value = ''
         if address:
-            value = GDB_Engine.read_memory(address, value_type.value_index, value_type.length,
-                                           value_type.zero_terminate)
+            value = GDB_Engine.read_memory(address, vt.value_index, vt.length, vt.zero_terminate, vt.value_repr,
+                                           vt.endian)
 
         assert isinstance(row, QTreeWidgetItem)
         row.setText(DESC_COL, description)
         row.setData(ADDR_COL, Qt.ItemDataRole.UserRole, address_expr)
         row.setText(ADDR_COL, address_text)
-        row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, value_type)
-        row.setText(TYPE_COL, value_type.text())
+        row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, vt)
+        row.setText(TYPE_COL, vt.text())
         row.setText(VALUE_COL, "" if value is None else str(value))
 
     # Returns the column values of the given row
@@ -1740,7 +1767,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
 # Add Address Manually Dialog
 class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def __init__(self, parent=None, description=tr.NO_DESCRIPTION, address="0x",
-                 index=type_defs.VALUE_INDEX.INDEX_INT32, length=10, zero_terminate=True):
+                 index=type_defs.VALUE_INDEX.INDEX_INT32, length=10, zero_terminate=True,
+                 endian=type_defs.ENDIANNESS.HOST):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.adjustSize()
@@ -1748,6 +1776,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.setFixedHeight(self.height())
         self.lineEdit_length.setValidator(QHexValidator(999, self))
         GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
+        fill_endianness_combobox(self.comboBox_Endianness, endian)
         self.lineEdit_description.setText(description)
         self.offsetsList = []
         if not isinstance(address, type_defs.PointerType):
@@ -1784,6 +1813,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.checkBox_zeroterminate.hide()
         self.setFixedSize(self.layout().sizeHint())
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
+        self.comboBox_Endianness.currentIndexChanged.connect(self.update_value_of_address)
         self.lineEdit_length.textChanged.connect(self.update_value_of_address)
         self.checkBox_zeroterminate.stateChanged.connect(self.update_value_of_address)
         self.checkBox_IsPointer.stateChanged.connect(self.comboBox_ValueType_current_index_changed)
@@ -1861,15 +1891,16 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             return
 
         address_type = self.comboBox_ValueType.currentIndex()
+        endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         if address_type == type_defs.VALUE_INDEX.INDEX_AOB:
             length = self.lineEdit_length.text()
-            value = GDB_Engine.read_memory(address, address_type, length)
+            value = GDB_Engine.read_memory(address, address_type, length, endian=endian)
         elif type_defs.VALUE_INDEX.is_string(address_type):
             length = self.lineEdit_length.text()
             is_zeroterminate = self.checkBox_zeroterminate.isChecked()
-            value = GDB_Engine.read_memory(address, address_type, length, is_zeroterminate)
+            value = GDB_Engine.read_memory(address, address_type, length, is_zeroterminate, endian=endian)
         else:
-            value = GDB_Engine.read_memory(address, address_type)
+            value = GDB_Engine.read_memory(address, address_type, endian=endian)
         self.label_valueofaddress.setText("<font color=red>??</font>" if value is None else str(value))
 
     def comboBox_ValueType_current_index_changed(self):
@@ -1923,13 +1954,12 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             length = int(length, 0)
         except:
             length = 0
-        zero_terminate = False
-        if self.checkBox_zeroterminate.isChecked():
-            zero_terminate = True
+        zero_terminate = self.checkBox_zeroterminate.isChecked()
         value_index = self.comboBox_ValueType.currentIndex()
+        endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         if self.checkBox_IsPointer.isChecked():
             address = type_defs.PointerType(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
-        return description, address, value_index, length, zero_terminate
+        return description, address, value_index, length, zero_terminate, endian
 
     def get_offsets_int_list(self):
         offsetsIntList = []
@@ -2921,8 +2951,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address),
                                                         index=type_defs.VALUE_INDEX.INDEX_AOB)
         if manual_address_dialog.exec():
-            desc, address_expr, value_index, length, zero_terminate = manual_address_dialog.get_values()
-            self.parent().add_entry_to_addresstable(desc, address_expr, value_index, length, zero_terminate)
+            desc, address, value_index, length, zero_terminate, endian = manual_address_dialog.get_values()
+            self.parent().add_entry_to_addresstable(desc, address, value_index, length, zero_terminate, endian=endian)
 
     def hex_view_scroll_up(self):
         self.verticalScrollBar_HexView.setValue(1)
@@ -4484,7 +4514,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
     def tableWidget_TrackInfo_item_double_clicked(self, index):
         address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
         self.parent().parent().add_entry_to_addresstable(tr.ACCESSED_BY.format(self.address), address,
-                                                         self.comboBox_ValueType.currentIndex(), 10, True)
+                                                         self.comboBox_ValueType.currentIndex(), 10)
 
     def pushButton_Stop_clicked(self):
         if self.stopped:

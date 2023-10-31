@@ -315,3 +315,6 @@ class TranslationConstants(QObject):
     NORMAL = QT_TR_NOOP("Normal")
     RW = QT_TR_NOOP("Read+Write")
     FULL = QT_TR_NOOP("Full")
+    HOST = QT_TR_NOOP("Host")
+    LITTLE = QT_TR_NOOP("Little")
+    BIG = QT_TR_NOOP("Big")

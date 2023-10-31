@@ -316,6 +316,10 @@ class SCAN_SCOPE:
     FULL_RW = 3
     FULL = 4
 
+class ENDIANNESS:
+    HOST = 0
+    LITTLE = 1
+    BIG = 2
 
 string_index_to_encoding_dict = {
     VALUE_INDEX.INDEX_STRING_UTF8: ["utf-8", "surrogateescape"],
@@ -404,7 +408,7 @@ class Frozen:
 
 
 class ValueType:
-    def __init__(self, value_index, length, zero_terminate, value_repr=VALUE_REPR.UNSIGNED):
+    def __init__(self, value_index, length, zero_terminate, value_repr=VALUE_REPR.UNSIGNED, endian=ENDIANNESS.HOST):
         """
         Args:
             value_index (int): Determines the type of data. Can be a member of VALUE_INDEX
@@ -412,14 +416,16 @@ class ValueType:
             zero_terminate (bool): If False, ",NZT" will be appended to the text representation
             Only used when value_index is INDEX_STRING. Ignored otherwise. "NZT" stands for "Not Zero Terminate"
             value_repr (int): Determines how the data is represented. Can be a member of VALUE_REPR
+            endian (int): Determines the endianness. Can be a member of ENDIANNESS
         """
         self.value_index = value_index
         self.length = length
         self.zero_terminate = zero_terminate
         self.value_repr = value_repr
+        self.endian = endian
 
     def serialize(self):
-        return self.value_index, self.length, self.zero_terminate, self.value_repr
+        return self.value_index, self.length, self.zero_terminate, self.value_repr, self.endian
 
     def text(self):
         """Returns the text representation according to its members
@@ -434,16 +440,20 @@ class ValueType:
         """
         returned_string = index_to_text_dict[self.value_index]
         if VALUE_INDEX.is_string(self.value_index):
-            returned_string = returned_string + "[" + str(self.length) + "]"
+            returned_string += f"[{self.length}]"
             if not self.zero_terminate:
                 returned_string += ",NZT"
         elif self.value_index == VALUE_INDEX.INDEX_AOB:
-            returned_string += "[" + str(self.length) + "]"
+            returned_string += f"[{self.length}]"
         if VALUE_INDEX.is_integer(self.value_index):
             if self.value_repr == VALUE_REPR.SIGNED:
                 returned_string += "(s)"
             elif self.value_repr == VALUE_REPR.HEX:
                 returned_string += "(h)"
+        if self.endian == ENDIANNESS.LITTLE:
+            returned_string += "<L>"
+        elif self.endian == ENDIANNESS.BIG:
+            returned_string += "<B>"
         return returned_string
 
 
@@ -456,10 +466,7 @@ class PointerType:
             Last offset in list won't be dereferenced to emulate CE behaviour.
         """
         self.base_address = base_address
-        if offsets_list == None:
-            self.offsets_list = []
-        else:
-            self.offsets_list = offsets_list
+        self.offsets_list = [] if not offsets_list else offsets_list
 
     def serialize(self):
         return self.base_address, self.offsets_list

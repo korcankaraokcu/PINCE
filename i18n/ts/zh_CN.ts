@@ -47,6 +47,11 @@
       <translation>长度</translation>
     </message>
     <message>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Endianness:</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
       <location filename="../../GUI/HexEditDialog.ui" line="0" />
       <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
@@ -862,6 +867,11 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Scan Scope:</source>
       <translation>扫描范围：</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Endianness:</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />
@@ -2528,6 +2538,21 @@ Proceed?</source>
       <location filename="../../tr/tr.py" line="0" />
       <source>Full</source>
       <translation>全部</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Host</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Little</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Big</source>
+      <translation type="unfinished" />
     </message>
   </context>
 </TS>
