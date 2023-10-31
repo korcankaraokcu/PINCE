@@ -18,11 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from threading import Lock, Thread, Condition
 from time import sleep, time
 from collections import OrderedDict, defaultdict
-import pexpect, os, ctypes, pickle, json, shelve, re, struct, io
+import pexpect, os, sys, ctypes, pickle, json, shelve, re, struct, io
 from . import SysUtils, type_defs, common_regexes
 
 self_pid = os.getpid()
 libc = ctypes.CDLL('libc.so.6')
+system_endianness = type_defs.ENDIANNESS.LITTLE if sys.byteorder == "little" else type_defs.ENDIANNESS.BIG
 
 #:tag:GDBInformation
 #:doc:
@@ -759,7 +760,8 @@ def memory_handle():
 
 
 #:tag:MemoryRW
-def read_memory(address, value_index, length=None, zero_terminate=True, signed=False, mem_handle=None):
+def read_memory(address, value_index, length=None, zero_terminate=True, value_repr=type_defs.VALUE_REPR.UNSIGNED,
+                endian=type_defs.ENDIANNESS.HOST, mem_handle=None):
     """Reads value from the given address
 
     Args:
@@ -769,13 +771,14 @@ def read_memory(address, value_index, length=None, zero_terminate=True, signed=F
         INDEX_STRING or INDEX_AOB. Ignored otherwise
         zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
         value_index is INDEX_STRING. Ignored otherwise
-        signed (bool): Casts the data as signed if True, unsigned if False. Only usable with integer types
+        value_repr (int): Can be a member of type_defs.VALUE_REPR. Only usable with integer types
+        endian (int): Can be a member of type_defs.ENDIANNESS
         mem_handle (BinaryIO): A file handle that points to the memory file of the current process
         This parameter is used for optimization, See memory_handle
         Don't forget to close the handle after you're done if you use this parameter manually
 
     Returns:
-        str: If the value_index is INDEX_STRING or INDEX_AOB
+        str: If the value_index is INDEX_STRING or INDEX_AOB, also when value_repr is HEX
         float: If the value_index is INDEX_FLOAT32 or INDEX_FLOAT64
         int: If the value_index is anything else
         None: If an error occurs while reading the given address
@@ -819,6 +822,8 @@ def read_memory(address, value_index, length=None, zero_terminate=True, signed=F
             mem_handle = open(mem_file, "rb")
         mem_handle.seek(address)
         data_read = mem_handle.read(expected_length)
+        if endian != type_defs.ENDIANNESS.HOST and system_endianness != endian:
+            data_read = data_read[::-1]
     except (OSError, ValueError):
         # TODO (read/write error output)
         # Disabled read error printing. If needed, find a way to implement error logging with this function
@@ -838,13 +843,17 @@ def read_memory(address, value_index, length=None, zero_terminate=True, signed=F
     elif value_index is type_defs.VALUE_INDEX.INDEX_AOB:
         return " ".join(format(n, '02x') for n in data_read)
     else:
-        if type_defs.VALUE_INDEX.is_integer(value_index) and signed:
+        is_integer = type_defs.VALUE_INDEX.is_integer(value_index)
+        if is_integer and value_repr == type_defs.VALUE_REPR.SIGNED:
             data_type = data_type.lower()
-        return struct.unpack_from(data_type, data_read)[0]
+        result = struct.unpack_from(data_type, data_read)[0]
+        if is_integer and value_repr == type_defs.VALUE_REPR.HEX:
+            return hex(result)
+        return result
 
 
 #:tag:MemoryRW
-def write_memory(address, value_index, value):
+def write_memory(address, value_index, value, endian=type_defs.ENDIANNESS.HOST):
     """Sets the given value to the given address
 
     If any errors occurs while setting value to the according address, it'll be ignored but the information about
@@ -854,6 +863,7 @@ def write_memory(address, value_index, value):
         address (str, int): Can be a hex string or an integer
         value_index (int): Can be a member of type_defs.VALUE_INDEX
         value (str): The value that'll be written to the given address
+        endian (int): Can be a member of type_defs.ENDIANNESS
 
     Notes:
         TODO: Implement a mem_handle parameter for optimization, check read_memory for an example
@@ -878,6 +888,8 @@ def write_memory(address, value_index, value):
             write_data = struct.pack(data_type, write_data)
     else:
         write_data = write_data.encode(encoding, option) + b"\x00"  # Zero-terminated by default
+    if endian != type_defs.ENDIANNESS.HOST and system_endianness != endian:
+        write_data = write_data[::-1]
     FILE = open(mem_file, "rb+")
     try:
         FILE.seek(address)
