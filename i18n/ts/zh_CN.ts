@@ -49,7 +49,7 @@
     <message>
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
       <source>Endianness:</source>
-      <translation type="unfinished" />
+      <translation>字节序：</translation>
     </message>
     <message>
       <location filename="../../GUI/HexEditDialog.ui" line="0" />
@@ -871,7 +871,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Endianness:</source>
-      <translation type="unfinished" />
+      <translation>字节序：</translation>
     </message>
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />
@@ -1554,7 +1554,7 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Process is running</source>
-      <translation type="unfinished" />
+      <translation>进程正在运行</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -2542,17 +2542,17 @@ Proceed?</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Host</source>
-      <translation type="unfinished" />
+      <translation>主机</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Little</source>
-      <translation type="unfinished" />
+      <translation>小</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Big</source>
-      <translation type="unfinished" />
+      <translation>大</translation>
     </message>
   </context>
 </TS>
