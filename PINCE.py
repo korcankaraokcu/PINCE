@@ -25,7 +25,7 @@ import gi
 # This line can be deleted when GTK 4.0 properly runs on all supported systems
 gi.require_version('Gtk', '3.0')
 
-from typing import Final
+from tr.tr import TranslationConstants as tr
 
 from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
     QKeyEvent, QRegularExpressionValidator, QShortcut, QColorConstants
@@ -35,12 +35,12 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
     QLocale
+from typing import Final
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect
 
 from libpince import GuiUtils, SysUtils, GDB_Engine, type_defs
 from libpince.libscanmem.scanmem import Scanmem
-from tr.tr import TranslationConstants as tr
 
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
