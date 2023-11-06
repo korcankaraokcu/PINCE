@@ -1,4 +1,26 @@
-from PyQt6.QtCore import QObject, QT_TR_NOOP
+from PyQt6.QtCore import QObject, QT_TR_NOOP, QT_TRANSLATE_NOOP
+
+# This handles the default translations for QDialogButtonBox.StandardButton
+# Some of the standard button labels have an ampersand (&). It's used to denote an access key or keyboard shortcut
+# Translate the text as you wish, then put the ampersand (&) where the shortcut should be
+QT_TRANSLATE_NOOP("QPlatformTheme", "OK")
+QT_TRANSLATE_NOOP("QPlatformTheme", "&Open")
+QT_TRANSLATE_NOOP("QPlatformTheme", "&Save")
+QT_TRANSLATE_NOOP("QPlatformTheme", "Cancel")
+QT_TRANSLATE_NOOP("QPlatformTheme", "Close")
+QT_TRANSLATE_NOOP("QPlatformTheme", "Discard")
+QT_TRANSLATE_NOOP("QPlatformTheme", "Apply")
+QT_TRANSLATE_NOOP("QPlatformTheme", "Reset")
+QT_TRANSLATE_NOOP("QPlatformTheme", "Restore Defaults")
+QT_TRANSLATE_NOOP("QPlatformTheme", "Help")
+QT_TRANSLATE_NOOP("QPlatformTheme", "Save All")
+QT_TRANSLATE_NOOP("QPlatformTheme", "&Yes")
+QT_TRANSLATE_NOOP("QPlatformTheme", "&No")
+QT_TRANSLATE_NOOP("QPlatformTheme", "Abort")
+QT_TRANSLATE_NOOP("QPlatformTheme", "Retry")
+QT_TRANSLATE_NOOP("QPlatformTheme", "Ignore")
+QT_TRANSLATE_NOOP("QPlatformTheme", "N&o to All")
+QT_TRANSLATE_NOOP("QPlatformTheme", "Yes to &All")
 
 
 class TranslationConstants(QObject):

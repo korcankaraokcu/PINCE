@@ -1156,6 +1156,99 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
   </context>
   <context>
+    <name>QPlatformTheme</name>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>OK</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>&amp;Open</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>&amp;Save</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Cancel</source>
+      <translation type="unfinished">取消</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Close</source>
+      <translation type="unfinished">关闭</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Discard</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Apply</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Reset</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Restore Defaults</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Help</source>
+      <translation type="unfinished">帮助</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Save All</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>&amp;Yes</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>&amp;No</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Abort</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Retry</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Ignore</source>
+      <translation type="unfinished">忽略</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>N&amp;o to All</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Yes to &amp;All</source>
+      <translation type="unfinished" />
+    </message>
+  </context>
+  <context>
     <name>TabWidget</name>
     <message>
       <location filename="../../GUI/AboutWidget.ui" line="0" />
