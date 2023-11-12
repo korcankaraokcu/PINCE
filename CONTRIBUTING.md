@@ -69,7 +69,8 @@ The py files that contains the same name with the ui files are auto-generated, p
 
 # Translation
 You need to have [Qt6 Linguist](https://pkgs.org/search/?q=linguist&on=files) and [pylupdate6](https://pkgs.org/search/?q=pylupdate6&on=files) installed. Here are the steps:
-- (Optional) To create a new translation file, use [compile_ts.sh](./compile_ts.sh) with the locale as the parameter, such as `sh compile.sh ja_JP`. This will create a ts file with the locale you entered
+- To create a new translation file, use [compile_ts.sh](./compile_ts.sh) with the locale as the parameter, such as `sh compile.sh ja_JP`. This will create a ts file with the locale you entered.
+You can skip this step if you only want to edit already existing files
 - Edit ts files in [/i18n/ts](./i18n/ts) with the linguist and then save them. After saving the files, run the [compile_ts.sh](./compile_ts.sh) script.
 This script fixes inconsistencies between Qt6 Linguist and pylupdate6, also removes line information so the git history stays cleaner
 - To test your translations, use [install_pince.sh](./install_pince.sh). The last part of the installation script also compiles ts files to qm files so PINCE can process them.
