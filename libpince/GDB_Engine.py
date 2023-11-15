@@ -280,7 +280,9 @@ def state_observe_thread():
             stop_info = matches[-1][0]
             if stop_info:
                 bp_num = common_regexes.breakpoint_number.search(stop_info)
-                if bp_num and breakpoint_on_hit_dict[bp_num.group(1)] != type_defs.BREAKPOINT_ON_HIT.BREAK:
+
+                # Return -1 for invalid breakpoints to ignore racing conditions
+                if bp_num and breakpoint_on_hit_dict.get(bp_num.group(1), -1) != type_defs.BREAKPOINT_ON_HIT.BREAK:
                     return
                 stop_reason = type_defs.STOP_REASON.DEBUG
                 inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
