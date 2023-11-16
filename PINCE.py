@@ -1185,10 +1185,14 @@ class MainForm(QMainWindow, MainWindow):
 
         # none of these should be possible to be true at the same time
         scan_index = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
-        if scan_index == type_defs.SCAN_INDEX.INDEX_FLOAT32 or scan_index == type_defs.SCAN_INDEX.INDEX_FLOAT64:
-            # this is odd, since when searching for floats from command line it uses `.` and not `,`
-            search_for = search_for.replace(".", ",")
-            search_for2 = search_for2.replace(".", ",")
+        if scan_index >= type_defs.SCAN_INDEX.INDEX_FLOAT_ANY and scan_index <= type_defs.SCAN_INDEX.INDEX_FLOAT64:
+            # Adjust to locale whatever the input
+            if QLocale.system().decimalPoint() == ".":
+                search_for = search_for.replace(",", ".")
+                search_for2 = search_for2.replace(",", ".")
+            else:
+                search_for = search_for.replace(".", ",")
+                search_for2 = search_for2.replace(".", ",")
         elif scan_index == type_defs.SCAN_INDEX.INDEX_STRING:
             search_for = "\" " + search_for
         elif self.checkBox_Hex.isChecked():
