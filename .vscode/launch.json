@@ -13,7 +13,8 @@
             "justMyCode": false,
             "sudo": true,
             "console": "integratedTerminal",
-            "program": "${workspaceFolder}/PINCE.py"
+            "program": "${workspaceFolder}/PINCE.py",
+            "python": "${workspaceFolder}/.venv/PINCE/bin/python3"
         }
     ]
 }
