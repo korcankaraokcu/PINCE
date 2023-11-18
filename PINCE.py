@@ -1242,11 +1242,12 @@ class MainForm(QMainWindow, MainWindow):
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         length = self._scan_to_length(current_type)
         mem_handle = GDB_Engine.memory_handle()
+        row = 0  # go back to using n when unknown issue gets fixed
         for n, address, offset, region_type, val, result_type in matches:
-            n = int(n)
             address = "0x" + address
-            current_item = QTableWidgetItem(address)
             result = result_type.split(" ")[0]
+            if result == "unknown":  # Ignore unknown entries for now
+                continue
             value_index = type_defs.scanmem_result_to_index_dict[result]
             if self.checkBox_Hex.isChecked():
                 value_repr = type_defs.VALUE_REPR.HEX
@@ -1255,13 +1256,15 @@ class MainForm(QMainWindow, MainWindow):
             else:
                 value_repr = type_defs.VALUE_REPR.UNSIGNED
             endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
+            current_item = QTableWidgetItem(address)
             current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian))
             value = str(GDB_Engine.read_memory(address, value_index, length, True, value_repr, endian, mem_handle))
-            self.tableWidget_valuesearchtable.insertRow(self.tableWidget_valuesearchtable.rowCount())
-            self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_ADDRESS_COL, current_item)
-            self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
-            self.tableWidget_valuesearchtable.setItem(n, SEARCH_TABLE_PREVIOUS_COL, QTableWidgetItem(value))
-            if n == 1000:
+            self.tableWidget_valuesearchtable.insertRow(row)
+            self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_ADDRESS_COL, current_item)
+            self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
+            self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_PREVIOUS_COL, QTableWidgetItem(value))
+            row += 1
+            if row == 1000:
                 break
         self.QWidget_Toolbox.setEnabled(True)
 
