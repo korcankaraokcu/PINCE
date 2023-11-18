@@ -246,7 +246,7 @@ scanmem_result_to_index_dict = collections.OrderedDict([
     ("F32", VALUE_INDEX.INDEX_FLOAT32),
     ("F64", VALUE_INDEX.INDEX_FLOAT64),
     ("string", VALUE_INDEX.INDEX_STRING_UTF8),
-    ("bytearray", VALUE_INDEX.INDEX_AOB),
+    ("bytearray", VALUE_INDEX.INDEX_AOB)
 ])
 
 # Represents the texts at indexes in scan combobox
