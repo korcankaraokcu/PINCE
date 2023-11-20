@@ -5,14 +5,13 @@
 - [compile_ts.sh](./compile_ts.sh) - Gathers translation information from various sources and compiles them into ts files
 - [fix_ts.py](./fix_ts.py) - Fixes line information issue, used within [compile_ts.sh](./compile_ts.sh)
 - [install_gdb.sh](./install_gdb.sh) - PINCE normally uses system GDB but in cases where system GDB is unavailable, this script is used to compile GDB locally
-- [GUI](./GUI) - Contains Qt Designer forms and their respective codes along with some custom Qt classes
+- [GUI](./GUI) - Contains Qt Designer forms and their respective codes along with utility functions and custom Qt classes
 - [media](./media) - Contains media files such as logos and icons
 - [tr](./tr) - Contains translation constants
 - [i18n](./i18n) - Contains translation files. `ts` files are created with Qt Linguist and [compile_ts.sh](./compile_ts.sh), `qm` files are created within the last section of [install_pince.sh](./install_pince.sh)
 - ### **[libpince](./libpince)**
   - [GDB_Engine.py](./libpince/GDB_Engine.py) - Everything related to communicating with GDB and debugging
   - [SysUtils.py](./libpince/SysUtils.py) - Contains generic utility functions such as parsing, file creation, documentation etc
-  - [GuiUtils.py](./libpince/GuiUtils.py) - Contains GUI related utility functions, it's more affiliated with Qt than libpince, could be moved in the future
   - [type_defs.py](./libpince/type_defs.py) - Contains all constants and variable definitions
   - [common_regexes.py](./libpince/common_regexes.py) - Contains regexes for parsing GDB output and other things
   - [Injection](./libpince/Injection) - An example for injecting .so files

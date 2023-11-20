@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
 
 
-# from libpince import GuiUtils
+# from GUI.Utils import guiutils
 
 
-class GuiUtils_tests(unittest.TestCase):
+class guiutils_tests(unittest.TestCase):
     def test_change_text_length(self):
         self.assertEqual(True, True)
         # The function below was removed during refactorization, thus making this test just a placeholder for now
-        # self.assertEqual(GuiUtils.change_text_length("AoB[42]", 30), "AoB[30]")
+        # self.assertEqual(guiutils.change_text_length("AoB[42]", 30), "AoB[30]")
