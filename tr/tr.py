@@ -249,6 +249,7 @@ class TranslationConstants(QObject):
     ADD_ENTRY = QT_TR_NOOP("Add new entry")
     DELETE = QT_TR_NOOP("Delete")
     ENTER_REGISTER_VALUE = QT_TR_NOOP("Enter the new value of register {}")
+    ENTER_FLAG_VALUE = QT_TR_NOOP("Enter the new value of flag {}")
     RESTORE_INSTRUCTION = QT_TR_NOOP("Restore this instruction")
     ENTER_HIT_COUNT = QT_TR_NOOP("Enter the hit count({} or higher)")
     HIT_COUNT_ASSERT_INT = QT_TR_NOOP("Hit count must be an integer")
@@ -340,3 +341,5 @@ class TranslationConstants(QObject):
     HOST = QT_TR_NOOP("Host")
     LITTLE = QT_TR_NOOP("Little")
     BIG = QT_TR_NOOP("Big")
+    SHOW_HEXVIEW = QT_TR_NOOP("Show in HexView")
+    SHOW_DISASSEMBLER = QT_TR_NOOP("Show in Disassembler")

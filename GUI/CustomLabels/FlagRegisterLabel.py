@@ -19,6 +19,7 @@ from PyQt6.QtGui import QCursor
 from PyQt6.QtCore import Qt
 from libpince import GDB_Engine, type_defs
 from PINCE import InputDialogForm
+from tr.tr import TranslationConstants as tr
 
 
 class QFlagRegisterLabel(QLabel):
@@ -42,7 +43,7 @@ class QFlagRegisterLabel(QLabel):
             return
         registers = GDB_Engine.read_registers()
         current_flag = self.objectName().lower()
-        label_text = "Enter the new value of flag " + self.objectName()
+        label_text = tr.ENTER_FLAG_VALUE.format(self.objectName())
         register_dialog = InputDialogForm(item_list=[(label_text, ["0", "1", int(registers[current_flag])])])
         if register_dialog.exec():
             GDB_Engine.set_register_flag(current_flag, register_dialog.get_values())

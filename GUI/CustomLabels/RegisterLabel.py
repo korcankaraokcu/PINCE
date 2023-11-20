@@ -20,7 +20,7 @@ from PyQt6.QtCore import Qt
 from libpince import GDB_Engine, type_defs
 from PINCE import InputDialogForm
 from GUI.Utils import guiutils
-
+from tr.tr import TranslationConstants as tr
 
 class QRegisterLabel(QLabel):
     def __init__(self, parent=None):
@@ -44,7 +44,7 @@ class QRegisterLabel(QLabel):
         registers = GDB_Engine.read_registers()
         current_register = self.objectName().lower()
         register_dialog = InputDialogForm(
-            item_list=[("Enter the new value of register " + self.objectName(), registers[current_register])])
+            item_list=[(tr.ENTER_REGISTER_VALUE.format(self.objectName()), registers[current_register])])
         if register_dialog.exec():
             GDB_Engine.set_convenience_variable(current_register, register_dialog.get_values())
             self.set_value(GDB_Engine.read_registers()[current_register])
@@ -53,8 +53,8 @@ class QRegisterLabel(QLabel):
         if GDB_Engine.currentpid == -1:
             return
         menu = QMenu()
-        show_in_hex_view = menu.addAction("Show in HexView")
-        show_in_disassembler = menu.addAction("Show in Disassembler")
+        show_in_hex_view = menu.addAction(tr.SHOW_HEXVIEW)
+        show_in_disassembler = menu.addAction(tr.SHOW_DISASSEMBLER)
         font_size = self.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(QContextMenuEvent.globalPos())
