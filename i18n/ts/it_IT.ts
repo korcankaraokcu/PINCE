@@ -2193,6 +2193,11 @@ You can use the assigned variable from the GDB Console</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Enter the new value of flag {}</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Restore this instruction</source>
       <translation type="unfinished" />
     </message>
@@ -2572,6 +2577,16 @@ Proceed?</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Big</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Show in HexView</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Show in Disassembler</source>
       <translation type="unfinished" />
     </message>
   </context>

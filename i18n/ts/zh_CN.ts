@@ -2248,6 +2248,11 @@ $28 是分配的便利变量
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Enter the new value of flag {}</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Restore this instruction</source>
       <translation>还原此指令</translation>
     </message>
@@ -2646,6 +2651,16 @@ Proceed?</source>
       <location filename="../../tr/tr.py" line="0" />
       <source>Big</source>
       <translation>大</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Show in HexView</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Show in Disassembler</source>
+      <translation type="unfinished" />
     </message>
   </context>
 </TS>
