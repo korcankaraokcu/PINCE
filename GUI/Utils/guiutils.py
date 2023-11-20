@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright (C) 2016-2017 Korcan Karaokçu <korcankaraokcu@gmail.com>
+Copyright (C) Korcan Karaokçu <korcankaraokcu@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from . import SysUtils, type_defs, common_regexes
-
+from libpince import SysUtils, type_defs, common_regexes
+from tr.tr import TranslationConstants as tr
 
 #:tag:GUI
 def get_icons_directory():
@@ -96,6 +96,22 @@ def fill_value_combobox(QCombobox, current_index=type_defs.VALUE_INDEX.INDEX_INT
         QCombobox.addItem(type_defs.index_to_text_dict[key])
     QCombobox.setCurrentIndex(current_index)
 
+#:tag:GUI
+def fill_endianness_combobox(QCombobox, current_index=type_defs.ENDIANNESS.HOST):
+    """Fills the given QCombobox with endianness strings
+
+    Args:
+        QCombobox (QCombobox): The combobox that'll be filled
+        current_index (int): Can be a member of type_defs.ENDIANNESS
+    """
+    endianness_text = [
+        (type_defs.ENDIANNESS.HOST, tr.HOST),
+        (type_defs.ENDIANNESS.LITTLE, tr.LITTLE),
+        (type_defs.ENDIANNESS.BIG, tr.BIG)
+    ]
+    for endian, text in endianness_text:
+        QCombobox.addItem(text, endian)
+    QCombobox.setCurrentIndex(current_index)
 
 #:tag:GUI
 def get_current_row(QObject):

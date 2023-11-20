@@ -39,8 +39,9 @@ from typing import Final
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect
 
-from libpince import GuiUtils, SysUtils, GDB_Engine, type_defs
+from libpince import SysUtils, GDB_Engine, type_defs
 from libpince.libscanmem.scanmem import Scanmem
+from GUI.Utils import guiutils
 
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
@@ -355,24 +356,6 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-def fill_endianness_combobox(QCombobox, current_index=type_defs.ENDIANNESS.HOST):
-    """Fills the given QCombobox with endianness strings
-    TODO: Carry this function to the GuiUtils.py when it gets separated from libpince
-
-    Args:
-        QCombobox (QCombobox): The combobox that'll be filled
-        current_index (int): Can be a member of type_defs.ENDIANNESS
-    """
-    endianness_text = [
-        (type_defs.ENDIANNESS.HOST, tr.HOST),
-        (type_defs.ENDIANNESS.LITTLE, tr.LITTLE),
-        (type_defs.ENDIANNESS.BIG, tr.BIG)
-    ]
-    for endian, text in endianness_text:
-        QCombobox.addItem(text, endian)
-    QCombobox.setCurrentIndex(current_index)
-
-
 # Checks if the inferior has been terminated
 class AwaitProcessExit(QThread):
     process_exited = pyqtSignal()
@@ -447,7 +430,7 @@ class MainForm(QMainWindow, MainWindow):
         }
         for hotkey, func in hotkey_to_func.items():
             hotkey.change_func(func)
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.treeWidget_AddressTable.setColumnWidth(FROZEN_COL, 50)
         self.treeWidget_AddressTable.setColumnWidth(DESC_COL, 150)
         self.treeWidget_AddressTable.setColumnWidth(ADDR_COL, 150)
@@ -497,10 +480,10 @@ class MainForm(QMainWindow, MainWindow):
         self.freeze_timer.start()
         self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
         self.shortcut_open_file.activated.connect(self.pushButton_Open_clicked)
-        GuiUtils.append_shortcut_to_tooltip(self.pushButton_Open, self.shortcut_open_file)
+        guiutils.append_shortcut_to_tooltip(self.pushButton_Open, self.shortcut_open_file)
         self.shortcut_save_file = QShortcut(QKeySequence("Ctrl+S"), self)
         self.shortcut_save_file.activated.connect(self.pushButton_Save_clicked)
-        GuiUtils.append_shortcut_to_tooltip(self.pushButton_Save, self.shortcut_save_file)
+        guiutils.append_shortcut_to_tooltip(self.pushButton_Save, self.shortcut_save_file)
 
         # Saving the original function because super() doesn't work when we override functions like this
         self.treeWidget_AddressTable.keyPressEvent_original = self.treeWidget_AddressTable.keyPressEvent
@@ -516,7 +499,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NewFirstScan_clicked()
         self.comboBox_ScanScope_init()
         self.comboBox_ValueType_init()
-        fill_endianness_combobox(self.comboBox_Endianness)
+        guiutils.fill_endianness_combobox(self.comboBox_Endianness)
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.lineEdit_Scan.setValidator(
@@ -540,7 +523,7 @@ class MainForm(QMainWindow, MainWindow):
         self.treeWidget_AddressTable.itemDoubleClicked.connect(self.treeWidget_AddressTable_item_double_clicked)
         self.treeWidget_AddressTable.expanded.connect(self.resize_address_table)
         self.treeWidget_AddressTable.collapsed.connect(self.resize_address_table)
-        icons_directory = GuiUtils.get_icons_directory()
+        icons_directory = guiutils.get_icons_directory()
         self.pushButton_AttachProcess.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
         self.pushButton_Save.setIcon(QIcon(QPixmap(icons_directory + "/disk.png")))
@@ -702,7 +685,7 @@ class MainForm(QMainWindow, MainWindow):
     def treeWidget_AddressTable_context_menu_event(self, event):
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
-        current_row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
+        current_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         header = self.treeWidget_AddressTable.headerItem()
         menu = QMenu()
         edit_menu = menu.addMenu(tr.EDIT)
@@ -739,20 +722,20 @@ class MainForm(QMainWindow, MainWindow):
             deletion_list = [edit_menu.menuAction(), show_hex, show_dec, show_unsigned, show_signed, toggle_record,
                              freeze_menu.menuAction(), browse_region, disassemble, what_writes, what_reads,
                              what_accesses]
-            GuiUtils.delete_menu_entries(menu, deletion_list)
+            guiutils.delete_menu_entries(menu, deletion_list)
         else:
             value_type = current_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
             if type_defs.VALUE_INDEX.is_integer(value_type.value_index):
                 if value_type.value_repr is type_defs.VALUE_REPR.HEX:
-                    GuiUtils.delete_menu_entries(menu, [show_unsigned, show_signed, show_hex])
+                    guiutils.delete_menu_entries(menu, [show_unsigned, show_signed, show_hex])
                 elif value_type.value_repr is type_defs.VALUE_REPR.UNSIGNED:
-                    GuiUtils.delete_menu_entries(menu, [show_unsigned, show_dec])
+                    guiutils.delete_menu_entries(menu, [show_unsigned, show_dec])
                 elif value_type.value_repr is type_defs.VALUE_REPR.SIGNED:
-                    GuiUtils.delete_menu_entries(menu, [show_signed, show_dec])
+                    guiutils.delete_menu_entries(menu, [show_signed, show_dec])
                 if current_row.checkState(FROZEN_COL) == Qt.CheckState.Unchecked:
-                    GuiUtils.delete_menu_entries(menu, [freeze_menu.menuAction()])
+                    guiutils.delete_menu_entries(menu, [freeze_menu.menuAction()])
             else:
-                GuiUtils.delete_menu_entries(menu, [show_hex, show_dec, show_unsigned, show_signed,
+                guiutils.delete_menu_entries(menu, [show_hex, show_dec, show_unsigned, show_signed,
                                                     freeze_menu.menuAction()])
         font_size = self.treeWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
@@ -790,7 +773,7 @@ class MainForm(QMainWindow, MainWindow):
             pass
 
     def exec_track_watchpoint_widget(self, watchpoint_type):
-        selected_row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
+        selected_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not selected_row:
             return
         address = selected_row.text(ADDR_COL).strip("P->")  # @todo Maybe rework address grabbing logic in the future
@@ -814,14 +797,14 @@ class MainForm(QMainWindow, MainWindow):
         TrackWatchpointWidgetForm(address, byte_len, watchpoint_type, self).show()
 
     def browse_region_for_selected_row(self):
-        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
+        row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if row:
             self.memory_view_window.hex_dump_address(int(row.text(ADDR_COL).strip("P->"), 16))
             self.memory_view_window.show()
             self.memory_view_window.activateWindow()
 
     def disassemble_selected_row(self):
-        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
+        row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if row:
             if self.memory_view_window.disassemble_expression(row.text(ADDR_COL).strip("P->"),
                                                               append_to_travel_history=True):
@@ -845,7 +828,7 @@ class MainForm(QMainWindow, MainWindow):
                 row.setForeground(FROZEN_COL, QBrush(QColor(255, 0, 0)))
 
     def toggle_selected_records(self):
-        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
+        row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if row:
             check_state = row.checkState(FROZEN_COL)
             new_check_state = Qt.CheckState.Checked if check_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
@@ -932,7 +915,7 @@ class MainForm(QMainWindow, MainWindow):
             QMessageBox.information(self, tr.ERROR, tr.INVALID_CLIPBOARD)
             return
 
-        insert_row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
+        insert_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         root = self.treeWidget_AddressTable.invisibleRootItem()
         if not insert_row:  # this is common when the treeWidget_AddressTable is empty
             self.insert_records(records, root, self.treeWidget_AddressTable.topLevelItemCount())
@@ -1567,7 +1550,7 @@ class MainForm(QMainWindow, MainWindow):
                 row.setForeground(FROZEN_COL, QBrush())
 
     def treeWidget_AddressTable_change_repr(self, new_repr):
-        value_type = GuiUtils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.ItemDataRole.UserRole)
+        value_type = guiutils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.ItemDataRole.UserRole)
         value_type.value_repr = new_repr
         for row in self.treeWidget_AddressTable.selectedItems():
             row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, value_type)
@@ -1575,7 +1558,7 @@ class MainForm(QMainWindow, MainWindow):
         self.update_address_table()
 
     def treeWidget_AddressTable_edit_value(self):
-        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
+        row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not row:
             return
         value = row.text(VALUE_COL)
@@ -1598,7 +1581,7 @@ class MainForm(QMainWindow, MainWindow):
             self.update_address_table()
 
     def treeWidget_AddressTable_edit_desc(self):
-        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
+        row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not row:
             return
         description = row.text(DESC_COL)
@@ -1609,7 +1592,7 @@ class MainForm(QMainWindow, MainWindow):
                 row.setText(DESC_COL, description_text)
 
     def treeWidget_AddressTable_edit_address(self):
-        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
+        row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not row:
             return
         desc, address_expr, vt = self.read_address_table_entries(row)
@@ -1623,7 +1606,7 @@ class MainForm(QMainWindow, MainWindow):
             self.change_address_table_entries(row, desc, address_expr, vt)
 
     def treeWidget_AddressTable_edit_type(self):
-        row = GuiUtils.get_current_item(self.treeWidget_AddressTable)
+        row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not row:
             return
         vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
@@ -1709,7 +1692,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        GuiUtils.center_to_parent(self)
+        guiutils.center_to_parent(self)
         self.refresh_process_table(self.tableWidget_ProcessTable, SysUtils.get_process_list())
         self.pushButton_Close.clicked.connect(self.close)
         self.pushButton_Open.clicked.connect(self.pushButton_Open_clicked)
@@ -1782,8 +1765,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.setMinimumWidth(300)
         self.setFixedHeight(self.height())
         self.lineEdit_length.setValidator(QHexValidator(999, self))
-        GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
-        fill_endianness_combobox(self.comboBox_Endianness, endian)
+        guiutils.fill_value_combobox(self.comboBox_ValueType, index)
+        guiutils.fill_endianness_combobox(self.comboBox_Endianness, endian)
         self.lineEdit_description.setText(description)
         self.offsetsList = []
         if not isinstance(address, type_defs.PointerType):
@@ -2005,7 +1988,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         self.setupUi(self)
         self.setMaximumSize(100, 100)
         self.lineEdit_Length.setValidator(QHexValidator(999, self))
-        GuiUtils.fill_value_combobox(self.comboBox_ValueType, index)
+        guiutils.fill_value_combobox(self.comboBox_ValueType, index)
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.label_Length.show()
             self.lineEdit_Length.show()
@@ -2094,7 +2077,7 @@ class LoadingDialogForm(QDialog, LoadingDialog):
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         if parent:
-            GuiUtils.center_to_parent(self)
+            guiutils.center_to_parent(self)
         self.keyPressEvent = QEvent.ignore
 
         # Make use of this background_thread when you spawn a LoadingDialogForm
@@ -2188,7 +2171,7 @@ class InputDialogForm(QDialog, InputDialog):
         self.adjustSize()
         self.verticalLayout.removeWidget(self.buttonBox)  # Pushing buttonBox to the end
         self.verticalLayout.addWidget(self.buttonBox)
-        for widget in GuiUtils.get_layout_widgets(self.verticalLayout):
+        for widget in guiutils.get_layout_widgets(self.verticalLayout):
             if isinstance(widget, QLabel):
                 continue
             widget.setFocus()  # Focus to the first input field
@@ -2242,7 +2225,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.set_default_settings = set_default_settings_func
         self.hotkey_to_value = {}  # Dict[str:str]-->Dict[Hotkey.name:settings_value]
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
-        icons_directory = GuiUtils.get_icons_directory()
+        icons_directory = guiutils.get_icons_directory()
         self.pushButton_GDBPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
         self.listWidget_Functions.currentRowChanged.connect(self.listWidget_Functions_current_row_changed)
         self.keySequenceEdit_Hotkey.keySequenceChanged.connect(self.keySequenceEdit_Hotkey_key_sequence_changed)
@@ -2460,7 +2443,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.setupUi(self)
         global instances
         instances.append(self)
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.completion_model = QStringListModel()
         self.completer = QCompleter()
         self.completer.setModel(self.completion_model)
@@ -2581,7 +2564,7 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        GuiUtils.center(self)
+        guiutils.center(self)
 
         # This section has untranslated text since it's just a placeholder
         license_text = open("COPYING").read()
@@ -2661,7 +2644,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         super().__init__()
         self.setupUi(self)
         self.parent = lambda: parent
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.updating_memoryview = False
         self.process_stopped.connect(self.on_process_stop)
         self.process_running.connect(self.on_process_running)
@@ -2719,7 +2702,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.verticalScrollBar_Disassemble.sliderChange = self.disassemble_scrollbar_sliderchanged
 
-        GuiUtils.center_scroll_bar(self.verticalScrollBar_Disassemble)
+        guiutils.center_scroll_bar(self.verticalScrollBar_Disassemble)
 
         # Format: [address1, address2, ...]
         self.tableWidget_Disassemble.travel_history = []
@@ -2778,7 +2761,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.verticalHeader().setDefaultSectionSize(
             self.tableView_HexView_Hex.verticalHeader().defaultSectionSize())
 
-        GuiUtils.center_scroll_bar(self.verticalScrollBar_HexView)
+        guiutils.center_scroll_bar(self.verticalScrollBar_HexView)
 
     def show_trace_window(self):
         if GDB_Engine.currentpid == -1:
@@ -2809,14 +2792,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def set_address(self):
         if GDB_Engine.currentpid == -1:
             return
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         GDB_Engine.set_convenience_variable("pc", current_address)
         self.refresh_disassemble_view()
 
     def edit_instruction(self):
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         bytes_aob = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
@@ -2825,7 +2808,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def nop_instruction(self):
         if GDB_Engine.currentpid == -1:
             return
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
@@ -2836,7 +2819,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def toggle_breakpoint(self):
         if GDB_Engine.currentpid == -1:
             return
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
@@ -2908,9 +2891,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         add_condition = menu.addAction(tr.CHANGE_BREAKPOINT_CONDITION)
         delete_breakpoint = menu.addAction(tr.DELETE_BREAKPOINT)
         if not GDB_Engine.check_address_in_breakpoints(selected_address):
-            GuiUtils.delete_menu_entries(menu, [add_condition, delete_breakpoint])
+            guiutils.delete_menu_entries(menu, [add_condition, delete_breakpoint])
         else:
-            GuiUtils.delete_menu_entries(menu, [watchpoint_menu.menuAction()])
+            guiutils.delete_menu_entries(menu, [watchpoint_menu.menuAction()])
         font_size = self.widget_HexView.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -2984,7 +2967,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         else:
             next_address = current_address + 0x40
         self.hex_dump_address(next_address)
-        GuiUtils.center_scroll_bar(self.verticalScrollBar_HexView)
+        guiutils.center_scroll_bar(self.verticalScrollBar_HexView)
         self.bHexViewScrolling = False
 
     def disassemble_scroll_up(self):
@@ -3008,7 +2991,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble_scroll("previous", instructions_per_scroll)
         else:
             self.tableWidget_Disassemble_scroll("next", instructions_per_scroll)
-        GuiUtils.center_scroll_bar(self.verticalScrollBar_Disassemble)
+        guiutils.center_scroll_bar(self.verticalScrollBar_Disassemble)
         self.bDisassemblyScrolling = False
 
     def on_hex_view_current_changed(self, QModelIndex_current):
@@ -3392,7 +3375,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_StackTrace.item(row, column).text())
 
-        selected_row = GuiUtils.get_current_row(self.tableWidget_StackTrace)
+        selected_row = guiutils.get_current_row(self.tableWidget_StackTrace)
 
         menu = QMenu()
         switch_to_stack = menu.addAction(tr.FULL_STACK)
@@ -3401,7 +3384,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         copy_return = clipboard_menu.addAction(tr.COPY_RETURN_ADDRESS)
         copy_frame = clipboard_menu.addAction(tr.COPY_FRAME_ADDRESS)
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [clipboard_menu.menuAction()])
+            guiutils.delete_menu_entries(menu, [clipboard_menu.menuAction()])
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
         font_size = self.tableWidget_StackTrace.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
@@ -3433,7 +3416,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def tableWidget_Stack_key_press_event(self, event):
         if GDB_Engine.currentpid == -1:
             return
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Stack)
+        selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if selected_row == -1:
             actions = type_defs.KeyboardModifiersTupleDict([
                 (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack)
@@ -3461,7 +3444,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         if GDB_Engine.currentpid == -1:
             return
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Stack)
+        selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if selected_row == -1:
             current_address = None
         else:
@@ -3479,7 +3462,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         show_in_disas = menu.addAction(f"{tr.DISASSEMBLE_VALUE_POINTER}[Ctrl+D]")
         show_in_hex = menu.addAction(f"{tr.HEXVIEW_VALUE_POINTER}[Ctrl+H]")
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [clipboard_menu.menuAction(), show_in_disas, show_in_hex])
+            guiutils.delete_menu_entries(menu, [clipboard_menu.menuAction(), show_in_disas, show_in_hex])
         font_size = self.tableWidget_Stack.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -3500,7 +3483,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def tableWidget_Stack_double_click(self, index):
         if GDB_Engine.currentpid == -1:
             return
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Stack)
+        selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if index.column() == STACK_POINTER_ADDRESS_COL:
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_POINTER_ADDRESS_COL).text()
             current_address = SysUtils.extract_address(current_address_text)
@@ -3517,7 +3500,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def tableWidget_StackTrace_double_click(self, index):
         if GDB_Engine.currentpid == -1:
             return
-        selected_row = GuiUtils.get_current_row(self.tableWidget_StackTrace)
+        selected_row = guiutils.get_current_row(self.tableWidget_StackTrace)
         if index.column() == STACKTRACE_RETURN_ADDRESS_COL:
             current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_RETURN_ADDRESS_COL).text()
             current_address = SysUtils.extract_address(current_address_text)
@@ -3551,7 +3534,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def disassemble_check_viewport(self, where, instruction_count):
         if GDB_Engine.currentpid == -1:
             return
-        current_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        current_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_row_height = self.tableWidget_Disassemble.rowViewportPosition(current_row)
         row_height = self.tableWidget_Disassemble.verticalHeader().defaultSectionSize()
         max_height = self.tableWidget_Disassemble.maximumViewportSize().height()
@@ -3611,7 +3594,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def tableWidget_Disassemble_key_press_event(self, event):
         if GDB_Engine.currentpid == -1:
             return
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         if selected_row == -1:
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -3648,7 +3631,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.currentpid == -1:
             return
         if index.column() == DISAS_COMMENT_COL:
-            selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+            selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
             current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
             current_address = int(SysUtils.extract_address(current_address_text), 16)
             if current_address in self.tableWidget_Disassemble.bookmarks:
@@ -3660,7 +3643,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.currentpid == -1:
             return
         try:
-            selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+            selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
             selected_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
             self.disassemble_last_selected_address_int = int(SysUtils.extract_address(selected_address_text), 16)
         except (TypeError, ValueError, AttributeError):
@@ -3697,7 +3680,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 copied_string += self.tableWidget_Disassemble.item(row, column).text() + "\t"
             app.clipboard().setText(copied_string)
 
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
@@ -3711,18 +3694,18 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text())
         follow = menu.addAction(f"{tr.FOLLOW}[Space]")
         if not followable:
-            GuiUtils.delete_menu_entries(menu, [follow])
+            guiutils.delete_menu_entries(menu, [follow])
         examine_referrers = menu.addAction(f"{tr.EXAMINE_REFERRERS}[Ctrl+E]")
-        if not GuiUtils.contains_reference_mark(current_address_text):
-            GuiUtils.delete_menu_entries(menu, [examine_referrers])
+        if not guiutils.contains_reference_mark(current_address_text):
+            guiutils.delete_menu_entries(menu, [examine_referrers])
         bookmark = menu.addAction(f"{tr.BOOKMARK_ADDRESS}[Ctrl+B]")
         delete_bookmark = menu.addAction(tr.DELETE_BOOKMARK)
         change_comment = menu.addAction(tr.CHANGE_COMMENT)
         is_bookmarked = current_address_int in self.tableWidget_Disassemble.bookmarks
         if not is_bookmarked:
-            GuiUtils.delete_menu_entries(menu, [delete_bookmark, change_comment])
+            guiutils.delete_menu_entries(menu, [delete_bookmark, change_comment])
         else:
-            GuiUtils.delete_menu_entries(menu, [bookmark])
+            guiutils.delete_menu_entries(menu, [bookmark])
         go_to_bookmark = menu.addMenu(tr.GO_TO_BOOKMARK_ADDRESS)
         address_list = [hex(address) for address in self.tableWidget_Disassemble.bookmarks.keys()]
         bookmark_actions = [go_to_bookmark.addAction(item.all) for item in GDB_Engine.examine_expressions(address_list)]
@@ -3730,12 +3713,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         toggle_breakpoint = menu.addAction(f"{tr.TOGGLE_BREAKPOINT}[F5]")
         add_condition = menu.addAction(tr.CHANGE_BREAKPOINT_CONDITION)
         if not GDB_Engine.check_address_in_breakpoints(current_address_int):
-            GuiUtils.delete_menu_entries(menu, [add_condition])
+            guiutils.delete_menu_entries(menu, [add_condition])
         menu.addSeparator()
         edit_instruction = menu.addAction(tr.EDIT_INSTRUCTION)
         nop_instruction = menu.addAction(tr.REPLACE_WITH_NOPS)
         if self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text() == '90':
-            GuiUtils.delete_menu_entries(menu, [nop_instruction])
+            guiutils.delete_menu_entries(menu, [nop_instruction])
         menu.addSeparator()
         track_breakpoint = menu.addAction(tr.WHAT_ACCESSES_INSTRUCTION)
         trace_instructions = menu.addAction(f"{tr.TRACE_INSTRUCTION}[Ctrl+T]")
@@ -3785,7 +3768,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def dissect_current_region(self):
         if GDB_Engine.currentpid == -1:
             return
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         if selected_row == -1:
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -3798,7 +3781,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def exec_examine_referrers_widget(self, current_address_text):
         if GDB_Engine.currentpid == -1:
             return
-        if not GuiUtils.contains_reference_mark(current_address_text):
+        if not guiutils.contains_reference_mark(current_address_text):
             return
         current_address = SysUtils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
@@ -3808,7 +3791,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def exec_trace_instructions_dialog(self):
         if GDB_Engine.currentpid == -1:
             return
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         if selected_row == -1:
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -3818,7 +3801,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def exec_track_breakpoint_dialog(self):
         if GDB_Engine.currentpid == -1:
             return
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = SysUtils.extract_address(current_address_text)
         current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
@@ -3831,7 +3814,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def exec_disassemble_go_to_dialog(self):
         if GDB_Engine.currentpid == -1:
             return
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         if selected_row == -1:
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -3978,7 +3961,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         self.float_registers_widget = FloatRegisterWidgetForm()
         self.float_registers_widget.show()
-        GuiUtils.center_to_window(self.float_registers_widget, self.widget_Registers)
+        guiutils.center_to_window(self.float_registers_widget, self.widget_Registers)
 
 
 class BookmarkWidgetForm(QWidget, BookmarkWidget):
@@ -3988,7 +3971,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.parent = lambda: parent
         global instances
         instances.append(self)
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.listWidget.contextMenuEvent = self.listWidget_context_menu_event
         self.listWidget.currentRowChanged.connect(self.change_display)
@@ -4028,7 +4011,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.refresh_table()
 
     def listWidget_context_menu_event(self, event):
-        current_item = GuiUtils.get_current_item(self.listWidget)
+        current_item = guiutils.get_current_item(self.listWidget)
         if current_item:
             current_address = int(SysUtils.extract_address(current_item.text()), 16)
             if current_address not in self.parent().tableWidget_Disassemble.bookmarks:
@@ -4042,7 +4025,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         change_comment = menu.addAction(tr.CHANGE_COMMENT)
         delete_record = menu.addAction(f"{tr.DELETE}[Del]")
         if current_item is None:
-            GuiUtils.delete_menu_entries(menu, [change_comment, delete_record])
+            guiutils.delete_menu_entries(menu, [change_comment, delete_record])
         menu.addSeparator()
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
         font_size = self.listWidget.font().pointSize()
@@ -4060,7 +4043,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
             pass
 
     def delete_record(self):
-        current_item = GuiUtils.get_current_item(self.listWidget)
+        current_item = guiutils.get_current_item(self.listWidget)
         if not current_item:
             return
         current_address = int(SysUtils.extract_address(current_item.text()), 16)
@@ -4116,7 +4099,7 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.listWidget_ReturnAddresses.currentRowChanged.connect(self.update_frame_info)
         self.update_stacktrace()
@@ -4143,7 +4126,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         self.parent = lambda: parent
         global instances
         instances.append(self)
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
 
         # Saving the original function because super() doesn't work when we override functions like this
@@ -4154,7 +4137,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         self.refresh()
 
     def tableWidget_Instructions_context_menu_event(self, event):
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Instructions)
+        selected_row = guiutils.get_current_row(self.tableWidget_Instructions)
         menu = QMenu()
         restore_instruction = menu.addAction(tr.RESTORE_INSTRUCTION)
         if selected_row != -1:
@@ -4162,7 +4145,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
             selected_address = SysUtils.extract_address(selected_address_text)
             selected_address_int = int(selected_address, 16)
         else:
-            GuiUtils.delete_menu_entries(menu, [restore_instruction])
+            guiutils.delete_menu_entries(menu, [restore_instruction])
             selected_address_int = None
         menu.addSeparator()
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
@@ -4192,7 +4175,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
             if not instr_name:
                 instr_name = "??"
             self.tableWidget_Instructions.setItem(row, INSTR_NAME_COL, QTableWidgetItem(instr_name))
-        GuiUtils.resize_to_contents(self.tableWidget_Instructions)
+        guiutils.resize_to_contents(self.tableWidget_Instructions)
 
     def refresh_all(self):
         self.parent().refresh_hex_view()
@@ -4226,7 +4209,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         self.parent = lambda: parent
         global instances
         instances.append(self)
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.tableWidget_BreakpointInfo.contextMenuEvent = self.tableWidget_BreakpointInfo_context_menu_event
 
@@ -4250,7 +4233,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_ON_HIT_COL, QTableWidgetItem(item.on_hit))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_HIT_COUNT_COL, QTableWidgetItem(item.hit_count))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_COND_COL, QTableWidgetItem(item.condition))
-        GuiUtils.resize_to_contents(self.tableWidget_BreakpointInfo)
+        guiutils.resize_to_contents(self.tableWidget_BreakpointInfo)
         self.textBrowser_BreakpointInfo.clear()
         self.textBrowser_BreakpointInfo.setText(GDB_Engine.send_command("info break", cli_output=True))
 
@@ -4260,7 +4243,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
             self.refresh_all()
 
     def tableWidget_BreakpointInfo_key_press_event(self, event):
-        selected_row = GuiUtils.get_current_row(self.tableWidget_BreakpointInfo)
+        selected_row = guiutils.get_current_row(self.tableWidget_BreakpointInfo)
         if selected_row != -1:
             current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
             current_address = SysUtils.extract_address(current_address_text)
@@ -4294,7 +4277,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
                                                  count=count)
 
     def tableWidget_BreakpointInfo_context_menu_event(self, event):
-        selected_row = GuiUtils.get_current_row(self.tableWidget_BreakpointInfo)
+        selected_row = guiutils.get_current_row(self.tableWidget_BreakpointInfo)
         if selected_row != -1:
             current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
             current_address = SysUtils.extract_address(current_address_text)
@@ -4316,7 +4299,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         if current_address is None:
             deletion_list = [change_condition, enable, disable, enable_once, enable_count, enable_delete,
                              delete_breakpoint]
-            GuiUtils.delete_menu_entries(menu, deletion_list)
+            guiutils.delete_menu_entries(menu, deletion_list)
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
         font_size = self.tableWidget_BreakpointInfo.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
@@ -4371,7 +4354,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.parent = lambda: parent
         global instances
         instances.append(self)
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.update_timer = QTimer(timeout=self.update_list)
         self.stopped = False
@@ -4408,7 +4391,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         for row, key in enumerate(info):
             self.tableWidget_Opcodes.setItem(row, TRACK_WATCHPOINT_COUNT_COL, QTableWidgetItem(str(info[key][0])))
             self.tableWidget_Opcodes.setItem(row, TRACK_WATCHPOINT_ADDR_COL, QTableWidgetItem(info[key][1]))
-        GuiUtils.resize_to_contents(self.tableWidget_Opcodes)
+        guiutils.resize_to_contents(self.tableWidget_Opcodes)
         self.tableWidget_Opcodes.selectRow(self.last_selected_row)
 
     def tableWidget_Opcodes_current_changed(self, QModelIndex_current):
@@ -4466,7 +4449,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.stopped = False
         self.address = address
         self.setWindowFlags(Qt.WindowType.Window)
-        GuiUtils.center_to_parent(self)
+        guiutils.center_to_parent(self)
         self.setWindowTitle(tr.ACCESSED_BY_INSTRUCTION.format(instruction))
         breakpoint = GDB_Engine.track_breakpoint(address, register_expressions)
         if not breakpoint:
@@ -4475,7 +4458,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.breakpoint = breakpoint
         self.info = {}
         self.last_selected_row = 0
-        GuiUtils.fill_value_combobox(self.comboBox_ValueType)
+        guiutils.fill_value_combobox(self.comboBox_ValueType)
         self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
         self.tableWidget_TrackInfo.itemDoubleClicked.connect(self.tableWidget_TrackInfo_item_double_clicked)
         self.tableWidget_TrackInfo.selectionModel().currentChanged.connect(self.tableWidget_TrackInfo_current_changed)
@@ -4510,7 +4493,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
             value = GDB_Engine.read_memory(address, value_type, 10, mem_handle=mem_handle)
             value = "" if value is None else str(value)
             self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(value))
-        GuiUtils.resize_to_contents(self.tableWidget_TrackInfo)
+        guiutils.resize_to_contents(self.tableWidget_TrackInfo)
         self.tableWidget_TrackInfo.selectRow(self.last_selected_row)
 
     def tableWidget_TrackInfo_current_changed(self, QModelIndex_current):
@@ -4586,7 +4569,7 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
             type_defs.TRACE_STATUS.STATUS_FINISHED: tr.TRACING_COMPLETED
         }
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.address = address
         self.breakpoint = breakpoint
         media_directory = SysUtils.get_media_directory()
@@ -4640,7 +4623,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.parent = lambda: parent
         global instances
         instances.append(self)
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.address = address
         self.trace_data = None
         self.treeWidget_InstructionInfo.currentItemChanged.connect(self.display_collected_data)
@@ -4742,7 +4725,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             pass
 
     def treeWidget_InstructionInfo_item_double_clicked(self, index):
-        current_item = GuiUtils.get_current_item(self.treeWidget_InstructionInfo)
+        current_item = guiutils.get_current_item(self.treeWidget_InstructionInfo)
         if not current_item:
             return
         address = SysUtils.extract_address(current_item.trace_data[0])
@@ -4761,7 +4744,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.parent = lambda: parent
         global instances
         instances.append(self)
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.textBrowser_AddressInfo.setFixedHeight(100)
         self.pushButton_Search.clicked.connect(self.refresh_table)
@@ -4770,7 +4753,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.tableWidget_SymbolInfo.selectionModel().currentChanged.connect(self.tableWidget_SymbolInfo_current_changed)
         self.tableWidget_SymbolInfo.itemDoubleClicked.connect(self.tableWidget_SymbolInfo_item_double_clicked)
         self.tableWidget_SymbolInfo.contextMenuEvent = self.tableWidget_SymbolInfo_context_menu_event
-        icons_directory = GuiUtils.get_icons_directory()
+        icons_directory = guiutils.get_icons_directory()
         self.pushButton_Help.setIcon(QIcon(QPixmap(icons_directory + "/help.png")))
         self.pushButton_Help.clicked.connect(self.pushButton_Help_clicked)
 
@@ -4802,7 +4785,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
             self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_ADDR_COL, address_item)
             self.tableWidget_SymbolInfo.setItem(row, FUNCTIONS_INFO_SYMBOL_COL, QTableWidgetItem(item[1]))
         self.tableWidget_SymbolInfo.setSortingEnabled(True)
-        GuiUtils.resize_to_contents(self.tableWidget_SymbolInfo)
+        guiutils.resize_to_contents(self.tableWidget_SymbolInfo)
 
     def tableWidget_SymbolInfo_current_changed(self, QModelIndex_current):
         self.textBrowser_AddressInfo.clear()
@@ -4822,13 +4805,13 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_SymbolInfo.item(row, column).text())
 
-        selected_row = GuiUtils.get_current_row(self.tableWidget_SymbolInfo)
+        selected_row = guiutils.get_current_row(self.tableWidget_SymbolInfo)
 
         menu = QMenu()
         copy_address = menu.addAction(tr.COPY_ADDRESS)
         copy_symbol = menu.addAction(tr.COPY_SYMBOL)
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_address, copy_symbol])
+            guiutils.delete_menu_entries(menu, [copy_address, copy_symbol])
         font_size = self.tableWidget_SymbolInfo.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -5014,7 +4997,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         global instances
         instances.append(self)
         if is_window:
-            GuiUtils.center(self)
+            guiutils.center(self)
             self.setWindowFlags(Qt.WindowType.Window)
         self.show_type_defs()
         self.splitter.setStretchFactor(0, 1)
@@ -5022,12 +5005,12 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         libpince_directory = SysUtils.get_libpince_directory()
         self.textBrowser_TypeDefs.setText(open(libpince_directory + "/type_defs.py").read())
         source_menu_items = ["(Tagged only)", "(All)"]
-        self.libpince_source_files = ["GDB_Engine", "SysUtils", "GuiUtils"]
-        source_menu_items.extend(self.libpince_source_files)
+        self.source_files = ["GDB_Engine", "SysUtils", "guiutils"]
+        source_menu_items.extend(self.source_files)
         self.comboBox_SourceFile.addItems(source_menu_items)
         self.comboBox_SourceFile.setCurrentIndex(0)
         self.fill_resource_tree()
-        icons_directory = GuiUtils.get_icons_directory()
+        icons_directory = guiutils.get_icons_directory()
         self.pushButton_TextUp.setIcon(QIcon(QPixmap(icons_directory + "/bullet_arrow_up.png")))
         self.pushButton_TextDown.setIcon(QIcon(QPixmap(icons_directory + "/bullet_arrow_down.png")))
         self.comboBox_SourceFile.currentIndexChanged.connect(self.comboBox_SourceFile_current_index_changed)
@@ -5045,7 +5028,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_ResourceTable.item(row, column).text())
 
-        selected_row = GuiUtils.get_current_row(self.tableWidget_ResourceTable)
+        selected_row = guiutils.get_current_row(self.tableWidget_ResourceTable)
 
         menu = QMenu()
         refresh = menu.addAction("Refresh")
@@ -5053,7 +5036,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         copy_item = menu.addAction("Copy Item")
         copy_value = menu.addAction("Copy Value")
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_item, copy_value])
+            guiutils.delete_menu_entries(menu, [copy_item, copy_value])
         font_size = self.tableWidget_ResourceTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -5069,7 +5052,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
 
     def treeWidget_ResourceTree_context_menu_event(self, event):
         def copy_to_clipboard(column):
-            current_item = GuiUtils.get_current_item(self.treeWidget_ResourceTree)
+            current_item = guiutils.get_current_item(self.treeWidget_ResourceTree)
             if current_item:
                 app.clipboard().setText(current_item.text(column))
 
@@ -5081,7 +5064,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
             self.treeWidget_ResourceTree.collapseAll()
             self.resize_resource_tree()
 
-        selected_row = GuiUtils.get_current_row(self.treeWidget_ResourceTree)
+        selected_row = guiutils.get_current_row(self.treeWidget_ResourceTree)
 
         menu = QMenu()
         refresh = menu.addAction("Refresh")
@@ -5089,7 +5072,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         copy_item = menu.addAction("Copy Item")
         copy_value = menu.addAction("Copy Value")
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_item, copy_value])
+            guiutils.delete_menu_entries(menu, [copy_item, copy_value])
         menu.addSeparator()
         expand_all_items = menu.addAction("Expand All")
         collapse_all_items = menu.addAction("Collapse All")
@@ -5126,7 +5109,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         self.stackedWidget_Resources.setCurrentIndex(0)
         self.treeWidget_ResourceTree.clear()
         parent = self.treeWidget_ResourceTree
-        checked_source_files = self.convert_to_modules(self.libpince_source_files)
+        checked_source_files = self.convert_to_modules(self.source_files)
         tag_dict = SysUtils.get_tags(checked_source_files, type_defs.tag_to_string, self.lineEdit_Search.text())
         docstring_dict = SysUtils.get_docstrings(checked_source_files, self.lineEdit_Search.text())
         for tag in tag_dict:
@@ -5152,7 +5135,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         self.tableWidget_ResourceTable.setSortingEnabled(False)
         self.tableWidget_ResourceTable.setRowCount(0)
         if self.comboBox_SourceFile.currentIndex() == 1:  # (All)
-            checked_source_files = self.libpince_source_files
+            checked_source_files = self.source_files
         else:
             checked_source_files = [self.comboBox_SourceFile.currentText()]
         checked_source_files = self.convert_to_modules(checked_source_files)
@@ -5168,7 +5151,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
             self.tableWidget_ResourceTable.setItem(row, LIBPINCE_REFERENCE_VALUE_COL, table_widget_item_value)
         self.tableWidget_ResourceTable.setSortingEnabled(True)
         self.tableWidget_ResourceTable.sortByColumn(LIBPINCE_REFERENCE_ITEM_COL, Qt.SortOrder.AscendingOrder)
-        GuiUtils.resize_to_contents(self.tableWidget_ResourceTable)
+        guiutils.resize_to_contents(self.tableWidget_ResourceTable)
 
     def pushButton_TextDown_clicked(self):
         if self.found_count == 0:
@@ -5256,7 +5239,7 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        GuiUtils.center(self)
+        guiutils.center(self)
         global instances
         instances.append(self)
         self.setWindowFlags(Qt.WindowType.Window)
@@ -5314,12 +5297,12 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         self.parent = lambda: parent
         global instances
         instances.append(self)
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.lineEdit_Start.setText(start)
         self.lineEdit_End.setText(end)
         self.tableWidget_Opcodes.setColumnWidth(SEARCH_OPCODE_ADDR_COL, 250)
-        icons_directory = GuiUtils.get_icons_directory()
+        icons_directory = guiutils.get_icons_directory()
         self.pushButton_Help.setIcon(QIcon(QPixmap(icons_directory + "/help.png")))
         self.pushButton_Help.clicked.connect(self.pushButton_Help_clicked)
         self.pushButton_Search.clicked.connect(self.refresh_table)
@@ -5369,13 +5352,13 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_Opcodes.item(row, column).text())
 
-        selected_row = GuiUtils.get_current_row(self.tableWidget_Opcodes)
+        selected_row = guiutils.get_current_row(self.tableWidget_Opcodes)
 
         menu = QMenu()
         copy_address = menu.addAction(tr.COPY_ADDRESS)
         copy_opcode = menu.addAction(tr.COPY_OPCODE)
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_address, copy_opcode])
+            guiutils.delete_menu_entries(menu, [copy_address, copy_opcode])
         font_size = self.tableWidget_Opcodes.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -5400,7 +5383,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         self.parent = lambda: parent
         global instances
         instances.append(self)
-        GuiUtils.center(self)
+        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.refresh_table()
         self.tableWidget_MemoryRegions.contextMenuEvent = self.tableWidget_MemoryRegions_context_menu_event
@@ -5418,13 +5401,13 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PERM_COL, QTableWidgetItem(perms))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_OFFSET_COL, QTableWidgetItem(offset))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PATH_COL, QTableWidgetItem(path))
-        GuiUtils.resize_to_contents(self.tableWidget_MemoryRegions)
+        guiutils.resize_to_contents(self.tableWidget_MemoryRegions)
 
     def tableWidget_MemoryRegions_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_MemoryRegions.item(row, column).text())
 
-        selected_row = GuiUtils.get_current_row(self.tableWidget_MemoryRegions)
+        selected_row = guiutils.get_current_row(self.tableWidget_MemoryRegions)
 
         menu = QMenu()
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
@@ -5433,7 +5416,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         copy_offset = menu.addAction(tr.COPY_OFFSET)
         copy_path = menu.addAction(tr.COPY_PATH)
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_addresses, copy_offset, copy_path])
+            guiutils.delete_menu_entries(menu, [copy_addresses, copy_offset, copy_path])
         font_size = self.tableWidget_MemoryRegions.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -5542,7 +5525,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
             self.region_list.append((start, end))
             self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_ADDR_COL, QTableWidgetItem(address))
             self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_PATH_COL, QTableWidgetItem(path))
-        GuiUtils.resize_to_contents(self.tableWidget_ExecutableMemoryRegions)
+        guiutils.resize_to_contents(self.tableWidget_ExecutableMemoryRegions)
 
     def scan_finished(self):
         self.init_pre_scan_gui()
@@ -5586,11 +5569,11 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.setupUi(self)
-        GuiUtils.fill_value_combobox(self.comboBox_ValueType, type_defs.VALUE_INDEX.INDEX_STRING_UTF8)
+        guiutils.fill_value_combobox(self.comboBox_ValueType, type_defs.VALUE_INDEX.INDEX_STRING_UTF8)
         self.parent = lambda: parent
         global instances
         instances.append(self)
-        GuiUtils.center_to_parent(self)
+        guiutils.center_to_parent(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.tableWidget_References.setColumnWidth(REF_STR_ADDR_COL, 150)
         self.tableWidget_References.setColumnWidth(REF_STR_COUNT_COL, 80)
@@ -5673,13 +5656,13 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_References.item(row, column).text())
 
-        selected_row = GuiUtils.get_current_row(self.tableWidget_References)
+        selected_row = guiutils.get_current_row(self.tableWidget_References)
 
         menu = QMenu()
         copy_address = menu.addAction(tr.COPY_ADDRESS)
         copy_value = menu.addAction(tr.COPY_VALUE)
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_address, copy_value])
+            guiutils.delete_menu_entries(menu, [copy_address, copy_value])
         font_size = self.tableWidget_References.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -5696,12 +5679,12 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         def copy_to_clipboard(row):
             app.clipboard().setText(self.listWidget_Referrers.item(row).text())
 
-        selected_row = GuiUtils.get_current_row(self.listWidget_Referrers)
+        selected_row = guiutils.get_current_row(self.listWidget_Referrers)
 
         menu = QMenu()
         copy_address = menu.addAction(tr.COPY_ADDRESS)
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_address])
+            guiutils.delete_menu_entries(menu, [copy_address])
         font_size = self.listWidget_Referrers.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -5725,7 +5708,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         self.parent = lambda: parent
         global instances
         instances.append(self)
-        GuiUtils.center_to_parent(self)
+        guiutils.center_to_parent(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.tableWidget_References.setColumnWidth(REF_CALL_ADDR_COL, 480)
         self.splitter.setStretchFactor(0, 1)
@@ -5802,12 +5785,12 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_References.item(row, column).text())
 
-        selected_row = GuiUtils.get_current_row(self.tableWidget_References)
+        selected_row = guiutils.get_current_row(self.tableWidget_References)
 
         menu = QMenu()
         copy_address = menu.addAction(tr.COPY_ADDRESS)
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_address])
+            guiutils.delete_menu_entries(menu, [copy_address])
         font_size = self.tableWidget_References.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -5823,12 +5806,12 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         def copy_to_clipboard(row):
             app.clipboard().setText(self.listWidget_Referrers.item(row).text())
 
-        selected_row = GuiUtils.get_current_row(self.listWidget_Referrers)
+        selected_row = guiutils.get_current_row(self.listWidget_Referrers)
 
         menu = QMenu()
         copy_address = menu.addAction(tr.COPY_ADDRESS)
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_address])
+            guiutils.delete_menu_entries(menu, [copy_address])
         font_size = self.listWidget_Referrers.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -5852,7 +5835,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         self.parent = lambda: parent
         global instances
         instances.append(self)
-        GuiUtils.center_to_parent(self)
+        guiutils.center_to_parent(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.splitter.setStretchFactor(0, 1)
         self.textBrowser_DisasInfo.resize(600, self.textBrowser_DisasInfo.height())
@@ -5946,12 +5929,12 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         def copy_to_clipboard(row):
             app.clipboard().setText(self.listWidget_Referrers.item(row).text())
 
-        selected_row = GuiUtils.get_current_row(self.listWidget_Referrers)
+        selected_row = guiutils.get_current_row(self.listWidget_Referrers)
 
         menu = QMenu()
         copy_address = menu.addAction(tr.COPY_ADDRESS)
         if selected_row == -1:
-            GuiUtils.delete_menu_entries(menu, [copy_address])
+            guiutils.delete_menu_entries(menu, [copy_address])
         font_size = self.listWidget_Referrers.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())

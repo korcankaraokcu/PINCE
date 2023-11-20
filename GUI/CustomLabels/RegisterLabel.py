@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt6.QtWidgets import QLabel, QMenu
 from PyQt6.QtGui import QCursor
 from PyQt6.QtCore import Qt
-from libpince import GDB_Engine, GuiUtils, type_defs
+from libpince import GDB_Engine, type_defs
 from PINCE import InputDialogForm
+from GUI.Utils import guiutils
 
 
 class QRegisterLabel(QLabel):
@@ -58,13 +59,13 @@ class QRegisterLabel(QLabel):
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(QContextMenuEvent.globalPos())
         if action == show_in_hex_view:
-            parent = GuiUtils.search_parents_by_function(self, "hex_dump_address")
+            parent = guiutils.search_parents_by_function(self, "hex_dump_address")
             if parent.objectName() == "MainWindow_MemoryView":
                 address = self.text().split("=")[-1]
                 address_int = int(address, 16)
                 parent.hex_dump_address(address_int)
         elif action == show_in_disassembler:
-            parent = GuiUtils.search_parents_by_function(self, "disassemble_expression")
+            parent = guiutils.search_parents_by_function(self, "disassemble_expression")
             if parent.objectName() == "MainWindow_MemoryView":
                 address = self.text().split("=")[-1]
                 parent.disassemble_expression(address)
