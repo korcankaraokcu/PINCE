@@ -297,7 +297,7 @@ saved_addresses_changed_list = list()
 
 # GDB expression cache
 # TODO: Try to find a fast and non-gdb way to calculate symbols so we don't need this
-# This is one of the few tricks we do to minimize examine_expressions calls
+# This is one of the few tricks we do to minimize examine_expression calls
 # This solution might bring problems if the symbols are changing frequently
 # Currently only address_table_loop uses this so user can refresh symbols with a button press
 exp_cache = {}
@@ -514,7 +514,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_About.clicked.connect(self.pushButton_About_clicked)
         self.pushButton_AddAddressManually.clicked.connect(self.pushButton_AddAddressManually_clicked)
         self.pushButton_MemoryView.clicked.connect(self.pushButton_MemoryView_clicked)
-        self.pushButton_RefreshAdressTable.clicked.connect(self.update_address_table)
+        self.pushButton_RefreshAdressTable.clicked.connect(lambda: self.update_address_table(use_cache=False))
         self.pushButton_CopyToAddressTable.clicked.connect(self.copy_to_address_table)
         self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
         self.tableWidget_valuesearchtable.cellDoubleClicked.connect(
@@ -936,7 +936,8 @@ class MainForm(QMainWindow, MainWindow):
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete), self.delete_selected_records),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B), self.browse_region_for_selected_row),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D), self.disassemble_selected_row),
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_address_table),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R),
+             lambda: self.update_address_table(use_cache=False)),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space), self.toggle_selected_records),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_X), self.cut_selected_records),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C), self.copy_selected_records),
@@ -962,17 +963,13 @@ class MainForm(QMainWindow, MainWindow):
         except KeyError:
             self.treeWidget_AddressTable.keyPressEvent_original(event)
 
-    def update_address_table(self, use_cache=False):
+    def update_address_table(self, use_cache=True):
         global exp_cache
         if GDB_Engine.currentpid == -1 or self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
         mem_handle = GDB_Engine.memory_handle()
-        rows = []
-        address_list = []
-        examine_indices = []
-        examine_list = []
-        index = 0
+        basic_math_exp = re.compile(r"^[0-9a-fA-F][/*+\-0-9a-fA-FxX]+$")
         while True:
             row = it.value()
             if not row:
@@ -980,53 +977,49 @@ class MainForm(QMainWindow, MainWindow):
             it += 1
             address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
             if isinstance(address_data, type_defs.PointerType):
-                address = address_data.base_address
+                expression = address_data.base_address
             else:
-                address = address_data
-            # Simple addresses first, examine_expression takes much longer time, especially for larger tables
-            try:
-                int(address, 0)
-            except (ValueError, TypeError):
-                if use_cache and address in exp_cache:
-                    address = exp_cache[address]
-                else:
-                    examine_list.append(address)
-                    examine_indices.append(index)
-            address_list.append(address)
-            rows.append(row)
-            index += 1
-        for index, item in enumerate(GDB_Engine.examine_expressions(examine_list)):
-            exp_cache[examine_list[index]] = item.address
-            address_list[examine_indices[index]] = item.address
-        for index, row in enumerate(rows):
+                expression = address_data
+            parent = row.parent()
+            if parent and expression.startswith(('+', '-')):
+                expression = parent.data(ADDR_COL, Qt.ItemDataRole.UserRole+1)+expression
+            if use_cache and expression in exp_cache:
+                address = exp_cache[expression]
+            elif expression.startswith(('+', '-')):  # If parent has an empty address
+                address = expression
+            elif basic_math_exp.match(expression.replace(" ", "")):
+                try:
+                    address = hex(eval(expression))
+                except:
+                    address = GDB_Engine.examine_expression(expression).address
+                    exp_cache[expression] = address
+            else:
+                address = GDB_Engine.examine_expression(expression).address
+                exp_cache[expression] = address
             vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-            address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
-            current_address = address_list[index]
             if isinstance(address_data, type_defs.PointerType):
                 # The original base could be a symbol so we have to save it
-                # This little hack makes it possible to call examine_expressions only once
-                if current_address:
+                # This little hack avoids the unnecessary examine_expression call
+                # TODO: Consider implementing exp_cache inside libpince so we don't need this hack
+                if address:
                     old_base = address_data.base_address  # save the old base
-                    address_data.base_address = current_address
+                    address_data.base_address = address
                     address = GDB_Engine.read_pointer(address_data)
                     address_data.base_address = old_base  # then set it back
                     if address:
-                        row.setText(ADDR_COL, f'P->{hex(address)}')
+                        address = hex(address)
+                        row.setText(ADDR_COL, f'P->{address}')
                     else:
                         row.setText(ADDR_COL, 'P->??')
                 else:
-                    # We already know that base address is an invalid symbol, skip the read_pointer call
-                    address = None
                     row.setText(ADDR_COL, 'P->??')
             else:
-                address = current_address
                 row.setText(ADDR_COL, address or address_data)
+            address = "" if not address else address
+            row.setData(ADDR_COL, Qt.ItemDataRole.UserRole+1, address)
             value = GDB_Engine.read_memory(address, vt.value_index, vt.length, vt.zero_terminate,
                                            vt.value_repr, vt.endian, mem_handle=mem_handle)
-            if value is None:
-                value = ""
-            else:
-                value = str(value)
+            value = "" if value is None else str(value)
             row.setText(VALUE_COL, value)
 
     def resize_address_table(self):
@@ -1038,6 +1031,7 @@ class MainForm(QMainWindow, MainWindow):
         if manual_address_dialog.exec():
             desc, address_expr, value_index, length, zero_terminate, endian = manual_address_dialog.get_values()
             self.add_entry_to_addresstable(desc, address_expr, value_index, length, zero_terminate, endian=endian)
+            self.update_address_table()
 
     def pushButton_MemoryView_clicked(self):
         self.memory_view_window.showMaximized()
@@ -1264,6 +1258,7 @@ class MainForm(QMainWindow, MainWindow):
         length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
         self.add_entry_to_addresstable(tr.NO_DESCRIPTION, current_item.text(), value_index, length,
                                        value_repr=value_repr, endian=endian)
+        self.update_address_table()
 
     def comboBox_ValueType_current_index_changed(self):
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
@@ -1393,6 +1388,7 @@ class MainForm(QMainWindow, MainWindow):
             if i % 3 == 0:
                 value_index, value_repr, endian = row.data(Qt.ItemDataRole.UserRole)
                 self.add_entry_to_addresstable("", row.text(), value_index, length, True, value_repr, endian)
+        self.update_address_table()
 
     def reset_scan(self):
         self.scan_mode = type_defs.SCAN_MODE.NEW
@@ -1442,6 +1438,7 @@ class MainForm(QMainWindow, MainWindow):
         GDB_Engine.detach()
         app.closeAllWindows()
 
+    # Call update_address_table manually after this
     def add_entry_to_addresstable(self, description, address_expr, value_index, length=0, zero_terminate=True,
                                   value_repr=type_defs.VALUE_REPR.UNSIGNED, endian=type_defs.ENDIANNESS.HOST):
         current_row = QTreeWidgetItem()
@@ -1475,7 +1472,7 @@ class MainForm(QMainWindow, MainWindow):
     def address_table_loop(self):
         if update_table and not exiting:
             try:
-                self.update_address_table(use_cache=True)
+                self.update_address_table()
             except:
                 traceback.print_exc()
         self.address_table_timer.start(table_update_interval)
@@ -1604,6 +1601,7 @@ class MainForm(QMainWindow, MainWindow):
             desc, address_expr, value_index, length, zero_terminate, endian = manual_address_dialog.get_values()
             vt = type_defs.ValueType(value_index, length, zero_terminate, vt.value_repr, endian)
             self.change_address_table_entries(row, desc, address_expr, vt)
+            self.update_address_table()
 
     def treeWidget_AddressTable_edit_type(self):
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
@@ -1621,29 +1619,11 @@ class MainForm(QMainWindow, MainWindow):
 
     # Changes the column values of the given row
     def change_address_table_entries(self, row, description=tr.NO_DESCRIPTION, address_expr="", vt=None):
-        if isinstance(address_expr, type_defs.PointerType):
-            address = GDB_Engine.read_pointer(address_expr)
-            address_text = f'P->{hex(address)}' if address != None else 'P->??'
-        else:
-            # Simple addresses first, examine_expression takes much longer time, especially for larger tables
-            try:
-                address = int(address_expr, 0)
-                address_text = hex(address)
-            except (ValueError, TypeError):
-                address = GDB_Engine.examine_expression(address_expr).address
-                address_text = address
-        value = ''
-        if address:
-            value = GDB_Engine.read_memory(address, vt.value_index, vt.length, vt.zero_terminate, vt.value_repr,
-                                           vt.endian)
-
         assert isinstance(row, QTreeWidgetItem)
         row.setText(DESC_COL, description)
         row.setData(ADDR_COL, Qt.ItemDataRole.UserRole, address_expr)
-        row.setText(ADDR_COL, address_text)
         row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, vt)
         row.setText(TYPE_COL, vt.text())
-        row.setText(VALUE_COL, "" if value is None else str(value))
 
     # Returns the column values of the given row
     def read_address_table_entries(self, row, serialize=False):
@@ -2943,6 +2923,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if manual_address_dialog.exec():
             desc, address, value_index, length, zero_terminate, endian = manual_address_dialog.get_values()
             self.parent().add_entry_to_addresstable(desc, address, value_index, length, zero_terminate, endian=endian)
+            self.parent().update_address_table()
 
     def hex_view_scroll_up(self):
         self.verticalScrollBar_HexView.setValue(1)
@@ -4505,6 +4486,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
         self.parent().parent().add_entry_to_addresstable(tr.ACCESSED_BY.format(self.address), address,
                                                          self.comboBox_ValueType.currentIndex(), 10)
+        self.parent().parent().update_address_table()
 
     def pushButton_Stop_clicked(self):
         if self.stopped:
