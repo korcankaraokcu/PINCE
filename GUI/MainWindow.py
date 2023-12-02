@@ -18,7 +18,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout.setObjectName("gridLayout")
-        self.treeWidget_AddressTable = QtWidgets.QTreeWidget(parent=self.centralwidget)
+        self.treeWidget_AddressTable = QAddressTree(parent=self.centralwidget)
         self.treeWidget_AddressTable.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.treeWidget_AddressTable.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragDrop)
         self.treeWidget_AddressTable.setDefaultDropAction(QtCore.Qt.DropAction.MoveAction)
@@ -317,3 +317,4 @@ class Ui_MainWindow(object):
         self.label_2.setText(_translate("MainWindow", "Value Type:"))
         self.label_ScanScope.setText(_translate("MainWindow", "Scan Scope:"))
         self.label_3.setText(_translate("MainWindow", "Endianness:"))
+from GUI.CustomTreeWidgets.AddressTree import QAddressTree
