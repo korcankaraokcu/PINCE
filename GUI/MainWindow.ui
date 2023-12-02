@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="3" column="0">
-     <widget class="QTreeWidget" name="treeWidget_AddressTable">
+     <widget class="QAddressTree" name="treeWidget_AddressTable">
       <property name="editTriggers">
        <set>QAbstractItemView::NoEditTriggers</set>
       </property>
@@ -621,6 +621,13 @@
    </property>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QAddressTree</class>
+   <extends>QTreeWidget</extends>
+   <header location="global">GUI.CustomTreeWidgets.AddressTree</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
