@@ -123,7 +123,6 @@ PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-dev python3-venv pkg-config qt6-l10n-to
 PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc python3-devel qt6-tools-linguist typelib-1_0-Gtk-3_0 cairo-devel gobject-introspection-devel make"
 PKG_NAMES_FEDORA="$PKG_NAMES_ALL python3-devel qt6-linguist redhat-lsb cairo-devel gobject-introspection-devel cairo-gobject-devel"
 PKG_NAMES_ARCH="python-pip qt6-tools gdb lsb-release" # arch defaults to py3 nowadays
-PKG_NAMES_PIP="pyqt6 pexpect distorm3 keystone-engine pygdbmi keyboard pygobject"
 
 INSTALL_COMMAND="install"
 
@@ -196,7 +195,7 @@ fi
 . .venv/PINCE/bin/activate
 
 # shellcheck disable=SC2086
-pip3 install ${PKG_NAMES_PIP} || exit_on_error
+pip3 install -r requirements.txt || exit_on_error
 
 install_libscanmem || exit_on_error
 
