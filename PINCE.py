@@ -1786,7 +1786,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.comboBox_Endianness.currentIndexChanged.connect(self.update_value_of_address)
         self.lineEdit_length.textChanged.connect(self.update_value_of_address)
         self.checkBox_zeroterminate.stateChanged.connect(self.update_value_of_address)
-        self.checkBox_IsPointer.stateChanged.connect(self.comboBox_ValueType_current_index_changed)
+        self.checkBox_IsPointer.stateChanged.connect(self.checkBox_IsPointer_state_changed)
         self.lineEdit_PtrStartAddress.textChanged.connect(self.update_value_of_address)
         self.lineEdit_address.textChanged.connect(self.update_value_of_address)
         self.addOffsetButton.clicked.connect(lambda: self.addOffsetLayout(True))
@@ -1886,6 +1886,10 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.label_length.hide()
             self.lineEdit_length.hide()
             self.checkBox_zeroterminate.hide()
+        self.setFixedSize(self.layout().sizeHint())
+        self.update_value_of_address()
+
+    def checkBox_IsPointer_state_changed(self):
         if self.checkBox_IsPointer.isChecked():
             self.lineEdit_address.setEnabled(False)
             self.lineEdit_PtrStartAddress.setText(self.lineEdit_address.text())
