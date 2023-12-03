@@ -1744,60 +1744,60 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.adjustSize()
         self.setMinimumWidth(300)
         self.setFixedHeight(self.height())
-        self.lineEdit_length.setValidator(QHexValidator(999, self))
+        self.lineEdit_Length.setValidator(QHexValidator(999, self))
         guiutils.fill_value_combobox(self.comboBox_ValueType, index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, endian)
-        self.lineEdit_description.setText(description)
+        self.lineEdit_Description.setText(description)
         self.offsetsList = []
         if not isinstance(address, type_defs.PointerType):
-            self.lineEdit_address.setText(address)
+            self.lineEdit_Address.setText(address)
             self.widget_Pointer.hide()
         else:
             self.checkBox_IsPointer.setChecked(True)
-            self.lineEdit_address.setEnabled(False)
+            self.lineEdit_Address.setEnabled(False)
             self.lineEdit_PtrStartAddress.setText(address.get_base_address())
             self.create_offsets_list(address)
             self.widget_Pointer.show()
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
-            self.label_length.show()
-            self.lineEdit_length.show()
+            self.label_Length.show()
+            self.lineEdit_Length.show()
             try:
                 length = str(length)
             except:
                 length = "10"
-            self.lineEdit_length.setText(length)
-            self.checkBox_zeroterminate.show()
-            self.checkBox_zeroterminate.setChecked(zero_terminate)
+            self.lineEdit_Length.setText(length)
+            self.checkBox_ZeroTerminate.show()
+            self.checkBox_ZeroTerminate.setChecked(zero_terminate)
         elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
-            self.label_length.show()
-            self.lineEdit_length.show()
+            self.label_Length.show()
+            self.lineEdit_Length.show()
             try:
                 length = str(length)
             except:
                 length = "10"
-            self.lineEdit_length.setText(length)
-            self.checkBox_zeroterminate.hide()
+            self.lineEdit_Length.setText(length)
+            self.checkBox_ZeroTerminate.hide()
         else:
-            self.label_length.hide()
-            self.lineEdit_length.hide()
-            self.checkBox_zeroterminate.hide()
+            self.label_Length.hide()
+            self.lineEdit_Length.hide()
+            self.checkBox_ZeroTerminate.hide()
         self.setFixedSize(self.layout().sizeHint())
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.comboBox_Endianness.currentIndexChanged.connect(self.update_value_of_address)
-        self.lineEdit_length.textChanged.connect(self.update_value_of_address)
-        self.checkBox_zeroterminate.stateChanged.connect(self.update_value_of_address)
+        self.lineEdit_Length.textChanged.connect(self.update_value_of_address)
+        self.checkBox_ZeroTerminate.stateChanged.connect(self.update_value_of_address)
         self.checkBox_IsPointer.stateChanged.connect(self.checkBox_IsPointer_state_changed)
         self.lineEdit_PtrStartAddress.textChanged.connect(self.update_value_of_address)
-        self.lineEdit_address.textChanged.connect(self.update_value_of_address)
-        self.addOffsetButton.clicked.connect(lambda: self.addOffsetLayout(True))
-        self.removeOffsetButton.clicked.connect(self.removeOffsetLayout)
-        self.label_valueofaddress.contextMenuEvent = self.label_valueofaddress_context_menu_event
+        self.lineEdit_Address.textChanged.connect(self.update_value_of_address)
+        self.pushButton_AddOffset.clicked.connect(lambda: self.addOffsetLayout(True))
+        self.pushButton_RemoveOffset.clicked.connect(self.removeOffsetLayout)
+        self.label_Value.contextMenuEvent = self.label_Value_context_menu_event
         self.update_value_of_address()
 
-    def label_valueofaddress_context_menu_event(self, event):
+    def label_Value_context_menu_event(self, event):
         menu = QMenu()
         refresh = menu.addAction(tr.REFRESH)
-        font_size = self.label_valueofaddress.font().pointSize()
+        font_size = self.label_Value.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
         actions = {
@@ -1853,53 +1853,53 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                 address_text = hex(address)
             else:
                 address_text = "??"
-            self.lineEdit_address.setText(address_text)
+            self.lineEdit_Address.setText(address_text)
         else:
-            address = GDB_Engine.examine_expression(self.lineEdit_address.text()).address
+            address = GDB_Engine.examine_expression(self.lineEdit_Address.text()).address
         if not address:
-            self.label_valueofaddress.setText("<font color=red>??</font>")
+            self.label_Value.setText("<font color=red>??</font>")
             return
 
         address_type = self.comboBox_ValueType.currentIndex()
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         if address_type == type_defs.VALUE_INDEX.INDEX_AOB:
-            length = self.lineEdit_length.text()
+            length = self.lineEdit_Length.text()
             value = GDB_Engine.read_memory(address, address_type, length, endian=endian)
         elif type_defs.VALUE_INDEX.is_string(address_type):
-            length = self.lineEdit_length.text()
-            is_zeroterminate = self.checkBox_zeroterminate.isChecked()
+            length = self.lineEdit_Length.text()
+            is_zeroterminate = self.checkBox_ZeroTerminate.isChecked()
             value = GDB_Engine.read_memory(address, address_type, length, is_zeroterminate, endian=endian)
         else:
             value = GDB_Engine.read_memory(address, address_type, endian=endian)
-        self.label_valueofaddress.setText("<font color=red>??</font>" if value is None else str(value))
+        self.label_Value.setText("<font color=red>??</font>" if value is None else str(value))
 
     def comboBox_ValueType_current_index_changed(self):
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
-            self.label_length.show()
-            self.lineEdit_length.show()
-            self.checkBox_zeroterminate.show()
+            self.label_Length.show()
+            self.lineEdit_Length.show()
+            self.checkBox_ZeroTerminate.show()
         elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
-            self.label_length.show()
-            self.lineEdit_length.show()
-            self.checkBox_zeroterminate.hide()
+            self.label_Length.show()
+            self.lineEdit_Length.show()
+            self.checkBox_ZeroTerminate.hide()
         else:
-            self.label_length.hide()
-            self.lineEdit_length.hide()
-            self.checkBox_zeroterminate.hide()
+            self.label_Length.hide()
+            self.lineEdit_Length.hide()
+            self.checkBox_ZeroTerminate.hide()
         self.setFixedSize(self.layout().sizeHint())
         self.update_value_of_address()
 
     def checkBox_IsPointer_state_changed(self):
         if self.checkBox_IsPointer.isChecked():
-            self.lineEdit_address.setEnabled(False)
-            self.lineEdit_PtrStartAddress.setText(self.lineEdit_address.text())
+            self.lineEdit_Address.setEnabled(False)
+            self.lineEdit_PtrStartAddress.setText(self.lineEdit_Address.text())
             if len(self.offsetsList) == 0:
                 self.addOffsetLayout(False)
             self.widget_Pointer.show()
         else:
-            self.lineEdit_address.setText(self.lineEdit_PtrStartAddress.text())
+            self.lineEdit_Address.setText(self.lineEdit_PtrStartAddress.text())
             self.lineEdit_PtrStartAddress.setText("")
-            self.lineEdit_address.setEnabled(True)
+            self.lineEdit_Address.setEnabled(True)
             self.widget_Pointer.hide()
         self.setFixedSize(self.layout().sizeHint())
         self.update_value_of_address()
@@ -1908,8 +1908,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         super(ManualAddressDialogForm, self).reject()
 
     def accept(self):
-        if self.label_length.isVisible():
-            length = self.lineEdit_length.text()
+        if self.label_Length.isVisible():
+            length = self.lineEdit_Length.text()
             try:
                 length = int(length, 0)
             except:
@@ -1921,14 +1921,14 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         super(ManualAddressDialogForm, self).accept()
 
     def get_values(self):
-        description = self.lineEdit_description.text()
-        address = self.lineEdit_address.text()
-        length = self.lineEdit_length.text()
+        description = self.lineEdit_Description.text()
+        address = self.lineEdit_Address.text()
+        length = self.lineEdit_Length.text()
         try:
             length = int(length, 0)
         except:
             length = 0
-        zero_terminate = self.checkBox_zeroterminate.isChecked()
+        zero_terminate = self.checkBox_ZeroTerminate.isChecked()
         value_index = self.comboBox_ValueType.currentIndex()
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         if self.checkBox_IsPointer.isChecked():
