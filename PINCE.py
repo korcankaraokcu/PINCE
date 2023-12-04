@@ -56,7 +56,7 @@ from GUI.HandleSignalsDialog import Ui_Dialog as HandleSignalsDialog
 from GUI.ConsoleWidget import Ui_Form as ConsoleWidget
 from GUI.AboutWidget import Ui_TabWidget as AboutWidget
 
-# If you are going to change the name "Ui_MainWindow_MemoryView", review GUI/CustomLabels/RegisterLabel.py as well
+# If you are going to change the name "Ui_MainWindow_MemoryView", review GUI/Labels/RegisterLabel.py as well
 from GUI.MemoryViewerWindow import Ui_MainWindow_MemoryView as MemoryViewWindow
 from GUI.BookmarkWidget import Ui_Form as BookmarkWidget
 from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
@@ -80,9 +80,9 @@ from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
 from GUI.RestoreInstructionsWidget import Ui_Form as RestoreInstructionsWidget
 
-from GUI.CustomAbstractTableModels.HexModel import QHexModel
-from GUI.CustomAbstractTableModels.AsciiModel import QAsciiModel
-from GUI.CustomValidators.HexValidator import QHexValidator
+from GUI.AbstractTableModels.HexModel import QHexModel
+from GUI.AbstractTableModels.AsciiModel import QAsciiModel
+from GUI.Validators.HexValidator import QHexValidator
 
 from keyboard import add_hotkey, remove_hotkey
 from operator import add as opAdd, sub as opSub
