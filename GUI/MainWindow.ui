@@ -625,7 +625,7 @@
   <customwidget>
    <class>QAddressTree</class>
    <extends>QTreeWidget</extends>
-   <header location="global">GUI.CustomTreeWidgets.AddressTree</header>
+   <header location="global">GUI.TreeWidgets.AddressTree</header>
   </customwidget>
  </customwidgets>
  <resources/>

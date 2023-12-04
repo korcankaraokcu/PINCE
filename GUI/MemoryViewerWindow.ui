@@ -1737,22 +1737,22 @@
   <customwidget>
    <class>QRegisterLabel</class>
    <extends>QLabel</extends>
-   <header location="global">GUI.CustomLabels.RegisterLabel</header>
+   <header location="global">GUI.Labels.RegisterLabel</header>
   </customwidget>
   <customwidget>
    <class>QFlagRegisterLabel</class>
    <extends>QLabel</extends>
-   <header location="global">GUI.CustomLabels.FlagRegisterLabel</header>
+   <header location="global">GUI.Labels.FlagRegisterLabel</header>
   </customwidget>
   <customwidget>
    <class>QHexView</class>
    <extends>QTableView</extends>
-   <header location="global">GUI.CustomTableViews.HexView</header>
+   <header location="global">GUI.TableViews.HexView</header>
   </customwidget>
   <customwidget>
    <class>QAsciiView</class>
    <extends>QTableView</extends>
-   <header location="global">GUI.CustomTableViews.AsciiView</header>
+   <header location="global">GUI.TableViews.AsciiView</header>
   </customwidget>
  </customwidgets>
  <resources/>

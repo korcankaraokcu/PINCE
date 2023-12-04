@@ -317,4 +317,4 @@ class Ui_MainWindow(object):
         self.label_2.setText(_translate("MainWindow", "Value Type:"))
         self.label_ScanScope.setText(_translate("MainWindow", "Scan Scope:"))
         self.label_3.setText(_translate("MainWindow", "Endianness:"))
-from GUI.CustomTreeWidgets.AddressTree import QAddressTree
+from GUI.TreeWidgets.AddressTree import QAddressTree
