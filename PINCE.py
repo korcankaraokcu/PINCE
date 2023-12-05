@@ -347,9 +347,11 @@ def signal_handler(signal, frame):
         try:
             text = input("\nNo GDB command to cancel, quit PINCE? (y/n)")
             if text.lower().startswith("y"):
+                GDB_Engine.detach()
                 quit()
         except RuntimeError:
             print()  # Prints a newline so the terminal looks nicer when we quit
+            GDB_Engine.detach()
             quit()
 
 
