@@ -685,8 +685,6 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NextScan.clicked.emit()
 
     def treeWidget_AddressTable_context_menu_event(self, event):
-        if self.treeWidget_AddressTable.topLevelItemCount() == 0:
-            return
         current_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         header = self.treeWidget_AddressTable.headerItem()
         menu = QMenu()
@@ -720,10 +718,13 @@ class MainForm(QMainWindow, MainWindow):
         what_writes = menu.addAction(tr.WHAT_WRITES)
         what_reads = menu.addAction(tr.WHAT_READS)
         what_accesses = menu.addAction(tr.WHAT_ACCESSES)
+        menu.addSeparator()
+        add_group = menu.addAction(tr.ADD_GROUP)
+        create_group = menu.addAction(tr.CREATE_GROUP)
         if current_row is None:
             deletion_list = [edit_menu.menuAction(), show_hex, show_dec, show_unsigned, show_signed, toggle_record,
                              freeze_menu.menuAction(), browse_region, disassemble, what_writes, what_reads,
-                             what_accesses]
+                             what_accesses, add_group]
             guiutils.delete_menu_entries(menu, deletion_list)
         else:
             value_type = current_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
@@ -767,7 +768,9 @@ class MainForm(QMainWindow, MainWindow):
             delete_record: self.delete_selected_records,
             what_writes: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.WRITE_ONLY),
             what_reads: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.READ_ONLY),
-            what_accesses: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.BOTH)
+            what_accesses: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.BOTH),
+            add_group: self.group_records,
+            create_group: self.create_group
         }
         try:
             actions[action]()
@@ -927,6 +930,30 @@ class MainForm(QMainWindow, MainWindow):
             parent = insert_row.parent() or root
             self.insert_records(records, parent, parent.indexOfChild(insert_row) + insert_after)
         self.update_address_table()
+
+    def group_records(self):
+        selected_items = self.treeWidget_AddressTable.selectedItems()
+        if self.create_group():
+            item_count = self.treeWidget_AddressTable.topLevelItemCount()
+            last_item = self.treeWidget_AddressTable.topLevelItem(item_count - 1)
+            for item in selected_items:
+                parent = item.parent()
+                if parent:
+                    parent.removeChild(item)
+                else:
+                    index = self.treeWidget_AddressTable.indexOfTopLevelItem(item)
+                    self.treeWidget_AddressTable.takeTopLevelItem(index)
+                last_item.addChild(item)
+            self.treeWidget_AddressTable.setCurrentItem(last_item)
+            last_item.setExpanded(True)
+
+    def create_group(self):
+        dialog = InputDialogForm(item_list=[(tr.ENTER_DESCRIPTION, tr.GROUP)])
+        if dialog.exec():
+            desc = dialog.get_values()
+            self.add_entry_to_addresstable(desc, "0x0", type_defs.VALUE_INDEX.INDEX_INT8)
+            return True
+        return False
 
     def delete_selected_records(self):
         root = self.treeWidget_AddressTable.invisibleRootItem()
