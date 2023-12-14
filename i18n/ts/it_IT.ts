@@ -1442,7 +1442,7 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Toggle selected records</source>
+      <source>Toggle</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -1477,42 +1477,27 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Cut selected records</source>
+      <source>Delete</source>
       <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Copy selected records</source>
+      <source>Cut</source>
       <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Cut selected records (recursive)</source>
+      <source>Copy</source>
       <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Copy selected records (recursive)</source>
+      <source>Paste</source>
       <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Paste selected records before</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Paste selected records after</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Paste selected records inside</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Delete selected records</source>
+      <source>Paste inside</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -1528,6 +1513,21 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Find out what accesses this address</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Add to a new group</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Create a new group</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Group</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -2179,11 +2179,6 @@ You can use the assigned variable from the GDB Console</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Add new entry</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Delete</source>
       <translation type="unfinished" />
     </message>
     <message>
