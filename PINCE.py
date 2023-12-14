@@ -518,7 +518,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_MemoryView.clicked.connect(self.pushButton_MemoryView_clicked)
         self.pushButton_RefreshAdressTable.clicked.connect(lambda: self.update_address_table(use_cache=False))
         self.pushButton_CopyToAddressTable.clicked.connect(self.copy_to_address_table)
-        self.pushButton_CleanAddressTable.clicked.connect(self.delete_address_table_contents)
+        self.pushButton_CleanAddressTable.clicked.connect(self.clear_address_table)
         self.tableWidget_valuesearchtable.cellDoubleClicked.connect(
             self.tableWidget_valuesearchtable_cell_double_clicked)
         self.treeWidget_AddressTable.itemClicked.connect(self.treeWidget_AddressTable_item_clicked)
@@ -688,6 +688,7 @@ class MainForm(QMainWindow, MainWindow):
         current_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         header = self.treeWidget_AddressTable.headerItem()
         menu = QMenu()
+        delete_record = menu.addAction(f"{tr.DELETE}[Del]")
         edit_menu = menu.addMenu(tr.EDIT)
         edit_desc = edit_menu.addAction(f"{header.text(DESC_COL)}[Ctrl+Enter]")
         edit_address = edit_menu.addAction(f"{header.text(ADDR_COL)}[Ctrl+Alt+Enter]")
@@ -697,7 +698,7 @@ class MainForm(QMainWindow, MainWindow):
         show_dec = menu.addAction(tr.SHOW_DEC)
         show_unsigned = menu.addAction(tr.SHOW_UNSIGNED)
         show_signed = menu.addAction(tr.SHOW_SIGNED)
-        toggle_record = menu.addAction(f"{tr.TOGGLE_RECORDS}[Space]")
+        toggle_record = menu.addAction(f"{tr.TOGGLE}[Space]")
         freeze_menu = menu.addMenu(tr.FREEZE)
         freeze_default = freeze_menu.addAction(tr.DEFAULT)
         freeze_inc = freeze_menu.addAction(tr.INCREMENTAL)
@@ -706,25 +707,21 @@ class MainForm(QMainWindow, MainWindow):
         browse_region = menu.addAction(f"{tr.BROWSE_MEMORY_REGION}[Ctrl+B]")
         disassemble = menu.addAction(f"{tr.DISASSEMBLE_ADDRESS}[Ctrl+D]")
         menu.addSeparator()
-        cut_record = menu.addAction(f"{tr.CUT_RECORDS}[Ctrl+X]")
-        copy_record = menu.addAction(f"{tr.COPY_RECORDS}[Ctrl+C]")
-        cut_record_recursively = menu.addAction(f"{tr.CUT_RECORDS_RECURSIVE}[X]")
-        copy_record_recursively = menu.addAction(f"{tr.COPY_RECORDS_RECURSIVE}[C]")
-        paste_record_before = menu.addAction(f"{tr.PASTE_BEFORE}[Ctrl+V]")
-        paste_record_after = menu.addAction(f"{tr.PASTE_AFTER}[V]")
-        paste_record_inside = menu.addAction(f"{tr.PASTE_INSIDE}[I]")
-        delete_record = menu.addAction(f"{tr.DELETE_RECORDS}[Del]")
-        menu.addSeparator()
         what_writes = menu.addAction(tr.WHAT_WRITES)
         what_reads = menu.addAction(tr.WHAT_READS)
         what_accesses = menu.addAction(tr.WHAT_ACCESSES)
+        menu.addSeparator()
+        cut_record = menu.addAction(f"{tr.CUT}[Ctrl+X]")
+        copy_record = menu.addAction(f"{tr.COPY}[Ctrl+C]")
+        paste_record = menu.addAction(f"{tr.PASTE}[Ctrl+V]")
+        paste_inside = menu.addAction(f"{tr.PASTE_INSIDE}[V]")
         menu.addSeparator()
         add_group = menu.addAction(tr.ADD_GROUP)
         create_group = menu.addAction(tr.CREATE_GROUP)
         if current_row is None:
             deletion_list = [edit_menu.menuAction(), show_hex, show_dec, show_unsigned, show_signed, toggle_record,
                              freeze_menu.menuAction(), browse_region, disassemble, what_writes, what_reads,
-                             what_accesses, add_group]
+                             what_accesses, cut_record, copy_record, paste_inside, delete_record, add_group]
             guiutils.delete_menu_entries(menu, deletion_list)
         else:
             value_type = current_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
@@ -744,6 +741,7 @@ class MainForm(QMainWindow, MainWindow):
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
         actions = {
+            delete_record: self.delete_records,
             edit_desc: self.treeWidget_AddressTable_edit_desc,
             edit_address: self.treeWidget_AddressTable_edit_address,
             edit_type: self.treeWidget_AddressTable_edit_type,
@@ -752,23 +750,19 @@ class MainForm(QMainWindow, MainWindow):
             show_dec: lambda: self.treeWidget_AddressTable_change_repr(type_defs.VALUE_REPR.UNSIGNED),
             show_unsigned: lambda: self.treeWidget_AddressTable_change_repr(type_defs.VALUE_REPR.UNSIGNED),
             show_signed: lambda: self.treeWidget_AddressTable_change_repr(type_defs.VALUE_REPR.SIGNED),
-            toggle_record: self.toggle_selected_records,
+            toggle_record: self.toggle_records,
             freeze_default: lambda: self.change_freeze_type(type_defs.FREEZE_TYPE.DEFAULT),
             freeze_inc: lambda: self.change_freeze_type(type_defs.FREEZE_TYPE.INCREMENT),
             freeze_dec: lambda: self.change_freeze_type(type_defs.FREEZE_TYPE.DECREMENT),
             browse_region: self.browse_region_for_selected_row,
             disassemble: self.disassemble_selected_row,
-            cut_record: self.cut_selected_records,
-            copy_record: self.copy_selected_records,
-            cut_record_recursively: self.cut_selected_records_recursively,
-            copy_record_recursively: self.copy_selected_records_recursively,
-            paste_record_before: lambda: self.paste_records(insert_after=False),
-            paste_record_after: lambda: self.paste_records(insert_after=True),
-            paste_record_inside: lambda: self.paste_records(insert_inside=True),
-            delete_record: self.delete_selected_records,
             what_writes: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.WRITE_ONLY),
             what_reads: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.READ_ONLY),
             what_accesses: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.BOTH),
+            cut_record: self.cut_records,
+            copy_record: self.copy_records,
+            paste_record: self.paste_records,
+            paste_inside: lambda: self.paste_records(True),
             add_group: self.group_records,
             create_group: self.create_group
         }
@@ -832,7 +826,7 @@ class MainForm(QMainWindow, MainWindow):
                 row.setText(FROZEN_COL, "▼")
                 row.setForeground(FROZEN_COL, QBrush(QColor(255, 0, 0)))
 
-    def toggle_selected_records(self):
+    def toggle_records(self):
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if row:
             check_state = row.checkState(FROZEN_COL)
@@ -841,22 +835,11 @@ class MainForm(QMainWindow, MainWindow):
                 row.setCheckState(FROZEN_COL, new_check_state)
                 self.treeWidget_AddressTable_item_clicked(row, FROZEN_COL)
 
-    def cut_selected_records(self):
-        # Flat cut, does not preserve structure
-        self.copy_selected_records()
-        self.delete_selected_records()
+    def cut_records(self):
+        self.copy_records()
+        self.delete_records()
 
-    def copy_selected_records(self):
-        # Flat copy, does not preserve structure
-        app.clipboard().setText(repr([self.read_address_table_entries(selected_row, True) + ((),) for selected_row in
-                                      self.treeWidget_AddressTable.selectedItems()]))
-        # each element in the list has no children
-
-    def cut_selected_records_recursively(self):
-        self.copy_selected_records_recursively()
-        self.delete_selected_records()
-
-    def copy_selected_records_recursively(self):
+    def copy_records(self):
         # Recursive copy
         items = self.treeWidget_AddressTable.selectedItems()
 
@@ -912,8 +895,9 @@ class MainForm(QMainWindow, MainWindow):
             rows.append(row)
 
         parent_row.insertChildren(insert_index, rows)
+        parent_row.setExpanded(True)
 
-    def paste_records(self, insert_after=None, insert_inside=False):
+    def paste_records(self, insert_inside=False):
         try:
             records = ast.literal_eval(app.clipboard().text())
         except (SyntaxError, ValueError):
@@ -928,7 +912,7 @@ class MainForm(QMainWindow, MainWindow):
             self.insert_records(records, insert_row, 0)
         else:
             parent = insert_row.parent() or root
-            self.insert_records(records, parent, parent.indexOfChild(insert_row) + insert_after)
+            self.insert_records(records, parent, parent.indexOfChild(insert_row) + 1)
         self.update_address_table()
 
     def group_records(self):
@@ -955,29 +939,23 @@ class MainForm(QMainWindow, MainWindow):
             return True
         return False
 
-    def delete_selected_records(self):
+    def delete_records(self):
         root = self.treeWidget_AddressTable.invisibleRootItem()
         for item in self.treeWidget_AddressTable.selectedItems():
             (item.parent() or root).removeChild(item)
 
     def treeWidget_AddressTable_key_press_event(self, event):
         actions = type_defs.KeyboardModifiersTupleDict([
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete), self.delete_selected_records),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete), self.delete_records),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B), self.browse_region_for_selected_row),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D), self.disassemble_selected_row),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R),
              lambda: self.update_address_table(use_cache=False)),
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space), self.toggle_selected_records),
-            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_X), self.cut_selected_records),
-            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C), self.copy_selected_records),
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_X), self.cut_selected_records_recursively),
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_C), self.copy_selected_records_recursively),
-            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_V),
-             lambda: self.paste_records(insert_after=False)),
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_V),
-             lambda: self.paste_records(insert_after=True)),
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_I),
-             lambda: self.paste_records(insert_inside=True)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space), self.toggle_records),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_X), self.cut_records),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C), self.copy_records),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_V), self.paste_records),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_V), lambda: self.paste_records(True)),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Return),
              self.treeWidget_AddressTable_edit_value),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Return),
@@ -1328,10 +1306,7 @@ class MainForm(QMainWindow, MainWindow):
         file_paths = QFileDialog.getOpenFileNames(self, tr.OPEN_PCT_FILE, pct_file_path, tr.FILE_TYPES_PCT)[0]
         if not file_paths:
             return
-        if self.treeWidget_AddressTable.topLevelItemCount() > 0:
-            if InputDialogForm(item_list=[(tr.CLEAR_TABLE,)]).exec():
-                self.treeWidget_AddressTable.clear()
-
+        self.clear_address_table()
         for file_path in file_paths:
             content = SysUtils.load_file(file_path)
             if content is None:
@@ -1402,7 +1377,7 @@ class MainForm(QMainWindow, MainWindow):
         # stop flashing attach button, timer will stop automatically on false value
         self.flashAttachButton = False
 
-    def delete_address_table_contents(self):
+    def clear_address_table(self):
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
         confirm_dialog = InputDialogForm(item_list=[(tr.CLEAR_TABLE,)])

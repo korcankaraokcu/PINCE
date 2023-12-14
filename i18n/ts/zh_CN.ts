@@ -1446,8 +1446,8 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Toggle selected records</source>
-      <translation>切换选定的记录</translation>
+      <source>Toggle</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -1481,43 +1481,28 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Cut selected records</source>
-      <translation>剪切选定的记录</translation>
+      <source>Delete</source>
+      <translation>删除</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Copy selected records</source>
-      <translation>复制选定的记录</translation>
+      <source>Cut</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Cut selected records (recursive)</source>
-      <translation>剪切选定的记录（递归）</translation>
+      <source>Copy</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Copy selected records (recursive)</source>
-      <translation>复制选定的记录（递归）</translation>
+      <source>Paste</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Paste selected records before</source>
-      <translation>在之前粘贴选定的记录</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Paste selected records after</source>
-      <translation>在之后粘贴选定的记录</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Paste selected records inside</source>
-      <translation>在之中粘贴选定的记录</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Delete selected records</source>
-      <translation>删除选定的记录</translation>
+      <source>Paste inside</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -1533,6 +1518,21 @@ To change the current GDB path, check Settings-&gt;Debug</source>
       <location filename="../../tr/tr.py" line="0" />
       <source>Find out what accesses this address</source>
       <translation>找出是什么访问了这个地址</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Add to a new group</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Create a new group</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Group</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -2235,11 +2235,6 @@ $28 是分配的便利变量
       <location filename="../../tr/tr.py" line="0" />
       <source>Add new entry</source>
       <translation>添加新条目</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Delete</source>
-      <translation>删除</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
