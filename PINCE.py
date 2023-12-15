@@ -1745,9 +1745,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                  endian=type_defs.ENDIANNESS.HOST):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.adjustSize()
-        self.setMinimumWidth(300)
-        self.setFixedHeight(self.height())
         self.lineEdit_Length.setValidator(QHexValidator(999, self))
         guiutils.fill_value_combobox(self.comboBox_ValueType, index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, endian)
@@ -1781,7 +1778,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.checkBox_ZeroTerminate.hide()
         else:
             self.widget_Length.hide()
-        self.setFixedSize(self.layout().sizeHint())
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.comboBox_Endianness.currentIndexChanged.connect(self.update_value_of_address)
         self.lineEdit_Length.textChanged.connect(self.update_value_of_address)
@@ -1793,6 +1789,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.pushButton_RemoveOffset.clicked.connect(self.removeOffsetLayout)
         self.label_Value.contextMenuEvent = self.label_Value_context_menu_event
         self.update_value_of_address()
+        app.processEvents()
+        self.adjustSize()
 
     def label_Value_context_menu_event(self, event):
         menu = QMenu()
@@ -1830,9 +1828,9 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.offsetsList.append(offsetFrame)
         self.verticalLayout_Pointers.insertWidget(0, self.offsetsList[-1])
         if should_update:
-            app.processEvents()  # @todo should probably change this once we can properly resize right after creation
-            self.setFixedSize(self.layout().sizeHint())
             self.update_value_of_address()
+            app.processEvents()  # @todo should probably change this once we can properly resize right after creation
+            self.adjustSize()
 
     def removeOffsetLayout(self):
         if len(self.offsetsList) == 1:
@@ -1841,9 +1839,9 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         frame.deleteLater()
         self.verticalLayout_Pointers.removeWidget(frame)
         del self.offsetsList[-1]
-        app.processEvents()  # @todo should probably change this once we can properly resize right after delete
-        self.setFixedSize(self.layout().sizeHint())
         self.update_value_of_address()
+        app.processEvents()  # @todo should probably change this once we can properly resize right after delete
+        self.adjustSize()
 
     def update_value_of_address(self):
         if self.checkBox_IsPointer.isChecked():
@@ -1878,11 +1876,13 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.show()
         elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
+            self.widget_Length.show()
             self.checkBox_ZeroTerminate.hide()
         else:
             self.widget_Length.hide()
-        self.setFixedSize(self.layout().sizeHint())
         self.update_value_of_address()
+        app.processEvents()
+        self.adjustSize()
 
     def checkBox_IsPointer_state_changed(self):
         if self.checkBox_IsPointer.isChecked():
@@ -1896,8 +1896,9 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_PtrStartAddress.setText("")
             self.lineEdit_Address.setEnabled(True)
             self.widget_Pointer.hide()
-        self.setFixedSize(self.layout().sizeHint())
         self.update_value_of_address()
+        app.processEvents()
+        self.adjustSize()
 
     def reject(self):
         super(ManualAddressDialogForm, self).reject()
