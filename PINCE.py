@@ -1763,8 +1763,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.create_offsets_list(address)
             self.widget_Pointer.show()
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
-            self.label_Length.show()
-            self.lineEdit_Length.show()
+            self.widget_Length.show()
             try:
                 length = str(length)
             except:
@@ -1773,8 +1772,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.checkBox_ZeroTerminate.show()
             self.checkBox_ZeroTerminate.setChecked(zero_terminate)
         elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
-            self.label_Length.show()
-            self.lineEdit_Length.show()
+            self.widget_Length.show()
             try:
                 length = str(length)
             except:
@@ -1782,9 +1780,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_Length.setText(length)
             self.checkBox_ZeroTerminate.hide()
         else:
-            self.label_Length.hide()
-            self.lineEdit_Length.hide()
-            self.checkBox_ZeroTerminate.hide()
+            self.widget_Length.hide()
         self.setFixedSize(self.layout().sizeHint())
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.comboBox_Endianness.currentIndexChanged.connect(self.update_value_of_address)
@@ -1879,17 +1875,12 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def comboBox_ValueType_current_index_changed(self):
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
-            self.label_Length.show()
-            self.lineEdit_Length.show()
+            self.widget_Length.show()
             self.checkBox_ZeroTerminate.show()
         elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
-            self.label_Length.show()
-            self.lineEdit_Length.show()
             self.checkBox_ZeroTerminate.hide()
         else:
-            self.label_Length.hide()
-            self.lineEdit_Length.hide()
-            self.checkBox_ZeroTerminate.hide()
+            self.widget_Length.hide()
         self.setFixedSize(self.layout().sizeHint())
         self.update_value_of_address()
 
