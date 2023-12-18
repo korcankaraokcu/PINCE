@@ -1739,6 +1739,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def __init__(self, parent=None, description=tr.NO_DESCRIPTION, address="0x", value_type=None):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.setMaximumSize(100, 100)
         vt = type_defs.ValueType() if not value_type else value_type
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
@@ -1793,8 +1794,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.pushButton_RemoveOffset.clicked.connect(self.removeOffsetLayout)
         self.label_Value.contextMenuEvent = self.label_Value_context_menu_event
         self.update_value()
-        app.processEvents()
-        self.adjustSize()
 
     def label_Value_context_menu_event(self, event):
         menu = QMenu()
@@ -1833,8 +1832,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.verticalLayout_Pointers.insertWidget(0, self.offsetsList[-1])
         if should_update:
             self.update_value()
-            app.processEvents()  # @todo should probably change this once we can properly resize right after creation
-            self.adjustSize()
 
     def removeOffsetLayout(self):
         if len(self.offsetsList) == 1:
@@ -1844,8 +1841,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.verticalLayout_Pointers.removeWidget(frame)
         del self.offsetsList[-1]
         self.update_value()
-        app.processEvents()  # @todo should probably change this once we can properly resize right after delete
-        self.adjustSize()
 
     def update_value(self):
         if self.checkBox_IsPointer.isChecked():
@@ -1884,8 +1879,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         else:
             self.widget_Length.hide()
         self.update_value()
-        app.processEvents()
-        self.adjustSize()
 
     def repr_changed(self):
         if self.checkBox_Hex.isChecked():
@@ -1907,8 +1900,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_Address.setEnabled(True)
             self.widget_Pointer.hide()
         self.update_value()
-        app.processEvents()
-        self.adjustSize()
 
     def reject(self):
         super(ManualAddressDialogForm, self).reject()
