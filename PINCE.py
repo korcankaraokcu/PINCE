@@ -935,7 +935,7 @@ class MainForm(QMainWindow, MainWindow):
         dialog = InputDialogForm(item_list=[(tr.ENTER_DESCRIPTION, tr.GROUP)])
         if dialog.exec():
             desc = dialog.get_values()
-            self.add_entry_to_addresstable(desc, "0x0", type_defs.VALUE_INDEX.INDEX_INT8)
+            self.add_entry_to_addresstable(desc, "0x0")
             return True
         return False
 
@@ -1036,8 +1036,8 @@ class MainForm(QMainWindow, MainWindow):
     def pushButton_AddAddressManually_clicked(self):
         manual_address_dialog = ManualAddressDialogForm()
         if manual_address_dialog.exec():
-            desc, address_expr, value_index, length, zero_terminate, endian = manual_address_dialog.get_values()
-            self.add_entry_to_addresstable(desc, address_expr, value_index, length, zero_terminate, endian=endian)
+            desc, address_expr, vt = manual_address_dialog.get_values()
+            self.add_entry_to_addresstable(desc, address_expr, vt)
             self.update_address_table()
 
     def pushButton_MemoryView_clicked(self):
@@ -1263,8 +1263,8 @@ class MainForm(QMainWindow, MainWindow):
         current_item = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL)
         value_index, value_repr, endian = current_item.data(Qt.ItemDataRole.UserRole)
         length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
-        self.add_entry_to_addresstable(tr.NO_DESCRIPTION, current_item.text(), value_index, length,
-                                       value_repr=value_repr, endian=endian)
+        vt = type_defs.ValueType(value_index, length, True, value_repr, endian)
+        self.add_entry_to_addresstable(tr.NO_DESCRIPTION, current_item.text(), vt)
         self.update_address_table()
 
     def comboBox_ValueType_current_index_changed(self):
@@ -1391,7 +1391,8 @@ class MainForm(QMainWindow, MainWindow):
             i = i + 1
             if i % 3 == 0:
                 value_index, value_repr, endian = row.data(Qt.ItemDataRole.UserRole)
-                self.add_entry_to_addresstable("", row.text(), value_index, length, True, value_repr, endian)
+                vt = type_defs.ValueType(value_index, length, True, value_repr, endian)
+                self.add_entry_to_addresstable(tr.NO_DESCRIPTION, row.text(), vt)
         self.update_address_table()
 
     def reset_scan(self):
@@ -1443,13 +1444,12 @@ class MainForm(QMainWindow, MainWindow):
         app.closeAllWindows()
 
     # Call update_address_table manually after this
-    def add_entry_to_addresstable(self, description, address_expr, value_index, length=0, zero_terminate=True,
-                                  value_repr=type_defs.VALUE_REPR.UNSIGNED, endian=type_defs.ENDIANNESS.HOST):
+    def add_entry_to_addresstable(self, description, address_expr, value_type=None):
         current_row = QTreeWidgetItem()
         current_row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
         frozen = type_defs.Frozen("", type_defs.FREEZE_TYPE.DEFAULT)
         current_row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
-        value_type = type_defs.ValueType(value_index, length, zero_terminate, value_repr, endian)
+        value_type = type_defs.ValueType() if not value_type else value_type
         self.treeWidget_AddressTable.addTopLevelItem(current_row)
         self.change_address_table_entries(current_row, description, address_expr, value_type)
         self.show()  # In case of getting called from elsewhere
@@ -1597,13 +1597,10 @@ class MainForm(QMainWindow, MainWindow):
         if not row:
             return
         desc, address_expr, vt = self.read_address_table_entries(row)
-        manual_address_dialog = ManualAddressDialogForm(description=desc, address=address_expr, index=vt.value_index,
-                                                        length=vt.length, zero_terminate=vt.zero_terminate,
-                                                        endian=vt.endian)
+        manual_address_dialog = ManualAddressDialogForm(description=desc, address=address_expr, value_type=vt)
         manual_address_dialog.setWindowTitle(tr.EDIT_ADDRESS)
         if manual_address_dialog.exec():
-            desc, address_expr, value_index, length, zero_terminate, endian = manual_address_dialog.get_values()
-            vt = type_defs.ValueType(value_index, length, zero_terminate, vt.value_repr, endian)
+            desc, address_expr, vt = manual_address_dialog.get_values()
             self.change_address_table_entries(row, desc, address_expr, vt)
             self.update_address_table()
 
@@ -1612,10 +1609,9 @@ class MainForm(QMainWindow, MainWindow):
         if not row:
             return
         vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-        dialog = EditTypeDialogForm(index=vt.value_index, length=vt.length, zero_terminate=vt.zero_terminate)
+        dialog = EditTypeDialogForm(value_type=vt)
         if dialog.exec():
-            value_index, length, zero_terminate = dialog.get_values()
-            vt = type_defs.ValueType(value_index, length, zero_terminate, vt.value_repr, vt.endian)
+            vt = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
                 row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, vt)
                 row.setText(TYPE_COL, vt.text())
@@ -1740,14 +1736,13 @@ class ProcessForm(QMainWindow, ProcessWindow):
 
 # Add Address Manually Dialog
 class ManualAddressDialogForm(QDialog, ManualAddressDialog):
-    def __init__(self, parent=None, description=tr.NO_DESCRIPTION, address="0x",
-                 index=type_defs.VALUE_INDEX.INDEX_INT32, length=10, zero_terminate=True,
-                 endian=type_defs.ENDIANNESS.HOST):
+    def __init__(self, parent=None, description=tr.NO_DESCRIPTION, address="0x", value_type=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.lineEdit_Length.setValidator(QHexValidator(999, self))
-        guiutils.fill_value_combobox(self.comboBox_ValueType, index)
-        guiutils.fill_endianness_combobox(self.comboBox_Endianness, endian)
+        vt = type_defs.ValueType() if not value_type else value_type
+        self.lineEdit_Length.setValidator(QHexValidator(99, self))
+        guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
+        guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
         self.lineEdit_Description.setText(description)
         self.offsetsList = []
         if not isinstance(address, type_defs.PointerType):
@@ -1767,7 +1762,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
                 length = "10"
             self.lineEdit_Length.setText(length)
             self.checkBox_ZeroTerminate.show()
-            self.checkBox_ZeroTerminate.setChecked(zero_terminate)
+            self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
         elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
             self.widget_Length.show()
             try:
@@ -1778,17 +1773,26 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.checkBox_ZeroTerminate.hide()
         else:
             self.widget_Length.hide()
+        if vt.value_repr == type_defs.VALUE_REPR.HEX:
+            self.checkBox_Hex.setChecked(True)
+            self.checkBox_Signed.setEnabled(False)
+        elif vt.value_repr == type_defs.VALUE_REPR.SIGNED:
+            self.checkBox_Signed.setChecked(True)
+        else:
+            self.checkBox_Signed.setChecked(False)
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
-        self.comboBox_Endianness.currentIndexChanged.connect(self.update_value_of_address)
-        self.lineEdit_Length.textChanged.connect(self.update_value_of_address)
-        self.checkBox_ZeroTerminate.stateChanged.connect(self.update_value_of_address)
+        self.comboBox_Endianness.currentIndexChanged.connect(self.update_value)
+        self.lineEdit_Length.textChanged.connect(self.update_value)
+        self.checkBox_Hex.stateChanged.connect(self.repr_changed)
+        self.checkBox_Signed.stateChanged.connect(self.repr_changed)
+        self.checkBox_ZeroTerminate.stateChanged.connect(self.update_value)
         self.checkBox_IsPointer.stateChanged.connect(self.checkBox_IsPointer_state_changed)
-        self.lineEdit_PtrStartAddress.textChanged.connect(self.update_value_of_address)
-        self.lineEdit_Address.textChanged.connect(self.update_value_of_address)
+        self.lineEdit_PtrStartAddress.textChanged.connect(self.update_value)
+        self.lineEdit_Address.textChanged.connect(self.update_value)
         self.pushButton_AddOffset.clicked.connect(lambda: self.addOffsetLayout(True))
         self.pushButton_RemoveOffset.clicked.connect(self.removeOffsetLayout)
         self.label_Value.contextMenuEvent = self.label_Value_context_menu_event
-        self.update_value_of_address()
+        self.update_value()
         app.processEvents()
         self.adjustSize()
 
@@ -1799,7 +1803,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
         actions = {
-            refresh: self.update_value_of_address
+            refresh: self.update_value
         }
         try:
             actions[action]()
@@ -1817,7 +1821,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         offsetText = QLineEdit(offsetFrame)
         offsetText.setFixedSize(70, 30)
         offsetText.setText(hex(0))
-        offsetText.textChanged.connect(self.update_value_of_address)
+        offsetText.textChanged.connect(self.update_value)
         offsetLayout.addWidget(offsetText)
         buttonRight = QPushButton(">", offsetFrame)
         buttonRight.setFixedSize(70, 30)
@@ -1828,7 +1832,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.offsetsList.append(offsetFrame)
         self.verticalLayout_Pointers.insertWidget(0, self.offsetsList[-1])
         if should_update:
-            self.update_value_of_address()
+            self.update_value()
             app.processEvents()  # @todo should probably change this once we can properly resize right after creation
             self.adjustSize()
 
@@ -1839,11 +1843,11 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         frame.deleteLater()
         self.verticalLayout_Pointers.removeWidget(frame)
         del self.offsetsList[-1]
-        self.update_value_of_address()
+        self.update_value()
         app.processEvents()  # @todo should probably change this once we can properly resize right after delete
         self.adjustSize()
 
-    def update_value_of_address(self):
+    def update_value(self):
         if self.checkBox_IsPointer.isChecked():
             pointer_type = type_defs.PointerType(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
             address = GDB_Engine.read_pointer(pointer_type)
@@ -1857,18 +1861,17 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         if not address:
             self.label_Value.setText("<font color=red>??</font>")
             return
-
-        address_type = self.comboBox_ValueType.currentIndex()
-        endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
-        if address_type == type_defs.VALUE_INDEX.INDEX_AOB:
-            length = self.lineEdit_Length.text()
-            value = GDB_Engine.read_memory(address, address_type, length, endian=endian)
-        elif type_defs.VALUE_INDEX.is_string(address_type):
-            length = self.lineEdit_Length.text()
-            is_zeroterminate = self.checkBox_ZeroTerminate.isChecked()
-            value = GDB_Engine.read_memory(address, address_type, length, is_zeroterminate, endian=endian)
+        if self.checkBox_Hex.isChecked():
+            value_repr = type_defs.VALUE_REPR.HEX
+        elif self.checkBox_Signed.isChecked():
+            value_repr = type_defs.VALUE_REPR.SIGNED
         else:
-            value = GDB_Engine.read_memory(address, address_type, endian=endian)
+            value_repr = type_defs.VALUE_REPR.UNSIGNED
+        address_type = self.comboBox_ValueType.currentIndex()
+        length = self.lineEdit_Length.text()
+        zero_terminate = self.checkBox_ZeroTerminate.isChecked()
+        endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
+        value = GDB_Engine.read_memory(address, address_type, length, zero_terminate, value_repr, endian)
         self.label_Value.setText("<font color=red>??</font>" if value is None else str(value))
 
     def comboBox_ValueType_current_index_changed(self):
@@ -1880,9 +1883,16 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.checkBox_ZeroTerminate.hide()
         else:
             self.widget_Length.hide()
-        self.update_value_of_address()
+        self.update_value()
         app.processEvents()
         self.adjustSize()
+
+    def repr_changed(self):
+        if self.checkBox_Hex.isChecked():
+            self.checkBox_Signed.setEnabled(False)
+        else:
+            self.checkBox_Signed.setEnabled(True)
+        self.update_value()
 
     def checkBox_IsPointer_state_changed(self):
         if self.checkBox_IsPointer.isChecked():
@@ -1896,7 +1906,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_PtrStartAddress.setText("")
             self.lineEdit_Address.setEnabled(True)
             self.widget_Pointer.hide()
-        self.update_value_of_address()
+        self.update_value()
         app.processEvents()
         self.adjustSize()
 
@@ -1926,10 +1936,17 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             length = 0
         zero_terminate = self.checkBox_ZeroTerminate.isChecked()
         value_index = self.comboBox_ValueType.currentIndex()
+        if self.checkBox_Hex.isChecked():
+            value_repr = type_defs.VALUE_REPR.HEX
+        elif self.checkBox_Signed.isChecked():
+            value_repr = type_defs.VALUE_REPR.SIGNED
+        else:
+            value_repr = type_defs.VALUE_REPR.UNSIGNED
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
+        vt = type_defs.ValueType(value_index, length, zero_terminate, value_repr, endian)
         if self.checkBox_IsPointer.isChecked():
             address = type_defs.PointerType(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
-        return description, address, value_index, length, zero_terminate, endian
+        return description, address, vt
 
     def get_offsets_int_list(self):
         offsetsIntList = []
@@ -1963,25 +1980,25 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
 
 class EditTypeDialogForm(QDialog, EditTypeDialog):
-    def __init__(self, parent=None, index=type_defs.VALUE_INDEX.INDEX_INT32, length=10, zero_terminate=True):
+    def __init__(self, parent=None, value_type=None):
         super().__init__(parent=parent)
         self.setupUi(self)
+        vt = type_defs.ValueType() if not value_type else value_type
         self.setMaximumSize(100, 100)
-        self.lineEdit_Length.setValidator(QHexValidator(999, self))
-        guiutils.fill_value_combobox(self.comboBox_ValueType, index)
+        self.lineEdit_Length.setValidator(QHexValidator(99, self))
+        guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
+        guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
-            self.label_Length.show()
-            self.lineEdit_Length.show()
+            self.widget_Length.show()
             try:
                 length = str(length)
             except:
                 length = "10"
             self.lineEdit_Length.setText(length)
             self.checkBox_ZeroTerminate.show()
-            self.checkBox_ZeroTerminate.setChecked(zero_terminate)
+            self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
         elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
-            self.label_Length.show()
-            self.lineEdit_Length.show()
+            self.widget_Length.show()
             try:
                 length = str(length)
             except:
@@ -1989,24 +2006,32 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.lineEdit_Length.setText(length)
             self.checkBox_ZeroTerminate.hide()
         else:
-            self.label_Length.hide()
-            self.lineEdit_Length.hide()
-            self.checkBox_ZeroTerminate.hide()
+            self.widget_Length.hide()
+        if vt.value_repr == type_defs.VALUE_REPR.HEX:
+            self.checkBox_Hex.setChecked(True)
+            self.checkBox_Signed.setEnabled(False)
+        elif vt.value_repr == type_defs.VALUE_REPR.SIGNED:
+            self.checkBox_Signed.setChecked(True)
+        else:
+            self.checkBox_Signed.setChecked(False)
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
+        self.checkBox_Hex.stateChanged.connect(self.repr_changed)
 
     def comboBox_ValueType_current_index_changed(self):
         if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
-            self.label_Length.show()
-            self.lineEdit_Length.show()
+            self.widget_Length.show()
             self.checkBox_ZeroTerminate.show()
         elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
-            self.label_Length.show()
-            self.lineEdit_Length.show()
+            self.widget_Length.show()
             self.checkBox_ZeroTerminate.hide()
         else:
-            self.label_Length.hide()
-            self.lineEdit_Length.hide()
-            self.checkBox_ZeroTerminate.hide()
+            self.widget_Length.hide()
+
+    def repr_changed(self):
+        if self.checkBox_Hex.isChecked():
+            self.checkBox_Signed.setEnabled(False)
+        else:
+            self.checkBox_Signed.setEnabled(True)
 
     def reject(self):
         super(EditTypeDialogForm, self).reject()
@@ -2025,16 +2050,21 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         super(EditTypeDialogForm, self).accept()
 
     def get_values(self):
+        value_index = self.comboBox_ValueType.currentIndex()
         length = self.lineEdit_Length.text()
         try:
             length = int(length, 0)
         except:
             length = 0
-        zero_terminate = False
-        if self.checkBox_ZeroTerminate.isChecked():
-            zero_terminate = True
-        address_type = self.comboBox_ValueType.currentIndex()
-        return address_type, length, zero_terminate
+        zero_terminate = self.checkBox_ZeroTerminate.isChecked()
+        if self.checkBox_Hex.isChecked():
+            value_repr = type_defs.VALUE_REPR.HEX
+        elif self.checkBox_Signed.isChecked():
+            value_repr = type_defs.VALUE_REPR.SIGNED
+        else:
+            value_repr = type_defs.VALUE_REPR.UNSIGNED
+        endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
+        return type_defs.ValueType(value_index, length, zero_terminate, value_repr, endian)
 
 
 class TrackSelectorDialogForm(QDialog, TrackSelectorDialog):
@@ -2918,11 +2948,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if GDB_Engine.currentpid == -1:
             return
         selected_address = self.tableView_HexView_Hex.get_selected_address()
-        manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address),
-                                                        index=type_defs.VALUE_INDEX.INDEX_AOB)
+        vt = type_defs.ValueType(type_defs.VALUE_INDEX.INDEX_AOB)
+        manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address), value_type=vt)
         if manual_address_dialog.exec():
-            desc, address, value_index, length, zero_terminate, endian = manual_address_dialog.get_values()
-            self.parent().add_entry_to_addresstable(desc, address, value_index, length, zero_terminate, endian=endian)
+            desc, address, vt = manual_address_dialog.get_values()
+            self.parent().add_entry_to_addresstable(desc, address, vt)
             self.parent().update_address_table()
 
     def hex_view_scroll_up(self):
@@ -4484,8 +4514,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
 
     def tableWidget_TrackInfo_item_double_clicked(self, index):
         address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
-        self.parent().parent().add_entry_to_addresstable(tr.ACCESSED_BY.format(self.address), address,
-                                                         self.comboBox_ValueType.currentIndex(), 10)
+        vt = type_defs.ValueType(self.comboBox_ValueType.currentIndex())
+        self.parent().parent().add_entry_to_addresstable(tr.ACCESSED_BY.format(self.address), address, vt)
         self.parent().parent().update_address_table()
 
     def pushButton_Stop_clicked(self):

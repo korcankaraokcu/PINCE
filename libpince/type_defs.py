@@ -408,7 +408,8 @@ class Frozen:
 
 
 class ValueType:
-    def __init__(self, value_index, length, zero_terminate, value_repr=VALUE_REPR.UNSIGNED, endian=ENDIANNESS.HOST):
+    def __init__(self, value_index=VALUE_INDEX.INDEX_INT32, length=10, zero_terminate=True,
+                 value_repr=VALUE_REPR.UNSIGNED, endian=ENDIANNESS.HOST):
         """
         Args:
             value_index (int): Determines the type of data. Can be a member of VALUE_INDEX
