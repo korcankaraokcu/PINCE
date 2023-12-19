@@ -174,8 +174,24 @@ forcing me to use magic numbers for adjusting, which is a bit hackish
 
 # Roadmap
 So, after learning how to contribute, you are wondering where to start now. You can either search for `TODO` within the code or pick up any task from the roadmap below.
-These are not in order, so free to pick any of them
-- Refactor file naming conventions(decide on snake_case or camelCase for modules etc)
+These tasks are ordered by importance but feel free to pick any of them. Further details can be discussed in the PINCE discord server
+- Implement libpince engine
+- Implement multi-line code injection, this will also help with previously dropped inject_with_advanced_injection
+- Migrate to Sphinx documentation from the custom libpince documentation
+- Move GUI classes of PINCE.py to their own files
+- Extend documentation to GUI parts. Libpince has 100% documentation coverage but GUI doesn't
+- Use type hints(py 3.5) and variable annotations(py 3.6) when support drops for older systems
+- Arrows for jump instructions based on disassembled output
+- Flowcharts based on disassembled output
+- Consider implementing a GUI for catching signals and syscalls. This is currently done via GDB Console
+- Implement speedhack
+- Implement unrandomizer
+- Implement pointer-scan
+- Automatic function bypassing(make it return the desired value, hook specific parts etc.)
+- Implement auto-ESP&aimbot
+- Implement thread info widget
+- Implement multi selection for HexView
+- Write at least one test for each function in libpince
 - Refactorize memory write/read functions
 - - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k.
   Only update the visible rows to prevent this(check ```disassemble_check_viewport``` for an example)
@@ -187,8 +203,6 @@ These are not in order, so free to pick any of them
 - - Change comboBox_ValueType string order to be ... String_UTF-8 String_Others if necessary
 - - Implement a custom combobox class for comboBox_ValueType and create a context menu for String_Others, if it gets implemented
 - Implement "Investigate Registers" button to gather information about the addresses registers point to
-- Implement selectionChanged signal of lineEdit_HexView
-- Implement multi selection for HexView
 - Add the ability to track down registers and addresses in tracer(unsure)
 - Implement CE's Ultimap-like feature for tracing data, dissect code data and raw instruction list.
 Search for calls and store their hit counts to filter out the functions that haven't or have executed specific number of times.
@@ -196,32 +210,13 @@ Implement a flexible input field for the execution count. For instance, 2^x only
 ([CE#358](https://github.com/cheat-engine/cheat-engine/issues/358))
 - Extend search_referenced_strings with relative search
 - Consider adding type guessing for the StackView
-- Move GUI classes of PINCE.py to their own files
-- Use gdb python API breakpoints instead of breakpoint commands for optimization, also find a way to eliminate output coming from stepping commands such as ```stepi&``` or ```nexti&```
 - Implement a psuedo-terminal for the inferior like edb does(idk if necessary, we don't usually target CLI games, up to debate)
-- Implement libpince engine
-- Implement auto-ESP&aimbot (depends on libpince engine)
 - Try to optimize TrackBreakpoint and TrackWatchpoint return data structures further, adding an id field might simplify traversing of the tree, performance tests are required
-- Extend tagging system to PINCE GUI functions
-- Implement multi-line code injection, this will also help with previously dropped inject_with_advanced_injection
-- Break on/Catch signals and syscalls
-- Flowcharts based on disassembled output
-- Automatic function bypassing(make it return the desired value, hook specific parts etc.)
-- Implement speedhack
-- Implement unrandomizer
-- Implement pointer-scan
-- Write at least one test for each function in libpince
-- Migrate to Sphinx documentation from the custom libpince documentation
-- Embedded tutorial videos
-- Super-Uber-Rad credits roll with chiptune tunes(as discussed, this could be an embedded video to prevent unnecessary dependencies)
 - Implement extra MemoryViewerWindow tabs(not really critical right now, up to debate)
 - ~~Consider removing the command file layer of IPC system for GDB_Engine.send_command to speed up things~~
 [Update-29/04/2018 : Delaying this until GDB/MI implements a native multiline command feature or improves ```interpreter-exec``` command to cover every single multiline command type(including ```define``` commands)]
-- Implement thread info widget
 - Implement developer mode in settings. Developer mode will include features like dissection of GUI elements on events such as mouse-over
 - Add ability to include non-absolute calls for dissect code feature(i.e call rax). Should be considered after the first version release. Might be useful for multi-breakpoint related features
-- Implement toggling of arrows for easier navigation for dissected regions
 - Provide information about absolute addresses in disassemble screen
-- Use type hints(py 3.5) and variable annotations(py 3.6) when support drops for older systems
 - All tables that hold large amount of data should only update the visible rows(check ```disassemble_check_viewport``` for an example)
 - Add different kinds of themes and the ability to change between them on runtime. Implement dark theme first. Also add the ability to create a custom theme and modify the existing ones
