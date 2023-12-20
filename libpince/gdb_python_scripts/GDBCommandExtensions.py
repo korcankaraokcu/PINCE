@@ -594,7 +594,7 @@ class ExamineExpressions(gdb.Command):
         contents_recv = receive_from_pince()
         # contents_recv format: [expression1, expression2, ...]
 
-        regions = SysUtils.get_region_set(pid)
+        regions = SysUtils.get_regions(pid)
         for expression in contents_recv:
             result_tuple = ScriptUtils.examine_expression(expression, regions)
             data_read_list.append(result_tuple)
