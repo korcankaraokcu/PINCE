@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import gdb, sys, traceback, functools
+import gdb, sys, os, traceback, functools
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -125,15 +125,27 @@ def examine_expression(expression, regions=None):
                 expression = expression.split(offset[0])[0]
             else:
                 offset = "+0"
+            index = common_regexes.index.search(expression)
+            if index:
+                expression = expression[:index.start()]
+                index = int(index.group(1))
+            else:
+                index = 0
+            count = 0
             if expression == inferior_name or common_regexes.file_with_extension.search(expression):
-                for address, file_name in regions:
+                for address, _, _, _, _, _, path in regions:
+                    file_name = os.path.split(path)[1]
                     if expression in file_name:
-                        try:
-                            address = hex(eval(address+offset))
-                        except Exception as e:
-                            print(e)
-                            return type_defs.tuple_examine_expression(None, None, None)
-                        return type_defs.tuple_examine_expression(address+file_name, address, file_name)
+                        if index == count:
+                            address = "0x"+address
+                            try:
+                                address = hex(eval(address+offset))
+                            except Exception as e:
+                                print(e)
+                                return type_defs.tuple_examine_expression(None, None, None)
+                            return type_defs.tuple_examine_expression(address+file_name, address, file_name)
+                        else:
+                            count += 1
         print(e)
         return type_defs.tuple_examine_expression(None, None, None)
     result = common_regexes.address_with_symbol.search(str(value))
