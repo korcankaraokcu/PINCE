@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt6.QtCore import QAbstractTableModel, QVariant, Qt
 from PyQt6.QtGui import QColor, QColorConstants
 
-from libpince import SysUtils, GDB_Engine
+from libpince import utils, debugcore
 
 breakpoint_red = QColor(QColorConstants.Red)
 breakpoint_red.setAlpha(96)
@@ -41,7 +41,7 @@ class QHexModel(QAbstractTableModel):
         if self.data_array and QModelIndex.isValid():
             if int_role == Qt.ItemDataRole.BackgroundRole:
                 address = self.current_address + QModelIndex.row() * self.column_count + QModelIndex.column()
-                if SysUtils.modulo_address(address, GDB_Engine.inferior_arch) in self.breakpoint_list:
+                if utils.modulo_address(address, debugcore.inferior_arch) in self.breakpoint_list:
                     return QVariant(breakpoint_red)
             elif int_role == Qt.ItemDataRole.DisplayRole:
                 return QVariant(self.data_array[QModelIndex.row() * self.column_count + QModelIndex.column()])
@@ -49,17 +49,17 @@ class QHexModel(QAbstractTableModel):
         return QVariant()
 
     def refresh(self, int_address, offset, data_array=None, breakpoint_info=None):
-        int_address = SysUtils.modulo_address(int_address, GDB_Engine.inferior_arch)
+        int_address = utils.modulo_address(int_address, debugcore.inferior_arch)
         self.breakpoint_list.clear()
         if data_array is None:
-            self.data_array = GDB_Engine.hex_dump(int_address, offset)
+            self.data_array = debugcore.hex_dump(int_address, offset)
         else:
             self.data_array = data_array
         if breakpoint_info is None:
-            breakpoint_info = GDB_Engine.get_breakpoint_info()
+            breakpoint_info = debugcore.get_breakpoint_info()
         for bp in breakpoint_info:
             breakpoint_address = int(bp.address, 16)
             for i in range(bp.size):
-                self.breakpoint_list.add(SysUtils.modulo_address(breakpoint_address + i, GDB_Engine.inferior_arch))
+                self.breakpoint_list.add(utils.modulo_address(breakpoint_address + i, debugcore.inferior_arch))
         self.current_address = int_address
         self.layoutChanged.emit()

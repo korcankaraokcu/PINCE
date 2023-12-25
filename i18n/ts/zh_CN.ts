@@ -555,8 +555,8 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>type_defs(Type Definitions)</source>
-      <translation>type_defs(类型定义)</translation>
+      <source>typedefs(Type Definitions)</source>
+      <translation>typedefs(类型定义)</translation>
     </message>
     <message>
       <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
@@ -583,8 +583,8 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Hide type_defs</source>
-      <translation>隐藏 type_defs</translation>
+      <source>Hide typedefs</source>
+      <translation>隐藏 typedefs</translation>
     </message>
     <message>
       <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />

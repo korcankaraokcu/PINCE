@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib, distorm3
-from . import type_defs, common_regexes
+from . import typedefs, regexes
 from keystone import Ks, KsError, KS_ARCH_X86, KS_MODE_32, KS_MODE_64
 from collections import OrderedDict
 from importlib.machinery import SourceFileLoader
@@ -36,7 +36,7 @@ def get_process_list():
     """
     process_list = []
     for line in os.popen("ps -eo pid:11,user,comm").read().splitlines():
-        info = common_regexes.ps.match(line)
+        info = regexes.ps.match(line)
         if info:
             process_list.append(info.groups())
     return process_list
@@ -86,7 +86,7 @@ def get_regions(pid):
     with open("/proc/"+str(pid)+"/maps") as f:
         regions = []
         for line in f.read().splitlines():
-            regions.append(common_regexes.maps.match(line).groups())
+            regions.append(regexes.maps.match(line).groups())
         return regions
 
 
@@ -137,7 +137,7 @@ def get_region_info(pid, address):
         end = int(end, 16)
         file_name = os.path.split(path)[1]
         if start <= address < end:
-            return type_defs.tuple_region_info(start, end, perms, file_name)
+            return typedefs.tuple_region_info(start, end, perms, file_name)
 
 
 #:tag:Processes
@@ -242,8 +242,8 @@ def get_libpince_directory():
         str: A string pointing to the libpince directory
 
     Note:
-        In fact this function returns the directory where SysUtils in and considering the fact that SysUtils resides in
-        libpince, it works. So, please don't move out SysUtils outside of libpince folder!
+        In fact this function returns the directory where utils in and considering the fact that utils resides in
+        libpince, it works. So, please don't move out utils outside of libpince folder!
     """
     return os.path.dirname(os.path.realpath(__file__))
 
@@ -290,9 +290,9 @@ def create_ipc_path(pid):
     delete_ipc_path(pid)
     is_path_valid(get_ipc_path(pid), "create")
 
-    # Opening the command file with 'w' each time GDB_Engine.send_command() gets invoked slows down the process
+    # Opening the command file with 'w' each time debugcore.send_command() gets invoked slows down the process
     # Instead, here we create the command file for only once when IPC path gets initialized
-    # Then, open the command file with 'r' in GDB_Engine.send_command() to get a better performance
+    # Then, open the command file with 'r' in debugcore.send_command() to get a better performance
     command_file = get_gdb_command_file(pid)
     open(command_file, "w").close()
 
@@ -307,7 +307,7 @@ def get_ipc_path(pid):
     Returns:
         str: Path of IPC directory
     """
-    return type_defs.IPC_PATHS.PINCE_IPC_PATH + str(pid)
+    return typedefs.IPC_PATHS.PINCE_IPC_PATH + str(pid)
 
 
 #:tag:GDBCommunication
@@ -532,7 +532,7 @@ def get_ipc_from_pince_file(pid):
     Returns:
         str: Path of IPC file
     """
-    return get_ipc_path(pid) + type_defs.IPC_PATHS.IPC_FROM_PINCE_PATH
+    return get_ipc_path(pid) + typedefs.IPC_PATHS.IPC_FROM_PINCE_PATH
 
 
 #:tag:GDBCommunication
@@ -545,7 +545,7 @@ def get_ipc_to_pince_file(pid):
     Returns:
         str: Path of IPC file
     """
-    return get_ipc_path(pid) + type_defs.IPC_PATHS.IPC_TO_PINCE_PATH
+    return get_ipc_path(pid) + typedefs.IPC_PATHS.IPC_TO_PINCE_PATH
 
 
 #:tag:ValueType
@@ -554,7 +554,7 @@ def parse_string(string, value_index):
 
     Args:
         string (str): String that'll be parsed
-        value_index (int): Determines the type of data. Can be a member of type_defs.VALUE_INDEX
+        value_index (int): Determines the type of data. Can be a member of typedefs.VALUE_INDEX
 
     Returns:
         str: If the value_index is INDEX_STRING
@@ -564,7 +564,7 @@ def parse_string(string, value_index):
         None: If the string is not parsable by using the parameter value_index
 
     Examples:
-        string="42 DE AD BE EF 24",value_index=type_defs.VALUE_INDEX.INDEX_AOB--▼
+        string="42 DE AD BE EF 24",value_index=typedefs.VALUE_INDEX.INDEX_AOB--▼
         returned_list=[66, 222, 173, 190, 239, 36]
     """
     string = str(string)
@@ -576,12 +576,12 @@ def parse_string(string, value_index):
     except:
         print(str(value_index) + " can't be converted to int")
         return
-    if type_defs.VALUE_INDEX.is_string(value_index):
+    if typedefs.VALUE_INDEX.is_string(value_index):
         return string
     string = string.strip()
-    if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
+    if value_index is typedefs.VALUE_INDEX.INDEX_AOB:
         try:
-            string_list = common_regexes.whitespaces.split(string)
+            string_list = regexes.whitespaces.split(string)
             for item in string_list:
                 if len(item) > 2:
                     print(string + " can't be parsed as array of bytes")
@@ -591,7 +591,7 @@ def parse_string(string, value_index):
         except:
             print(string + " can't be parsed as array of bytes")
             return
-    elif value_index is type_defs.VALUE_INDEX.INDEX_FLOAT32 or value_index is type_defs.VALUE_INDEX.INDEX_FLOAT64:
+    elif value_index is typedefs.VALUE_INDEX.INDEX_FLOAT32 or value_index is typedefs.VALUE_INDEX.INDEX_FLOAT64:
         try:
             string = float(string)
         except:
@@ -610,13 +610,13 @@ def parse_string(string, value_index):
             except:
                 print(string + " can't be parsed as integer or hexadecimal")
                 return
-        if value_index is type_defs.VALUE_INDEX.INDEX_INT8:
+        if value_index is typedefs.VALUE_INDEX.INDEX_INT8:
             string = string % 0x100  # 256
-        elif value_index is type_defs.VALUE_INDEX.INDEX_INT16:
+        elif value_index is typedefs.VALUE_INDEX.INDEX_INT16:
             string = string % 0x10000  # 65536
-        elif value_index is type_defs.VALUE_INDEX.INDEX_INT32:
+        elif value_index is typedefs.VALUE_INDEX.INDEX_INT32:
             string = string % 0x100000000  # 4294967296
-        elif value_index is type_defs.VALUE_INDEX.INDEX_INT64:
+        elif value_index is typedefs.VALUE_INDEX.INDEX_INT64:
             string = string % 0x10000000000000000  # 18446744073709551616
         return string
 
@@ -633,7 +633,7 @@ def instruction_follow_address(string):
         str: Hex address
         None: If no hex address is found or no location changing instructions found
     """
-    result = common_regexes.instruction_follow.search(string)
+    result = regexes.instruction_follow.search(string)
     if result:
         return result.group(2)
 
@@ -649,7 +649,7 @@ def extract_address(string):
         str: Hex address
         None: If no hex address is found
     """
-    result = common_regexes.hex_number.search(string)
+    result = regexes.hex_number.search(string)
     if result:
         return result.group(0)
 
@@ -661,16 +661,16 @@ def modulo_address(int_address, arch_type):
 
     Args:
         int_address (int): Self-explanatory
-        arch_type (int): Architecture type (x86, x64). Can be a member of type_defs.INFERIOR_ARCH
+        arch_type (int): Architecture type (x86, x64). Can be a member of typedefs.INFERIOR_ARCH
 
     Returns:
         int: Modulo of the given integer based on the given architecture type
     """
-    if arch_type == type_defs.INFERIOR_ARCH.ARCH_32:
+    if arch_type == typedefs.INFERIOR_ARCH.ARCH_32:
         return int_address % 0x100000000
-    elif arch_type == type_defs.INFERIOR_ARCH.ARCH_64:
+    elif arch_type == typedefs.INFERIOR_ARCH.ARCH_64:
         return int_address % 0x10000000000000000
-    raise Exception("arch_type must be a member of type_defs.INFERIOR_ARCH")
+    raise Exception("arch_type must be a member of typedefs.INFERIOR_ARCH")
 
 
 #:tag:Utilities
@@ -680,15 +680,15 @@ def get_opcodes(address, aob, inferior_arch):
     Args:
         address (int): The address where the opcode starts from
         aob (str): Bytes of the opcode as an array of bytes
-        inferior_arch (int): Architecture type (x86, x64). Can be a member of type_defs.INFERIOR_ARCH
+        inferior_arch (int): Architecture type (x86, x64). Can be a member of typedefs.INFERIOR_ARCH
 
     Returns:
         str: Opcodes, multiple entries are separated with ;
         None: If there was an error
     """
-    if inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+    if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64:
         disas_option = distorm3.Decode64Bits
-    elif inferior_arch == type_defs.INFERIOR_ARCH.ARCH_32:
+    elif inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32:
         disas_option = distorm3.Decode32Bits
     try:
         bytecode = bytes.fromhex(aob.replace(" ", ""))
@@ -705,14 +705,14 @@ def assemble(instructions, address, inferior_arch):
     Args:
         instructions (str): A string of instructions, multiple entries separated by ;
         address (int): Address of the instruction
-        inferior_arch (int): Can be a member of type_defs.INFERIOR_ARCH
+        inferior_arch (int): Can be a member of typedefs.INFERIOR_ARCH
 
     Returns:
         tuple: A tuple of (list, int) --> Assembled bytes (list of int) and instruction count (int)
         None: If there was an error
     """
     try:
-        if inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+        if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64:
             return ks_64.asm(instructions, address)
         else:
             return ks_32.asm(instructions, address)
@@ -725,7 +725,7 @@ def aob_to_str(list_of_bytes, encoding="ascii"):
     """Converts given array of hex strings to str
 
     Args:
-        list_of_bytes (list): Must be returned from GDB_Engine.hex_dump()
+        list_of_bytes (list): Must be returned from debugcore.hex_dump()
         encoding (str): See here-->https://docs.python.org/3/library/codecs.html#standard-encodings
 
     Returns:
@@ -785,11 +785,11 @@ def str_to_aob(string, encoding="ascii"):
 
 #:tag:GDBExpressions
 def split_symbol(symbol_string):
-    """Splits symbol part of type_defs.tuple_function_info into smaller fractions
+    """Splits symbol part of typedefs.tuple_function_info into smaller fractions
     Fraction count depends on the the symbol_string. See Examples section for demonstration
 
     Args:
-        symbol_string (str): symbol part of type_defs.tuple_function_info
+        symbol_string (str): symbol part of typedefs.tuple_function_info
 
     Returns:
         list: A list containing parts of the splitted symbol
@@ -811,9 +811,9 @@ def split_symbol(symbol_string):
     # searching for balanced parentheses works because apparently no demangled symbol can finish with <.*>
     # XXX: run this code to test while attached to a process and open a detailed issue if you get a result
     """
-    from libpince import GDB_Engine
+    from libpince import debugcore
     import re
-    result=GDB_Engine.search_functions("")
+    result=debugcore.search_functions("")
     for address, symbol in result:
         if re.search("<.*>[^()]+$", symbol):
             print(symbol)
@@ -942,7 +942,7 @@ def get_variable_comments(modules, search_for=""):
                             docstring_list.append(current_line)
                     else:
                         while True:
-                            stripped_current_line = common_regexes.docstring_variable.search(current_line)
+                            stripped_current_line = regexes.docstring_variable.search(current_line)
                             if stripped_current_line:
                                 variable = stripped_current_line.group(1)
                                 break
@@ -965,7 +965,7 @@ def get_tags(modules, tag_to_string, search_for=""):
     Args:
         modules (list): A list of modules
         tag_to_string (dict): A dictionary that holds tag descriptions in this format-->{tag:tag_description}
-        Check type_defs.tag_to_string for an example
+        Check typedefs.tag_to_string for an example
         search_for (str): String that will be searched in tags
 
     Returns:
@@ -999,7 +999,7 @@ def get_tags(modules, tag_to_string, search_for=""):
                 while True:
                     row += 1
                     current_line = lines[row].strip()
-                    stripped_current_line = common_regexes.docstring_function_or_variable.search(current_line)
+                    stripped_current_line = regexes.docstring_function_or_variable.search(current_line)
                     if stripped_current_line:
                         for item in stripped_current_line.groups():
                             if item:
@@ -1038,9 +1038,9 @@ def get_module_name(module):
 #:tag:Utilities
 def init_user_files():
     """Initializes user files"""
-    for directory in type_defs.USER_PATHS.get_init_directories():
+    for directory in typedefs.USER_PATHS.get_init_directories():
         is_path_valid(get_user_path(directory), "create")
-    for file in type_defs.USER_PATHS.get_init_files():
+    for file in typedefs.USER_PATHS.get_init_files():
         file = get_user_path(file)
         try:
             open(file).close()
@@ -1076,7 +1076,7 @@ def get_user_path(user_path):
     """Returns the specified user path for the current user
 
     Args:
-        user_path (str): Can be a member of type_defs.USER_PATHS
+        user_path (str): Can be a member of typedefs.USER_PATHS
 
     Returns:
         str: Specified user path of the current user
@@ -1118,7 +1118,7 @@ def execute_script(file_path):
 #:tag:Utilities
 def parse_response(response, line_num=0):
     """Parses the given GDB/MI output. Wraps gdbmiparser.parse_response
-    GDB_Engine.send_command returns an additional "^done" output because of the "source" command
+    debugcore.send_command returns an additional "^done" output because of the "source" command
     This function is used to get rid of that output before parsing
 
     Args:

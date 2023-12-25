@@ -14,4 +14,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-# This source file will be used for things that are shared between test modules
+import unittest
+from libpince import debugcore, typedefs, regexes
+
+
+class debugcore_tests(unittest.TestCase):
+    def test_read_registers(self):
+        register_dict = debugcore.read_registers()
+        if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64:
+            test_register = "rax"
+        else:
+            test_register = "eax"
+        self.assertRegex(register_dict[test_register], regexes.hex_number.pattern)

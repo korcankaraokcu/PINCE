@@ -553,7 +553,7 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>type_defs(Type Definitions)</source>
+      <source>typedefs(Type Definitions)</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -581,7 +581,7 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Hide type_defs</source>
+      <source>Hide typedefs</source>
       <translation type="unfinished" />
     </message>
     <message>

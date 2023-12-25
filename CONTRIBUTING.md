@@ -10,14 +10,14 @@
 - [tr](./tr) - Contains translation constants
 - [i18n](./i18n) - Contains translation files. `ts` files are created with Qt Linguist and [compile_ts.sh](./compile_ts.sh), `qm` files are created within the last section of [install_pince.sh](./install_pince.sh)
 - ### **[libpince](./libpince)**
-  - [GDB_Engine.py](./libpince/GDB_Engine.py) - Everything related to communicating with GDB and debugging
-  - [SysUtils.py](./libpince/SysUtils.py) - Contains generic utility functions such as parsing, file creation, documentation etc
-  - [type_defs.py](./libpince/type_defs.py) - Contains all constants and variable definitions
-  - [common_regexes.py](./libpince/common_regexes.py) - Contains regexes for parsing GDB output and other things
-  - [Injection](./libpince/Injection) - An example for injecting .so files
+  - [debugcore.py](./libpince/debugcore.py) - Everything related to communicating with GDB and debugging
+  - [utils.py](./libpince/utils.py) - Contains generic utility functions such as parsing, file creation, documentation etc
+  - [typedefs.py](./libpince/typedefs.py) - Contains all constants and variable definitions
+  - [regexes.py](./libpince/regexes.py) - Contains regexes for parsing GDB output and other things
+  - [injection](./libpince/injection) - An example for injecting .so files
   - ### **[gdb_python_scripts](./libpince/gdb_python_scripts)**
-    - [GDBCommandExtensions.py](./libpince/gdb_python_scripts/GDBCommandExtensions.py) - Contains custom GDB commands
-    - [ScriptUtils.py](./libpince/gdb_python_scripts/ScriptUtils.py) - Contains utility functions for GDB commands
+    - [gdbextensions.py](./libpince/gdb_python_scripts/gdbextensions.py) - Contains custom GDB commands
+    - [gdbutils.py](./libpince/gdb_python_scripts/gdbutils.py) - Contains utility functions for GDB commands
     - [tests](./libpince/gdb_python_scripts/tests) - An example for .so extension, read more [here](https://github.com/korcankaraokcu/PINCE/wiki/Extending-PINCE-with-.so-files)
 
 # Code Style
@@ -213,7 +213,7 @@ Implement a flexible input field for the execution count. For instance, 2^x only
 - Implement a psuedo-terminal for the inferior like edb does(idk if necessary, we don't usually target CLI games, up to debate)
 - Try to optimize TrackBreakpoint and TrackWatchpoint return data structures further, adding an id field might simplify traversing of the tree, performance tests are required
 - Implement extra MemoryViewerWindow tabs(not really critical right now, up to debate)
-- ~~Consider removing the command file layer of IPC system for GDB_Engine.send_command to speed up things~~
+- ~~Consider removing the command file layer of IPC system for debugcore.send_command to speed up things~~
 [Update-29/04/2018 : Delaying this until GDB/MI implements a native multiline command feature or improves ```interpreter-exec``` command to cover every single multiline command type(including ```define``` commands)]
 - Implement developer mode in settings. Developer mode will include features like dissection of GUI elements on events such as mouse-over
 - Add ability to include non-absolute calls for dissect code feature(i.e call rax). Should be considered after the first version release. Might be useful for multi-breakpoint related features
