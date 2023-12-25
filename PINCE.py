@@ -95,7 +95,10 @@ language_list = [
     ("简体中文", "zh_CN")
 ]
 
-theme_list = ["Dark", "Light", "Wong (Colorblind Friendly)"]
+theme_list = ["Dark",
+              "Light",
+              "System Default",
+              "Wong (Colorblind Friendly)"]
 
 
 def get_locale():
@@ -474,7 +477,11 @@ class MainForm(QMainWindow, MainWindow):
         else:
             self.apply_after_init()
         self.memory_view_window = MemoryViewWindowForm(self)
-        self.memory_view_window.setPalette(change_theme(theme))
+        try:
+            self.memory_view_window.setPalette(change_theme(theme))
+        except Exception as e:
+            self.memory_view_window.setPalette(change_theme("System Default"))
+            print("An exception occurred while setting color palette, using system theme\n", e)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
@@ -6063,9 +6070,5 @@ def handle_exit():
 if __name__ == "__main__":
     app.aboutToQuit.connect(handle_exit)
     window = MainForm()
-    try:
-        window.setPalette(change_theme(theme))
-    except Exception as e:
-        print("An exception occurred while setting color palette, using system theme\n", e)
     window.show()
     sys.exit(app.exec())
