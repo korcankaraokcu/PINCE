@@ -19,11 +19,11 @@ from threading import Lock, Thread, Condition
 from time import sleep, time
 from collections import OrderedDict, defaultdict
 import pexpect, os, sys, ctypes, pickle, json, shelve, re, struct, io
-from . import SysUtils, type_defs, common_regexes
+from . import utils, typedefs, regexes
 
 self_pid = os.getpid()
 libc = ctypes.CDLL('libc.so.6')
-system_endianness = type_defs.ENDIANNESS.LITTLE if sys.byteorder == "little" else type_defs.ENDIANNESS.BIG
+system_endianness = typedefs.ENDIANNESS.LITTLE if sys.byteorder == "little" else typedefs.ENDIANNESS.BIG
 
 #:tag:GDBInformation
 #:doc:
@@ -32,12 +32,12 @@ gdb_initialized = False
 
 #:tag:InferiorInformation
 #:doc:
-# An integer. Can be a member of type_defs.INFERIOR_ARCH
+# An integer. Can be a member of typedefs.INFERIOR_ARCH
 inferior_arch = int
 
 #:tag:InferiorInformation
 #:doc:
-# An integer. Can be a member of type_defs.INFERIOR_STATUS
+# An integer. Can be a member of typedefs.INFERIOR_STATUS
 inferior_status = -1
 
 #:tag:InferiorInformation
@@ -47,7 +47,7 @@ currentpid = -1
 
 #:tag:GDBInformation
 #:doc:
-# An integer. Can be a member of type_defs.STOP_REASON
+# An integer. Can be a member of typedefs.STOP_REASON
 stop_reason = int
 
 #:tag:GDBInformation
@@ -102,9 +102,9 @@ gdb_output = ""
 
 #:tag:GDBInformation
 #:doc:
-# An instance of type_defs.RegisterQueue. Updated whenever GDB receives an async event such as breakpoint modification
+# An instance of typedefs.RegisterQueue. Updated whenever GDB receives an async event such as breakpoint modification
 # See PINCE's AwaitAsyncOutput class for an example of usage
-gdb_async_output = type_defs.RegisterQueue()
+gdb_async_output = typedefs.RegisterQueue()
 
 #:tag:GDBInformation
 #:doc:
@@ -122,7 +122,7 @@ last_gdb_command = ""
 #:doc:
 # A list of booleans. Used to adjust gdb output
 # Use the function set_gdb_output_mode to make use of this variable
-gdb_output_mode = type_defs.gdb_output_mode(True, True, True)
+gdb_output_mode = typedefs.gdb_output_mode(True, True, True)
 
 #:tag:InferiorInformation
 #:doc:
@@ -144,7 +144,7 @@ def set_gdb_output_mode(output_mode_tuple):
     """Adjusts gdb output
 
     Args:
-        output_mode_tuple (type_defs.gdb_output_mode): Setting any field True will enable the output that's associated
+        output_mode_tuple (typedefs.gdb_output_mode): Setting any field True will enable the output that's associated
         with that field. Setting it False will disable the associated output
     """
     global gdb_output_mode
@@ -168,7 +168,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         command (str): The command that'll be sent
         control (bool): This param should be True if the command sent is ctrl+key instead of the regular command
         cli_output (bool): If True, returns the readable parsed cli output instead of gdb/mi garbage
-        send_with_file (bool): Custom commands declared in GDBCommandExtensions.py requires file communication. If
+        send_with_file (bool): Custom commands declared in gdbextensions.py requires file communication. If
         called command has any parameters, pass this as True
         file_contents_send (any type that pickle.dump supports): Arguments for the called custom gdb command
         recv_with_file (bool): Pass this as True if the called custom gdb command returns something
@@ -200,13 +200,13 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         if gdb_output_mode.command_info:
             time0 = time()
         if not gdb_initialized:
-            raise type_defs.GDBInitializeException
+            raise typedefs.GDBInitializeException
         gdb_output = ""
         if send_with_file:
-            send_file = SysUtils.get_ipc_from_pince_file(currentpid)
+            send_file = utils.get_ipc_from_pince_file(currentpid)
             pickle.dump(file_contents_send, open(send_file, "wb"))
         if recv_with_file or cli_output:
-            recv_file = SysUtils.get_ipc_to_pince_file(currentpid)
+            recv_file = utils.get_ipc_to_pince_file(currentpid)
 
             # Truncating the recv_file because we wouldn't like to see output of previous command in case of errors
             open(recv_file, "w").close()
@@ -218,7 +218,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
         if control:
             child.sendcontrol(command)
         else:
-            command_file = SysUtils.get_gdb_command_file(currentpid)
+            command_file = utils.get_gdb_command_file(currentpid)
             command_fd = open(command_file, "r+")
             command_fd.truncate()
             command_fd.write(command)
@@ -229,7 +229,7 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
                 child.sendline("cli-output source " + command_file)
         if not control:
             while not gdb_output:
-                sleep(type_defs.CONST_TIME.GDB_INPUT_SLEEP)
+                sleep(typedefs.CONST_TIME.GDB_INPUT_SLEEP)
                 if cancel_send_command:
                     break
             if not cancel_send_command:
@@ -262,7 +262,7 @@ def state_observe_thread():
     """
 
     def check_inferior_status():
-        matches = common_regexes.gdb_state_observe.findall(child.before)
+        matches = regexes.gdb_state_observe.findall(child.before)
         if len(matches) > 0:
             global stop_reason
             global inferior_status
@@ -279,15 +279,15 @@ def state_observe_thread():
             # Get the last match only to optimize parsing
             stop_info = matches[-1][0]
             if stop_info:
-                bp_num = common_regexes.breakpoint_number.search(stop_info)
+                bp_num = regexes.breakpoint_number.search(stop_info)
 
                 # Return -1 for invalid breakpoints to ignore racing conditions
-                if bp_num and breakpoint_on_hit_dict.get(bp_num.group(1), -1) != type_defs.BREAKPOINT_ON_HIT.BREAK:
+                if bp_num and breakpoint_on_hit_dict.get(bp_num.group(1), -1) != typedefs.BREAKPOINT_ON_HIT.BREAK:
                     return
-                stop_reason = type_defs.STOP_REASON.DEBUG
-                inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_STOPPED
+                stop_reason = typedefs.STOP_REASON.DEBUG
+                inferior_status = typedefs.INFERIOR_STATUS.INFERIOR_STOPPED
             else:
-                inferior_status = type_defs.INFERIOR_STATUS.INFERIOR_RUNNING
+                inferior_status = typedefs.INFERIOR_STATUS.INFERIOR_RUNNING
             if old_status != inferior_status:
                 with status_changed_condition:
                     status_changed_condition.notify_all()
@@ -301,8 +301,8 @@ def state_observe_thread():
             if not child.before:
                 continue
             check_inferior_status()
-            command_file = re.escape(SysUtils.get_gdb_command_file(currentpid))
-            if common_regexes.gdb_command_source(command_file).search(child.before):
+            command_file = re.escape(utils.get_gdb_command_file(currentpid))
+            if regexes.gdb_command_source(command_file).search(child.before):
                 child.expect_exact("(gdb)")
                 child.before = child.before.strip()
                 check_inferior_status()
@@ -335,11 +335,11 @@ def execute_func_temporary_interruption(func, *args, **kwargs):
         ???: Result of the given function. Return type depends on the given function
     """
     old_status = inferior_status
-    if old_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-        interrupt_inferior(type_defs.STOP_REASON.PAUSE)
+    if old_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        interrupt_inferior(typedefs.STOP_REASON.PAUSE)
         wait_for_stop()
     result = func(*args, **kwargs)
-    if old_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+    if old_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
         continue_inferior()
     return result
 
@@ -371,19 +371,19 @@ def wait_for_stop(timeout=1):
         timeout (float): Timeout time in seconds
     """
     remaining_time = timeout
-    while inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
-        sleep(type_defs.CONST_TIME.GDB_INPUT_SLEEP)
-        remaining_time -= type_defs.CONST_TIME.GDB_INPUT_SLEEP
+    while inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        sleep(typedefs.CONST_TIME.GDB_INPUT_SLEEP)
+        remaining_time -= typedefs.CONST_TIME.GDB_INPUT_SLEEP
         if remaining_time < 0:
             break
 
 
 #:tag:Debug
-def interrupt_inferior(interrupt_reason=type_defs.STOP_REASON.DEBUG):
+def interrupt_inferior(interrupt_reason=typedefs.STOP_REASON.DEBUG):
     """Interrupt the inferior
 
     Args:
-        interrupt_reason (int): Just changes the global variable stop_reason. Can be a member of type_defs.STOP_REASON
+        interrupt_reason (int): Just changes the global variable stop_reason. Can be a member of typedefs.STOP_REASON
     """
     if currentpid == -1:
         return
@@ -440,7 +440,7 @@ def unignore_signal(signal_name):
 
 
 #:tag:GDBCommunication
-def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
+def init_gdb(gdb_path=typedefs.PATHS.GDB_PATH):
     """Spawns gdb and initializes/resets some of the global variables
 
     Args:
@@ -456,11 +456,11 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     global gdb_output
     global cancel_send_command
     global last_gdb_command
-    SysUtils.init_user_files()
+    utils.init_user_files()
     detach()
 
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
-    SysUtils.create_ipc_path(currentpid)
+    utils.create_ipc_path(currentpid)
 
     breakpoint_on_hit_dict.clear()
     chained_breakpoints.clear()
@@ -468,7 +468,7 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     cancel_send_command = False
     last_gdb_command = ""
 
-    libpince_dir = SysUtils.get_libpince_directory()
+    libpince_dir = utils.get_libpince_directory()
     child = pexpect.spawn(f'sudo -E --preserve-env=PATH LC_NUMERIC=C {gdb_path} --nx --interpreter=mi',
                           cwd=libpince_dir, encoding="utf-8")
     child.setecho(False)
@@ -481,8 +481,8 @@ def init_gdb(gdb_path=type_defs.PATHS.GDB_PATH):
     gdb_initialized = True
     set_logging(False)
     send_command("source ./gdbinit_venv")
-    send_command("source " + SysUtils.get_user_path(type_defs.USER_PATHS.GDBINIT_PATH))
-    SysUtils.execute_script(SysUtils.get_user_path(type_defs.USER_PATHS.PINCEINIT_PATH))
+    send_command("source " + utils.get_user_path(typedefs.USER_PATHS.GDBINIT_PATH))
+    utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_PATH))
 
 
 #:tag:GDBCommunication
@@ -493,23 +493,23 @@ def set_logging(state):
         state (bool): Sets logging on if True, off if False
     """
     send_command("set logging enabled off")
-    send_command("set logging file " + SysUtils.get_logging_file(currentpid))
+    send_command("set logging file " + utils.get_logging_file(currentpid))
     if state:
         send_command("set logging enabled on")
 
 
 #:tag:GDBCommunication
 def set_pince_paths():
-    """Initializes $PINCE_PATH and $GDBINIT_AA_PATH convenience variables to make commands in GDBCommandExtensions.py
-    and ScriptUtils.py work. GDB scripts need to know libpince and .config directories, unfortunately they don't start
+    """Initializes $PINCE_PATH and $GDBINIT_AA_PATH convenience variables to make commands in gdbextensions.py
+    and gdbutils.py work. GDB scripts need to know libpince and .config directories, unfortunately they don't start
     from the place where script exists
     """
-    libpince_dir = SysUtils.get_libpince_directory()
+    libpince_dir = utils.get_libpince_directory()
     pince_dir = os.path.dirname(libpince_dir)
-    gdbinit_aa_dir = SysUtils.get_user_path(type_defs.USER_PATHS.GDBINIT_AA_PATH)
+    gdbinit_aa_dir = utils.get_user_path(typedefs.USER_PATHS.GDBINIT_AA_PATH)
     send_command('set $GDBINIT_AA_PATH=' + '"' + gdbinit_aa_dir + '"')
     send_command('set $PINCE_PATH=' + '"' + pince_dir + '"')
-    send_command("source gdb_python_scripts/GDBCommandExtensions.py")
+    send_command("source gdb_python_scripts/gdbextensions.py")
 
 
 def init_referenced_dicts(pid):
@@ -518,13 +518,13 @@ def init_referenced_dicts(pid):
     Args:
         pid (int,str): PID of the attached process
     """
-    shelve.open(SysUtils.get_referenced_strings_file(pid), "c")
-    shelve.open(SysUtils.get_referenced_jumps_file(pid), "c")
-    shelve.open(SysUtils.get_referenced_calls_file(pid), "c")
+    shelve.open(utils.get_referenced_strings_file(pid), "c")
+    shelve.open(utils.get_referenced_jumps_file(pid), "c")
+    shelve.open(utils.get_referenced_calls_file(pid), "c")
 
 
 #:tag:Debug
-def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
+def attach(pid, gdb_path=typedefs.PATHS.GDB_PATH):
     """Attaches gdb to the target and initializes some of the global variables
 
     Args:
@@ -532,21 +532,21 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
         gdb_path (str): Path of the gdb binary
 
     Returns:
-        int: A member of type_defs.ATTACH_RESULT
+        int: A member of typedefs.ATTACH_RESULT
 
     Note:
         If gdb is already initialized, gdb_path will be ignored
     """
     global currentpid
     pid = int(pid)
-    traced_by = SysUtils.is_traced(pid)
+    traced_by = utils.is_traced(pid)
     pid_control_list = [
         # Attaching PINCE to itself makes PINCE freeze immediately because gdb freezes the target on attach
-        (lambda: pid == self_pid, type_defs.ATTACH_RESULT.ATTACH_SELF),
-        (lambda: not SysUtils.is_process_valid(pid), type_defs.ATTACH_RESULT.PROCESS_NOT_VALID),
-        (lambda: pid == currentpid, type_defs.ATTACH_RESULT.ALREADY_DEBUGGING),
-        (lambda: traced_by is not None, type_defs.ATTACH_RESULT.ALREADY_TRACED),
-        (lambda: not can_attach(pid), type_defs.ATTACH_RESULT.PERM_DENIED)
+        (lambda: pid == self_pid, typedefs.ATTACH_RESULT.ATTACH_SELF),
+        (lambda: not utils.is_process_valid(pid), typedefs.ATTACH_RESULT.PROCESS_NOT_VALID),
+        (lambda: pid == currentpid, typedefs.ATTACH_RESULT.ALREADY_DEBUGGING),
+        (lambda: traced_by is not None, typedefs.ATTACH_RESULT.ALREADY_TRACED),
+        (lambda: not can_attach(pid), typedefs.ATTACH_RESULT.PERM_DENIED)
     ]
     for control_func, attach_result in pid_control_list:
         if control_func():
@@ -557,17 +557,17 @@ def attach(pid, gdb_path=type_defs.PATHS.GDB_PATH):
     global mem_file
     currentpid = pid
     mem_file = "/proc/" + str(currentpid) + "/mem"
-    SysUtils.create_ipc_path(pid)
+    utils.create_ipc_path(pid)
     send_command("attach " + str(pid))
     set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
-    SysUtils.execute_script(SysUtils.get_user_path(type_defs.USER_PATHS.PINCEINIT_AA_PATH))
-    return type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL
+    utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_AA_PATH))
+    return typedefs.ATTACH_RESULT.ATTACH_SUCCESSFUL
 
 
 #:tag:Debug
-def create_process(process_path, args="", ld_preload_path="", gdb_path=type_defs.PATHS.GDB_PATH):
+def create_process(process_path, args="", ld_preload_path="", gdb_path=typedefs.PATHS.GDB_PATH):
     """Creates a new process for debugging and initializes some of the global variables
     Current process will be detached even if the create_process call fails
     Make sure to save your data before calling this monstrosity
@@ -590,7 +590,7 @@ def create_process(process_path, args="", ld_preload_path="", gdb_path=type_defs
     if currentpid != -1 or not gdb_initialized:
         init_gdb(gdb_path)
     output = send_command("file " + process_path)
-    if common_regexes.gdb_error.search(output):
+    if regexes.gdb_error.search(output):
         print("An error occurred while trying to create process from the file at " + process_path)
         detach()
         return False
@@ -611,11 +611,11 @@ def create_process(process_path, args="", ld_preload_path="", gdb_path=type_defs
     pid = get_inferior_pid()
     currentpid = int(pid)
     mem_file = "/proc/" + str(currentpid) + "/mem"
-    SysUtils.create_ipc_path(pid)
+    utils.create_ipc_path(pid)
     set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
-    SysUtils.execute_script(SysUtils.get_user_path(type_defs.USER_PATHS.PINCEINIT_AA_PATH))
+    utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_AA_PATH))
     return True
 
 
@@ -633,7 +633,7 @@ def detach():
         gdb_initialized = False
         child.close()
     if old_pid != -1:
-        SysUtils.delete_ipc_path(old_pid)
+        utils.delete_ipc_path(old_pid)
     print("Detached from the process with PID:" + str(old_pid))
 
 
@@ -642,18 +642,18 @@ def toggle_attach():
     """Detaches from the current process without ending the season if currently attached. Attaches back if detached
 
     Returns:
-        int: The new state of the process as a member of type_defs.TOGGLE_ATTACH
+        int: The new state of the process as a member of typedefs.TOGGLE_ATTACH
         None: If detaching or attaching fails
     """
     if currentpid == -1:
         return
     if is_attached():
-        if common_regexes.gdb_error.search(send_command("phase-out")):
+        if regexes.gdb_error.search(send_command("phase-out")):
             return
-        return type_defs.TOGGLE_ATTACH.DETACHED
-    if common_regexes.gdb_error.search(send_command("phase-in")):
+        return typedefs.TOGGLE_ATTACH.DETACHED
+    if regexes.gdb_error.search(send_command("phase-in")):
         return
-    return type_defs.TOGGLE_ATTACH.ATTACHED
+    return typedefs.TOGGLE_ATTACH.ATTACHED
 
 
 #:tag:Debug
@@ -663,7 +663,7 @@ def is_attached():
     Returns:
         bool: True if attached, False if not
     """
-    if common_regexes.gdb_error.search(send_command("info proc")):
+    if regexes.gdb_error.search(send_command("info proc")):
         return False
     return True
 
@@ -713,19 +713,19 @@ def read_pointer(pointer_type):
     """Reads the address pointed by this pointer
 
     Args:
-        pointer_type (PointerType): type_defs.PointerType class containing a base_address and an offsets list
+        pointer_type (PointerType): typedefs.PointerType class containing a base_address and an offsets list
 
     Returns:
         int: Final pointed address after dereferencing this pointer and it's offsets list
         None: If an error occurs while reading the given pointer
     """
-    if not isinstance(pointer_type, type_defs.PointerType):
+    if not isinstance(pointer_type, typedefs.PointerType):
         raise TypeError("Passed non-PointerType to read_pointer!")
 
-    if inferior_arch == type_defs.INFERIOR_ARCH.ARCH_32:
-        value_index = type_defs.VALUE_INDEX.INDEX_INT32
+    if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32:
+        value_index = typedefs.VALUE_INDEX.INDEX_INT32
     else:
-        value_index = type_defs.VALUE_INDEX.INDEX_INT64
+        value_index = typedefs.VALUE_INDEX.INDEX_INT64
 
     # Simple addresses first, examine_expression takes much longer time, especially for larger tables
     try:
@@ -762,19 +762,19 @@ def memory_handle():
 
 
 #:tag:MemoryRW
-def read_memory(address, value_index, length=None, zero_terminate=True, value_repr=type_defs.VALUE_REPR.UNSIGNED,
-                endian=type_defs.ENDIANNESS.HOST, mem_handle=None):
+def read_memory(address, value_index, length=None, zero_terminate=True, value_repr=typedefs.VALUE_REPR.UNSIGNED,
+                endian=typedefs.ENDIANNESS.HOST, mem_handle=None):
     """Reads value from the given address
 
     Args:
         address (str, int): Can be a hex string or an integer.
-        value_index (int): Determines the type of data read. Can be a member of type_defs.VALUE_INDEX
+        value_index (int): Determines the type of data read. Can be a member of typedefs.VALUE_INDEX
         length (int): Length of the data that'll be read. Must be greater than 0. Only used when the value_index is
         INDEX_STRING or INDEX_AOB. Ignored otherwise
         zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
         value_index is INDEX_STRING. Ignored otherwise
-        value_repr (int): Can be a member of type_defs.VALUE_REPR. Only usable with integer types
-        endian (int): Can be a member of type_defs.ENDIANNESS
+        value_repr (int): Can be a member of typedefs.VALUE_REPR. Only usable with integer types
+        endian (int): Can be a member of typedefs.ENDIANNESS
         mem_handle (BinaryIO): A file handle that points to the memory file of the current process
         This parameter is used for optimization, See memory_handle
         Don't forget to close the handle after you're done if you use this parameter manually
@@ -796,8 +796,8 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
         except:
             # print(str(address) + " is not a valid address")
             return
-    packed_data = type_defs.index_to_valuetype_dict.get(value_index, -1)
-    if type_defs.VALUE_INDEX.is_string(value_index):
+    packed_data = typedefs.index_to_valuetype_dict.get(value_index, -1)
+    if typedefs.VALUE_INDEX.is_string(value_index):
         try:
             length = int(length)
         except:
@@ -806,8 +806,8 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
         if not length > 0:
             # print("length must be greater than 0")
             return
-        expected_length = length * type_defs.string_index_to_multiplier_dict.get(value_index, 1)
-    elif value_index is type_defs.VALUE_INDEX.INDEX_AOB:
+        expected_length = length * typedefs.string_index_to_multiplier_dict.get(value_index, 1)
+    elif value_index is typedefs.VALUE_INDEX.INDEX_AOB:
         try:
             expected_length = int(length)
         except:
@@ -824,7 +824,7 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
             mem_handle = open(mem_file, "rb")
         mem_handle.seek(address)
         data_read = mem_handle.read(expected_length)
-        if endian != type_defs.ENDIANNESS.HOST and system_endianness != endian:
+        if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian:
             data_read = data_read[::-1]
     except (OSError, ValueError):
         # TODO (read/write error output)
@@ -833,8 +833,8 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
         # Maybe creating a function that toggles logging on and off? Other functions could use it too
         # print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return
-    if type_defs.VALUE_INDEX.is_string(value_index):
-        encoding, option = type_defs.string_index_to_encoding_dict[value_index]
+    if typedefs.VALUE_INDEX.is_string(value_index):
+        encoding, option = typedefs.string_index_to_encoding_dict[value_index]
         returned_string = data_read.decode(encoding, option)
         if zero_terminate:
             if returned_string.startswith('\x00'):
@@ -842,20 +842,20 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
             else:
                 returned_string = returned_string.split('\x00')[0]
         return returned_string[0:length]
-    elif value_index is type_defs.VALUE_INDEX.INDEX_AOB:
+    elif value_index is typedefs.VALUE_INDEX.INDEX_AOB:
         return " ".join(format(n, '02x') for n in data_read)
     else:
-        is_integer = type_defs.VALUE_INDEX.is_integer(value_index)
-        if is_integer and value_repr == type_defs.VALUE_REPR.SIGNED:
+        is_integer = typedefs.VALUE_INDEX.is_integer(value_index)
+        if is_integer and value_repr == typedefs.VALUE_REPR.SIGNED:
             data_type = data_type.lower()
         result = struct.unpack_from(data_type, data_read)[0]
-        if is_integer and value_repr == type_defs.VALUE_REPR.HEX:
+        if is_integer and value_repr == typedefs.VALUE_REPR.HEX:
             return hex(result)
         return result
 
 
 #:tag:MemoryRW
-def write_memory(address, value_index, value, endian=type_defs.ENDIANNESS.HOST):
+def write_memory(address, value_index, value, endian=typedefs.ENDIANNESS.HOST):
     """Sets the given value to the given address
 
     If any errors occurs while setting value to the according address, it'll be ignored but the information about
@@ -863,9 +863,9 @@ def write_memory(address, value_index, value, endian=type_defs.ENDIANNESS.HOST):
 
     Args:
         address (str, int): Can be a hex string or an integer
-        value_index (int): Can be a member of type_defs.VALUE_INDEX
+        value_index (int): Can be a member of typedefs.VALUE_INDEX
         value (str): The value that'll be written to the given address
-        endian (int): Can be a member of type_defs.ENDIANNESS
+        endian (int): Can be a member of typedefs.ENDIANNESS
 
     Notes:
         TODO: Implement a mem_handle parameter for optimization, check read_memory for an example
@@ -878,19 +878,19 @@ def write_memory(address, value_index, value, endian=type_defs.ENDIANNESS.HOST):
         except:
             # print(str(address) + " is not a valid address")
             return
-    write_data = SysUtils.parse_string(value, value_index)
+    write_data = utils.parse_string(value, value_index)
     if write_data is None:
         return
-    encoding, option = type_defs.string_index_to_encoding_dict.get(value_index, (None, None))
+    encoding, option = typedefs.string_index_to_encoding_dict.get(value_index, (None, None))
     if encoding is None:
-        if value_index is type_defs.VALUE_INDEX.INDEX_AOB:
+        if value_index is typedefs.VALUE_INDEX.INDEX_AOB:
             write_data = bytearray(write_data)
         else:
-            data_type = type_defs.index_to_struct_pack_dict.get(value_index, -1)
+            data_type = typedefs.index_to_struct_pack_dict.get(value_index, -1)
             write_data = struct.pack(data_type, write_data)
     else:
         write_data = write_data.encode(encoding, option) + b"\x00"  # Zero-terminated by default
-    if endian != type_defs.ENDIANNESS.HOST and system_endianness != endian:
+    if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian:
         write_data = write_data[::-1]
     FILE = open(mem_file, "rb+")
     try:
@@ -920,7 +920,7 @@ def disassemble(expression, offset_or_address):
     output = send_command("disas /r " + expression + "," + offset_or_address)
     disas_data = []
     for line in output.splitlines():
-        result = common_regexes.disassemble_output.search(line)
+        result = regexes.disassemble_output.search(line)
         if result:
             disas_data.append(result.groups())
     return disas_data
@@ -934,7 +934,7 @@ def examine_expression(expression):
         expression (str): Any gdb expression
 
     Returns:
-        type_defs.tuple_examine_expression: Evaluated value, address and symbol in a tuple
+        typedefs.tuple_examine_expression: Evaluated value, address and symbol in a tuple
         Any erroneous field will be returned as None instead of str
     """
     return send_command("pince-examine-expressions", send_with_file=True, file_contents_send=[expression],
@@ -948,7 +948,7 @@ def examine_expressions(expression_list):
         expression_list (list): List of gdb expressions as str
 
     Returns:
-        list: List of type_defs.tuple_examine_expression
+        list: List of typedefs.tuple_examine_expression
     """
     if not expression_list:
         return []
@@ -987,7 +987,7 @@ def get_thread_info():
         None: If the output doesn't fit the regex
     """
     thread_info = send_command("info threads")
-    return re.sub(r'\\"', r'"', common_regexes.thread_info.search(thread_info).group(1))
+    return re.sub(r'\\"', r'"', regexes.thread_info.search(thread_info).group(1))
 
 
 #:tag:Assembly
@@ -1019,21 +1019,21 @@ def find_closest_instruction_address(address, instruction_location="next", instr
         disas_data = disassemble(address + offset, address)
     if not disas_data:
         if instruction_location != "next":
-            start_address = hex(SysUtils.get_region_info(currentpid, address).start)
+            start_address = hex(utils.get_region_info(currentpid, address).start)
             disas_data = disassemble(start_address, address)
     if instruction_location == "next":
         try:
-            return SysUtils.extract_address(disas_data[instruction_count][0])
+            return utils.extract_address(disas_data[instruction_count][0])
         except IndexError:
-            return hex(SysUtils.get_region_info(currentpid, address).end)
+            return hex(utils.get_region_info(currentpid, address).end)
     else:
         try:
-            return SysUtils.extract_address(disas_data[-instruction_count][0])
+            return utils.extract_address(disas_data[-instruction_count][0])
         except IndexError:
             try:
                 return start_address
             except UnboundLocalError:
-                return hex(SysUtils.get_region_info(currentpid, address).start)
+                return hex(utils.get_region_info(currentpid, address).start)
 
 
 #:tag:GDBExpressions
@@ -1095,7 +1095,7 @@ def get_inferior_pid():
         str: pid
     """
     output = send_command("info inferior")
-    return common_regexes.inferior_pid.search(output).group(1)
+    return regexes.inferior_pid.search(output).group(1)
 
 
 #:tag:InferiorInformation
@@ -1103,11 +1103,11 @@ def get_inferior_arch():
     """Returns the architecture of the current inferior
 
     Returns:
-        int: A member of type_defs.INFERIOR_ARCH
+        int: A member of typedefs.INFERIOR_ARCH
     """
     if parse_and_eval("$rax") == "void":
-        return type_defs.INFERIOR_ARCH.ARCH_32
-    return type_defs.INFERIOR_ARCH.ARCH_64
+        return typedefs.INFERIOR_ARCH.ARCH_32
+    return typedefs.INFERIOR_ARCH.ARCH_64
 
 
 #:tag:Registers
@@ -1115,7 +1115,7 @@ def read_registers():
     """Returns the current registers
 
     Returns:
-        dict: A dict that holds general, flag and segment registers. Check type_defs.REGISTERS for the full list
+        dict: A dict that holds general, flag and segment registers. Check typedefs.REGISTERS for the full list
     """
     return send_command("pince-read-registers", recv_with_file=True)
 
@@ -1125,7 +1125,7 @@ def read_float_registers():
     """Returns the current floating point registers
 
     Returns:
-        dict: A dict that holds floating point registers. Check type_defs.REGISTERS.FLOAT for the full list
+        dict: A dict that holds floating point registers. Check typedefs.REGISTERS.FLOAT for the full list
 
     Note:
         Returned xmm values are based on xmm.v4_float
@@ -1151,7 +1151,7 @@ def set_register_flag(flag, value):
     """Sets given register flag to given value
 
     Args:
-        flag (str): A member of type_defs.REGISTERS.FLAG
+        flag (str): A member of typedefs.REGISTERS.FLAG
         value (Union[int,str]): 0 or 1
     """
     registers = read_registers()
@@ -1159,8 +1159,8 @@ def set_register_flag(flag, value):
     registers[flag] = value
     if value != "0" and value != "1":
         raise Exception(value + " isn't valid value. It can be only 0 or 1")
-    if flag not in type_defs.REGISTERS.FLAG:
-        raise Exception(flag + " isn't a valid flag, must be a member of type_defs.REGISTERS.FLAG")
+    if flag not in typedefs.REGISTERS.FLAG:
+        raise Exception(flag + " isn't a valid flag, must be a member of typedefs.REGISTERS.FLAG")
     eflags_hex_value = hex(int(
         registers["of"] + registers["df"] + registers["if"] + registers["tf"] + registers["sf"] + registers[
             "zf"] + "0" + registers["af"] + "0" + registers["pf"] + "0" + registers["cf"], 2))
@@ -1294,7 +1294,7 @@ def nop_instruction(start_address, length_of_instr):
         modified_instructions_dict[start_address] = old_aob
 
     nop_aob = '90 ' * length_of_instr
-    write_memory(start_address, type_defs.VALUE_INDEX.INDEX_AOB, nop_aob)
+    write_memory(start_address, typedefs.VALUE_INDEX.INDEX_AOB, nop_aob)
 
 
 #:tag:MemoryRW
@@ -1314,7 +1314,7 @@ def modify_instruction(start_address, array_of_bytes):
     global modified_instructions_dict
     if start_address not in modified_instructions_dict:
         modified_instructions_dict[start_address] = old_aob
-    write_memory(start_address, type_defs.VALUE_INDEX.INDEX_AOB, array_of_bytes)
+    write_memory(start_address, typedefs.VALUE_INDEX.INDEX_AOB, array_of_bytes)
 
 
 #:tag:MemoryRW
@@ -1329,7 +1329,7 @@ def restore_instruction(start_address):
     """
     global modified_instructions_dict
     array_of_bytes = modified_instructions_dict.pop(start_address)
-    write_memory(start_address, type_defs.VALUE_INDEX.INDEX_AOB, array_of_bytes)
+    write_memory(start_address, typedefs.VALUE_INDEX.INDEX_AOB, array_of_bytes)
 
 
 #:tag:BreakWatchpoints
@@ -1337,7 +1337,7 @@ def get_breakpoint_info():
     """Returns current breakpoint/watchpoint list
 
     Returns:
-        list: A list of type_defs.tuple_breakpoint_info where;
+        list: A list of typedefs.tuple_breakpoint_info where;
             number is the gdb breakpoint number
             breakpoint_type is the breakpoint type
             disp shows what will be done after breakpoint hits
@@ -1361,7 +1361,7 @@ def get_breakpoint_info():
     # Temporary fix for https://sourceware.org/bugzilla/show_bug.cgi?id=9659
     # TODO:Delete this line when gdb or pygdbmi fixes the problem
     raw_info = re.sub("script={(.*?)}", "script=[\g<1>]", raw_info)  # Please refer to issue #53
-    for item in SysUtils.parse_response(raw_info)['payload']['BreakpointTable']['body']:
+    for item in utils.parse_response(raw_info)['payload']['BreakpointTable']['body']:
         item = defaultdict(lambda: "", item)
         number, breakpoint_type, disp, enabled, address, what, condition, hit_count, enable_count = \
             item['number'], item['type'], item['disp'], item['enabled'], item['addr'], item['what'], item['cond'], \
@@ -1373,21 +1373,21 @@ def get_breakpoint_info():
             number = number.split(".")[0]
             breakpoint_type, disp, condition, hit_count = multiple_break_data[number]
         if what:
-            address = SysUtils.extract_address(what)
+            address = utils.extract_address(what)
             if not address:
                 address = examine_expression(what).address
-        on_hit_dict_value = breakpoint_on_hit_dict.get(number, type_defs.BREAKPOINT_ON_HIT.BREAK)
-        on_hit = type_defs.on_hit_to_text_dict.get(on_hit_dict_value, "Unknown")
+        on_hit_dict_value = breakpoint_on_hit_dict.get(number, typedefs.BREAKPOINT_ON_HIT.BREAK)
+        on_hit = typedefs.on_hit_to_text_dict.get(on_hit_dict_value, "Unknown")
         if breakpoint_type.find("breakpoint") >= 0:
             size = 1
         else:
-            possible_size = common_regexes.breakpoint_size.search(what)
+            possible_size = regexes.breakpoint_size.search(what)
             if possible_size:
                 size = int(possible_size.group(1))
             else:
                 size = 1
         returned_list.append(
-            type_defs.tuple_breakpoint_info(number, breakpoint_type, disp, enabled, address, size, on_hit, hit_count,
+            typedefs.tuple_breakpoint_info(number, breakpoint_type, disp, enabled, address, size, on_hit, hit_count,
                                             enable_count, condition))
     return returned_list
 
@@ -1402,7 +1402,7 @@ def check_address_in_breakpoints(address, range_offset=0):
         checked instead of just address itself
 
     Returns:
-        type_defs.tuple_breakpoint_info: Info of the existing breakpoint for given address range
+        typedefs.tuple_breakpoint_info: Info of the existing breakpoint for given address range
         None: If it doesn't exist
     """
     if type(address) != int:
@@ -1430,7 +1430,7 @@ def hardware_breakpoint_available():
     breakpoint_info = get_breakpoint_info()
     hw_bp_total = 0
     for item in breakpoint_info:
-        if common_regexes.hw_breakpoint_count.search(item.breakpoint_type):
+        if regexes.hw_breakpoint_count.search(item.breakpoint_type):
             hw_bp_total += 1
 
     # Maximum number of hardware breakpoints is limited to 4 in x86 architecture
@@ -1438,15 +1438,15 @@ def hardware_breakpoint_available():
 
 
 #:tag:BreakWatchpoints
-def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWARE_BP,
-                   on_hit=type_defs.BREAKPOINT_ON_HIT.BREAK):
+def add_breakpoint(expression, breakpoint_type=typedefs.BREAKPOINT_TYPE.HARDWARE_BP,
+                   on_hit=typedefs.BREAKPOINT_ON_HIT.BREAK):
     """Adds a breakpoint at the address evaluated by the given expression. Uses a software breakpoint if all hardware
     breakpoint slots are being used
 
     Args:
         expression (str): Any gdb expression
-        breakpoint_type (int): Can be a member of type_defs.BREAKPOINT_TYPE
-        on_hit (int): Can be a member of type_defs.BREAKPOINT_ON_HIT
+        breakpoint_type (int): Can be a member of typedefs.BREAKPOINT_TYPE
+        on_hit (int): Can be a member of typedefs.BREAKPOINT_ON_HIT
 
     Returns:
         str: Number of the breakpoint set
@@ -1460,17 +1460,17 @@ def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWAR
     if check_address_in_breakpoints(str_address):
         print("breakpoint/watchpoint for address " + str_address + " is already set")
         return
-    if breakpoint_type == type_defs.BREAKPOINT_TYPE.HARDWARE_BP:
+    if breakpoint_type == typedefs.BREAKPOINT_TYPE.HARDWARE_BP:
         if hardware_breakpoint_available():
             output = send_command("hbreak *" + str_address)
         else:
             print("All hardware breakpoint slots are being used, using a software breakpoint instead")
             output = send_command("break *" + str_address)
-    elif breakpoint_type == type_defs.BREAKPOINT_TYPE.SOFTWARE_BP:
+    elif breakpoint_type == typedefs.BREAKPOINT_TYPE.SOFTWARE_BP:
         output = send_command("break *" + str_address)
-    if common_regexes.breakpoint_created.search(output):
+    if regexes.breakpoint_created.search(output):
         global breakpoint_on_hit_dict
-        number = common_regexes.breakpoint_number.search(output).group(1)
+        number = regexes.breakpoint_number.search(output).group(1)
         breakpoint_on_hit_dict[number] = on_hit
         return number
     else:
@@ -1478,15 +1478,15 @@ def add_breakpoint(expression, breakpoint_type=type_defs.BREAKPOINT_TYPE.HARDWAR
 
 
 #:tag:BreakWatchpoints
-def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TYPE.BOTH,
-                   on_hit=type_defs.BREAKPOINT_ON_HIT.BREAK):
+def add_watchpoint(expression, length=4, watchpoint_type=typedefs.WATCHPOINT_TYPE.BOTH,
+                   on_hit=typedefs.BREAKPOINT_ON_HIT.BREAK):
     """Adds a watchpoint at the address evaluated by the given expression
 
     Args:
         expression (str): Any gdb expression
         length (int): Length of the watchpoint
-        watchpoint_type (int): Can be a member of type_defs.WATCHPOINT_TYPE
-        on_hit (int): Can be a member of type_defs.BREAKPOINT_ON_HIT
+        watchpoint_type (int): Can be a member of typedefs.WATCHPOINT_TYPE
+        on_hit (int): Can be a member of typedefs.BREAKPOINT_ON_HIT
 
     Returns:
         list: Numbers of the successfully set breakpoints as strings
@@ -1495,18 +1495,18 @@ def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TY
     if not str_address:
         print("expression for watchpoint is not valid")
         return
-    if watchpoint_type == type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
+    if watchpoint_type == typedefs.WATCHPOINT_TYPE.WRITE_ONLY:
         watch_command = "watch"
-    elif watchpoint_type == type_defs.WATCHPOINT_TYPE.READ_ONLY:
+    elif watchpoint_type == typedefs.WATCHPOINT_TYPE.READ_ONLY:
         watch_command = "rwatch"
-    elif watchpoint_type == type_defs.WATCHPOINT_TYPE.BOTH:
+    elif watchpoint_type == typedefs.WATCHPOINT_TYPE.BOTH:
         watch_command = "awatch"
     remaining_length = length
     breakpoints_set = []
     arch = get_inferior_arch()
     str_address_int = int(str_address, 16)
     breakpoint_addresses = []
-    if arch == type_defs.INFERIOR_ARCH.ARCH_64:
+    if arch == typedefs.INFERIOR_ARCH.ARCH_64:
         max_length = 8
     else:
         max_length = 4
@@ -1523,12 +1523,12 @@ def add_watchpoint(expression, length=4, watchpoint_type=type_defs.WATCHPOINT_TY
             breakpoint_length = remaining_length
         cmd = f"{watch_command} * (char[{breakpoint_length}] *) {hex(str_address_int)}"
         output = execute_func_temporary_interruption(send_command, cmd)
-        if common_regexes.breakpoint_created.search(output):
+        if regexes.breakpoint_created.search(output):
             breakpoint_addresses.append([str_address_int, breakpoint_length])
         else:
             print("Failed to create a watchpoint at address " + hex(str_address_int) + ". Bailing out...")
             break
-        breakpoint_number = common_regexes.breakpoint_number.search(output).group(1)
+        breakpoint_number = regexes.breakpoint_number.search(output).group(1)
         breakpoints_set.append(breakpoint_number)
         global breakpoint_on_hit_dict
         breakpoint_on_hit_dict[breakpoint_number] = on_hit
@@ -1545,7 +1545,7 @@ def modify_breakpoint(expression, modify_what, condition=None, count=None):
 
     Args:
         expression (str): Any gdb expression
-        modify_what (int): Can be a member of type_defs.BREAKPOINT_MODIFY_TYPES
+        modify_what (int): Can be a member of typedefs.BREAKPOINT_MODIFY_TYPES
         This function modifies condition of the breakpoint if CONDITION, enables the breakpoint if ENABLE, disables the
         breakpoint if DISABLE, enables once then disables after hit if ENABLE_ONCE, enables for specified count then
         disables after the count is reached if ENABLE_COUNT, enables once then deletes the breakpoint if ENABLE_DELETE
@@ -1556,12 +1556,12 @@ def modify_breakpoint(expression, modify_what, condition=None, count=None):
         bool: True if the condition has been set successfully, False otherwise
 
     Examples:
-        modify_what-->type_defs.BREAKPOINT_MODIFY_TYPES.CONDITION
+        modify_what-->typedefs.BREAKPOINT_MODIFY_TYPES.CONDITION
         condition-->$eax==0x523
         condition-->$rax>0 && ($rbp<0 || $rsp==0)
         condition-->printf($r10)==3
 
-        modify_what-->type_defs.BREAKPOINT_MODIFY_TYPES.ENABLE_COUNT
+        modify_what-->typedefs.BREAKPOINT_MODIFY_TYPES.ENABLE_COUNT
         count-->10
     """
     str_address = examine_expression(expression).address
@@ -1582,18 +1582,18 @@ def modify_breakpoint(expression, modify_what, condition=None, count=None):
             continue
         else:
             breakpoint_number = found_breakpoint.number
-        if modify_what == type_defs.BREAKPOINT_MODIFY.CONDITION:
+        if modify_what == typedefs.BREAKPOINT_MODIFY.CONDITION:
             if condition is None:
                 print("Please set condition first")
                 return False
             send_command("condition " + breakpoint_number + " " + condition)
-        elif modify_what == type_defs.BREAKPOINT_MODIFY.ENABLE:
+        elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE:
             send_command("enable " + breakpoint_number)
-        elif modify_what == type_defs.BREAKPOINT_MODIFY.DISABLE:
+        elif modify_what == typedefs.BREAKPOINT_MODIFY.DISABLE:
             send_command("disable " + breakpoint_number)
-        elif modify_what == type_defs.BREAKPOINT_MODIFY.ENABLE_ONCE:
+        elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE_ONCE:
             send_command("enable once " + breakpoint_number)
-        elif modify_what == type_defs.BREAKPOINT_MODIFY.ENABLE_COUNT:
+        elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE_COUNT:
             if count is None:
                 print("Please set count first")
                 return False
@@ -1601,7 +1601,7 @@ def modify_breakpoint(expression, modify_what, condition=None, count=None):
                 print("Count can't be lower than 1")
                 return False
             send_command("enable count " + str(count) + " " + breakpoint_number)
-        elif modify_what == type_defs.BREAKPOINT_MODIFY.ENABLE_DELETE:
+        elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE_DELETE:
             send_command("enable delete " + breakpoint_number)
         else:
             print("Parameter modify_what is not valid")
@@ -1656,13 +1656,13 @@ def track_watchpoint(expression, length, watchpoint_type):
     Args:
         expression (str): Any gdb expression
         length (int): Length of the watchpoint
-        watchpoint_type (int): Can be a member of type_defs.WATCHPOINT_TYPE
+        watchpoint_type (int): Can be a member of typedefs.WATCHPOINT_TYPE
 
     Returns:
         list: Numbers of the successfully set breakpoints as strings
         None: If fails to set any watchpoint
     """
-    breakpoints = add_watchpoint(expression, length, watchpoint_type, type_defs.BREAKPOINT_ON_HIT.FIND_CODE)
+    breakpoints = add_watchpoint(expression, length, watchpoint_type, typedefs.BREAKPOINT_ON_HIT.FIND_CODE)
     if not breakpoints:
         return
     for breakpoint in breakpoints:
@@ -1691,7 +1691,7 @@ def get_track_watchpoint_info(watchpoint_list):
         float_info-->(dict) Same dict returned from read_float_registers()
         disas_info-->(str) A small section that's disassembled just after previous_pc_counter
     """
-    track_watchpoint_file = SysUtils.get_track_watchpoint_file(currentpid, watchpoint_list)
+    track_watchpoint_file = utils.get_track_watchpoint_file(currentpid, watchpoint_list)
     try:
         output = pickle.load(open(track_watchpoint_file, "rb"))
     except:
@@ -1714,7 +1714,7 @@ def track_breakpoint(expression, register_expressions):
         str: Number of the breakpoint set
         None: If fails to set any breakpoint
     """
-    breakpoint = add_breakpoint(expression, on_hit=type_defs.BREAKPOINT_ON_HIT.FIND_ADDR)
+    breakpoint = add_breakpoint(expression, on_hit=typedefs.BREAKPOINT_ON_HIT.FIND_ADDR)
     if not breakpoint:
         return
     send_command("commands " + breakpoint
@@ -1739,7 +1739,7 @@ def get_track_breakpoint_info(breakpoint):
         value-->(str) Value calculated by given register expression as hex str
         count-->(int) How many times this expression has been reached
     """
-    track_breakpoint_file = SysUtils.get_track_breakpoint_file(currentpid, breakpoint)
+    track_breakpoint_file = utils.get_track_breakpoint_file(currentpid, breakpoint)
     try:
         output = pickle.load(open(track_breakpoint_file, "rb"))
     except:
@@ -1749,7 +1749,7 @@ def get_track_breakpoint_info(breakpoint):
 
 #:tag:Tools
 def trace_instructions(expression, max_trace_count=1000, trigger_condition="", stop_condition="",
-                       step_mode=type_defs.STEP_MODE.SINGLE_STEP,
+                       step_mode=typedefs.STEP_MODE.SINGLE_STEP,
                        stop_after_trace=False, collect_general_registers=True, collect_flag_registers=True,
                        collect_segment_registers=True, collect_float_registers=True):
     """Starts tracing instructions at the address evaluated by the given expression
@@ -1762,7 +1762,7 @@ def trace_instructions(expression, max_trace_count=1000, trigger_condition="", s
         max_trace_count (int): Maximum number of steps will be taken while tracing. Must be greater than or equal to 1
         trigger_condition (str): Optional, any gdb expression. Tracing will start if the condition is met
         stop_condition (str): Optional, any gdb expression. Tracing will stop whenever the condition is met
-        step_mode (int): Can be a member of type_defs.STEP_MODE
+        step_mode (int): Can be a member of typedefs.STEP_MODE
         stop_after_trace (bool): Inferior won't be continuing after the tracing process
         collect_general_registers (bool): Collect general registers while stepping
         collect_flag_registers (bool): Collect flag registers while stepping
@@ -1779,12 +1779,12 @@ def trace_instructions(expression, max_trace_count=1000, trigger_condition="", s
     if type(max_trace_count) != int:
         print("max_trace_count must be an integer")
         return
-    breakpoint = add_breakpoint(expression, on_hit=type_defs.BREAKPOINT_ON_HIT.TRACE)
+    breakpoint = add_breakpoint(expression, on_hit=typedefs.BREAKPOINT_ON_HIT.TRACE)
     if not breakpoint:
         return
-    modify_breakpoint(expression, type_defs.BREAKPOINT_MODIFY.CONDITION, condition=trigger_condition)
-    contents_send = (type_defs.TRACE_STATUS.STATUS_IDLE, "")
-    trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)
+    modify_breakpoint(expression, typedefs.BREAKPOINT_MODIFY.CONDITION, condition=trigger_condition)
+    contents_send = (typedefs.TRACE_STATUS.STATUS_IDLE, "")
+    trace_status_file = utils.get_trace_instructions_status_file(currentpid, breakpoint)
     pickle.dump(contents_send, open(trace_status_file, "wb"))
     param_str = (
         breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers,
@@ -1813,7 +1813,7 @@ def get_trace_instructions_info(breakpoint):
         Any "call" instruction creates a node in SINGLE_STEP mode
         Any "ret" instruction creates a parent regardless of the mode
     """
-    trace_instructions_file = SysUtils.get_trace_instructions_file(currentpid, breakpoint)
+    trace_instructions_file = utils.get_trace_instructions_file(currentpid, breakpoint)
     try:
         output = json.load(open(trace_instructions_file, "r"), object_pairs_hook=OrderedDict)
     except:
@@ -1831,12 +1831,12 @@ def get_trace_instructions_status(breakpoint):
     Returns:
         tuple:(status_id, status_str)
 
-        status_id-->(int) A member of type_defs.TRACE_STATUS
-        status_str-->(str) Status string, only used with type_defs.TRACE_STATUS.STATUS_TRACING
+        status_id-->(int) A member of typedefs.TRACE_STATUS
+        status_str-->(str) Status string, only used with typedefs.TRACE_STATUS.STATUS_TRACING
 
         Returns a tuple of (None, "") if fails to gather info
     """
-    trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)
+    trace_status_file = utils.get_trace_instructions_status_file(currentpid, breakpoint)
     try:
         output = pickle.load(open(trace_status_file, "rb"))
     except:
@@ -1851,8 +1851,8 @@ def cancel_trace_instructions(breakpoint):
     Args:
         breakpoint (str): breakpoint number, must be returned from trace_instructions()
     """
-    status_info = (type_defs.TRACE_STATUS.STATUS_CANCELED, "")
-    trace_status_file = SysUtils.get_trace_instructions_status_file(currentpid, breakpoint)
+    status_info = (typedefs.TRACE_STATUS.STATUS_CANCELED, "")
+    trace_status_file = utils.get_trace_instructions_status_file(currentpid, breakpoint)
     pickle.dump(status_info, open(trace_status_file, "wb"))
 
 
@@ -1871,7 +1871,7 @@ def call_function_from_inferior(expression):
         call_function_from_inferior("printf('123')") returns ("$26","3")
     """
     result = execute_func_temporary_interruption(send_command, f"call (void*(*)(char*, int)) {expression}")
-    filtered_result = common_regexes.convenience_variable.search(result)
+    filtered_result = regexes.convenience_variable.search(result)
     if filtered_result:
         return filtered_result.group(1), filtered_result.group(2)
     return False, False
@@ -1886,7 +1886,7 @@ def find_entry_point():
         None: If fails to find an entry point
     """
     result = send_command("info file")
-    filtered_result = common_regexes.entry_point.search(result)
+    filtered_result = regexes.entry_point.search(result)
     if filtered_result:
         return filtered_result.group(1)
 
@@ -1944,7 +1944,7 @@ def dissect_code(region_list, discard_invalid_strings=True):
 
     Args:
         region_list (list): A list of (start_address, end_address) -> (str, str)
-        Can be returned from functions like SysUtils.filter_regions
+        Can be returned from functions like utils.filter_regions
         discard_invalid_strings (bool): Entries that can't be decoded as utf-8 won't be included in referenced strings
     """
     send_command("pince-dissect-code", send_with_file=True, file_contents_send=(region_list, discard_invalid_strings))
@@ -1967,7 +1967,7 @@ def get_dissect_code_status():
 
         Returns a tuple of ("", "", "", 0, 0, 0) if fails to gather info
     """
-    dissect_code_status_file = SysUtils.get_dissect_code_status_file(currentpid)
+    dissect_code_status_file = utils.get_dissect_code_status_file(currentpid)
     try:
         output = pickle.load(open(dissect_code_status_file, "rb"))
     except:
@@ -2012,22 +2012,22 @@ def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, refere
     """
     dict_list = []
     if referenced_strings:
-        dict_list.append(shelve.open(SysUtils.get_referenced_strings_file(currentpid), "r"))
+        dict_list.append(shelve.open(utils.get_referenced_strings_file(currentpid), "r"))
     if referenced_jumps:
-        dict_list.append(shelve.open(SysUtils.get_referenced_jumps_file(currentpid), "r"))
+        dict_list.append(shelve.open(utils.get_referenced_jumps_file(currentpid), "r"))
     if referenced_calls:
-        dict_list.append(shelve.open(SysUtils.get_referenced_calls_file(currentpid), "r"))
+        dict_list.append(shelve.open(utils.get_referenced_calls_file(currentpid), "r"))
     return dict_list
 
 
 #:tag:Tools
-def search_referenced_strings(searched_str, value_index=type_defs.VALUE_INDEX.INDEX_STRING_UTF8, case_sensitive=False,
+def search_referenced_strings(searched_str, value_index=typedefs.VALUE_INDEX.INDEX_STRING_UTF8, case_sensitive=False,
                               enable_regex=False):
     """Searches for given str in the referenced strings
 
     Args:
         searched_str (str): String that will be searched
-        value_index (int): Can be a member of type_defs.VALUE_INDEX
+        value_index (int): Can be a member of typedefs.VALUE_INDEX
         case_sensitive (bool): If True, search will be case sensitive
         enable_regex (bool): If True, searched_str will be treated as a regex expression
 
@@ -2096,6 +2096,6 @@ def complete_command(gdb_command):
     """
     returned_list = []
     for item in send_command("complete " + gdb_command, cli_output=True).splitlines():
-        if not common_regexes.max_completions_reached.search(item):
+        if not regexes.max_completions_reached.search(item):
             returned_list.append(item)
     return returned_list

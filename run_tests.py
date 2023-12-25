@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import unittest, argparse
-from libpince import GDB_Engine, SysUtils
+from libpince import debugcore, utils
 
 desc = 'Runs all unit tests by creating or attaching to a process'
 ex = 'Example of Usage:' \
@@ -34,7 +34,7 @@ parser.add_argument("-l", metavar="ld_preload_path", type=str, default="",
 
 args = parser.parse_args()
 if args.a:
-    process_list = SysUtils.search_processes(args.a)
+    process_list = utils.search_processes(args.a)
     if not process_list:
         parser.error("There's no process with the name " + args.a)
     if len(process_list) > 1:
@@ -43,15 +43,15 @@ if args.a:
         print("There are more than one process with the name " + args.a)
         exit()
     pid = process_list[0][0]
-    if not GDB_Engine.can_attach(pid):
+    if not debugcore.can_attach(pid):
         parser.error("Failed to attach to the process with pid " + pid)
-    GDB_Engine.attach(pid)
+    debugcore.attach(pid)
 elif args.c:
-    if not GDB_Engine.create_process(args.c, args.o, args.l):
+    if not debugcore.create_process(args.c, args.o, args.l):
         parser.error("Couldn't create the process with current args")
 else:
     parser.error("Provide at least one of these arguments: -a or -c")
-unittest.main(module="tests.GDB_Engine_tests", exit=False, argv=[""])
-unittest.main(module="tests.SysUtils_tests", exit=False, argv=[""])
+unittest.main(module="tests.debugcore_tests", exit=False, argv=[""])
+unittest.main(module="tests.utils_tests", exit=False, argv=[""])
 unittest.main(module="tests.guiutils_tests", exit=False, argv=[""])
-GDB_Engine.detach()
+debugcore.detach()

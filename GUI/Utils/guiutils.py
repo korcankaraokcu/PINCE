@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from libpince import SysUtils, type_defs, common_regexes
+from libpince import utils, typedefs, regexes
 from tr.tr import TranslationConstants as tr
 
 #:tag:GUI
@@ -25,7 +25,7 @@ def get_icons_directory():
     Returns:
         str: Path to the icons directory
     """
-    return SysUtils.get_script_directory() + "/media/icons"
+    return utils.get_script_directory() + "/media/icons"
 
 
 #:tag:GUI
@@ -85,29 +85,29 @@ def resize_to_contents(QTableWidget):
 
 
 #:tag:GUI
-def fill_value_combobox(QCombobox, current_index=type_defs.VALUE_INDEX.INDEX_INT32):
+def fill_value_combobox(QCombobox, current_index=typedefs.VALUE_INDEX.INDEX_INT32):
     """Fills the given QCombobox with value_index strings
 
     Args:
         QCombobox (QCombobox): The combobox that'll be filled
-        current_index (int): Can be a member of type_defs.VALUE_INDEX
+        current_index (int): Can be a member of typedefs.VALUE_INDEX
     """
-    for key in type_defs.index_to_text_dict:
-        QCombobox.addItem(type_defs.index_to_text_dict[key])
+    for key in typedefs.index_to_text_dict:
+        QCombobox.addItem(typedefs.index_to_text_dict[key])
     QCombobox.setCurrentIndex(current_index)
 
 #:tag:GUI
-def fill_endianness_combobox(QCombobox, current_index=type_defs.ENDIANNESS.HOST):
+def fill_endianness_combobox(QCombobox, current_index=typedefs.ENDIANNESS.HOST):
     """Fills the given QCombobox with endianness strings
 
     Args:
         QCombobox (QCombobox): The combobox that'll be filled
-        current_index (int): Can be a member of type_defs.ENDIANNESS
+        current_index (int): Can be a member of typedefs.ENDIANNESS
     """
     endianness_text = [
-        (type_defs.ENDIANNESS.HOST, tr.HOST),
-        (type_defs.ENDIANNESS.LITTLE, tr.LITTLE),
-        (type_defs.ENDIANNESS.BIG, tr.BIG)
+        (typedefs.ENDIANNESS.HOST, tr.HOST),
+        (typedefs.ENDIANNESS.LITTLE, tr.LITTLE),
+        (typedefs.ENDIANNESS.BIG, tr.BIG)
     ]
     for endian, text in endianness_text:
         QCombobox.addItem(text, endian)
@@ -236,7 +236,7 @@ def contains_reference_mark(string):
     Returns:
         bool: True if given string contains the reference mark, False otherwise
     """
-    return True if common_regexes.reference_mark.search(string) else False
+    return True if regexes.reference_mark.search(string) else False
 
 
 #:tag:GUI

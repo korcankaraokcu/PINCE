@@ -23,13 +23,13 @@ gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
 PINCE_PATH = gdbvalue.string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
-from libpince.gdb_python_scripts import ScriptUtils
-from libpince import SysUtils, type_defs, common_regexes
+from libpince.gdb_python_scripts import gdbutils
+from libpince import utils, typedefs, regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
-recv_file = SysUtils.get_ipc_from_pince_file(pid)
-send_file = SysUtils.get_ipc_to_pince_file(pid)
+recv_file = utils.get_ipc_from_pince_file(pid)
+send_file = utils.get_ipc_to_pince_file(pid)
 
 lib = None
 
@@ -53,7 +53,7 @@ def send_to_pince(contents_send):
     pickle.dump(contents_send, open(send_file, "wb"))
 
 
-ScriptUtils.gdbinit()
+gdbutils.gdbinit()
 
 
 class IgnoreErrors(gdb.Command):
@@ -102,9 +102,9 @@ class ReadRegisters(gdb.Command):
         super(ReadRegisters, self).__init__("pince-read-registers", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        registers = ScriptUtils.get_general_registers()
-        registers.update(ScriptUtils.get_flag_registers())
-        registers.update(ScriptUtils.get_segment_registers())
+        registers = gdbutils.get_general_registers()
+        registers.update(gdbutils.get_flag_registers())
+        registers.update(gdbutils.get_segment_registers())
         send_to_pince(registers)
 
 
@@ -113,7 +113,7 @@ class ReadFloatRegisters(gdb.Command):
         super(ReadFloatRegisters, self).__init__("pince-read-float-registers", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        send_to_pince(ScriptUtils.get_float_registers())
+        send_to_pince(gdbutils.get_float_registers())
 
 
 class GetStackTraceInfo(gdb.Command):
@@ -122,18 +122,18 @@ class GetStackTraceInfo(gdb.Command):
 
     def invoke(self, arg, from_tty):
         stacktrace_info_list = []
-        if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+        if gdbutils.current_arch == typedefs.INFERIOR_ARCH.ARCH_64:
             sp_register = "rsp"
         else:
             sp_register = "esp"
-        stack_pointer = ScriptUtils.examine_expression(f"${sp_register}").address
+        stack_pointer = gdbutils.examine_expression(f"${sp_register}").address
         if not stack_pointer:
             print(f"Cannot get the value of ${sp_register}")
             send_to_pince(stacktrace_info_list)
             return
         stack_pointer = int(stack_pointer, 16)
         result = gdb.execute("bt", from_tty, to_string=True)
-        max_frame = common_regexes.max_frame_count.findall(result)[-1]
+        max_frame = regexes.max_frame_count.findall(result)[-1]
 
         # +1 because frame numbers start from 0
         for item in range(int(max_frame) + 1):
@@ -141,12 +141,12 @@ class GetStackTraceInfo(gdb.Command):
                 result = gdb.execute(f"info frame {item}", from_tty, to_string=True)
             except:
                 break
-            frame_address = common_regexes.frame_address.search(result).group(1)
+            frame_address = regexes.frame_address.search(result).group(1)
             difference = hex(int(frame_address, 16) - stack_pointer)
             frame_address_with_difference = frame_address + "(" + sp_register + "+" + difference + ")"
-            return_address = common_regexes.return_address.search(result)
+            return_address = regexes.return_address.search(result)
             if return_address:
-                return_address_with_info = ScriptUtils.examine_expression(return_address.group(1)).all
+                return_address_with_info = gdbutils.examine_expression(return_address.group(1)).all
             else:
                 return_address_with_info = "<>"
             stacktrace_info_list.append([return_address_with_info, frame_address_with_difference])
@@ -159,7 +159,7 @@ class GetStackInfo(gdb.Command):
 
     def invoke(self, arg, from_tty):
         stack_info_list = []
-        if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+        if gdbutils.current_arch == typedefs.INFERIOR_ARCH.ARCH_64:
             chunk_size = 8
             int_format = "Q"
             sp_register = "rsp"
@@ -167,13 +167,13 @@ class GetStackInfo(gdb.Command):
             chunk_size = 4
             int_format = "I"
             sp_register = "esp"
-        sp_address = ScriptUtils.examine_expression(f"${sp_register}").address
+        sp_address = gdbutils.examine_expression(f"${sp_register}").address
         if not sp_address:
             print(f"Cannot get the value of ${sp_register}")
             send_to_pince(stack_info_list)
             return
         sp_address = int(sp_address, 16)
-        with open(ScriptUtils.mem_file, "rb") as FILE:
+        with open(gdbutils.mem_file, "rb") as FILE:
             try:
                 old_position = FILE.seek(sp_address)
             except (OSError, ValueError):
@@ -198,7 +198,7 @@ class GetStackInfo(gdb.Command):
                 except (OSError, ValueError):
                     pointer_data = ""
                 else:
-                    symbol = ScriptUtils.examine_expression(hex_repr).symbol
+                    symbol = gdbutils.examine_expression(hex_repr).symbol
                     if not symbol:
                         pointer_data = "(str)" + read_pointer.decode("utf-8", "ignore")
                     else:
@@ -214,7 +214,7 @@ class GetFrameReturnAddresses(gdb.Command):
     def invoke(self, arg, from_tty):
         return_address_list = []
         result = gdb.execute("bt", from_tty, to_string=True)
-        max_frame = common_regexes.max_frame_count.findall(result)[-1]
+        max_frame = regexes.max_frame_count.findall(result)[-1]
 
         # +1 because frame numbers start from 0
         for item in range(int(max_frame) + 1):
@@ -222,9 +222,9 @@ class GetFrameReturnAddresses(gdb.Command):
                 result = gdb.execute(f"info frame {item}", from_tty, to_string=True)
             except:
                 break
-            return_address = common_regexes.return_address.search(result)
+            return_address = regexes.return_address.search(result)
             if return_address:
-                return_address_with_info = ScriptUtils.examine_expression(return_address.group(1)).all
+                return_address_with_info = gdbutils.examine_expression(return_address.group(1)).all
             else:
                 return_address_with_info = "<>"
             return_address_list.append(return_address_with_info)
@@ -238,7 +238,7 @@ class GetFrameInfo(gdb.Command):
     def invoke(self, arg, from_tty):
         frame_number = receive_from_pince()
         result = gdb.execute("bt", from_tty, to_string=True)
-        max_frame = common_regexes.max_frame_count.findall(result)[-1]
+        max_frame = regexes.max_frame_count.findall(result)[-1]
         if 0 <= int(frame_number) <= int(max_frame):
             frame_info = gdb.execute("info frame " + frame_number, from_tty, to_string=True)
         else:
@@ -253,13 +253,13 @@ class GetTrackWatchpointInfo(gdb.Command):
 
     def invoke(self, arg, from_tty):
         breakpoints = arg
-        current_pc_int = int(SysUtils.extract_address(str(gdb.parse_and_eval("$pc"))), 16)
+        current_pc_int = int(utils.extract_address(str(gdb.parse_and_eval("$pc"))), 16)
         try:
             disas_output = gdb.execute("disas $pc-30,$pc", to_string=True)
 
             # Just before the line "End of assembler dump"
             last_instruction = disas_output.splitlines()[-2]
-            previous_pc_address = SysUtils.extract_address(last_instruction)
+            previous_pc_address = utils.extract_address(last_instruction)
         except:
             previous_pc_address = hex(current_pc_int)
         global track_watchpoint_dict
@@ -269,14 +269,14 @@ class GetTrackWatchpointInfo(gdb.Command):
             if breakpoints not in track_watchpoint_dict:
                 track_watchpoint_dict[breakpoints] = OrderedDict()
             count = 1
-        register_info = ScriptUtils.get_general_registers()
-        register_info.update(ScriptUtils.get_flag_registers())
-        register_info.update(ScriptUtils.get_segment_registers())
-        float_info = ScriptUtils.get_float_registers()
+        register_info = gdbutils.get_general_registers()
+        register_info.update(gdbutils.get_flag_registers())
+        register_info.update(gdbutils.get_segment_registers())
+        float_info = gdbutils.get_float_registers()
         disas_info = gdb.execute("disas " + previous_pc_address + ",+40", to_string=True).replace("=>", "  ")
         track_watchpoint_dict[breakpoints][current_pc_int] = [count, previous_pc_address, register_info, float_info,
                                                               disas_info]
-        track_watchpoint_file = SysUtils.get_track_watchpoint_file(pid, breakpoints)
+        track_watchpoint_file = utils.get_track_watchpoint_file(pid, breakpoints)
         pickle.dump(track_watchpoint_dict[breakpoints], open(track_watchpoint_file, "wb"))
 
 
@@ -297,7 +297,7 @@ class GetTrackBreakpointInfo(gdb.Command):
             if not register_expression in track_breakpoint_dict[breakpoint_number]:
                 track_breakpoint_dict[breakpoint_number][register_expression] = OrderedDict()
             try:
-                address = ScriptUtils.examine_expression(register_expression).address
+                address = gdbutils.examine_expression(register_expression).address
             except:
                 address = None
             if address:
@@ -305,7 +305,7 @@ class GetTrackBreakpointInfo(gdb.Command):
                     track_breakpoint_dict[breakpoint_number][register_expression][address] = 1
                 else:
                     track_breakpoint_dict[breakpoint_number][register_expression][address] += 1
-        track_breakpoint_file = SysUtils.get_track_breakpoint_file(pid, breakpoint_number)
+        track_breakpoint_file = utils.get_track_breakpoint_file(pid, breakpoint_number)
         pickle.dump(track_breakpoint_dict[breakpoint_number], open(track_breakpoint_file, "wb"))
 
 
@@ -335,7 +335,7 @@ class TraceInstructions(gdb.Command):
         (breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers,
          collect_flag_registers, collect_segment_registers, collect_float_registers) = eval(arg)
         gdb.execute("delete " + breakpoint)
-        trace_status_file = SysUtils.get_trace_instructions_status_file(pid, breakpoint)
+        trace_status_file = utils.get_trace_instructions_status_file(pid, breakpoint)
 
         # The reason we don't use a tree class is to make the tree json-compatible
         # tree format-->[node1, node2, node3, ...]
@@ -350,27 +350,27 @@ class TraceInstructions(gdb.Command):
         for x in range(max_trace_count):
             try:
                 output = pickle.load(open(trace_status_file, "rb"))
-                if output[0] == type_defs.TRACE_STATUS.STATUS_CANCELED:
+                if output[0] == typedefs.TRACE_STATUS.STATUS_CANCELED:
                     break
             except:
                 pass
             line_info = gdb.execute("x/i $pc", to_string=True).splitlines()[0].split(maxsplit=1)[1]
             collect_dict = OrderedDict()
             if collect_general_registers:
-                collect_dict.update(ScriptUtils.get_general_registers())
+                collect_dict.update(gdbutils.get_general_registers())
             if collect_flag_registers:
-                collect_dict.update(ScriptUtils.get_flag_registers())
+                collect_dict.update(gdbutils.get_flag_registers())
             if collect_segment_registers:
-                collect_dict.update(ScriptUtils.get_segment_registers())
+                collect_dict.update(gdbutils.get_segment_registers())
             if collect_float_registers:
-                collect_dict.update(ScriptUtils.get_float_registers())
+                collect_dict.update(gdbutils.get_float_registers())
             current_index += 1
             tree.append([(line_info, collect_dict), current_root_index, []])
             tree[current_root_index][2].append(current_index)  # Add a child
-            status_info = (type_defs.TRACE_STATUS.STATUS_TRACING,
+            status_info = (typedefs.TRACE_STATUS.STATUS_TRACING,
                            line_info + "\n(" + str(x + 1) + "/" + str(max_trace_count) + ")")
             pickle.dump(status_info, open(trace_status_file, "wb"))
-            if common_regexes.trace_instructions_ret.search(line_info):
+            if regexes.trace_instructions_ret.search(line_info):
                 if tree[current_root_index][1] is None:  # If no parents exist
                     current_index += 1
                     tree.append([("", None), None, [current_root_index]])
@@ -379,8 +379,8 @@ class TraceInstructions(gdb.Command):
                     root_index = current_root_index  # set new root
                 else:
                     current_root_index = tree[current_root_index][1]  # current_node=current_node.parent
-            elif step_mode == type_defs.STEP_MODE.SINGLE_STEP:
-                if common_regexes.trace_instructions_call.search(line_info):
+            elif step_mode == typedefs.STEP_MODE.SINGLE_STEP:
+                if regexes.trace_instructions_call.search(line_info):
                     current_root_index = current_index
             if stop_condition:
                 try:
@@ -388,15 +388,15 @@ class TraceInstructions(gdb.Command):
                         break
                 except:
                     pass
-            if step_mode == type_defs.STEP_MODE.SINGLE_STEP:
+            if step_mode == typedefs.STEP_MODE.SINGLE_STEP:
                 gdb.execute("stepi", to_string=True)
-            elif step_mode == type_defs.STEP_MODE.STEP_OVER:
+            elif step_mode == typedefs.STEP_MODE.STEP_OVER:
                 gdb.execute("nexti", to_string=True)
-        status_info = (type_defs.TRACE_STATUS.STATUS_PROCESSING, "")
+        status_info = (typedefs.TRACE_STATUS.STATUS_PROCESSING, "")
         pickle.dump(status_info, open(trace_status_file, "wb"))
-        trace_instructions_file = SysUtils.get_trace_instructions_file(pid, breakpoint)
+        trace_instructions_file = utils.get_trace_instructions_file(pid, breakpoint)
         json.dump((tree, root_index), open(trace_instructions_file, "w"))
-        status_info = (type_defs.TRACE_STATUS.STATUS_FINISHED, "")
+        status_info = (typedefs.TRACE_STATUS.STATUS_FINISHED, "")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         if not stop_after_trace:
             gdb.execute("c&")
@@ -461,17 +461,17 @@ class DissectCode(gdb.Command):
         return True
 
     def invoke(self, arg, from_tty):
-        if ScriptUtils.current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+        if gdbutils.current_arch == typedefs.INFERIOR_ARCH.ARCH_64:
             disas_option = distorm3.Decode64Bits
         else:
             disas_option = distorm3.Decode32Bits
-        referenced_strings_dict = shelve.open(SysUtils.get_referenced_strings_file(pid), writeback=True)
-        referenced_jumps_dict = shelve.open(SysUtils.get_referenced_jumps_file(pid), writeback=True)
-        referenced_calls_dict = shelve.open(SysUtils.get_referenced_calls_file(pid), writeback=True)
+        referenced_strings_dict = shelve.open(utils.get_referenced_strings_file(pid), writeback=True)
+        referenced_jumps_dict = shelve.open(utils.get_referenced_jumps_file(pid), writeback=True)
+        referenced_calls_dict = shelve.open(utils.get_referenced_calls_file(pid), writeback=True)
         region_list, discard_invalid_strings = receive_from_pince()
-        dissect_code_status_file = SysUtils.get_dissect_code_status_file(pid)
+        dissect_code_status_file = utils.get_dissect_code_status_file(pid)
         region_count = len(region_list)
-        self.memory = open(ScriptUtils.mem_file, "rb")
+        self.memory = open(gdbutils.mem_file, "rb")
 
         # Has the best record of 111 secs. Tested on Torchlight 2 with Intel i7-4702MQ CPU and 8GB RAM
         buffer = 0x10000  # Aligned to 2**16
@@ -509,12 +509,12 @@ class DissectCode(gdb.Command):
                     if isinstance(instruction, bytes):
                         instruction = instruction.decode()
                     if instruction.startswith("J") or instruction.startswith("LOOP"):
-                        found = common_regexes.dissect_code_valid_address.search(instruction)
+                        found = regexes.dissect_code_valid_address.search(instruction)
                         if found:
-                            referenced_address_str = common_regexes.hex_number.search(found.group(0)).group(0)
+                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int):
-                                instruction_only = common_regexes.alphanumerics.search(instruction).group(0).casefold()
+                                instruction_only = regexes.alphanumerics.search(instruction).group(0).casefold()
                                 try:
                                     referenced_jumps_dict[referenced_address_str][instruction_offset] = instruction_only
                                 except KeyError:
@@ -522,9 +522,9 @@ class DissectCode(gdb.Command):
                                     referenced_jumps_dict[referenced_address_str][instruction_offset] = instruction_only
                                     ref_jmp_count += 1
                     elif instruction.startswith("CALL"):
-                        found = common_regexes.dissect_code_valid_address.search(instruction)
+                        found = regexes.dissect_code_valid_address.search(instruction)
                         if found:
-                            referenced_address_str = common_regexes.hex_number.search(found.group(0)).group(0)
+                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int):
                                 try:
@@ -534,9 +534,9 @@ class DissectCode(gdb.Command):
                                     referenced_calls_dict[referenced_address_str].add(instruction_offset)
                                     ref_call_count += 1
                     else:
-                        found = common_regexes.dissect_code_valid_address.search(instruction)
+                        found = regexes.dissect_code_valid_address.search(instruction)
                         if found:
-                            referenced_address_str = common_regexes.hex_number.search(found.group(0)).group(0)
+                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0)
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
                                 try:
@@ -564,10 +564,10 @@ class SearchReferencedCalls(gdb.Command):
             except Exception as e:
                 print("An exception occurred while trying to compile the given regex\n", str(e))
                 return
-        str_dict = shelve.open(SysUtils.get_referenced_calls_file(pid), "r")
+        str_dict = shelve.open(utils.get_referenced_calls_file(pid), "r")
         returned_list = []
         for index, item in enumerate(str_dict):
-            symbol = ScriptUtils.examine_expression(item).all
+            symbol = gdbutils.examine_expression(item).all
             if not symbol:
                 continue
             if enable_regex:
@@ -594,9 +594,9 @@ class ExamineExpressions(gdb.Command):
         contents_recv = receive_from_pince()
         # contents_recv format: [expression1, expression2, ...]
 
-        regions = SysUtils.get_regions(pid)
+        regions = utils.get_regions(pid)
         for expression in contents_recv:
-            result_tuple = ScriptUtils.examine_expression(expression, regions)
+            result_tuple = gdbutils.examine_expression(expression, regions)
             data_read_list.append(result_tuple)
         send_to_pince(data_read_list)
 
@@ -619,7 +619,7 @@ class SearchFunctions(gdb.Command):
             output = ""
         gdb.execute("set case-sensitive auto")
         for line in output.splitlines():
-            non_debugging = common_regexes.info_functions_non_debugging.search(line)
+            non_debugging = regexes.info_functions_non_debugging.search(line)
             if non_debugging:
                 function_list.append((non_debugging.group(1), non_debugging.group(2)))
             else:

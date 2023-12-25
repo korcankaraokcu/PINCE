@@ -23,19 +23,19 @@ PINCE_PATH = gdb.parse_and_eval("$PINCE_PATH").string()
 GDBINIT_AA_PATH = gdb.parse_and_eval("$GDBINIT_AA_PATH").string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
-from libpince import SysUtils, type_defs, common_regexes
+from libpince import utils, typedefs, regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
-inferior_name = SysUtils.get_process_name(pid)
+inferior_name = utils.get_process_name(pid)
 mem_file = "/proc/" + str(pid) + "/mem"
 
 void_ptr = gdb.lookup_type("void").pointer()
 
 if str(gdb.parse_and_eval("$rax")) == "void":
-    current_arch = type_defs.INFERIOR_ARCH.ARCH_32
+    current_arch = typedefs.INFERIOR_ARCH.ARCH_32
 else:
-    current_arch = type_defs.INFERIOR_ARCH.ARCH_64
+    current_arch = typedefs.INFERIOR_ARCH.ARCH_64
 
 
 # Use this function instead of the .gdbinit file
@@ -66,10 +66,10 @@ def print_exception(func):
 
 def get_general_registers():
     contents_send = OrderedDict()
-    if current_arch == type_defs.INFERIOR_ARCH.ARCH_64:
-        general_register_list = type_defs.REGISTERS.GENERAL_64
+    if current_arch == typedefs.INFERIOR_ARCH.ARCH_64:
+        general_register_list = typedefs.REGISTERS.GENERAL_64
     else:
-        general_register_list = type_defs.REGISTERS.GENERAL_32
+        general_register_list = typedefs.REGISTERS.GENERAL_32
     for item in general_register_list:
         contents_send[item] = examine_expression("$" + item).address
     return contents_send
@@ -98,17 +98,17 @@ def get_flag_registers():
 
 def get_segment_registers():
     contents_send = OrderedDict()
-    for item in type_defs.REGISTERS.SEGMENT:
+    for item in typedefs.REGISTERS.SEGMENT:
         contents_send[item] = examine_expression("$" + item).address
     return contents_send
 
 
 def get_float_registers():
     contents_send = OrderedDict()
-    for register in type_defs.REGISTERS.FLOAT.ST:
+    for register in typedefs.REGISTERS.FLOAT.ST:
         value = gdb.parse_and_eval("$" + register)
         contents_send[register] = str(value)
-    for register in type_defs.REGISTERS.FLOAT.XMM:
+    for register in typedefs.REGISTERS.FLOAT.XMM:
         value = gdb.parse_and_eval("$" + register + ".v4_float")
         contents_send[register] = str(value)
     return contents_send
@@ -119,20 +119,20 @@ def examine_expression(expression, regions=None):
         value = gdb.parse_and_eval(expression).cast(void_ptr)
     except Exception as e:
         if regions:  # this check comes first for optimization
-            offset = common_regexes.offset_expression.search(expression)
+            offset = regexes.offset_expression.search(expression)
             if offset:
                 offset = offset.group(0)
                 expression = expression.split(offset[0])[0]
             else:
                 offset = "+0"
-            index = common_regexes.index.search(expression)
+            index = regexes.index.search(expression)
             if index:
                 expression = expression[:index.start()]
                 index = int(index.group(1))
             else:
                 index = 0
             count = 0
-            if expression == inferior_name or common_regexes.file_with_extension.search(expression):
+            if expression == inferior_name or regexes.file_with_extension.search(expression):
                 for address, _, _, _, _, _, path in regions:
                     file_name = os.path.split(path)[1]
                     if expression in file_name:
@@ -142,11 +142,11 @@ def examine_expression(expression, regions=None):
                                 address = hex(eval(address+offset))
                             except Exception as e:
                                 print(e)
-                                return type_defs.tuple_examine_expression(None, None, None)
-                            return type_defs.tuple_examine_expression(address+file_name, address, file_name)
+                                return typedefs.tuple_examine_expression(None, None, None)
+                            return typedefs.tuple_examine_expression(address+file_name, address, file_name)
                         else:
                             count += 1
         print(e)
-        return type_defs.tuple_examine_expression(None, None, None)
-    result = common_regexes.address_with_symbol.search(str(value))
-    return type_defs.tuple_examine_expression(*result.groups())
+        return typedefs.tuple_examine_expression(None, None, None)
+    result = regexes.address_with_symbol.search(str(value))
+    return typedefs.tuple_examine_expression(*result.groups())

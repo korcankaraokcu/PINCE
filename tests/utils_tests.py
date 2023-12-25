@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import unittest
-from libpince import SysUtils
+from libpince import utils
 
 
-class SysUtils_tests(unittest.TestCase):
+class utils_tests(unittest.TestCase):
     def test_split_symbol(self):
-        self.assertListEqual(SysUtils.split_symbol("func(param)@plt"), ["func", "func(param)", "func(param)@plt"])
+        self.assertListEqual(utils.split_symbol("func(param)@plt"), ["func", "func(param)", "func(param)@plt"])
