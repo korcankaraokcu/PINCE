@@ -39,7 +39,7 @@ from typing import Final
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect
 
-from libpince import SysUtils, GDB_Engine, type_defs
+from libpince import utils, debugcore, typedefs
 from libpince.libscanmem.scanmem import Scanmem
 from GUI.Settings.themes import change_theme
 from GUI.Utils import guiutils
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     app.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
     app.setApplicationName("PINCE")
     QSettings.setPath(QSettings.Format.NativeFormat, QSettings.Scope.UserScope,
-                      SysUtils.get_user_path(type_defs.USER_PATHS.CONFIG_PATH))
+                      utils.get_user_path(typedefs.USER_PATHS.CONFIG_PATH))
     settings = QSettings()
     translator = QTranslator()
     locale = settings.value("General/locale", type=str)
@@ -311,7 +311,7 @@ exp_cache = {}
 # vars for communication with the non blocking threads
 exiting = 0
 
-scanmem = Scanmem(os.path.join(SysUtils.get_libpince_directory(), "libscanmem", "libscanmem.so"))
+scanmem = Scanmem(os.path.join(utils.get_libpince_directory(), "libscanmem", "libscanmem.so"))
 
 threadpool = QThreadPool()
 # Placeholder number, may have to be changed in the future
@@ -337,7 +337,7 @@ class Worker(QRunnable):
 
 def except_hook(exception_type, value, tb):
     focused_widget = app.focusWidget()
-    if focused_widget and exception_type == type_defs.GDBInitializeException:
+    if focused_widget and exception_type == typedefs.GDBInitializeException:
         QMessageBox.information(focused_widget, tr.ERROR, tr.GDB_INIT)
     traceback.print_exception(exception_type, value, tb)
 
@@ -348,18 +348,18 @@ sys.excepthook = except_hook
 
 
 def signal_handler(signal, frame):
-    if GDB_Engine.lock_send_command.locked():
+    if debugcore.lock_send_command.locked():
         print("\nCancelling the last GDB command")
-        GDB_Engine.cancel_last_command()
+        debugcore.cancel_last_command()
     else:
         try:
             text = input("\nNo GDB command to cancel, quit PINCE? (y/n)")
             if text.lower().startswith("y"):
-                GDB_Engine.detach()
+                debugcore.detach()
                 quit()
         except RuntimeError:
             print()  # Prints a newline so the terminal looks nicer when we quit
-            GDB_Engine.detach()
+            debugcore.detach()
             quit()
 
 
@@ -372,8 +372,8 @@ class AwaitProcessExit(QThread):
 
     def run(self):
         while True:
-            with GDB_Engine.process_exited_condition:
-                GDB_Engine.process_exited_condition.wait()
+            with debugcore.process_exited_condition:
+                debugcore.process_exited_condition.wait()
             self.process_exited.emit()
 
 
@@ -386,7 +386,7 @@ class AwaitAsyncOutput(QThread):
         self.queue_active = True
 
     def run(self):
-        async_output_queue = GDB_Engine.gdb_async_output.register_queue()
+        async_output_queue = debugcore.gdb_async_output.register_queue()
         while self.queue_active:
             try:
                 async_output = async_output_queue.get(timeout=5)
@@ -394,7 +394,7 @@ class AwaitAsyncOutput(QThread):
                 pass
             else:
                 self.async_output_ready.emit(async_output)
-        GDB_Engine.gdb_async_output.delete_queue(async_output_queue)
+        debugcore.gdb_async_output.delete_queue(async_output_queue)
 
     def stop(self):
         self.queue_active = False
@@ -406,11 +406,11 @@ class CheckInferiorStatus(QThread):
 
     def run(self):
         while True:
-            with GDB_Engine.status_changed_condition:
-                GDB_Engine.status_changed_condition.wait()
-            if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_STOPPED:
+            with debugcore.status_changed_condition:
+                debugcore.status_changed_condition.wait()
+            if debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_STOPPED:
                 self.process_stopped.emit()
-            elif GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+            elif debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
                 self.process_running.emit()
 
 
@@ -432,11 +432,11 @@ class MainForm(QMainWindow, MainWindow):
             Hotkeys.break_hotkey: self.break_hotkey_pressed,
             Hotkeys.continue_hotkey: self.continue_hotkey_pressed,
             Hotkeys.toggle_attach_hotkey: self.toggle_attach_hotkey_pressed,
-            Hotkeys.exact_scan_hotkey: lambda: self.nextscan_hotkey_pressed(type_defs.SCAN_TYPE.EXACT),
-            Hotkeys.increased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(type_defs.SCAN_TYPE.INCREASED),
-            Hotkeys.decreased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(type_defs.SCAN_TYPE.DECREASED),
-            Hotkeys.changed_scan_hotkey: lambda: self.nextscan_hotkey_pressed(type_defs.SCAN_TYPE.CHANGED),
-            Hotkeys.unchanged_scan_hotkey: lambda: self.nextscan_hotkey_pressed(type_defs.SCAN_TYPE.UNCHANGED)
+            Hotkeys.exact_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.EXACT),
+            Hotkeys.increased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.INCREASED),
+            Hotkeys.decreased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.DECREASED),
+            Hotkeys.changed_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.CHANGED),
+            Hotkeys.unchanged_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.UNCHANGED)
         }
         for hotkey, func in hotkey_to_func.items():
             hotkey.change_func(func)
@@ -448,7 +448,8 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 110)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.settings = QSettings()
-        if not SysUtils.is_path_valid(self.settings.fileName()):
+        settings_path = self.settings.fileName()
+        if not utils.is_path_valid(settings_path):
             self.set_default_settings()
         try:
             settings_version = self.settings.value("Misc/version", type=str)
@@ -457,16 +458,16 @@ class MainForm(QMainWindow, MainWindow):
             settings_version = None
         if settings_version != current_settings_version:
             print("Settings version mismatch, rolling back to the default configuration")
-            self.settings.clear()
+            os.remove(settings_path)
             self.set_default_settings()
         try:
             self.apply_settings()
         except Exception as e:
             print("An exception occurred while loading settings, rolling back to the default configuration\n", e)
-            self.settings.clear()
+            os.remove(settings_path)
             self.set_default_settings()
         try:
-            GDB_Engine.init_gdb(gdb_path)
+            debugcore.init_gdb(gdb_path)
         except pexpect.EOF:
             InputDialogForm.setPalette(change_theme(theme))
             InputDialogForm(item_list=[(tr.GDB_INIT_ERROR, None)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
@@ -507,7 +508,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_UndoScan.clicked.connect(self.pushButton_UndoScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
-        self.scan_mode = type_defs.SCAN_MODE.NEW
+        self.scan_mode = typedefs.SCAN_MODE.NEW
         self.pushButton_NewFirstScan_clicked()
         self.comboBox_ScanScope_init()
         self.comboBox_ValueType_init()
@@ -560,7 +561,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("auto_update_address_table", True)
         self.settings.setValue("address_table_update_interval", 500)
         self.settings.setValue("freeze_interval", 100)
-        self.settings.setValue("gdb_output_mode", type_defs.gdb_output_mode(True, True, True))
+        self.settings.setValue("gdb_output_mode", typedefs.gdb_output_mode(True, True, True))
         self.settings.setValue("auto_attach_list", "")
         self.settings.setValue("auto_attach_regex", False)
         self.settings.setValue("locale", get_locale())
@@ -572,14 +573,14 @@ class MainForm(QMainWindow, MainWindow):
             self.settings.setValue(hotkey.name, hotkey.default)
         self.settings.endGroup()
         self.settings.beginGroup("CodeInjection")
-        self.settings.setValue("code_injection_method", type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL)
+        self.settings.setValue("code_injection_method", typedefs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL)
         self.settings.endGroup()
         self.settings.beginGroup("Disassemble")
         self.settings.setValue("bring_disassemble_to_front", False)
         self.settings.setValue("instructions_per_scroll", 2)
         self.settings.endGroup()
         self.settings.beginGroup("Debug")
-        self.settings.setValue("gdb_path", type_defs.PATHS.GDB_PATH)
+        self.settings.setValue("gdb_path", typedefs.PATHS.GDB_PATH)
         self.settings.setValue("gdb_logging", False)
         self.settings.setValue("ignored_signals", "1,1,1,0")
         self.settings.endGroup()
@@ -596,12 +597,12 @@ class MainForm(QMainWindow, MainWindow):
         exp_cache.clear()
         gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
         ignored_signals = self.settings.value("Debug/ignored_signals", type=str)
-        GDB_Engine.set_logging(gdb_logging)
+        debugcore.set_logging(gdb_logging)
         for index, ignore_status in enumerate(ignored_signals.split(",")):
             if ignore_status == "1":
-                GDB_Engine.ignore_signal(signal_list[index])
+                debugcore.ignore_signal(signal_list[index])
             else:
-                GDB_Engine.unignore_signal(signal_list[index])
+                debugcore.unignore_signal(signal_list[index])
 
     def apply_settings(self):
         global update_table
@@ -626,9 +627,9 @@ class MainForm(QMainWindow, MainWindow):
         auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
         locale = self.settings.value("General/locale", type=str)
         logo_path = self.settings.value("General/logo_path", type=str)
-        app.setWindowIcon(QIcon(os.path.join(SysUtils.get_logo_directory(), logo_path)))
+        app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
         theme = self.settings.value("General/theme", type=str)
-        GDB_Engine.set_gdb_output_mode(gdb_output_mode)
+        debugcore.set_gdb_output_mode(gdb_output_mode)
         for hotkey in Hotkeys.get_hotkeys():
             hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
         try:
@@ -639,7 +640,7 @@ class MainForm(QMainWindow, MainWindow):
         bring_disassemble_to_front = self.settings.value("Disassemble/bring_disassemble_to_front", type=bool)
         instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
         gdb_path = self.settings.value("Debug/gdb_path", type=str)
-        if GDB_Engine.gdb_initialized:
+        if debugcore.gdb_initialized:
             self.apply_after_init()
 
     # Check if any process should be attached to automatically
@@ -653,14 +654,14 @@ class MainForm(QMainWindow, MainWindow):
             except:
                 print("Auto-attach failed: " + auto_attach_list + " isn't a valid regex")
                 return
-            for pid, _, name in SysUtils.get_process_list():
+            for pid, _, name in utils.get_process_list():
                 if compiled_re.search(name):
                     self.attach_to_pid(pid)
                     self.flashAttachButton = False
                     return
         else:
             for target in auto_attach_list.split(";"):
-                for pid, _, name in SysUtils.get_process_list():
+                for pid, _, name in utils.get_process_list():
                     if name.find(target) != -1:
                         self.attach_to_pid(pid)
                         self.flashAttachButton = False
@@ -670,29 +671,29 @@ class MainForm(QMainWindow, MainWindow):
     # Writing a custom event loop instead of ignoring exceptions could work as well but honestly, this looks cleaner
     # Keyboard package does not play well with Qt, do not use anything Qt related with hotkeys
     # Instead of using Qt functions, try to use their signals to prevent crashes
-    @SysUtils.ignore_exceptions
+    @utils.ignore_exceptions
     def pause_hotkey_pressed(self):
-        GDB_Engine.interrupt_inferior(type_defs.STOP_REASON.PAUSE)
+        debugcore.interrupt_inferior(typedefs.STOP_REASON.PAUSE)
 
-    @SysUtils.ignore_exceptions
+    @utils.ignore_exceptions
     def break_hotkey_pressed(self):
-        GDB_Engine.interrupt_inferior()
+        debugcore.interrupt_inferior()
 
-    @SysUtils.ignore_exceptions
+    @utils.ignore_exceptions
     def continue_hotkey_pressed(self):
-        GDB_Engine.continue_inferior()
+        debugcore.continue_inferior()
 
-    @SysUtils.ignore_exceptions
+    @utils.ignore_exceptions
     def toggle_attach_hotkey_pressed(self):
-        result = GDB_Engine.toggle_attach()
+        result = debugcore.toggle_attach()
         if not result:
             print("Unable to toggle attach")
-        elif result == type_defs.TOGGLE_ATTACH.DETACHED:
+        elif result == typedefs.TOGGLE_ATTACH.DETACHED:
             self.on_status_detached()
 
-    @SysUtils.ignore_exceptions
+    @utils.ignore_exceptions
     def nextscan_hotkey_pressed(self, index):
-        if self.scan_mode == type_defs.SCAN_MODE.NEW:
+        if self.scan_mode == typedefs.SCAN_MODE.NEW:
             return
         self.comboBox_ScanType.setCurrentIndex(index)
         self.pushButton_NextScan.clicked.emit()
@@ -738,12 +739,12 @@ class MainForm(QMainWindow, MainWindow):
             guiutils.delete_menu_entries(menu, deletion_list)
         else:
             value_type = current_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-            if type_defs.VALUE_INDEX.is_integer(value_type.value_index):
-                if value_type.value_repr is type_defs.VALUE_REPR.HEX:
+            if typedefs.VALUE_INDEX.is_integer(value_type.value_index):
+                if value_type.value_repr is typedefs.VALUE_REPR.HEX:
                     guiutils.delete_menu_entries(menu, [show_unsigned, show_signed, show_hex])
-                elif value_type.value_repr is type_defs.VALUE_REPR.UNSIGNED:
+                elif value_type.value_repr is typedefs.VALUE_REPR.UNSIGNED:
                     guiutils.delete_menu_entries(menu, [show_unsigned, show_dec])
-                elif value_type.value_repr is type_defs.VALUE_REPR.SIGNED:
+                elif value_type.value_repr is typedefs.VALUE_REPR.SIGNED:
                     guiutils.delete_menu_entries(menu, [show_signed, show_dec])
                 if current_row.checkState(FROZEN_COL) == Qt.CheckState.Unchecked:
                     guiutils.delete_menu_entries(menu, [freeze_menu.menuAction()])
@@ -759,19 +760,19 @@ class MainForm(QMainWindow, MainWindow):
             edit_address: self.treeWidget_AddressTable_edit_address,
             edit_type: self.treeWidget_AddressTable_edit_type,
             edit_value: self.treeWidget_AddressTable_edit_value,
-            show_hex: lambda: self.treeWidget_AddressTable_change_repr(type_defs.VALUE_REPR.HEX),
-            show_dec: lambda: self.treeWidget_AddressTable_change_repr(type_defs.VALUE_REPR.UNSIGNED),
-            show_unsigned: lambda: self.treeWidget_AddressTable_change_repr(type_defs.VALUE_REPR.UNSIGNED),
-            show_signed: lambda: self.treeWidget_AddressTable_change_repr(type_defs.VALUE_REPR.SIGNED),
+            show_hex: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.HEX),
+            show_dec: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.UNSIGNED),
+            show_unsigned: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.UNSIGNED),
+            show_signed: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.SIGNED),
             toggle_record: self.toggle_records,
-            freeze_default: lambda: self.change_freeze_type(type_defs.FREEZE_TYPE.DEFAULT),
-            freeze_inc: lambda: self.change_freeze_type(type_defs.FREEZE_TYPE.INCREMENT),
-            freeze_dec: lambda: self.change_freeze_type(type_defs.FREEZE_TYPE.DECREMENT),
+            freeze_default: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT),
+            freeze_inc: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.INCREMENT),
+            freeze_dec: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.DECREMENT),
             browse_region: self.browse_region_for_selected_row,
             disassemble: self.disassemble_selected_row,
-            what_writes: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.WRITE_ONLY),
-            what_reads: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.READ_ONLY),
-            what_accesses: lambda: self.exec_track_watchpoint_widget(type_defs.WATCHPOINT_TYPE.BOTH),
+            what_writes: lambda: self.exec_track_watchpoint_widget(typedefs.WATCHPOINT_TYPE.WRITE_ONLY),
+            what_reads: lambda: self.exec_track_watchpoint_widget(typedefs.WATCHPOINT_TYPE.READ_ONLY),
+            what_accesses: lambda: self.exec_track_watchpoint_widget(typedefs.WATCHPOINT_TYPE.BOTH),
             cut_record: self.cut_records,
             copy_record: self.copy_records,
             paste_record: self.paste_records,
@@ -790,7 +791,7 @@ class MainForm(QMainWindow, MainWindow):
             return
         address = selected_row.text(ADDR_COL).strip("P->")  # @todo Maybe rework address grabbing logic in the future
         address_data = selected_row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
-        if isinstance(address_data, type_defs.PointerType):
+        if isinstance(address_data, typedefs.PointerType):
             selection_dialog = TrackSelectorDialogForm()
             selection_dialog.setPalette(change_theme(theme))
             selection_dialog.exec()
@@ -799,14 +800,14 @@ class MainForm(QMainWindow, MainWindow):
             if selection_dialog.selection == "pointer":
                 address = address_data.get_base_address()
         value_type = selected_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-        if type_defs.VALUE_INDEX.is_string(value_type.value_index):
+        if typedefs.VALUE_INDEX.is_string(value_type.value_index):
             value_text = selected_row.text(VALUE_COL)
-            encoding, option = type_defs.string_index_to_encoding_dict[value_type.value_index]
+            encoding, option = typedefs.string_index_to_encoding_dict[value_type.value_index]
             byte_len = len(value_text.encode(encoding, option))
-        elif value_type.value_index == type_defs.VALUE_INDEX.INDEX_AOB:
+        elif value_type.value_index == typedefs.VALUE_INDEX.INDEX_AOB:
             byte_len = value_type.length
         else:
-            byte_len = type_defs.index_to_valuetype_dict[value_type.value_index][0]
+            byte_len = typedefs.index_to_valuetype_dict[value_type.value_index][0]
         TrackWatchpointWidgetForm.setPalette(change_theme(theme))
         TrackWatchpointWidgetForm(address, byte_len, watchpoint_type, self).show()
 
@@ -833,13 +834,13 @@ class MainForm(QMainWindow, MainWindow):
             frozen.freeze_type = freeze_type
 
             # TODO: Create a QWidget subclass with signals so freeze type can be changed by clicking on the cell
-            if freeze_type == type_defs.FREEZE_TYPE.DEFAULT:
+            if freeze_type == typedefs.FREEZE_TYPE.DEFAULT:
                 row.setText(FROZEN_COL, "")
                 row.setForeground(FROZEN_COL, QBrush())
-            elif freeze_type == type_defs.FREEZE_TYPE.INCREMENT:
+            elif freeze_type == typedefs.FREEZE_TYPE.INCREMENT:
                 row.setText(FROZEN_COL, "▲")
                 row.setForeground(FROZEN_COL, QBrush(QColor(0, 255, 0)))
-            elif freeze_type == type_defs.FREEZE_TYPE.DECREMENT:
+            elif freeze_type == typedefs.FREEZE_TYPE.DECREMENT:
                 row.setText(FROZEN_COL, "▼")
                 row.setForeground(FROZEN_COL, QBrush(QColor(255, 0, 0)))
 
@@ -898,15 +899,15 @@ class MainForm(QMainWindow, MainWindow):
         for rec in records:
             row = QTreeWidgetItem()
             row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
-            frozen = type_defs.Frozen("", type_defs.FREEZE_TYPE.DEFAULT)
+            frozen = typedefs.Frozen("", typedefs.FREEZE_TYPE.DEFAULT)
             row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
 
             # Deserialize the address_expr & value_type param
             if type(rec[1]) in [list, tuple]:
-                address_expr = type_defs.PointerType(*rec[1])
+                address_expr = typedefs.PointerType(*rec[1])
             else:
                 address_expr = rec[1]
-            value_type = type_defs.ValueType(*rec[2])
+            value_type = typedefs.ValueType(*rec[2])
             self.change_address_table_entries(row, rec[0], address_expr, value_type)
             self.insert_records(rec[-1], row, 0)
             rows.append(row)
@@ -963,7 +964,7 @@ class MainForm(QMainWindow, MainWindow):
             (item.parent() or root).removeChild(item)
 
     def treeWidget_AddressTable_key_press_event(self, event):
-        actions = type_defs.KeyboardModifiersTupleDict([
+        actions = typedefs.KeyboardModifiersTupleDict([
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete), self.delete_records),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B), self.browse_region_for_selected_row),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D), self.disassemble_selected_row),
@@ -981,8 +982,7 @@ class MainForm(QMainWindow, MainWindow):
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return),
              self.treeWidget_AddressTable_edit_address),
             (
-                QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return),
-                self.treeWidget_AddressTable_edit_type)
+            QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return), self.treeWidget_AddressTable_edit_type)
         ])
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
@@ -991,10 +991,10 @@ class MainForm(QMainWindow, MainWindow):
 
     def update_address_table(self, use_cache=True):
         global exp_cache
-        if GDB_Engine.currentpid == -1 or self.treeWidget_AddressTable.topLevelItemCount() == 0:
+        if debugcore.currentpid == -1 or self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
-        mem_handle = GDB_Engine.memory_handle()
+        mem_handle = debugcore.memory_handle()
         basic_math_exp = re.compile(r"^[0-9a-fA-F][/*+\-0-9a-fA-FxX]+$")
         while True:
             row = it.value()
@@ -1002,13 +1002,13 @@ class MainForm(QMainWindow, MainWindow):
                 break
             it += 1
             address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
-            if isinstance(address_data, type_defs.PointerType):
+            if isinstance(address_data, typedefs.PointerType):
                 expression = address_data.base_address
             else:
                 expression = address_data
             parent = row.parent()
             if parent and expression.startswith(('+', '-')):
-                expression = parent.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1) + expression
+                expression = parent.data(ADDR_COL, Qt.ItemDataRole.UserRole+1)+expression
             if use_cache and expression in exp_cache:
                 address = exp_cache[expression]
             elif expression.startswith(('+', '-')):  # If parent has an empty address
@@ -1017,20 +1017,20 @@ class MainForm(QMainWindow, MainWindow):
                 try:
                     address = hex(eval(expression))
                 except:
-                    address = GDB_Engine.examine_expression(expression).address
+                    address = debugcore.examine_expression(expression).address
                     exp_cache[expression] = address
             else:
-                address = GDB_Engine.examine_expression(expression).address
+                address = debugcore.examine_expression(expression).address
                 exp_cache[expression] = address
             vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-            if isinstance(address_data, type_defs.PointerType):
+            if isinstance(address_data, typedefs.PointerType):
                 # The original base could be a symbol so we have to save it
                 # This little hack avoids the unnecessary examine_expression call
                 # TODO: Consider implementing exp_cache inside libpince so we don't need this hack
                 if address:
                     old_base = address_data.base_address  # save the old base
                     address_data.base_address = address
-                    address = GDB_Engine.read_pointer(address_data)
+                    address = debugcore.read_pointer(address_data)
                     address_data.base_address = old_base  # then set it back
                     if address:
                         address = hex(address)
@@ -1042,8 +1042,8 @@ class MainForm(QMainWindow, MainWindow):
             else:
                 row.setText(ADDR_COL, address or address_data)
             address = "" if not address else address
-            row.setData(ADDR_COL, Qt.ItemDataRole.UserRole + 1, address)
-            value = GDB_Engine.read_memory(address, vt.value_index, vt.length, vt.zero_terminate,
+            row.setData(ADDR_COL, Qt.ItemDataRole.UserRole+1, address)
+            value = debugcore.read_memory(address, vt.value_index, vt.length, vt.zero_terminate,
                                            vt.value_repr, vt.endian, mem_handle=mem_handle)
             value = "" if value is None else str(value)
             row.setText(VALUE_COL, value)
@@ -1066,7 +1066,7 @@ class MainForm(QMainWindow, MainWindow):
         self.memory_view_window.activateWindow()
 
     def pushButton_Wiki_clicked(self):
-        SysUtils.execute_command_as_user('python3 -m webbrowser "https://github.com/korcankaraokcu/PINCE/wiki"')
+        utils.execute_command_as_user('python3 -m webbrowser "https://github.com/korcankaraokcu/PINCE/wiki"')
 
     def pushButton_About_clicked(self):
         self.about_widget.setPalette(change_theme(theme))
@@ -1095,13 +1095,13 @@ class MainForm(QMainWindow, MainWindow):
 
     # TODO add a damn keybind for this...
     def pushButton_NewFirstScan_clicked(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             self.comboBox_ScanType_init()
             return
-        if self.scan_mode == type_defs.SCAN_MODE.ONGOING:
+        if self.scan_mode == typedefs.SCAN_MODE.ONGOING:
             self.reset_scan()
         else:
-            self.scan_mode = type_defs.SCAN_MODE.ONGOING
+            self.scan_mode = typedefs.SCAN_MODE.ONGOING
             self.pushButton_NewFirstScan.setText(tr.NEW_SCAN)
             self.comboBox_ValueType.setEnabled(False)
             self.pushButton_NextScan.setEnabled(True)
@@ -1120,13 +1120,13 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NextScan_clicked("undo")
 
     def comboBox_ScanType_current_index_changed(self):
-        hidden_types = [type_defs.SCAN_TYPE.INCREASED, type_defs.SCAN_TYPE.DECREASED, type_defs.SCAN_TYPE.CHANGED,
-                        type_defs.SCAN_TYPE.UNCHANGED, type_defs.SCAN_TYPE.UNKNOWN]
+        hidden_types = [typedefs.SCAN_TYPE.INCREASED, typedefs.SCAN_TYPE.DECREASED, typedefs.SCAN_TYPE.CHANGED,
+                        typedefs.SCAN_TYPE.UNCHANGED, typedefs.SCAN_TYPE.UNKNOWN]
         if self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole) in hidden_types:
             self.widget_Scan.setEnabled(False)
         else:
             self.widget_Scan.setEnabled(True)
-        if self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole) == type_defs.SCAN_TYPE.BETWEEN:
+        if self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole) == typedefs.SCAN_TYPE.BETWEEN:
             self.label_Between.setVisible(True)
             self.lineEdit_Scan2.setVisible(True)
         else:
@@ -1135,21 +1135,21 @@ class MainForm(QMainWindow, MainWindow):
 
     def comboBox_ScanType_init(self):
         scan_type_text = {
-            type_defs.SCAN_TYPE.EXACT: tr.EXACT,
-            type_defs.SCAN_TYPE.INCREASED: tr.INCREASED,
-            type_defs.SCAN_TYPE.INCREASED_BY: tr.INCREASED_BY,
-            type_defs.SCAN_TYPE.DECREASED: tr.DECREASED,
-            type_defs.SCAN_TYPE.DECREASED_BY: tr.DECREASED_BY,
-            type_defs.SCAN_TYPE.LESS: tr.LESS_THAN,
-            type_defs.SCAN_TYPE.MORE: tr.MORE_THAN,
-            type_defs.SCAN_TYPE.BETWEEN: tr.BETWEEN,
-            type_defs.SCAN_TYPE.CHANGED: tr.CHANGED,
-            type_defs.SCAN_TYPE.UNCHANGED: tr.UNCHANGED,
-            type_defs.SCAN_TYPE.UNKNOWN: tr.UNKNOWN_VALUE
+            typedefs.SCAN_TYPE.EXACT: tr.EXACT,
+            typedefs.SCAN_TYPE.INCREASED: tr.INCREASED,
+            typedefs.SCAN_TYPE.INCREASED_BY: tr.INCREASED_BY,
+            typedefs.SCAN_TYPE.DECREASED: tr.DECREASED,
+            typedefs.SCAN_TYPE.DECREASED_BY: tr.DECREASED_BY,
+            typedefs.SCAN_TYPE.LESS: tr.LESS_THAN,
+            typedefs.SCAN_TYPE.MORE: tr.MORE_THAN,
+            typedefs.SCAN_TYPE.BETWEEN: tr.BETWEEN,
+            typedefs.SCAN_TYPE.CHANGED: tr.CHANGED,
+            typedefs.SCAN_TYPE.UNCHANGED: tr.UNCHANGED,
+            typedefs.SCAN_TYPE.UNKNOWN: tr.UNKNOWN_VALUE
         }
         current_type = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
         self.comboBox_ScanType.clear()
-        items = type_defs.SCAN_TYPE.get_list(self.scan_mode)
+        items = typedefs.SCAN_TYPE.get_list(self.scan_mode)
         old_index = 0
         for index, type_index in enumerate(items):
             if current_type == type_index:
@@ -1159,20 +1159,20 @@ class MainForm(QMainWindow, MainWindow):
 
     def comboBox_ScanScope_init(self):
         scan_scope_text = [
-            (type_defs.SCAN_SCOPE.BASIC, tr.BASIC),
-            (type_defs.SCAN_SCOPE.NORMAL, tr.NORMAL),
-            (type_defs.SCAN_SCOPE.FULL_RW, tr.RW),
-            (type_defs.SCAN_SCOPE.FULL, tr.FULL)
+            (typedefs.SCAN_SCOPE.BASIC, tr.BASIC),
+            (typedefs.SCAN_SCOPE.NORMAL, tr.NORMAL),
+            (typedefs.SCAN_SCOPE.FULL_RW, tr.RW),
+            (typedefs.SCAN_SCOPE.FULL, tr.FULL)
         ]
         for scope, text in scan_scope_text:
             self.comboBox_ScanScope.addItem(text, scope)
-        self.comboBox_ScanScope.setCurrentIndex(1)  # type_defs.SCAN_SCOPE.NORMAL
+        self.comboBox_ScanScope.setCurrentIndex(1)  # typedefs.SCAN_SCOPE.NORMAL
 
     def comboBox_ValueType_init(self):
         self.comboBox_ValueType.clear()
-        for value_index, value_text in type_defs.scan_index_to_text_dict.items():
+        for value_index, value_text in typedefs.scan_index_to_text_dict.items():
             self.comboBox_ValueType.addItem(value_text, value_index)
-        self.comboBox_ValueType.setCurrentIndex(type_defs.SCAN_INDEX.INDEX_INT32)
+        self.comboBox_ValueType.setCurrentIndex(typedefs.SCAN_INDEX.INDEX_INT32)
         self.comboBox_ValueType_current_index_changed()
 
     # :doc:
@@ -1181,18 +1181,18 @@ class MainForm(QMainWindow, MainWindow):
     def validate_search(self, search_for, search_for2):
         type_index = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
         symbol_map = {
-            type_defs.SCAN_TYPE.INCREASED: "+",
-            type_defs.SCAN_TYPE.DECREASED: "-",
-            type_defs.SCAN_TYPE.CHANGED: "!=",
-            type_defs.SCAN_TYPE.UNCHANGED: "=",
-            type_defs.SCAN_TYPE.UNKNOWN: "snapshot"
+            typedefs.SCAN_TYPE.INCREASED: "+",
+            typedefs.SCAN_TYPE.DECREASED: "-",
+            typedefs.SCAN_TYPE.CHANGED: "!=",
+            typedefs.SCAN_TYPE.UNCHANGED: "=",
+            typedefs.SCAN_TYPE.UNKNOWN: "snapshot"
         }
         if type_index in symbol_map:
             return symbol_map[type_index]
 
         # none of these should be possible to be true at the same time
         scan_index = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
-        if scan_index >= type_defs.SCAN_INDEX.INDEX_FLOAT_ANY and scan_index <= type_defs.SCAN_INDEX.INDEX_FLOAT64:
+        if scan_index >= typedefs.SCAN_INDEX.INDEX_FLOAT_ANY and scan_index <= typedefs.SCAN_INDEX.INDEX_FLOAT64:
             # Adjust to locale whatever the input
             if QLocale.system().decimalPoint() == ".":
                 search_for = search_for.replace(",", ".")
@@ -1200,20 +1200,20 @@ class MainForm(QMainWindow, MainWindow):
             else:
                 search_for = search_for.replace(".", ",")
                 search_for2 = search_for2.replace(".", ",")
-        elif scan_index == type_defs.SCAN_INDEX.INDEX_STRING:
+        elif scan_index == typedefs.SCAN_INDEX.INDEX_STRING:
             search_for = "\" " + search_for
         elif self.checkBox_Hex.isChecked():
             if not search_for.startswith("0x"):
                 search_for = "0x" + search_for
             if not search_for2.startswith("0x"):
                 search_for2 = "0x" + search_for2
-        if type_index == type_defs.SCAN_TYPE.BETWEEN:
+        if type_index == typedefs.SCAN_TYPE.BETWEEN:
             return search_for + ".." + search_for2
         cmp_symbols = {
-            type_defs.SCAN_TYPE.INCREASED_BY: "+",
-            type_defs.SCAN_TYPE.DECREASED_BY: "-",
-            type_defs.SCAN_TYPE.LESS: "<",
-            type_defs.SCAN_TYPE.MORE: ">"
+            typedefs.SCAN_TYPE.INCREASED_BY: "+",
+            typedefs.SCAN_TYPE.DECREASED_BY: "-",
+            typedefs.SCAN_TYPE.LESS: "<",
+            typedefs.SCAN_TYPE.MORE: ">"
         }
         if type_index in cmp_symbols:
             return cmp_symbols[type_index] + " " + search_for
@@ -1221,7 +1221,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def pushButton_NextScan_clicked(self, search_for=None):
         global threadpool
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         if not search_for:
             search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
@@ -1248,24 +1248,24 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setRowCount(0)
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         length = self._scan_to_length(current_type)
-        mem_handle = GDB_Engine.memory_handle()
+        mem_handle = debugcore.memory_handle()
         row = 0  # go back to using n when unknown issue gets fixed
         for n, address, offset, region_type, val, result_type in matches:
             address = "0x" + address
             result = result_type.split(" ")[0]
             if result == "unknown":  # Ignore unknown entries for now
                 continue
-            value_index = type_defs.scanmem_result_to_index_dict[result]
+            value_index = typedefs.scanmem_result_to_index_dict[result]
             if self.checkBox_Hex.isChecked():
-                value_repr = type_defs.VALUE_REPR.HEX
-            elif type_defs.VALUE_INDEX.is_integer(value_index) and result.endswith("s"):
-                value_repr = type_defs.VALUE_REPR.SIGNED
+                value_repr = typedefs.VALUE_REPR.HEX
+            elif typedefs.VALUE_INDEX.is_integer(value_index) and result.endswith("s"):
+                value_repr = typedefs.VALUE_REPR.SIGNED
             else:
-                value_repr = type_defs.VALUE_REPR.UNSIGNED
+                value_repr = typedefs.VALUE_REPR.UNSIGNED
             endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
             current_item = QTableWidgetItem(address)
             current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian))
-            value = str(GDB_Engine.read_memory(address, value_index, length, True, value_repr, endian, mem_handle))
+            value = str(debugcore.read_memory(address, value_index, length, True, value_repr, endian, mem_handle))
             self.tableWidget_valuesearchtable.insertRow(row)
             self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_ADDRESS_COL, current_item)
             self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
@@ -1276,9 +1276,9 @@ class MainForm(QMainWindow, MainWindow):
         self.QWidget_Toolbox.setEnabled(True)
 
     def _scan_to_length(self, type_index):
-        if type_index == type_defs.SCAN_INDEX.INDEX_AOB:
+        if type_index == typedefs.SCAN_INDEX.INDEX_AOB:
             return self.lineEdit_Scan.text().count(" ") + 1
-        if type_index == type_defs.SCAN_INDEX.INDEX_STRING:
+        if type_index == typedefs.SCAN_INDEX.INDEX_STRING:
             return len(self.lineEdit_Scan.text())
         return 0
 
@@ -1286,7 +1286,7 @@ class MainForm(QMainWindow, MainWindow):
         current_item = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL)
         value_index, value_repr, endian = current_item.data(Qt.ItemDataRole.UserRole)
         length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
-        vt = type_defs.ValueType(value_index, length, True, value_repr, endian)
+        vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
         self.add_entry_to_addresstable(tr.NO_DESCRIPTION, current_item.text(), vt)
         self.update_address_table()
 
@@ -1301,7 +1301,7 @@ class MainForm(QMainWindow, MainWindow):
             # array of bytes
             "string": None
         }
-        scanmem_type = type_defs.scan_index_to_scanmem_dict[current_type]
+        scanmem_type = typedefs.scan_index_to_scanmem_dict[current_type]
         validator_str = scanmem_type  # used to get the correct validator
 
         # TODO this can probably be made to look nicer, though it doesn't really matter
@@ -1326,13 +1326,13 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow.show()
 
     def pushButton_Open_clicked(self):
-        pct_file_path = SysUtils.get_user_path(type_defs.USER_PATHS.CHEAT_TABLES_PATH)
+        pct_file_path = utils.get_user_path(typedefs.USER_PATHS.CHEAT_TABLES_PATH)
         file_paths = QFileDialog.getOpenFileNames(self, tr.OPEN_PCT_FILE, pct_file_path, tr.FILE_TYPES_PCT)[0]
         if not file_paths:
             return
         self.clear_address_table()
         for file_path in file_paths:
-            content = SysUtils.load_file(file_path)
+            content = utils.load_file(file_path)
             if content is None:
                 QMessageBox.information(self, tr.ERROR, tr.FILE_LOAD_ERROR.format(file_path))
                 break
@@ -1340,20 +1340,20 @@ class MainForm(QMainWindow, MainWindow):
                                 self.treeWidget_AddressTable.topLevelItemCount())
 
     def pushButton_Save_clicked(self):
-        pct_file_path = SysUtils.get_user_path(type_defs.USER_PATHS.CHEAT_TABLES_PATH)
+        pct_file_path = utils.get_user_path(typedefs.USER_PATHS.CHEAT_TABLES_PATH)
         file_path = QFileDialog.getSaveFileName(self, tr.SAVE_PCT_FILE, pct_file_path, tr.FILE_TYPES_PCT)[0]
         if not file_path:
             return
         content = [self.read_address_table_recursively(self.treeWidget_AddressTable.topLevelItem(i))
                    for i in range(self.treeWidget_AddressTable.topLevelItemCount())]
-        file_path = SysUtils.append_file_extension(file_path, "pct")
-        if not SysUtils.save_file(content, file_path):
+        file_path = utils.append_file_extension(file_path, "pct")
+        if not utils.save_file(content, file_path):
             QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
 
     # Returns: a bool value indicates whether the operation succeeded.
     def attach_to_pid(self, pid):
-        attach_result = GDB_Engine.attach(pid, gdb_path)
-        if attach_result == type_defs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
+        attach_result = debugcore.attach(pid, gdb_path)
+        if attach_result == typedefs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
             self.apply_after_init()
             scanmem.pid(pid)
             self.on_new_process()
@@ -1361,22 +1361,22 @@ class MainForm(QMainWindow, MainWindow):
             # TODO: This makes PINCE call on_process_stop twice when attaching
             # TODO: Signal design might have to change to something like mutexes eventually
             self.memory_view_window.on_process_stop()
-            GDB_Engine.continue_inferior()
+            debugcore.continue_inferior()
             return True
         else:
             messages = {
-                type_defs.ATTACH_RESULT.ATTACH_SELF: tr.SMARTASS,  # easter egg
-                type_defs.ATTACH_RESULT.PROCESS_NOT_VALID: tr.PROCESS_NOT_VALID,
-                type_defs.ATTACH_RESULT.ALREADY_DEBUGGING: tr.ALREADY_DEBUGGING,
-                type_defs.ATTACH_RESULT.ALREADY_TRACED: tr.ALREADY_TRACED.format(SysUtils.is_traced(pid)),
-                type_defs.ATTACH_RESULT.PERM_DENIED: tr.PERM_DENIED
+                typedefs.ATTACH_RESULT.ATTACH_SELF: tr.SMARTASS,  # easter egg
+                typedefs.ATTACH_RESULT.PROCESS_NOT_VALID: tr.PROCESS_NOT_VALID,
+                typedefs.ATTACH_RESULT.ALREADY_DEBUGGING: tr.ALREADY_DEBUGGING,
+                typedefs.ATTACH_RESULT.ALREADY_TRACED: tr.ALREADY_TRACED.format(utils.is_traced(pid)),
+                typedefs.ATTACH_RESULT.PERM_DENIED: tr.PERM_DENIED
             }
             QMessageBox.information(app.focusWidget(), tr.ERROR, messages[attach_result])
             return False
 
     # Returns: a bool value indicates whether the operation succeeded.
     def create_new_process(self, file_path, args, ld_preload_path):
-        if GDB_Engine.create_process(file_path, args, ld_preload_path):
+        if debugcore.create_process(file_path, args, ld_preload_path):
             self.apply_after_init()
             self.on_new_process()
             return True
@@ -1387,8 +1387,8 @@ class MainForm(QMainWindow, MainWindow):
 
     # Changes appearance whenever a new process is created or attached
     def on_new_process(self):
-        name = SysUtils.get_process_name(GDB_Engine.currentpid)
-        self.label_SelectedProcess.setText(str(GDB_Engine.currentpid) + " - " + name)
+        name = utils.get_process_name(debugcore.currentpid)
+        self.label_SelectedProcess.setText(str(debugcore.currentpid) + " - " + name)
 
         # enable scan GUI
         self.lineEdit_Scan.setPlaceholderText(tr.SCAN_FOR)
@@ -1416,12 +1416,12 @@ class MainForm(QMainWindow, MainWindow):
             i = i + 1
             if i % 3 == 0:
                 value_index, value_repr, endian = row.data(Qt.ItemDataRole.UserRole)
-                vt = type_defs.ValueType(value_index, length, True, value_repr, endian)
+                vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
                 self.add_entry_to_addresstable(tr.NO_DESCRIPTION, row.text(), vt)
         self.update_address_table()
 
     def reset_scan(self):
-        self.scan_mode = type_defs.SCAN_MODE.NEW
+        self.scan_mode = typedefs.SCAN_MODE.NEW
         self.pushButton_NewFirstScan.setText(tr.FIRST_SCAN)
         scanmem.reset()
         self.tableWidget_valuesearchtable.setRowCount(0)
@@ -1440,7 +1440,7 @@ class MainForm(QMainWindow, MainWindow):
         self.lineEdit_Scan.setText("")
         self.reset_scan()
         self.on_status_running()
-        GDB_Engine.init_gdb(gdb_path)
+        debugcore.init_gdb(gdb_path)
         self.apply_after_init()
         self.flashAttachButton = True
         self.flashAttachButtonTimer.start(100)
@@ -1465,16 +1465,16 @@ class MainForm(QMainWindow, MainWindow):
 
     # closes all windows on exit
     def closeEvent(self, event):
-        GDB_Engine.detach()
+        debugcore.detach()
         app.closeAllWindows()
 
     # Call update_address_table manually after this
     def add_entry_to_addresstable(self, description, address_expr, value_type=None):
         current_row = QTreeWidgetItem()
         current_row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
-        frozen = type_defs.Frozen("", type_defs.FREEZE_TYPE.DEFAULT)
+        frozen = typedefs.Frozen("", typedefs.FREEZE_TYPE.DEFAULT)
         current_row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
-        value_type = type_defs.ValueType() if not value_type else value_type
+        value_type = typedefs.ValueType() if not value_type else value_type
         self.treeWidget_AddressTable.addTopLevelItem(current_row)
         self.change_address_table_entries(current_row, description, address_expr, value_type)
         self.setPalette(change_theme(theme))
@@ -1526,18 +1526,18 @@ class MainForm(QMainWindow, MainWindow):
     # ----------------------------------------------------
 
     def update_search_table(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         row_count = self.tableWidget_valuesearchtable.rowCount()
         if row_count > 0:
             length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
-            mem_handle = GDB_Engine.memory_handle()
+            mem_handle = debugcore.memory_handle()
             for row_index in range(row_count):
                 address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
                 previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
                 value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
                 address = address_item.text()
-                new_value = str(GDB_Engine.read_memory(address, value_index, length, value_repr=value_repr,
+                new_value = str(debugcore.read_memory(address, value_index, length, value_repr=value_repr,
                                                        endian=endian, mem_handle=mem_handle))
                 value_item = QTableWidgetItem(new_value)
                 if new_value != previous_text:
@@ -1545,7 +1545,7 @@ class MainForm(QMainWindow, MainWindow):
                 self.tableWidget_valuesearchtable.setItem(row_index, SEARCH_TABLE_VALUE_COL, value_item)
 
     def freeze(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
         while it.value():
@@ -1556,15 +1556,15 @@ class MainForm(QMainWindow, MainWindow):
                 frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 value = frozen.value
                 freeze_type = frozen.freeze_type
-                if type_defs.VALUE_INDEX.is_integer(vt.value_index):
-                    new_value = GDB_Engine.read_memory(address, vt.value_index, endian=vt.endian)
+                if typedefs.VALUE_INDEX.is_integer(vt.value_index):
+                    new_value = debugcore.read_memory(address, vt.value_index, endian=vt.endian)
                     new_value = int(new_value, 0) if isinstance(new_value, str) else new_value
-                    if freeze_type == type_defs.FREEZE_TYPE.INCREMENT and new_value > int(value, 0) or \
-                            freeze_type == type_defs.FREEZE_TYPE.DECREMENT and new_value < int(value, 0):
+                    if freeze_type == typedefs.FREEZE_TYPE.INCREMENT and new_value > int(value, 0) or \
+                            freeze_type == typedefs.FREEZE_TYPE.DECREMENT and new_value < int(value, 0):
                         frozen.value = str(new_value)
-                        GDB_Engine.write_memory(address, vt.value_index, frozen.value, vt.endian)
+                        debugcore.write_memory(address, vt.value_index, frozen.value, vt.endian)
                         continue
-                GDB_Engine.write_memory(address, vt.value_index, value, vt.endian)
+                debugcore.write_memory(address, vt.value_index, value, vt.endian)
             it += 1
 
     def treeWidget_AddressTable_item_clicked(self, row, column):
@@ -1597,15 +1597,15 @@ class MainForm(QMainWindow, MainWindow):
             for row in self.treeWidget_AddressTable.selectedItems():
                 address = row.text(ADDR_COL).strip("P->")
                 value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-                if type_defs.VALUE_INDEX.has_length(value_type.value_index):
-                    unknown_type = SysUtils.parse_string(new_value, value_type.value_index)
+                if typedefs.VALUE_INDEX.has_length(value_type.value_index):
+                    unknown_type = utils.parse_string(new_value, value_type.value_index)
                     if unknown_type is not None:
                         value_type.length = len(unknown_type)
                         row.setText(TYPE_COL, value_type.text())
                 frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 frozen.value = new_value
                 row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
-                GDB_Engine.write_memory(address, value_type.value_index, new_value, value_type.endian)
+                debugcore.write_memory(address, value_type.value_index, new_value, value_type.endian)
             self.update_address_table()
 
     def treeWidget_AddressTable_edit_desc(self):
@@ -1660,7 +1660,7 @@ class MainForm(QMainWindow, MainWindow):
         description = row.text(DESC_COL)
         if serialize:
             address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
-            if isinstance(address_data, type_defs.PointerType):
+            if isinstance(address_data, typedefs.PointerType):
                 address_expr = address_data.serialize()
             else:
                 address_expr = address_data
@@ -1675,8 +1675,8 @@ class MainForm(QMainWindow, MainWindow):
     # Last value is an iterable of information about its direct children.
     def read_address_table_recursively(self, row):
         return self.read_address_table_entries(row, True) + \
-            ([self.read_address_table_recursively(row.child(i)) for i in range(row.childCount())],)
-
+               ([self.read_address_table_recursively(row.child(i)) for i in range(row.childCount())],)
+    
     # Flashing Attach Button when the process is not attached
     def flash_attach_button(self):
         if not self.flashAttachButton:
@@ -1703,7 +1703,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         super().__init__(parent=parent)
         self.setupUi(self)
         guiutils.center_to_parent(self)
-        self.refresh_process_table(self.tableWidget_ProcessTable, SysUtils.get_process_list())
+        self.refresh_process_table(self.tableWidget_ProcessTable, utils.get_process_list())
         self.pushButton_Close.clicked.connect(self.close)
         self.pushButton_Open.clicked.connect(self.pushButton_Open_clicked)
         self.pushButton_CreateProcess.clicked.connect(self.pushButton_CreateProcess_clicked)
@@ -1713,7 +1713,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
     # refreshes process list
     def generate_new_list(self):
         text = self.lineEdit_SearchProcess.text()
-        processlist = SysUtils.search_processes(text)
+        processlist = utils.search_processes(text)
         self.refresh_process_table(self.tableWidget_ProcessTable, processlist)
 
     def keyPressEvent(self, e):
@@ -1771,13 +1771,13 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.setMaximumSize(100, 100)
-        vt = type_defs.ValueType() if not value_type else value_type
+        vt = typedefs.ValueType() if not value_type else value_type
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
         self.lineEdit_Description.setText(description)
         self.offsetsList = []
-        if not isinstance(address, type_defs.PointerType):
+        if not isinstance(address, typedefs.PointerType):
             self.lineEdit_Address.setText(address)
             self.widget_Pointer.hide()
         else:
@@ -1787,7 +1787,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.create_offsets_list(address)
             self.widget_Pointer.setPalette(change_theme(theme))
             self.widget_Pointer.show()
-        if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
+        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             try:
@@ -1798,7 +1798,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.checkBox_ZeroTerminate.setPalette(change_theme(theme))
             self.checkBox_ZeroTerminate.show()
             self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
-        elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
             self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             try:
@@ -1809,10 +1809,10 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.checkBox_ZeroTerminate.hide()
         else:
             self.widget_Length.hide()
-        if vt.value_repr == type_defs.VALUE_REPR.HEX:
+        if vt.value_repr == typedefs.VALUE_REPR.HEX:
             self.checkBox_Hex.setChecked(True)
             self.checkBox_Signed.setEnabled(False)
-        elif vt.value_repr == type_defs.VALUE_REPR.SIGNED:
+        elif vt.value_repr == typedefs.VALUE_REPR.SIGNED:
             self.checkBox_Signed.setChecked(True)
         else:
             self.checkBox_Signed.setChecked(False)
@@ -1879,38 +1879,38 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def update_value(self):
         if self.checkBox_IsPointer.isChecked():
-            pointer_type = type_defs.PointerType(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
-            address = GDB_Engine.read_pointer(pointer_type)
+            pointer_type = typedefs.PointerType(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
+            address = debugcore.read_pointer(pointer_type)
             if address != None:
                 address_text = hex(address)
             else:
                 address_text = "??"
             self.lineEdit_Address.setText(address_text)
         else:
-            address = GDB_Engine.examine_expression(self.lineEdit_Address.text()).address
+            address = debugcore.examine_expression(self.lineEdit_Address.text()).address
         if not address:
             self.label_Value.setText("<font color=red>??</font>")
             return
         if self.checkBox_Hex.isChecked():
-            value_repr = type_defs.VALUE_REPR.HEX
+            value_repr = typedefs.VALUE_REPR.HEX
         elif self.checkBox_Signed.isChecked():
-            value_repr = type_defs.VALUE_REPR.SIGNED
+            value_repr = typedefs.VALUE_REPR.SIGNED
         else:
-            value_repr = type_defs.VALUE_REPR.UNSIGNED
+            value_repr = typedefs.VALUE_REPR.UNSIGNED
         address_type = self.comboBox_ValueType.currentIndex()
         length = self.lineEdit_Length.text()
         zero_terminate = self.checkBox_ZeroTerminate.isChecked()
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
-        value = GDB_Engine.read_memory(address, address_type, length, zero_terminate, value_repr, endian)
+        value = debugcore.read_memory(address, address_type, length, zero_terminate, value_repr, endian)
         self.label_Value.setText("<font color=red>??</font>" if value is None else str(value))
 
     def comboBox_ValueType_current_index_changed(self):
-        if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
+        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.setPalette(change_theme(theme))
             self.checkBox_ZeroTerminate.show()
-        elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
             self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.hide()
@@ -1967,15 +1967,15 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         zero_terminate = self.checkBox_ZeroTerminate.isChecked()
         value_index = self.comboBox_ValueType.currentIndex()
         if self.checkBox_Hex.isChecked():
-            value_repr = type_defs.VALUE_REPR.HEX
+            value_repr = typedefs.VALUE_REPR.HEX
         elif self.checkBox_Signed.isChecked():
-            value_repr = type_defs.VALUE_REPR.SIGNED
+            value_repr = typedefs.VALUE_REPR.SIGNED
         else:
-            value_repr = type_defs.VALUE_REPR.UNSIGNED
+            value_repr = typedefs.VALUE_REPR.UNSIGNED
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
-        vt = type_defs.ValueType(value_index, length, zero_terminate, value_repr, endian)
+        vt = typedefs.ValueType(value_index, length, zero_terminate, value_repr, endian)
         if self.checkBox_IsPointer.isChecked():
-            address = type_defs.PointerType(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
+            address = typedefs.PointerType(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
         return description, address, vt
 
     def get_offsets_int_list(self):
@@ -1990,7 +1990,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         return offsetsIntList
 
     def create_offsets_list(self, address):
-        if not isinstance(address, type_defs.PointerType):
+        if not isinstance(address, typedefs.PointerType):
             raise TypeError("Passed non-pointer type to create_offsets_list!")
 
         for offset in address.offsets_list:
@@ -2004,7 +2004,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             offsetValue = int(offsetText, 16)
         except ValueError:
             offsetValue = 0
-        sizeVal = type_defs.index_to_valuetype_dict[self.comboBox_ValueType.currentIndex()][0]
+        sizeVal = typedefs.index_to_valuetype_dict[self.comboBox_ValueType.currentIndex()][0]
         offsetValue = operator_func(offsetValue, sizeVal)
         offsetTextWidget.setText(hex(offsetValue))
 
@@ -2013,12 +2013,12 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
     def __init__(self, parent=None, value_type=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        vt = type_defs.ValueType() if not value_type else value_type
+        vt = typedefs.ValueType() if not value_type else value_type
         self.setMaximumSize(100, 100)
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
-        if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
+        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             try:
@@ -2029,7 +2029,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.checkBox_ZeroTerminate.setPalette(change_theme(theme))
             self.checkBox_ZeroTerminate.show()
             self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
-        elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
             self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             try:
@@ -2040,10 +2040,10 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.checkBox_ZeroTerminate.hide()
         else:
             self.widget_Length.hide()
-        if vt.value_repr == type_defs.VALUE_REPR.HEX:
+        if vt.value_repr == typedefs.VALUE_REPR.HEX:
             self.checkBox_Hex.setChecked(True)
             self.checkBox_Signed.setEnabled(False)
-        elif vt.value_repr == type_defs.VALUE_REPR.SIGNED:
+        elif vt.value_repr == typedefs.VALUE_REPR.SIGNED:
             self.checkBox_Signed.setChecked(True)
         else:
             self.checkBox_Signed.setChecked(False)
@@ -2051,12 +2051,12 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         self.checkBox_Hex.stateChanged.connect(self.repr_changed)
 
     def comboBox_ValueType_current_index_changed(self):
-        if type_defs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
+        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.setPalette(change_theme(theme))
             self.checkBox_ZeroTerminate.show()
-        elif self.comboBox_ValueType.currentIndex() == type_defs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
             self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.hide()
@@ -2094,13 +2094,13 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             length = 0
         zero_terminate = self.checkBox_ZeroTerminate.isChecked()
         if self.checkBox_Hex.isChecked():
-            value_repr = type_defs.VALUE_REPR.HEX
+            value_repr = typedefs.VALUE_REPR.HEX
         elif self.checkBox_Signed.isChecked():
-            value_repr = type_defs.VALUE_REPR.SIGNED
+            value_repr = typedefs.VALUE_REPR.SIGNED
         else:
-            value_repr = type_defs.VALUE_REPR.UNSIGNED
+            value_repr = typedefs.VALUE_REPR.UNSIGNED
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
-        return type_defs.ValueType(value_index, length, zero_terminate, value_repr, endian)
+        return typedefs.ValueType(value_index, length, zero_terminate, value_repr, endian)
 
 
 class TrackSelectorDialogForm(QDialog, TrackSelectorDialog):
@@ -2133,7 +2133,7 @@ class LoadingDialogForm(QDialog, LoadingDialog):
         self.background_thread = self.BackgroundThread()
         self.background_thread.output_ready.connect(self.accept)
         self.pushButton_Cancel.clicked.connect(self.cancel_thread)
-        media_directory = SysUtils.get_media_directory()
+        media_directory = utils.get_media_directory()
         self.movie = QMovie(media_directory + "/LoadingDialog/ajax-loader.gif", QByteArray())
         self.label_Animated.setMovie(self.movie)
         self.movie.setScaledSize(QSize(25, 25))
@@ -2144,7 +2144,7 @@ class LoadingDialogForm(QDialog, LoadingDialog):
     # This function only cancels the last command sent
     # Override this if you want to do dangerous stuff like, God forbid, background_thread.terminate()
     def cancel_thread(self):
-        GDB_Engine.cancel_last_command()
+        debugcore.cancel_last_command()
 
     def exec(self):
         self.background_thread.start()
@@ -2179,7 +2179,7 @@ class InputDialogForm(QDialog, InputDialog):
     # that points the current index of the QComboBox, for instance: ["0", "1", 1] will create a QCombobox with the items
     # "0" and "1" then will set current index to 1 (which is the item "1")
     # label_alignment is optional
-    def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=type_defs.VALUE_INDEX.INDEX_INT32,
+    def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=typedefs.VALUE_INDEX.INDEX_INT32,
                  buttons=(QDialogButtonBox.StandardButton.Ok, QDialogButtonBox.StandardButton.Cancel)):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -2240,7 +2240,7 @@ class InputDialogForm(QDialog, InputDialog):
     def accept(self):
         if self.parsed_index != -1:
             item = self.object_list[self.parsed_index]
-            if SysUtils.parse_string(self.get_text(item), self.value_index) is None:
+            if utils.parse_string(self.get_text(item), self.value_index) is None:
                 QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
                 return
         super(InputDialogForm, self).accept()
@@ -2321,7 +2321,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
         self.settings.setValue("General/freeze_interval", current_freeze_interval)
-        current_gdb_output_mode = type_defs.gdb_output_mode(self.checkBox_OutputModeAsync.isChecked(),
+        current_gdb_output_mode = typedefs.gdb_output_mode(self.checkBox_OutputModeAsync.isChecked(),
                                                             self.checkBox_OutputModeCommand.isChecked(),
                                                             self.checkBox_OutputModeCommandInfo.isChecked())
         self.settings.setValue("General/gdb_output_mode", current_gdb_output_mode)
@@ -2345,9 +2345,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         for hotkey in Hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
         if self.radioButton_SimpleDLopenCall.isChecked():
-            injection_method = type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
+            injection_method = typedefs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
         elif self.radioButton_AdvancedInjection.isChecked():
-            injection_method = type_defs.INJECTION_METHOD.ADVANCED_INJECTION
+            injection_method = typedefs.INJECTION_METHOD.ADVANCED_INJECTION
         self.settings.setValue("CodeInjection/code_injection_method", injection_method)
         self.settings.setValue("Disassemble/bring_disassemble_to_front",
                                self.checkBox_BringDisassembleToFront.isChecked())
@@ -2356,7 +2356,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
         if selected_gdb_path != current_gdb_path:
             if InputDialogForm(item_list=[(tr.GDB_RESET,)]).exec():
-                GDB_Engine.init_gdb(selected_gdb_path)
+                debugcore.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
         if self.handle_signals_data is not None:
@@ -2379,16 +2379,16 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         for lang, loc in language_list:
             self.comboBox_Language.addItem(lang)
             if loc == cur_loc:
-                self.comboBox_Language.setCurrentIndex(self.comboBox_Language.count() - 1)
+                self.comboBox_Language.setCurrentIndex(self.comboBox_Language.count()-1)
         self.comboBox_Theme.clear()
         cur_theme = self.settings.value("General/theme", type=str)
         self.setPalette(change_theme(cur_theme))
         for thm in theme_list:
             self.comboBox_Theme.addItem(thm)
             if thm == cur_theme:
-                self.comboBox_Theme.setCurrentIndex(self.comboBox_Theme.count() - 1)
-        logo_directory = SysUtils.get_logo_directory()
-        logo_list = SysUtils.search_files(logo_directory, "\.(png|jpg|jpeg|svg)$")
+                self.comboBox_Theme.setCurrentIndex(self.comboBox_Theme.count()-1)
+        logo_directory = utils.get_logo_directory()
+        logo_list = utils.search_files(logo_directory, "\.(png|jpg|jpeg|svg)$")
         self.comboBox_Logo.clear()
         for logo in logo_list:
             self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
@@ -2399,9 +2399,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.listWidget_Functions.addItem(hotkey.desc)
             self.hotkey_to_value[hotkey.name] = self.settings.value("Hotkeys/" + hotkey.name)
         injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
-        if injection_method == type_defs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL:
+        if injection_method == typedefs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL:
             self.radioButton_SimpleDLopenCall.setChecked(True)
-        elif injection_method == type_defs.INJECTION_METHOD.ADVANCED_INJECTION:
+        elif injection_method == typedefs.INJECTION_METHOD.ADVANCED_INJECTION:
             self.radioButton_AdvancedInjection.setChecked(True)
         self.checkBox_BringDisassembleToFront.setChecked(
             self.settings.value("Disassemble/bring_disassemble_to_front", type=bool))
@@ -2424,8 +2424,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if index == -1:
             self.keySequenceEdit_Hotkey.clear()
         else:
-            self.hotkey_to_value[
-                Hotkeys.get_hotkeys()[index].name] = self.keySequenceEdit_Hotkey.keySequence().toString()
+            self.hotkey_to_value[Hotkeys.get_hotkeys()[index].name] = self.keySequenceEdit_Hotkey.keySequence().toString()
 
     def pushButton_ClearHotkey_clicked(self):
         self.keySequenceEdit_Hotkey.clear()
@@ -2551,9 +2550,9 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             console_output = tr.CONT_SESSION_CRASH
         else:
             if self.radioButton_CLI.isChecked():
-                console_output = GDB_Engine.send_command(console_input, cli_output=True)
+                console_output = debugcore.send_command(console_input, cli_output=True)
             else:
-                console_output = GDB_Engine.send_command(console_input)
+                console_output = debugcore.send_command(console_input)
         self.textBrowser.append("-->" + console_input)
         if console_output:
             self.textBrowser.append(console_output)
@@ -2597,7 +2596,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.lineEdit.setText(self.input_history[self.current_history_index])
 
     def lineEdit_key_press_event(self, event):
-        actions = type_defs.KeyboardModifiersTupleDict([
+        actions = typedefs.KeyboardModifiersTupleDict([
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Up), self.scroll_backwards_history),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Down), self.scroll_forwards_history)
         ])
@@ -2610,8 +2609,8 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.completion_model.setStringList([])
 
     def complete_command(self):
-        if GDB_Engine.gdb_initialized and GDB_Engine.currentpid != -1 and self.lineEdit.text():
-            self.completion_model.setStringList(GDB_Engine.complete_command(self.lineEdit.text()))
+        if debugcore.gdb_initialized and debugcore.currentpid != -1 and self.lineEdit.text():
+            self.completion_model.setStringList(debugcore.complete_command(self.lineEdit.text()))
             self.completer.complete()
         else:
             self.finish_completion()
@@ -2671,8 +2670,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionLoad_Trace.triggered.connect(self.show_trace_window)
 
     def initialize_debug_context_menu(self):
-        self.actionBreak.triggered.connect(GDB_Engine.interrupt_inferior)
-        self.actionRun.triggered.connect(GDB_Engine.continue_inferior)
+        self.actionBreak.triggered.connect(debugcore.interrupt_inferior)
+        self.actionRun.triggered.connect(debugcore.continue_inferior)
         self.actionToggle_Attach.triggered.connect(lambda: self.parent().toggle_attach_hotkey_pressed())
         self.actionStep.triggered.connect(self.step_instruction)
         self.actionStep_Over.triggered.connect(self.step_over_instruction)
@@ -2782,9 +2781,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def initialize_hex_view(self):
         self.hex_view_last_selected_address_int = 0
-        self.hex_view_current_region = type_defs.tuple_region_info(0, 0, None, None)
+        self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None)
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
-
+        
         # Saving the original function because super() doesn't work when we override functions like this
         self.widget_HexView.keyPressEvent_original = self.widget_HexView.keyPressEvent
         self.widget_HexView.keyPressEvent = self.widget_HexView_key_press_event
@@ -2826,96 +2825,96 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         guiutils.center_scroll_bar(self.verticalScrollBar_HexView)
 
     def show_trace_window(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         TraceInstructionsWindowForm(prompt_dialog=False)
 
     def step_instruction(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         if self.updating_memoryview:
             return
-        GDB_Engine.step_instruction()
+        debugcore.step_instruction()
 
     def step_over_instruction(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         if self.updating_memoryview:
             return
-        GDB_Engine.step_over_instruction()
+        debugcore.step_over_instruction()
 
     def execute_till_return(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         if self.updating_memoryview:
             return
-        GDB_Engine.execute_till_return()
+        debugcore.execute_till_return()
 
     def set_address(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
-        GDB_Engine.set_convenience_variable("pc", current_address)
+        current_address = utils.extract_address(current_address_text)
+        debugcore.set_convenience_variable("pc", current_address)
         self.refresh_disassemble_view()
 
     def edit_instruction(self):
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
+        current_address = utils.extract_address(current_address_text)
         bytes_aob = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
         EditInstructionDialogForm(current_address, bytes_aob, self).setPalette(change_theme(theme))
         EditInstructionDialogForm(current_address, bytes_aob, self).exec()
 
     def nop_instruction(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
+        current_address = utils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
         array_of_bytes = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
-        GDB_Engine.nop_instruction(current_address_int, len(array_of_bytes.split()))
+        debugcore.nop_instruction(current_address_int, len(array_of_bytes.split()))
         self.refresh_disassemble_view()
 
     def toggle_breakpoint(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
+        current_address = utils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
-        if GDB_Engine.check_address_in_breakpoints(current_address_int):
-            GDB_Engine.delete_breakpoint(current_address)
+        if debugcore.check_address_in_breakpoints(current_address_int):
+            debugcore.delete_breakpoint(current_address)
         else:
-            if not GDB_Engine.add_breakpoint(current_address):
+            if not debugcore.add_breakpoint(current_address):
                 QMessageBox.information(self, tr.ERROR, tr.BREAKPOINT_FAILED.format(current_address))
         self.refresh_disassemble_view()
 
-    def toggle_watchpoint(self, address, watchpoint_type=type_defs.WATCHPOINT_TYPE.BOTH):
-        if GDB_Engine.currentpid == -1:
+    def toggle_watchpoint(self, address, watchpoint_type=typedefs.WATCHPOINT_TYPE.BOTH):
+        if debugcore.currentpid == -1:
             return
-        if GDB_Engine.check_address_in_breakpoints(address):
-            GDB_Engine.delete_breakpoint(hex(address))
+        if debugcore.check_address_in_breakpoints(address):
+            debugcore.delete_breakpoint(hex(address))
         else:
             watchpoint_dialog = InputDialogForm(item_list=[(tr.ENTER_WATCHPOINT_LENGTH, "")])
             watchpoint_dialog.setPalette(change_theme(theme))
             if watchpoint_dialog.exec():
                 user_input = watchpoint_dialog.get_values()
-                user_input_int = SysUtils.parse_string(user_input, type_defs.VALUE_INDEX.INDEX_INT32)
+                user_input_int = utils.parse_string(user_input, typedefs.VALUE_INDEX.INDEX_INT32)
                 if user_input_int is None:
                     QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR_INT.format(user_input))
                     return
                 if user_input_int < 1:
                     QMessageBox.information(self, tr.ERROR, tr.BREAKPOINT_ASSERT_LT.format(1))
                     return
-                if len(GDB_Engine.add_watchpoint(hex(address), user_input_int, watchpoint_type)) < 1:
+                if len(debugcore.add_watchpoint(hex(address), user_input_int, watchpoint_type)) < 1:
                     QMessageBox.information(self, tr.ERROR, tr.WATCHPOINT_FAILED.format(hex(address)))
         self.refresh_hex_view()
 
     def label_HexView_Information_context_menu_event(self, event):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
 
         def copy_to_clipboard():
@@ -2935,7 +2934,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             pass
 
     def widget_HexView_context_menu_event(self, event):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_address = self.tableView_HexView_Hex.get_selected_address()
         menu = QMenu()
@@ -2954,7 +2953,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         watchpoint_both = watchpoint_menu.addAction(tr.BOTH)
         add_condition = menu.addAction(tr.CHANGE_BREAKPOINT_CONDITION)
         delete_breakpoint = menu.addAction(tr.DELETE_BREAKPOINT)
-        if not GDB_Engine.check_address_in_breakpoints(selected_address):
+        if not debugcore.check_address_in_breakpoints(selected_address):
             guiutils.delete_menu_entries(menu, [add_condition, delete_breakpoint])
         else:
             guiutils.delete_menu_entries(menu, [watchpoint_menu.menuAction()])
@@ -2967,9 +2966,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             disassemble: lambda: self.disassemble_expression(hex(selected_address), append_to_travel_history=True),
             add_address: self.exec_hex_view_add_address_dialog,
             refresh: self.refresh_hex_view,
-            watchpoint_write: lambda: self.toggle_watchpoint(selected_address, type_defs.WATCHPOINT_TYPE.WRITE_ONLY),
-            watchpoint_read: lambda: self.toggle_watchpoint(selected_address, type_defs.WATCHPOINT_TYPE.READ_ONLY),
-            watchpoint_both: lambda: self.toggle_watchpoint(selected_address, type_defs.WATCHPOINT_TYPE.BOTH),
+            watchpoint_write: lambda: self.toggle_watchpoint(selected_address, typedefs.WATCHPOINT_TYPE.WRITE_ONLY),
+            watchpoint_read: lambda: self.toggle_watchpoint(selected_address, typedefs.WATCHPOINT_TYPE.READ_ONLY),
+            watchpoint_both: lambda: self.toggle_watchpoint(selected_address, typedefs.WATCHPOINT_TYPE.BOTH),
             add_condition: lambda: self.add_breakpoint_condition(selected_address),
             delete_breakpoint: lambda: self.toggle_watchpoint(selected_address)
         }
@@ -2979,7 +2978,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             pass
 
     def exec_hex_view_edit_dialog(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_address = self.tableView_HexView_Hex.get_selected_address()
         selected_address.setPalette(change_theme(theme))
@@ -2987,24 +2986,24 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.refresh_hex_view()
 
     def exec_hex_view_go_to_dialog(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         current_address = hex(self.tableView_HexView_Hex.get_selected_address())
         go_to_dialog = InputDialogForm(item_list=[(tr.ENTER_EXPRESSION, current_address)])
         go_to_dialog.setPalette(change_theme(theme))
         if go_to_dialog.exec():
             expression = go_to_dialog.get_values()
-            dest_address = GDB_Engine.examine_expression(expression).address
+            dest_address = debugcore.examine_expression(expression).address
             if not dest_address:
                 QMessageBox.information(self, tr.ERROR, tr.INVALID.format(expression))
                 return
             self.hex_dump_address(int(dest_address, 16))
 
     def exec_hex_view_add_address_dialog(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_address = self.tableView_HexView_Hex.get_selected_address()
-        vt = type_defs.ValueType(type_defs.VALUE_INDEX.INDEX_AOB)
+        vt = typedefs.ValueType(typedefs.VALUE_INDEX.INDEX_AOB)
         manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address), value_type=vt)
         manual_address_dialog.setPalette(change_theme(theme))
         if manual_address_dialog.exec():
@@ -3063,7 +3062,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.bDisassemblyScrolling = False
 
     def on_hex_view_current_changed(self, QModelIndex_current):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.tableView_HexView_Ascii.selectionModel().setCurrentIndex(QModelIndex_current,
@@ -3073,7 +3072,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
     def on_ascii_view_current_changed(self, QModelIndex_current):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.tableView_HexView_Hex.selectionModel().setCurrentIndex(QModelIndex_current,
@@ -3085,33 +3084,33 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     # TODO: Move this function to that class if that happens
     # TODO: Also consider moving shared fields of HexView and HexModel to that class(such as HexModel.current_address)
     def hex_dump_address(self, int_address, offset=HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
-        int_address = SysUtils.modulo_address(int_address, GDB_Engine.inferior_arch)
+        int_address = utils.modulo_address(int_address, debugcore.inferior_arch)
         if not (self.hex_view_current_region.start <= int_address < self.hex_view_current_region.end):
-            info = SysUtils.get_region_info(GDB_Engine.currentpid, int_address)
+            info = utils.get_region_info(debugcore.currentpid, int_address)
             if info:
                 self.hex_view_current_region = info
                 self.label_HexView_Information.setText(tr.REGION_INFO.format(
                     info.perms, hex(info.start), hex(info.end), info.file_name))
             else:
-                self.hex_view_current_region = type_defs.tuple_region_info(0, 0, None, None)
+                self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None)
                 self.label_HexView_Information.setText(tr.INVALID_REGION)
         self.tableWidget_HexView_Address.setRowCount(0)
         self.tableWidget_HexView_Address.setRowCount(HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
         for row, current_offset in enumerate(range(HEX_VIEW_ROW_COUNT)):
-            row_address = hex(SysUtils.modulo_address(int_address + current_offset * 16, GDB_Engine.inferior_arch))
+            row_address = hex(utils.modulo_address(int_address + current_offset * 16, debugcore.inferior_arch))
             self.tableWidget_HexView_Address.setItem(row, 0, QTableWidgetItem(row_address))
         tableWidget_HexView_column_size = self.tableWidget_HexView_Address.sizeHintForColumn(0) + 5
         self.tableWidget_HexView_Address.setMaximumWidth(tableWidget_HexView_column_size)
         self.tableWidget_HexView_Address.setMinimumWidth(tableWidget_HexView_column_size)
         self.tableWidget_HexView_Address.setColumnWidth(0, tableWidget_HexView_column_size)
-        data_array = GDB_Engine.hex_dump(int_address, offset)
-        breakpoint_info = GDB_Engine.get_breakpoint_info()
+        data_array = debugcore.hex_dump(int_address, offset)
+        breakpoint_info = debugcore.get_breakpoint_info()
         self.hex_model.refresh(int_address, offset, data_array, breakpoint_info)
         self.ascii_model.refresh(int_address, offset, data_array, breakpoint_info)
         for index in range(offset):
-            current_address = SysUtils.modulo_address(self.hex_model.current_address + index, GDB_Engine.inferior_arch)
+            current_address = utils.modulo_address(self.hex_model.current_address + index, debugcore.inferior_arch)
             if current_address == self.hex_view_last_selected_address_int:
                 row_index = int(index / HEX_VIEW_COL_COUNT)
                 model_index = QModelIndex(self.hex_model.index(row_index, index % HEX_VIEW_COL_COUNT))
@@ -3128,10 +3127,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableView_HexView_Ascii.clearSelection()
 
     def refresh_hex_view(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         if self.tableWidget_HexView_Address.rowCount() == 0:
-            entry_point = GDB_Engine.find_entry_point()
+            entry_point = debugcore.find_entry_point()
             if not entry_point:
                 # **Shrugs**
                 entry_point = "0x00400000"
@@ -3144,31 +3143,31 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     # offset can also be an address as hex str
     # returns True if the given expression is disassembled correctly, False if not
     def disassemble_expression(self, expression, offset="+200", append_to_travel_history=False):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
-        disas_data = GDB_Engine.disassemble(expression, offset)
+        disas_data = debugcore.disassemble(expression, offset)
         if not disas_data:
             QMessageBox.information(app.focusWidget(), tr.ERROR, tr.EXPRESSION_ACCESS_ERROR.format(expression))
             return False
-        program_counter = GDB_Engine.examine_expression("$pc").address
+        program_counter = debugcore.examine_expression("$pc").address
         program_counter_int = int(program_counter, 16) if program_counter else None
         row_color = {}
-        breakpoint_info = GDB_Engine.get_breakpoint_info()
+        breakpoint_info = debugcore.get_breakpoint_info()
 
         # TODO: Change this nonsense when the huge refactorization happens
-        current_first_address = SysUtils.extract_address(disas_data[0][0])  # address of first list entry
+        current_first_address = utils.extract_address(disas_data[0][0])  # address of first list entry
         try:
-            previous_first_address = SysUtils.extract_address(
+            previous_first_address = utils.extract_address(
                 self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text())
         except AttributeError:
             previous_first_address = current_first_address
 
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
-        jmp_dict, call_dict = GDB_Engine.get_dissect_code_data(False, True, True)
+        jmp_dict, call_dict = debugcore.get_dissect_code_data(False, True, True)
         for row, (address_info, bytes_aob, opcode) in enumerate(disas_data):
             comment = ""
-            current_address = int(SysUtils.extract_address(address_info), 16)
+            current_address = int(utils.extract_address(address_info), 16)
             current_address_str = hex(current_address)
             jmp_ref_exists = False
             call_ref_exists = False
@@ -3270,13 +3269,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         return True
 
     def refresh_disassemble_view(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         self.disassemble_expression(self.disassemble_currently_displayed_address)
 
     # Set color of a row if a specific address is encountered(e.g $pc, a bookmarked address etc.)
     def handle_colors(self, row_color):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         for row in row_color:
             current_row = row_color[row]
@@ -3303,7 +3302,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.set_row_color(row, REF_COLOR)
 
     def set_row_color(self, row, color):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         for col in range(self.tableWidget_Disassemble.columnCount()):
             color = QColor(color)
@@ -3311,12 +3310,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.item(row, col).setData(Qt.ItemDataRole.BackgroundRole, color)
 
     def on_process_stop(self):
-        if GDB_Engine.stop_reason == type_defs.STOP_REASON.PAUSE:
+        if debugcore.stop_reason == typedefs.STOP_REASON.PAUSE:
             self.setWindowTitle(tr.MV_PAUSED)
             return
         self.updating_memoryview = True
         time0 = time()
-        self.setWindowTitle(tr.MV_DEBUGGING.format(GDB_Engine.get_thread_info()))
+        self.setWindowTitle(tr.MV_DEBUGGING.format(debugcore.get_thread_info()))
         self.disassemble_expression("$pc")
         self.update_registers()
         if self.stackedWidget_StackScreens.currentWidget() == self.StackTrace:
@@ -3352,9 +3351,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.setWindowTitle(tr.MV_RUNNING)
 
     def add_breakpoint_condition(self, int_address):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
-        breakpoint = GDB_Engine.check_address_in_breakpoints(int_address)
+        breakpoint = debugcore.check_address_in_breakpoints(int_address)
         if breakpoint:
             condition_line_edit_text = breakpoint.condition
         else:
@@ -3364,15 +3363,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         condition_dialog.setPalette(change_theme(theme))
         if condition_dialog.exec():
             condition = condition_dialog.get_values()
-            if not GDB_Engine.modify_breakpoint(hex(int_address), type_defs.BREAKPOINT_MODIFY.CONDITION,
+            if not debugcore.modify_breakpoint(hex(int_address), typedefs.BREAKPOINT_MODIFY.CONDITION,
                                                 condition=condition):
                 QMessageBox.information(app.focusWidget(), tr.ERROR, tr.BP_CONDITION_FAILED.format(hex(int_address)))
 
     def update_registers(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
-        registers = GDB_Engine.read_registers()
-        if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64:
+        registers = debugcore.read_registers()
+        if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64:
             self.stackedWidget.setCurrentWidget(self.registers_64)
             self.RAX.set_value(registers["rax"])
             self.RBX.set_value(registers["rbx"])
@@ -3391,7 +3390,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.R13.set_value(registers["r13"])
             self.R14.set_value(registers["r14"])
             self.R15.set_value(registers["r15"])
-        elif GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_32:
+        elif debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32:
             self.stackedWidget.setCurrentWidget(self.registers_32)
             self.EAX.set_value(registers["eax"])
             self.EBX.set_value(registers["ebx"])
@@ -3419,9 +3418,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.FS.set_value(registers["fs"])
 
     def update_stacktrace(self):
-        if GDB_Engine.currentpid == -1 or GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
             return
-        stack_trace_info = GDB_Engine.get_stacktrace_info()
+        stack_trace_info = debugcore.get_stacktrace_info()
         self.tableWidget_StackTrace.setRowCount(0)
         self.tableWidget_StackTrace.setRowCount(len(stack_trace_info))
         for row, item in enumerate(stack_trace_info):
@@ -3429,7 +3428,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_StackTrace.setItem(row, STACKTRACE_FRAME_ADDRESS_COL, QTableWidgetItem(item[1]))
 
     def set_stack_widget(self, stack_widget):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         self.stackedWidget_StackScreens.setCurrentWidget(stack_widget)
         if stack_widget == self.Stack:
@@ -3438,7 +3437,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.update_stacktrace()
 
     def tableWidget_StackTrace_context_menu_event(self, event):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
 
         def copy_to_clipboard(row, column):
@@ -3470,9 +3469,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             pass
 
     def update_stack(self):
-        if GDB_Engine.currentpid == -1 or GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
             return
-        stack_info = GDB_Engine.get_stack_info()
+        stack_info = debugcore.get_stack_info()
         self.tableWidget_Stack.setRowCount(0)
         self.tableWidget_Stack.setRowCount(len(stack_info))
         for row, item in enumerate(stack_info):
@@ -3483,18 +3482,18 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Stack.resizeColumnToContents(STACK_VALUE_COL)
 
     def tableWidget_Stack_key_press_event(self, event):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if selected_row == -1:
-            actions = type_defs.KeyboardModifiersTupleDict([
+            actions = typedefs.KeyboardModifiersTupleDict([
                 (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack)
             ])
         else:
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
-            current_address = SysUtils.extract_address(current_address_text)
+            current_address = utils.extract_address(current_address_text)
 
-            actions = type_defs.KeyboardModifiersTupleDict([
+            actions = typedefs.KeyboardModifiersTupleDict([
                 (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack),
                 (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
                  lambda: self.disassemble_expression(current_address, append_to_travel_history=True)),
@@ -3511,14 +3510,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_Stack.item(row, column).text())
 
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if selected_row == -1:
             current_address = None
         else:
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
-            current_address = SysUtils.extract_address(current_address_text)
+            current_address = utils.extract_address(current_address_text)
         menu = QMenu()
         switch_to_stacktrace = menu.addAction(tr.STACKTRACE)
         menu.addSeparator()
@@ -3550,39 +3549,39 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             pass
 
     def tableWidget_Stack_double_click(self, index):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if index.column() == STACK_POINTER_ADDRESS_COL:
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_POINTER_ADDRESS_COL).text()
-            current_address = SysUtils.extract_address(current_address_text)
+            current_address = utils.extract_address(current_address_text)
             self.hex_dump_address(int(current_address, 16))
         else:
             points_to_text = self.tableWidget_Stack.item(selected_row, STACK_POINTS_TO_COL).text()
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
-            current_address = SysUtils.extract_address(current_address_text)
+            current_address = utils.extract_address(current_address_text)
             if points_to_text.startswith("(str)"):
                 self.hex_dump_address(int(current_address, 16))
             else:
                 self.disassemble_expression(current_address, append_to_travel_history=True)
 
     def tableWidget_StackTrace_double_click(self, index):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_StackTrace)
         if index.column() == STACKTRACE_RETURN_ADDRESS_COL:
             current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_RETURN_ADDRESS_COL).text()
-            current_address = SysUtils.extract_address(current_address_text)
+            current_address = utils.extract_address(current_address_text)
             self.disassemble_expression(current_address, append_to_travel_history=True)
         if index.column() == STACKTRACE_FRAME_ADDRESS_COL:
             current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_FRAME_ADDRESS_COL).text()
-            current_address = SysUtils.extract_address(current_address_text)
+            current_address = utils.extract_address(current_address_text)
             self.hex_dump_address(int(current_address, 16))
 
     def tableWidget_StackTrace_key_press_event(self, event):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
-        actions = type_defs.KeyboardModifiersTupleDict([
+        actions = typedefs.KeyboardModifiersTupleDict([
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stacktrace)
         ])
         try:
@@ -3592,7 +3591,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_StackTrace.keyPressEvent_original(event)
 
     def widget_Disassemble_wheel_event(self, event):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         steps = event.angleDelta()
         if steps.y() > 0:
@@ -3601,7 +3600,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble_scroll("next", instructions_per_scroll)
 
     def disassemble_check_viewport(self, where, instruction_count):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         current_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_row_height = self.tableWidget_Disassemble.rowViewportPosition(current_row)
@@ -3615,22 +3614,22 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 if self.tableWidget_Disassemble.rowViewportPosition(row) > height:
                     break
                 last_visible_row += 1
-            current_address = SysUtils.extract_address(
+            current_address = utils.extract_address(
                 self.tableWidget_Disassemble.item(current_row, DISAS_ADDR_COL).text())
-            new_address = GDB_Engine.find_closest_instruction_address(current_address, "previous", last_visible_row)
+            new_address = debugcore.find_closest_instruction_address(current_address, "previous", last_visible_row)
             self.disassemble_expression(new_address)
         elif (where == "previous" and current_row == 0) or (where == "next" and current_row_height > height):
             self.tableWidget_Disassemble_scroll(where, instruction_count)
 
     def tableWidget_Disassemble_scroll(self, where, instruction_count):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         current_address = self.disassemble_currently_displayed_address
-        new_address = GDB_Engine.find_closest_instruction_address(current_address, where, instruction_count)
+        new_address = debugcore.find_closest_instruction_address(current_address, where, instruction_count)
         self.disassemble_expression(new_address)
 
     def widget_HexView_wheel_event(self, event):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         steps = event.angleDelta()
         current_address = self.hex_model.current_address
@@ -3641,11 +3640,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_dump_address(next_address)
 
     def widget_HexView_key_press_event(self, event):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_address = self.tableView_HexView_Hex.get_selected_address()
 
-        actions = type_defs.KeyboardModifiersTupleDict([
+        actions = typedefs.KeyboardModifiersTupleDict([
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_G), self.exec_hex_view_go_to_dialog),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
              lambda: self.disassemble_expression(hex(selected_address), append_to_travel_history=True)),
@@ -3661,16 +3660,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.widget_HexView.keyPressEvent_original(event)
 
     def tableWidget_Disassemble_key_press_event(self, event):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         if selected_row == -1:
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
+        current_address = utils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
 
-        actions = type_defs.KeyboardModifiersTupleDict([
+        actions = typedefs.KeyboardModifiersTupleDict([
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space),
              lambda: self.follow_instruction(selected_row)),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_E),
@@ -3697,39 +3696,39 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.keyPressEvent_original(event)
 
     def tableWidget_Disassemble_item_double_clicked(self, index):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         if index.column() == DISAS_COMMENT_COL:
             selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
             current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-            current_address = int(SysUtils.extract_address(current_address_text), 16)
+            current_address = int(utils.extract_address(current_address_text), 16)
             if current_address in self.tableWidget_Disassemble.bookmarks:
                 self.change_bookmark_comment(current_address)
             else:
                 self.bookmark_address(current_address)
 
     def tableWidget_Disassemble_item_selection_changed(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         try:
             selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
             selected_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-            self.disassemble_last_selected_address_int = int(SysUtils.extract_address(selected_address_text), 16)
+            self.disassemble_last_selected_address_int = int(utils.extract_address(selected_address_text), 16)
         except (TypeError, ValueError, AttributeError):
             pass
 
     # Search the item in given row for location changing instructions
     # Go to the address pointed by that instruction if it contains any
     def follow_instruction(self, selected_row):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
-        address = SysUtils.instruction_follow_address(
+        address = utils.instruction_follow_address(
             self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text())
         if address:
             self.disassemble_expression(address, append_to_travel_history=True)
 
     def disassemble_go_back(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         if self.tableWidget_Disassemble.travel_history:
             last_location = self.tableWidget_Disassemble.travel_history[-1]
@@ -3737,7 +3736,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.travel_history.pop()
 
     def tableWidget_Disassemble_context_menu_event(self, event):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
 
         def copy_to_clipboard(row, column):
@@ -3751,7 +3750,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
+        current_address = utils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
 
         menu = QMenu()
@@ -3759,7 +3758,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         back = menu.addAction(tr.BACK)
         show_in_hex_view = menu.addAction(f"{tr.HEXVIEW_ADDRESS}[Ctrl+H]")
         menu.addSeparator()
-        followable = SysUtils.instruction_follow_address(
+        followable = utils.instruction_follow_address(
             self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text())
         follow = menu.addAction(f"{tr.FOLLOW}[Space]")
         if not followable:
@@ -3777,11 +3776,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             guiutils.delete_menu_entries(menu, [bookmark])
         go_to_bookmark = menu.addMenu(tr.GO_TO_BOOKMARK_ADDRESS)
         address_list = [hex(address) for address in self.tableWidget_Disassemble.bookmarks.keys()]
-        bookmark_actions = [go_to_bookmark.addAction(item.all) for item in GDB_Engine.examine_expressions(address_list)]
+        bookmark_actions = [go_to_bookmark.addAction(item.all) for item in debugcore.examine_expressions(address_list)]
         menu.addSeparator()
         toggle_breakpoint = menu.addAction(f"{tr.TOGGLE_BREAKPOINT}[F5]")
         add_condition = menu.addAction(tr.CHANGE_BREAKPOINT_CONDITION)
-        if not GDB_Engine.check_address_in_breakpoints(current_address_int):
+        if not debugcore.check_address_in_breakpoints(current_address_int):
             guiutils.delete_menu_entries(menu, [add_condition])
         menu.addSeparator()
         edit_instruction = menu.addAction(tr.EDIT_INSTRUCTION)
@@ -3832,16 +3831,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         except KeyError:
             pass
         if action in bookmark_actions:
-            self.disassemble_expression(SysUtils.extract_address(action.text()), append_to_travel_history=True)
+            self.disassemble_expression(utils.extract_address(action.text()), append_to_travel_history=True)
 
     def dissect_current_region(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         if selected_row == -1:
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
+        current_address = utils.extract_address(current_address_text)
         dissect_code_dialog = DissectCodeDialogForm(int_address=int(current_address, 16))
         dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
         dissect_code_dialog.setPalette(change_theme(theme))
@@ -3849,32 +3848,32 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.refresh_disassemble_view()
 
     def exec_examine_referrers_widget(self, current_address_text):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         if not guiutils.contains_reference_mark(current_address_text):
             return
-        current_address = SysUtils.extract_address(current_address_text)
+        current_address = utils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
         examine_referrers_widget = ExamineReferrersWidgetForm(current_address_int, self)
         examine_referrers_widget.setPalette(change_theme(theme))
         examine_referrers_widget.show()
 
     def exec_trace_instructions_dialog(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         if selected_row == -1:
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
+        current_address = utils.extract_address(current_address_text)
         TraceInstructionsWindowForm(current_address, parent=self)
 
     def exec_track_breakpoint_dialog(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
+        current_address = utils.extract_address(current_address_text)
         current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
         register_expression_dialog = InputDialogForm(item_list=[(tr.ENTER_TRACK_BP_EXPRESSION, "")])
         register_expression_dialog.setPalette(change_theme(theme))
@@ -3885,13 +3884,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             track_breakpoint_widget.show()
 
     def exec_disassemble_go_to_dialog(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         if selected_row == -1:
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
+        current_address = utils.extract_address(current_address_text)
 
         go_to_dialog = InputDialogForm(item_list=[(tr.ENTER_EXPRESSION, current_address)])
         go_to_dialog.setPalette(change_theme(theme))
@@ -3900,7 +3899,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.disassemble_expression(traveled_exp, append_to_travel_history=True)
 
     def bookmark_address(self, int_address):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         if int_address in self.tableWidget_Disassemble.bookmarks:
             QMessageBox.information(app.focusWidget(), tr.ERROR, tr.ALREADY_BOOKMARKED)
@@ -3915,7 +3914,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.refresh_disassemble_view()
 
     def change_bookmark_comment(self, int_address):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         current_comment = self.tableWidget_Disassemble.bookmarks[int_address]
         comment_dialog = InputDialogForm(item_list=[(tr.ENTER_BOOKMARK_COMMENT, current_comment)])
@@ -3928,14 +3927,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.refresh_disassemble_view()
 
     def delete_bookmark(self, int_address):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         if int_address in self.tableWidget_Disassemble.bookmarks:
             del self.tableWidget_Disassemble.bookmarks[int_address]
             self.refresh_disassemble_view()
 
     def actionBookmarks_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         bookmark_widget = BookmarkWidgetForm(self)
         bookmark_widget.setPalette(change_theme(theme))
@@ -3943,14 +3942,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         bookmark_widget.activateWindow()
 
     def actionStackTrace_Info_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         self.stacktrace_info_widget = StackTraceInfoWidgetForm()
         self.stacktrace_info_widget.setPalette(change_theme(theme))
         self.stacktrace_info_widget.show()
 
     def actionBreakpoints_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         breakpoint_widget = BreakpointInfoWidgetForm(self)
         breakpoint_widget.setPalette(change_theme(theme))
@@ -3958,70 +3957,70 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         breakpoint_widget.activateWindow()
 
     def actionFunctions_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         functions_info_widget = FunctionsInfoWidgetForm(self)
         functions_info_widget.setPalette(change_theme(theme))
         functions_info_widget.show()
 
     def actionGDB_Log_File_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         log_file_widget = LogFileWidgetForm()
         log_file_widget.showMaximized()
 
     def actionMemory_Regions_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         memory_regions_widget = MemoryRegionsWidgetForm(self)
         memory_regions_widget.setPalette(change_theme(theme))
         memory_regions_widget.show()
 
     def actionRestore_Instructions_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         restore_instructions_widget = RestoreInstructionsWidgetForm(self)
         restore_instructions_widget.setPalette(change_theme(theme))
         restore_instructions_widget.show()
 
     def actionReferenced_Strings_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         ref_str_widget = ReferencedStringsWidgetForm(self)
         ref_str_widget.setPalette(change_theme(theme))
         ref_str_widget.show()
 
     def actionReferenced_Calls_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         ref_call_widget = ReferencedCallsWidgetForm(self)
         ref_call_widget.setPalette(change_theme(theme))
         ref_call_widget.show()
 
     def actionInject_so_file_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         file_path = QFileDialog.getOpenFileName(self, tr.SELECT_SO_FILE, "", tr.SHARED_OBJECT_TYPE)[0]
         if file_path:
-            if GDB_Engine.inject_with_dlopen_call(file_path):
+            if debugcore.inject_with_dlopen_call(file_path):
                 QMessageBox.information(self, tr.SUCCESS, tr.FILE_INJECTED)
             else:
                 QMessageBox.information(self, tr.ERROR, tr.FILE_INJECT_FAILED)
 
     def actionCall_Function_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         call_dialog = InputDialogForm(item_list=[(tr.ENTER_CALL_EXPRESSION, "")])
         call_dialog.setPalette(change_theme(theme))
         if call_dialog.exec():
-            result = GDB_Engine.call_function_from_inferior(call_dialog.get_values())
+            result = debugcore.call_function_from_inferior(call_dialog.get_values())
             if result[0]:
                 QMessageBox.information(self, tr.SUCCESS, result[0] + " = " + result[1])
             else:
                 QMessageBox.information(self, tr.ERROR, tr.CALL_EXPRESSION_FAILED.format(call_dialog.get_values()))
 
     def actionSearch_Opcode_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         start_address = int(self.disassemble_currently_displayed_address, 16)
         end_address = start_address + 0x30000
@@ -4030,7 +4029,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         search_opcode_widget.show()
 
     def actionDissect_Code_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         self.dissect_code_dialog = DissectCodeDialogForm()
         self.dissect_code_dialog.setPalette(change_theme(theme))
@@ -4038,14 +4037,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.refresh_disassemble_view()
 
     def actionlibpince_triggered(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         libpince_widget = LibpinceReferenceWidgetForm(is_window=True)
         libpince_widget.setPalette(change_theme(theme))
         libpince_widget.showMaximized()
 
     def pushButton_ShowFloatRegisters_clicked(self):
-        if GDB_Engine.currentpid == -1:
+        if debugcore.currentpid == -1:
             return
         self.float_registers_widget = FloatRegisterWidgetForm()
         self.float_registers_widget.setPalette(change_theme(theme))
@@ -4074,22 +4073,22 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
     def refresh_table(self):
         self.listWidget.clear()
         address_list = [hex(address) for address in self.parent().tableWidget_Disassemble.bookmarks.keys()]
-        self.listWidget.addItems([item.all for item in GDB_Engine.examine_expressions(address_list)])
+        self.listWidget.addItems([item.all for item in debugcore.examine_expressions(address_list)])
 
     def change_display(self, row):
-        current_address = SysUtils.extract_address(self.listWidget.item(row).text())
-        self.lineEdit_Info.setText(GDB_Engine.get_address_info(current_address))
+        current_address = utils.extract_address(self.listWidget.item(row).text())
+        self.lineEdit_Info.setText(debugcore.get_address_info(current_address))
         self.lineEdit_Comment.setText(self.parent().tableWidget_Disassemble.bookmarks[int(current_address, 16)])
 
     def listWidget_item_double_clicked(self, item):
-        self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
+        self.parent().disassemble_expression(utils.extract_address(item.text()), append_to_travel_history=True)
 
     def exec_add_entry_dialog(self):
         entry_dialog = InputDialogForm(item_list=[(tr.ENTER_EXPRESSION, "")])
         entry_dialog.setPalette(change_theme(theme))
         if entry_dialog.exec():
             text = entry_dialog.get_values()
-            address = GDB_Engine.examine_expression(text).address
+            address = debugcore.examine_expression(text).address
             if not address:
                 QMessageBox.information(self, tr.ERROR, tr.INVALID_EXPRESSION)
                 return
@@ -4103,7 +4102,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
     def listWidget_context_menu_event(self, event):
         current_item = guiutils.get_current_item(self.listWidget)
         if current_item:
-            current_address = int(SysUtils.extract_address(current_item.text()), 16)
+            current_address = int(utils.extract_address(current_item.text()), 16)
             if current_address not in self.parent().tableWidget_Disassemble.bookmarks:
                 QMessageBox.information(self, tr.ERROR, tr.INVALID_ENTRY)
                 self.refresh_table()
@@ -4136,7 +4135,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         current_item = guiutils.get_current_item(self.listWidget)
         if not current_item:
             return
-        current_address = int(SysUtils.extract_address(current_item.text()), 16)
+        current_address = int(utils.extract_address(current_item.text()), 16)
         self.parent().delete_bookmark(current_address)
         self.refresh_table()
 
@@ -4159,8 +4158,8 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         self.tableWidget_FPU.setRowCount(8)
         self.tableWidget_XMM.setRowCount(0)
         self.tableWidget_XMM.setRowCount(8)
-        float_registers = GDB_Engine.read_float_registers()
-        for row, (st, xmm) in enumerate(zip(type_defs.REGISTERS.FLOAT.ST, type_defs.REGISTERS.FLOAT.XMM)):
+        float_registers = debugcore.read_float_registers()
+        for row, (st, xmm) in enumerate(zip(typedefs.REGISTERS.FLOAT.ST, typedefs.REGISTERS.FLOAT.XMM)):
             self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(st))
             self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(float_registers[st]))
             self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(xmm))
@@ -4182,7 +4181,7 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         if register_dialog.exec():
             if self.currentWidget() == self.XMM:
                 current_register += ".v4_float"
-            GDB_Engine.set_convenience_variable(current_register, register_dialog.get_values())
+            debugcore.set_convenience_variable(current_register, register_dialog.get_values())
             self.update_registers()
 
 
@@ -4197,16 +4196,16 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
 
     def update_stacktrace(self):
         self.listWidget_ReturnAddresses.clear()
-        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
             return
-        return_addresses = GDB_Engine.get_stack_frame_return_addresses()
+        return_addresses = debugcore.get_stack_frame_return_addresses()
         self.listWidget_ReturnAddresses.addItems(return_addresses)
 
     def update_frame_info(self, index):
-        if GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
             self.textBrowser_Info.setText(tr.PROCESS_RUNNING)
             return
-        frame_info = GDB_Engine.get_stack_frame_info(index)
+        frame_info = debugcore.get_stack_frame_info(index)
         self.textBrowser_Info.setText(frame_info)
 
 
@@ -4233,7 +4232,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         restore_instruction = menu.addAction(tr.RESTORE_INSTRUCTION)
         if selected_row != -1:
             selected_address_text = self.tableWidget_Instructions.item(selected_row, INSTR_ADDR_COL).text()
-            selected_address = SysUtils.extract_address(selected_address_text)
+            selected_address = utils.extract_address(selected_address_text)
             selected_address_int = int(selected_address, 16)
         else:
             guiutils.delete_menu_entries(menu, [restore_instruction])
@@ -4253,16 +4252,16 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
             pass
 
     def restore_instruction(self, selected_address_int):
-        GDB_Engine.restore_instruction(selected_address_int)
+        debugcore.restore_instruction(selected_address_int)
         self.refresh_all()
 
     def refresh(self):
-        modified_instructions = GDB_Engine.get_modified_instructions()
+        modified_instructions = debugcore.get_modified_instructions()
         self.tableWidget_Instructions.setRowCount(len(modified_instructions))
         for row, (address, aob) in enumerate(modified_instructions.items()):
             self.tableWidget_Instructions.setItem(row, INSTR_ADDR_COL, QTableWidgetItem(hex(address)))
             self.tableWidget_Instructions.setItem(row, INSTR_AOB_COL, QTableWidgetItem(aob))
-            instr_name = SysUtils.get_opcodes(address, aob, GDB_Engine.get_inferior_arch())
+            instr_name = utils.get_opcodes(address, aob, debugcore.get_inferior_arch())
             if not instr_name:
                 instr_name = "??"
             self.tableWidget_Instructions.setItem(row, INSTR_NAME_COL, QTableWidgetItem(instr_name))
@@ -4274,7 +4273,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         self.refresh()
 
     def tableWidget_Instructions_key_press_event(self, event):
-        actions = type_defs.KeyboardModifiersTupleDict([
+        actions = typedefs.KeyboardModifiersTupleDict([
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh)
         ])
         try:
@@ -4285,7 +4284,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
 
     def tableWidget_Instructions_double_clicked(self, index):
         current_address_text = self.tableWidget_Instructions.item(index.row(), INSTR_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
+        current_address = utils.extract_address(current_address_text)
         self.parent().disassemble_expression(current_address, append_to_travel_history=True)
 
     def closeEvent(self, QCloseEvent):
@@ -4311,7 +4310,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         self.refresh()
 
     def refresh(self):
-        break_info = GDB_Engine.get_breakpoint_info()
+        break_info = debugcore.get_breakpoint_info()
         self.tableWidget_BreakpointInfo.setRowCount(0)
         self.tableWidget_BreakpointInfo.setRowCount(len(break_info))
         for row, item in enumerate(break_info):
@@ -4326,22 +4325,22 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_COND_COL, QTableWidgetItem(item.condition))
         guiutils.resize_to_contents(self.tableWidget_BreakpointInfo)
         self.textBrowser_BreakpointInfo.clear()
-        self.textBrowser_BreakpointInfo.setText(GDB_Engine.send_command("info break", cli_output=True))
+        self.textBrowser_BreakpointInfo.setText(debugcore.send_command("info break", cli_output=True))
 
     def delete_breakpoint(self, address):
         if address is not None:
-            GDB_Engine.delete_breakpoint(address)
+            debugcore.delete_breakpoint(address)
             self.refresh_all()
 
     def tableWidget_BreakpointInfo_key_press_event(self, event):
         selected_row = guiutils.get_current_row(self.tableWidget_BreakpointInfo)
         if selected_row != -1:
             current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
-            current_address = SysUtils.extract_address(current_address_text)
+            current_address = utils.extract_address(current_address_text)
         else:
             current_address = None
 
-        actions = type_defs.KeyboardModifiersTupleDict([
+        actions = typedefs.KeyboardModifiersTupleDict([
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete),
              lambda: self.delete_breakpoint(current_address)),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh)
@@ -4365,14 +4364,14 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
                 if count < 1:
                     QMessageBox.information(self, tr.ERROR, tr.HIT_COUNT_ASSERT_LT.format(1))
                 else:
-                    GDB_Engine.modify_breakpoint(current_address, type_defs.BREAKPOINT_MODIFY.ENABLE_COUNT,
+                    debugcore.modify_breakpoint(current_address, typedefs.BREAKPOINT_MODIFY.ENABLE_COUNT,
                                                  count=count)
 
     def tableWidget_BreakpointInfo_context_menu_event(self, event):
         selected_row = guiutils.get_current_row(self.tableWidget_BreakpointInfo)
         if selected_row != -1:
             current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
-            current_address = SysUtils.extract_address(current_address_text)
+            current_address = utils.extract_address(current_address_text)
             current_address_int = int(current_address, 16)
         else:
             current_address = None
@@ -4398,13 +4397,13 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         action = menu.exec(event.globalPos())
         actions = {
             change_condition: lambda: self.parent().add_breakpoint_condition(current_address_int),
-            enable: lambda: GDB_Engine.modify_breakpoint(current_address, type_defs.BREAKPOINT_MODIFY.ENABLE),
-            disable: lambda: GDB_Engine.modify_breakpoint(current_address, type_defs.BREAKPOINT_MODIFY.DISABLE),
-            enable_once: lambda: GDB_Engine.modify_breakpoint(current_address, type_defs.BREAKPOINT_MODIFY.ENABLE_ONCE),
+            enable: lambda: debugcore.modify_breakpoint(current_address, typedefs.BREAKPOINT_MODIFY.ENABLE),
+            disable: lambda: debugcore.modify_breakpoint(current_address, typedefs.BREAKPOINT_MODIFY.DISABLE),
+            enable_once: lambda: debugcore.modify_breakpoint(current_address, typedefs.BREAKPOINT_MODIFY.ENABLE_ONCE),
             enable_count: lambda: self.exec_enable_count_dialog(current_address),
-            enable_delete: lambda: GDB_Engine.modify_breakpoint(current_address,
-                                                                type_defs.BREAKPOINT_MODIFY.ENABLE_DELETE),
-            delete_breakpoint: lambda: GDB_Engine.delete_breakpoint(current_address),
+            enable_delete: lambda: debugcore.modify_breakpoint(current_address,
+                                                                typedefs.BREAKPOINT_MODIFY.ENABLE_DELETE),
+            delete_breakpoint: lambda: debugcore.delete_breakpoint(current_address),
             refresh: self.refresh
         }
         try:
@@ -4421,7 +4420,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
 
     def tableWidget_BreakpointInfo_double_clicked(self, index):
         current_address_text = self.tableWidget_BreakpointInfo.item(index.row(), BREAK_ADDR_COL).text()
-        current_address = SysUtils.extract_address(current_address_text)
+        current_address = utils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
 
         if index.column() == BREAK_COND_COL:
@@ -4451,16 +4450,16 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.update_timer = QTimer(timeout=self.update_list)
         self.stopped = False
         self.address = address
-        if watchpoint_type == type_defs.WATCHPOINT_TYPE.WRITE_ONLY:
+        if watchpoint_type == typedefs.WATCHPOINT_TYPE.WRITE_ONLY:
             string = tr.OPCODE_WRITING_TO.format(address)
-        elif watchpoint_type == type_defs.WATCHPOINT_TYPE.READ_ONLY:
+        elif watchpoint_type == typedefs.WATCHPOINT_TYPE.READ_ONLY:
             string = tr.OPCODE_READING_FROM.format(address)
-        elif watchpoint_type == type_defs.WATCHPOINT_TYPE.BOTH:
+        elif watchpoint_type == typedefs.WATCHPOINT_TYPE.BOTH:
             string = tr.OPCODE_ACCESSING_TO.format(address)
         else:
             raise Exception("Watchpoint type is invalid: " + str(watchpoint_type))
         self.setWindowTitle(string)
-        breakpoints = GDB_Engine.track_watchpoint(address, length, watchpoint_type)
+        breakpoints = debugcore.track_watchpoint(address, length, watchpoint_type)
         if not breakpoints:
             QMessageBox.information(self, tr.ERROR, tr.TRACK_WATCHPOINT_FAILED.format(address))
             return
@@ -4474,7 +4473,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.update_timer.start(100)
 
     def update_list(self):
-        info = GDB_Engine.get_track_watchpoint_info(self.breakpoints)
+        info = debugcore.get_track_watchpoint_info(self.breakpoints)
         if not info or self.info == info:
             return
         self.info = info
@@ -4515,7 +4514,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         if self.stopped:
             self.close()
             return
-        if not GDB_Engine.delete_breakpoint(self.address):
+        if not debugcore.delete_breakpoint(self.address):
             QMessageBox.information(self, tr.ERROR, tr.DELETE_WATCHPOINT_FAILED.format(self.address))
             return
         self.stopped = True
@@ -4525,7 +4524,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         global instances
         self.update_timer.stop()
         if not self.stopped:
-            GDB_Engine.delete_breakpoint(self.address)
+            debugcore.delete_breakpoint(self.address)
         self.deleteLater()
         instances.remove(self)
 
@@ -4544,7 +4543,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.setWindowFlags(Qt.WindowType.Window)
         guiutils.center_to_parent(self)
         self.setWindowTitle(tr.ACCESSED_BY_INSTRUCTION.format(instruction))
-        breakpoint = GDB_Engine.track_breakpoint(address, register_expressions)
+        breakpoint = debugcore.track_breakpoint(address, register_expressions)
         if not breakpoint:
             QMessageBox.information(self, tr.ERROR, tr.TRACK_BREAKPOINT_FAILED.format(address))
             return
@@ -4561,7 +4560,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.parent().refresh_disassemble_view()
 
     def update_list(self):
-        info = GDB_Engine.get_track_breakpoint_info(self.breakpoint)
+        info = debugcore.get_track_breakpoint_info(self.breakpoint)
         if not info:
             return
         if info == self.info:
@@ -4579,11 +4578,11 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.update_values()
 
     def update_values(self):
-        mem_handle = GDB_Engine.memory_handle()
+        mem_handle = debugcore.memory_handle()
         value_type = self.comboBox_ValueType.currentIndex()
         for row in range(self.tableWidget_TrackInfo.rowCount()):
             address = self.tableWidget_TrackInfo.item(row, TRACK_BREAKPOINT_ADDR_COL).text()
-            value = GDB_Engine.read_memory(address, value_type, 10, mem_handle=mem_handle)
+            value = debugcore.read_memory(address, value_type, 10, mem_handle=mem_handle)
             value = "" if value is None else str(value)
             self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(value))
         guiutils.resize_to_contents(self.tableWidget_TrackInfo)
@@ -4596,7 +4595,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
 
     def tableWidget_TrackInfo_item_double_clicked(self, index):
         address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
-        vt = type_defs.ValueType(self.comboBox_ValueType.currentIndex())
+        vt = typedefs.ValueType(self.comboBox_ValueType.currentIndex())
         self.parent().parent().add_entry_to_addresstable(tr.ACCESSED_BY.format(self.address), address, vt)
         self.parent().parent().update_address_table()
 
@@ -4604,7 +4603,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         if self.stopped:
             self.close()
             return
-        if not GDB_Engine.delete_breakpoint(self.address):
+        if not debugcore.delete_breakpoint(self.address):
             QMessageBox.information(self, tr.ERROR, tr.DELETE_BREAKPOINT_FAILED.format(self.address))
             return
         self.stopped = True
@@ -4616,7 +4615,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.update_list_timer.stop()
         self.update_values_timer.stop()
         if not self.stopped:
-            GDB_Engine.delete_breakpoint(self.address)
+            debugcore.delete_breakpoint(self.address)
         self.parent().refresh_disassemble_view()
         self.deleteLater()
         instances.remove(self)
@@ -4632,9 +4631,9 @@ class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
         trigger_condition = self.lineEdit_TriggerCondition.text()
         stop_condition = self.lineEdit_StopCondition.text()
         if self.checkBox_StepOver.isChecked():
-            step_mode = type_defs.STEP_MODE.STEP_OVER
+            step_mode = typedefs.STEP_MODE.STEP_OVER
         else:
-            step_mode = type_defs.STEP_MODE.SINGLE_STEP
+            step_mode = typedefs.STEP_MODE.SINGLE_STEP
         stop_after_trace = self.checkBox_StopAfterTrace.isChecked()
         collect_general_registers = self.checkBox_GeneralRegisters.isChecked()
         collect_flag_registers = self.checkBox_FlagRegisters.isChecked()
@@ -4657,16 +4656,16 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.status_to_text = {
-            type_defs.TRACE_STATUS.STATUS_IDLE: tr.WAITING_FOR_BREAKPOINT,
-            type_defs.TRACE_STATUS.STATUS_CANCELED: tr.TRACING_CANCELED,
-            type_defs.TRACE_STATUS.STATUS_PROCESSING: tr.PROCESSING_DATA,
-            type_defs.TRACE_STATUS.STATUS_FINISHED: tr.TRACING_COMPLETED
+            typedefs.TRACE_STATUS.STATUS_IDLE: tr.WAITING_FOR_BREAKPOINT,
+            typedefs.TRACE_STATUS.STATUS_CANCELED: tr.TRACING_CANCELED,
+            typedefs.TRACE_STATUS.STATUS_PROCESSING: tr.PROCESSING_DATA,
+            typedefs.TRACE_STATUS.STATUS_FINISHED: tr.TRACING_COMPLETED
         }
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)
         guiutils.center(self)
         self.address = address
         self.breakpoint = breakpoint
-        media_directory = SysUtils.get_media_directory()
+        media_directory = utils.get_media_directory()
         self.movie = QMovie(media_directory + "/TraceInstructionsWaitWidget/ajax-loader.gif", QByteArray())
         self.label_Animated.setMovie(self.movie)
         self.movie.setScaledSize(QSize(215, 100))
@@ -4681,12 +4680,12 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         self.status_timer.start()
 
     def change_status(self):
-        status_info = GDB_Engine.get_trace_instructions_status(self.breakpoint)
-        if status_info[0] == type_defs.TRACE_STATUS.STATUS_FINISHED or \
-                status_info[0] == type_defs.TRACE_STATUS.STATUS_PROCESSING:
+        status_info = debugcore.get_trace_instructions_status(self.breakpoint)
+        if status_info[0] == typedefs.TRACE_STATUS.STATUS_FINISHED or \
+                status_info[0] == typedefs.TRACE_STATUS.STATUS_PROCESSING:
             self.close()
             return
-        if status_info[0] == type_defs.TRACE_STATUS.STATUS_TRACING:
+        if status_info[0] == typedefs.TRACE_STATUS.STATUS_TRACING:
             self.label_StatusText.setText(status_info[1])
         else:
             self.label_StatusText.setText(self.status_to_text[status_info[0]])
@@ -4698,15 +4697,15 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         self.pushButton_Cancel.setVisible(False)
         self.adjustSize()
         app.processEvents()
-        status_info = GDB_Engine.get_trace_instructions_status(self.breakpoint)
-        if status_info[0] == type_defs.TRACE_STATUS.STATUS_TRACING or \
-                status_info[0] == type_defs.TRACE_STATUS.STATUS_PROCESSING:
-            GDB_Engine.cancel_trace_instructions(self.breakpoint)
-            while GDB_Engine.get_trace_instructions_status(self.breakpoint)[0] \
-                    != type_defs.TRACE_STATUS.STATUS_FINISHED:
+        status_info = debugcore.get_trace_instructions_status(self.breakpoint)
+        if status_info[0] == typedefs.TRACE_STATUS.STATUS_TRACING or \
+                status_info[0] == typedefs.TRACE_STATUS.STATUS_PROCESSING:
+            debugcore.cancel_trace_instructions(self.breakpoint)
+            while debugcore.get_trace_instructions_status(self.breakpoint)[0] \
+                    != typedefs.TRACE_STATUS.STATUS_FINISHED:
                 sleep(0.1)
                 app.processEvents()
-        GDB_Engine.delete_breakpoint(self.address)
+        debugcore.delete_breakpoint(self.address)
         self.widget_closed.emit()
 
 
@@ -4732,7 +4731,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         prompt_dialog.setPalette(change_theme(theme))
         if prompt_dialog.exec():
             params = (address,) + prompt_dialog.get_values()
-            breakpoint = GDB_Engine.trace_instructions(*params)
+            breakpoint = debugcore.trace_instructions(*params)
             if not breakpoint:
                 QMessageBox.information(self, tr.ERROR, tr.BREAKPOINT_FAILED.format(address))
                 self.close()
@@ -4762,7 +4761,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         if trace_data:
             trace_tree, current_root_index = trace_data
         else:
-            trace_data = GDB_Engine.get_trace_instructions_info(self.breakpoint)
+            trace_data = debugcore.get_trace_instructions_info(self.breakpoint)
             if trace_data:
                 trace_tree, current_root_index = trace_data
             else:
@@ -4786,18 +4785,18 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.treeWidget_InstructionInfo.expandAll()
 
     def save_file(self):
-        trace_file_path = SysUtils.get_user_path(type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH)
+        trace_file_path = utils.get_user_path(typedefs.USER_PATHS.TRACE_INSTRUCTIONS_PATH)
         file_path = QFileDialog.getSaveFileName(self, tr.SAVE_TRACE_FILE, trace_file_path, tr.FILE_TYPES_TRACE)[0]
         if file_path:
-            file_path = SysUtils.append_file_extension(file_path, "trace")
-            if not SysUtils.save_file(self.trace_data, file_path):
+            file_path = utils.append_file_extension(file_path, "trace")
+            if not utils.save_file(self.trace_data, file_path):
                 QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
 
     def load_file(self):
-        trace_file_path = SysUtils.get_user_path(type_defs.USER_PATHS.TRACE_INSTRUCTIONS_PATH)
+        trace_file_path = utils.get_user_path(typedefs.USER_PATHS.TRACE_INSTRUCTIONS_PATH)
         file_path = QFileDialog.getOpenFileName(self, tr.OPEN_TRACE_FILE, trace_file_path, tr.FILE_TYPES_TRACE)[0]
         if file_path:
-            content = SysUtils.load_file(file_path)
+            content = utils.load_file(file_path)
             if content is None:
                 QMessageBox.information(self, tr.ERROR, tr.FILE_LOAD_ERROR.format(file_path))
                 return
@@ -4824,7 +4823,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         current_item = guiutils.get_current_item(self.treeWidget_InstructionInfo)
         if not current_item:
             return
-        address = SysUtils.extract_address(current_item.trace_data[0])
+        address = utils.extract_address(current_item.trace_data[0])
         if address:
             self.parent().disassemble_expression(address, append_to_travel_history=True)
 
@@ -4864,7 +4863,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.loading_dialog.exec()
 
     def process_data(self, gdb_input, case_sensitive):
-        return GDB_Engine.search_functions(gdb_input, case_sensitive)
+        return debugcore.search_functions(gdb_input, case_sensitive)
 
     def apply_data(self, output):
         self.tableWidget_SymbolInfo.setSortingEnabled(False)
@@ -4890,10 +4889,10 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         if current_row < 0:
             return
         address = self.tableWidget_SymbolInfo.item(current_row, FUNCTIONS_INFO_ADDR_COL).text()
-        if SysUtils.extract_address(address):
+        if utils.extract_address(address):
             symbol = self.tableWidget_SymbolInfo.item(current_row, FUNCTIONS_INFO_SYMBOL_COL).text()
-            for item in SysUtils.split_symbol(symbol):
-                info = GDB_Engine.get_symbol_info(item)
+            for item in utils.split_symbol(symbol):
+                info = debugcore.get_symbol_info(item)
                 self.textBrowser_AddressInfo.append(info)
         else:
             self.textBrowser_AddressInfo.append(tr.DEFINED_SYMBOL)
@@ -4958,9 +4957,9 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
 
     def lineEdit_Bytes_text_edited(self):
         bytes_aob = self.lineEdit_Bytes.text()
-        if SysUtils.parse_string(bytes_aob, type_defs.VALUE_INDEX.INDEX_AOB):
+        if utils.parse_string(bytes_aob, typedefs.VALUE_INDEX.INDEX_AOB):
             address = int(self.lineEdit_Address.text(), 0)
-            instruction = SysUtils.get_opcodes(address, bytes_aob, GDB_Engine.inferior_arch)
+            instruction = utils.get_opcodes(address, bytes_aob, debugcore.inferior_arch)
             if instruction:
                 self.set_valid(True)
                 self.lineEdit_Instruction.setText(instruction)
@@ -4971,7 +4970,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
     def lineEdit_Instruction_text_edited(self):
         instruction = self.lineEdit_Instruction.text()
         address = int(self.lineEdit_Address.text(), 0)
-        result = SysUtils.assemble(instruction, address, GDB_Engine.inferior_arch)
+        result = utils.assemble(instruction, address, debugcore.inferior_arch)
         if result:
             byte_list = result[0]
             self.set_valid(True)
@@ -4992,11 +4991,11 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
             new_length = len(bytes_aob.split())
             old_length = len(self.orig_bytes.split())
             if new_length < old_length:
-                bytes_aob += " 90" * (old_length - new_length)  # Append NOPs if we are short on bytes
+                bytes_aob += " 90"*(old_length-new_length)  # Append NOPs if we are short on bytes
             elif new_length > old_length:
                 if not InputDialogForm(item_list=[(tr.NEW_OPCODE.format(new_length, old_length),)]).exec():
                     return
-            GDB_Engine.modify_instruction(address, bytes_aob)
+            debugcore.modify_instruction(address, bytes_aob)
         self.parent().refresh_hex_view()
         self.parent().refresh_disassemble_view()
         super(EditInstructionDialogForm, self).accept()
@@ -5021,9 +5020,9 @@ class HexEditDialogForm(QDialog, HexEditDialog):
         self.lineEdit_Length.textChanged.connect(self.refresh_view)
 
     def lineEdit_AsciiView_selection_changed(self):
-        length = len(SysUtils.str_to_aob(self.lineEdit_AsciiView.selectedText(), "utf-8"))
+        length = len(utils.str_to_aob(self.lineEdit_AsciiView.selectedText(), "utf-8"))
         start_index = self.lineEdit_AsciiView.selectionStart()
-        start_index = len(SysUtils.str_to_aob(self.lineEdit_AsciiView.text()[0:start_index], "utf-8"))
+        start_index = len(utils.str_to_aob(self.lineEdit_AsciiView.text()[0:start_index], "utf-8"))
         if start_index > 0:
             start_index += 1
         self.lineEdit_HexView.deselect()
@@ -5036,12 +5035,12 @@ class HexEditDialogForm(QDialog, HexEditDialog):
 
     def lineEdit_HexView_text_edited(self):
         aob_string = self.lineEdit_HexView.text()
-        if not SysUtils.parse_string(aob_string, type_defs.VALUE_INDEX.INDEX_AOB):
+        if not utils.parse_string(aob_string, typedefs.VALUE_INDEX.INDEX_AOB):
             self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
             return
         aob_array = aob_string.split()
         try:
-            self.lineEdit_AsciiView.setText(SysUtils.aob_to_str(aob_array, "utf-8"))
+            self.lineEdit_AsciiView.setText(utils.aob_to_str(aob_array, "utf-8"))
             self.lineEdit_HexView.setStyleSheet("")  # This should set background color back to QT default
         except ValueError:
             self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
@@ -5049,7 +5048,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
     def lineEdit_AsciiView_text_edited(self):
         ascii_str = self.lineEdit_AsciiView.text()
         try:
-            self.lineEdit_HexView.setText(SysUtils.str_to_aob(ascii_str, "utf-8"))
+            self.lineEdit_HexView.setText(utils.str_to_aob(ascii_str, "utf-8"))
             self.lineEdit_AsciiView.setStyleSheet("")
         except ValueError:
             self.lineEdit_AsciiView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
@@ -5057,7 +5056,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
     def refresh_view(self):
         self.lineEdit_AsciiView.clear()
         self.lineEdit_HexView.clear()
-        address = GDB_Engine.examine_expression(self.lineEdit_Address.text()).address
+        address = debugcore.examine_expression(self.lineEdit_Address.text()).address
         if not address:
             return
         length = self.lineEdit_Length.text()
@@ -5066,19 +5065,19 @@ class HexEditDialogForm(QDialog, HexEditDialog):
             address = int(address, 0)
         except ValueError:
             return
-        aob_array = GDB_Engine.hex_dump(address, length)
-        ascii_str = SysUtils.aob_to_str(aob_array, "utf-8")
+        aob_array = debugcore.hex_dump(address, length)
+        ascii_str = utils.aob_to_str(aob_array, "utf-8")
         self.lineEdit_AsciiView.setText(ascii_str)
         self.lineEdit_HexView.setText(" ".join(aob_array))
 
     def accept(self):
         expression = self.lineEdit_Address.text()
-        address = GDB_Engine.examine_expression(expression).address
+        address = debugcore.examine_expression(expression).address
         if not address:
             QMessageBox.information(self, tr.ERROR, tr.IS_INVALID_EXPRESSION.format(expression))
             return
         value = self.lineEdit_HexView.text()
-        GDB_Engine.write_memory(address, type_defs.VALUE_INDEX.INDEX_AOB, value)
+        debugcore.write_memory(address, typedefs.VALUE_INDEX.INDEX_AOB, value)
         super(HexEditDialogForm, self).accept()
 
 
@@ -5097,13 +5096,13 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         if is_window:
             guiutils.center(self)
             self.setWindowFlags(Qt.WindowType.Window)
-        self.show_type_defs()
+        self.show_typedefs()
         self.splitter.setStretchFactor(0, 1)
         self.widget_Resources.resize(700, self.widget_Resources.height())
-        libpince_directory = SysUtils.get_libpince_directory()
-        self.textBrowser_TypeDefs.setText(open(libpince_directory + "/type_defs.py").read())
+        libpince_directory = utils.get_libpince_directory()
+        self.textBrowser_TypeDefs.setText(open(libpince_directory + "/typedefs.py").read())
         source_menu_items = ["(Tagged only)", "(All)"]
-        self.source_files = ["GDB_Engine", "SysUtils", "guiutils"]
+        self.source_files = ["debugcore", "utils", "guiutils"]
         source_menu_items.extend(self.source_files)
         self.comboBox_SourceFile.addItems(source_menu_items)
         self.comboBox_SourceFile.setCurrentIndex(0)
@@ -5112,7 +5111,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         self.pushButton_TextUp.setIcon(QIcon(QPixmap(icons_directory + "/bullet_arrow_up.png")))
         self.pushButton_TextDown.setIcon(QIcon(QPixmap(icons_directory + "/bullet_arrow_down.png")))
         self.comboBox_SourceFile.currentIndexChanged.connect(self.comboBox_SourceFile_current_index_changed)
-        self.pushButton_ShowTypeDefs.clicked.connect(self.toggle_type_defs)
+        self.pushButton_ShowTypeDefs.clicked.connect(self.toggle_typedefs)
         self.lineEdit_SearchText.textChanged.connect(self.highlight_text)
         self.pushButton_TextDown.clicked.connect(self.pushButton_TextDown_clicked)
         self.pushButton_TextUp.clicked.connect(self.pushButton_TextUp_clicked)
@@ -5208,8 +5207,8 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         self.treeWidget_ResourceTree.clear()
         parent = self.treeWidget_ResourceTree
         checked_source_files = self.convert_to_modules(self.source_files)
-        tag_dict = SysUtils.get_tags(checked_source_files, type_defs.tag_to_string, self.lineEdit_Search.text())
-        docstring_dict = SysUtils.get_docstrings(checked_source_files, self.lineEdit_Search.text())
+        tag_dict = utils.get_tags(checked_source_files, typedefs.tag_to_string, self.lineEdit_Search.text())
+        docstring_dict = utils.get_docstrings(checked_source_files, self.lineEdit_Search.text())
         for tag in tag_dict:
             child = QTreeWidgetItem(parent)
             child.setText(0, tag)
@@ -5237,7 +5236,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         else:
             checked_source_files = [self.comboBox_SourceFile.currentText()]
         checked_source_files = self.convert_to_modules(checked_source_files)
-        element_dict = SysUtils.get_docstrings(checked_source_files, self.lineEdit_Search.text())
+        element_dict = utils.get_docstrings(checked_source_files, self.lineEdit_Search.text())
         self.tableWidget_ResourceTable.setRowCount(len(element_dict))
         for row, item in enumerate(element_dict):
             docstring = element_dict.get(item)
@@ -5312,22 +5311,22 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         self.textBrowser_TypeDefs.find(pattern)
         self.current_found = 1
 
-    def toggle_type_defs(self):
-        if self.type_defs_shown:
-            self.hide_type_defs()
+    def toggle_typedefs(self):
+        if self.typedefs_shown:
+            self.hide_typedefs()
         else:
-            self.show_type_defs()
+            self.show_typedefs()
 
-    def hide_type_defs(self):
-        self.type_defs_shown = False
+    def hide_typedefs(self):
+        self.typedefs_shown = False
         self.widget_TypeDefs.hide()
-        self.pushButton_ShowTypeDefs.setText("Show type_defs")
+        self.pushButton_ShowTypeDefs.setText("Show typedefs")
 
-    def show_type_defs(self):
-        self.type_defs_shown = True
+    def show_typedefs(self):
+        self.typedefs_shown = True
         self.widget_TypeDefs.setPalette(change_theme(theme))
         self.widget_TypeDefs.show()
-        self.pushButton_ShowTypeDefs.setText("Hide type_defs")
+        self.pushButton_ShowTypeDefs.setText("Hide typedefs")
 
     def closeEvent(self, QCloseEvent):
         global instances
@@ -5350,8 +5349,8 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         self.refresh_timer.start()
 
     def refresh_contents(self):
-        log_path = SysUtils.get_logging_file(GDB_Engine.currentpid)
-        self.setWindowTitle(tr.LOG_FILE.format(GDB_Engine.currentpid))
+        log_path = utils.get_logging_file(debugcore.currentpid)
+        self.setWindowTitle(tr.LOG_FILE.format(debugcore.currentpid))
         self.label_FilePath.setText(tr.LOG_CONTENTS.format(log_path, 20000))
         logging_status = f"<font color=blue>{tr.ON}</font>" if gdb_logging else f"<font color=red>{tr.OFF}</font>"
         self.label_LoggingStatus.setText(f"<b>{tr.LOG_STATUS.format(logging_status)}</b>")
@@ -5425,7 +5424,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         self.loading_dialog.exec()
 
     def process_data(self, regex, start_address, end_address, case_sensitive, enable_regex):
-        return GDB_Engine.search_opcode(regex, start_address, end_address, case_sensitive, enable_regex)
+        return debugcore.search_opcode(regex, start_address, end_address, case_sensitive, enable_regex)
 
     def apply_data(self, disas_data):
         if disas_data is None:
@@ -5447,7 +5446,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
     def tableWidget_Opcodes_item_double_clicked(self, index):
         row = index.row()
         address = self.tableWidget_Opcodes.item(row, SEARCH_OPCODE_ADDR_COL).text()
-        self.parent().disassemble_expression(SysUtils.extract_address(address), append_to_travel_history=True)
+        self.parent().disassemble_expression(utils.extract_address(address), append_to_travel_history=True)
 
     def tableWidget_Opcodes_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -5493,11 +5492,11 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         self.shortcut_refresh.activated.connect(self.refresh_table)
 
     def refresh_table(self):
-        memory_regions = SysUtils.get_regions(GDB_Engine.currentpid)
+        memory_regions = utils.get_regions(debugcore.currentpid)
         self.tableWidget_MemoryRegions.setRowCount(0)
         self.tableWidget_MemoryRegions.setRowCount(len(memory_regions))
         for row, (start, end, perms, offset, _, _, path) in enumerate(memory_regions):
-            address = start + "-" + end
+            address = start+"-"+end
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_ADDR_COL, QTableWidgetItem(address))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PERM_COL, QTableWidgetItem(perms))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_OFFSET_COL, QTableWidgetItem(offset))
@@ -5582,7 +5581,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
             self.discard_invalid_strings = discard_invalid_strings
 
         def run(self):
-            GDB_Engine.dissect_code(self.region_list, self.discard_invalid_strings)
+            debugcore.dissect_code(self.region_list, self.discard_invalid_strings)
             if not self.is_canceled:
                 self.output_ready.emit()
 
@@ -5597,7 +5596,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         self.pushButton_StartCancel.setText(tr.CANCEL)
 
     def refresh_dissect_status(self):
-        region, region_count, range, string_count, jump_count, call_count = GDB_Engine.get_dissect_code_status()
+        region, region_count, range, string_count, jump_count, call_count = debugcore.get_dissect_code_status()
         if not region:
             return
         self.label_RegionInfo.setText(region)
@@ -5609,7 +5608,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
 
     def update_dissect_results(self):
         try:
-            referenced_strings, referenced_jumps, referenced_calls = GDB_Engine.get_dissect_code_data()
+            referenced_strings, referenced_jumps, referenced_calls = debugcore.get_dissect_code_data()
         except:
             return
         self.label_StringReferenceCount.setText(str(len(referenced_strings)))
@@ -5617,12 +5616,12 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         self.label_CallReferenceCount.setText(str(len(referenced_calls)))
 
     def show_memory_regions(self):
-        executable_regions = SysUtils.filter_regions(GDB_Engine.currentpid, "permissions", "..x.")
+        executable_regions = utils.filter_regions(debugcore.currentpid, "permissions", "..x.")
         self.region_list = []
         self.tableWidget_ExecutableMemoryRegions.setRowCount(0)
         self.tableWidget_ExecutableMemoryRegions.setRowCount(len(executable_regions))
         for row, (start, end, _, _, _, _, path) in enumerate(executable_regions):
-            address = start + "-" + end
+            address = start+"-"+end
             self.region_list.append((start, end))
             self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_ADDR_COL, QTableWidgetItem(address))
             self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_PATH_COL, QTableWidgetItem(path))
@@ -5642,7 +5641,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         if self.is_scanning:
             self.is_canceled = True
             self.background_thread.is_canceled = True
-            GDB_Engine.cancel_dissect_code()
+            debugcore.cancel_dissect_code()
             self.refresh_timer.stop()
             self.update_dissect_results()
             self.label_ScanInfo.setText(tr.SCAN_CANCELED)
@@ -5662,7 +5661,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
             self.background_thread.start()
 
     def closeEvent(self, QCloseEvent):
-        GDB_Engine.cancel_dissect_code()
+        debugcore.cancel_dissect_code()
         self.refresh_timer.stop()
 
 
@@ -5670,7 +5669,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.setupUi(self)
-        guiutils.fill_value_combobox(self.comboBox_ValueType, type_defs.VALUE_INDEX.INDEX_STRING_UTF8)
+        guiutils.fill_value_combobox(self.comboBox_ValueType, typedefs.VALUE_INDEX.INDEX_STRING_UTF8)
         self.parent = lambda: parent
         global instances
         instances.append(self)
@@ -5680,8 +5679,8 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         self.tableWidget_References.setColumnWidth(REF_STR_COUNT_COL, 80)
         self.splitter.setStretchFactor(0, 1)
         self.listWidget_Referrers.resize(400, self.listWidget_Referrers.height())
-        self.hex_len = 16 if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64 else 8
-        str_dict, jmp_dict, call_dict = GDB_Engine.get_dissect_code_data()
+        self.hex_len = 16 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 else 8
+        str_dict, jmp_dict, call_dict = debugcore.get_dissect_code_data()
         str_dict_len, jmp_dict_len, call_dict_len = len(str_dict), len(jmp_dict), len(call_dict)
         str_dict.close()
         jmp_dict.close()
@@ -5715,7 +5714,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         return '0x' + hex_str[2:].zfill(self.hex_len + self_len)
 
     def refresh_table(self):
-        item_list = GDB_Engine.search_referenced_strings(self.lineEdit_Regex.text(),
+        item_list = debugcore.search_referenced_strings(self.lineEdit_Regex.text(),
                                                          self.comboBox_ValueType.currentIndex(),
                                                          self.checkBox_CaseSensitive.isChecked(),
                                                          self.checkBox_Regex.isChecked())
@@ -5739,11 +5738,11 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         if QModelIndex_current.row() < 0:
             return
         self.listWidget_Referrers.clear()
-        str_dict = GDB_Engine.get_dissect_code_data(True, False, False)[0]
+        str_dict = debugcore.get_dissect_code_data(True, False, False)[0]
         addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_STR_ADDR_COL).text()
         referrers = str_dict[hex(int(addr, 16))]
         addrs = [hex(address) for address in referrers]
-        self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in GDB_Engine.examine_expressions(addrs)])
+        self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)])
         self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
         str_dict.close()
 
@@ -5753,7 +5752,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         self.parent().hex_dump_address(int(address, 16))
 
     def listWidget_Referrers_item_double_clicked(self, item):
-        self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
+        self.parent().disassemble_expression(utils.extract_address(item.text()), append_to_travel_history=True)
 
     def tableWidget_References_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -5816,8 +5815,8 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         self.tableWidget_References.setColumnWidth(REF_CALL_ADDR_COL, 480)
         self.splitter.setStretchFactor(0, 1)
         self.listWidget_Referrers.resize(400, self.listWidget_Referrers.height())
-        self.hex_len = 16 if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64 else 8
-        str_dict, jmp_dict, call_dict = GDB_Engine.get_dissect_code_data()
+        self.hex_len = 16 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 else 8
+        str_dict, jmp_dict, call_dict = debugcore.get_dissect_code_data()
         str_dict_len, jmp_dict_len, call_dict_len = len(str_dict), len(jmp_dict), len(call_dict)
         str_dict.close()
         jmp_dict.close()
@@ -5850,7 +5849,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         return '0x' + hex_str[2:].zfill(self.hex_len + self_len)
 
     def refresh_table(self):
-        item_list = GDB_Engine.search_referenced_calls(self.lineEdit_Regex.text(),
+        item_list = debugcore.search_referenced_calls(self.lineEdit_Regex.text(),
                                                        self.checkBox_CaseSensitive.isChecked(),
                                                        self.checkBox_Regex.isChecked())
         if item_list is None:
@@ -5870,21 +5869,21 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         if QModelIndex_current.row() < 0:
             return
         self.listWidget_Referrers.clear()
-        call_dict = GDB_Engine.get_dissect_code_data(False, False, True)[0]
+        call_dict = debugcore.get_dissect_code_data(False, False, True)[0]
         addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_CALL_ADDR_COL).text()
-        referrers = call_dict[hex(int(SysUtils.extract_address(addr), 16))]
+        referrers = call_dict[hex(int(utils.extract_address(addr), 16))]
         addrs = [hex(address) for address in referrers]
-        self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in GDB_Engine.examine_expressions(addrs)])
+        self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)])
         self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
         call_dict.close()
 
     def tableWidget_References_item_double_clicked(self, index):
         row = index.row()
         address = self.tableWidget_References.item(row, REF_CALL_ADDR_COL).text()
-        self.parent().disassemble_expression(SysUtils.extract_address(address), append_to_travel_history=True)
+        self.parent().disassemble_expression(utils.extract_address(address), append_to_travel_history=True)
 
     def listWidget_Referrers_item_double_clicked(self, item):
-        self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
+        self.parent().disassemble_expression(utils.extract_address(item.text()), append_to_travel_history=True)
 
     def tableWidget_References_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -5945,7 +5944,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         self.splitter.setStretchFactor(0, 1)
         self.textBrowser_DisasInfo.resize(600, self.textBrowser_DisasInfo.height())
         self.referenced_hex = hex(int_address)
-        self.hex_len = 16 if GDB_Engine.inferior_arch == type_defs.INFERIOR_ARCH.ARCH_64 else 8
+        self.hex_len = 16 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 else 8
         self.collect_referrer_data()
         self.refresh_table()
         self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
@@ -5965,7 +5964,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         return '0x' + hex_str[2:].zfill(self.hex_len + self_len)
 
     def collect_referrer_data(self):
-        jmp_dict, call_dict = GDB_Engine.get_dissect_code_data(False, True, True)
+        jmp_dict, call_dict = debugcore.get_dissect_code_data(False, True, True)
         self.referrer_data = []
         try:
             jmp_referrers = jmp_dict[self.referenced_hex]
@@ -5973,14 +5972,14 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
             pass
         else:
             jmp_referrers = [hex(item) for item in jmp_referrers]
-            self.referrer_data.extend([item.all for item in GDB_Engine.examine_expressions(jmp_referrers)])
+            self.referrer_data.extend([item.all for item in debugcore.examine_expressions(jmp_referrers)])
         try:
             call_referrers = call_dict[self.referenced_hex]
         except KeyError:
             pass
         else:
             call_referrers = [hex(item) for item in call_referrers]
-            self.referrer_data.extend([item.all for item in GDB_Engine.examine_expressions(call_referrers)])
+            self.referrer_data.extend([item.all for item in debugcore.examine_expressions(call_referrers)])
         jmp_dict.close()
         call_dict.close()
 
@@ -6018,8 +6017,8 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         if QModelIndex_current.row() < 0:
             return
         self.textBrowser_DisasInfo.clear()
-        disas_data = GDB_Engine.disassemble(
-            SysUtils.extract_address(self.listWidget_Referrers.item(QModelIndex_current.row()).text()), "+200")
+        disas_data = debugcore.disassemble(
+            utils.extract_address(self.listWidget_Referrers.item(QModelIndex_current.row()).text()), "+200")
         for address_info, _, opcode in disas_data:
             self.textBrowser_DisasInfo.append(address_info + opcode)
         cursor = self.textBrowser_DisasInfo.textCursor()
@@ -6028,7 +6027,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         self.textBrowser_DisasInfo.ensureCursorVisible()
 
     def listWidget_Referrers_item_double_clicked(self, item):
-        self.parent().disassemble_expression(SysUtils.extract_address(item.text()), append_to_travel_history=True)
+        self.parent().disassemble_expression(utils.extract_address(item.text()), append_to_travel_history=True)
 
     def listWidget_Referrers_context_menu_event(self, event):
         def copy_to_clipboard(row):
