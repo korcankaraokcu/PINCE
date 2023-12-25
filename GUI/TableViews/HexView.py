@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt6.QtWidgets import QTableView, QAbstractItemView
 from PyQt6.QtCore import Qt
-from libpince import SysUtils, GDB_Engine
+from libpince import utils, debugcore
 
 
 class QHexView(QTableView):
@@ -49,4 +49,4 @@ class QHexView(QTableView):
         if index_list:
             cell = index_list[0]
             current_address = current_address + cell.row() * self.model().columnCount() + cell.column()
-        return SysUtils.modulo_address(current_address, GDB_Engine.inferior_arch)
+        return utils.modulo_address(current_address, debugcore.inferior_arch)

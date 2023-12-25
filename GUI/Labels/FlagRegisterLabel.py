@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtGui import QCursor
 from PyQt6.QtCore import Qt
-from libpince import GDB_Engine, type_defs
+from libpince import debugcore, typedefs
 from PINCE import InputDialogForm
 from tr.tr import TranslationConstants as tr
 
@@ -39,12 +39,12 @@ class QFlagRegisterLabel(QLabel):
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
     def mouseDoubleClickEvent(self, QMouseEvent):
-        if GDB_Engine.currentpid == -1 or GDB_Engine.inferior_status == type_defs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
             return
-        registers = GDB_Engine.read_registers()
+        registers = debugcore.read_registers()
         current_flag = self.objectName().lower()
         label_text = tr.ENTER_FLAG_VALUE.format(self.objectName())
         register_dialog = InputDialogForm(item_list=[(label_text, ["0", "1", int(registers[current_flag])])])
         if register_dialog.exec():
-            GDB_Engine.set_register_flag(current_flag, register_dialog.get_values())
-            self.set_value(GDB_Engine.read_registers()[current_flag])
+            debugcore.set_register_flag(current_flag, register_dialog.get_values())
+            self.set_value(debugcore.read_registers()[current_flag])

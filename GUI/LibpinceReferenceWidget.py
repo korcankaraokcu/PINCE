@@ -148,7 +148,7 @@ class Ui_Form(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "libpince Reference"))
         self.label_5.setText(_translate("Form", "Search"))
-        self.label_3.setText(_translate("Form", "type_defs(Type Definitions)"))
+        self.label_3.setText(_translate("Form", "typedefs(Type Definitions)"))
         self.treeWidget_ResourceTree.headerItem().setText(1, _translate("Form", "Value"))
         self.tableWidget_ResourceTable.setSortingEnabled(True)
         item = self.tableWidget_ResourceTable.horizontalHeaderItem(0)
@@ -158,4 +158,4 @@ class Ui_Form(object):
         self.label_4.setText(_translate("Form", "Search"))
         self.label.setText(_translate("Form", "Source File"))
         self.label_2.setText(_translate("Form", "Resources(Mouse-over items to see docstrings)"))
-        self.pushButton_ShowTypeDefs.setText(_translate("Form", "Hide type_defs"))
+        self.pushButton_ShowTypeDefs.setText(_translate("Form", "Hide typedefs"))

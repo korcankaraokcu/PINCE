@@ -61,7 +61,7 @@
          <item>
           <widget class="QLabel" name="label_3">
            <property name="text">
-            <string>type_defs(Type Definitions)</string>
+            <string>typedefs(Type Definitions)</string>
            </property>
           </widget>
          </item>
@@ -275,7 +275,7 @@
          <item>
           <widget class="QPushButton" name="pushButton_ShowTypeDefs">
            <property name="text">
-            <string>Hide type_defs</string>
+            <string>Hide typedefs</string>
            </property>
           </widget>
          </item>

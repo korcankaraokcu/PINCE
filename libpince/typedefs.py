@@ -29,13 +29,13 @@ class PATHS:
 
 
 class IPC_PATHS:
-    PINCE_IPC_PATH = "/dev/shm/PINCE-connection/"  # Use SysUtils.get_ipc_path()
-    IPC_FROM_PINCE_PATH = "/from_PINCE_file"  # Use SysUtils.get_ipc_from_pince_file()
-    IPC_TO_PINCE_PATH = "/to_PINCE_file"  # Use SysUtils.get_ipc_to_pince_file()
+    PINCE_IPC_PATH = "/dev/shm/PINCE-connection/"  # Use utils.get_ipc_path()
+    IPC_FROM_PINCE_PATH = "/from_PINCE_file"  # Use utils.get_ipc_from_pince_file()
+    IPC_TO_PINCE_PATH = "/to_PINCE_file"  # Use utils.get_ipc_to_pince_file()
 
 
 class USER_PATHS:
-    # Use SysUtils.get_user_path() to make use of these
+    # Use utils.get_user_path() to make use of these
 
     CONFIG_PATH = ".config/"
     ROOT_PATH = CONFIG_PATH + "PINCE/PINCE_USER_FILES/"
@@ -335,7 +335,7 @@ string_index_to_multiplier_dict = {
 }
 
 # first value is the length and the second one is the type
-# Check ScriptUtils for an exemplary usage
+# Check gdbutils for an exemplary usage
 index_to_valuetype_dict = {
     VALUE_INDEX.INDEX_INT8: [1, "B"],
     VALUE_INDEX.INDEX_INT16: [2, "H"],
@@ -350,7 +350,7 @@ index_to_valuetype_dict = {
     VALUE_INDEX.INDEX_AOB: [None, None]
 }
 
-# Check ScriptUtils for an exemplary usage
+# Check gdbutils for an exemplary usage
 index_to_struct_pack_dict = {
     VALUE_INDEX.INDEX_INT8: "B",
     VALUE_INDEX.INDEX_INT16: "H",

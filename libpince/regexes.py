@@ -19,7 +19,7 @@ from re import compile, VERBOSE, MULTILINE
 
 # The comments near regular expressions shows the expected gdb output, hope it helps to the future developers
 
-# --------------------------------------------GDB_Engine----------------------------------------------------------------
+# --------------------------------------------debugcore----------------------------------------------------------------
 
 gdb_state_observe = compile(r"^\*(stopped.+)|^\*(running)", MULTILINE)
 gdb_error = compile(r"\^error")
@@ -35,7 +35,7 @@ breakpoint_created = compile(r"breakpoint-created")
 breakpoint_number = compile(r"(?:number|bkptno)=\"(\d+)\"")
 convenience_variable = compile(r'"(\$\d+)\s+=\s+(.*)"')  # "$26 = 3"
 entry_point = compile(r"Entry\s+point:\s+" + hex_number_grouped.pattern)
-# The command will always start with the word "source", check GDB_Engine.send_command function for the cause
+# The command will always start with the word "source", check debugcore.send_command function for the cause
 gdb_command_source = lambda command_file: compile(r"&\".*source\s" + command_file + r"\\n\"")  # &"command\n"
 # 0x00007fd81d4c7400 <__printf+0>:\t48 81 ec d8 00 00 00\tsub    rsp,0xd8\n
 disassemble_output = compile(r"""
@@ -46,7 +46,7 @@ disassemble_output = compile(r"""
 info_functions_non_debugging = compile(hex_number_grouped.pattern + r"\s+(.*)")
 max_completions_reached = compile(r"\*\*\*\s+List\s+may\s+be\s+truncated,\s+max-completions\s+reached\.\s+\*\*\*")
 
-# --------------------------------------------SysUtils------------------------------------------------------------------
+# --------------------------------------------utils------------------------------------------------------------------
 
 instruction_follow = compile(r"(j|call|loop).*\s+" + hex_number_grouped.pattern)
 docstring_variable = compile(r"(\w+)\s*=")
@@ -70,7 +70,7 @@ maps = compile(r"""
 
 reference_mark = compile(r"\{\d*\}")
 
-# --------------------------------------------GDBCommandExtensions------------------------------------------------------
+# --------------------------------------------gdbextensions------------------------------------------------------
 
 max_frame_count = compile(r"#(\d+)\s+.*")
 frame_address = compile(r"frame\s+at\s+" + hex_number_grouped.pattern)  # frame at 0x7ffe1e989950

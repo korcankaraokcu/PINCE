@@ -10,6 +10,40 @@
     </message>
     <message>
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Type:</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Endianness:</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Hex</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Signed</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/HexEditDialog.ui" line="0" />
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Length:</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Zero-Terminated</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
       <source>Base Address:</source>
       <translation type="unfinished" />
     </message>
@@ -24,31 +58,8 @@
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>Pointer</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>Type:</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>Zero-Terminated</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>Length</source>
-      <translation type="unfinished">Lunghezza</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>Endianness:</source>
+      <source>Description:</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -59,8 +70,9 @@
       <translation>Indirizzo:</translation>
     </message>
     <message>
+      <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>Description:</source>
+      <source>Pointer</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -131,13 +143,19 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
       <source>Type</source>
       <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-      <source>Select the new type</source>
+      <source>Endianness</source>
       <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <source>Length</source>
+      <translation type="unfinished">Lunghezza</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -158,11 +176,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
       <location filename="../../GUI/HexEditDialog.ui" line="0" />
       <source>Hex Edit</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/HexEditDialog.ui" line="0" />
-      <source>Length:</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -553,7 +566,7 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>type_defs(Type Definitions)</source>
+      <source>typedefs(Type Definitions)</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -581,7 +594,7 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Hide type_defs</source>
+      <source>Hide typedefs</source>
       <translation type="unfinished" />
     </message>
     <message>

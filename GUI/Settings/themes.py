@@ -109,6 +109,9 @@ def change_theme(new_theme):
             }
             light_palette = update_theme(light_dict)
             return light_palette
+        case "System Default":
+            sys_default = QPalette()
+            return sys_default
         case "Wong (Colorblind Friendly)":
             dup_dict = {"WINDOW_TEXT": "#000000",
                         "BUTTON": "#E69F00",

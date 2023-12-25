@@ -10,6 +10,40 @@
     </message>
     <message>
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Type:</source>
+      <translation>类型：</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Endianness:</source>
+      <translation>字节序：</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Hex</source>
+      <translation type="unfinished">十六进制</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Signed</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/HexEditDialog.ui" line="0" />
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Length:</source>
+      <translation>长度：</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
+      <source>Zero-Terminated</source>
+      <translation>以零终止</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
       <source>Base Address:</source>
       <translation>基址：</translation>
     </message>
@@ -24,32 +58,9 @@
       <translation>移除偏移量</translation>
     </message>
     <message>
-      <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>Pointer</source>
-      <translation>指针</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>Type:</source>
-      <translation>类型：</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>Zero-Terminated</source>
-      <translation>以零终止</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>Length</source>
-      <translation>长度</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>Endianness:</source>
-      <translation>字节序：</translation>
+      <source>Description:</source>
+      <translation>备注：</translation>
     </message>
     <message>
       <location filename="../../GUI/HexEditDialog.ui" line="0" />
@@ -59,9 +70,10 @@
       <translation>地址：</translation>
     </message>
     <message>
+      <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-      <source>Description:</source>
-      <translation>备注：</translation>
+      <source>Pointer</source>
+      <translation>指针</translation>
     </message>
     <message>
       <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
@@ -132,13 +144,19 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
       <source>Type</source>
       <translation>类型</translation>
     </message>
     <message>
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-      <source>Select the new type</source>
-      <translation>选择一个新类型</translation>
+      <source>Endianness</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+      <source>Length</source>
+      <translation>长度</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -160,11 +178,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
       <location filename="../../GUI/HexEditDialog.ui" line="0" />
       <source>Hex Edit</source>
       <translation>十六进制编辑</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/HexEditDialog.ui" line="0" />
-      <source>Length:</source>
-      <translation>长度：</translation>
     </message>
     <message>
       <location filename="../../GUI/HexEditDialog.ui" line="0" />
@@ -555,8 +568,8 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>type_defs(Type Definitions)</source>
-      <translation>type_defs(类型定义)</translation>
+      <source>typedefs(Type Definitions)</source>
+      <translation>typedefs(类型定义)</translation>
     </message>
     <message>
       <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
@@ -583,8 +596,8 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Hide type_defs</source>
-      <translation>隐藏 type_defs</translation>
+      <source>Hide typedefs</source>
+      <translation>隐藏 typedefs</translation>
     </message>
     <message>
       <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
