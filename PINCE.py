@@ -1858,9 +1858,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_Address.setText(address_text)
         else:
             address = debugcore.examine_expression(self.lineEdit_Address.text()).address
-        if not address:
-            self.label_Value.setText("<font color=red>??</font>")
-            return
         if self.checkBox_Hex.isChecked():
             value_repr = typedefs.VALUE_REPR.HEX
         elif self.checkBox_Signed.isChecked():
@@ -1873,6 +1870,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         value = debugcore.read_memory(address, address_type, length, zero_terminate, value_repr, endian)
         self.label_Value.setText("<font color=red>??</font>" if value is None else str(value))
+        app.processEvents()
+        self.adjustSize()
 
     def comboBox_ValueType_current_index_changed(self):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
@@ -2011,6 +2010,8 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.checkBox_Signed.setChecked(False)
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.checkBox_Hex.stateChanged.connect(self.repr_changed)
+        app.processEvents()
+        self.adjustSize()
 
     def comboBox_ValueType_current_index_changed(self):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
@@ -2021,6 +2022,8 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.checkBox_ZeroTerminate.hide()
         else:
             self.widget_Length.hide()
+        app.processEvents()
+        self.adjustSize()
 
     def repr_changed(self):
         if self.checkBox_Hex.isChecked():
