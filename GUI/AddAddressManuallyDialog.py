@@ -14,7 +14,6 @@ class Ui_Dialog(object):
         Dialog.setObjectName("Dialog")
         Dialog.resize(273, 431)
         self.gridLayout = QtWidgets.QGridLayout(Dialog)
-        self.gridLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetFixedSize)
         self.gridLayout.setObjectName("gridLayout")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setObjectName("verticalLayout_3")
@@ -24,12 +23,6 @@ class Ui_Dialog(object):
         self.label_5.setObjectName("label_5")
         self.horizontalLayout_3.addWidget(self.label_5)
         self.comboBox_ValueType = QtWidgets.QComboBox(parent=Dialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.comboBox_ValueType.sizePolicy().hasHeightForWidth())
-        self.comboBox_ValueType.setSizePolicy(sizePolicy)
-        self.comboBox_ValueType.setSizeAdjustPolicy(QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.comboBox_ValueType.setObjectName("comboBox_ValueType")
         self.horizontalLayout_3.addWidget(self.comboBox_ValueType)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
@@ -182,7 +175,6 @@ class Ui_Dialog(object):
         self.gridLayout.addWidget(self.checkBox_IsPointer, 3, 0, 1, 1)
 
         self.retranslateUi(Dialog)
-        self.comboBox_ValueType.setCurrentIndex(-1)
         self.buttonBox.accepted.connect(Dialog.accept) # type: ignore
         self.buttonBox.rejected.connect(Dialog.reject) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Dialog)
