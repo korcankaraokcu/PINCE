@@ -1,6 +1,12 @@
 from PyQt6.QtGui import QColor, QPalette
 
 
+theme_list = ["Dark",
+              "Light",
+              "System Default",
+              "Wong (Colorblind Friendly)"]
+
+
 # TODO: Previewing themes in settings window would drastically increase usability
 def change_theme(new_theme):
     """Update app theme based on user choice in settings window

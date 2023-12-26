@@ -42,6 +42,7 @@ import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpec
 from libpince import utils, debugcore, typedefs
 from libpince.libscanmem.scanmem import Scanmem
 from GUI.Settings.themes import change_theme
+from GUI.Settings.themes import theme_list
 from GUI.Utils import guiutils
 
 from GUI.MainWindow import Ui_MainWindow as MainWindow
@@ -94,11 +95,6 @@ language_list = [
     ("Italiano", "it_IT"),
     ("简体中文", "zh_CN")
 ]
-
-theme_list = ["Dark",
-              "Light",
-              "System Default",
-              "Wong (Colorblind Friendly)"]
 
 
 def get_locale():
@@ -472,15 +468,14 @@ class MainForm(QMainWindow, MainWindow):
         try:
             debugcore.init_gdb(gdb_path)
         except pexpect.EOF:
-            InputDialogForm.setPalette(change_theme(theme))
             InputDialogForm(item_list=[(tr.GDB_INIT_ERROR, None)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
         else:
             self.apply_after_init()
         self.memory_view_window = MemoryViewWindowForm(self)
         try:
-            self.memory_view_window.setPalette(change_theme(theme))
+            app.setPalette(change_theme(theme))
         except Exception as e:
-            self.memory_view_window.setPalette(change_theme("System Default"))
+            app.setPalette(change_theme("System Default"))
             print("An exception occurred while setting color palette, using system theme\n", e)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
@@ -573,7 +568,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("auto_attach_regex", False)
         self.settings.setValue("locale", get_locale())
         self.settings.setValue("logo_path", "ozgurozbek/pince_small_transparent.png")
-        self.settings.setValue("theme", "Dark")
+        self.settings.setValue("theme", "System Default")
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
         for hotkey in Hotkeys.get_hotkeys():
@@ -800,7 +795,6 @@ class MainForm(QMainWindow, MainWindow):
         address_data = selected_row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
         if isinstance(address_data, typedefs.PointerType):
             selection_dialog = TrackSelectorDialogForm()
-            selection_dialog.setPalette(change_theme(theme))
             selection_dialog.exec()
             if not selection_dialog.selection:
                 return
@@ -815,14 +809,12 @@ class MainForm(QMainWindow, MainWindow):
             byte_len = value_type.length
         else:
             byte_len = typedefs.index_to_valuetype_dict[value_type.value_index][0]
-        TrackWatchpointWidgetForm.setPalette(change_theme(theme))
         TrackWatchpointWidgetForm(address, byte_len, watchpoint_type, self).show()
 
     def browse_region_for_selected_row(self):
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if row:
             self.memory_view_window.hex_dump_address(int(row.text(ADDR_COL).strip("P->"), 16))
-            self.memory_view_window.setPalette(change_theme(theme))
             self.memory_view_window.show()
             self.memory_view_window.activateWindow()
 
@@ -831,7 +823,6 @@ class MainForm(QMainWindow, MainWindow):
         if row:
             if self.memory_view_window.disassemble_expression(row.text(ADDR_COL).strip("P->"),
                                                               append_to_travel_history=True):
-                self.memory_view_window.setPalette(change_theme(theme))
                 self.memory_view_window.show()
                 self.memory_view_window.activateWindow()
 
@@ -958,7 +949,6 @@ class MainForm(QMainWindow, MainWindow):
 
     def create_group(self):
         dialog = InputDialogForm(item_list=[(tr.ENTER_DESCRIPTION, tr.GROUP)])
-        dialog.setPalette(change_theme(theme))
         if dialog.exec():
             desc = dialog.get_values()
             self.add_entry_to_addresstable(desc, "0x0")
@@ -1061,14 +1051,12 @@ class MainForm(QMainWindow, MainWindow):
     # gets the information from the dialog then adds it to addresstable
     def pushButton_AddAddressManually_clicked(self):
         manual_address_dialog = ManualAddressDialogForm()
-        manual_address_dialog.setPalette(change_theme(theme))
         if manual_address_dialog.exec():
             desc, address_expr, vt = manual_address_dialog.get_values()
             self.add_entry_to_addresstable(desc, address_expr, vt)
             self.update_address_table()
 
     def pushButton_MemoryView_clicked(self):
-        self.memory_view_window.setPalette(change_theme(theme))
         self.memory_view_window.showMaximized()
         self.memory_view_window.activateWindow()
 
@@ -1076,13 +1064,11 @@ class MainForm(QMainWindow, MainWindow):
         utils.execute_command_as_user('python3 -m webbrowser "https://github.com/korcankaraokcu/PINCE/wiki"')
 
     def pushButton_About_clicked(self):
-        self.about_widget.setPalette(change_theme(theme))
         self.about_widget.show()
         self.about_widget.activateWindow()
 
     def pushButton_Settings_clicked(self):
         settings_dialog = SettingsDialogForm(self.set_default_settings)
-        settings_dialog.setPalette(change_theme(theme))
         if settings_dialog.exec():
             self.apply_settings()
 
@@ -1329,7 +1315,6 @@ class MainForm(QMainWindow, MainWindow):
 
     def pushButton_AttachProcess_clicked(self):
         self.processwindow = ProcessForm(self)
-        self.processwindow.setPalette(change_theme(theme))
         self.processwindow.show()
 
     def pushButton_Open_clicked(self):
@@ -1412,7 +1397,6 @@ class MainForm(QMainWindow, MainWindow):
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
         confirm_dialog = InputDialogForm(item_list=[(tr.CLEAR_TABLE,)])
-        confirm_dialog.setPalette(change_theme(theme))
         if confirm_dialog.exec():
             self.treeWidget_AddressTable.clear()
 
@@ -1484,7 +1468,6 @@ class MainForm(QMainWindow, MainWindow):
         value_type = typedefs.ValueType() if not value_type else value_type
         self.treeWidget_AddressTable.addTopLevelItem(current_row)
         self.change_address_table_entries(current_row, description, address_expr, value_type)
-        self.setPalette(change_theme(theme))
         self.show()  # In case of getting called from elsewhere
         self.activateWindow()
 
@@ -1598,7 +1581,6 @@ class MainForm(QMainWindow, MainWindow):
         value = row.text(VALUE_COL)
         value_index = row.data(TYPE_COL, Qt.ItemDataRole.UserRole).value_index
         dialog = InputDialogForm(item_list=[(tr.ENTER_VALUE, value)], parsed_index=0, value_index=value_index)
-        dialog.setPalette(change_theme(theme))
         if dialog.exec():
             new_value = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
@@ -1621,7 +1603,6 @@ class MainForm(QMainWindow, MainWindow):
             return
         description = row.text(DESC_COL)
         dialog = InputDialogForm(item_list=[(tr.ENTER_DESCRIPTION, description)])
-        dialog.setPalette(change_theme(theme))
         if dialog.exec():
             description_text = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
@@ -1634,7 +1615,6 @@ class MainForm(QMainWindow, MainWindow):
         desc, address_expr, vt = self.read_address_table_entries(row)
         manual_address_dialog = ManualAddressDialogForm(description=desc, address=address_expr, value_type=vt)
         manual_address_dialog.setWindowTitle(tr.EDIT_ADDRESS)
-        manual_address_dialog.setPalette(change_theme(theme))
         if manual_address_dialog.exec():
             desc, address_expr, vt = manual_address_dialog.get_values()
             self.change_address_table_entries(row, desc, address_expr, vt)
@@ -1646,7 +1626,6 @@ class MainForm(QMainWindow, MainWindow):
             return
         vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
         dialog = EditTypeDialogForm(value_type=vt)
-        dialog.setPalette(change_theme(theme))
         if dialog.exec():
             vt = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
@@ -1761,7 +1740,6 @@ class ProcessForm(QMainWindow, ProcessWindow):
         if file_path:
             items = [(tr.ENTER_OPTIONAL_ARGS, ""), (tr.LD_PRELOAD_OPTIONAL, "")]
             arg_dialog = InputDialogForm(item_list=items)
-            arg_dialog.setPalette(change_theme(theme))
             if arg_dialog.exec():
                 args, ld_preload_path = arg_dialog.get_values()
             else:
@@ -1792,21 +1770,17 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_Address.setEnabled(False)
             self.lineEdit_PtrStartAddress.setText(address.get_base_address())
             self.create_offsets_list(address)
-            self.widget_Pointer.setPalette(change_theme(theme))
             self.widget_Pointer.show()
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
-            self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             try:
                 length = str(length)
             except:
                 length = "10"
             self.lineEdit_Length.setText(length)
-            self.checkBox_ZeroTerminate.setPalette(change_theme(theme))
             self.checkBox_ZeroTerminate.show()
             self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
         elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
-            self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             try:
                 length = str(length)
@@ -1913,12 +1887,9 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def comboBox_ValueType_current_index_changed(self):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
-            self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
-            self.checkBox_ZeroTerminate.setPalette(change_theme(theme))
             self.checkBox_ZeroTerminate.show()
         elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
-            self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.hide()
         else:
@@ -1938,7 +1909,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_PtrStartAddress.setText(self.lineEdit_Address.text())
             if len(self.offsetsList) == 0:
                 self.addOffsetLayout(False)
-            self.widget_Pointer.setPalette(change_theme(theme))
             self.widget_Pointer.show()
         else:
             self.lineEdit_Address.setText(self.lineEdit_PtrStartAddress.text())
@@ -2026,18 +1996,15 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
-            self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             try:
                 length = str(length)
             except:
                 length = "10"
             self.lineEdit_Length.setText(length)
-            self.checkBox_ZeroTerminate.setPalette(change_theme(theme))
             self.checkBox_ZeroTerminate.show()
             self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
         elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
-            self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             try:
                 length = str(length)
@@ -2059,12 +2026,9 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
 
     def comboBox_ValueType_current_index_changed(self):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
-            self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
-            self.checkBox_ZeroTerminate.setPalette(change_theme(theme))
             self.checkBox_ZeroTerminate.show()
         elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
-            self.widget_Length.setPalette(change_theme(theme))
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.hide()
         else:
@@ -2155,7 +2119,6 @@ class LoadingDialogForm(QDialog, LoadingDialog):
 
     def exec(self):
         self.background_thread.start()
-        super(LoadingDialogForm, self).setPalette(change_theme(theme))
         super(LoadingDialogForm, self).exec()
 
     class BackgroundThread(QThread):
@@ -2348,7 +2311,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         new_theme = theme_list[self.comboBox_Theme.currentIndex()]
         self.settings.setValue("General/theme", self.comboBox_Theme.currentText())
         if theme != new_theme:
-            window.setPalette(change_theme(new_theme))
+            app.setPalette(change_theme(new_theme))
         for hotkey in Hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
         if self.radioButton_SimpleDLopenCall.isChecked():
@@ -2389,7 +2352,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 self.comboBox_Language.setCurrentIndex(self.comboBox_Language.count()-1)
         self.comboBox_Theme.clear()
         cur_theme = self.settings.value("General/theme", type=str)
-        self.setPalette(change_theme(cur_theme))
         for thm in theme_list:
             self.comboBox_Theme.addItem(thm)
             if thm == cur_theme:
@@ -2438,7 +2400,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
     def pushButton_ResetSettings_clicked(self):
         confirm_dialog = InputDialogForm(item_list=[(tr.RESET_DEFAULT_SETTINGS,)])
-        confirm_dialog.setPalette(change_theme(theme))
         if confirm_dialog.exec():
             self.set_default_settings()
             self.handle_signals_data = None
@@ -2468,7 +2429,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if self.handle_signals_data is None:
             self.handle_signals_data = self.settings.value("Debug/ignored_signals", type=str).split(",")
         signal_dialog = HandleSignalsDialogForm(self.handle_signals_data)
-        signal_dialog.setPalette(change_theme(theme))
         if signal_dialog.exec():
             self.handle_signals_data = signal_dialog.get_values()
 
@@ -2577,7 +2537,6 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
 
     def enter_multiline_mode(self):
         multiline_dialog = TextEditDialogForm(text=self.lineEdit.text())
-        multiline_dialog.setPalette(change_theme(theme))
         if multiline_dialog.exec():
             self.lineEdit.setText(multiline_dialog.get_values())
             self.communicate()
@@ -2871,7 +2830,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_address(current_address_text)
         bytes_aob = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
-        EditInstructionDialogForm(current_address, bytes_aob, self).setPalette(change_theme(theme))
         EditInstructionDialogForm(current_address, bytes_aob, self).exec()
 
     def nop_instruction(self):
@@ -2906,7 +2864,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             debugcore.delete_breakpoint(hex(address))
         else:
             watchpoint_dialog = InputDialogForm(item_list=[(tr.ENTER_WATCHPOINT_LENGTH, "")])
-            watchpoint_dialog.setPalette(change_theme(theme))
             if watchpoint_dialog.exec():
                 user_input = watchpoint_dialog.get_values()
                 user_input_int = utils.parse_string(user_input, typedefs.VALUE_INDEX.INDEX_INT32)
@@ -2988,7 +2945,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         selected_address = self.tableView_HexView_Hex.get_selected_address()
-        selected_address.setPalette(change_theme(theme))
         HexEditDialogForm(hex(selected_address)).exec()
         self.refresh_hex_view()
 
@@ -2997,7 +2953,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         current_address = hex(self.tableView_HexView_Hex.get_selected_address())
         go_to_dialog = InputDialogForm(item_list=[(tr.ENTER_EXPRESSION, current_address)])
-        go_to_dialog.setPalette(change_theme(theme))
         if go_to_dialog.exec():
             expression = go_to_dialog.get_values()
             dest_address = debugcore.examine_expression(expression).address
@@ -3012,7 +2967,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_address = self.tableView_HexView_Hex.get_selected_address()
         vt = typedefs.ValueType(typedefs.VALUE_INDEX.INDEX_AOB)
         manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address), value_type=vt)
-        manual_address_dialog.setPalette(change_theme(theme))
         if manual_address_dialog.exec():
             desc, address, vt = manual_address_dialog.get_values()
             self.parent().add_entry_to_addresstable(desc, address, vt)
@@ -3367,7 +3321,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             condition_line_edit_text = ""
         condition_dialog = InputDialogForm(
             item_list=[(tr.ENTER_BP_CONDITION, condition_line_edit_text, Qt.AlignmentFlag.AlignLeft)])
-        condition_dialog.setPalette(change_theme(theme))
         if condition_dialog.exec():
             condition = condition_dialog.get_values()
             if not debugcore.modify_breakpoint(hex(int_address), typedefs.BREAKPOINT_MODIFY.CONDITION,
@@ -3850,7 +3803,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address = utils.extract_address(current_address_text)
         dissect_code_dialog = DissectCodeDialogForm(int_address=int(current_address, 16))
         dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
-        dissect_code_dialog.setPalette(change_theme(theme))
         dissect_code_dialog.exec()
         self.refresh_disassemble_view()
 
@@ -3862,7 +3814,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address = utils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
         examine_referrers_widget = ExamineReferrersWidgetForm(current_address_int, self)
-        examine_referrers_widget.setPalette(change_theme(theme))
         examine_referrers_widget.show()
 
     def exec_trace_instructions_dialog(self):
@@ -3883,11 +3834,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address = utils.extract_address(current_address_text)
         current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
         register_expression_dialog = InputDialogForm(item_list=[(tr.ENTER_TRACK_BP_EXPRESSION, "")])
-        register_expression_dialog.setPalette(change_theme(theme))
         if register_expression_dialog.exec():
             exp = register_expression_dialog.get_values()
             track_breakpoint_widget = TrackBreakpointWidgetForm(current_address, current_instruction, exp, self)
-            track_breakpoint_widget.setPalette(change_theme(theme))
             track_breakpoint_widget.show()
 
     def exec_disassemble_go_to_dialog(self):
@@ -3900,7 +3849,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address = utils.extract_address(current_address_text)
 
         go_to_dialog = InputDialogForm(item_list=[(tr.ENTER_EXPRESSION, current_address)])
-        go_to_dialog.setPalette(change_theme(theme))
         if go_to_dialog.exec():
             traveled_exp = go_to_dialog.get_values()
             self.disassemble_expression(traveled_exp, append_to_travel_history=True)
@@ -3912,7 +3860,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             QMessageBox.information(app.focusWidget(), tr.ERROR, tr.ALREADY_BOOKMARKED)
             return
         comment_dialog = InputDialogForm(item_list=[(tr.ENTER_BOOKMARK_COMMENT, "")])
-        comment_dialog.setPalette(change_theme(theme))
         if comment_dialog.exec():
             comment = comment_dialog.get_values()
         else:
@@ -3925,7 +3872,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         current_comment = self.tableWidget_Disassemble.bookmarks[int_address]
         comment_dialog = InputDialogForm(item_list=[(tr.ENTER_BOOKMARK_COMMENT, current_comment)])
-        comment_dialog.setPalette(change_theme(theme))
         if comment_dialog.exec():
             new_comment = comment_dialog.get_values()
         else:
@@ -3944,7 +3890,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         bookmark_widget = BookmarkWidgetForm(self)
-        bookmark_widget.setPalette(change_theme(theme))
         bookmark_widget.show()
         bookmark_widget.activateWindow()
 
@@ -3952,14 +3897,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         self.stacktrace_info_widget = StackTraceInfoWidgetForm()
-        self.stacktrace_info_widget.setPalette(change_theme(theme))
         self.stacktrace_info_widget.show()
 
     def actionBreakpoints_triggered(self):
         if debugcore.currentpid == -1:
             return
         breakpoint_widget = BreakpointInfoWidgetForm(self)
-        breakpoint_widget.setPalette(change_theme(theme))
         breakpoint_widget.show()
         breakpoint_widget.activateWindow()
 
@@ -3967,7 +3910,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         functions_info_widget = FunctionsInfoWidgetForm(self)
-        functions_info_widget.setPalette(change_theme(theme))
         functions_info_widget.show()
 
     def actionGDB_Log_File_triggered(self):
@@ -3980,28 +3922,24 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         memory_regions_widget = MemoryRegionsWidgetForm(self)
-        memory_regions_widget.setPalette(change_theme(theme))
         memory_regions_widget.show()
 
     def actionRestore_Instructions_triggered(self):
         if debugcore.currentpid == -1:
             return
         restore_instructions_widget = RestoreInstructionsWidgetForm(self)
-        restore_instructions_widget.setPalette(change_theme(theme))
         restore_instructions_widget.show()
 
     def actionReferenced_Strings_triggered(self):
         if debugcore.currentpid == -1:
             return
         ref_str_widget = ReferencedStringsWidgetForm(self)
-        ref_str_widget.setPalette(change_theme(theme))
         ref_str_widget.show()
 
     def actionReferenced_Calls_triggered(self):
         if debugcore.currentpid == -1:
             return
         ref_call_widget = ReferencedCallsWidgetForm(self)
-        ref_call_widget.setPalette(change_theme(theme))
         ref_call_widget.show()
 
     def actionInject_so_file_triggered(self):
@@ -4018,7 +3956,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         call_dialog = InputDialogForm(item_list=[(tr.ENTER_CALL_EXPRESSION, "")])
-        call_dialog.setPalette(change_theme(theme))
         if call_dialog.exec():
             result = debugcore.call_function_from_inferior(call_dialog.get_values())
             if result[0]:
@@ -4032,14 +3969,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         start_address = int(self.disassemble_currently_displayed_address, 16)
         end_address = start_address + 0x30000
         search_opcode_widget = SearchOpcodeWidgetForm(hex(start_address), hex(end_address), self)
-        search_opcode_widget.setPalette(change_theme(theme))
         search_opcode_widget.show()
 
     def actionDissect_Code_triggered(self):
         if debugcore.currentpid == -1:
             return
         self.dissect_code_dialog = DissectCodeDialogForm()
-        self.dissect_code_dialog.setPalette(change_theme(theme))
         self.dissect_code_dialog.exec()
         self.refresh_disassemble_view()
 
@@ -4047,14 +3982,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         libpince_widget = LibpinceReferenceWidgetForm(is_window=True)
-        libpince_widget.setPalette(change_theme(theme))
         libpince_widget.showMaximized()
 
     def pushButton_ShowFloatRegisters_clicked(self):
         if debugcore.currentpid == -1:
             return
         self.float_registers_widget = FloatRegisterWidgetForm()
-        self.float_registers_widget.setPalette(change_theme(theme))
         self.float_registers_widget.show()
         guiutils.center_to_window(self.float_registers_widget, self.widget_Registers)
 
@@ -4092,7 +4025,6 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
 
     def exec_add_entry_dialog(self):
         entry_dialog = InputDialogForm(item_list=[(tr.ENTER_EXPRESSION, "")])
-        entry_dialog.setPalette(change_theme(theme))
         if entry_dialog.exec():
             text = entry_dialog.get_values()
             address = debugcore.examine_expression(text).address
@@ -4184,7 +4116,6 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         current_value = current_table_widget.item(current_row, FLOAT_REGISTERS_VALUE_COL).text()
         label_text = tr.ENTER_REGISTER_VALUE.format(current_register.upper())
         register_dialog = InputDialogForm(item_list=[(label_text, current_value)])
-        register_dialog.setPalette(change_theme(theme))
         if register_dialog.exec():
             if self.currentWidget() == self.XMM:
                 current_register += ".v4_float"
@@ -4360,7 +4291,6 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
 
     def exec_enable_count_dialog(self, current_address):
         hit_count_dialog = InputDialogForm(item_list=[(tr.ENTER_HIT_COUNT.format(1), "")])
-        hit_count_dialog.setPalette(change_theme(theme))
         if hit_count_dialog.exec():
             count = hit_count_dialog.get_values()
             try:
@@ -4513,7 +4443,6 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.parent().memory_view_window.disassemble_expression(
             self.tableWidget_Opcodes.item(index.row(), TRACK_WATCHPOINT_ADDR_COL).text(),
             append_to_travel_history=True)
-        self.parent().memory_view_window.setPalette(change_theme(theme))
         self.parent().memory_view_window.show()
         self.parent().memory_view_window.activateWindow()
 
@@ -4735,7 +4664,6 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         if not prompt_dialog:
             return
         prompt_dialog = TraceInstructionsPromptDialogForm()
-        prompt_dialog.setPalette(change_theme(theme))
         if prompt_dialog.exec():
             params = (address,) + prompt_dialog.get_values()
             breakpoint = debugcore.trace_instructions(*params)
@@ -4747,7 +4675,6 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             self.breakpoint = breakpoint
             self.wait_dialog = TraceInstructionsWaitWidgetForm(address, breakpoint, self)
             self.wait_dialog.widget_closed.connect(self.show_trace_info)
-            self.wait_dialog.setPalette(change_theme(theme))
             self.wait_dialog.show()
         else:
             self.close()
@@ -4866,7 +4793,6 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.background_thread = self.loading_dialog.background_thread
         self.background_thread.overrided_func = lambda: self.process_data(input_text, case_sensitive)
         self.background_thread.output_ready.connect(self.apply_data)
-        self.loading_dialog.setPalette(change_theme(theme))
         self.loading_dialog.exec()
 
     def process_data(self, gdb_input, case_sensitive):
@@ -4934,7 +4860,6 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.parent().disassemble_expression(address, append_to_travel_history=True)
 
     def pushButton_Help_clicked(self):
-        InputDialogForm.setPalette(change_theme(theme))
         InputDialogForm(item_list=[(tr.FUNCTIONS_INFO_HELPER, None, Qt.AlignmentFlag.AlignLeft)],
                         buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
 
@@ -5331,7 +5256,6 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
 
     def show_typedefs(self):
         self.typedefs_shown = True
-        self.widget_TypeDefs.setPalette(change_theme(theme))
         self.widget_TypeDefs.show()
         self.pushButton_ShowTypeDefs.setText("Hide typedefs")
 
@@ -5427,7 +5351,6 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         self.background_thread.overrided_func = lambda: self.process_data(regex, start_address, end_address,
                                                                           case_sensitive, enable_regex)
         self.background_thread.output_ready.connect(self.apply_data)
-        self.loading_dialog.setPalette(change_theme(theme))
         self.loading_dialog.exec()
 
     def process_data(self, regex, start_address, end_address, case_sensitive, enable_regex):
@@ -5446,7 +5369,6 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         self.tableWidget_Opcodes.setSortingEnabled(True)
 
     def pushButton_Help_clicked(self):
-        InputDialogForm.setPalette(change_theme(theme))
         InputDialogForm(item_list=[(tr.SEARCH_OPCODE_HELPER, None, Qt.AlignmentFlag.AlignLeft)],
                         buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
 
@@ -5694,11 +5616,9 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         call_dict.close()
         if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
             confirm_dialog = InputDialogForm(item_list=[(tr.DISSECT_CODE,)])
-            confirm_dialog.setPalette(change_theme(theme))
             if confirm_dialog.exec():
                 dissect_code_dialog = DissectCodeDialogForm()
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
-                dissect_code_dialog.setPalette(change_theme(theme))
                 dissect_code_dialog.exec()
         self.refresh_table()
         self.tableWidget_References.sortByColumn(REF_STR_ADDR_COL, Qt.SortOrder.AscendingOrder)
@@ -5830,11 +5750,9 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         call_dict.close()
         if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
             confirm_dialog = InputDialogForm(item_list=[(tr.DISSECT_CODE,)])
-            confirm_dialog.setPalette(change_theme(theme))
             if confirm_dialog.exec():
                 dissect_code_dialog = DissectCodeDialogForm()
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
-                dissect_code_dialog.setPalette(change_theme(theme))
                 dissect_code_dialog.exec()
         self.refresh_table()
         self.tableWidget_References.sortByColumn(REF_CALL_ADDR_COL, Qt.SortOrder.AscendingOrder)
