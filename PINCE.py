@@ -1745,7 +1745,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def __init__(self, parent=None, description=tr.NO_DESCRIPTION, address="0x", value_type=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.setMaximumSize(100, 100)
         vt = typedefs.ValueType() if not value_type else value_type
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
@@ -1981,7 +1980,6 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         super().__init__(parent=parent)
         self.setupUi(self)
         vt = typedefs.ValueType() if not value_type else value_type
-        self.setMaximumSize(100, 100)
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
