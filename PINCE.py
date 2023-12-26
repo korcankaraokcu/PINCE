@@ -110,7 +110,13 @@ if __name__ == '__main__':
                       utils.get_user_path(typedefs.USER_PATHS.CONFIG_PATH))
     settings = QSettings()
     translator = QTranslator()
-    locale = settings.value("General/locale", type=str)
+    try:
+        locale = settings.value("General/locale", type=str)
+    except SystemError:
+        # We're reading the settings for the first time here
+        # If there's an error due to python objects, clear settings
+        settings.clear()
+        locale = None
     if not locale:
         locale = get_locale()
     translator.load(f'i18n/qm/{locale}.qm')
@@ -440,8 +446,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 110)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.settings = QSettings()
-        settings_path = self.settings.fileName()
-        if not utils.is_path_valid(settings_path):
+        if not utils.is_path_valid(self.settings.fileName()):
             self.set_default_settings()
         try:
             settings_version = self.settings.value("Misc/version", type=str)
@@ -450,13 +455,13 @@ class MainForm(QMainWindow, MainWindow):
             settings_version = None
         if settings_version != current_settings_version:
             print("Settings version mismatch, rolling back to the default configuration")
-            os.remove(settings_path)
+            self.settings.clear()
             self.set_default_settings()
         try:
             self.apply_settings()
         except Exception as e:
             print("An exception occurred while loading settings, rolling back to the default configuration\n", e)
-            os.remove(settings_path)
+            self.settings.clear()
             self.set_default_settings()
         try:
             debugcore.init_gdb(gdb_path)
