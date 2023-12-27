@@ -348,7 +348,7 @@ Patterns at former positions have higher priority if regex is off</string>
                 </widget>
                </item>
                <item>
-                <widget class="QComboBox" name="comboBox"/>
+                <widget class="QComboBox" name="comboBox_Theme"/>
                </item>
                <item>
                 <spacer name="horizontalSpacer_11">
