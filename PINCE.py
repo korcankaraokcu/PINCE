@@ -446,7 +446,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 110)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.settings = QSettings()
-        if not utils.is_path_valid(self.settings.fileName()):
+        if not os.path.exists(self.settings.fileName()):
             self.set_default_settings()
         try:
             settings_version = self.settings.value("Misc/version", type=str)

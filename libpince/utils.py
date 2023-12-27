@@ -201,7 +201,7 @@ def is_process_valid(pid):
     Returns:
         bool: True if the process is still running, False if not
     """
-    return is_path_valid("/proc/%d" % pid)
+    return os.path.exists("/proc/%d" % pid)
 
 
 #:tag:Utilities
@@ -248,28 +248,6 @@ def get_libpince_directory():
     return os.path.dirname(os.path.realpath(__file__))
 
 
-#:tag:Utilities
-def is_path_valid(dest_path, issue_path=""):
-    """Check if the given path is valid
-
-    Args:
-        dest_path (str): Path
-        issue_path (str): If this parameter is passed as "delete", given path will be deleted if it's valid.
-        If this parameter is passed as "create", given path path will be created if it's not valid.
-
-    Returns:
-        bool: True if path is valid, False if not
-    """
-    if os.path.exists(dest_path):
-        if issue_path == "delete":
-            shutil.rmtree(dest_path)
-        return True
-    else:
-        if issue_path == "create":
-            os.makedirs(dest_path)
-        return False
-
-
 #:tag:GDBCommunication
 def delete_ipc_path(pid):
     """Deletes the IPC directory of given pid
@@ -277,7 +255,9 @@ def delete_ipc_path(pid):
     Args:
         pid (int,str): PID of the process
     """
-    is_path_valid(get_ipc_path(pid), "delete")
+    path = get_ipc_path(pid)
+    if os.path.exists(path):
+        shutil.rmtree(path)
 
 
 #:tag:GDBCommunication
@@ -287,8 +267,10 @@ def create_ipc_path(pid):
     Args:
         pid (int,str): PID of the process
     """
-    delete_ipc_path(pid)
-    is_path_valid(get_ipc_path(pid), "create")
+    path = get_ipc_path(pid)
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path)
 
     # Opening the command file with 'w' each time debugcore.send_command() gets invoked slows down the process
     # Instead, here we create the command file for only once when IPC path gets initialized
@@ -1039,7 +1021,9 @@ def get_module_name(module):
 def init_user_files():
     """Initializes user files"""
     for directory in typedefs.USER_PATHS.get_init_directories():
-        is_path_valid(get_user_path(directory), "create")
+        path = get_user_path(directory)
+        if not os.path.exists(path):
+            os.makedirs(path)
     for file in typedefs.USER_PATHS.get_init_files():
         file = get_user_path(file)
         try:
