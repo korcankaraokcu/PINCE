@@ -31,7 +31,7 @@ from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, Q
     QKeyEvent, QRegularExpressionValidator, QShortcut, QColorConstants
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
     QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
-    QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame
+    QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
     QLocale
@@ -453,7 +453,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 110)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.settings = QSettings()
-        if not utils.is_path_valid(self.settings.fileName()):
+        if not os.path.exists(self.settings.fileName()):
             self.set_default_settings()
         try:
             settings_version = self.settings.value("Misc/version", type=str)
@@ -1835,16 +1835,18 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         offsetLayout.setContentsMargins(0, 3, 0, 3)
         offsetFrame.setLayout(offsetLayout)
         buttonLeft = QPushButton("<", offsetFrame)
-        buttonLeft.setFixedSize(70, 30)
+        buttonLeft.setFixedWidth(40)
         offsetLayout.addWidget(buttonLeft)
         offsetText = QLineEdit(offsetFrame)
-        offsetText.setFixedSize(70, 30)
         offsetText.setText(hex(0))
         offsetText.textChanged.connect(self.update_value)
         offsetLayout.addWidget(offsetText)
         buttonRight = QPushButton(">", offsetFrame)
-        buttonRight.setFixedSize(70, 30)
+        buttonRight.setFixedWidth(40)
         offsetLayout.addWidget(buttonRight)
+        # TODO: Replace this spacer with address calculation per offset
+        spacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding)
+        offsetLayout.addItem(spacer)
         buttonLeft.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opSub))
         buttonRight.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opAdd))
 
@@ -1885,8 +1887,10 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         value = debugcore.read_memory(address, address_type, length, zero_terminate, value_repr, endian)
         self.label_Value.setText("<font color=red>??</font>" if value is None else str(value))
+        old_width = self.width()
         app.processEvents()
         self.adjustSize()
+        self.resize(old_width, self.minimumHeight())
 
     def comboBox_ValueType_current_index_changed(self):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
@@ -1995,6 +1999,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         self.setupUi(self)
         vt = typedefs.ValueType() if not value_type else value_type
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
+        self.lineEdit_Length.setFixedWidth(40)
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
