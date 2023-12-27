@@ -26,20 +26,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="comboBox_ValueType">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="currentIndex">
-          <number>-1</number>
-         </property>
-         <property name="sizeAdjustPolicy">
-          <enum>QComboBox::AdjustToContents</enum>
-         </property>
-        </widget>
+        <widget class="QComboBox" name="comboBox_ValueType"/>
        </item>
        <item>
         <spacer name="horizontalSpacer_3">

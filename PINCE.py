@@ -114,7 +114,13 @@ if __name__ == '__main__':
                       utils.get_user_path(typedefs.USER_PATHS.CONFIG_PATH))
     settings = QSettings()
     translator = QTranslator()
-    locale = settings.value("General/locale", type=str)
+    try:
+        locale = settings.value("General/locale", type=str)
+    except SystemError:
+        # We're reading the settings for the first time here
+        # If there's an error due to python objects, clear settings
+        settings.clear()
+        locale = None
     if not locale:
         locale = get_locale()
     translator.load(f'i18n/qm/{locale}.qm')
@@ -447,8 +453,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 110)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.settings = QSettings()
-        settings_path = self.settings.fileName()
-        if not utils.is_path_valid(settings_path):
+        if not utils.is_path_valid(self.settings.fileName()):
             self.set_default_settings()
         try:
             settings_version = self.settings.value("Misc/version", type=str)
@@ -457,13 +462,13 @@ class MainForm(QMainWindow, MainWindow):
             settings_version = None
         if settings_version != current_settings_version:
             print("Settings version mismatch, rolling back to the default configuration")
-            os.remove(settings_path)
+            self.settings.clear()
             self.set_default_settings()
         try:
             self.apply_settings()
         except Exception as e:
             print("An exception occurred while loading settings, rolling back to the default configuration\n", e)
-            os.remove(settings_path)
+            self.settings.clear()
             self.set_default_settings()
         try:
             debugcore.init_gdb(gdb_path)
@@ -1755,7 +1760,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def __init__(self, parent=None, description=tr.NO_DESCRIPTION, address="0x", value_type=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.setMaximumSize(100, 100)
         vt = typedefs.ValueType() if not value_type else value_type
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
@@ -1869,9 +1873,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_Address.setText(address_text)
         else:
             address = debugcore.examine_expression(self.lineEdit_Address.text()).address
-        if not address:
-            self.label_Value.setText("<font color=red>??</font>")
-            return
         if self.checkBox_Hex.isChecked():
             value_repr = typedefs.VALUE_REPR.HEX
         elif self.checkBox_Signed.isChecked():
@@ -1884,6 +1885,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         value = debugcore.read_memory(address, address_type, length, zero_terminate, value_repr, endian)
         self.label_Value.setText("<font color=red>??</font>" if value is None else str(value))
+        app.processEvents()
+        self.adjustSize()
 
     def comboBox_ValueType_current_index_changed(self):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
@@ -1991,7 +1994,6 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         super().__init__(parent=parent)
         self.setupUi(self)
         vt = typedefs.ValueType() if not value_type else value_type
-        self.setMaximumSize(100, 100)
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
@@ -2023,6 +2025,8 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.checkBox_Signed.setChecked(False)
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.checkBox_Hex.stateChanged.connect(self.repr_changed)
+        app.processEvents()
+        self.adjustSize()
 
     def comboBox_ValueType_current_index_changed(self):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
@@ -2033,6 +2037,8 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.checkBox_ZeroTerminate.hide()
         else:
             self.widget_Length.hide()
+        app.processEvents()
+        self.adjustSize()
 
     def repr_changed(self):
         if self.checkBox_Hex.isChecked():
