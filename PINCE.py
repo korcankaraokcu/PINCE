@@ -1984,6 +1984,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         self.setupUi(self)
         vt = typedefs.ValueType() if not value_type else value_type
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
+        self.lineEdit_Length.setFixedWidth(40)
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
