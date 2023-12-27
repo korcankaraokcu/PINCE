@@ -31,7 +31,7 @@ from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, Q
     QKeyEvent, QRegularExpressionValidator, QShortcut, QColorConstants
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
     QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
-    QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame
+    QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
     QLocale
@@ -1820,16 +1820,18 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         offsetLayout.setContentsMargins(0, 3, 0, 3)
         offsetFrame.setLayout(offsetLayout)
         buttonLeft = QPushButton("<", offsetFrame)
-        buttonLeft.setFixedSize(70, 30)
+        buttonLeft.setFixedWidth(40)
         offsetLayout.addWidget(buttonLeft)
         offsetText = QLineEdit(offsetFrame)
-        offsetText.setFixedSize(70, 30)
         offsetText.setText(hex(0))
         offsetText.textChanged.connect(self.update_value)
         offsetLayout.addWidget(offsetText)
         buttonRight = QPushButton(">", offsetFrame)
-        buttonRight.setFixedSize(70, 30)
+        buttonRight.setFixedWidth(40)
         offsetLayout.addWidget(buttonRight)
+        # TODO: Replace this spacer with address calculation per offset
+        spacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding)
+        offsetLayout.addItem(spacer)
         buttonLeft.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opSub))
         buttonRight.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opAdd))
 
@@ -1870,8 +1872,10 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         value = debugcore.read_memory(address, address_type, length, zero_terminate, value_repr, endian)
         self.label_Value.setText("<font color=red>??</font>" if value is None else str(value))
+        old_width = self.width()
         app.processEvents()
         self.adjustSize()
+        self.resize(old_width, self.minimumHeight())
 
     def comboBox_ValueType_current_index_changed(self):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
