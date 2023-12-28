@@ -130,7 +130,7 @@ if __name__ == '__main__':
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "26"  # Increase version by one if you change settings
+current_settings_version = "27"  # Increase version by one if you change settings
 update_table = bool
 table_update_interval = int
 freeze_interval = int
@@ -477,11 +477,6 @@ class MainForm(QMainWindow, MainWindow):
         else:
             self.apply_after_init()
         self.memory_view_window = MemoryViewWindowForm(self)
-        try:
-            app.setPalette(change_theme(theme))
-        except Exception as e:
-            app.setPalette(change_theme("System Default"))
-            print("An exception occurred while setting color palette, using system theme\n", e)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
@@ -636,6 +631,7 @@ class MainForm(QMainWindow, MainWindow):
         logo_path = self.settings.value("General/logo_path", type=str)
         app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
         theme = self.settings.value("General/theme", type=str)
+        app.setPalette(change_theme(theme))
         debugcore.set_gdb_output_mode(gdb_output_mode)
         for hotkey in Hotkeys.get_hotkeys():
             hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
@@ -2319,10 +2315,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if locale != new_locale:
             QMessageBox.information(self, tr.INFO, tr.LANG_RESET)
         self.settings.setValue("General/logo_path", self.comboBox_Logo.currentText())
-        new_theme = theme_list[self.comboBox_Theme.currentIndex()]
         self.settings.setValue("General/theme", self.comboBox_Theme.currentText())
-        if theme != new_theme:
-            app.setPalette(change_theme(new_theme))
         for hotkey in Hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
         if self.radioButton_SimpleDLopenCall.isChecked():
