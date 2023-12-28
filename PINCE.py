@@ -31,7 +31,7 @@ from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, Q
     QKeyEvent, QRegularExpressionValidator, QShortcut, QColorConstants
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
     QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
-    QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame
+    QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
     QLocale
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "26"  # Increase version by one if you change settings
+current_settings_version = "27"  # Increase version by one if you change settings
 update_table = bool
 table_update_interval = int
 freeze_interval = int
@@ -453,7 +453,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 110)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.settings = QSettings()
-        if not utils.is_path_valid(self.settings.fileName()):
+        if not os.path.exists(self.settings.fileName()):
             self.set_default_settings()
         try:
             settings_version = self.settings.value("Misc/version", type=str)
@@ -477,11 +477,6 @@ class MainForm(QMainWindow, MainWindow):
         else:
             self.apply_after_init()
         self.memory_view_window = MemoryViewWindowForm(self)
-        try:
-            app.setPalette(change_theme(theme))
-        except Exception as e:
-            app.setPalette(change_theme("System Default"))
-            print("An exception occurred while setting color palette, using system theme\n", e)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
@@ -636,6 +631,7 @@ class MainForm(QMainWindow, MainWindow):
         logo_path = self.settings.value("General/logo_path", type=str)
         app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
         theme = self.settings.value("General/theme", type=str)
+        app.setPalette(change_theme(theme))
         debugcore.set_gdb_output_mode(gdb_output_mode)
         for hotkey in Hotkeys.get_hotkeys():
             hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
@@ -1835,16 +1831,18 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         offsetLayout.setContentsMargins(0, 3, 0, 3)
         offsetFrame.setLayout(offsetLayout)
         buttonLeft = QPushButton("<", offsetFrame)
-        buttonLeft.setFixedSize(70, 30)
+        buttonLeft.setFixedWidth(40)
         offsetLayout.addWidget(buttonLeft)
         offsetText = QLineEdit(offsetFrame)
-        offsetText.setFixedSize(70, 30)
         offsetText.setText(hex(0))
         offsetText.textChanged.connect(self.update_value)
         offsetLayout.addWidget(offsetText)
         buttonRight = QPushButton(">", offsetFrame)
-        buttonRight.setFixedSize(70, 30)
+        buttonRight.setFixedWidth(40)
         offsetLayout.addWidget(buttonRight)
+        # TODO: Replace this spacer with address calculation per offset
+        spacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding)
+        offsetLayout.addItem(spacer)
         buttonLeft.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opSub))
         buttonRight.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opAdd))
 
@@ -1885,8 +1883,10 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         value = debugcore.read_memory(address, address_type, length, zero_terminate, value_repr, endian)
         self.label_Value.setText("<font color=red>??</font>" if value is None else str(value))
+        old_width = self.width()
         app.processEvents()
         self.adjustSize()
+        self.resize(old_width, self.minimumHeight())
 
     def comboBox_ValueType_current_index_changed(self):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
@@ -1995,6 +1995,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         self.setupUi(self)
         vt = typedefs.ValueType() if not value_type else value_type
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
+        self.lineEdit_Length.setFixedWidth(40)
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
@@ -2314,10 +2315,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if locale != new_locale:
             QMessageBox.information(self, tr.INFO, tr.LANG_RESET)
         self.settings.setValue("General/logo_path", self.comboBox_Logo.currentText())
-        new_theme = theme_list[self.comboBox_Theme.currentIndex()]
         self.settings.setValue("General/theme", self.comboBox_Theme.currentText())
-        if theme != new_theme:
-            app.setPalette(change_theme(new_theme))
         for hotkey in Hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
         if self.radioButton_SimpleDLopenCall.isChecked():
