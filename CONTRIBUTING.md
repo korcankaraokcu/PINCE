@@ -29,7 +29,7 @@ The rules are about the same with PEP-8, with some changes. While they are not s
   - Variables: snake_case
   - Functions: snake_case
   - Constants: SCREAMING_SNAKE_CASE
-  - Modules: Not yet specified, a bit random at the moment, will be addressed later on
+  - Modules: flatcase
   - Standalone scripts: snake_case
 - Variable naming for Qt:
   - Classes: PascalCase
@@ -219,4 +219,3 @@ Implement a flexible input field for the execution count. For instance, 2^x only
 - Add ability to include non-absolute calls for dissect code feature(i.e call rax). Should be considered after the first version release. Might be useful for multi-breakpoint related features
 - Provide information about absolute addresses in disassemble screen
 - All tables that hold large amount of data should only update the visible rows(check ```disassemble_check_viewport``` for an example)
-- Add different kinds of themes and the ability to change between them on runtime. Implement dark theme first. Also add the ability to create a custom theme and modify the existing ones
