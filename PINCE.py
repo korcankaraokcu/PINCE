@@ -41,6 +41,8 @@ import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpec
 
 from libpince import utils, debugcore, typedefs
 from libpince.libscanmem.scanmem import Scanmem
+from GUI.Settings.themes import change_theme
+from GUI.Settings.themes import theme_list
 from GUI.Utils import guiutils
 
 from GUI.MainWindow import Ui_MainWindow as MainWindow
@@ -94,12 +96,14 @@ language_list = [
     ("简体中文", "zh_CN")
 ]
 
+
 def get_locale():
     system_locale = QLocale.system().name()
     for _, locale in language_list:
         if system_locale == locale:
             return locale
     return language_list[0][1]
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -135,6 +139,7 @@ auto_attach_list = str
 auto_attach_regex = bool
 locale = str
 logo_path = str
+theme = str
 
 
 class Hotkeys:
@@ -317,8 +322,10 @@ threadpool = QThreadPool()
 # Placeholder number, may have to be changed in the future
 threadpool.setMaxThreadCount(10)
 
+
 class WorkerSignals(QObject):
     finished = pyqtSignal()
+
 
 class Worker(QRunnable):
     def __init__(self, fn, *args, **kwargs):
@@ -470,6 +477,11 @@ class MainForm(QMainWindow, MainWindow):
         else:
             self.apply_after_init()
         self.memory_view_window = MemoryViewWindowForm(self)
+        try:
+            app.setPalette(change_theme(theme))
+        except Exception as e:
+            app.setPalette(change_theme("System Default"))
+            print("An exception occurred while setting color palette, using system theme\n", e)
         self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
@@ -561,6 +573,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("auto_attach_regex", False)
         self.settings.setValue("locale", get_locale())
         self.settings.setValue("logo_path", "ozgurozbek/pince_small_transparent.png")
+        self.settings.setValue("theme", "System Default")
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
         for hotkey in Hotkeys.get_hotkeys():
@@ -606,6 +619,7 @@ class MainForm(QMainWindow, MainWindow):
         global auto_attach_regex
         global locale
         global logo_path
+        global theme
         global code_injection_method
         global bring_disassemble_to_front
         global instructions_per_scroll
@@ -621,6 +635,7 @@ class MainForm(QMainWindow, MainWindow):
         locale = self.settings.value("General/locale", type=str)
         logo_path = self.settings.value("General/logo_path", type=str)
         app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
+        theme = self.settings.value("General/theme", type=str)
         debugcore.set_gdb_output_mode(gdb_output_mode)
         for hotkey in Hotkeys.get_hotkeys():
             hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
@@ -2304,6 +2319,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if locale != new_locale:
             QMessageBox.information(self, tr.INFO, tr.LANG_RESET)
         self.settings.setValue("General/logo_path", self.comboBox_Logo.currentText())
+        new_theme = theme_list[self.comboBox_Theme.currentIndex()]
+        self.settings.setValue("General/theme", self.comboBox_Theme.currentText())
+        if theme != new_theme:
+            app.setPalette(change_theme(new_theme))
         for hotkey in Hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
         if self.radioButton_SimpleDLopenCall.isChecked():
@@ -2342,6 +2361,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.comboBox_Language.addItem(lang)
             if loc == cur_loc:
                 self.comboBox_Language.setCurrentIndex(self.comboBox_Language.count()-1)
+        self.comboBox_Theme.clear()
+        cur_theme = self.settings.value("General/theme", type=str)
+        for thm in theme_list:
+            self.comboBox_Theme.addItem(thm)
+            if thm == cur_theme:
+                self.comboBox_Theme.setCurrentIndex(self.comboBox_Theme.count()-1)
         logo_directory = utils.get_logo_directory()
         logo_list = utils.search_files(logo_directory, "\.(png|jpg|jpeg|svg)$")
         self.comboBox_Logo.clear()
