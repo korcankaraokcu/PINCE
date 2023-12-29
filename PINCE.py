@@ -2248,6 +2248,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings = QSettings()
         self.set_default_settings = set_default_settings_func
         self.hotkey_to_value = {}  # Dict[str:str]-->Dict[Hotkey.name:settings_value]
+        self.handle_signals_data = None
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
         icons_directory = guiutils.get_icons_directory()
         self.pushButton_GDBPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
@@ -2258,9 +2259,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.pushButton_GDBPath.clicked.connect(self.pushButton_GDBPath_clicked)
         self.checkBox_AutoUpdateAddressTable.stateChanged.connect(self.checkBox_AutoUpdateAddressTable_state_changed)
         self.checkBox_AutoAttachRegex.stateChanged.connect(self.checkBox_AutoAttachRegex_state_changed)
-        self.checkBox_AutoAttachRegex_state_changed()
+        self.comboBox_Logo.currentIndexChanged.connect(self.comboBox_Logo_current_index_changed)
+        self.comboBox_Theme.currentIndexChanged.connect(self.comboBox_Theme_current_index_changed)
         self.pushButton_HandleSignals.clicked.connect(self.pushButton_HandleSignals_clicked)
-        self.handle_signals_data = None
         self.config_gui()
 
     def accept(self):
@@ -2335,7 +2336,14 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
         if self.handle_signals_data is not None:
             self.settings.setValue("Debug/ignored_signals", ",".join(self.handle_signals_data))
-        super(SettingsDialogForm, self).accept()
+        super().accept()
+
+    def reject(self):
+        logo_path = self.settings.value("General/logo_path", type=str)
+        app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
+        theme = self.settings.value("General/theme", type=str)
+        app.setPalette(change_theme(theme))
+        super().reject()
 
     def config_gui(self):
         self.checkBox_AutoUpdateAddressTable.setChecked(
@@ -2354,18 +2362,22 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.comboBox_Language.addItem(lang)
             if loc == cur_loc:
                 self.comboBox_Language.setCurrentIndex(self.comboBox_Language.count()-1)
+        self.comboBox_Theme.blockSignals(True)
         self.comboBox_Theme.clear()
         cur_theme = self.settings.value("General/theme", type=str)
         for thm in theme_list:
             self.comboBox_Theme.addItem(thm)
             if thm == cur_theme:
                 self.comboBox_Theme.setCurrentIndex(self.comboBox_Theme.count()-1)
+        self.comboBox_Theme.blockSignals(False)
         logo_directory = utils.get_logo_directory()
         logo_list = utils.search_files(logo_directory, "\.(png|jpg|jpeg|svg)$")
+        self.comboBox_Logo.blockSignals(True)
         self.comboBox_Logo.clear()
         for logo in logo_list:
             self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
         self.comboBox_Logo.setCurrentIndex(logo_list.index(self.settings.value("General/logo_path", type=str)))
+        self.comboBox_Logo.blockSignals(False)
         self.listWidget_Functions.clear()
         self.hotkey_to_value.clear()
         for hotkey in Hotkeys.get_hotkeys():
@@ -2422,6 +2434,13 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         else:
             self.lineEdit_AutoAttachList.setPlaceholderText(tr.SEPARATE_PROCESSES_WITH.format(";"))
             self.lineEdit_AutoAttachList.setToolTip("")
+
+    def comboBox_Logo_current_index_changed(self):
+        logo_path = self.comboBox_Logo.currentText()
+        app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
+
+    def comboBox_Theme_current_index_changed(self):
+        app.setPalette(change_theme(self.comboBox_Theme.currentText()))
 
     def pushButton_GDBPath_clicked(self):
         current_path = self.lineEdit_GDBPath.text()
