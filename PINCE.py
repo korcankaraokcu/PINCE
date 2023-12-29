@@ -41,7 +41,7 @@ import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpec
 
 from libpince import utils, debugcore, typedefs
 from libpince.libscanmem.scanmem import Scanmem
-from GUI.Settings.themes import change_theme
+from GUI.Settings.themes import get_theme
 from GUI.Settings.themes import theme_list
 from GUI.Utils import guiutils
 
@@ -631,7 +631,7 @@ class MainForm(QMainWindow, MainWindow):
         logo_path = self.settings.value("General/logo_path", type=str)
         app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
         theme = self.settings.value("General/theme", type=str)
-        app.setPalette(change_theme(theme))
+        app.setPalette(get_theme(theme))
         debugcore.set_gdb_output_mode(gdb_output_mode)
         for hotkey in Hotkeys.get_hotkeys():
             hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
@@ -2342,7 +2342,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         logo_path = self.settings.value("General/logo_path", type=str)
         app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
         theme = self.settings.value("General/theme", type=str)
-        app.setPalette(change_theme(theme))
+        app.setPalette(get_theme(theme))
         super().reject()
 
     def config_gui(self):
@@ -2440,7 +2440,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
 
     def comboBox_Theme_current_index_changed(self):
-        app.setPalette(change_theme(self.comboBox_Theme.currentText()))
+        app.setPalette(get_theme(self.comboBox_Theme.currentText()))
 
     def pushButton_GDBPath_clicked(self):
         current_path = self.lineEdit_GDBPath.text()
