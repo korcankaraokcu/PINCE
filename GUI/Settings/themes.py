@@ -37,7 +37,6 @@ role_dict = {
 }
 
 
-# TODO: Previewing themes in settings window would drastically increase usability
 def change_theme(new_theme):
     """Update app theme based on user choice in settings window
 
