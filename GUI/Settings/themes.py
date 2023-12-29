@@ -37,16 +37,16 @@ role_dict = {
 }
 
 
-def change_theme(new_theme):
-    """Update app theme based on user choice in settings window
+def get_theme(theme_name):
+    """Returns a customized theme based on the specified theme choice
 
     Args:
-        new_theme (str): Predefined theme chosen from theme_list
+        theme_name (str): Predefined theme chosen from theme_list
 
     Returns:
         QPalette: Complete color palette swap for the app
     """
-    match new_theme:
+    match theme_name:
         case "Dark":
             dup_dict = {
                 "WINDOW_TEXT": "#FFFFFF",
@@ -97,8 +97,7 @@ def change_theme(new_theme):
                     "PLACEHOLDER_TEXT": "#80FFFFFF"
                 },
             }
-            dark_palette = update_theme(dark_dict)
-            return dark_palette
+            return apply_palette(dark_dict)
         case "Light":
             dup_dict = {
                 "WINDOW_TEXT": "#000000",
@@ -149,11 +148,9 @@ def change_theme(new_theme):
                     "PLACEHOLDER_TEXT": "#80000000"
                 },
             }
-            light_palette = update_theme(light_dict)
-            return light_palette
+            return apply_palette(light_dict)
         case "System Default":
-            sys_default = QPalette()
-            return sys_default
+            return QPalette()
         case "Wong (Colorblind Friendly)":
             dup_dict = {
                 "WINDOW_TEXT": "#000000",
@@ -204,28 +201,27 @@ def change_theme(new_theme):
                     "PLACEHOLDER_TEXT": "#80000000"
                 },
             }
-            wong_palette = update_theme(wong_dict)
-            return wong_palette
+            return apply_palette(wong_dict)
         case _:
-            print("There was an error parsing themes.")
+            print("There was an error parsing themes")
 
 
-def update_theme(cur_dict):
-    """Recursive function to parameterize theme dictionary and return palette
+def apply_palette(theme_dict):
+    """Creates a palette based on the given theme dictionary
 
     Args:
-        cur_dict (dict): Self-explanatory
+        theme_dict (dict): See the usage in get_theme
 
     Return:
         QPalette: Self-explanatory
     """
     new_palette = QPalette()
 
-    for group in cur_dict:
+    for group in theme_dict:
         cur_grp = grp_dict[group]
 
-        for color in cur_dict[group]:
+        for color in theme_dict[group]:
             cur_role = role_dict[color]
-            new_palette.setColor(cur_grp, cur_role, QColor(cur_dict[group][color]))
+            new_palette.setColor(cur_grp, cur_role, QColor(theme_dict[group][color]))
 
     return new_palette
