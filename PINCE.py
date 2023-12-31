@@ -4484,6 +4484,9 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.update_timer.stop()
         if not self.stopped:
             debugcore.delete_breakpoint(self.address)
+        watchpoint_file = utils.get_track_watchpoint_file(debugcore.currentpid, self.breakpoints)
+        if os.path.exists(watchpoint_file):
+            os.remove(watchpoint_file)
         self.deleteLater()
         instances.remove(self)
 
@@ -4575,6 +4578,9 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.update_values_timer.stop()
         if not self.stopped:
             debugcore.delete_breakpoint(self.address)
+        breakpoint_file = utils.get_track_breakpoint_file(debugcore.currentpid, self.breakpoint)
+        if os.path.exists(breakpoint_file):
+            os.remove(breakpoint_file)
         self.parent().refresh_disassemble_view()
         self.deleteLater()
         instances.remove(self)
