@@ -26,6 +26,7 @@ class CONST_TIME:
 
 class PATHS:
     GDB_PATH = "/bin/gdb"
+    TMP_PATH = "/tmp/PINCE/"
 
 
 class IPC_PATHS:
