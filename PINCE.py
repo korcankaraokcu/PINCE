@@ -111,7 +111,7 @@ if __name__ == '__main__':
     app.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
     app.setApplicationName("PINCE")
     QSettings.setPath(QSettings.Format.NativeFormat, QSettings.Scope.UserScope,
-                      utils.get_user_path(typedefs.USER_PATHS.CONFIG_PATH))
+                      utils.get_user_path(typedefs.USER_PATHS.CONFIG))
     settings = QSettings()
     translator = QTranslator()
     try:
@@ -413,9 +413,9 @@ class CheckInferiorStatus(QThread):
         while True:
             with debugcore.status_changed_condition:
                 debugcore.status_changed_condition.wait()
-            if debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_STOPPED:
+            if debugcore.inferior_status == typedefs.INFERIOR_STATUS.STOPPED:
                 self.process_stopped.emit()
-            elif debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+            elif debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
                 self.process_running.emit()
 
 
@@ -575,14 +575,14 @@ class MainForm(QMainWindow, MainWindow):
             self.settings.setValue(hotkey.name, hotkey.default)
         self.settings.endGroup()
         self.settings.beginGroup("CodeInjection")
-        self.settings.setValue("code_injection_method", typedefs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL)
+        self.settings.setValue("code_injection_method", typedefs.INJECTION_METHOD.DLOPEN)
         self.settings.endGroup()
         self.settings.beginGroup("Disassemble")
         self.settings.setValue("bring_disassemble_to_front", False)
         self.settings.setValue("instructions_per_scroll", 2)
         self.settings.endGroup()
         self.settings.beginGroup("Debug")
-        self.settings.setValue("gdb_path", typedefs.PATHS.GDB_PATH)
+        self.settings.setValue("gdb_path", typedefs.PATHS.GDB)
         self.settings.setValue("gdb_logging", False)
         self.settings.setValue("ignored_signals", "1,1,1,0")
         self.settings.endGroup()
@@ -806,7 +806,7 @@ class MainForm(QMainWindow, MainWindow):
             value_text = selected_row.text(VALUE_COL)
             encoding, option = typedefs.string_index_to_encoding_dict[value_type.value_index]
             byte_len = len(value_text.encode(encoding, option))
-        elif value_type.value_index == typedefs.VALUE_INDEX.INDEX_AOB:
+        elif value_type.value_index == typedefs.VALUE_INDEX.AOB:
             byte_len = value_type.length
         else:
             byte_len = typedefs.index_to_valuetype_dict[value_type.value_index][0]
@@ -1166,7 +1166,7 @@ class MainForm(QMainWindow, MainWindow):
         self.comboBox_ValueType.clear()
         for value_index, value_text in typedefs.scan_index_to_text_dict.items():
             self.comboBox_ValueType.addItem(value_text, value_index)
-        self.comboBox_ValueType.setCurrentIndex(typedefs.SCAN_INDEX.INDEX_INT32)
+        self.comboBox_ValueType.setCurrentIndex(typedefs.SCAN_INDEX.INT32)
         self.comboBox_ValueType_current_index_changed()
 
     # :doc:
@@ -1186,7 +1186,7 @@ class MainForm(QMainWindow, MainWindow):
 
         # none of these should be possible to be true at the same time
         scan_index = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
-        if scan_index >= typedefs.SCAN_INDEX.INDEX_FLOAT_ANY and scan_index <= typedefs.SCAN_INDEX.INDEX_FLOAT64:
+        if scan_index >= typedefs.SCAN_INDEX.FLOAT_ANY and scan_index <= typedefs.SCAN_INDEX.FLOAT64:
             # Adjust to locale whatever the input
             if QLocale.system().decimalPoint() == ".":
                 search_for = search_for.replace(",", ".")
@@ -1194,7 +1194,7 @@ class MainForm(QMainWindow, MainWindow):
             else:
                 search_for = search_for.replace(".", ",")
                 search_for2 = search_for2.replace(".", ",")
-        elif scan_index == typedefs.SCAN_INDEX.INDEX_STRING:
+        elif scan_index == typedefs.SCAN_INDEX.STRING:
             search_for = "\" " + search_for
         elif self.checkBox_Hex.isChecked():
             if not search_for.startswith("0x"):
@@ -1270,9 +1270,9 @@ class MainForm(QMainWindow, MainWindow):
         self.QWidget_Toolbox.setEnabled(True)
 
     def _scan_to_length(self, type_index):
-        if type_index == typedefs.SCAN_INDEX.INDEX_AOB:
+        if type_index == typedefs.SCAN_INDEX.AOB:
             return self.lineEdit_Scan.text().count(" ") + 1
-        if type_index == typedefs.SCAN_INDEX.INDEX_STRING:
+        if type_index == typedefs.SCAN_INDEX.STRING:
             return len(self.lineEdit_Scan.text())
         return 0
 
@@ -1319,7 +1319,7 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow.show()
 
     def pushButton_Open_clicked(self):
-        pct_file_path = utils.get_user_path(typedefs.USER_PATHS.CHEAT_TABLES_PATH)
+        pct_file_path = utils.get_user_path(typedefs.USER_PATHS.CHEAT_TABLES)
         file_paths = QFileDialog.getOpenFileNames(self, tr.OPEN_PCT_FILE, pct_file_path, tr.FILE_TYPES_PCT)[0]
         if not file_paths:
             return
@@ -1333,7 +1333,7 @@ class MainForm(QMainWindow, MainWindow):
                                 self.treeWidget_AddressTable.topLevelItemCount())
 
     def pushButton_Save_clicked(self):
-        pct_file_path = utils.get_user_path(typedefs.USER_PATHS.CHEAT_TABLES_PATH)
+        pct_file_path = utils.get_user_path(typedefs.USER_PATHS.CHEAT_TABLES)
         file_path = QFileDialog.getSaveFileName(self, tr.SAVE_PCT_FILE, pct_file_path, tr.FILE_TYPES_PCT)[0]
         if not file_path:
             return
@@ -1346,7 +1346,7 @@ class MainForm(QMainWindow, MainWindow):
     # Returns: a bool value indicates whether the operation succeeded.
     def attach_to_pid(self, pid):
         attach_result = debugcore.attach(pid, gdb_path)
-        if attach_result == typedefs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
+        if attach_result == typedefs.ATTACH_RESULT.SUCCESSFUL:
             self.apply_after_init()
             scanmem.pid(pid)
             self.on_new_process()
@@ -1780,7 +1780,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_Length.setText(length)
             self.checkBox_ZeroTerminate.show()
             self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
-        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.AOB:
             self.widget_Length.show()
             try:
                 length = str(length)
@@ -1892,7 +1892,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.show()
-        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.AOB:
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.hide()
         else:
@@ -2007,7 +2007,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.lineEdit_Length.setText(length)
             self.checkBox_ZeroTerminate.show()
             self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
-        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.AOB:
             self.widget_Length.show()
             try:
                 length = str(length)
@@ -2033,7 +2033,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.show()
-        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.AOB:
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.hide()
         else:
@@ -2156,7 +2156,7 @@ class InputDialogForm(QDialog, InputDialog):
     # that points the current index of the QComboBox, for instance: ["0", "1", 1] will create a QCombobox with the items
     # "0" and "1" then will set current index to 1 (which is the item "1")
     # label_alignment is optional
-    def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=typedefs.VALUE_INDEX.INDEX_INT32,
+    def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=typedefs.VALUE_INDEX.INT32,
                  buttons=(QDialogButtonBox.StandardButton.Ok, QDialogButtonBox.StandardButton.Cancel)):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -2320,9 +2320,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         for hotkey in Hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
         if self.radioButton_SimpleDLopenCall.isChecked():
-            injection_method = typedefs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
+            injection_method = typedefs.INJECTION_METHOD.DLOPEN
         elif self.radioButton_AdvancedInjection.isChecked():
-            injection_method = typedefs.INJECTION_METHOD.ADVANCED_INJECTION
+            injection_method = typedefs.INJECTION_METHOD.ADVANCED
         self.settings.setValue("CodeInjection/code_injection_method", injection_method)
         self.settings.setValue("Disassemble/bring_disassemble_to_front",
                                self.checkBox_BringDisassembleToFront.isChecked())
@@ -2384,9 +2384,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.listWidget_Functions.addItem(hotkey.desc)
             self.hotkey_to_value[hotkey.name] = self.settings.value("Hotkeys/" + hotkey.name)
         injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
-        if injection_method == typedefs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL:
+        if injection_method == typedefs.INJECTION_METHOD.DLOPEN:
             self.radioButton_SimpleDLopenCall.setChecked(True)
-        elif injection_method == typedefs.INJECTION_METHOD.ADVANCED_INJECTION:
+        elif injection_method == typedefs.INJECTION_METHOD.ADVANCED:
             self.radioButton_AdvancedInjection.setChecked(True)
         self.checkBox_BringDisassembleToFront.setChecked(
             self.settings.value("Disassemble/bring_disassemble_to_front", type=bool))
@@ -2889,7 +2889,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             watchpoint_dialog = InputDialogForm(item_list=[(tr.ENTER_WATCHPOINT_LENGTH, "")])
             if watchpoint_dialog.exec():
                 user_input = watchpoint_dialog.get_values()
-                user_input_int = utils.parse_string(user_input, typedefs.VALUE_INDEX.INDEX_INT32)
+                user_input_int = utils.parse_string(user_input, typedefs.VALUE_INDEX.INT32)
                 if user_input_int is None:
                     QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR_INT.format(user_input))
                     return
@@ -2988,7 +2988,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         selected_address = self.tableView_HexView_Hex.get_selected_address()
-        vt = typedefs.ValueType(typedefs.VALUE_INDEX.INDEX_AOB)
+        vt = typedefs.ValueType(typedefs.VALUE_INDEX.AOB)
         manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address), value_type=vt)
         if manual_address_dialog.exec():
             desc, address, vt = manual_address_dialog.get_values()
@@ -3401,7 +3401,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.FS.set_value(registers["fs"])
 
     def update_stacktrace(self):
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
         stack_trace_info = debugcore.get_stacktrace_info()
         self.tableWidget_StackTrace.setRowCount(0)
@@ -3452,7 +3452,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             pass
 
     def update_stack(self):
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
         stack_info = debugcore.get_stack_info()
         self.tableWidget_Stack.setRowCount(0)
@@ -4157,13 +4157,13 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
 
     def update_stacktrace(self):
         self.listWidget_ReturnAddresses.clear()
-        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
         return_addresses = debugcore.get_stack_frame_return_addresses()
         self.listWidget_ReturnAddresses.addItems(return_addresses)
 
     def update_frame_info(self, index):
-        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             self.textBrowser_Info.setText(tr.PROCESS_RUNNING)
             return
         frame_info = debugcore.get_stack_frame_info(index)
@@ -4615,10 +4615,10 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.status_to_text = {
-            typedefs.TRACE_STATUS.STATUS_IDLE: tr.WAITING_FOR_BREAKPOINT,
-            typedefs.TRACE_STATUS.STATUS_CANCELED: tr.TRACING_CANCELED,
-            typedefs.TRACE_STATUS.STATUS_PROCESSING: tr.PROCESSING_DATA,
-            typedefs.TRACE_STATUS.STATUS_FINISHED: tr.TRACING_COMPLETED
+            typedefs.TRACE_STATUS.IDLE: tr.WAITING_FOR_BREAKPOINT,
+            typedefs.TRACE_STATUS.CANCELED: tr.TRACING_CANCELED,
+            typedefs.TRACE_STATUS.PROCESSING: tr.PROCESSING_DATA,
+            typedefs.TRACE_STATUS.FINISHED: tr.TRACING_COMPLETED
         }
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)
         guiutils.center(self)
@@ -4640,11 +4640,10 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
 
     def change_status(self):
         status_info = debugcore.get_trace_instructions_status(self.breakpoint)
-        if status_info[0] == typedefs.TRACE_STATUS.STATUS_FINISHED or \
-                status_info[0] == typedefs.TRACE_STATUS.STATUS_PROCESSING:
+        if status_info[0] == typedefs.TRACE_STATUS.FINISHED or status_info[0] == typedefs.TRACE_STATUS.PROCESSING:
             self.close()
             return
-        if status_info[0] == typedefs.TRACE_STATUS.STATUS_TRACING:
+        if status_info[0] == typedefs.TRACE_STATUS.TRACING:
             self.label_StatusText.setText(status_info[1])
         else:
             self.label_StatusText.setText(self.status_to_text[status_info[0]])
@@ -4657,11 +4656,9 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         self.adjustSize()
         app.processEvents()
         status_info = debugcore.get_trace_instructions_status(self.breakpoint)
-        if status_info[0] == typedefs.TRACE_STATUS.STATUS_TRACING or \
-                status_info[0] == typedefs.TRACE_STATUS.STATUS_PROCESSING:
+        if status_info[0] == typedefs.TRACE_STATUS.TRACING or status_info[0] == typedefs.TRACE_STATUS.PROCESSING:
             debugcore.cancel_trace_instructions(self.breakpoint)
-            while debugcore.get_trace_instructions_status(self.breakpoint)[0] \
-                    != typedefs.TRACE_STATUS.STATUS_FINISHED:
+            while debugcore.get_trace_instructions_status(self.breakpoint)[0] != typedefs.TRACE_STATUS.FINISHED:
                 sleep(0.1)
                 app.processEvents()
         debugcore.delete_breakpoint(self.address)
@@ -4742,7 +4739,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.treeWidget_InstructionInfo.expandAll()
 
     def save_file(self):
-        trace_file_path = utils.get_user_path(typedefs.USER_PATHS.TRACE_INSTRUCTIONS_PATH)
+        trace_file_path = utils.get_user_path(typedefs.USER_PATHS.TRACE_INSTRUCTIONS)
         file_path = QFileDialog.getSaveFileName(self, tr.SAVE_TRACE_FILE, trace_file_path, tr.FILE_TYPES_TRACE)[0]
         if file_path:
             file_path = utils.append_file_extension(file_path, "trace")
@@ -4750,7 +4747,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
                 QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
 
     def load_file(self):
-        trace_file_path = utils.get_user_path(typedefs.USER_PATHS.TRACE_INSTRUCTIONS_PATH)
+        trace_file_path = utils.get_user_path(typedefs.USER_PATHS.TRACE_INSTRUCTIONS)
         file_path = QFileDialog.getOpenFileName(self, tr.OPEN_TRACE_FILE, trace_file_path, tr.FILE_TYPES_TRACE)[0]
         if file_path:
             content = utils.load_file(file_path)
@@ -4912,7 +4909,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
 
     def lineEdit_Bytes_text_edited(self):
         bytes_aob = self.lineEdit_Bytes.text()
-        if utils.parse_string(bytes_aob, typedefs.VALUE_INDEX.INDEX_AOB):
+        if utils.parse_string(bytes_aob, typedefs.VALUE_INDEX.AOB):
             address = int(self.lineEdit_Address.text(), 0)
             instruction = utils.get_opcodes(address, bytes_aob, debugcore.inferior_arch)
             if instruction:
@@ -4990,7 +4987,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
 
     def lineEdit_HexView_text_edited(self):
         aob_string = self.lineEdit_HexView.text()
-        if not utils.parse_string(aob_string, typedefs.VALUE_INDEX.INDEX_AOB):
+        if not utils.parse_string(aob_string, typedefs.VALUE_INDEX.AOB):
             self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
             return
         aob_array = aob_string.split()
@@ -5032,7 +5029,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
             QMessageBox.information(self, tr.ERROR, tr.IS_INVALID_EXPRESSION.format(expression))
             return
         value = self.lineEdit_HexView.text()
-        debugcore.write_memory(address, typedefs.VALUE_INDEX.INDEX_AOB, value)
+        debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, value)
         super(HexEditDialogForm, self).accept()
 
 
@@ -5621,7 +5618,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.setupUi(self)
-        guiutils.fill_value_combobox(self.comboBox_ValueType, typedefs.VALUE_INDEX.INDEX_STRING_UTF8)
+        guiutils.fill_value_combobox(self.comboBox_ValueType, typedefs.VALUE_INDEX.STRING_UTF8)
         self.parent = lambda: parent
         global instances
         instances.append(self)

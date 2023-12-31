@@ -28,8 +28,8 @@ from libpince import utils, typedefs, regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
-recv_file = utils.get_ipc_from_pince_file(pid)
-send_file = utils.get_ipc_to_pince_file(pid)
+recv_file = utils.get_from_pince_file(pid)
+send_file = utils.get_to_pince_file(pid)
 
 lib = None
 
@@ -350,7 +350,7 @@ class TraceInstructions(gdb.Command):
         for x in range(max_trace_count):
             try:
                 output = pickle.load(open(trace_status_file, "rb"))
-                if output[0] == typedefs.TRACE_STATUS.STATUS_CANCELED:
+                if output[0] == typedefs.TRACE_STATUS.CANCELED:
                     break
             except:
                 pass
@@ -367,7 +367,7 @@ class TraceInstructions(gdb.Command):
             current_index += 1
             tree.append([(line_info, collect_dict), current_root_index, []])
             tree[current_root_index][2].append(current_index)  # Add a child
-            status_info = (typedefs.TRACE_STATUS.STATUS_TRACING,
+            status_info = (typedefs.TRACE_STATUS.TRACING,
                            line_info + "\n(" + str(x + 1) + "/" + str(max_trace_count) + ")")
             pickle.dump(status_info, open(trace_status_file, "wb"))
             if regexes.trace_instructions_ret.search(line_info):
@@ -392,11 +392,11 @@ class TraceInstructions(gdb.Command):
                 gdb.execute("stepi", to_string=True)
             elif step_mode == typedefs.STEP_MODE.STEP_OVER:
                 gdb.execute("nexti", to_string=True)
-        status_info = (typedefs.TRACE_STATUS.STATUS_PROCESSING, "")
+        status_info = (typedefs.TRACE_STATUS.PROCESSING, "")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         trace_instructions_file = utils.get_trace_instructions_file(pid, breakpoint)
         json.dump((tree, root_index), open(trace_instructions_file, "w"))
-        status_info = (typedefs.TRACE_STATUS.STATUS_FINISHED, "")
+        status_info = (typedefs.TRACE_STATUS.FINISHED, "")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         if not stop_after_trace:
             gdb.execute("c&")
