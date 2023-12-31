@@ -383,7 +383,7 @@ def get_trace_instructions_file(pid, breakpoint):
     Returns:
         str: Path of trace instructions file
     """
-    return get_ipc_path(pid) + "/" + breakpoint + "_trace.txt"
+    return get_tmp_path(pid) + "/" + breakpoint + "_trace.txt"
 
 
 #:tag:Utilities
@@ -501,7 +501,7 @@ def get_referenced_strings_file(pid):
     Returns:
         str: Path of referenced strings dict file
     """
-    return get_ipc_path(pid) + "/referenced_strings_dict.txt"
+    return get_tmp_path(pid) + "/referenced_strings_dict.txt"
 
 
 #:tag:Tools
@@ -514,7 +514,7 @@ def get_referenced_jumps_file(pid):
     Returns:
         str: Path of referenced jumps dict file
     """
-    return get_ipc_path(pid) + "/referenced_jumps_dict.txt"
+    return get_tmp_path(pid) + "/referenced_jumps_dict.txt"
 
 
 #:tag:Tools
@@ -527,7 +527,7 @@ def get_referenced_calls_file(pid):
     Returns:
         str: Path of referenced calls dict file
     """
-    return get_ipc_path(pid) + "/referenced_calls_dict.txt"
+    return get_tmp_path(pid) + "/referenced_calls_dict.txt"
 
 
 #:tag:GDBCommunication
