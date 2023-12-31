@@ -280,6 +280,19 @@ def create_ipc_path(pid):
 
 
 #:tag:GDBCommunication
+def create_tmp_path(pid):
+    """Creates the tmp directory of given pid
+
+    Args:
+        pid (int,str): PID of the process
+    """
+    path = get_tmp_path(pid)
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path)
+
+
+#:tag:GDBCommunication
 def get_ipc_path(pid):
     """Get the IPC directory of given pid
 
@@ -293,6 +306,19 @@ def get_ipc_path(pid):
 
 
 #:tag:GDBCommunication
+def get_tmp_path(pid):
+    """Get the tmp directory of given pid
+
+    Args:
+        pid (int): PID of the process
+
+    Returns:
+        str: Path of tmp directory
+    """
+    return typedefs.PATHS.TMP_PATH + str(pid)
+
+
+#:tag:GDBCommunication
 def get_logging_file(pid):
     """Get the path of gdb logfile of given pid
 
@@ -302,7 +328,7 @@ def get_logging_file(pid):
     Returns:
         str: Path of gdb logfile
     """
-    return get_ipc_path(pid) + "/gdb_log.txt"
+    return get_tmp_path(pid) + "/gdb_log.txt"
 
 
 #:tag:GDBCommunication

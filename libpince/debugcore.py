@@ -461,6 +461,7 @@ def init_gdb(gdb_path=typedefs.PATHS.GDB_PATH):
 
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
     utils.create_ipc_path(currentpid)
+    utils.create_tmp_path(currentpid)
 
     breakpoint_on_hit_dict.clear()
     chained_breakpoints.clear()
@@ -558,6 +559,7 @@ def attach(pid, gdb_path=typedefs.PATHS.GDB_PATH):
     currentpid = pid
     mem_file = "/proc/" + str(currentpid) + "/mem"
     utils.create_ipc_path(pid)
+    utils.create_tmp_path(pid)
     send_command("attach " + str(pid))
     set_pince_paths()
     init_referenced_dicts(pid)
@@ -612,6 +614,7 @@ def create_process(process_path, args="", ld_preload_path="", gdb_path=typedefs.
     currentpid = int(pid)
     mem_file = "/proc/" + str(currentpid) + "/mem"
     utils.create_ipc_path(pid)
+    utils.create_tmp_path(pid)
     set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
