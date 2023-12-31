@@ -14,7 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt6.QtWidgets import QLabel, QMenu
+from PyQt6.QtWidgets import QLabel, QMenu, QApplication
 from PyQt6.QtGui import QCursor
 from PyQt6.QtCore import Qt
 from libpince import debugcore, typedefs
@@ -53,6 +53,8 @@ class QRegisterLabel(QLabel):
         if debugcore.currentpid == -1:
             return
         menu = QMenu()
+        copy = menu.addAction(tr.COPY)
+        menu.addSeparator()
         show_in_hex_view = menu.addAction(tr.SHOW_HEXVIEW)
         show_in_disassembler = menu.addAction(tr.SHOW_DISASSEMBLER)
         font_size = self.font().pointSize()
@@ -69,3 +71,5 @@ class QRegisterLabel(QLabel):
             if parent.objectName() == "MainWindow_MemoryView":
                 address = self.text().split("=")[-1]
                 parent.disassemble_expression(address)
+        elif action == copy:
+            QApplication.instance().clipboard().setText(self.text().split("=")[1])
