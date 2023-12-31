@@ -25,41 +25,36 @@ class CONST_TIME:
 
 
 class PATHS:
-    GDB_PATH = "/bin/gdb"
-    TMP_PATH = "/tmp/PINCE/"
-
-
-class IPC_PATHS:
-    PINCE_IPC_PATH = "/dev/shm/PINCE-connection/"  # Use utils.get_ipc_path()
-    IPC_FROM_PINCE_PATH = "/from_PINCE_file"  # Use utils.get_ipc_from_pince_file()
-    IPC_TO_PINCE_PATH = "/to_PINCE_file"  # Use utils.get_ipc_to_pince_file()
+    GDB = "/bin/gdb"
+    TMP = "/tmp/PINCE/"  # Use utils.get_tmp_path()
+    IPC = "/dev/shm/PINCE_IPC/"  # Use utils.get_ipc_path()
+    FROM_PINCE = "/from_PINCE"  # Use utils.get_from_pince_file()
+    TO_PINCE = "/to_PINCE"  # Use utils.get_to_pince_file()
 
 
 class USER_PATHS:
     # Use utils.get_user_path() to make use of these
-
-    CONFIG_PATH = ".config/"
-    ROOT_PATH = CONFIG_PATH + "PINCE/PINCE_USER_FILES/"
-    TRACE_INSTRUCTIONS_PATH = ROOT_PATH + "TraceInstructions/"
-    CHEAT_TABLES_PATH = ROOT_PATH + "CheatTables/"
-    GDBINIT_PATH = ROOT_PATH + "gdbinit"
-    GDBINIT_AA_PATH = ROOT_PATH + "gdbinit_after_attach"
-    PINCEINIT_PATH = ROOT_PATH + "pinceinit.py"
-    PINCEINIT_AA_PATH = ROOT_PATH + "pinceinit_after_attach.py"
+    CONFIG = ".config/"
+    ROOT = CONFIG + "PINCE/PINCE_USER_FILES/"
+    TRACE_INSTRUCTIONS = ROOT + "TraceInstructions/"
+    CHEAT_TABLES = ROOT + "CheatTables/"
+    GDBINIT = ROOT + "gdbinit"
+    GDBINIT_AA = ROOT + "gdbinit_after_attach"
+    PINCEINIT = ROOT + "pinceinit.py"
+    PINCEINIT_AA = ROOT + "pinceinit_after_attach.py"
 
     @staticmethod
     def get_init_directories():
-        return USER_PATHS.ROOT_PATH, USER_PATHS.TRACE_INSTRUCTIONS_PATH, USER_PATHS.CHEAT_TABLES_PATH
+        return USER_PATHS.ROOT, USER_PATHS.TRACE_INSTRUCTIONS, USER_PATHS.CHEAT_TABLES
 
     @staticmethod
     def get_init_files():
-        return USER_PATHS.GDBINIT_PATH, USER_PATHS.GDBINIT_AA_PATH, USER_PATHS.PINCEINIT_PATH, \
-               USER_PATHS.PINCEINIT_AA_PATH
+        return USER_PATHS.GDBINIT, USER_PATHS.GDBINIT_AA, USER_PATHS.PINCEINIT, USER_PATHS.PINCEINIT_AA
 
 
 class INFERIOR_STATUS:
-    INFERIOR_RUNNING = 1
-    INFERIOR_STOPPED = 2
+    RUNNING = 1
+    STOPPED = 2
 
 
 class INFERIOR_ARCH:
@@ -68,13 +63,13 @@ class INFERIOR_ARCH:
 
 
 class INJECTION_METHOD:
-    SIMPLE_DLOPEN_CALL = 1
-    ADVANCED_INJECTION = 2
+    DLOPEN = 1
+    ADVANCED = 2
 
 
 class BREAKPOINT_TYPE:
-    HARDWARE_BP = 1
-    SOFTWARE_BP = 2
+    HARDWARE = 1
+    SOFTWARE = 2
 
 
 class WATCHPOINT_TYPE:
@@ -105,11 +100,11 @@ class STEP_MODE:
 
 
 class TRACE_STATUS:
-    STATUS_IDLE = 1
-    STATUS_TRACING = 2
-    STATUS_CANCELED = 3
-    STATUS_PROCESSING = 4
-    STATUS_FINISHED = 5
+    IDLE = 1
+    TRACING = 2
+    CANCELED = 3
+    PROCESSING = 4
+    FINISHED = 5
 
 
 class STOP_REASON:
@@ -119,7 +114,7 @@ class STOP_REASON:
 
 class ATTACH_RESULT:
     ATTACH_SELF = 1
-    ATTACH_SUCCESSFUL = 2
+    SUCCESSFUL = 2
     PROCESS_NOT_VALID = 3
     ALREADY_DEBUGGING = 4
     ALREADY_TRACED = 5
@@ -157,50 +152,49 @@ class VALUE_REPR:
 
 class VALUE_INDEX:
     # Beginning of the integer indexes, new integer indexes should be added between 0 and 3
-    INDEX_INT8 = 0
-    INDEX_INT16 = 1
-    INDEX_INT32 = 2
-    INDEX_INT64 = 3
+    INT8 = 0
+    INT16 = 1
+    INT32 = 2
+    INT64 = 3
     # Ending of the integer indexes
 
-    INDEX_FLOAT32 = 4
-    INDEX_FLOAT64 = 5
+    FLOAT32 = 4
+    FLOAT64 = 5
 
     # Beginning of the string indexes, new string indexes should be added between 6 and 9
-    INDEX_STRING_ASCII = 6
-    INDEX_STRING_UTF8 = 7
-    INDEX_STRING_UTF16 = 8
-    INDEX_STRING_UTF32 = 9
+    STRING_ASCII = 6
+    STRING_UTF8 = 7
+    STRING_UTF16 = 8
+    STRING_UTF32 = 9
     # Ending of the string indexes
 
-    INDEX_AOB = 10  # Array of Bytes
+    AOB = 10  # Array of Bytes
 
     @staticmethod
     def is_integer(value_index):
-        return VALUE_INDEX.INDEX_INT8 <= value_index <= VALUE_INDEX.INDEX_INT64
+        return VALUE_INDEX.INT8 <= value_index <= VALUE_INDEX.INT64
 
     @staticmethod
     def is_string(value_index):
-        return VALUE_INDEX.INDEX_STRING_ASCII <= value_index <= VALUE_INDEX.INDEX_STRING_UTF32
+        return VALUE_INDEX.STRING_ASCII <= value_index <= VALUE_INDEX.STRING_UTF32
 
     @staticmethod
     def has_length(value_index):
-        return VALUE_INDEX.INDEX_STRING_ASCII <= value_index <= VALUE_INDEX.INDEX_STRING_UTF32 or \
-               value_index == VALUE_INDEX.INDEX_AOB
+        return VALUE_INDEX.STRING_ASCII <= value_index <= VALUE_INDEX.STRING_UTF32 or value_index == VALUE_INDEX.AOB
 
 
 class SCAN_INDEX:
-    INDEX_INT_ANY = 0
-    INDEX_INT8 = 1
-    INDEX_INT16 = 2
-    INDEX_INT32 = 3
-    INDEX_INT64 = 4
-    INDEX_FLOAT_ANY = 5
-    INDEX_FLOAT32 = 6
-    INDEX_FLOAT64 = 7
-    INDEX_ANY = 8
-    INDEX_STRING = 9
-    INDEX_AOB = 10  # Array of Bytes
+    INT_ANY = 0
+    INT8 = 1
+    INT16 = 2
+    INT32 = 3
+    INT64 = 4
+    FLOAT_ANY = 5
+    FLOAT32 = 6
+    FLOAT64 = 7
+    ANY = 8
+    STRING = 9
+    AOB = 10  # Array of Bytes
 
 
 # GDB already provides breakpoint info in english, no need to make these translatable
@@ -214,17 +208,17 @@ on_hit_to_text_dict = {
 # Represents the texts at indexes in the address table
 # TODO: This class is mostly an UI helper, maybe integrate it into the the UI completely in the future?
 index_to_text_dict = collections.OrderedDict([
-    (VALUE_INDEX.INDEX_INT8, "Int8"),
-    (VALUE_INDEX.INDEX_INT16, "Int16"),
-    (VALUE_INDEX.INDEX_INT32, "Int32"),
-    (VALUE_INDEX.INDEX_INT64, "Int64"),
-    (VALUE_INDEX.INDEX_FLOAT32, "Float32"),
-    (VALUE_INDEX.INDEX_FLOAT64, "Float64"),
-    (VALUE_INDEX.INDEX_STRING_ASCII, "String_ASCII"),
-    (VALUE_INDEX.INDEX_STRING_UTF8, "String_UTF8"),
-    (VALUE_INDEX.INDEX_STRING_UTF16, "String_UTF16"),
-    (VALUE_INDEX.INDEX_STRING_UTF32, "String_UTF32"),
-    (VALUE_INDEX.INDEX_AOB, "ByteArray")
+    (VALUE_INDEX.INT8, "Int8"),
+    (VALUE_INDEX.INT16, "Int16"),
+    (VALUE_INDEX.INT32, "Int32"),
+    (VALUE_INDEX.INT64, "Int64"),
+    (VALUE_INDEX.FLOAT32, "Float32"),
+    (VALUE_INDEX.FLOAT64, "Float64"),
+    (VALUE_INDEX.STRING_ASCII, "String_ASCII"),
+    (VALUE_INDEX.STRING_UTF8, "String_UTF8"),
+    (VALUE_INDEX.STRING_UTF16, "String_UTF16"),
+    (VALUE_INDEX.STRING_UTF32, "String_UTF32"),
+    (VALUE_INDEX.AOB, "ByteArray")
 ])
 
 text_to_index_dict = collections.OrderedDict()
@@ -232,53 +226,53 @@ for key in index_to_text_dict:
     text_to_index_dict[index_to_text_dict[key]] = key
 
 scanmem_result_to_index_dict = collections.OrderedDict([
-    ("I8", VALUE_INDEX.INDEX_INT8),
-    ("I8u", VALUE_INDEX.INDEX_INT8),
-    ("I8s", VALUE_INDEX.INDEX_INT8),
-    ("I16", VALUE_INDEX.INDEX_INT16),
-    ("I16u", VALUE_INDEX.INDEX_INT16),
-    ("I16s", VALUE_INDEX.INDEX_INT16),
-    ("I32", VALUE_INDEX.INDEX_INT32),
-    ("I32u", VALUE_INDEX.INDEX_INT32),
-    ("I32s", VALUE_INDEX.INDEX_INT32),
-    ("I64", VALUE_INDEX.INDEX_INT64),
-    ("I64u", VALUE_INDEX.INDEX_INT64),
-    ("I64s", VALUE_INDEX.INDEX_INT64),
-    ("F32", VALUE_INDEX.INDEX_FLOAT32),
-    ("F64", VALUE_INDEX.INDEX_FLOAT64),
-    ("string", VALUE_INDEX.INDEX_STRING_UTF8),
-    ("bytearray", VALUE_INDEX.INDEX_AOB)
+    ("I8", VALUE_INDEX.INT8),
+    ("I8u", VALUE_INDEX.INT8),
+    ("I8s", VALUE_INDEX.INT8),
+    ("I16", VALUE_INDEX.INT16),
+    ("I16u", VALUE_INDEX.INT16),
+    ("I16s", VALUE_INDEX.INT16),
+    ("I32", VALUE_INDEX.INT32),
+    ("I32u", VALUE_INDEX.INT32),
+    ("I32s", VALUE_INDEX.INT32),
+    ("I64", VALUE_INDEX.INT64),
+    ("I64u", VALUE_INDEX.INT64),
+    ("I64s", VALUE_INDEX.INT64),
+    ("F32", VALUE_INDEX.FLOAT32),
+    ("F64", VALUE_INDEX.FLOAT64),
+    ("string", VALUE_INDEX.STRING_UTF8),
+    ("bytearray", VALUE_INDEX.AOB)
 ])
 
 # Represents the texts at indexes in scan combobox
 # TODO: Same as index_to_text_dict, consider integrating into UI completely
 scan_index_to_text_dict = collections.OrderedDict([
-    (SCAN_INDEX.INDEX_INT_ANY, "Int(any)"),
-    (SCAN_INDEX.INDEX_INT8, "Int8"),
-    (SCAN_INDEX.INDEX_INT16, "Int16"),
-    (SCAN_INDEX.INDEX_INT32, "Int32"),
-    (SCAN_INDEX.INDEX_INT64, "Int64"),
-    (SCAN_INDEX.INDEX_FLOAT_ANY, "Float(any)"),
-    (SCAN_INDEX.INDEX_FLOAT32, "Float32"),
-    (SCAN_INDEX.INDEX_FLOAT64, "Float64"),
-    (SCAN_INDEX.INDEX_ANY, "Any(int, float)"),
-    (SCAN_INDEX.INDEX_STRING, "String"),
-    (VALUE_INDEX.INDEX_AOB, "ByteArray")
+    (SCAN_INDEX.INT_ANY, "Int(any)"),
+    (SCAN_INDEX.INT8, "Int8"),
+    (SCAN_INDEX.INT16, "Int16"),
+    (SCAN_INDEX.INT32, "Int32"),
+    (SCAN_INDEX.INT64, "Int64"),
+    (SCAN_INDEX.FLOAT_ANY, "Float(any)"),
+    (SCAN_INDEX.FLOAT32, "Float32"),
+    (SCAN_INDEX.FLOAT64, "Float64"),
+    (SCAN_INDEX.ANY, "Any(int, float)"),
+    (SCAN_INDEX.STRING, "String"),
+    (VALUE_INDEX.AOB, "ByteArray")
 ])
 
 # Used in scan_data_type option of scanmem
 scan_index_to_scanmem_dict = collections.OrderedDict([
-    (SCAN_INDEX.INDEX_INT_ANY, "int"),
-    (SCAN_INDEX.INDEX_INT8, "int8"),
-    (SCAN_INDEX.INDEX_INT16, "int16"),
-    (SCAN_INDEX.INDEX_INT32, "int32"),
-    (SCAN_INDEX.INDEX_INT64, "int64"),
-    (SCAN_INDEX.INDEX_FLOAT_ANY, "float"),
-    (SCAN_INDEX.INDEX_FLOAT32, "float32"),
-    (SCAN_INDEX.INDEX_FLOAT64, "float64"),
-    (SCAN_INDEX.INDEX_ANY, "number"),
-    (SCAN_INDEX.INDEX_STRING, "string"),
-    (VALUE_INDEX.INDEX_AOB, "bytearray")
+    (SCAN_INDEX.INT_ANY, "int"),
+    (SCAN_INDEX.INT8, "int8"),
+    (SCAN_INDEX.INT16, "int16"),
+    (SCAN_INDEX.INT32, "int32"),
+    (SCAN_INDEX.INT64, "int64"),
+    (SCAN_INDEX.FLOAT_ANY, "float"),
+    (SCAN_INDEX.FLOAT32, "float32"),
+    (SCAN_INDEX.FLOAT64, "float64"),
+    (SCAN_INDEX.ANY, "number"),
+    (SCAN_INDEX.STRING, "string"),
+    (VALUE_INDEX.AOB, "bytearray")
 ])
 
 
@@ -323,42 +317,42 @@ class ENDIANNESS:
     BIG = 2
 
 string_index_to_encoding_dict = {
-    VALUE_INDEX.INDEX_STRING_UTF8: ["utf-8", "surrogateescape"],
-    VALUE_INDEX.INDEX_STRING_UTF16: ["utf-16", "replace"],
-    VALUE_INDEX.INDEX_STRING_UTF32: ["utf-32", "replace"],
-    VALUE_INDEX.INDEX_STRING_ASCII: ["ascii", "replace"],
+    VALUE_INDEX.STRING_UTF8: ["utf-8", "surrogateescape"],
+    VALUE_INDEX.STRING_UTF16: ["utf-16", "replace"],
+    VALUE_INDEX.STRING_UTF32: ["utf-32", "replace"],
+    VALUE_INDEX.STRING_ASCII: ["ascii", "replace"],
 }
 
 string_index_to_multiplier_dict = {
-    VALUE_INDEX.INDEX_STRING_UTF8: 2,
-    VALUE_INDEX.INDEX_STRING_UTF16: 4,
-    VALUE_INDEX.INDEX_STRING_UTF32: 8,
+    VALUE_INDEX.STRING_UTF8: 2,
+    VALUE_INDEX.STRING_UTF16: 4,
+    VALUE_INDEX.STRING_UTF32: 8,
 }
 
 # first value is the length and the second one is the type
 # Check gdbutils for an exemplary usage
 index_to_valuetype_dict = {
-    VALUE_INDEX.INDEX_INT8: [1, "B"],
-    VALUE_INDEX.INDEX_INT16: [2, "H"],
-    VALUE_INDEX.INDEX_INT32: [4, "I"],
-    VALUE_INDEX.INDEX_INT64: [8, "Q"],
-    VALUE_INDEX.INDEX_FLOAT32: [4, "f"],
-    VALUE_INDEX.INDEX_FLOAT64: [8, "d"],
-    VALUE_INDEX.INDEX_STRING_ASCII: [None, None],
-    VALUE_INDEX.INDEX_STRING_UTF8: [None, None],
-    VALUE_INDEX.INDEX_STRING_UTF16: [None, None],
-    VALUE_INDEX.INDEX_STRING_UTF32: [None, None],
-    VALUE_INDEX.INDEX_AOB: [None, None]
+    VALUE_INDEX.INT8: [1, "B"],
+    VALUE_INDEX.INT16: [2, "H"],
+    VALUE_INDEX.INT32: [4, "I"],
+    VALUE_INDEX.INT64: [8, "Q"],
+    VALUE_INDEX.FLOAT32: [4, "f"],
+    VALUE_INDEX.FLOAT64: [8, "d"],
+    VALUE_INDEX.STRING_ASCII: [None, None],
+    VALUE_INDEX.STRING_UTF8: [None, None],
+    VALUE_INDEX.STRING_UTF16: [None, None],
+    VALUE_INDEX.STRING_UTF32: [None, None],
+    VALUE_INDEX.AOB: [None, None]
 }
 
 # Check gdbutils for an exemplary usage
 index_to_struct_pack_dict = {
-    VALUE_INDEX.INDEX_INT8: "B",
-    VALUE_INDEX.INDEX_INT16: "H",
-    VALUE_INDEX.INDEX_INT32: "I",
-    VALUE_INDEX.INDEX_INT64: "Q",
-    VALUE_INDEX.INDEX_FLOAT32: "f",
-    VALUE_INDEX.INDEX_FLOAT64: "d"
+    VALUE_INDEX.INT8: "B",
+    VALUE_INDEX.INT16: "H",
+    VALUE_INDEX.INT32: "I",
+    VALUE_INDEX.INT64: "Q",
+    VALUE_INDEX.FLOAT32: "f",
+    VALUE_INDEX.FLOAT64: "d"
 }
 
 # Format: {tag:tag_description}
@@ -409,14 +403,14 @@ class Frozen:
 
 
 class ValueType:
-    def __init__(self, value_index=VALUE_INDEX.INDEX_INT32, length=10, zero_terminate=True,
+    def __init__(self, value_index=VALUE_INDEX.INT32, length=10, zero_terminate=True,
                  value_repr=VALUE_REPR.UNSIGNED, endian=ENDIANNESS.HOST):
         """
         Args:
             value_index (int): Determines the type of data. Can be a member of VALUE_INDEX
-            length (int): Length of the data. Only used when the value_index is INDEX_STRING or INDEX_AOB
+            length (int): Length of the data. Only used when the value_index is STRING or AOB
             zero_terminate (bool): If False, ",NZT" will be appended to the text representation
-            Only used when value_index is INDEX_STRING. Ignored otherwise. "NZT" stands for "Not Zero Terminate"
+            Only used when value_index is STRING. Ignored otherwise. "NZT" stands for "Non-Zero Terminate"
             value_repr (int): Determines how the data is represented. Can be a member of VALUE_REPR
             endian (int): Determines the endianness. Can be a member of ENDIANNESS
         """
@@ -436,16 +430,16 @@ class ValueType:
             str: A str generated by given parameters
 
         Examples:
-            value_index=VALUE_INDEX.INDEX_STRING_UTF16, length=15, zero_terminate=False--▼
+            value_index=VALUE_INDEX.STRING_UTF16, length=15, zero_terminate=False--▼
             returned str="String_UTF16[15],NZT"
-            value_index=VALUE_INDEX.INDEX_AOB, length=42-->returned str="AoB[42]"
+            value_index=VALUE_INDEX.AOB, length=42-->returned str="AoB[42]"
         """
         returned_string = index_to_text_dict[self.value_index]
         if VALUE_INDEX.is_string(self.value_index):
             returned_string += f"[{self.length}]"
             if not self.zero_terminate:
                 returned_string += ",NZT"
-        elif self.value_index == VALUE_INDEX.INDEX_AOB:
+        elif self.value_index == VALUE_INDEX.AOB:
             returned_string += f"[{self.length}]"
         if VALUE_INDEX.is_integer(self.value_index):
             if self.value_repr == VALUE_REPR.SIGNED:

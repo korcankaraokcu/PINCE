@@ -39,7 +39,7 @@ class QFlagRegisterLabel(QLabel):
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
     def mouseDoubleClickEvent(self, QMouseEvent):
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
         registers = debugcore.read_registers()
         current_flag = self.objectName().lower()
