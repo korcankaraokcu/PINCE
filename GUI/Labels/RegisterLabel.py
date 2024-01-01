@@ -46,12 +46,12 @@ class QRegisterLabel(QLabel):
         register_dialog = InputDialogForm(
             item_list=[(tr.ENTER_REGISTER_VALUE.format(self.objectName()), registers[current_register])])
         if register_dialog.exec():
+            if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+                return
             debugcore.set_convenience_variable(current_register, register_dialog.get_values())
             self.set_value(debugcore.read_registers()[current_register])
 
     def contextMenuEvent(self, QContextMenuEvent):
-        if debugcore.currentpid == -1:
-            return
         menu = QMenu()
         copy = menu.addAction(tr.COPY)
         menu.addSeparator()

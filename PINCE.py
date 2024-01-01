@@ -684,6 +684,8 @@ class MainForm(QMainWindow, MainWindow):
 
     @utils.ignore_exceptions
     def continue_hotkey_pressed(self):
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+            return
         debugcore.continue_inferior()
 
     @utils.ignore_exceptions
@@ -2819,28 +2821,25 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         TraceInstructionsWindowForm(prompt_dialog=False)
 
     def step_instruction(self):
-        if debugcore.currentpid == -1:
-            return
-        if self.updating_memoryview:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING or \
+                self.updating_memoryview:
             return
         debugcore.step_instruction()
 
     def step_over_instruction(self):
-        if debugcore.currentpid == -1:
-            return
-        if self.updating_memoryview:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING or \
+                self.updating_memoryview:
             return
         debugcore.step_over_instruction()
 
     def execute_till_return(self):
-        if debugcore.currentpid == -1:
-            return
-        if self.updating_memoryview:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING or \
+                self.updating_memoryview:
             return
         debugcore.execute_till_return()
 
     def set_address(self):
-        if debugcore.currentpid == -1:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -4008,7 +4007,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         libpince_widget.showMaximized()
 
     def pushButton_ShowFloatRegisters_clicked(self):
-        if debugcore.currentpid == -1:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
         self.float_registers_widget = FloatRegisterWidgetForm()
         self.float_registers_widget.show()
@@ -4128,6 +4127,8 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
             self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(float_registers[xmm]))
 
     def set_register(self, index):
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+            return
         current_row = index.row()
         if self.currentWidget() == self.FPU:
             current_table_widget = self.tableWidget_FPU
@@ -4140,6 +4141,8 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         label_text = tr.ENTER_REGISTER_VALUE.format(current_register.upper())
         register_dialog = InputDialogForm(item_list=[(label_text, current_value)])
         if register_dialog.exec():
+            if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+                return
             if self.currentWidget() == self.XMM:
                 current_register += ".v4_float"
             debugcore.set_convenience_variable(current_register, register_dialog.get_values())
