@@ -695,6 +695,10 @@ class MainForm(QMainWindow, MainWindow):
             print("Unable to toggle attach")
         elif result == typedefs.TOGGLE_ATTACH.DETACHED:
             self.on_status_detached()
+        else:
+            # Attaching back doesn't update the status if the process is already stopped before detachment
+            with debugcore.status_changed_condition:
+                debugcore.status_changed_condition.notify_all()
 
     @utils.ignore_exceptions
     def nextscan_hotkey_pressed(self, index):
