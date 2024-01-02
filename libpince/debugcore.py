@@ -941,6 +941,8 @@ def examine_expression(expression):
         typedefs.tuple_examine_expression: Evaluated value, address and symbol in a tuple
         Any erroneous field will be returned as None instead of str
     """
+    if currentpid == -1:
+        return typedefs.tuple_examine_expression(None, None, None)
     return send_command("pince-examine-expressions", send_with_file=True, file_contents_send=[expression],
                         recv_with_file=True)[0]
 
@@ -956,6 +958,8 @@ def examine_expressions(expression_list):
     """
     if not expression_list:
         return []
+    if currentpid == -1:
+        return [typedefs.tuple_examine_expression(None, None, None) for _ in range(len(expression_list))]
     return send_command("pince-examine-expressions", send_with_file=True, file_contents_send=expression_list,
                         recv_with_file=True)
 
