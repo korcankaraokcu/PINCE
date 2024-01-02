@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import gdb, pickle, json, sys, re, struct, ctypes, os, shelve, distorm3
+import gdb, pickle, json, sys, re, struct, ctypes, os, shelve, distorm3, importlib
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -26,11 +26,10 @@ sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import 
 from libpince.gdb_python_scripts import gdbutils
 from libpince import utils, typedefs, regexes
 
-inferior = gdb.selected_inferior()
-pid = inferior.pid
+importlib.reload(gdbutils)
+pid = gdbutils.pid
 recv_file = utils.get_from_pince_file(pid)
 send_file = utils.get_to_pince_file(pid)
-
 lib = None
 
 # Format of info_list: [count, previous_pc_address, register_info, float_info, disas_info]

@@ -482,6 +482,7 @@ def init_gdb(gdb_path=typedefs.PATHS.GDB):
     gdb_initialized = True
     set_logging(False)
     send_command("source ./gdbinit_venv")
+    set_pince_paths()
     send_command("source " + utils.get_user_path(typedefs.USER_PATHS.GDBINIT))
     utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT))
 
