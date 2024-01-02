@@ -2820,8 +2820,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         guiutils.center_scroll_bar(self.verticalScrollBar_HexView)
 
     def show_trace_window(self):
-        if debugcore.currentpid == -1:
-            return
         TraceInstructionsWindowForm(prompt_dialog=False)
 
     def step_instruction(self):
@@ -3423,14 +3421,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.update_stacktrace()
 
     def tableWidget_StackTrace_context_menu_event(self, event):
-        if debugcore.currentpid == -1:
-            return
-
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_StackTrace.item(row, column).text())
 
         selected_row = guiutils.get_current_row(self.tableWidget_StackTrace)
-
         menu = QMenu()
         switch_to_stack = menu.addAction(tr.FULL_STACK)
         menu.addSeparator()
@@ -3440,6 +3434,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if selected_row == -1:
             guiutils.delete_menu_entries(menu, [clipboard_menu.menuAction()])
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
+        if debugcore.currentpid == -1:
+            menu.clear()
+            menu.addMenu(clipboard_menu)
         font_size = self.tableWidget_StackTrace.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -3496,8 +3493,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_Stack.item(row, column).text())
 
-        if debugcore.currentpid == -1:
-            return
         selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if selected_row == -1:
             current_address = None
@@ -3517,6 +3512,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         show_in_hex = menu.addAction(f"{tr.HEXVIEW_VALUE_POINTER}[Ctrl+H]")
         if selected_row == -1:
             guiutils.delete_menu_entries(menu, [clipboard_menu.menuAction(), show_in_disas, show_in_hex])
+        if debugcore.currentpid == -1:
+            menu.clear()
+            menu.addMenu(clipboard_menu)
         font_size = self.tableWidget_Stack.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -3722,9 +3720,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.travel_history.pop()
 
     def tableWidget_Disassemble_context_menu_event(self, event):
-        if debugcore.currentpid == -1:
-            return
-
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_Disassemble.item(row, column).text())
 
@@ -3780,6 +3775,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         menu.addSeparator()
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
         menu.addSeparator()
+        if debugcore.currentpid == -1:
+            menu.clear()
         clipboard_menu = menu.addMenu(tr.COPY_CLIPBOARD)
         copy_address = clipboard_menu.addAction(tr.COPY_ADDRESS)
         copy_bytes = clipboard_menu.addAction(tr.COPY_BYTES)
@@ -3913,8 +3910,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.refresh_disassemble_view()
 
     def actionBookmarks_triggered(self):
-        if debugcore.currentpid == -1:
-            return
         bookmark_widget = BookmarkWidgetForm(self)
         bookmark_widget.show()
         bookmark_widget.activateWindow()
@@ -3939,8 +3934,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         functions_info_widget.show()
 
     def actionGDB_Log_File_triggered(self):
-        if debugcore.currentpid == -1:
-            return
         log_file_widget = LogFileWidgetForm()
         log_file_widget.showMaximized()
 
@@ -4005,8 +3998,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.refresh_disassemble_view()
 
     def actionlibpince_triggered(self):
-        if debugcore.currentpid == -1:
-            return
         libpince_widget = LibpinceReferenceWidgetForm(is_window=True)
         libpince_widget.showMaximized()
 
@@ -4039,11 +4030,17 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
     def refresh_table(self):
         self.listWidget.clear()
         address_list = [hex(address) for address in self.parent().tableWidget_Disassemble.bookmarks.keys()]
-        self.listWidget.addItems([item.all for item in debugcore.examine_expressions(address_list)])
+        if debugcore.currentpid == -1:
+            self.listWidget.addItems(address_list)
+        else:
+            self.listWidget.addItems([item.all for item in debugcore.examine_expressions(address_list)])
 
     def change_display(self, row):
         current_address = utils.extract_address(self.listWidget.item(row).text())
-        self.lineEdit_Info.setText(debugcore.get_address_info(current_address))
+        if debugcore.currentpid == -1:
+            self.lineEdit_Info.clear()
+        else:
+            self.lineEdit_Info.setText(debugcore.get_address_info(current_address))
         self.lineEdit_Comment.setText(self.parent().tableWidget_Disassemble.bookmarks[int(current_address, 16)])
 
     def listWidget_item_double_clicked(self, item):
@@ -4695,6 +4692,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.actionSave.triggered.connect(self.save_file)
         self.splitter.setStretchFactor(0, 1)
         if not prompt_dialog:
+            self.showMaximized()
             return
         prompt_dialog = TraceInstructionsPromptDialogForm()
         if prompt_dialog.exec():
