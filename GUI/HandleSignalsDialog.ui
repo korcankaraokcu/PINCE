@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>268</width>
-    <height>244</height>
+    <width>363</width>
+    <height>523</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -44,7 +44,12 @@
      </column>
      <column>
       <property name="text">
-       <string>Ignore</string>
+       <string>Stop &amp; Print</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Pass to Program</string>
       </property>
      </column>
     </widget>
