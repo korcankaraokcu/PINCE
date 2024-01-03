@@ -420,23 +420,17 @@ def execute_till_return():
 
 
 #:tag:Debug
-def ignore_signal(signal_name):
-    """Ignores the given signal
+def handle_signal(signal_name, stop, pass_to_program):
+    """Decides on what will GDB do when the process recieves a signal
 
     Args:
-        signal_name (str): Name of the ignored signal
+        signal_name (str): Name of the signal
+        stop (bool): Stop the program and print to the console
+        pass_to_program (bool): Pass signal to program
     """
-    send_command("handle " + signal_name + " nostop noprint")
-
-
-#:tag:Debug
-def unignore_signal(signal_name):
-    """Unignores the given signal
-
-    Args:
-        signal_name (str): Name of the unignored signal
-    """
-    send_command("handle " + signal_name + " stop print")
+    stop = "stop print" if stop else "nostop noprint"
+    pass_to_program = "pass" if pass_to_program else "nopass"
+    send_command(f"handle {signal_name} {stop} {pass_to_program}")
 
 
 #:tag:GDBCommunication

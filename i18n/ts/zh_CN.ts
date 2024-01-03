@@ -171,8 +171,13 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
       <location filename="../../GUI/HandleSignalsDialog.ui" line="0" />
-      <source>Ignore</source>
-      <translation>忽略</translation>
+      <source>Stop &amp; Print</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/HandleSignalsDialog.ui" line="0" />
+      <source>Pass to Program</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../GUI/HexEditDialog.ui" line="0" />
@@ -291,6 +296,11 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Logo</source>
       <translation>图标</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Theme</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />

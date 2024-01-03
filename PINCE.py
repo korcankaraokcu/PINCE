@@ -37,7 +37,7 @@ from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, 
     QLocale
 from typing import Final
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect, json
 
 from libpince import utils, debugcore, typedefs
 from libpince.libscanmem.scanmem import Scanmem
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "27"  # Increase version by one if you change settings
+current_settings_version = "28"  # Increase version by one if you change settings
 update_table = bool
 table_update_interval = int
 freeze_interval = int
@@ -201,8 +201,27 @@ instructions_per_scroll = int
 gdb_path = str
 gdb_logging = bool
 
-ignored_signals = str
-signal_list = ["SIGUSR1", "SIGPWR", "SIGXCPU", "SIGSEGV"]
+handle_signals = str
+# Due to community feedback, these signals are disabled by default: SIGUSR1, SIGUSR2, SIGPWR, SIGXCPU, SIGXFSZ, SIGSYS
+# Rest is the same with GDB defaults
+default_signals = [
+    ["SIGHUP", True, True], ["SIGINT", True, False], ["SIGQUIT", True, True], ["SIGILL", True, True],
+    ["SIGTRAP", True, False], ["SIGABRT", True, True], ["SIGEMT", True, True], ["SIGFPE", True, True],
+    ["SIGKILL", True, True], ["SIGBUS", True, True], ["SIGSEGV", True, True], ["SIGSYS", False, True],
+    ["SIGPIPE", True, True], ["SIGALRM", False, True], ["SIGTERM", True, True], ["SIGURG", False, True],
+    ["SIGSTOP", True, True], ["SIGTSTP", True, True], ["SIGCONT", True, True], ["SIGCHLD", False, True],
+    ["SIGTTIN", True, True], ["SIGTTOU", True, True], ["SIGIO", False, True], ["SIGXCPU", False, True],
+    ["SIGXFSZ", False, True], ["SIGVTALRM", False, True], ["SIGPROF", False, True], ["SIGWINCH", False, True],
+    ["SIGLOST", True, True], ["SIGUSR1", False, True], ["SIGUSR2", False, True], ["SIGPWR", False, True],
+    ["SIGPOLL", False, True], ["SIGWIND", True, True], ["SIGPHONE", True, True], ["SIGWAITING", False, True],
+    ["SIGLWP", False, True], ["SIGDANGER", True, True], ["SIGGRANT", True, True], ["SIGRETRACT", True, True],
+    ["SIGMSG", True, True], ["SIGSOUND", True, True], ["SIGSAK", True, True], ["SIGPRIO", False, True],
+    ["SIGCANCEL", False, True], ["SIGINFO", True, True], ["EXC_BAD_ACCESS", True, True],
+    ["EXC_BAD_INSTRUCTION", True, True], ["EXC_ARITHMETIC", True, True], ["EXC_EMULATION", True, True],
+    ["EXC_SOFTWARE", True, True], ["EXC_BREAKPOINT", True, True], ["SIGLIBRT", False, True]
+]
+for x in range(33, 128):  # Add signals SIG33-SIG127
+    default_signals.append([f"SIG{x}", True, True])
 
 # represents the index of columns in instructions restore table
 INSTR_ADDR_COL = 0
@@ -584,7 +603,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.beginGroup("Debug")
         self.settings.setValue("gdb_path", typedefs.PATHS.GDB)
         self.settings.setValue("gdb_logging", False)
-        self.settings.setValue("ignored_signals", "1,1,1,0")
+        self.settings.setValue("handle_signals", json.dumps(default_signals))
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
         self.settings.setValue("version", current_settings_version)
@@ -593,18 +612,15 @@ class MainForm(QMainWindow, MainWindow):
 
     def apply_after_init(self):
         global gdb_logging
-        global ignored_signals
+        global handle_signals
         global exp_cache
 
         exp_cache.clear()
         gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
-        ignored_signals = self.settings.value("Debug/ignored_signals", type=str)
+        handle_signals = self.settings.value("Debug/handle_signals", type=str)
         debugcore.set_logging(gdb_logging)
-        for index, ignore_status in enumerate(ignored_signals.split(",")):
-            if ignore_status == "1":
-                debugcore.ignore_signal(signal_list[index])
-            else:
-                debugcore.unignore_signal(signal_list[index])
+        for signal, stop, pass_to_program in json.loads(handle_signals):
+            debugcore.handle_signal(signal, stop, pass_to_program)
 
     def apply_settings(self):
         global update_table
@@ -2254,7 +2270,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings = QSettings()
         self.set_default_settings = set_default_settings_func
         self.hotkey_to_value = {}  # Dict[str:str]-->Dict[Hotkey.name:settings_value]
-        self.handle_signals_data = None
+        self.handle_signals_data = ""
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
         icons_directory = guiutils.get_icons_directory()
         self.pushButton_GDBPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
@@ -2340,8 +2356,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 debugcore.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
-        if self.handle_signals_data is not None:
-            self.settings.setValue("Debug/ignored_signals", ",".join(self.handle_signals_data))
+        if self.handle_signals_data:
+            self.settings.setValue("Debug/handle_signals", self.handle_signals_data)
         super().accept()
 
     def reject(self):
@@ -2424,7 +2440,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         confirm_dialog = InputDialogForm(item_list=[(tr.RESET_DEFAULT_SETTINGS,)])
         if confirm_dialog.exec():
             self.set_default_settings()
-            self.handle_signals_data = None
+            self.handle_signals_data = ""
             self.config_gui()
 
     def checkBox_AutoUpdateAddressTable_state_changed(self):
@@ -2455,8 +2471,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.lineEdit_GDBPath.setText(file_path)
 
     def pushButton_HandleSignals_clicked(self):
-        if self.handle_signals_data is None:
-            self.handle_signals_data = self.settings.value("Debug/ignored_signals", type=str).split(",")
+        if not self.handle_signals_data:
+            self.handle_signals_data = self.settings.value("Debug/handle_signals", type=str)
         signal_dialog = HandleSignalsDialogForm(self.handle_signals_data)
         if signal_dialog.exec():
             self.handle_signals_data = signal_dialog.get_values()
@@ -2466,31 +2482,47 @@ class HandleSignalsDialogForm(QDialog, HandleSignalsDialog):
     def __init__(self, signal_data, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.tableWidget_Signals.setRowCount(len(signal_list))
-        for index, state in enumerate(signal_data):
-            self.tableWidget_Signals.setItem(index, 0, QTableWidgetItem(signal_list[index]))
-            widget = QWidget()
-            checkbox = QCheckBox()
-            layout = QHBoxLayout(widget)
-            layout.addWidget(checkbox)
-            layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            layout.setContentsMargins(0, 0, 0, 0)
+        self.signal_data = json.loads(signal_data)
+        self.tableWidget_Signals.setRowCount(len(self.signal_data))
+        for index, (signal, stop, pass_to_program) in enumerate(self.signal_data):
+            self.tableWidget_Signals.setItem(index, 0, QTableWidgetItem(signal))
+            widget, checkbox = self.create_checkbox_widget()
             self.tableWidget_Signals.setCellWidget(index, 1, widget)
-            if state == "1":
+            if stop:
                 checkbox.setCheckState(Qt.CheckState.Checked)
             else:
                 checkbox.setCheckState(Qt.CheckState.Unchecked)
+            widget, checkbox = self.create_checkbox_widget()
+            self.tableWidget_Signals.setCellWidget(index, 2, widget)
+            if pass_to_program:
+                checkbox.setCheckState(Qt.CheckState.Checked)
+            else:
+                checkbox.setCheckState(Qt.CheckState.Unchecked)
+        self.tableWidget_Signals.resizeColumnsToContents()
+            
+
+    def create_checkbox_widget(self):
+        widget = QWidget()
+        checkbox = QCheckBox()
+        layout = QHBoxLayout(widget)
+        layout.addWidget(checkbox)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.setContentsMargins(0, 0, 0, 0)
+        return widget, checkbox
 
     def get_values(self):
-        final_state = []
-        for index in range(len(signal_list)):
+        signal_data = []
+        for index in range(len(self.signal_data)):
+            current_signal = []
+            current_signal.append(self.signal_data[index][0])
             widget = self.tableWidget_Signals.cellWidget(index, 1)
             checkbox = widget.findChild(QCheckBox)
-            if checkbox.checkState() == Qt.CheckState.Checked:
-                final_state.append("1")
-            else:
-                final_state.append("0")
-        return final_state
+            current_signal.append(True if checkbox.checkState() == Qt.CheckState.Checked else False)
+            widget = self.tableWidget_Signals.cellWidget(index, 2)
+            checkbox = widget.findChild(QCheckBox)
+            current_signal.append(True if checkbox.checkState() == Qt.CheckState.Checked else False)
+            signal_data.append(current_signal)
+        return json.dumps(signal_data)
 
 
 class ConsoleWidgetForm(QWidget, ConsoleWidget):
