@@ -129,6 +129,11 @@ gdb_output_mode = typedefs.gdb_output_mode(True, True, True)
 # A string. memory file of the currently attached/created process
 mem_file = "/proc/" + str(currentpid) + "/mem"
 
+#:tag:Debug
+#:doc:
+# A string. Determines which signal to use to interrupt the process
+interrupt_signal = "SIGINT"
+
 '''
 When PINCE was first launched, it used gdb 7.7.1, which is a very outdated version of gdb
 interpreter-exec mi command of gdb showed some buggy behaviour at that time
@@ -388,7 +393,14 @@ def interrupt_inferior(interrupt_reason=typedefs.STOP_REASON.DEBUG):
     if currentpid == -1:
         return
     global stop_reason
-    send_command("interrupt")
+    if interrupt_signal == "SIGINT":
+        send_command("interrupt")
+    elif inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+        sig_num = interrupt_signal[3:]
+        if sig_num.isnumeric():
+            os.system(f"kill -{sig_num} {currentpid}")
+        else:
+            os.system(f"kill -s {interrupt_signal} {currentpid}")
     wait_for_stop()
     stop_reason = interrupt_reason
 
@@ -420,6 +432,18 @@ def execute_till_return():
 
 
 #:tag:Debug
+def set_interrupt_signal(signal_name):
+    """Decides on what signal to use to stop the process
+
+    Args:
+        signal_name (str): Name of the signal
+    """
+    global interrupt_signal
+    handle_signal(signal_name, True, False)
+    interrupt_signal = signal_name
+
+
+#:tag:Debug
 def handle_signal(signal_name, stop, pass_to_program):
     """Decides on what will GDB do when the process recieves a signal
 
@@ -428,7 +452,8 @@ def handle_signal(signal_name, stop, pass_to_program):
         stop (bool): Stop the program and print to the console
         pass_to_program (bool): Pass signal to program
     """
-    send_command("pince-handle-signals", send_with_file=True, file_contents_send=[signal_name, stop, pass_to_program])
+    params = json.dumps([[signal_name, stop, pass_to_program]])
+    send_command("pince-handle-signals", send_with_file=True, file_contents_send=params)
 
 
 #:tag:Debug

@@ -130,7 +130,7 @@ if __name__ == '__main__':
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "28"  # Increase version by one if you change settings
+current_settings_version = "29"  # Increase version by one if you change settings
 update_table = bool
 table_update_interval = int
 freeze_interval = int
@@ -200,8 +200,9 @@ bring_disassemble_to_front = bool
 instructions_per_scroll = int
 gdb_path = str
 gdb_logging = bool
-
+interrupt_signal = str
 handle_signals = str
+
 # Due to community feedback, these signals are disabled by default: SIGUSR1, SIGUSR2, SIGPWR, SIGXCPU, SIGXFSZ, SIGSYS
 # Rest is the same with GDB defaults
 default_signals = [
@@ -220,7 +221,7 @@ default_signals = [
     ["EXC_BAD_INSTRUCTION", True, True], ["EXC_ARITHMETIC", True, True], ["EXC_EMULATION", True, True],
     ["EXC_SOFTWARE", True, True], ["EXC_BREAKPOINT", True, True], ["SIGLIBRT", False, True]
 ]
-for x in range(33, 128):  # Add signals SIG33-SIG127
+for x in range(32, 128):  # Add signals SIG32-SIG127
     default_signals.append([f"SIG{x}", True, True])
 
 # represents the index of columns in instructions restore table
@@ -603,6 +604,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.beginGroup("Debug")
         self.settings.setValue("gdb_path", typedefs.PATHS.GDB)
         self.settings.setValue("gdb_logging", False)
+        self.settings.setValue("interrupt_signal", "SIGINT")
         self.settings.setValue("handle_signals", json.dumps(default_signals))
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
@@ -612,14 +614,17 @@ class MainForm(QMainWindow, MainWindow):
 
     def apply_after_init(self):
         global gdb_logging
+        global interrupt_signal
         global handle_signals
         global exp_cache
 
         exp_cache.clear()
         gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
+        interrupt_signal = self.settings.value("Debug/interrupt_signal", type=str)
         handle_signals = self.settings.value("Debug/handle_signals", type=str)
         debugcore.set_logging(gdb_logging)
         debugcore.handle_signals(handle_signals)
+        debugcore.set_interrupt_signal(interrupt_signal)  # Needs to be called after handle_signals
 
     def apply_settings(self):
         global update_table
@@ -2355,6 +2360,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 debugcore.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
+        self.settings.setValue("Debug/interrupt_signal", self.comboBox_InterruptSignal.currentText())
         if self.handle_signals_data:
             self.settings.setValue("Debug/handle_signals", self.handle_signals_data)
         super().accept()
@@ -2415,6 +2421,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             str(self.settings.value("Disassemble/instructions_per_scroll", type=int)))
         self.lineEdit_GDBPath.setText(str(self.settings.value("Debug/gdb_path", type=str)))
         self.checkBox_GDBLogging.setChecked(self.settings.value("Debug/gdb_logging", type=bool))
+        cur_signal = self.settings.value("Debug/interrupt_signal", type=str)
+        self.comboBox_InterruptSignal.clear()
+        self.comboBox_InterruptSignal.addItem("SIGINT")
+        self.comboBox_InterruptSignal.addItems([f"SIG{x}" for x in range(signal.SIGRTMIN, signal.SIGRTMAX+1)])
+        self.comboBox_InterruptSignal.setCurrentIndex(self.comboBox_InterruptSignal.findText(cur_signal))
+        self.comboBox_InterruptSignal.setStyleSheet("combobox-popup: 0;")  # maxVisibleItems doesn't work otherwise
 
     def change_display(self, index):
         self.stackedWidget.setCurrentIndex(index)
