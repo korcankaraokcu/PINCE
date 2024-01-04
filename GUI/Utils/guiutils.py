@@ -85,7 +85,7 @@ def resize_to_contents(QTableWidget):
 
 
 #:tag:GUI
-def fill_value_combobox(QCombobox, current_index=typedefs.VALUE_INDEX.INDEX_INT32):
+def fill_value_combobox(QCombobox, current_index=typedefs.VALUE_INDEX.INT32):
     """Fills the given QCombobox with value_index strings
 
     Args:

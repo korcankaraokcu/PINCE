@@ -27,7 +27,11 @@ from libpince import utils, typedefs, regexes
 
 inferior = gdb.selected_inferior()
 pid = inferior.pid
-inferior_name = utils.get_process_name(pid)
+if pid == 0:
+    pid = -1
+    inferior_name = ""
+else:
+    inferior_name = utils.get_process_name(pid)
 mem_file = "/proc/" + str(pid) + "/mem"
 
 void_ptr = gdb.lookup_type("void").pointer()

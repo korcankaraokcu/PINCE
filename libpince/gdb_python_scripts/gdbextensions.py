@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import gdb, pickle, json, sys, re, struct, ctypes, os, shelve, distorm3
+import gdb, pickle, json, sys, re, struct, ctypes, os, shelve, distorm3, importlib
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -26,11 +26,10 @@ sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import 
 from libpince.gdb_python_scripts import gdbutils
 from libpince import utils, typedefs, regexes
 
-inferior = gdb.selected_inferior()
-pid = inferior.pid
-recv_file = utils.get_ipc_from_pince_file(pid)
-send_file = utils.get_ipc_to_pince_file(pid)
-
+importlib.reload(gdbutils)
+pid = gdbutils.pid
+recv_file = utils.get_from_pince_file(pid)
+send_file = utils.get_to_pince_file(pid)
 lib = None
 
 # Format of info_list: [count, previous_pc_address, register_info, float_info, disas_info]
@@ -350,7 +349,7 @@ class TraceInstructions(gdb.Command):
         for x in range(max_trace_count):
             try:
                 output = pickle.load(open(trace_status_file, "rb"))
-                if output[0] == typedefs.TRACE_STATUS.STATUS_CANCELED:
+                if output[0] == typedefs.TRACE_STATUS.CANCELED:
                     break
             except:
                 pass
@@ -367,7 +366,7 @@ class TraceInstructions(gdb.Command):
             current_index += 1
             tree.append([(line_info, collect_dict), current_root_index, []])
             tree[current_root_index][2].append(current_index)  # Add a child
-            status_info = (typedefs.TRACE_STATUS.STATUS_TRACING,
+            status_info = (typedefs.TRACE_STATUS.TRACING,
                            line_info + "\n(" + str(x + 1) + "/" + str(max_trace_count) + ")")
             pickle.dump(status_info, open(trace_status_file, "wb"))
             if regexes.trace_instructions_ret.search(line_info):
@@ -392,11 +391,11 @@ class TraceInstructions(gdb.Command):
                 gdb.execute("stepi", to_string=True)
             elif step_mode == typedefs.STEP_MODE.STEP_OVER:
                 gdb.execute("nexti", to_string=True)
-        status_info = (typedefs.TRACE_STATUS.STATUS_PROCESSING, "")
+        status_info = (typedefs.TRACE_STATUS.PROCESSING, "")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         trace_instructions_file = utils.get_trace_instructions_file(pid, breakpoint)
         json.dump((tree, root_index), open(trace_instructions_file, "w"))
-        status_info = (typedefs.TRACE_STATUS.STATUS_FINISHED, "")
+        status_info = (typedefs.TRACE_STATUS.FINISHED, "")
         pickle.dump(status_info, open(trace_status_file, "wb"))
         if not stop_after_trace:
             gdb.execute("c&")
@@ -472,9 +471,7 @@ class DissectCode(gdb.Command):
         dissect_code_status_file = utils.get_dissect_code_status_file(pid)
         region_count = len(region_list)
         self.memory = open(gdbutils.mem_file, "rb")
-
-        # Has the best record of 111 secs. Tested on Torchlight 2 with Intel i7-4702MQ CPU and 8GB RAM
-        buffer = 0x10000  # Aligned to 2**16
+        buffer = 0x100000
         ref_str_count = len(referenced_strings_dict)
         ref_jmp_count = len(referenced_jumps_dict)
         ref_call_count = len(referenced_calls_dict)

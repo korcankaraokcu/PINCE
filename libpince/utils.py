@@ -280,6 +280,19 @@ def create_ipc_path(pid):
 
 
 #:tag:GDBCommunication
+def create_tmp_path(pid):
+    """Creates the tmp directory of given pid
+
+    Args:
+        pid (int,str): PID of the process
+    """
+    path = get_tmp_path(pid)
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path)
+
+
+#:tag:GDBCommunication
 def get_ipc_path(pid):
     """Get the IPC directory of given pid
 
@@ -289,7 +302,20 @@ def get_ipc_path(pid):
     Returns:
         str: Path of IPC directory
     """
-    return typedefs.IPC_PATHS.PINCE_IPC_PATH + str(pid)
+    return typedefs.PATHS.IPC + str(pid)
+
+
+#:tag:GDBCommunication
+def get_tmp_path(pid):
+    """Get the tmp directory of given pid
+
+    Args:
+        pid (int): PID of the process
+
+    Returns:
+        str: Path of tmp directory
+    """
+    return typedefs.PATHS.TMP + str(pid)
 
 
 #:tag:GDBCommunication
@@ -302,7 +328,7 @@ def get_logging_file(pid):
     Returns:
         str: Path of gdb logfile
     """
-    return get_ipc_path(pid) + "/gdb_log.txt"
+    return get_tmp_path(pid) + "/gdb_log.txt"
 
 
 #:tag:GDBCommunication
@@ -357,7 +383,7 @@ def get_trace_instructions_file(pid, breakpoint):
     Returns:
         str: Path of trace instructions file
     """
-    return get_ipc_path(pid) + "/" + breakpoint + "_trace.txt"
+    return get_tmp_path(pid) + "/" + breakpoint + "_trace.txt"
 
 
 #:tag:Utilities
@@ -475,7 +501,7 @@ def get_referenced_strings_file(pid):
     Returns:
         str: Path of referenced strings dict file
     """
-    return get_ipc_path(pid) + "/referenced_strings_dict.txt"
+    return get_tmp_path(pid) + "/referenced_strings_dict.txt"
 
 
 #:tag:Tools
@@ -488,7 +514,7 @@ def get_referenced_jumps_file(pid):
     Returns:
         str: Path of referenced jumps dict file
     """
-    return get_ipc_path(pid) + "/referenced_jumps_dict.txt"
+    return get_tmp_path(pid) + "/referenced_jumps_dict.txt"
 
 
 #:tag:Tools
@@ -501,11 +527,11 @@ def get_referenced_calls_file(pid):
     Returns:
         str: Path of referenced calls dict file
     """
-    return get_ipc_path(pid) + "/referenced_calls_dict.txt"
+    return get_tmp_path(pid) + "/referenced_calls_dict.txt"
 
 
 #:tag:GDBCommunication
-def get_ipc_from_pince_file(pid):
+def get_from_pince_file(pid):
     """Get the path of IPC file sent to custom gdb commands from PINCE for given pid
 
     Args:
@@ -514,11 +540,11 @@ def get_ipc_from_pince_file(pid):
     Returns:
         str: Path of IPC file
     """
-    return get_ipc_path(pid) + typedefs.IPC_PATHS.IPC_FROM_PINCE_PATH
+    return get_ipc_path(pid) + typedefs.PATHS.FROM_PINCE
 
 
 #:tag:GDBCommunication
-def get_ipc_to_pince_file(pid):
+def get_to_pince_file(pid):
     """Get the path of IPC file sent to PINCE from custom gdb commands for given pid
 
     Args:
@@ -527,7 +553,7 @@ def get_ipc_to_pince_file(pid):
     Returns:
         str: Path of IPC file
     """
-    return get_ipc_path(pid) + typedefs.IPC_PATHS.IPC_TO_PINCE_PATH
+    return get_ipc_path(pid) + typedefs.PATHS.TO_PINCE
 
 
 #:tag:ValueType
@@ -539,14 +565,14 @@ def parse_string(string, value_index):
         value_index (int): Determines the type of data. Can be a member of typedefs.VALUE_INDEX
 
     Returns:
-        str: If the value_index is INDEX_STRING
-        list: If the value_index is INDEX_AOB. A list of ints is returned
-        float: If the value_index is INDEX_FLOAT32 or INDEX_FLOAT64
+        str: If the value_index is STRING
+        list: If the value_index is AOB. A list of ints is returned
+        float: If the value_index is FLOAT32 or FLOAT64
         int: If the value_index is anything else
         None: If the string is not parsable by using the parameter value_index
 
     Examples:
-        string="42 DE AD BE EF 24",value_index=typedefs.VALUE_INDEX.INDEX_AOB--▼
+        string="42 DE AD BE EF 24",value_index=typedefs.VALUE_INDEX.AOB--▼
         returned_list=[66, 222, 173, 190, 239, 36]
     """
     string = str(string)
@@ -561,7 +587,7 @@ def parse_string(string, value_index):
     if typedefs.VALUE_INDEX.is_string(value_index):
         return string
     string = string.strip()
-    if value_index is typedefs.VALUE_INDEX.INDEX_AOB:
+    if value_index == typedefs.VALUE_INDEX.AOB:
         try:
             string_list = regexes.whitespaces.split(string)
             for item in string_list:
@@ -573,7 +599,7 @@ def parse_string(string, value_index):
         except:
             print(string + " can't be parsed as array of bytes")
             return
-    elif value_index is typedefs.VALUE_INDEX.INDEX_FLOAT32 or value_index is typedefs.VALUE_INDEX.INDEX_FLOAT64:
+    elif value_index == typedefs.VALUE_INDEX.FLOAT32 or value_index == typedefs.VALUE_INDEX.FLOAT64:
         try:
             string = float(string)
         except:
@@ -592,13 +618,13 @@ def parse_string(string, value_index):
             except:
                 print(string + " can't be parsed as integer or hexadecimal")
                 return
-        if value_index is typedefs.VALUE_INDEX.INDEX_INT8:
+        if value_index == typedefs.VALUE_INDEX.INT8:
             string = string % 0x100  # 256
-        elif value_index is typedefs.VALUE_INDEX.INDEX_INT16:
+        elif value_index == typedefs.VALUE_INDEX.INT16:
             string = string % 0x10000  # 65536
-        elif value_index is typedefs.VALUE_INDEX.INDEX_INT32:
+        elif value_index == typedefs.VALUE_INDEX.INT32:
             string = string % 0x100000000  # 4294967296
-        elif value_index is typedefs.VALUE_INDEX.INDEX_INT64:
+        elif value_index == typedefs.VALUE_INDEX.INT64:
             string = string % 0x10000000000000000  # 18446744073709551616
         return string
 

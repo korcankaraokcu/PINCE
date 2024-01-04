@@ -203,10 +203,10 @@ def send_command(command, control=False, cli_output=False, send_with_file=False,
             raise typedefs.GDBInitializeException
         gdb_output = ""
         if send_with_file:
-            send_file = utils.get_ipc_from_pince_file(currentpid)
+            send_file = utils.get_from_pince_file(currentpid)
             pickle.dump(file_contents_send, open(send_file, "wb"))
         if recv_with_file or cli_output:
-            recv_file = utils.get_ipc_to_pince_file(currentpid)
+            recv_file = utils.get_to_pince_file(currentpid)
 
             # Truncating the recv_file because we wouldn't like to see output of previous command in case of errors
             open(recv_file, "w").close()
@@ -285,9 +285,9 @@ def state_observe_thread():
                 if bp_num and breakpoint_on_hit_dict.get(bp_num.group(1), -1) != typedefs.BREAKPOINT_ON_HIT.BREAK:
                     return
                 stop_reason = typedefs.STOP_REASON.DEBUG
-                inferior_status = typedefs.INFERIOR_STATUS.INFERIOR_STOPPED
+                inferior_status = typedefs.INFERIOR_STATUS.STOPPED
             else:
-                inferior_status = typedefs.INFERIOR_STATUS.INFERIOR_RUNNING
+                inferior_status = typedefs.INFERIOR_STATUS.RUNNING
             if old_status != inferior_status:
                 with status_changed_condition:
                     status_changed_condition.notify_all()
@@ -335,11 +335,11 @@ def execute_func_temporary_interruption(func, *args, **kwargs):
         ???: Result of the given function. Return type depends on the given function
     """
     old_status = inferior_status
-    if old_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+    if old_status == typedefs.INFERIOR_STATUS.RUNNING:
         interrupt_inferior(typedefs.STOP_REASON.PAUSE)
         wait_for_stop()
     result = func(*args, **kwargs)
-    if old_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+    if old_status == typedefs.INFERIOR_STATUS.RUNNING:
         continue_inferior()
     return result
 
@@ -371,7 +371,7 @@ def wait_for_stop(timeout=1):
         timeout (float): Timeout time in seconds
     """
     remaining_time = timeout
-    while inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+    while inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
         sleep(typedefs.CONST_TIME.GDB_INPUT_SLEEP)
         remaining_time -= typedefs.CONST_TIME.GDB_INPUT_SLEEP
         if remaining_time < 0:
@@ -420,27 +420,21 @@ def execute_till_return():
 
 
 #:tag:Debug
-def ignore_signal(signal_name):
-    """Ignores the given signal
+def handle_signal(signal_name, stop, pass_to_program):
+    """Decides on what will GDB do when the process recieves a signal
 
     Args:
-        signal_name (str): Name of the ignored signal
+        signal_name (str): Name of the signal
+        stop (bool): Stop the program and print to the console
+        pass_to_program (bool): Pass signal to program
     """
-    send_command("handle " + signal_name + " nostop noprint")
-
-
-#:tag:Debug
-def unignore_signal(signal_name):
-    """Unignores the given signal
-
-    Args:
-        signal_name (str): Name of the unignored signal
-    """
-    send_command("handle " + signal_name + " stop print")
+    stop = "stop print" if stop else "nostop noprint"
+    pass_to_program = "pass" if pass_to_program else "nopass"
+    send_command(f"handle {signal_name} {stop} {pass_to_program}")
 
 
 #:tag:GDBCommunication
-def init_gdb(gdb_path=typedefs.PATHS.GDB_PATH):
+def init_gdb(gdb_path=typedefs.PATHS.GDB):
     """Spawns gdb and initializes/resets some of the global variables
 
     Args:
@@ -461,6 +455,7 @@ def init_gdb(gdb_path=typedefs.PATHS.GDB_PATH):
 
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
     utils.create_ipc_path(currentpid)
+    utils.create_tmp_path(currentpid)
 
     breakpoint_on_hit_dict.clear()
     chained_breakpoints.clear()
@@ -481,8 +476,9 @@ def init_gdb(gdb_path=typedefs.PATHS.GDB_PATH):
     gdb_initialized = True
     set_logging(False)
     send_command("source ./gdbinit_venv")
-    send_command("source " + utils.get_user_path(typedefs.USER_PATHS.GDBINIT_PATH))
-    utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_PATH))
+    set_pince_paths()
+    send_command("source " + utils.get_user_path(typedefs.USER_PATHS.GDBINIT))
+    utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT))
 
 
 #:tag:GDBCommunication
@@ -506,7 +502,7 @@ def set_pince_paths():
     """
     libpince_dir = utils.get_libpince_directory()
     pince_dir = os.path.dirname(libpince_dir)
-    gdbinit_aa_dir = utils.get_user_path(typedefs.USER_PATHS.GDBINIT_AA_PATH)
+    gdbinit_aa_dir = utils.get_user_path(typedefs.USER_PATHS.GDBINIT_AA)
     send_command('set $GDBINIT_AA_PATH=' + '"' + gdbinit_aa_dir + '"')
     send_command('set $PINCE_PATH=' + '"' + pince_dir + '"')
     send_command("source gdb_python_scripts/gdbextensions.py")
@@ -524,7 +520,7 @@ def init_referenced_dicts(pid):
 
 
 #:tag:Debug
-def attach(pid, gdb_path=typedefs.PATHS.GDB_PATH):
+def attach(pid, gdb_path=typedefs.PATHS.GDB):
     """Attaches gdb to the target and initializes some of the global variables
 
     Args:
@@ -558,16 +554,17 @@ def attach(pid, gdb_path=typedefs.PATHS.GDB_PATH):
     currentpid = pid
     mem_file = "/proc/" + str(currentpid) + "/mem"
     utils.create_ipc_path(pid)
+    utils.create_tmp_path(pid)
     send_command("attach " + str(pid))
     set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
-    utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_AA_PATH))
-    return typedefs.ATTACH_RESULT.ATTACH_SUCCESSFUL
+    utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_AA))
+    return typedefs.ATTACH_RESULT.SUCCESSFUL
 
 
 #:tag:Debug
-def create_process(process_path, args="", ld_preload_path="", gdb_path=typedefs.PATHS.GDB_PATH):
+def create_process(process_path, args="", ld_preload_path="", gdb_path=typedefs.PATHS.GDB):
     """Creates a new process for debugging and initializes some of the global variables
     Current process will be detached even if the create_process call fails
     Make sure to save your data before calling this monstrosity
@@ -612,10 +609,11 @@ def create_process(process_path, args="", ld_preload_path="", gdb_path=typedefs.
     currentpid = int(pid)
     mem_file = "/proc/" + str(currentpid) + "/mem"
     utils.create_ipc_path(pid)
+    utils.create_tmp_path(pid)
     set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
-    utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_AA_PATH))
+    utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_AA))
     return True
 
 
@@ -698,6 +696,7 @@ def inject_with_dlopen_call(library_path):
     Returns:
         bool: Result of the injection
     """
+    # TODO: Merge injection functions and rename them to inject_so once advanced injection is implemented
     injectionpath = '"' + library_path + '"'
     result = call_function_from_inferior("dlopen(" + injectionpath + ", 1)")[1]
     if result == "0" or not result:
@@ -723,9 +722,9 @@ def read_pointer(pointer_type):
         raise TypeError("Passed non-PointerType to read_pointer!")
 
     if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32:
-        value_index = typedefs.VALUE_INDEX.INDEX_INT32
+        value_index = typedefs.VALUE_INDEX.INT32
     else:
-        value_index = typedefs.VALUE_INDEX.INDEX_INT64
+        value_index = typedefs.VALUE_INDEX.INT64
 
     # Simple addresses first, examine_expression takes much longer time, especially for larger tables
     try:
@@ -770,9 +769,9 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
         address (str, int): Can be a hex string or an integer.
         value_index (int): Determines the type of data read. Can be a member of typedefs.VALUE_INDEX
         length (int): Length of the data that'll be read. Must be greater than 0. Only used when the value_index is
-        INDEX_STRING or INDEX_AOB. Ignored otherwise
+        STRING or AOB. Ignored otherwise
         zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
-        value_index is INDEX_STRING. Ignored otherwise
+        value_index is STRING. Ignored otherwise
         value_repr (int): Can be a member of typedefs.VALUE_REPR. Only usable with integer types
         endian (int): Can be a member of typedefs.ENDIANNESS
         mem_handle (BinaryIO): A file handle that points to the memory file of the current process
@@ -780,8 +779,8 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
         Don't forget to close the handle after you're done if you use this parameter manually
 
     Returns:
-        str: If the value_index is INDEX_STRING or INDEX_AOB, also when value_repr is HEX
-        float: If the value_index is INDEX_FLOAT32 or INDEX_FLOAT64
+        str: If the value_index is STRING or AOB, also when value_repr is HEX
+        float: If the value_index is FLOAT32 or FLOAT64
         int: If the value_index is anything else
         None: If an error occurs while reading the given address
     """
@@ -807,7 +806,7 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
             # print("length must be greater than 0")
             return
         expected_length = length * typedefs.string_index_to_multiplier_dict.get(value_index, 1)
-    elif value_index is typedefs.VALUE_INDEX.INDEX_AOB:
+    elif value_index is typedefs.VALUE_INDEX.AOB:
         try:
             expected_length = int(length)
         except:
@@ -842,7 +841,7 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
             else:
                 returned_string = returned_string.split('\x00')[0]
         return returned_string[0:length]
-    elif value_index is typedefs.VALUE_INDEX.INDEX_AOB:
+    elif value_index is typedefs.VALUE_INDEX.AOB:
         return " ".join(format(n, '02x') for n in data_read)
     else:
         is_integer = typedefs.VALUE_INDEX.is_integer(value_index)
@@ -883,7 +882,7 @@ def write_memory(address, value_index, value, endian=typedefs.ENDIANNESS.HOST):
         return
     encoding, option = typedefs.string_index_to_encoding_dict.get(value_index, (None, None))
     if encoding is None:
-        if value_index is typedefs.VALUE_INDEX.INDEX_AOB:
+        if value_index is typedefs.VALUE_INDEX.AOB:
             write_data = bytearray(write_data)
         else:
             data_type = typedefs.index_to_struct_pack_dict.get(value_index, -1)
@@ -937,6 +936,8 @@ def examine_expression(expression):
         typedefs.tuple_examine_expression: Evaluated value, address and symbol in a tuple
         Any erroneous field will be returned as None instead of str
     """
+    if currentpid == -1:
+        return typedefs.tuple_examine_expression(None, None, None)
     return send_command("pince-examine-expressions", send_with_file=True, file_contents_send=[expression],
                         recv_with_file=True)[0]
 
@@ -952,6 +953,8 @@ def examine_expressions(expression_list):
     """
     if not expression_list:
         return []
+    if currentpid == -1:
+        return [typedefs.tuple_examine_expression(None, None, None) for _ in range(len(expression_list))]
     return send_command("pince-examine-expressions", send_with_file=True, file_contents_send=expression_list,
                         recv_with_file=True)
 
@@ -1294,7 +1297,7 @@ def nop_instruction(start_address, length_of_instr):
         modified_instructions_dict[start_address] = old_aob
 
     nop_aob = '90 ' * length_of_instr
-    write_memory(start_address, typedefs.VALUE_INDEX.INDEX_AOB, nop_aob)
+    write_memory(start_address, typedefs.VALUE_INDEX.AOB, nop_aob)
 
 
 #:tag:MemoryRW
@@ -1314,7 +1317,7 @@ def modify_instruction(start_address, array_of_bytes):
     global modified_instructions_dict
     if start_address not in modified_instructions_dict:
         modified_instructions_dict[start_address] = old_aob
-    write_memory(start_address, typedefs.VALUE_INDEX.INDEX_AOB, array_of_bytes)
+    write_memory(start_address, typedefs.VALUE_INDEX.AOB, array_of_bytes)
 
 
 #:tag:MemoryRW
@@ -1329,7 +1332,7 @@ def restore_instruction(start_address):
     """
     global modified_instructions_dict
     array_of_bytes = modified_instructions_dict.pop(start_address)
-    write_memory(start_address, typedefs.VALUE_INDEX.INDEX_AOB, array_of_bytes)
+    write_memory(start_address, typedefs.VALUE_INDEX.AOB, array_of_bytes)
 
 
 #:tag:BreakWatchpoints
@@ -1438,7 +1441,7 @@ def hardware_breakpoint_available():
 
 
 #:tag:BreakWatchpoints
-def add_breakpoint(expression, breakpoint_type=typedefs.BREAKPOINT_TYPE.HARDWARE_BP,
+def add_breakpoint(expression, breakpoint_type=typedefs.BREAKPOINT_TYPE.HARDWARE,
                    on_hit=typedefs.BREAKPOINT_ON_HIT.BREAK):
     """Adds a breakpoint at the address evaluated by the given expression. Uses a software breakpoint if all hardware
     breakpoint slots are being used
@@ -1460,13 +1463,13 @@ def add_breakpoint(expression, breakpoint_type=typedefs.BREAKPOINT_TYPE.HARDWARE
     if check_address_in_breakpoints(str_address):
         print("breakpoint/watchpoint for address " + str_address + " is already set")
         return
-    if breakpoint_type == typedefs.BREAKPOINT_TYPE.HARDWARE_BP:
+    if breakpoint_type == typedefs.BREAKPOINT_TYPE.HARDWARE:
         if hardware_breakpoint_available():
             output = send_command("hbreak *" + str_address)
         else:
             print("All hardware breakpoint slots are being used, using a software breakpoint instead")
             output = send_command("break *" + str_address)
-    elif breakpoint_type == typedefs.BREAKPOINT_TYPE.SOFTWARE_BP:
+    elif breakpoint_type == typedefs.BREAKPOINT_TYPE.SOFTWARE:
         output = send_command("break *" + str_address)
     if regexes.breakpoint_created.search(output):
         global breakpoint_on_hit_dict
@@ -1783,7 +1786,7 @@ def trace_instructions(expression, max_trace_count=1000, trigger_condition="", s
     if not breakpoint:
         return
     modify_breakpoint(expression, typedefs.BREAKPOINT_MODIFY.CONDITION, condition=trigger_condition)
-    contents_send = (typedefs.TRACE_STATUS.STATUS_IDLE, "")
+    contents_send = (typedefs.TRACE_STATUS.IDLE, "")
     trace_status_file = utils.get_trace_instructions_status_file(currentpid, breakpoint)
     pickle.dump(contents_send, open(trace_status_file, "wb"))
     param_str = (
@@ -1832,7 +1835,7 @@ def get_trace_instructions_status(breakpoint):
         tuple:(status_id, status_str)
 
         status_id-->(int) A member of typedefs.TRACE_STATUS
-        status_str-->(str) Status string, only used with typedefs.TRACE_STATUS.STATUS_TRACING
+        status_str-->(str) Status string, only used with typedefs.TRACE_STATUS.TRACING
 
         Returns a tuple of (None, "") if fails to gather info
     """
@@ -1851,7 +1854,7 @@ def cancel_trace_instructions(breakpoint):
     Args:
         breakpoint (str): breakpoint number, must be returned from trace_instructions()
     """
-    status_info = (typedefs.TRACE_STATUS.STATUS_CANCELED, "")
+    status_info = (typedefs.TRACE_STATUS.CANCELED, "")
     trace_status_file = utils.get_trace_instructions_status_file(currentpid, breakpoint)
     pickle.dump(status_info, open(trace_status_file, "wb"))
 
@@ -2021,7 +2024,7 @@ def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, refere
 
 
 #:tag:Tools
-def search_referenced_strings(searched_str, value_index=typedefs.VALUE_INDEX.INDEX_STRING_UTF8, case_sensitive=False,
+def search_referenced_strings(searched_str, value_index=typedefs.VALUE_INDEX.STRING_UTF8, case_sensitive=False,
                               enable_regex=False):
     """Searches for given str in the referenced strings
 

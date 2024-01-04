@@ -37,7 +37,7 @@ from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, 
     QLocale
 from typing import Final
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect, json
 
 from libpince import utils, debugcore, typedefs
 from libpince.libscanmem.scanmem import Scanmem
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     app.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
     app.setApplicationName("PINCE")
     QSettings.setPath(QSettings.Format.NativeFormat, QSettings.Scope.UserScope,
-                      utils.get_user_path(typedefs.USER_PATHS.CONFIG_PATH))
+                      utils.get_user_path(typedefs.USER_PATHS.CONFIG))
     settings = QSettings()
     translator = QTranslator()
     try:
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "27"  # Increase version by one if you change settings
+current_settings_version = "28"  # Increase version by one if you change settings
 update_table = bool
 table_update_interval = int
 freeze_interval = int
@@ -201,8 +201,27 @@ instructions_per_scroll = int
 gdb_path = str
 gdb_logging = bool
 
-ignored_signals = str
-signal_list = ["SIGUSR1", "SIGPWR", "SIGXCPU", "SIGSEGV"]
+handle_signals = str
+# Due to community feedback, these signals are disabled by default: SIGUSR1, SIGUSR2, SIGPWR, SIGXCPU, SIGXFSZ, SIGSYS
+# Rest is the same with GDB defaults
+default_signals = [
+    ["SIGHUP", True, True], ["SIGINT", True, False], ["SIGQUIT", True, True], ["SIGILL", True, True],
+    ["SIGTRAP", True, False], ["SIGABRT", True, True], ["SIGEMT", True, True], ["SIGFPE", True, True],
+    ["SIGKILL", True, True], ["SIGBUS", True, True], ["SIGSEGV", True, True], ["SIGSYS", False, True],
+    ["SIGPIPE", True, True], ["SIGALRM", False, True], ["SIGTERM", True, True], ["SIGURG", False, True],
+    ["SIGSTOP", True, True], ["SIGTSTP", True, True], ["SIGCONT", True, True], ["SIGCHLD", False, True],
+    ["SIGTTIN", True, True], ["SIGTTOU", True, True], ["SIGIO", False, True], ["SIGXCPU", False, True],
+    ["SIGXFSZ", False, True], ["SIGVTALRM", False, True], ["SIGPROF", False, True], ["SIGWINCH", False, True],
+    ["SIGLOST", True, True], ["SIGUSR1", False, True], ["SIGUSR2", False, True], ["SIGPWR", False, True],
+    ["SIGPOLL", False, True], ["SIGWIND", True, True], ["SIGPHONE", True, True], ["SIGWAITING", False, True],
+    ["SIGLWP", False, True], ["SIGDANGER", True, True], ["SIGGRANT", True, True], ["SIGRETRACT", True, True],
+    ["SIGMSG", True, True], ["SIGSOUND", True, True], ["SIGSAK", True, True], ["SIGPRIO", False, True],
+    ["SIGCANCEL", False, True], ["SIGINFO", True, True], ["EXC_BAD_ACCESS", True, True],
+    ["EXC_BAD_INSTRUCTION", True, True], ["EXC_ARITHMETIC", True, True], ["EXC_EMULATION", True, True],
+    ["EXC_SOFTWARE", True, True], ["EXC_BREAKPOINT", True, True], ["SIGLIBRT", False, True]
+]
+for x in range(33, 128):  # Add signals SIG33-SIG127
+    default_signals.append([f"SIG{x}", True, True])
 
 # represents the index of columns in instructions restore table
 INSTR_ADDR_COL = 0
@@ -413,9 +432,9 @@ class CheckInferiorStatus(QThread):
         while True:
             with debugcore.status_changed_condition:
                 debugcore.status_changed_condition.wait()
-            if debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_STOPPED:
+            if debugcore.inferior_status == typedefs.INFERIOR_STATUS.STOPPED:
                 self.process_stopped.emit()
-            elif debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+            elif debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
                 self.process_running.emit()
 
 
@@ -575,16 +594,16 @@ class MainForm(QMainWindow, MainWindow):
             self.settings.setValue(hotkey.name, hotkey.default)
         self.settings.endGroup()
         self.settings.beginGroup("CodeInjection")
-        self.settings.setValue("code_injection_method", typedefs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL)
+        self.settings.setValue("code_injection_method", typedefs.INJECTION_METHOD.DLOPEN)
         self.settings.endGroup()
         self.settings.beginGroup("Disassemble")
         self.settings.setValue("bring_disassemble_to_front", False)
         self.settings.setValue("instructions_per_scroll", 2)
         self.settings.endGroup()
         self.settings.beginGroup("Debug")
-        self.settings.setValue("gdb_path", typedefs.PATHS.GDB_PATH)
+        self.settings.setValue("gdb_path", typedefs.PATHS.GDB)
         self.settings.setValue("gdb_logging", False)
-        self.settings.setValue("ignored_signals", "1,1,1,0")
+        self.settings.setValue("handle_signals", json.dumps(default_signals))
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
         self.settings.setValue("version", current_settings_version)
@@ -593,18 +612,15 @@ class MainForm(QMainWindow, MainWindow):
 
     def apply_after_init(self):
         global gdb_logging
-        global ignored_signals
+        global handle_signals
         global exp_cache
 
         exp_cache.clear()
         gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
-        ignored_signals = self.settings.value("Debug/ignored_signals", type=str)
+        handle_signals = self.settings.value("Debug/handle_signals", type=str)
         debugcore.set_logging(gdb_logging)
-        for index, ignore_status in enumerate(ignored_signals.split(",")):
-            if ignore_status == "1":
-                debugcore.ignore_signal(signal_list[index])
-            else:
-                debugcore.unignore_signal(signal_list[index])
+        for signal, stop, pass_to_program in json.loads(handle_signals):
+            debugcore.handle_signal(signal, stop, pass_to_program)
 
     def apply_settings(self):
         global update_table
@@ -684,6 +700,8 @@ class MainForm(QMainWindow, MainWindow):
 
     @utils.ignore_exceptions
     def continue_hotkey_pressed(self):
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+            return
         debugcore.continue_inferior()
 
     @utils.ignore_exceptions
@@ -693,6 +711,10 @@ class MainForm(QMainWindow, MainWindow):
             print("Unable to toggle attach")
         elif result == typedefs.TOGGLE_ATTACH.DETACHED:
             self.on_status_detached()
+        else:
+            # Attaching back doesn't update the status if the process is already stopped before detachment
+            with debugcore.status_changed_condition:
+                debugcore.status_changed_condition.notify_all()
 
     @utils.ignore_exceptions
     def nextscan_hotkey_pressed(self, index):
@@ -806,7 +828,7 @@ class MainForm(QMainWindow, MainWindow):
             value_text = selected_row.text(VALUE_COL)
             encoding, option = typedefs.string_index_to_encoding_dict[value_type.value_index]
             byte_len = len(value_text.encode(encoding, option))
-        elif value_type.value_index == typedefs.VALUE_INDEX.INDEX_AOB:
+        elif value_type.value_index == typedefs.VALUE_INDEX.AOB:
             byte_len = value_type.length
         else:
             byte_len = typedefs.index_to_valuetype_dict[value_type.value_index][0]
@@ -1166,7 +1188,7 @@ class MainForm(QMainWindow, MainWindow):
         self.comboBox_ValueType.clear()
         for value_index, value_text in typedefs.scan_index_to_text_dict.items():
             self.comboBox_ValueType.addItem(value_text, value_index)
-        self.comboBox_ValueType.setCurrentIndex(typedefs.SCAN_INDEX.INDEX_INT32)
+        self.comboBox_ValueType.setCurrentIndex(typedefs.SCAN_INDEX.INT32)
         self.comboBox_ValueType_current_index_changed()
 
     # :doc:
@@ -1186,7 +1208,7 @@ class MainForm(QMainWindow, MainWindow):
 
         # none of these should be possible to be true at the same time
         scan_index = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
-        if scan_index >= typedefs.SCAN_INDEX.INDEX_FLOAT_ANY and scan_index <= typedefs.SCAN_INDEX.INDEX_FLOAT64:
+        if scan_index >= typedefs.SCAN_INDEX.FLOAT_ANY and scan_index <= typedefs.SCAN_INDEX.FLOAT64:
             # Adjust to locale whatever the input
             if QLocale.system().decimalPoint() == ".":
                 search_for = search_for.replace(",", ".")
@@ -1194,7 +1216,7 @@ class MainForm(QMainWindow, MainWindow):
             else:
                 search_for = search_for.replace(".", ",")
                 search_for2 = search_for2.replace(".", ",")
-        elif scan_index == typedefs.SCAN_INDEX.INDEX_STRING:
+        elif scan_index == typedefs.SCAN_INDEX.STRING:
             search_for = "\" " + search_for
         elif self.checkBox_Hex.isChecked():
             if not search_for.startswith("0x"):
@@ -1270,9 +1292,9 @@ class MainForm(QMainWindow, MainWindow):
         self.QWidget_Toolbox.setEnabled(True)
 
     def _scan_to_length(self, type_index):
-        if type_index == typedefs.SCAN_INDEX.INDEX_AOB:
+        if type_index == typedefs.SCAN_INDEX.AOB:
             return self.lineEdit_Scan.text().count(" ") + 1
-        if type_index == typedefs.SCAN_INDEX.INDEX_STRING:
+        if type_index == typedefs.SCAN_INDEX.STRING:
             return len(self.lineEdit_Scan.text())
         return 0
 
@@ -1319,7 +1341,7 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow.show()
 
     def pushButton_Open_clicked(self):
-        pct_file_path = utils.get_user_path(typedefs.USER_PATHS.CHEAT_TABLES_PATH)
+        pct_file_path = utils.get_user_path(typedefs.USER_PATHS.CHEAT_TABLES)
         file_paths = QFileDialog.getOpenFileNames(self, tr.OPEN_PCT_FILE, pct_file_path, tr.FILE_TYPES_PCT)[0]
         if not file_paths:
             return
@@ -1333,7 +1355,7 @@ class MainForm(QMainWindow, MainWindow):
                                 self.treeWidget_AddressTable.topLevelItemCount())
 
     def pushButton_Save_clicked(self):
-        pct_file_path = utils.get_user_path(typedefs.USER_PATHS.CHEAT_TABLES_PATH)
+        pct_file_path = utils.get_user_path(typedefs.USER_PATHS.CHEAT_TABLES)
         file_path = QFileDialog.getSaveFileName(self, tr.SAVE_PCT_FILE, pct_file_path, tr.FILE_TYPES_PCT)[0]
         if not file_path:
             return
@@ -1346,7 +1368,7 @@ class MainForm(QMainWindow, MainWindow):
     # Returns: a bool value indicates whether the operation succeeded.
     def attach_to_pid(self, pid):
         attach_result = debugcore.attach(pid, gdb_path)
-        if attach_result == typedefs.ATTACH_RESULT.ATTACH_SUCCESSFUL:
+        if attach_result == typedefs.ATTACH_RESULT.SUCCESSFUL:
             self.apply_after_init()
             scanmem.pid(pid)
             self.on_new_process()
@@ -1780,7 +1802,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_Length.setText(length)
             self.checkBox_ZeroTerminate.show()
             self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
-        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.AOB:
             self.widget_Length.show()
             try:
                 length = str(length)
@@ -1892,7 +1914,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.show()
-        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.AOB:
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.hide()
         else:
@@ -2007,7 +2029,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.lineEdit_Length.setText(length)
             self.checkBox_ZeroTerminate.show()
             self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
-        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.AOB:
             self.widget_Length.show()
             try:
                 length = str(length)
@@ -2033,7 +2055,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.show()
-        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.INDEX_AOB:
+        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.AOB:
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.hide()
         else:
@@ -2156,7 +2178,7 @@ class InputDialogForm(QDialog, InputDialog):
     # that points the current index of the QComboBox, for instance: ["0", "1", 1] will create a QCombobox with the items
     # "0" and "1" then will set current index to 1 (which is the item "1")
     # label_alignment is optional
-    def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=typedefs.VALUE_INDEX.INDEX_INT32,
+    def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=typedefs.VALUE_INDEX.INT32,
                  buttons=(QDialogButtonBox.StandardButton.Ok, QDialogButtonBox.StandardButton.Cancel)):
         super().__init__(parent=parent)
         self.setupUi(self)
@@ -2248,7 +2270,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings = QSettings()
         self.set_default_settings = set_default_settings_func
         self.hotkey_to_value = {}  # Dict[str:str]-->Dict[Hotkey.name:settings_value]
-        self.handle_signals_data = None
+        self.handle_signals_data = ""
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
         icons_directory = guiutils.get_icons_directory()
         self.pushButton_GDBPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
@@ -2320,9 +2342,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         for hotkey in Hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
         if self.radioButton_SimpleDLopenCall.isChecked():
-            injection_method = typedefs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL
+            injection_method = typedefs.INJECTION_METHOD.DLOPEN
         elif self.radioButton_AdvancedInjection.isChecked():
-            injection_method = typedefs.INJECTION_METHOD.ADVANCED_INJECTION
+            injection_method = typedefs.INJECTION_METHOD.ADVANCED
         self.settings.setValue("CodeInjection/code_injection_method", injection_method)
         self.settings.setValue("Disassemble/bring_disassemble_to_front",
                                self.checkBox_BringDisassembleToFront.isChecked())
@@ -2334,8 +2356,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 debugcore.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
-        if self.handle_signals_data is not None:
-            self.settings.setValue("Debug/ignored_signals", ",".join(self.handle_signals_data))
+        if self.handle_signals_data:
+            self.settings.setValue("Debug/handle_signals", self.handle_signals_data)
         super().accept()
 
     def reject(self):
@@ -2384,9 +2406,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.listWidget_Functions.addItem(hotkey.desc)
             self.hotkey_to_value[hotkey.name] = self.settings.value("Hotkeys/" + hotkey.name)
         injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
-        if injection_method == typedefs.INJECTION_METHOD.SIMPLE_DLOPEN_CALL:
+        if injection_method == typedefs.INJECTION_METHOD.DLOPEN:
             self.radioButton_SimpleDLopenCall.setChecked(True)
-        elif injection_method == typedefs.INJECTION_METHOD.ADVANCED_INJECTION:
+        elif injection_method == typedefs.INJECTION_METHOD.ADVANCED:
             self.radioButton_AdvancedInjection.setChecked(True)
         self.checkBox_BringDisassembleToFront.setChecked(
             self.settings.value("Disassemble/bring_disassemble_to_front", type=bool))
@@ -2418,7 +2440,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         confirm_dialog = InputDialogForm(item_list=[(tr.RESET_DEFAULT_SETTINGS,)])
         if confirm_dialog.exec():
             self.set_default_settings()
-            self.handle_signals_data = None
+            self.handle_signals_data = ""
             self.config_gui()
 
     def checkBox_AutoUpdateAddressTable_state_changed(self):
@@ -2449,8 +2471,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.lineEdit_GDBPath.setText(file_path)
 
     def pushButton_HandleSignals_clicked(self):
-        if self.handle_signals_data is None:
-            self.handle_signals_data = self.settings.value("Debug/ignored_signals", type=str).split(",")
+        if not self.handle_signals_data:
+            self.handle_signals_data = self.settings.value("Debug/handle_signals", type=str)
         signal_dialog = HandleSignalsDialogForm(self.handle_signals_data)
         if signal_dialog.exec():
             self.handle_signals_data = signal_dialog.get_values()
@@ -2460,31 +2482,47 @@ class HandleSignalsDialogForm(QDialog, HandleSignalsDialog):
     def __init__(self, signal_data, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
-        self.tableWidget_Signals.setRowCount(len(signal_list))
-        for index, state in enumerate(signal_data):
-            self.tableWidget_Signals.setItem(index, 0, QTableWidgetItem(signal_list[index]))
-            widget = QWidget()
-            checkbox = QCheckBox()
-            layout = QHBoxLayout(widget)
-            layout.addWidget(checkbox)
-            layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            layout.setContentsMargins(0, 0, 0, 0)
+        self.signal_data = json.loads(signal_data)
+        self.tableWidget_Signals.setRowCount(len(self.signal_data))
+        for index, (signal, stop, pass_to_program) in enumerate(self.signal_data):
+            self.tableWidget_Signals.setItem(index, 0, QTableWidgetItem(signal))
+            widget, checkbox = self.create_checkbox_widget()
             self.tableWidget_Signals.setCellWidget(index, 1, widget)
-            if state == "1":
+            if stop:
                 checkbox.setCheckState(Qt.CheckState.Checked)
             else:
                 checkbox.setCheckState(Qt.CheckState.Unchecked)
+            widget, checkbox = self.create_checkbox_widget()
+            self.tableWidget_Signals.setCellWidget(index, 2, widget)
+            if pass_to_program:
+                checkbox.setCheckState(Qt.CheckState.Checked)
+            else:
+                checkbox.setCheckState(Qt.CheckState.Unchecked)
+        self.tableWidget_Signals.resizeColumnsToContents()
+            
+
+    def create_checkbox_widget(self):
+        widget = QWidget()
+        checkbox = QCheckBox()
+        layout = QHBoxLayout(widget)
+        layout.addWidget(checkbox)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.setContentsMargins(0, 0, 0, 0)
+        return widget, checkbox
 
     def get_values(self):
-        final_state = []
-        for index in range(len(signal_list)):
+        signal_data = []
+        for index in range(len(self.signal_data)):
+            current_signal = []
+            current_signal.append(self.signal_data[index][0])
             widget = self.tableWidget_Signals.cellWidget(index, 1)
             checkbox = widget.findChild(QCheckBox)
-            if checkbox.checkState() == Qt.CheckState.Checked:
-                final_state.append("1")
-            else:
-                final_state.append("0")
-        return final_state
+            current_signal.append(True if checkbox.checkState() == Qt.CheckState.Checked else False)
+            widget = self.tableWidget_Signals.cellWidget(index, 2)
+            checkbox = widget.findChild(QCheckBox)
+            current_signal.append(True if checkbox.checkState() == Qt.CheckState.Checked else False)
+            signal_data.append(current_signal)
+        return json.dumps(signal_data)
 
 
 class ConsoleWidgetForm(QWidget, ConsoleWidget):
@@ -2814,33 +2852,28 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         guiutils.center_scroll_bar(self.verticalScrollBar_HexView)
 
     def show_trace_window(self):
-        if debugcore.currentpid == -1:
-            return
         TraceInstructionsWindowForm(prompt_dialog=False)
 
     def step_instruction(self):
-        if debugcore.currentpid == -1:
-            return
-        if self.updating_memoryview:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING or \
+                self.updating_memoryview:
             return
         debugcore.step_instruction()
 
     def step_over_instruction(self):
-        if debugcore.currentpid == -1:
-            return
-        if self.updating_memoryview:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING or \
+                self.updating_memoryview:
             return
         debugcore.step_over_instruction()
 
     def execute_till_return(self):
-        if debugcore.currentpid == -1:
-            return
-        if self.updating_memoryview:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING or \
+                self.updating_memoryview:
             return
         debugcore.execute_till_return()
 
     def set_address(self):
-        if debugcore.currentpid == -1:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -2889,7 +2922,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             watchpoint_dialog = InputDialogForm(item_list=[(tr.ENTER_WATCHPOINT_LENGTH, "")])
             if watchpoint_dialog.exec():
                 user_input = watchpoint_dialog.get_values()
-                user_input_int = utils.parse_string(user_input, typedefs.VALUE_INDEX.INDEX_INT32)
+                user_input_int = utils.parse_string(user_input, typedefs.VALUE_INDEX.INT32)
                 if user_input_int is None:
                     QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR_INT.format(user_input))
                     return
@@ -2988,7 +3021,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         selected_address = self.tableView_HexView_Hex.get_selected_address()
-        vt = typedefs.ValueType(typedefs.VALUE_INDEX.INDEX_AOB)
+        vt = typedefs.ValueType(typedefs.VALUE_INDEX.AOB)
         manual_address_dialog = ManualAddressDialogForm(address=hex(selected_address), value_type=vt)
         if manual_address_dialog.exec():
             desc, address, vt = manual_address_dialog.get_values()
@@ -3401,7 +3434,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.FS.set_value(registers["fs"])
 
     def update_stacktrace(self):
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
         stack_trace_info = debugcore.get_stacktrace_info()
         self.tableWidget_StackTrace.setRowCount(0)
@@ -3420,14 +3453,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.update_stacktrace()
 
     def tableWidget_StackTrace_context_menu_event(self, event):
-        if debugcore.currentpid == -1:
-            return
-
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_StackTrace.item(row, column).text())
 
         selected_row = guiutils.get_current_row(self.tableWidget_StackTrace)
-
         menu = QMenu()
         switch_to_stack = menu.addAction(tr.FULL_STACK)
         menu.addSeparator()
@@ -3437,6 +3466,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if selected_row == -1:
             guiutils.delete_menu_entries(menu, [clipboard_menu.menuAction()])
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
+        if debugcore.currentpid == -1:
+            menu.clear()
+            menu.addMenu(clipboard_menu)
         font_size = self.tableWidget_StackTrace.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -3452,7 +3484,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             pass
 
     def update_stack(self):
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
         stack_info = debugcore.get_stack_info()
         self.tableWidget_Stack.setRowCount(0)
@@ -3493,8 +3525,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_Stack.item(row, column).text())
 
-        if debugcore.currentpid == -1:
-            return
         selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if selected_row == -1:
             current_address = None
@@ -3514,6 +3544,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         show_in_hex = menu.addAction(f"{tr.HEXVIEW_VALUE_POINTER}[Ctrl+H]")
         if selected_row == -1:
             guiutils.delete_menu_entries(menu, [clipboard_menu.menuAction(), show_in_disas, show_in_hex])
+        if debugcore.currentpid == -1:
+            menu.clear()
+            menu.addMenu(clipboard_menu)
         font_size = self.tableWidget_Stack.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -3719,9 +3752,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.travel_history.pop()
 
     def tableWidget_Disassemble_context_menu_event(self, event):
-        if debugcore.currentpid == -1:
-            return
-
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_Disassemble.item(row, column).text())
 
@@ -3777,6 +3807,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         menu.addSeparator()
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
         menu.addSeparator()
+        if debugcore.currentpid == -1:
+            menu.clear()
         clipboard_menu = menu.addMenu(tr.COPY_CLIPBOARD)
         copy_address = clipboard_menu.addAction(tr.COPY_ADDRESS)
         copy_bytes = clipboard_menu.addAction(tr.COPY_BYTES)
@@ -3910,8 +3942,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.refresh_disassemble_view()
 
     def actionBookmarks_triggered(self):
-        if debugcore.currentpid == -1:
-            return
         bookmark_widget = BookmarkWidgetForm(self)
         bookmark_widget.show()
         bookmark_widget.activateWindow()
@@ -3936,8 +3966,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         functions_info_widget.show()
 
     def actionGDB_Log_File_triggered(self):
-        if debugcore.currentpid == -1:
-            return
         log_file_widget = LogFileWidgetForm()
         log_file_widget.showMaximized()
 
@@ -4002,13 +4030,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.refresh_disassemble_view()
 
     def actionlibpince_triggered(self):
-        if debugcore.currentpid == -1:
-            return
         libpince_widget = LibpinceReferenceWidgetForm(is_window=True)
         libpince_widget.showMaximized()
 
     def pushButton_ShowFloatRegisters_clicked(self):
-        if debugcore.currentpid == -1:
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
         self.float_registers_widget = FloatRegisterWidgetForm()
         self.float_registers_widget.show()
@@ -4036,11 +4062,17 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
     def refresh_table(self):
         self.listWidget.clear()
         address_list = [hex(address) for address in self.parent().tableWidget_Disassemble.bookmarks.keys()]
-        self.listWidget.addItems([item.all for item in debugcore.examine_expressions(address_list)])
+        if debugcore.currentpid == -1:
+            self.listWidget.addItems(address_list)
+        else:
+            self.listWidget.addItems([item.all for item in debugcore.examine_expressions(address_list)])
 
     def change_display(self, row):
         current_address = utils.extract_address(self.listWidget.item(row).text())
-        self.lineEdit_Info.setText(debugcore.get_address_info(current_address))
+        if debugcore.currentpid == -1:
+            self.lineEdit_Info.clear()
+        else:
+            self.lineEdit_Info.setText(debugcore.get_address_info(current_address))
         self.lineEdit_Comment.setText(self.parent().tableWidget_Disassemble.bookmarks[int(current_address, 16)])
 
     def listWidget_item_double_clicked(self, item):
@@ -4128,6 +4160,8 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
             self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(float_registers[xmm]))
 
     def set_register(self, index):
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+            return
         current_row = index.row()
         if self.currentWidget() == self.FPU:
             current_table_widget = self.tableWidget_FPU
@@ -4140,6 +4174,8 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         label_text = tr.ENTER_REGISTER_VALUE.format(current_register.upper())
         register_dialog = InputDialogForm(item_list=[(label_text, current_value)])
         if register_dialog.exec():
+            if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+                return
             if self.currentWidget() == self.XMM:
                 current_register += ".v4_float"
             debugcore.set_convenience_variable(current_register, register_dialog.get_values())
@@ -4157,13 +4193,13 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
 
     def update_stacktrace(self):
         self.listWidget_ReturnAddresses.clear()
-        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
         return_addresses = debugcore.get_stack_frame_return_addresses()
         self.listWidget_ReturnAddresses.addItems(return_addresses)
 
     def update_frame_info(self, index):
-        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.INFERIOR_RUNNING:
+        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             self.textBrowser_Info.setText(tr.PROCESS_RUNNING)
             return
         frame_info = debugcore.get_stack_frame_info(index)
@@ -4484,6 +4520,9 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.update_timer.stop()
         if not self.stopped:
             debugcore.delete_breakpoint(self.address)
+        watchpoint_file = utils.get_track_watchpoint_file(debugcore.currentpid, self.breakpoints)
+        if os.path.exists(watchpoint_file):
+            os.remove(watchpoint_file)
         self.deleteLater()
         instances.remove(self)
 
@@ -4575,6 +4614,9 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.update_values_timer.stop()
         if not self.stopped:
             debugcore.delete_breakpoint(self.address)
+        breakpoint_file = utils.get_track_breakpoint_file(debugcore.currentpid, self.breakpoint)
+        if os.path.exists(breakpoint_file):
+            os.remove(breakpoint_file)
         self.parent().refresh_disassemble_view()
         self.deleteLater()
         instances.remove(self)
@@ -4615,10 +4657,10 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.status_to_text = {
-            typedefs.TRACE_STATUS.STATUS_IDLE: tr.WAITING_FOR_BREAKPOINT,
-            typedefs.TRACE_STATUS.STATUS_CANCELED: tr.TRACING_CANCELED,
-            typedefs.TRACE_STATUS.STATUS_PROCESSING: tr.PROCESSING_DATA,
-            typedefs.TRACE_STATUS.STATUS_FINISHED: tr.TRACING_COMPLETED
+            typedefs.TRACE_STATUS.IDLE: tr.WAITING_FOR_BREAKPOINT,
+            typedefs.TRACE_STATUS.CANCELED: tr.TRACING_CANCELED,
+            typedefs.TRACE_STATUS.PROCESSING: tr.PROCESSING_DATA,
+            typedefs.TRACE_STATUS.FINISHED: tr.TRACING_COMPLETED
         }
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)
         guiutils.center(self)
@@ -4640,11 +4682,10 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
 
     def change_status(self):
         status_info = debugcore.get_trace_instructions_status(self.breakpoint)
-        if status_info[0] == typedefs.TRACE_STATUS.STATUS_FINISHED or \
-                status_info[0] == typedefs.TRACE_STATUS.STATUS_PROCESSING:
+        if status_info[0] == typedefs.TRACE_STATUS.FINISHED or status_info[0] == typedefs.TRACE_STATUS.PROCESSING:
             self.close()
             return
-        if status_info[0] == typedefs.TRACE_STATUS.STATUS_TRACING:
+        if status_info[0] == typedefs.TRACE_STATUS.TRACING:
             self.label_StatusText.setText(status_info[1])
         else:
             self.label_StatusText.setText(self.status_to_text[status_info[0]])
@@ -4657,11 +4698,9 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         self.adjustSize()
         app.processEvents()
         status_info = debugcore.get_trace_instructions_status(self.breakpoint)
-        if status_info[0] == typedefs.TRACE_STATUS.STATUS_TRACING or \
-                status_info[0] == typedefs.TRACE_STATUS.STATUS_PROCESSING:
+        if status_info[0] == typedefs.TRACE_STATUS.TRACING or status_info[0] == typedefs.TRACE_STATUS.PROCESSING:
             debugcore.cancel_trace_instructions(self.breakpoint)
-            while debugcore.get_trace_instructions_status(self.breakpoint)[0] \
-                    != typedefs.TRACE_STATUS.STATUS_FINISHED:
+            while debugcore.get_trace_instructions_status(self.breakpoint)[0] != typedefs.TRACE_STATUS.FINISHED:
                 sleep(0.1)
                 app.processEvents()
         debugcore.delete_breakpoint(self.address)
@@ -4685,6 +4724,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.actionSave.triggered.connect(self.save_file)
         self.splitter.setStretchFactor(0, 1)
         if not prompt_dialog:
+            self.showMaximized()
             return
         prompt_dialog = TraceInstructionsPromptDialogForm()
         if prompt_dialog.exec():
@@ -4742,7 +4782,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.treeWidget_InstructionInfo.expandAll()
 
     def save_file(self):
-        trace_file_path = utils.get_user_path(typedefs.USER_PATHS.TRACE_INSTRUCTIONS_PATH)
+        trace_file_path = utils.get_user_path(typedefs.USER_PATHS.TRACE_INSTRUCTIONS)
         file_path = QFileDialog.getSaveFileName(self, tr.SAVE_TRACE_FILE, trace_file_path, tr.FILE_TYPES_TRACE)[0]
         if file_path:
             file_path = utils.append_file_extension(file_path, "trace")
@@ -4750,7 +4790,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
                 QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
 
     def load_file(self):
-        trace_file_path = utils.get_user_path(typedefs.USER_PATHS.TRACE_INSTRUCTIONS_PATH)
+        trace_file_path = utils.get_user_path(typedefs.USER_PATHS.TRACE_INSTRUCTIONS)
         file_path = QFileDialog.getOpenFileName(self, tr.OPEN_TRACE_FILE, trace_file_path, tr.FILE_TYPES_TRACE)[0]
         if file_path:
             content = utils.load_file(file_path)
@@ -4912,7 +4952,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
 
     def lineEdit_Bytes_text_edited(self):
         bytes_aob = self.lineEdit_Bytes.text()
-        if utils.parse_string(bytes_aob, typedefs.VALUE_INDEX.INDEX_AOB):
+        if utils.parse_string(bytes_aob, typedefs.VALUE_INDEX.AOB):
             address = int(self.lineEdit_Address.text(), 0)
             instruction = utils.get_opcodes(address, bytes_aob, debugcore.inferior_arch)
             if instruction:
@@ -4990,7 +5030,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
 
     def lineEdit_HexView_text_edited(self):
         aob_string = self.lineEdit_HexView.text()
-        if not utils.parse_string(aob_string, typedefs.VALUE_INDEX.INDEX_AOB):
+        if not utils.parse_string(aob_string, typedefs.VALUE_INDEX.AOB):
             self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
             return
         aob_array = aob_string.split()
@@ -5032,7 +5072,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
             QMessageBox.information(self, tr.ERROR, tr.IS_INVALID_EXPRESSION.format(expression))
             return
         value = self.lineEdit_HexView.text()
-        debugcore.write_memory(address, typedefs.VALUE_INDEX.INDEX_AOB, value)
+        debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, value)
         super(HexEditDialogForm, self).accept()
 
 
@@ -5621,7 +5661,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.setupUi(self)
-        guiutils.fill_value_combobox(self.comboBox_ValueType, typedefs.VALUE_INDEX.INDEX_STRING_UTF8)
+        guiutils.fill_value_combobox(self.comboBox_ValueType, typedefs.VALUE_INDEX.STRING_UTF8)
         self.parent = lambda: parent
         global instances
         instances.append(self)

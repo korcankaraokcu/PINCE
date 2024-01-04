@@ -183,7 +183,7 @@ These tasks are ordered by importance but feel free to pick any of them. Further
 - Use type hints(py 3.5) and variable annotations(py 3.6) when support drops for older systems
 - Arrows for jump instructions based on disassembled output
 - Flowcharts based on disassembled output
-- Consider implementing a GUI for catching signals and syscalls. This is currently done via GDB Console
+- Consider implementing a GUI for catchpoints. This is currently done via GDB Console
 - Implement speedhack
 - Implement unrandomizer
 - Implement pointer-scan
