@@ -619,8 +619,7 @@ class MainForm(QMainWindow, MainWindow):
         gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
         handle_signals = self.settings.value("Debug/handle_signals", type=str)
         debugcore.set_logging(gdb_logging)
-        for signal, stop, pass_to_program in json.loads(handle_signals):
-            debugcore.handle_signal(signal, stop, pass_to_program)
+        debugcore.handle_signals(handle_signals)
 
     def apply_settings(self):
         global update_table
