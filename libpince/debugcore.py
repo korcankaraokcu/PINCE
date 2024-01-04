@@ -428,9 +428,17 @@ def handle_signal(signal_name, stop, pass_to_program):
         stop (bool): Stop the program and print to the console
         pass_to_program (bool): Pass signal to program
     """
-    stop = "stop print" if stop else "nostop noprint"
-    pass_to_program = "pass" if pass_to_program else "nopass"
-    send_command(f"handle {signal_name} {stop} {pass_to_program}")
+    send_command("pince-handle-signals", send_with_file=True, file_contents_send=[signal_name, stop, pass_to_program])
+
+
+#:tag:Debug
+def handle_signals(signal_list):
+    """Optimized version of handle_signal for multiple signals
+
+    Args:
+        signal_list (list): A list of the parameters of handle_signal
+    """
+    send_command("pince-handle-signals", send_with_file=True, file_contents_send=signal_list)
 
 
 #:tag:GDBCommunication
