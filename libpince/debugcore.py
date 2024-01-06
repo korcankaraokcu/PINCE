@@ -452,7 +452,7 @@ def handle_signal(signal_name, stop, pass_to_program):
         stop (bool): Stop the program and print to the console
         pass_to_program (bool): Pass signal to program
     """
-    params = json.dumps([[signal_name, stop, pass_to_program]])
+    params = [[signal_name, stop, pass_to_program]]
     send_command("pince-handle-signals", send_with_file=True, file_contents_send=params)
 
 

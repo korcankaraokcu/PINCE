@@ -201,7 +201,7 @@ instructions_per_scroll = int
 gdb_path = str
 gdb_logging = bool
 interrupt_signal = str
-handle_signals = str
+handle_signals = list
 
 # Due to community feedback, these signals are disabled by default: SIGUSR1, SIGUSR2, SIGPWR, SIGXCPU, SIGXFSZ, SIGSYS
 # Rest is the same with GDB defaults
@@ -623,7 +623,7 @@ class MainForm(QMainWindow, MainWindow):
         exp_cache.clear()
         gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
         interrupt_signal = self.settings.value("Debug/interrupt_signal", type=str)
-        handle_signals = self.settings.value("Debug/handle_signals", type=str)
+        handle_signals = json.loads(self.settings.value("Debug/handle_signals", type=str))
         debugcore.set_logging(gdb_logging)
         debugcore.handle_signals(handle_signals)
         debugcore.set_interrupt_signal(interrupt_signal)  # Needs to be called after handle_signals
