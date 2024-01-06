@@ -85,7 +85,7 @@ class HandleSignals(gdb.Command):
 
     def invoke(self, arg, from_tty):
         signal_data = receive_from_pince()
-        for signal, stop, pass_to_program in json.loads(signal_data):
+        for signal, stop, pass_to_program in signal_data:
             stop = "stop print" if stop else "nostop noprint"
             pass_to_program = "pass" if pass_to_program else "nopass"
             gdb.execute(f"handle {signal} {stop} {pass_to_program}", from_tty, to_string=True)
