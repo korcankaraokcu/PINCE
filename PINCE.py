@@ -130,7 +130,7 @@ if __name__ == '__main__':
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "29"  # Increase version by one if you change settings
+current_settings_version = "30"  # Increase version by one if you change settings
 update_table = bool
 table_update_interval = int
 freeze_interval = int
@@ -578,12 +578,14 @@ class MainForm(QMainWindow, MainWindow):
         self.flashAttachButtonTimer.start(100)
         self.auto_attach()
 
+    # Please refrain from using python specific objects in settings, use json-compatible ones instead
+    # Using python objects causes issues when filenames change
     def set_default_settings(self):
         self.settings.beginGroup("General")
         self.settings.setValue("auto_update_address_table", True)
         self.settings.setValue("address_table_update_interval", 500)
         self.settings.setValue("freeze_interval", 100)
-        self.settings.setValue("gdb_output_mode", typedefs.gdb_output_mode(True, True, True))
+        self.settings.setValue("gdb_output_mode", json.dumps([True, True, True]))
         self.settings.setValue("auto_attach_list", "")
         self.settings.setValue("auto_attach_regex", False)
         self.settings.setValue("locale", get_locale())
@@ -644,7 +646,8 @@ class MainForm(QMainWindow, MainWindow):
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
         table_update_interval = self.settings.value("General/address_table_update_interval", type=int)
         freeze_interval = self.settings.value("General/freeze_interval", type=int)
-        gdb_output_mode = self.settings.value("General/gdb_output_mode", type=tuple)
+        gdb_output_mode = json.loads(self.settings.value("General/gdb_output_mode", type=str))
+        gdb_output_mode = typedefs.gdb_output_mode(*gdb_output_mode)
         auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
         auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
         locale = self.settings.value("General/locale", type=str)
@@ -2325,10 +2328,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
         self.settings.setValue("General/freeze_interval", current_freeze_interval)
-        current_gdb_output_mode = typedefs.gdb_output_mode(self.checkBox_OutputModeAsync.isChecked(),
-                                                            self.checkBox_OutputModeCommand.isChecked(),
-                                                            self.checkBox_OutputModeCommandInfo.isChecked())
-        self.settings.setValue("General/gdb_output_mode", current_gdb_output_mode)
+        output_mode = [self.checkBox_OutputModeAsync.isChecked(), self.checkBox_OutputModeCommand.isChecked(),
+                       self.checkBox_OutputModeCommandInfo.isChecked()]
+        self.settings.setValue("General/gdb_output_mode", json.dumps(output_mode))
         if self.checkBox_AutoAttachRegex.isChecked():
             try:
                 re.compile(self.lineEdit_AutoAttachList.text())
@@ -2378,9 +2380,11 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.lineEdit_UpdateInterval.setText(
             str(self.settings.value("General/address_table_update_interval", type=int)))
         self.lineEdit_FreezeInterval.setText(str(self.settings.value("General/freeze_interval", type=int)))
-        self.checkBox_OutputModeAsync.setChecked(self.settings.value("General/gdb_output_mode").async_output)
-        self.checkBox_OutputModeCommand.setChecked(self.settings.value("General/gdb_output_mode").command_output)
-        self.checkBox_OutputModeCommandInfo.setChecked(self.settings.value("General/gdb_output_mode").command_info)
+        output_mode = json.loads(self.settings.value("General/gdb_output_mode", type=str))
+        output_mode = typedefs.gdb_output_mode(*output_mode)
+        self.checkBox_OutputModeAsync.setChecked(output_mode.async_output)
+        self.checkBox_OutputModeCommand.setChecked(output_mode.command_output)
+        self.checkBox_OutputModeCommandInfo.setChecked(output_mode.command_info)
         self.lineEdit_AutoAttachList.setText(self.settings.value("General/auto_attach_list", type=str))
         self.checkBox_AutoAttachRegex.setChecked(self.settings.value("General/auto_attach_regex", type=bool))
         self.comboBox_Language.clear()
