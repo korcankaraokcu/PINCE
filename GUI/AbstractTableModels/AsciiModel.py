@@ -15,13 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt6.QtCore import QVariant, Qt
-from PyQt6.QtGui import QColor, QColorConstants
 from GUI.AbstractTableModels.HexModel import QHexModel
 
 from libpince import utils, debugcore
 
-breakpoint_red = QColor(QColorConstants.Red)
-breakpoint_red.setAlpha(96)
 
 class QAsciiModel(QHexModel):
     def __init__(self, row_count, column_count, parent=None):
@@ -29,10 +26,13 @@ class QAsciiModel(QHexModel):
 
     def data(self, QModelIndex, int_role=None):
         if self.data_array and QModelIndex.isValid():
+            index = QModelIndex.row() * self.column_count + QModelIndex.column()
             if int_role == Qt.ItemDataRole.BackgroundRole:
-                address = self.current_address + QModelIndex.row() * self.column_count + QModelIndex.column()
+                address = self.current_address + index
                 if utils.modulo_address(address, debugcore.inferior_arch) in self.breakpoint_list:
-                    return QVariant(breakpoint_red)
+                    return QVariant(self.breakpoint_color)
+                self.cell_change_color.setAlpha(20*self.cell_animation[index])
+                return QVariant(self.cell_change_color)
             elif int_role == Qt.ItemDataRole.DisplayRole:
-                return QVariant(utils.aob_to_str(self.data_array[QModelIndex.row() * self.column_count + QModelIndex.column()]))
+                return QVariant(utils.aob_to_str(self.data_array[index]))
         return QVariant()

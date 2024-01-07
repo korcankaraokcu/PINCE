@@ -2802,9 +2802,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.bDisassemblyScrolling = False  # rejects new scroll requests while scrolling
         self.tableWidget_Disassemble.wheelEvent = QEvent.ignore
         self.verticalScrollBar_Disassemble.wheelEvent = QEvent.ignore
-
         self.verticalScrollBar_Disassemble.sliderChange = self.disassemble_scrollbar_sliderchanged
-
         guiutils.center_scroll_bar(self.verticalScrollBar_Disassemble)
 
         # Format: [address1, address2, ...]
@@ -2824,8 +2822,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def initialize_hex_view(self):
         self.hex_view_last_selected_address_int = 0
         self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None)
+        self.hex_model = QHexModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
+        self.ascii_model = QAsciiModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
+        self.tableView_HexView_Hex.setModel(self.hex_model)
+        self.tableView_HexView_Ascii.setModel(self.ascii_model)
+
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
-        
         # Saving the original function because super() doesn't work when we override functions like this
         self.widget_HexView.keyPressEvent_original = self.widget_HexView.keyPressEvent
         self.widget_HexView.keyPressEvent = self.widget_HexView_key_press_event
@@ -2841,18 +2843,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.bHexViewScrolling = False  # rejects new scroll requests while scrolling
         self.verticalScrollBar_HexView.wheelEvent = QEvent.ignore
-
         self.verticalScrollBar_HexView.sliderChange = self.hex_view_scrollbar_sliderchanged
+        guiutils.center_scroll_bar(self.verticalScrollBar_HexView)
 
         self.tableWidget_HexView_Address.wheelEvent = QEvent.ignore
         self.tableWidget_HexView_Address.setAutoScroll(False)
         self.tableWidget_HexView_Address.setStyleSheet("QTableWidget {background-color: transparent;}")
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-
-        self.hex_model = QHexModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
-        self.ascii_model = QAsciiModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
-        self.tableView_HexView_Hex.setModel(self.hex_model)
-        self.tableView_HexView_Ascii.setModel(self.ascii_model)
 
         self.tableView_HexView_Hex.selectionModel().currentChanged.connect(self.on_hex_view_current_changed)
         self.tableView_HexView_Ascii.selectionModel().currentChanged.connect(self.on_ascii_view_current_changed)
@@ -2864,7 +2861,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.verticalHeader().setDefaultSectionSize(
             self.tableView_HexView_Hex.verticalHeader().defaultSectionSize())
 
-        guiutils.center_scroll_bar(self.verticalScrollBar_HexView)
+        self.hex_update_timer = QTimer(timeout=self.hex_update_loop)
+        self.hex_update_timer.start(200)
 
     def show_trace_window(self):
         TraceInstructionsWindowForm(prompt_dialog=False)
@@ -3111,6 +3109,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                                                                     QItemSelectionModel.SelectionFlag.ClearAndSelect)
         self.tableWidget_HexView_Address.selectRow(QModelIndex_current.row())
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+
+    def hex_update_loop(self):
+        if debugcore.currentpid == -1:
+            return
+        offset = HEX_VIEW_ROW_COUNT*HEX_VIEW_COL_COUNT
+        updated_array = debugcore.hex_dump(self.hex_model.current_address, offset)
+        self.hex_model.update_loop(updated_array)
+        self.ascii_model.update_loop(updated_array)
 
     # TODO: Consider merging HexView_Address, HexView_Hex and HexView_Ascii into one UI class
     # TODO: Move this function to that class if that happens
