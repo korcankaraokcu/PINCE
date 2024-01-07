@@ -19,8 +19,6 @@ from PyQt6.QtGui import QColor, QColorConstants
 
 from libpince import utils, debugcore
 
-breakpoint_red = QColor(QColorConstants.Red)
-breakpoint_red.setAlpha(96)
 
 class QHexModel(QAbstractTableModel):
     def __init__(self, row_count, column_count, parent=None):
@@ -30,6 +28,11 @@ class QHexModel(QAbstractTableModel):
         self.row_count = row_count
         self.column_count = column_count
         self.current_address = 0
+        offset = row_count*column_count
+        self.cell_animation = [0]*offset
+        self.cell_change_color = QColor(QColorConstants.Red)
+        self.breakpoint_color = QColor(QColorConstants.Green)
+        self.breakpoint_color.setAlpha(96)
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return self.row_count
@@ -39,13 +42,15 @@ class QHexModel(QAbstractTableModel):
 
     def data(self, QModelIndex, int_role=None):
         if self.data_array and QModelIndex.isValid():
+            index = QModelIndex.row() * self.column_count + QModelIndex.column()
             if int_role == Qt.ItemDataRole.BackgroundRole:
-                address = self.current_address + QModelIndex.row() * self.column_count + QModelIndex.column()
+                address = self.current_address + index
                 if utils.modulo_address(address, debugcore.inferior_arch) in self.breakpoint_list:
-                    return QVariant(breakpoint_red)
+                    return QVariant(self.breakpoint_color)
+                self.cell_change_color.setAlpha(20*self.cell_animation[index])
+                return QVariant(self.cell_change_color)
             elif int_role == Qt.ItemDataRole.DisplayRole:
-                return QVariant(self.data_array[QModelIndex.row() * self.column_count + QModelIndex.column()])
-
+                return QVariant(self.data_array[index])
         return QVariant()
 
     def refresh(self, int_address, offset, data_array=None, breakpoint_info=None):
@@ -62,4 +67,15 @@ class QHexModel(QAbstractTableModel):
             for i in range(bp.size):
                 self.breakpoint_list.add(utils.modulo_address(breakpoint_address + i, debugcore.inferior_arch))
         self.current_address = int_address
+        self.cell_animation = [0]*offset
+        self.layoutChanged.emit()
+
+    def update_loop(self, updated_array):
+        for index, item in enumerate(self.cell_animation):
+            if item > 0:
+                self.cell_animation[index] = item-1
+        for index, item in enumerate(updated_array):
+            if item != self.data_array[index]:
+                self.cell_animation[index] = 6
+        self.data_array = updated_array
         self.layoutChanged.emit()
