@@ -1479,6 +1479,11 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Toggle including children</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Freeze</source>
       <translation>冻结</translation>
     </message>
