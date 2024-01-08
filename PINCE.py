@@ -745,6 +745,7 @@ class MainForm(QMainWindow, MainWindow):
         show_unsigned = menu.addAction(tr.SHOW_UNSIGNED)
         show_signed = menu.addAction(tr.SHOW_SIGNED)
         toggle_record = menu.addAction(f"{tr.TOGGLE}[Space]")
+        toggle_children = menu.addAction(f"{tr.TOGGLE_CHILDREN}[Ctrl+Space]")
         freeze_menu = menu.addMenu(tr.FREEZE)
         freeze_default = freeze_menu.addAction(tr.DEFAULT)
         freeze_inc = freeze_menu.addAction(tr.INCREMENTAL)
@@ -766,8 +767,9 @@ class MainForm(QMainWindow, MainWindow):
         create_group = menu.addAction(tr.CREATE_GROUP)
         if current_row is None:
             deletion_list = [edit_menu.menuAction(), show_hex, show_dec, show_unsigned, show_signed, toggle_record,
-                             freeze_menu.menuAction(), browse_region, disassemble, what_writes, what_reads,
-                             what_accesses, cut_record, copy_record, paste_inside, delete_record, add_group]
+                             toggle_children, freeze_menu.menuAction(), browse_region, disassemble, what_writes,
+                             what_reads, what_accesses, cut_record, copy_record, paste_inside, delete_record,
+                             add_group]
             guiutils.delete_menu_entries(menu, deletion_list)
         else:
             value_type = current_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
@@ -783,6 +785,8 @@ class MainForm(QMainWindow, MainWindow):
             else:
                 guiutils.delete_menu_entries(menu, [show_hex, show_dec, show_unsigned, show_signed,
                                                     freeze_menu.menuAction()])
+            if current_row.childCount() == 0:
+                guiutils.delete_menu_entries(menu, [toggle_children])
         font_size = self.treeWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -797,6 +801,7 @@ class MainForm(QMainWindow, MainWindow):
             show_unsigned: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.UNSIGNED),
             show_signed: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.SIGNED),
             toggle_record: self.toggle_records,
+            toggle_children: lambda: self.toggle_records(True),
             freeze_default: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT),
             freeze_inc: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.INCREMENT),
             freeze_dec: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.DECREMENT),
@@ -872,14 +877,19 @@ class MainForm(QMainWindow, MainWindow):
                 row.setText(FROZEN_COL, "▼")
                 row.setForeground(FROZEN_COL, QBrush(QColor(255, 0, 0)))
 
-    def toggle_records(self):
+    def toggle_records(self, toggle_children=False):
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if row:
             check_state = row.checkState(FROZEN_COL)
-            new_check_state = Qt.CheckState.Checked if check_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
+            new_state = Qt.CheckState.Checked if check_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
             for row in self.treeWidget_AddressTable.selectedItems():
-                row.setCheckState(FROZEN_COL, new_check_state)
+                row.setCheckState(FROZEN_COL, new_state)
                 self.treeWidget_AddressTable_item_clicked(row, FROZEN_COL)
+                if toggle_children:
+                    for index in range(row.childCount()):
+                        child = row.child(index)
+                        child.setCheckState(FROZEN_COL, new_state)
+                        self.treeWidget_AddressTable_item_clicked(child, FROZEN_COL)
 
     def cut_records(self):
         self.copy_records()
@@ -998,6 +1008,8 @@ class MainForm(QMainWindow, MainWindow):
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R),
              lambda: self.update_address_table(use_cache=False)),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space), self.toggle_records),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Space),
+             lambda: self.toggle_records(True)),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_X), self.cut_records),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C), self.copy_records),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_V), self.paste_records),

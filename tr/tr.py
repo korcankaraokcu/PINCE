@@ -52,6 +52,7 @@ class TranslationConstants(QObject):
     SHOW_UNSIGNED = QT_TR_NOOP("Show as unsigned")
     SHOW_SIGNED = QT_TR_NOOP("Show as signed")
     TOGGLE = QT_TR_NOOP("Toggle")
+    TOGGLE_CHILDREN = QT_TR_NOOP("Toggle including children")
     FREEZE = QT_TR_NOOP("Freeze")
     DEFAULT = QT_TR_NOOP("Default")
     INCREMENTAL = QT_TR_NOOP("Incremental")
