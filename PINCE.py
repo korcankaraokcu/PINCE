@@ -2846,8 +2846,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
         self.tableView_HexView_Ascii.contextMenuEvent = self.widget_HexView_context_menu_event
-        self.tableView_HexView_Hex.doubleClicked.connect(self.exec_hex_view_edit_dialog)
-        self.tableView_HexView_Ascii.doubleClicked.connect(self.exec_hex_view_edit_dialog)
 
         # Ignoring the event sends it directly to the parent, which is widget_HexView
         self.tableView_HexView_Hex.keyPressEvent = QEvent.ignore
@@ -3123,7 +3121,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
     def hex_update_loop(self):
-        if debugcore.currentpid == -1:
+        if debugcore.currentpid == -1 or exiting:
             return
         offset = HEX_VIEW_ROW_COUNT*HEX_VIEW_COL_COUNT
         updated_array = debugcore.hex_dump(self.hex_model.current_address, offset)
