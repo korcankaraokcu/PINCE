@@ -64,5 +64,5 @@ class QHexView(QTableView):
         index = cell.row() * model.columnCount() + cell.column()
         address = utils.modulo_address(model.current_address + index, debugcore.inferior_arch)
         data = self.delegate.editor.text()
-        debugcore.write_memory(address, self.write_type, data)
+        debugcore.write_memory(address, self.write_type, data, False)
         model.update_index(index, data)
