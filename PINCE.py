@@ -1594,9 +1594,9 @@ class MainForm(QMainWindow, MainWindow):
                     if freeze_type == typedefs.FREEZE_TYPE.INCREMENT and new_value > int(value, 0) or \
                             freeze_type == typedefs.FREEZE_TYPE.DECREMENT and new_value < int(value, 0):
                         frozen.value = str(new_value)
-                        debugcore.write_memory(address, vt.value_index, frozen.value, vt.endian)
+                        debugcore.write_memory(address, vt.value_index, frozen.value, endian=vt.endian)
                         continue
-                debugcore.write_memory(address, vt.value_index, value, vt.endian)
+                debugcore.write_memory(address, vt.value_index, value, vt.zero_terminate, vt.endian)
             it += 1
 
     def treeWidget_AddressTable_item_clicked(self, row, column):
@@ -1627,16 +1627,16 @@ class MainForm(QMainWindow, MainWindow):
             new_value = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
                 address = row.text(ADDR_COL).strip("P->")
-                value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-                if typedefs.VALUE_INDEX.has_length(value_type.value_index):
-                    unknown_type = utils.parse_string(new_value, value_type.value_index)
+                vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+                if typedefs.VALUE_INDEX.has_length(vt.value_index):
+                    unknown_type = utils.parse_string(new_value, vt.value_index)
                     if unknown_type is not None:
-                        value_type.length = len(unknown_type)
-                        row.setText(TYPE_COL, value_type.text())
+                        vt.length = len(unknown_type)
+                        row.setText(TYPE_COL, vt.text())
                 frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 frozen.value = new_value
                 row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
-                debugcore.write_memory(address, value_type.value_index, new_value, value_type.endian)
+                debugcore.write_memory(address, vt.value_index, new_value, vt.zero_terminate, vt.endian)
             self.update_address_table()
 
     def treeWidget_AddressTable_edit_desc(self):

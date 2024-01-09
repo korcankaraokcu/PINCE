@@ -887,7 +887,7 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
 
 
 #:tag:MemoryRW
-def write_memory(address, value_index, value, endian=typedefs.ENDIANNESS.HOST):
+def write_memory(address, value_index, value, zero_terminate=True, endian=typedefs.ENDIANNESS.HOST):
     """Sets the given value to the given address
 
     If any errors occurs while setting value to the according address, it'll be ignored but the information about
@@ -897,6 +897,7 @@ def write_memory(address, value_index, value, endian=typedefs.ENDIANNESS.HOST):
         address (str, int): Can be a hex string or an integer
         value_index (int): Can be a member of typedefs.VALUE_INDEX
         value (str): The value that'll be written to the given address
+        zero_terminate (bool): If True, appends a null byte to the value. Only used when value_index is STRING
         endian (int): Can be a member of typedefs.ENDIANNESS
 
     Notes:
@@ -921,7 +922,9 @@ def write_memory(address, value_index, value, endian=typedefs.ENDIANNESS.HOST):
             data_type = typedefs.index_to_struct_pack_dict.get(value_index, -1)
             write_data = struct.pack(data_type, write_data)
     else:
-        write_data = write_data.encode(encoding, option) + b"\x00"  # Zero-terminated by default
+        write_data = write_data.encode(encoding, option)
+        if zero_terminate:
+            write_data += b"\x00"
     if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian:
         write_data = write_data[::-1]
     FILE = open(mem_file, "rb+")
