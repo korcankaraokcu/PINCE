@@ -14,9 +14,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt6.QtCore import QAbstractTableModel, QVariant, Qt
+from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt6.QtGui import QColor, QColorConstants
-
 from libpince import utils, debugcore
 
 
@@ -40,18 +39,26 @@ class QHexModel(QAbstractTableModel):
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
         return self.column_count
 
-    def data(self, QModelIndex, int_role=None):
-        if self.data_array and QModelIndex.isValid():
-            index = QModelIndex.row() * self.column_count + QModelIndex.column()
+    def flags(self, index: QModelIndex):
+        return super().flags(index) | Qt.ItemFlag.ItemIsEditable
+
+    def data(self, model_index: QModelIndex, int_role=None):
+        if self.data_array and model_index.isValid():
+            index = model_index.row() * self.column_count + model_index.column()
             if int_role == Qt.ItemDataRole.BackgroundRole:
                 address = self.current_address + index
                 if utils.modulo_address(address, debugcore.inferior_arch) in self.breakpoint_list:
-                    return QVariant(self.breakpoint_color)
+                    return self.breakpoint_color
                 self.cell_change_color.setAlpha(20*self.cell_animation[index])
-                return QVariant(self.cell_change_color)
+                return self.cell_change_color
             elif int_role == Qt.ItemDataRole.DisplayRole:
-                return QVariant(self.data_array[index])
-        return QVariant()
+                return self.display_data(index)
+
+    def display_data(self, index):
+        return self.data_array[index]
+
+    def translate_data(self, data):
+        return data
 
     def refresh(self, int_address, offset, data_array=None, breakpoint_info=None):
         int_address = utils.modulo_address(int_address, debugcore.inferior_arch)
@@ -79,3 +86,10 @@ class QHexModel(QAbstractTableModel):
                 self.cell_animation[index] = 6
         self.data_array = updated_array
         self.layoutChanged.emit()
+
+    def update_index(self, index, data):
+        data = self.translate_data(data)
+        if self.data_array[index] != data:
+            self.cell_animation[index] = 6
+            self.data_array[index] = data
+            self.layoutChanged.emit()
