@@ -34,10 +34,10 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
     QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
-    QLocale
+    QLocale, QSignalBlocker
 from typing import Final
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect, json
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect, json, select
 
 from libpince import utils, debugcore, typedefs
 from libpince.libscanmem.scanmem import Scanmem
@@ -371,21 +371,35 @@ def except_hook(exception_type, value, tb):
 # So, we must override sys.excepthook to avoid calling of qFatal()
 sys.excepthook = except_hook
 
+quit_prompt_active = False
+
 
 def signal_handler(signal, frame):
-    if debugcore.lock_send_command.locked():
-        print("\nCancelling the last GDB command")
-        debugcore.cancel_last_command()
-    else:
-        try:
-            text = input("\nNo GDB command to cancel, quit PINCE? (y/n)")
-            if text.lower().startswith("y"):
+    global quit_prompt_active
+    with QSignalBlocker(app):
+        if debugcore.lock_send_command.locked():
+            print("\nCancelling the last GDB command")
+            debugcore.cancel_last_command()
+        else:
+            if quit_prompt_active:
+                print()  # Prints a newline so the terminal looks nicer when we quit
                 debugcore.detach()
                 quit()
-        except RuntimeError:
-            print()  # Prints a newline so the terminal looks nicer when we quit
-            debugcore.detach()
-            quit()
+            quit_prompt_active = True
+            print("\nNo GDB command to cancel, quit PINCE? (y/n)", end="", flush=True)
+            while True:
+                # Using select() instead of input() because it causes the bug below
+                # QBackingStore::endPaint() called with active painter
+                rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
+                if rlist:
+                    user_input = sys.stdin.readline().strip().lower()
+                    break
+            if user_input.lower().startswith("y"):
+                debugcore.detach()
+                quit()
+            else:
+                print("Quit aborted")
+            quit_prompt_active = False
 
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -2405,22 +2419,20 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.comboBox_Language.addItem(lang)
             if loc == cur_loc:
                 self.comboBox_Language.setCurrentIndex(self.comboBox_Language.count()-1)
-        self.comboBox_Theme.blockSignals(True)
-        self.comboBox_Theme.clear()
-        cur_theme = self.settings.value("General/theme", type=str)
-        for thm in theme_list:
-            self.comboBox_Theme.addItem(thm)
-            if thm == cur_theme:
-                self.comboBox_Theme.setCurrentIndex(self.comboBox_Theme.count()-1)
-        self.comboBox_Theme.blockSignals(False)
+        with QSignalBlocker(self.comboBox_Theme):
+            self.comboBox_Theme.clear()
+            cur_theme = self.settings.value("General/theme", type=str)
+            for thm in theme_list:
+                self.comboBox_Theme.addItem(thm)
+                if thm == cur_theme:
+                    self.comboBox_Theme.setCurrentIndex(self.comboBox_Theme.count()-1)
         logo_directory = utils.get_logo_directory()
         logo_list = utils.search_files(logo_directory, "\.(png|jpg|jpeg|svg)$")
-        self.comboBox_Logo.blockSignals(True)
-        self.comboBox_Logo.clear()
-        for logo in logo_list:
-            self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
-        self.comboBox_Logo.setCurrentIndex(logo_list.index(self.settings.value("General/logo_path", type=str)))
-        self.comboBox_Logo.blockSignals(False)
+        with QSignalBlocker(self.comboBox_Logo):
+            self.comboBox_Logo.clear()
+            for logo in logo_list:
+                self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
+            self.comboBox_Logo.setCurrentIndex(logo_list.index(self.settings.value("General/logo_path", type=str)))
         self.listWidget_Functions.clear()
         self.hotkey_to_value.clear()
         for hotkey in Hotkeys.get_hotkeys():
