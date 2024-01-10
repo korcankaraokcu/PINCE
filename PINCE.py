@@ -394,7 +394,7 @@ def signal_handler(signal, frame):
                 if rlist:
                     user_input = sys.stdin.readline().strip().lower()
                     break
-            if user_input.lower().startswith("y"):
+            if user_input.startswith("y"):
                 debugcore.detach()
                 quit()
             else:
