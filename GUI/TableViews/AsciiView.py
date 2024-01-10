@@ -15,11 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from GUI.TableViews.HexView import QHexView
+from GUI.ItemDelegates.HexDelegate import QHexDelegate
+from libpince import typedefs
 
 
 class QAsciiView(QHexView):
-    # data_array is returned from debugcore.hex_dump()
     def __init__(self, parent=None):
         super().__init__(parent)
         self.horizontalHeader().setMinimumSectionSize(15)
         self.horizontalHeader().setDefaultSectionSize(15)
+        self.write_type = typedefs.VALUE_INDEX.STRING_UTF8
+        self.delegate = QHexDelegate(1, ".+")
+        self.delegate.closeEditor.connect(self.on_editor_close)
+        self.setItemDelegate(self.delegate)

@@ -34,10 +34,10 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
     QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
-    QLocale
+    QLocale, QSignalBlocker
 from typing import Final
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect, json
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect, json, select
 
 from libpince import utils, debugcore, typedefs
 from libpince.libscanmem.scanmem import Scanmem
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "28"  # Increase version by one if you change settings
+current_settings_version = "30"  # Increase version by one if you change settings
 update_table = bool
 table_update_interval = int
 freeze_interval = int
@@ -200,8 +200,9 @@ bring_disassemble_to_front = bool
 instructions_per_scroll = int
 gdb_path = str
 gdb_logging = bool
+interrupt_signal = str
+handle_signals = list
 
-handle_signals = str
 # Due to community feedback, these signals are disabled by default: SIGUSR1, SIGUSR2, SIGPWR, SIGXCPU, SIGXFSZ, SIGSYS
 # Rest is the same with GDB defaults
 default_signals = [
@@ -220,7 +221,7 @@ default_signals = [
     ["EXC_BAD_INSTRUCTION", True, True], ["EXC_ARITHMETIC", True, True], ["EXC_EMULATION", True, True],
     ["EXC_SOFTWARE", True, True], ["EXC_BREAKPOINT", True, True], ["SIGLIBRT", False, True]
 ]
-for x in range(33, 128):  # Add signals SIG33-SIG127
+for x in range(32, 128):  # Add signals SIG32-SIG127
     default_signals.append([f"SIG{x}", True, True])
 
 # represents the index of columns in instructions restore table
@@ -370,21 +371,35 @@ def except_hook(exception_type, value, tb):
 # So, we must override sys.excepthook to avoid calling of qFatal()
 sys.excepthook = except_hook
 
+quit_prompt_active = False
+
 
 def signal_handler(signal, frame):
-    if debugcore.lock_send_command.locked():
-        print("\nCancelling the last GDB command")
-        debugcore.cancel_last_command()
-    else:
-        try:
-            text = input("\nNo GDB command to cancel, quit PINCE? (y/n)")
-            if text.lower().startswith("y"):
+    global quit_prompt_active
+    with QSignalBlocker(app):
+        if debugcore.lock_send_command.locked():
+            print("\nCancelling the last GDB command")
+            debugcore.cancel_last_command()
+        else:
+            if quit_prompt_active:
+                print()  # Prints a newline so the terminal looks nicer when we quit
                 debugcore.detach()
                 quit()
-        except RuntimeError:
-            print()  # Prints a newline so the terminal looks nicer when we quit
-            debugcore.detach()
-            quit()
+            quit_prompt_active = True
+            print("\nNo GDB command to cancel, quit PINCE? (y/n)", end="", flush=True)
+            while True:
+                # Using select() instead of input() because it causes the bug below
+                # QBackingStore::endPaint() called with active painter
+                rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
+                if rlist:
+                    user_input = sys.stdin.readline().strip().lower()
+                    break
+            if user_input.startswith("y"):
+                debugcore.detach()
+                quit()
+            else:
+                print("Quit aborted")
+            quit_prompt_active = False
 
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -577,12 +592,14 @@ class MainForm(QMainWindow, MainWindow):
         self.flashAttachButtonTimer.start(100)
         self.auto_attach()
 
+    # Please refrain from using python specific objects in settings, use json-compatible ones instead
+    # Using python objects causes issues when filenames change
     def set_default_settings(self):
         self.settings.beginGroup("General")
         self.settings.setValue("auto_update_address_table", True)
         self.settings.setValue("address_table_update_interval", 500)
         self.settings.setValue("freeze_interval", 100)
-        self.settings.setValue("gdb_output_mode", typedefs.gdb_output_mode(True, True, True))
+        self.settings.setValue("gdb_output_mode", json.dumps([True, True, True]))
         self.settings.setValue("auto_attach_list", "")
         self.settings.setValue("auto_attach_regex", False)
         self.settings.setValue("locale", get_locale())
@@ -603,6 +620,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.beginGroup("Debug")
         self.settings.setValue("gdb_path", typedefs.PATHS.GDB)
         self.settings.setValue("gdb_logging", False)
+        self.settings.setValue("interrupt_signal", "SIGINT")
         self.settings.setValue("handle_signals", json.dumps(default_signals))
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
@@ -612,15 +630,17 @@ class MainForm(QMainWindow, MainWindow):
 
     def apply_after_init(self):
         global gdb_logging
+        global interrupt_signal
         global handle_signals
         global exp_cache
 
         exp_cache.clear()
         gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
-        handle_signals = self.settings.value("Debug/handle_signals", type=str)
+        interrupt_signal = self.settings.value("Debug/interrupt_signal", type=str)
+        handle_signals = json.loads(self.settings.value("Debug/handle_signals", type=str))
         debugcore.set_logging(gdb_logging)
-        for signal, stop, pass_to_program in json.loads(handle_signals):
-            debugcore.handle_signal(signal, stop, pass_to_program)
+        debugcore.handle_signals(handle_signals)
+        debugcore.set_interrupt_signal(interrupt_signal)  # Needs to be called after handle_signals
 
     def apply_settings(self):
         global update_table
@@ -640,7 +660,8 @@ class MainForm(QMainWindow, MainWindow):
         update_table = self.settings.value("General/auto_update_address_table", type=bool)
         table_update_interval = self.settings.value("General/address_table_update_interval", type=int)
         freeze_interval = self.settings.value("General/freeze_interval", type=int)
-        gdb_output_mode = self.settings.value("General/gdb_output_mode", type=tuple)
+        gdb_output_mode = json.loads(self.settings.value("General/gdb_output_mode", type=str))
+        gdb_output_mode = typedefs.gdb_output_mode(*gdb_output_mode)
         auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
         auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
         locale = self.settings.value("General/locale", type=str)
@@ -738,6 +759,7 @@ class MainForm(QMainWindow, MainWindow):
         show_unsigned = menu.addAction(tr.SHOW_UNSIGNED)
         show_signed = menu.addAction(tr.SHOW_SIGNED)
         toggle_record = menu.addAction(f"{tr.TOGGLE}[Space]")
+        toggle_children = menu.addAction(f"{tr.TOGGLE_CHILDREN}[Ctrl+Space]")
         freeze_menu = menu.addMenu(tr.FREEZE)
         freeze_default = freeze_menu.addAction(tr.DEFAULT)
         freeze_inc = freeze_menu.addAction(tr.INCREMENTAL)
@@ -759,8 +781,9 @@ class MainForm(QMainWindow, MainWindow):
         create_group = menu.addAction(tr.CREATE_GROUP)
         if current_row is None:
             deletion_list = [edit_menu.menuAction(), show_hex, show_dec, show_unsigned, show_signed, toggle_record,
-                             freeze_menu.menuAction(), browse_region, disassemble, what_writes, what_reads,
-                             what_accesses, cut_record, copy_record, paste_inside, delete_record, add_group]
+                             toggle_children, freeze_menu.menuAction(), browse_region, disassemble, what_writes,
+                             what_reads, what_accesses, cut_record, copy_record, paste_inside, delete_record,
+                             add_group]
             guiutils.delete_menu_entries(menu, deletion_list)
         else:
             value_type = current_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
@@ -776,6 +799,8 @@ class MainForm(QMainWindow, MainWindow):
             else:
                 guiutils.delete_menu_entries(menu, [show_hex, show_dec, show_unsigned, show_signed,
                                                     freeze_menu.menuAction()])
+            if current_row.childCount() == 0:
+                guiutils.delete_menu_entries(menu, [toggle_children])
         font_size = self.treeWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -790,6 +815,7 @@ class MainForm(QMainWindow, MainWindow):
             show_unsigned: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.UNSIGNED),
             show_signed: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.SIGNED),
             toggle_record: self.toggle_records,
+            toggle_children: lambda: self.toggle_records(True),
             freeze_default: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT),
             freeze_inc: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.INCREMENT),
             freeze_dec: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.DECREMENT),
@@ -865,14 +891,19 @@ class MainForm(QMainWindow, MainWindow):
                 row.setText(FROZEN_COL, "▼")
                 row.setForeground(FROZEN_COL, QBrush(QColor(255, 0, 0)))
 
-    def toggle_records(self):
+    def toggle_records(self, toggle_children=False):
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if row:
             check_state = row.checkState(FROZEN_COL)
-            new_check_state = Qt.CheckState.Checked if check_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
+            new_state = Qt.CheckState.Checked if check_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
             for row in self.treeWidget_AddressTable.selectedItems():
-                row.setCheckState(FROZEN_COL, new_check_state)
+                row.setCheckState(FROZEN_COL, new_state)
                 self.treeWidget_AddressTable_item_clicked(row, FROZEN_COL)
+                if toggle_children:
+                    for index in range(row.childCount()):
+                        child = row.child(index)
+                        child.setCheckState(FROZEN_COL, new_state)
+                        self.treeWidget_AddressTable_item_clicked(child, FROZEN_COL)
 
     def cut_records(self):
         self.copy_records()
@@ -991,6 +1022,8 @@ class MainForm(QMainWindow, MainWindow):
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R),
              lambda: self.update_address_table(use_cache=False)),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space), self.toggle_records),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Space),
+             lambda: self.toggle_records(True)),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_X), self.cut_records),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C), self.copy_records),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_V), self.paste_records),
@@ -1575,9 +1608,9 @@ class MainForm(QMainWindow, MainWindow):
                     if freeze_type == typedefs.FREEZE_TYPE.INCREMENT and new_value > int(value, 0) or \
                             freeze_type == typedefs.FREEZE_TYPE.DECREMENT and new_value < int(value, 0):
                         frozen.value = str(new_value)
-                        debugcore.write_memory(address, vt.value_index, frozen.value, vt.endian)
+                        debugcore.write_memory(address, vt.value_index, frozen.value, endian=vt.endian)
                         continue
-                debugcore.write_memory(address, vt.value_index, value, vt.endian)
+                debugcore.write_memory(address, vt.value_index, value, vt.zero_terminate, vt.endian)
             it += 1
 
     def treeWidget_AddressTable_item_clicked(self, row, column):
@@ -1608,16 +1641,16 @@ class MainForm(QMainWindow, MainWindow):
             new_value = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
                 address = row.text(ADDR_COL).strip("P->")
-                value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-                if typedefs.VALUE_INDEX.has_length(value_type.value_index):
-                    unknown_type = utils.parse_string(new_value, value_type.value_index)
+                vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+                if typedefs.VALUE_INDEX.has_length(vt.value_index):
+                    unknown_type = utils.parse_string(new_value, vt.value_index)
                     if unknown_type is not None:
-                        value_type.length = len(unknown_type)
-                        row.setText(TYPE_COL, value_type.text())
+                        vt.length = len(unknown_type)
+                        row.setText(TYPE_COL, vt.text())
                 frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 frozen.value = new_value
                 row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
-                debugcore.write_memory(address, value_type.value_index, new_value, value_type.endian)
+                debugcore.write_memory(address, vt.value_index, new_value, vt.zero_terminate, vt.endian)
             self.update_address_table()
 
     def treeWidget_AddressTable_edit_desc(self):
@@ -2321,10 +2354,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
         self.settings.setValue("General/freeze_interval", current_freeze_interval)
-        current_gdb_output_mode = typedefs.gdb_output_mode(self.checkBox_OutputModeAsync.isChecked(),
-                                                            self.checkBox_OutputModeCommand.isChecked(),
-                                                            self.checkBox_OutputModeCommandInfo.isChecked())
-        self.settings.setValue("General/gdb_output_mode", current_gdb_output_mode)
+        output_mode = [self.checkBox_OutputModeAsync.isChecked(), self.checkBox_OutputModeCommand.isChecked(),
+                       self.checkBox_OutputModeCommandInfo.isChecked()]
+        self.settings.setValue("General/gdb_output_mode", json.dumps(output_mode))
         if self.checkBox_AutoAttachRegex.isChecked():
             try:
                 re.compile(self.lineEdit_AutoAttachList.text())
@@ -2356,6 +2388,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 debugcore.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
+        self.settings.setValue("Debug/interrupt_signal", self.comboBox_InterruptSignal.currentText())
         if self.handle_signals_data:
             self.settings.setValue("Debug/handle_signals", self.handle_signals_data)
         super().accept()
@@ -2373,9 +2406,11 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.lineEdit_UpdateInterval.setText(
             str(self.settings.value("General/address_table_update_interval", type=int)))
         self.lineEdit_FreezeInterval.setText(str(self.settings.value("General/freeze_interval", type=int)))
-        self.checkBox_OutputModeAsync.setChecked(self.settings.value("General/gdb_output_mode").async_output)
-        self.checkBox_OutputModeCommand.setChecked(self.settings.value("General/gdb_output_mode").command_output)
-        self.checkBox_OutputModeCommandInfo.setChecked(self.settings.value("General/gdb_output_mode").command_info)
+        output_mode = json.loads(self.settings.value("General/gdb_output_mode", type=str))
+        output_mode = typedefs.gdb_output_mode(*output_mode)
+        self.checkBox_OutputModeAsync.setChecked(output_mode.async_output)
+        self.checkBox_OutputModeCommand.setChecked(output_mode.command_output)
+        self.checkBox_OutputModeCommandInfo.setChecked(output_mode.command_info)
         self.lineEdit_AutoAttachList.setText(self.settings.value("General/auto_attach_list", type=str))
         self.checkBox_AutoAttachRegex.setChecked(self.settings.value("General/auto_attach_regex", type=bool))
         self.comboBox_Language.clear()
@@ -2384,22 +2419,20 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.comboBox_Language.addItem(lang)
             if loc == cur_loc:
                 self.comboBox_Language.setCurrentIndex(self.comboBox_Language.count()-1)
-        self.comboBox_Theme.blockSignals(True)
-        self.comboBox_Theme.clear()
-        cur_theme = self.settings.value("General/theme", type=str)
-        for thm in theme_list:
-            self.comboBox_Theme.addItem(thm)
-            if thm == cur_theme:
-                self.comboBox_Theme.setCurrentIndex(self.comboBox_Theme.count()-1)
-        self.comboBox_Theme.blockSignals(False)
+        with QSignalBlocker(self.comboBox_Theme):
+            self.comboBox_Theme.clear()
+            cur_theme = self.settings.value("General/theme", type=str)
+            for thm in theme_list:
+                self.comboBox_Theme.addItem(thm)
+                if thm == cur_theme:
+                    self.comboBox_Theme.setCurrentIndex(self.comboBox_Theme.count()-1)
         logo_directory = utils.get_logo_directory()
         logo_list = utils.search_files(logo_directory, "\.(png|jpg|jpeg|svg)$")
-        self.comboBox_Logo.blockSignals(True)
-        self.comboBox_Logo.clear()
-        for logo in logo_list:
-            self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
-        self.comboBox_Logo.setCurrentIndex(logo_list.index(self.settings.value("General/logo_path", type=str)))
-        self.comboBox_Logo.blockSignals(False)
+        with QSignalBlocker(self.comboBox_Logo):
+            self.comboBox_Logo.clear()
+            for logo in logo_list:
+                self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
+            self.comboBox_Logo.setCurrentIndex(logo_list.index(self.settings.value("General/logo_path", type=str)))
         self.listWidget_Functions.clear()
         self.hotkey_to_value.clear()
         for hotkey in Hotkeys.get_hotkeys():
@@ -2416,6 +2449,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             str(self.settings.value("Disassemble/instructions_per_scroll", type=int)))
         self.lineEdit_GDBPath.setText(str(self.settings.value("Debug/gdb_path", type=str)))
         self.checkBox_GDBLogging.setChecked(self.settings.value("Debug/gdb_logging", type=bool))
+        cur_signal = self.settings.value("Debug/interrupt_signal", type=str)
+        self.comboBox_InterruptSignal.clear()
+        self.comboBox_InterruptSignal.addItem("SIGINT")
+        self.comboBox_InterruptSignal.addItems([f"SIG{x}" for x in range(signal.SIGRTMIN, signal.SIGRTMAX+1)])
+        self.comboBox_InterruptSignal.setCurrentIndex(self.comboBox_InterruptSignal.findText(cur_signal))
+        self.comboBox_InterruptSignal.setStyleSheet("combobox-popup: 0;")  # maxVisibleItems doesn't work otherwise
 
     def change_display(self, index):
         self.stackedWidget.setCurrentIndex(index)
@@ -2787,9 +2826,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.bDisassemblyScrolling = False  # rejects new scroll requests while scrolling
         self.tableWidget_Disassemble.wheelEvent = QEvent.ignore
         self.verticalScrollBar_Disassemble.wheelEvent = QEvent.ignore
-
         self.verticalScrollBar_Disassemble.sliderChange = self.disassemble_scrollbar_sliderchanged
-
         guiutils.center_scroll_bar(self.verticalScrollBar_Disassemble)
 
         # Format: [address1, address2, ...]
@@ -2809,16 +2846,18 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def initialize_hex_view(self):
         self.hex_view_last_selected_address_int = 0
         self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None)
+        self.hex_model = QHexModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
+        self.ascii_model = QAsciiModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
+        self.tableView_HexView_Hex.setModel(self.hex_model)
+        self.tableView_HexView_Ascii.setModel(self.ascii_model)
+
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
-        
         # Saving the original function because super() doesn't work when we override functions like this
         self.widget_HexView.keyPressEvent_original = self.widget_HexView.keyPressEvent
         self.widget_HexView.keyPressEvent = self.widget_HexView_key_press_event
 
         self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
         self.tableView_HexView_Ascii.contextMenuEvent = self.widget_HexView_context_menu_event
-        self.tableView_HexView_Hex.doubleClicked.connect(self.exec_hex_view_edit_dialog)
-        self.tableView_HexView_Ascii.doubleClicked.connect(self.exec_hex_view_edit_dialog)
 
         # Ignoring the event sends it directly to the parent, which is widget_HexView
         self.tableView_HexView_Hex.keyPressEvent = QEvent.ignore
@@ -2826,18 +2865,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.bHexViewScrolling = False  # rejects new scroll requests while scrolling
         self.verticalScrollBar_HexView.wheelEvent = QEvent.ignore
-
         self.verticalScrollBar_HexView.sliderChange = self.hex_view_scrollbar_sliderchanged
+        guiutils.center_scroll_bar(self.verticalScrollBar_HexView)
 
         self.tableWidget_HexView_Address.wheelEvent = QEvent.ignore
         self.tableWidget_HexView_Address.setAutoScroll(False)
         self.tableWidget_HexView_Address.setStyleSheet("QTableWidget {background-color: transparent;}")
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-
-        self.hex_model = QHexModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
-        self.ascii_model = QAsciiModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
-        self.tableView_HexView_Hex.setModel(self.hex_model)
-        self.tableView_HexView_Ascii.setModel(self.ascii_model)
 
         self.tableView_HexView_Hex.selectionModel().currentChanged.connect(self.on_hex_view_current_changed)
         self.tableView_HexView_Ascii.selectionModel().currentChanged.connect(self.on_ascii_view_current_changed)
@@ -2849,7 +2883,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.verticalHeader().setDefaultSectionSize(
             self.tableView_HexView_Hex.verticalHeader().defaultSectionSize())
 
-        guiutils.center_scroll_bar(self.verticalScrollBar_HexView)
+        self.hex_update_timer = QTimer(timeout=self.hex_update_loop)
+        self.hex_update_timer.start(200)
 
     def show_trace_window(self):
         TraceInstructionsWindowForm(prompt_dialog=False)
@@ -3096,6 +3131,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                                                                     QItemSelectionModel.SelectionFlag.ClearAndSelect)
         self.tableWidget_HexView_Address.selectRow(QModelIndex_current.row())
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+
+    def hex_update_loop(self):
+        if debugcore.currentpid == -1 or exiting:
+            return
+        offset = HEX_VIEW_ROW_COUNT*HEX_VIEW_COL_COUNT
+        updated_array = debugcore.hex_dump(self.hex_model.current_address, offset)
+        self.hex_model.update_loop(updated_array)
+        self.ascii_model.update_loop(updated_array)
 
     # TODO: Consider merging HexView_Address, HexView_Hex and HexView_Ascii into one UI class
     # TODO: Move this function to that class if that happens

@@ -79,6 +79,18 @@ class CLIOutput(gdb.Command):
         send_to_pince(contents_send)
 
 
+class HandleSignals(gdb.Command):
+    def __init__(self):
+        super().__init__("pince-handle-signals", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        signal_data = receive_from_pince()
+        for signal, stop, pass_to_program in signal_data:
+            stop = "stop print" if stop else "nostop noprint"
+            pass_to_program = "pass" if pass_to_program else "nopass"
+            gdb.execute(f"handle {signal} {stop} {pass_to_program}", from_tty, to_string=True)
+
+
 class ParseAndEval(gdb.Command):
     def __init__(self):
         super(ParseAndEval, self).__init__("pince-parse-and-eval", gdb.COMMAND_USER)
@@ -627,6 +639,7 @@ class SearchFunctions(gdb.Command):
 
 IgnoreErrors()
 CLIOutput()
+HandleSignals()
 ParseAndEval()
 ReadRegisters()
 ReadFloatRegisters()

@@ -14,25 +14,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt6.QtCore import QVariant, Qt
-from PyQt6.QtGui import QColor, QColorConstants
 from GUI.AbstractTableModels.HexModel import QHexModel
+from libpince import utils
 
-from libpince import utils, debugcore
-
-breakpoint_red = QColor(QColorConstants.Red)
-breakpoint_red.setAlpha(96)
 
 class QAsciiModel(QHexModel):
     def __init__(self, row_count, column_count, parent=None):
         super().__init__(row_count, column_count, parent)
 
-    def data(self, QModelIndex, int_role=None):
-        if self.data_array and QModelIndex.isValid():
-            if int_role == Qt.ItemDataRole.BackgroundRole:
-                address = self.current_address + QModelIndex.row() * self.column_count + QModelIndex.column()
-                if utils.modulo_address(address, debugcore.inferior_arch) in self.breakpoint_list:
-                    return QVariant(breakpoint_red)
-            elif int_role == Qt.ItemDataRole.DisplayRole:
-                return QVariant(utils.aob_to_str(self.data_array[QModelIndex.row() * self.column_count + QModelIndex.column()]))
-        return QVariant()
+    def display_data(self, index):
+        return utils.aob_to_str(self.data_array[index])
+
+    def translate_data(self, data):
+        return utils.str_to_aob(data)

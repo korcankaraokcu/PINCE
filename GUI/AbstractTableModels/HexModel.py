@@ -14,13 +14,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt6.QtCore import QAbstractTableModel, QVariant, Qt
+from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt6.QtGui import QColor, QColorConstants
-
 from libpince import utils, debugcore
 
-breakpoint_red = QColor(QColorConstants.Red)
-breakpoint_red.setAlpha(96)
 
 class QHexModel(QAbstractTableModel):
     def __init__(self, row_count, column_count, parent=None):
@@ -30,6 +27,11 @@ class QHexModel(QAbstractTableModel):
         self.row_count = row_count
         self.column_count = column_count
         self.current_address = 0
+        offset = row_count*column_count
+        self.cell_animation = [0]*offset
+        self.cell_change_color = QColor(QColorConstants.Red)
+        self.breakpoint_color = QColor(QColorConstants.Green)
+        self.breakpoint_color.setAlpha(96)
 
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return self.row_count
@@ -37,16 +39,26 @@ class QHexModel(QAbstractTableModel):
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
         return self.column_count
 
-    def data(self, QModelIndex, int_role=None):
-        if self.data_array and QModelIndex.isValid():
-            if int_role == Qt.ItemDataRole.BackgroundRole:
-                address = self.current_address + QModelIndex.row() * self.column_count + QModelIndex.column()
-                if utils.modulo_address(address, debugcore.inferior_arch) in self.breakpoint_list:
-                    return QVariant(breakpoint_red)
-            elif int_role == Qt.ItemDataRole.DisplayRole:
-                return QVariant(self.data_array[QModelIndex.row() * self.column_count + QModelIndex.column()])
+    def flags(self, index: QModelIndex):
+        return super().flags(index) | Qt.ItemFlag.ItemIsEditable
 
-        return QVariant()
+    def data(self, model_index: QModelIndex, int_role=None):
+        if self.data_array and model_index.isValid():
+            index = model_index.row() * self.column_count + model_index.column()
+            if int_role == Qt.ItemDataRole.BackgroundRole:
+                address = self.current_address + index
+                if utils.modulo_address(address, debugcore.inferior_arch) in self.breakpoint_list:
+                    return self.breakpoint_color
+                self.cell_change_color.setAlpha(20*self.cell_animation[index])
+                return self.cell_change_color
+            elif int_role == Qt.ItemDataRole.DisplayRole:
+                return self.display_data(index)
+
+    def display_data(self, index):
+        return self.data_array[index]
+
+    def translate_data(self, data):
+        return data
 
     def refresh(self, int_address, offset, data_array=None, breakpoint_info=None):
         int_address = utils.modulo_address(int_address, debugcore.inferior_arch)
@@ -62,4 +74,22 @@ class QHexModel(QAbstractTableModel):
             for i in range(bp.size):
                 self.breakpoint_list.add(utils.modulo_address(breakpoint_address + i, debugcore.inferior_arch))
         self.current_address = int_address
+        self.cell_animation = [0]*offset
         self.layoutChanged.emit()
+
+    def update_loop(self, updated_array):
+        for index, item in enumerate(self.cell_animation):
+            if item > 0:
+                self.cell_animation[index] = item-1
+        for index, item in enumerate(updated_array):
+            if item != self.data_array[index]:
+                self.cell_animation[index] = 6
+        self.data_array = updated_array
+        self.layoutChanged.emit()
+
+    def update_index(self, index, data):
+        data = self.translate_data(data)
+        if self.data_array[index] != data:
+            self.cell_animation[index] = 6
+            self.data_array[index] = data
+            self.layoutChanged.emit()

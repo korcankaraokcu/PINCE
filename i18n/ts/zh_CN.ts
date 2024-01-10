@@ -354,6 +354,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Interruption signal</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Reset Settings</source>
       <translation>重置设置</translation>
     </message>
@@ -1470,6 +1475,11 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Toggle</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Toggle including children</source>
       <translation type="unfinished" />
     </message>
     <message>
