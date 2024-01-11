@@ -15,6 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+from PyQt6.QtWidgets import QWidget, QScrollBar, QTableWidget, QComboBox, QMenu, QLayout
+from PyQt6.QtCore import QObject
+from PyQt6.QtGui import QShortcut
 from libpince import utils, typedefs, regexes
 from tr.tr import TranslationConstants as tr
 
@@ -29,79 +32,81 @@ def get_icons_directory():
 
 
 #:tag:GUI
-def center(window):
+def center(window: QWidget):
     """Center the given window to desktop
 
     Args:
-        window (QMainWindow, QWidget etc.): The window that'll be centered to desktop
+        window (QWidget): The window that'll be centered to desktop
     """
     window.frameGeometry().moveCenter(window.screen().availableGeometry().center())
 
 
 #:tag:GUI
-def center_to_parent(window):
+def center_to_parent(window: QWidget):
     """Center the given window to it's parent
 
     Args:
-        window (QMainWindow, QWidget etc.): The window that'll be centered to it's parent
+        window (QWidget): The window that'll be centered to it's parent
     """
-    window.move(window.parent().frameGeometry().center() - window.frameGeometry().center())
+    parent: QWidget = window.parent()
+    window.move(parent.frameGeometry().center() - window.frameGeometry().center())
 
 
 #:tag:GUI
-def center_to_window(window_secondary, window_main):
+def center_to_window(window_secondary: QWidget, window_main: QWidget):
     """Center the given window_secondary to window_main
 
     Args:
-        window_secondary (QMainWindow, QWidget etc.): The window that'll be centered to window_main
-        window_main (QMainWindow, QWidget etc.): The window that window_secondary will centered to
+        window_secondary (QQWidget): The window that'll be centered to window_main
+        window_main (QWidget): The window that window_secondary will centered to
     """
     window_secondary.move(window_main.frameGeometry().center() - window_secondary.frameGeometry().center())
 
 
 #:tag:GUI
-def center_scroll_bar(QScrollBar):
+def center_scroll_bar(scrollbar: QScrollBar):
     """Center the given scrollbar
 
     Args:
-        QScrollBar (QScrollbar): The scrollbar that'll be centered
+        scrollbar (QScrollbar): Self-explanatory
     """
-    maximum = QScrollBar.maximum()
-    minimum = QScrollBar.minimum()
-    QScrollBar.setValue((maximum + minimum) // 2)
+    maximum = scrollbar.maximum()
+    minimum = scrollbar.minimum()
+    scrollbar.setValue((maximum + minimum) // 2)
 
 
 #:tag:GUI
-def resize_to_contents(QTableWidget):
+def resize_to_contents(tablewidget: QTableWidget):
     """Resizes the columns of the given QTableWidget to its contents
     This also fixes the stretch problem of the last column
 
     Args:
-        QTableWidget (QTableWidget): Self-explanatory
+        tablewidget (QTableWidget): Self-explanatory
     """
-    QTableWidget.resizeColumnsToContents()
-    default_size = QTableWidget.horizontalHeader().defaultSectionSize()
-    QTableWidget.horizontalHeader().resizeSection(QTableWidget.columnCount() - 1, default_size)
+    tablewidget.resizeColumnsToContents()
+    default_size = tablewidget.horizontalHeader().defaultSectionSize()
+    tablewidget.horizontalHeader().resizeSection(tablewidget.columnCount() - 1, default_size)
 
 
 #:tag:GUI
-def fill_value_combobox(QCombobox, current_index=typedefs.VALUE_INDEX.INT32):
-    """Fills the given QCombobox with value_index strings
+def fill_value_combobox(combobox: QComboBox, current_index: int = typedefs.VALUE_INDEX.INT32):
+    """Fills the given QComboBox with value_index strings
 
     Args:
-        QCombobox (QCombobox): The combobox that'll be filled
+        combobox (QComboBox): The combobox that'll be filled
         current_index (int): Can be a member of typedefs.VALUE_INDEX
     """
     for key in typedefs.index_to_text_dict:
-        QCombobox.addItem(typedefs.index_to_text_dict[key])
-    QCombobox.setCurrentIndex(current_index)
+        combobox.addItem(typedefs.index_to_text_dict[key])
+    combobox.setCurrentIndex(current_index)
+
 
 #:tag:GUI
-def fill_endianness_combobox(QCombobox, current_index=typedefs.ENDIANNESS.HOST):
-    """Fills the given QCombobox with endianness strings
+def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.ENDIANNESS.HOST):
+    """Fills the given QComboBox with endianness strings
 
     Args:
-        QCombobox (QCombobox): The combobox that'll be filled
+        combobox (QComboBox): The combobox that'll be filled
         current_index (int): Can be a member of typedefs.ENDIANNESS
     """
     endianness_text = [
@@ -110,18 +115,19 @@ def fill_endianness_combobox(QCombobox, current_index=typedefs.ENDIANNESS.HOST):
         (typedefs.ENDIANNESS.BIG, tr.BIG)
     ]
     for endian, text in endianness_text:
-        QCombobox.addItem(text, endian)
-    QCombobox.setCurrentIndex(current_index)
+        combobox.addItem(text, endian)
+    combobox.setCurrentIndex(current_index)
+
 
 #:tag:GUI
-def get_current_row(QObject):
-    """Returns the currently selected row index for the given QObject
+def get_current_row(tablewidget: QTableWidget):
+    """Returns the currently selected row index for the given QTableWidget
     If you try to use only selectionModel().currentIndex().row() for this purpose, you'll get the last selected row even
     if it was unselected afterwards. This is why this function exists, it checks the selection state before returning
     the selected row
 
     Args:
-        QObject (QObject): Self-explanatory
+        tablewidget (QTableWidget): Self-explanatory
 
     Returns:
         int: Currently selected row. Returns -1 if nothing is selected
@@ -134,20 +140,20 @@ def get_current_row(QObject):
 
         For developers: You can use the regex \.current.*\.connect to search signals if a cleanup is needed
     """
-    if QObject.selectionModel().selectedRows():
-        return QObject.selectionModel().currentIndex().row()
+    if tablewidget.selectionModel().selectedRows():
+        return tablewidget.selectionModel().currentIndex().row()
     return -1
 
 
 #:tag:GUI
-def get_current_item(QObject):
-    """Returns the currently selected item for the given QObject
+def get_current_item(tablewidget: QTableWidget):
+    """Returns the currently selected item for the given QTableWidget
     If you try to use only selectionModel().currentItem() for this purpose, you'll get the last selected item even
     if it was unselected afterwards. This is why this function exists, it checks the selection state before returning
     the selected item. Unlike get_current_row, this function can be used with QTreeWidget
 
     Args:
-        QObject (QObject): Self-explanatory
+        tablewidget (QTableWidget): Self-explanatory
 
     Returns:
         Any: Currently selected item. Returns None if nothing is selected
@@ -160,21 +166,21 @@ def get_current_item(QObject):
 
         For developers: You can use the regex \.current.*\.connect to search signals if a cleanup is needed
     """
-    if QObject.selectionModel().selectedRows():
-        return QObject.currentItem()
+    if tablewidget.selectionModel().selectedRows():
+        return tablewidget.currentItem()
 
 
 #:tag:GUI
-def delete_menu_entries(QMenu, QAction_list):
+def delete_menu_entries(menu: QMenu, QAction_list: list):
     """Deletes given QActions from the QMenu recursively and cleans up the remaining redundant separators and menus
     Doesn't support menus that includes types other than actions, separators and menus
 
     Args:
-        QMenu (QMenu): Self-explanatory
+        menu (QMenu): Self-explanatory
         QAction_list (list): List of QActions. Leave blank if you just want to clean the redundant separators up
     """
 
-    def remove_entries(menu):
+    def remove_entries(menu: QMenu):
         for action in menu.actions():
             try:
                 QAction_list.index(action)
@@ -183,7 +189,7 @@ def delete_menu_entries(QMenu, QAction_list):
             else:
                 menu.removeAction(action)
 
-    def clean_entries(menu):
+    def clean_entries(menu: QMenu):
         for action in menu.actions():
             if action.isSeparator():
                 actions = menu.actions()
@@ -193,18 +199,18 @@ def delete_menu_entries(QMenu, QAction_list):
                         (actions[current_index - 1].isSeparator() and actions[current_index + 1].isSeparator()):
                     menu.removeAction(action)
 
-    remove_entries(QMenu)
-    clean_entries(QMenu)
+    remove_entries(menu)
+    clean_entries(menu)
 
 
 # TODO: This is a really bad design pattern, remove this function after moving classes to their own files
 #:tag:GUI
-def search_parents_by_function(qt_object, func_name):
-    """Search for func_name in the parents of given qt_object. Once function is found, parent that possesses func_name
+def search_parents_by_function(qt_object: QObject, func_name: str):
+    """Search for func_name in the parents of given QObject. Once function is found, parent that possesses func_name
     is returned
 
     Args:
-        qt_object (object): The object that'll be searched for it's parents
+        qt_object (QObject): The object that'll be searched for it's parents
         func_name (str): The name of the function that'll be searched
     """
     while qt_object is not None:
@@ -214,8 +220,8 @@ def search_parents_by_function(qt_object, func_name):
 
 
 #:tag:GUI
-def get_layout_widgets(layout):
-    """Returns the widgets of a layout as a list
+def get_layout_widgets(layout: QLayout):
+    """Returns the widgets of a QLayout as a list
 
     Args:
         layout: Self-explanatory
@@ -227,7 +233,7 @@ def get_layout_widgets(layout):
 
 
 #:tag:GUI
-def contains_reference_mark(string):
+def contains_reference_mark(string: str):
     """Checks if given string contains the reference mark
 
     Args:
@@ -240,11 +246,11 @@ def contains_reference_mark(string):
 
 
 #:tag:GUI
-def append_shortcut_to_tooltip(QObject, QShortcut):
+def append_shortcut_to_tooltip(qt_object: QObject, shortcut: QShortcut):
     """Appends key string of the given QShortcut to the toolTip of the given QObject
 
     Args:
-        QObject (QObject): Self-explanatory
-        QShortcut (QShortcut): Self-explanatory
+        qt_object (QObject): Self-explanatory
+        shortcut (QShortcut): Self-explanatory
     """
-    QObject.setToolTip(QObject.toolTip() + "[" + QShortcut.key().toString() + "]")
+    qt_object.setToolTip(qt_object.toolTip() + "[" + shortcut.key().toString() + "]")
