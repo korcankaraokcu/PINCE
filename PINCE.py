@@ -1758,16 +1758,15 @@ class ProcessForm(QMainWindow, ProcessWindow):
         processlist = utils.search_processes(text)
         self.refresh_process_table(self.tableWidget_ProcessTable, processlist)
 
-    def keyPressEvent(self, e):
-        if e.key() == Qt.Key.Key_Escape:
-            # closes the window whenever ESC key is pressed
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
             self.close()
-        elif e.key() == Qt.Key.Key_Return:
+        elif event.key() == Qt.Key.Key_Return:
             self.pushButton_Open_clicked()
-        elif e.key() == Qt.Key.Key_F1:
+        elif event.key() == Qt.Key.Key_F1:
             self.pushButton_CreateProcess_clicked()
-        elif e.key() == Qt.Key.Key_Down or e.key() == Qt.Key.Key_Up:
-            self.tableWidget_ProcessTable.keyPressEvent(QKeyEvent(QEvent.KeyPress, e.key(), Qt.NoModifier))
+        else:
+            return super().keyPressEvent(event)
 
     # lists currently working processes to table
     def refresh_process_table(self, tablewidget, processlist):
