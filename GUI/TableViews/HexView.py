@@ -30,7 +30,6 @@ class QHexView(QTableView):
         self.verticalHeader().setDefaultSectionSize(21)
         self.horizontalHeader().setMinimumSectionSize(25)
         self.horizontalHeader().setDefaultSectionSize(25)
-        self.setStyleSheet("QTableView {background-color: transparent;}")
         self.setShowGrid(False)
         self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)

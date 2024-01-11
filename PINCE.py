@@ -2870,7 +2870,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.tableWidget_HexView_Address.wheelEvent = QEvent.ignore
         self.tableWidget_HexView_Address.setAutoScroll(False)
-        self.tableWidget_HexView_Address.setStyleSheet("QTableWidget {background-color: transparent;}")
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
         self.tableView_HexView_Hex.selectionModel().currentChanged.connect(self.on_hex_view_current_changed)
