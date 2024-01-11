@@ -14,6 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import QTableView, QAbstractItemView
 from PyQt6.QtCore import Qt
 from GUI.ItemDelegates.HexDelegate import QHexDelegate
@@ -32,6 +33,7 @@ class QHexView(QTableView):
         self.horizontalHeader().setDefaultSectionSize(25)
         self.setStyleSheet("QTableView {background-color: transparent;}")
         self.setShowGrid(False)
+        self.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
         self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -43,6 +45,12 @@ class QHexView(QTableView):
 
     def wheelEvent(self, QWheelEvent):
         QWheelEvent.ignore()
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key.Key_Return and self.state() != QAbstractItemView.State.EditingState:
+            self.edit(self.currentIndex())
+        else:
+            return super().keyPressEvent(event)
 
     def resize_to_contents(self):
         size = self.columnWidth(0) * self.model().columnCount()

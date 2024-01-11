@@ -2858,10 +2858,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
         self.tableView_HexView_Ascii.contextMenuEvent = self.widget_HexView_context_menu_event
 
-        # Ignoring the event sends it directly to the parent, which is widget_HexView
-        self.tableView_HexView_Hex.keyPressEvent = QEvent.ignore
-        self.tableView_HexView_Ascii.keyPressEvent = QEvent.ignore
-
         self.bHexViewScrolling = False  # rejects new scroll requests while scrolling
         self.verticalScrollBar_HexView.wheelEvent = QEvent.ignore
         self.verticalScrollBar_HexView.sliderChange = self.hex_view_scrollbar_sliderchanged
