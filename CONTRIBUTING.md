@@ -191,7 +191,6 @@ These tasks are ordered by importance but feel free to pick any of them. Further
 - Automatic function bypassing(make it return the desired value, hook specific parts etc.)
 - Implement auto-ESP&aimbot
 - Implement thread info widget
-- Implement multi selection for HexView
 - Write at least one test for each function in libpince
 - Refactorize memory write/read functions
 - - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k.
