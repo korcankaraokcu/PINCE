@@ -2843,7 +2843,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.itemSelectionChanged.connect(self.tableWidget_Disassemble_item_selection_changed)
 
     def initialize_hex_view(self):
-        self.hex_view_last_selected_address_int = 0
+        self.hex_view_last_selected_address = 0
         self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None)
         self.hex_model = QHexModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
         self.ascii_model = QAsciiModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
@@ -2868,8 +2868,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.setStyleSheet("QTableWidget {background-color: transparent;}")
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
-        self.tableView_HexView_Hex.selectionModel().currentChanged.connect(self.on_hex_view_current_changed)
-        self.tableView_HexView_Ascii.selectionModel().currentChanged.connect(self.on_ascii_view_current_changed)
+        self.tableView_HexView_Hex.selectionModel().selectionChanged.connect(self.hex_view_selection_changed)
+        self.tableView_HexView_Ascii.selectionModel().selectionChanged.connect(self.hex_view_selection_changed)
 
         self.scrollArea_Hex.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scrollArea_Hex.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -3108,24 +3108,28 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         guiutils.center_scroll_bar(self.verticalScrollBar_Disassemble)
         self.bDisassemblyScrolling = False
 
-    def on_hex_view_current_changed(self, QModelIndex_current):
-        if debugcore.currentpid == -1:
-            return
-        self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.tableView_HexView_Ascii.selectionModel().setCurrentIndex(QModelIndex_current,
-                                                                      QItemSelectionModel.SelectionFlag.ClearAndSelect)
-        self.tableWidget_HexView_Address.selectRow(QModelIndex_current.row())
-        self.hex_view_last_selected_address_int = self.tableView_HexView_Hex.get_selected_address()
+    def hex_view_selection_changed(self, selected, deselected):
+        sender_selection_model: QItemSelectionModel = self.sender()
+        if sender_selection_model == self.tableView_HexView_Hex.selectionModel():
+            other_selection_model = self.tableView_HexView_Ascii.selectionModel()
+        else:
+            other_selection_model = self.tableView_HexView_Hex.selectionModel()
+        self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+        self.tableWidget_HexView_Address.clearSelection()
+        selected_rows = []
+        with QSignalBlocker(other_selection_model):
+            other_selection_model.clearSelection()
+            for index in sender_selection_model.selectedIndexes():
+                other_selection_model.select(index, QItemSelectionModel.SelectionFlag.Select)
+                row = index.row()
+                if row not in selected_rows:
+                    selected_rows.append(row)
+                    self.tableWidget_HexView_Address.selectRow(row)
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-
-    def on_ascii_view_current_changed(self, QModelIndex_current):
-        if debugcore.currentpid == -1:
-            return
-        self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.tableView_HexView_Hex.selectionModel().setCurrentIndex(QModelIndex_current,
-                                                                    QItemSelectionModel.SelectionFlag.ClearAndSelect)
-        self.tableWidget_HexView_Address.selectRow(QModelIndex_current.row())
-        self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self.hex_view_last_selected_address = self.tableView_HexView_Hex.get_selected_address()
+        self.tableView_HexView_Hex.update()
+        self.tableView_HexView_Ascii.update()
+        self.tableWidget_HexView_Address.update()
 
     def hex_update_loop(self):
         if debugcore.currentpid == -1 or exiting:
@@ -3166,7 +3170,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.ascii_model.refresh(int_address, offset, data_array, breakpoint_info)
         for index in range(offset):
             current_address = utils.modulo_address(self.hex_model.current_address + index, debugcore.inferior_arch)
-            if current_address == self.hex_view_last_selected_address_int:
+            if current_address == self.hex_view_last_selected_address:
                 row_index = int(index / HEX_VIEW_COL_COUNT)
                 model_index = QModelIndex(self.hex_model.index(row_index, index % HEX_VIEW_COL_COUNT))
                 self.tableView_HexView_Hex.selectionModel().setCurrentIndex(model_index,

@@ -34,7 +34,6 @@ class QHexView(QTableView):
         self.setStyleSheet("QTableView {background-color: transparent;}")
         self.setShowGrid(False)
         self.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
-        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setAutoScroll(False)
@@ -58,17 +57,16 @@ class QHexView(QTableView):
         self.setMaximumWidth(size)
 
     def get_selected_address(self):
-        index_list = self.selectionModel().selectedIndexes()  # Use selectionModel instead of currentIndex
+        cell = self.currentIndex()
         model: QHexModel = self.model()
         current_address = model.current_address
-        if index_list:
-            cell = index_list[0]
+        if cell:
             current_address = current_address + cell.row() * model.columnCount() + cell.column()
         return utils.modulo_address(current_address, debugcore.inferior_arch)
 
     def on_editor_close(self):
         model: QHexModel = self.model()
-        cell = self.selectionModel().selectedIndexes()[0]
+        cell = self.currentIndex()
         index = cell.row() * model.columnCount() + cell.column()
         address = utils.modulo_address(model.current_address + index, debugcore.inferior_arch)
         data = self.delegate.editor.text()

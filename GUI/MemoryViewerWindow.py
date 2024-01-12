@@ -642,7 +642,6 @@ class Ui_MainWindow_MemoryView(object):
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
         self.tableWidget_HexView_Address = QtWidgets.QTableWidget(parent=self.scrollAreaWidgetContents_2)
         self.tableWidget_HexView_Address.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.tableWidget_HexView_Address.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         self.tableWidget_HexView_Address.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.tableWidget_HexView_Address.setShowGrid(False)
         self.tableWidget_HexView_Address.setObjectName("tableWidget_HexView_Address")
