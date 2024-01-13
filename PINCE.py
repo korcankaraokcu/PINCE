@@ -1101,7 +1101,7 @@ class MainForm(QMainWindow, MainWindow):
             value = "" if value is None else str(value)
             row.setText(VALUE_COL, value)
 
-    def scan_for_values(self):
+    def scan_values(self):
         global threadpool
         if debugcore.currentpid == -1:
             return
@@ -1174,7 +1174,7 @@ class MainForm(QMainWindow, MainWindow):
             scanmem.reset()
             self.comboBox_ScanScope.setEnabled(False)
             self.comboBox_Endianness.setEnabled(False)
-            self.scan_for_values()
+            self.scan_values()
         self.comboBox_ScanType_init()
 
     def pushButton_UndoScan_clicked(self):
@@ -1287,7 +1287,7 @@ class MainForm(QMainWindow, MainWindow):
         return search_for
 
     def pushButton_NextScan_clicked(self):
-        self.scan_for_values()
+        self.scan_values()
         self.pushButton_UndoScan.setEnabled(True)
 
     def scan_callback(self):
