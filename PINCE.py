@@ -1101,6 +1101,19 @@ class MainForm(QMainWindow, MainWindow):
             value = "" if value is None else str(value)
             row.setText(VALUE_COL, value)
 
+    def scan_for_values(self):
+        global threadpool
+        if debugcore.currentpid == -1:
+            return
+        search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
+        self.QWidget_Toolbox.setEnabled(False)
+        self.progressBar.setValue(0)
+        self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
+        self.progress_bar_timer.start(100)
+        scan_thread = Worker(scanmem.send_command, search_for)
+        scan_thread.signals.finished.connect(self.scan_callback)
+        threadpool.start(scan_thread)
+
     def resize_address_table(self):
         self.treeWidget_AddressTable.resizeColumnToContents(FROZEN_COL)
 
@@ -1154,7 +1167,6 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText(tr.NEW_SCAN)
             self.comboBox_ValueType.setEnabled(False)
             self.pushButton_NextScan.setEnabled(True)
-            self.pushButton_UndoScan.setEnabled(True)
             search_scope = self.comboBox_ScanScope.currentData(Qt.ItemDataRole.UserRole)
             endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
             scanmem.send_command(f"option region_scan_level {search_scope}")
@@ -1162,11 +1174,17 @@ class MainForm(QMainWindow, MainWindow):
             scanmem.reset()
             self.comboBox_ScanScope.setEnabled(False)
             self.comboBox_Endianness.setEnabled(False)
-            self.pushButton_NextScan_clicked()  # makes code a little simpler to just implement everything in nextscan
+            self.scan_for_values()
         self.comboBox_ScanType_init()
 
     def pushButton_UndoScan_clicked(self):
-        self.pushButton_NextScan_clicked("undo")
+        global threadpool
+        if debugcore.currentpid == -1:
+            return
+        undo_thread = Worker(scanmem.undo_scan)
+        undo_thread.signals.finished.connect(self.scan_callback)
+        threadpool.start(undo_thread)
+        self.pushButton_UndoScan.setEnabled(False)  # we can undo once so set it to false and re-enable at next scan
 
     def comboBox_ScanType_current_index_changed(self):
         hidden_types = [typedefs.SCAN_TYPE.INCREASED, typedefs.SCAN_TYPE.DECREASED, typedefs.SCAN_TYPE.CHANGED,
@@ -1268,22 +1286,9 @@ class MainForm(QMainWindow, MainWindow):
             return cmp_symbols[type_index] + " " + search_for
         return search_for
 
-    def pushButton_NextScan_clicked(self, search_for=None):
-        global threadpool
-        if debugcore.currentpid == -1:
-            return
-        if not search_for:
-            search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
-        self.QWidget_Toolbox.setEnabled(False)
-        self.progressBar.setValue(0)
-        self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
-        self.progress_bar_timer.start(100)
-        if search_for == "undo":
-            scan_thread = Worker(scanmem.undo_scan)
-        else:
-            scan_thread = Worker(scanmem.send_command, search_for)
-        scan_thread.signals.finished.connect(self.scan_callback)
-        threadpool.start(scan_thread)
+    def pushButton_NextScan_clicked(self):
+        self.scan_for_values()
+        self.pushButton_UndoScan.setEnabled(True)
 
     def scan_callback(self):
         self.progress_bar_timer.stop()
