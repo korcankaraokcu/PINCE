@@ -25,6 +25,14 @@ if [ "$(id -u)" = "0" ]; then
 	exit 1
 fi
 
+if [ ! -d ".git" ]; then
+	echo "Error! Could not find \".git\" folder!"
+	echo "This can happen if you downloaded the ZIP file instead of cloning through git."
+	echo "Please clone the PINCE repository using the \"--recursive\" flag and try again!"
+	echo "For more information, please follow the installation instructions on GitHub."
+	exit 1
+fi
+
 CURRENT_USER="$(whoami)"
 
 if [ -z "$NUM_MAKE_JOBS" ]; then
