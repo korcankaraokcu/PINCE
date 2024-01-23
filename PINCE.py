@@ -34,7 +34,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessag
     QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
     QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
-    QLocale, QSignalBlocker
+    QLocale, QSignalBlocker, QItemSelection
 from typing import Final
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect, json, select
@@ -3119,17 +3119,64 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             other_selection_model = self.tableView_HexView_Ascii.selectionModel()
         else:
             other_selection_model = self.tableView_HexView_Hex.selectionModel()
+        sender_selection = sorted([(idx.row(), idx.column()) for idx in sender_selection_model.selectedIndexes()])
+        first_selection = sender_selection[0]
+        last_selection = sender_selection[-1]
+        if len(sender_selection) == 1:
+            self.hex_selection_start = first_selection
+            self.hex_selection_end = first_selection
+        else:
+            # Selection ends in top left
+            if last_selection == self.hex_selection_start:
+                self.hex_selection_end = first_selection
+            # Selection ends in top right
+            elif last_selection[0] == self.hex_selection_start[0]:
+                self.hex_selection_end = (first_selection[0], last_selection[1])
+            # Selection ends in bottom left
+            elif last_selection[1] == self.hex_selection_start[1]:
+                self.hex_selection_end = (last_selection[0], first_selection[1])
+            # Selection ends in bottom right
+            else:
+                self.hex_selection_end = last_selection
+        with QSignalBlocker(sender_selection_model), QSignalBlocker(other_selection_model):
+            sender_selection_model.clearSelection()
+            other_selection_model.clearSelection()
+            if self.hex_selection_start < self.hex_selection_end:
+                start_point = self.hex_selection_start
+                end_point = self.hex_selection_end
+            else:
+                start_point = self.hex_selection_end
+                end_point = self.hex_selection_start
+            if start_point[0] == end_point[0]:
+                start = sender_selection_model.model().index(*start_point)
+                end = sender_selection_model.model().index(*end_point)
+                selection = QItemSelection(start, end)
+                sender_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
+                other_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
+            else:
+                # First line
+                start = sender_selection_model.model().index(*start_point)
+                end = sender_selection_model.model().index(start_point[0], HEX_VIEW_COL_COUNT-1)
+                selection = QItemSelection(start, end)
+                sender_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
+                other_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
+                # Middle
+                if end_point[0]-start_point[0] > 1:
+                    start = sender_selection_model.model().index(start_point[0]+1, 0)
+                    end = sender_selection_model.model().index(end_point[0]-1, HEX_VIEW_COL_COUNT-1)
+                    selection = QItemSelection(start, end)
+                    sender_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
+                    other_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
+                # Last line
+                start = sender_selection_model.model().index(end_point[0], 0)
+                end = sender_selection_model.model().index(*end_point)
+                selection = QItemSelection(start, end)
+                sender_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
+                other_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
         self.tableWidget_HexView_Address.clearSelection()
-        selected_rows = []
-        with QSignalBlocker(other_selection_model):
-            other_selection_model.clearSelection()
-            for index in sender_selection_model.selectedIndexes():
-                other_selection_model.select(index, QItemSelectionModel.SelectionFlag.Select)
-                row = index.row()
-                if row not in selected_rows:
-                    selected_rows.append(row)
-                    self.tableWidget_HexView_Address.selectRow(row)
+        for row in range(start_point[0], end_point[0]+1):
+            self.tableWidget_HexView_Address.selectRow(row)
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.hex_view_last_selected_address = self.tableView_HexView_Hex.get_selected_address()
         self.tableView_HexView_Hex.update()
