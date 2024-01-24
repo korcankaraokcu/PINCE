@@ -143,6 +143,13 @@ So, old parts of codebase still get their required information by parsing gdb co
 New parts can try to rely on gdb/mi output
 '''
 
+'''
+Functions that require breakpoint commands, such as track_watchpoint and track_breakpoint, requires process to be
+stopped beforehand. If the process is running before we give the breakpoint its commands, there's a chance that the
+breakpoint will be triggered before we give it commands. The process must be stopped to avoid this race condition
+It's also necessary to stop the process to run commands like "watch"
+'''
+
 
 #:tag:GDBCommunication
 def set_gdb_output_mode(output_mode_tuple):
@@ -342,11 +349,20 @@ def execute_func_temporary_interruption(func, *args, **kwargs):
     old_status = inferior_status
     if old_status == typedefs.INFERIOR_STATUS.RUNNING:
         interrupt_inferior(typedefs.STOP_REASON.PAUSE)
-        wait_for_stop()
     result = func(*args, **kwargs)
     if old_status == typedefs.INFERIOR_STATUS.RUNNING:
         continue_inferior()
     return result
+
+
+#:tag:GDBCommunication
+def execute_with_temporary_interruption(func):
+    """Decorator version of execute_func_temporary_interruption"""
+
+    def wrapper(*args, **kwargs):
+        return execute_func_temporary_interruption(func, *args, **kwargs)
+
+    return wrapper
 
 
 #:tag:Debug
@@ -1687,6 +1703,7 @@ def delete_breakpoint(expression):
     return True
 
 
+@execute_with_temporary_interruption
 #:tag:BreakWatchpoints
 def track_watchpoint(expression, length, watchpoint_type):
     """Starts tracking a value by setting a watchpoint at the address holding it
@@ -1738,6 +1755,7 @@ def get_track_watchpoint_info(watchpoint_list):
     return output
 
 
+@execute_with_temporary_interruption
 #:tag:BreakWatchpoints
 def track_breakpoint(expression, register_expressions):
     """Starts tracking a value by setting a breakpoint at the address holding it
@@ -1786,6 +1804,7 @@ def get_track_breakpoint_info(breakpoint):
     return output
 
 
+@execute_with_temporary_interruption
 #:tag:Tools
 def trace_instructions(expression, max_trace_count=1000, trigger_condition="", stop_condition="",
                        step_mode=typedefs.STEP_MODE.SINGLE_STEP,

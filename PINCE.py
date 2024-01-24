@@ -4540,6 +4540,8 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.update_timer = QTimer(timeout=self.update_list)
         self.stopped = False
         self.address = address
+        self.info = {}
+        self.last_selected_row = 0
         if watchpoint_type == typedefs.WATCHPOINT_TYPE.WRITE_ONLY:
             string = tr.OPCODE_WRITING_TO.format(address)
         elif watchpoint_type == typedefs.WATCHPOINT_TYPE.READ_ONLY:
@@ -4549,13 +4551,11 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         else:
             raise Exception("Watchpoint type is invalid: " + str(watchpoint_type))
         self.setWindowTitle(string)
-        breakpoints = debugcore.track_watchpoint(address, length, watchpoint_type)
-        if not breakpoints:
+        self.breakpoints = debugcore.track_watchpoint(address, length, watchpoint_type)
+        if not self.breakpoints:
             QMessageBox.information(self, tr.ERROR, tr.TRACK_WATCHPOINT_FAILED.format(address))
+            self.close()
             return
-        self.breakpoints = breakpoints
-        self.info = {}
-        self.last_selected_row = 0
         self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
         self.pushButton_Refresh.clicked.connect(self.update_list)
         self.tableWidget_Opcodes.itemDoubleClicked.connect(self.tableWidget_Opcodes_item_double_clicked)
@@ -4632,16 +4632,16 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.update_values_timer = QTimer(timeout=self.update_values)
         self.stopped = False
         self.address = address
+        self.info = {}
+        self.last_selected_row = 0
         self.setWindowFlags(Qt.WindowType.Window)
         guiutils.center_to_parent(self)
         self.setWindowTitle(tr.ACCESSED_BY_INSTRUCTION.format(instruction))
-        breakpoint = debugcore.track_breakpoint(address, register_expressions)
-        if not breakpoint:
+        self.breakpoint = debugcore.track_breakpoint(address, register_expressions)
+        if not self.breakpoint:
             QMessageBox.information(self, tr.ERROR, tr.TRACK_BREAKPOINT_FAILED.format(address))
+            self.close()
             return
-        self.breakpoint = breakpoint
-        self.info = {}
-        self.last_selected_row = 0
         guiutils.fill_value_combobox(self.comboBox_ValueType)
         self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
         self.tableWidget_TrackInfo.itemDoubleClicked.connect(self.tableWidget_TrackInfo_item_double_clicked)
