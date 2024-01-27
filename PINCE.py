@@ -1641,9 +1641,9 @@ class MainForm(QMainWindow, MainWindow):
                 debugcore.write_memory(address, vt.value_index, value, vt.zero_terminate, vt.endian)
             it += 1
 
-    def treeWidget_AddressTable_item_clicked(self, row, column):
+    def treeWidget_AddressTable_item_clicked(self, row: QTreeWidgetItem, column: int):
         if column == FROZEN_COL:
-            frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+            frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
             is_checked = row.checkState(FROZEN_COL) == Qt.CheckState.Checked
             is_frozen = frozen.enabled
 
@@ -1668,7 +1668,8 @@ class MainForm(QMainWindow, MainWindow):
                     frozen.value = row.text(VALUE_COL)
                 else:
                     frozen.enabled = False # it has just been toggled off
-                
+                    self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT)
+
 
     def treeWidget_AddressTable_change_repr(self, new_repr):
         value_type = guiutils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.ItemDataRole.UserRole)
