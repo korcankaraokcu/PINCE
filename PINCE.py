@@ -880,7 +880,6 @@ class MainForm(QMainWindow, MainWindow):
             frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
             frozen.freeze_type = freeze_type
 
-            # TODO: Create a QWidget subclass with signals so freeze type can be changed by clicking on the cell
             if freeze_type == typedefs.FREEZE_TYPE.DEFAULT:
                 row.setText(FROZEN_COL, "")
                 row.setForeground(FROZEN_COL, QBrush())
@@ -1620,12 +1619,32 @@ class MainForm(QMainWindow, MainWindow):
 
     def treeWidget_AddressTable_item_clicked(self, row, column):
         if column == FROZEN_COL:
-            if row.checkState(FROZEN_COL) == Qt.CheckState.Checked:
-                frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
-                frozen.value = row.text(VALUE_COL)
-            else:
-                row.setText(FROZEN_COL, "")
-                row.setForeground(FROZEN_COL, QBrush())
+            frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+            is_checked = row.checkState(FROZEN_COL) == Qt.CheckState.Checked
+            is_frozen = frozen.enabled
+
+            frozen_state_toggled = is_checked and not is_frozen or not is_checked and is_frozen
+            # this helps determine whether the user clicked checkbox or the text
+            # if the user clicked the text, change the freeze type
+
+            if not frozen_state_toggled and is_checked:
+                # user clicked the text, iterate through the freeze type
+                if frozen.freeze_type == typedefs.FREEZE_TYPE.DECREMENT: 
+                    # decrement is the last freeze type
+                    self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT)
+                else:
+                    self.change_freeze_type(frozen.freeze_type + 1)
+
+            if frozen_state_toggled:
+                if is_checked:
+                    frozen.enabled = True
+                    # reapply the freeze type, to reflect the current freeze type in the UI
+                    # otherwise the UI will show DEFAULT freeze type after enabling instead of the actual type
+                    self.change_freeze_type(frozen.freeze_type)
+                    frozen.value = row.text(VALUE_COL)
+                else:
+                    frozen.enabled = False # it has just been toggled off
+                
 
     def treeWidget_AddressTable_change_repr(self, new_repr):
         value_type = guiutils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.ItemDataRole.UserRole)
