@@ -397,9 +397,10 @@ class GDBInitializeException(Exception):
 
 
 class Frozen:
-    def __init__(self, value, freeze_type):
+    def __init__(self, value, freeze_type=FREEZE_TYPE.DEFAULT):
         self.value = value
         self.freeze_type = freeze_type
+        self.enabled = False
 
 
 class ValueType:
