@@ -555,6 +555,10 @@ class MainForm(QMainWindow, MainWindow):
             QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan))
         self.lineEdit_Scan2.setValidator(
             QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan2))
+        self.lineEdit_Scan.keyPressEvent_original = self.lineEdit_Scan.keyPressEvent
+        self.lineEdit_Scan2.keyPressEvent_original = self.lineEdit_Scan2.keyPressEvent
+        self.lineEdit_Scan.keyPressEvent = self.lineEdit_Scan_on_key_press_event
+        self.lineEdit_Scan2.keyPressEvent = self.lineEdit_Scan2_on_key_press_event
         self.comboBox_ScanType.currentIndexChanged.connect(self.comboBox_ScanType_current_index_changed)
         self.comboBox_ScanType_current_index_changed()
         self.pushButton_Settings.clicked.connect(self.pushButton_Settings_clicked)
@@ -1154,7 +1158,6 @@ class MainForm(QMainWindow, MainWindow):
             self.lineEdit_Scan.setValidator(QRegularExpressionValidator(self.qRegExp_dec, parent=self.lineEdit_Scan))
             self.lineEdit_Scan2.setValidator(QRegularExpressionValidator(self.qRegExp_dec, parent=self.lineEdit_Scan2))
 
-    # TODO add a damn keybind for this...
     def pushButton_NewFirstScan_clicked(self):
         if debugcore.currentpid == -1:
             self.comboBox_ScanType_init()
@@ -1175,6 +1178,27 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_Endianness.setEnabled(False)
             self.scan_values()
         self.comboBox_ScanType_init()
+
+    def handle_line_edit_scan_key_press_event(self, event):
+        valid_keys = [Qt.Key.Key_Return, Qt.Key.Key_Enter]
+        if event.key() in valid_keys and Qt.KeyboardModifier.ControlModifier in event.modifiers():
+            self.pushButton_NewFirstScan_clicked()
+            return
+
+        if event.key() in valid_keys:
+            if self.scan_mode == typedefs.SCAN_MODE.ONGOING:
+                self.pushButton_NextScan_clicked()
+            else:
+                self.pushButton_NewFirstScan_clicked()
+            return
+        
+    def lineEdit_Scan_on_key_press_event(self, event):
+        self.handle_line_edit_scan_key_press_event(event)
+        self.lineEdit_Scan.keyPressEvent_original(event)
+
+    def lineEdit_Scan2_on_key_press_event(self, event):
+        self.handle_line_edit_scan_key_press_event(event)
+        self.lineEdit_Scan2.keyPressEvent_original(event)
 
     def pushButton_UndoScan_clicked(self):
         global threadpool
