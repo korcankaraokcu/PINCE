@@ -1804,6 +1804,12 @@ class ProcessForm(QMainWindow, ProcessWindow):
 
     # gets the pid out of the selection to attach
     def pushButton_Open_clicked(self):
+        index = self.tableWidget_ProcessTable.currentIndex()
+        row_count = self.tableWidget_ProcessTable.rowCount()
+        if index.row() == -1 and row_count == 1:
+            # autoselect first row if there is only one row
+            self.tableWidget_ProcessTable.setCurrentCell(0, 0)
+            
         current_item = self.tableWidget_ProcessTable.item(self.tableWidget_ProcessTable.currentIndex().row(), 0)
         if current_item is None:
             QMessageBox.information(self, tr.ERROR, tr.SELECT_PROCESS)
