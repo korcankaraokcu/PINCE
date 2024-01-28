@@ -171,16 +171,24 @@ class VALUE_INDEX:
     AOB = 10  # Array of Bytes
 
     @staticmethod
-    def is_integer(value_index):
+    def is_integer(value_index: int):
         return VALUE_INDEX.INT8 <= value_index <= VALUE_INDEX.INT64
 
     @staticmethod
-    def is_string(value_index):
+    def is_float(value_index: int):
+        return VALUE_INDEX.FLOAT32 <= value_index <= VALUE_INDEX.FLOAT64
+
+    @staticmethod
+    def is_number(value_index: int):
+        return VALUE_INDEX.INT8 <= value_index <= VALUE_INDEX.FLOAT64
+
+    @staticmethod
+    def is_string(value_index: int):
         return VALUE_INDEX.STRING_ASCII <= value_index <= VALUE_INDEX.STRING_UTF32
 
     @staticmethod
-    def has_length(value_index):
-        return VALUE_INDEX.STRING_ASCII <= value_index <= VALUE_INDEX.STRING_UTF32 or value_index == VALUE_INDEX.AOB
+    def has_length(value_index: int):
+        return VALUE_INDEX.STRING_ASCII <= value_index <= VALUE_INDEX.AOB
 
 
 class SCAN_INDEX:
