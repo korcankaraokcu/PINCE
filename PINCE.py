@@ -1625,18 +1625,17 @@ class MainForm(QMainWindow, MainWindow):
         while it.value():
             row = it.value()
             if row.checkState(FROZEN_COL) == Qt.CheckState.Checked:
-                vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+                vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 address = row.text(ADDR_COL).strip("P->")
-                frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+                frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 value = frozen.value
                 freeze_type = frozen.freeze_type
-                if typedefs.VALUE_INDEX.is_integer(vt.value_index):
+                if typedefs.VALUE_INDEX.is_number(vt.value_index):
                     new_value = debugcore.read_memory(address, vt.value_index, endian=vt.endian)
-                    new_value = int(new_value, 0) if isinstance(new_value, str) else new_value
-                    if freeze_type == typedefs.FREEZE_TYPE.INCREMENT and new_value > int(value, 0) or \
-                            freeze_type == typedefs.FREEZE_TYPE.DECREMENT and new_value < int(value, 0):
-                        frozen.value = str(new_value)
-                        debugcore.write_memory(address, vt.value_index, frozen.value, endian=vt.endian)
+                    if freeze_type == typedefs.FREEZE_TYPE.INCREMENT and new_value > value or \
+                            freeze_type == typedefs.FREEZE_TYPE.DECREMENT and new_value < value:
+                        frozen.value = new_value
+                        debugcore.write_memory(address, vt.value_index, new_value, endian=vt.endian)
                         continue
                 debugcore.write_memory(address, vt.value_index, value, vt.zero_terminate, vt.endian)
             it += 1
@@ -1665,7 +1664,8 @@ class MainForm(QMainWindow, MainWindow):
                     # reapply the freeze type, to reflect the current freeze type in the UI
                     # otherwise the UI will show DEFAULT freeze type after enabling instead of the actual type
                     self.change_freeze_type(frozen.freeze_type)
-                    frozen.value = row.text(VALUE_COL)
+                    vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+                    frozen.value = utils.parse_string(row.text(VALUE_COL), vt.value_index)
                 else:
                     frozen.enabled = False # it has just been toggled off
                     self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT)
@@ -1690,16 +1690,14 @@ class MainForm(QMainWindow, MainWindow):
             new_value = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
                 address = row.text(ADDR_COL).strip("P->")
-                vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-                if typedefs.VALUE_INDEX.has_length(vt.value_index):
-                    unknown_type = utils.parse_string(new_value, vt.value_index)
-                    if unknown_type is not None:
-                        vt.length = len(unknown_type)
-                        row.setText(TYPE_COL, vt.text())
-                frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
-                frozen.value = new_value
-                row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
-                debugcore.write_memory(address, vt.value_index, new_value, vt.zero_terminate, vt.endian)
+                vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+                parsed_value = utils.parse_string(new_value, vt.value_index)
+                if typedefs.VALUE_INDEX.has_length(vt.value_index) and parsed_value != None:
+                    vt.length = len(parsed_value)
+                    row.setText(TYPE_COL, vt.text())
+                frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+                frozen.value = parsed_value
+                debugcore.write_memory(address, vt.value_index, parsed_value, vt.zero_terminate, vt.endian)
             self.update_address_table()
 
     def treeWidget_AddressTable_edit_desc(self):

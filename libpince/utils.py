@@ -557,7 +557,7 @@ def get_to_pince_file(pid):
 
 
 #:tag:ValueType
-def parse_string(string, value_index):
+def parse_string(string: str, value_index: int):
     """Parses the string according to the given value_index
 
     Args:
@@ -575,7 +575,6 @@ def parse_string(string, value_index):
         string="42 DE AD BE EF 24",value_index=typedefs.VALUE_INDEX.AOB--▼
         returned_list=[66, 222, 173, 190, 239, 36]
     """
-    string = str(string)
     if not string:
         print("please enter a string first")
         return
@@ -599,7 +598,7 @@ def parse_string(string, value_index):
         except:
             print(string + " can't be parsed as array of bytes")
             return
-    elif value_index == typedefs.VALUE_INDEX.FLOAT32 or value_index == typedefs.VALUE_INDEX.FLOAT64:
+    elif typedefs.VALUE_INDEX.is_float(value_index):
         try:
             string = float(string)
         except:

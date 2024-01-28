@@ -903,7 +903,8 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
 
 
 #:tag:MemoryRW
-def write_memory(address, value_index, value, zero_terminate=True, endian=typedefs.ENDIANNESS.HOST):
+def write_memory(address: str | int, value_index: int, value: str | int | float | list[int], zero_terminate=True,
+                 endian=typedefs.ENDIANNESS.HOST):
     """Sets the given value to the given address
 
     If any errors occurs while setting value to the according address, it'll be ignored but the information about
@@ -912,7 +913,7 @@ def write_memory(address, value_index, value, zero_terminate=True, endian=typede
     Args:
         address (str, int): Can be a hex string or an integer
         value_index (int): Can be a member of typedefs.VALUE_INDEX
-        value (str): The value that'll be written to the given address
+        value (str, int, float, list): The value that'll be written to the given address
         zero_terminate (bool): If True, appends a null byte to the value. Only used when value_index is STRING
         endian (int): Can be a member of typedefs.ENDIANNESS
 
@@ -927,9 +928,12 @@ def write_memory(address, value_index, value, zero_terminate=True, endian=typede
         except:
             # print(str(address) + " is not a valid address")
             return
-    write_data = utils.parse_string(value, value_index)
-    if write_data is None:
-        return
+    if isinstance(value, str):
+        write_data = utils.parse_string(value, value_index)
+        if write_data is None:
+            return
+    else:
+        write_data = value
     encoding, option = typedefs.string_index_to_encoding_dict.get(value_index, (None, None))
     if encoding is None:
         if value_index is typedefs.VALUE_INDEX.AOB:
