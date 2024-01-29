@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import gdb, sys, os, traceback, functools
+import gdb, sys, traceback, functools
 from collections import OrderedDict
 
 # This is some retarded hack
@@ -23,15 +23,10 @@ PINCE_PATH = gdb.parse_and_eval("$PINCE_PATH").string()
 GDBINIT_AA_PATH = gdb.parse_and_eval("$GDBINIT_AA_PATH").string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
-from libpince import utils, typedefs, regexes
+from libpince import typedefs, regexes
 
 inferior = gdb.selected_inferior()
-pid = inferior.pid
-if pid == 0:
-    pid = -1
-    inferior_name = ""
-else:
-    inferior_name = utils.get_process_name(pid)
+pid = -1 if inferior.pid == 0 else inferior.pid
 mem_file = "/proc/" + str(pid) + "/mem"
 
 void_ptr = gdb.lookup_type("void").pointer()
@@ -118,7 +113,7 @@ def get_float_registers():
     return contents_send
 
 
-def examine_expression(expression, regions=None):
+def examine_expression(expression: str, regions=None):
     try:
         value = gdb.parse_and_eval(expression).cast(void_ptr)
     except Exception as e:
@@ -135,21 +130,17 @@ def examine_expression(expression, regions=None):
                 index = int(index.group(1))
             else:
                 index = 0
-            count = 0
-            if expression == inferior_name or regexes.file_with_extension.search(expression):
-                for address, _, _, _, _, _, path in regions:
-                    file_name = os.path.split(path)[1]
-                    if expression in file_name:
-                        if index == count:
-                            address = "0x"+address
-                            try:
-                                address = hex(eval(address+offset))
-                            except Exception as e:
-                                print(e)
-                                return typedefs.tuple_examine_expression(None, None, None)
-                            return typedefs.tuple_examine_expression(address+file_name, address, file_name)
-                        else:
-                            count += 1
+            if expression in regions:
+                start_address_list = regions[expression]
+                if len(start_address_list) > index:
+                    address = start_address_list[index]
+                    try:
+                        address = hex(eval(address+offset))
+                    except Exception as e:
+                        print(e)
+                        return typedefs.tuple_examine_expression(None, None, None)
+                    return typedefs.tuple_examine_expression(f"{address} {expression}", address, expression)
+            return typedefs.tuple_examine_expression(None, None, None)
         print(e)
         return typedefs.tuple_examine_expression(None, None, None)
     result = regexes.address_with_symbol.search(str(value))

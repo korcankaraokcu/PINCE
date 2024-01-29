@@ -91,27 +91,34 @@ def get_regions(pid):
 
 
 #:tag:Processes
-def get_region_set(pid):
-    """Returns memory regions of a process, removes path duplicates and empty paths
+def get_region_dict(pid: int) -> dict[str, list[str]]:
+    """Returns memory regions of a process as a dictionary where key is the path tail and value is the list of the
+    corresponding start addresses of the tail, empty paths will be ignored. Also adds shortcuts for file extensions,
+    returned dict will include both sonames, with and without version information
 
     Args:
         pid (int): PID of the process
 
     Returns:
-        list: List of (start_address, file_name) -> (str, str)
+        dict: {file_name:start_address_list}
     """
-    region_set = []
-    current_file = ""
+    region_dict: dict[str, list[str]] = {}
     for item in get_regions(pid):
         start_addr, _, _, _, _, _, path = item
         if not path:
             continue
-        head, tail = os.path.split(path)
-        if not head or tail == current_file:
-            continue
-        current_file = tail
-        region_set.append(("0x"+start_addr, tail))
-    return region_set
+        _, tail = os.path.split(path)
+        start_addr = "0x"+start_addr
+        short_name = regexes.file_with_extension.search(tail)
+        if tail in region_dict:
+            region_dict[tail].append(start_addr)
+            if short_name:
+                region_dict[short_name.group(0)].append(start_addr)
+        else:
+            region_dict[tail] = [start_addr]
+            if short_name:
+                region_dict[short_name.group(0)] = [start_addr]
+    return region_dict
 
 
 #:tag:Processes

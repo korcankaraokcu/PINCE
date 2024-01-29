@@ -603,7 +603,7 @@ class ExamineExpressions(gdb.Command):
         contents_recv = receive_from_pince()
         # contents_recv format: [expression1, expression2, ...]
 
-        regions = utils.get_regions(pid)
+        regions = utils.get_region_dict(pid)
         for expression in contents_recv:
             result_tuple = gdbutils.examine_expression(expression, regions)
             data_read_list.append(result_tuple)
