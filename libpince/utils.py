@@ -110,14 +110,18 @@ def get_region_dict(pid: int) -> dict[str, list[str]]:
         _, tail = os.path.split(path)
         start_addr = "0x"+start_addr
         short_name = regexes.file_with_extension.search(tail)
+        if short_name:
+            short_name = short_name.group(0)
+            if short_name == tail:
+                short_name = None
         if tail in region_dict:
             region_dict[tail].append(start_addr)
             if short_name:
-                region_dict[short_name.group(0)].append(start_addr)
+                region_dict[short_name].append(start_addr)
         else:
             region_dict[tail] = [start_addr]
             if short_name:
-                region_dict[short_name.group(0)] = [start_addr]
+                region_dict[short_name] = [start_addr]
     return region_dict
 
 
