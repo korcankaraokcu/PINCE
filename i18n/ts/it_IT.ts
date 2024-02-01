@@ -1870,21 +1870,6 @@ Changing output mode only affects commands sent. Any other output coming from ex
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Enter the watchpoint length in size of bytes</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>{} can't be parsed as an integer</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Breakpoint length can't be lower than {}</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
       <source>Failed to set watchpoint at address {}</source>
       <translation type="unfinished" />
     </message>
