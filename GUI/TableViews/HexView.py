@@ -14,7 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtGui import QKeyEvent, QWheelEvent
 from PyQt6.QtWidgets import QTableView, QAbstractItemView
 from PyQt6.QtCore import Qt
 from GUI.ItemDelegates.HexDelegate import QHexDelegate
@@ -42,8 +42,8 @@ class QHexView(QTableView):
         self.delegate.closeEditor.connect(self.on_editor_close)
         self.setItemDelegate(self.delegate)
 
-    def wheelEvent(self, QWheelEvent):
-        QWheelEvent.ignore()
+    def wheelEvent(self, event: QWheelEvent):
+        event.ignore()
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Return and self.state() != QAbstractItemView.State.EditingState:
@@ -55,14 +55,6 @@ class QHexView(QTableView):
         size = self.columnWidth(0) * self.model().columnCount()
         self.setMinimumWidth(size)
         self.setMaximumWidth(size)
-
-    def get_selected_address(self):
-        cell = self.currentIndex()
-        model: QHexModel = self.model()
-        current_address = model.current_address
-        if cell:
-            current_address = current_address + cell.row() * model.columnCount() + cell.column()
-        return utils.modulo_address(current_address, debugcore.inferior_arch)
 
     def on_editor_close(self):
         model: QHexModel = self.model()

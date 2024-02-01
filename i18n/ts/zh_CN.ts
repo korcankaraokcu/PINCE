@@ -1899,21 +1899,6 @@ pince-execute-from-so-file lib.func(params)：运行 lib 中的一个函数
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Enter the watchpoint length in size of bytes</source>
-      <translation>输入监视点长度，以字节为单位</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>{} can't be parsed as an integer</source>
-      <translation>{} 无法解析为整数</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Breakpoint length can't be lower than {}</source>
-      <translation>断点长度不能小于 {}</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
       <source>Failed to set watchpoint at address {}</source>
       <translation>无法在地址 {} 设置监视点</translation>
     </message>

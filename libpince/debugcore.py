@@ -1392,7 +1392,7 @@ def restore_instruction(start_address):
 
 
 #:tag:BreakWatchpoints
-def get_breakpoint_info():
+def get_breakpoint_info() -> list[typedefs.tuple_breakpoint_info]:
     """Returns current breakpoint/watchpoint list
 
     Returns:
@@ -1452,27 +1452,28 @@ def get_breakpoint_info():
 
 
 #:tag:BreakWatchpoints
-def check_address_in_breakpoints(address, range_offset=0):
+def get_breakpoints_in_range(address: str | int, length: int = 1) -> list[typedefs.tuple_breakpoint_info]:
     """Checks if given address exists in breakpoint list
 
     Args:
-        address (int,str): Hex address or an int
-        range_offset (int): If this parameter is different than 0, the range between address and address+offset is
-        checked instead of just address itself
+        address (str,int): Start address of the range, hex address or an int
+        length (int): If this parameter is bigger than 1, the range between address and address+length-1 will be
+        checked instead of just the address itself
 
     Returns:
-        typedefs.tuple_breakpoint_info: Info of the existing breakpoint for given address range
-        None: If it doesn't exist
+        list: A list of typedefs.tuple_breakpoint_info, info of the existing breakpoints for given address range
     """
+    breakpoint_list = []
     if type(address) != int:
         address = int(address, 0)
-    max_address = max(address, address + range_offset)
-    min_address = min(address, address + range_offset)
+    max_address = max(address, address+length-1)
+    min_address = min(address, address+length-1)
     breakpoint_info = get_breakpoint_info()
     for item in breakpoint_info:
         breakpoint_address = int(item.address, 16)
-        if not (max_address < breakpoint_address or min_address > breakpoint_address + item.size - 1):
-            return item
+        if not (max_address < breakpoint_address or min_address > breakpoint_address+item.size-1):
+            breakpoint_list.append(item)
+    return breakpoint_list
 
 
 #:tag:BreakWatchpoints
@@ -1516,7 +1517,7 @@ def add_breakpoint(expression, breakpoint_type=typedefs.BREAKPOINT_TYPE.HARDWARE
     if not str_address:
         print("expression for breakpoint is not valid")
         return
-    if check_address_in_breakpoints(str_address):
+    if get_breakpoints_in_range(str_address):
         print("breakpoint/watchpoint for address " + str_address + " is already set")
         return
     if breakpoint_type == typedefs.BREAKPOINT_TYPE.HARDWARE:
@@ -1570,16 +1571,16 @@ def add_watchpoint(expression, length=4, watchpoint_type=typedefs.WATCHPOINT_TYP
     else:
         max_length = 4
     while remaining_length > 0:
-        if check_address_in_breakpoints(str_address_int):
+        if remaining_length >= max_length:
+            breakpoint_length = max_length
+        else:
+            breakpoint_length = remaining_length
+        if get_breakpoints_in_range(str_address_int, breakpoint_length):
             print("breakpoint/watchpoint for address " + hex(str_address_int) + " is already set. Bailing out...")
             break
         if not hardware_breakpoint_available():
             print("All hardware breakpoint slots are being used, unable to set a new watchpoint. Bailing out...")
             break
-        if remaining_length >= max_length:
-            breakpoint_length = max_length
-        else:
-            breakpoint_length = remaining_length
         cmd = f"{watch_command} * (char[{breakpoint_length}] *) {hex(str_address_int)}"
         output = execute_func_temporary_interruption(send_command, cmd)
         if regexes.breakpoint_created.search(output):
@@ -1635,12 +1636,12 @@ def modify_breakpoint(expression, modify_what, condition=None, count=None):
                 modification_list = item
                 break
     for breakpoint in modification_list:
-        found_breakpoint = check_address_in_breakpoints(breakpoint[0])
+        found_breakpoint = get_breakpoints_in_range(breakpoint[0])
         if not found_breakpoint:
             print("no such breakpoint exists for address " + str_address)
             continue
         else:
-            breakpoint_number = found_breakpoint.number
+            breakpoint_number = found_breakpoint[0].number
         if modify_what == typedefs.BREAKPOINT_MODIFY.CONDITION:
             if condition is None:
                 print("Please set condition first")
@@ -1692,12 +1693,12 @@ def delete_breakpoint(expression):
                 del chained_breakpoints[n]
                 break
     for breakpoint in deletion_list:
-        found_breakpoint = check_address_in_breakpoints(breakpoint[0])
+        found_breakpoint = get_breakpoints_in_range(breakpoint[0])
         if not found_breakpoint:
             print("no such breakpoint exists for address " + str_address)
             continue
         else:
-            breakpoint_number = found_breakpoint.number
+            breakpoint_number = found_breakpoint[0].number
         global breakpoint_on_hit_dict
         try:
             del breakpoint_on_hit_dict[breakpoint_number]
