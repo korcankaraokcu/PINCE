@@ -3267,10 +3267,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         return start_point, end_point
 
     def hex_update_loop(self):
-        if debugcore.currentpid == -1 or exiting:
-            return
         offset = HEX_VIEW_ROW_COUNT*HEX_VIEW_COL_COUNT
-        updated_array = debugcore.hex_dump(self.hex_model.current_address, offset)
+        if debugcore.currentpid == -1 or exiting:
+            updated_array = ["??"]*offset
+        else:
+            updated_array = debugcore.hex_dump(self.hex_model.current_address, offset)
         self.hex_model.update_loop(updated_array)
         self.ascii_model.update_loop(updated_array)
 
