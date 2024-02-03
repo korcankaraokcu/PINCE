@@ -1477,7 +1477,7 @@ def get_breakpoints_in_range(address: str | int, length: int = 1) -> list[typede
 
 
 #:tag:BreakWatchpoints
-def hardware_breakpoint_available():
+def hardware_breakpoint_available() -> bool:
     """Checks if there is an available hardware breakpoint slot
 
     Returns:
@@ -1485,7 +1485,7 @@ def hardware_breakpoint_available():
 
     Todo:
         Check debug registers to determine hardware breakpoint state rather than relying on gdb output because inferior
-        might modify it's own debug registers
+        might modify its own debug registers
     """
     breakpoint_info = get_breakpoint_info()
     hw_bp_total = 0
@@ -1536,10 +1536,10 @@ def add_breakpoint(expression, breakpoint_type=typedefs.BREAKPOINT_TYPE.HARDWARE
     else:
         return
 
-
+@execute_with_temporary_interruption
 #:tag:BreakWatchpoints
-def add_watchpoint(expression, length=4, watchpoint_type=typedefs.WATCHPOINT_TYPE.BOTH,
-                   on_hit=typedefs.BREAKPOINT_ON_HIT.BREAK):
+def add_watchpoint(expression: str, length: int = 4, watchpoint_type: int = typedefs.WATCHPOINT_TYPE.BOTH,
+                   on_hit: int = typedefs.BREAKPOINT_ON_HIT.BREAK) -> list[str]:
     """Adds a watchpoint at the address evaluated by the given expression
 
     Args:
