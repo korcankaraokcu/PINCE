@@ -758,9 +758,6 @@ def aob_to_str(list_of_bytes, encoding="ascii"):
     else:
         byteList = []
         byteList.append(list_of_bytes)
-
-    newByte=0
-
     for sByte in byteList:
         if (sByte == "??"):
             hexString += f'{63:02x}' # replace ?? with a single ?
@@ -781,7 +778,6 @@ def aob_to_str(list_of_bytes, encoding="ascii"):
             #    hexString += f'{46:02x}' # replace non-printable chars with a period (.)
             #else:
             hexString += f'{byte:02x}'
-
     hexBytes=bytes.fromhex(hexString)
     return hexBytes.decode(encoding, "surrogateescape")
 

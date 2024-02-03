@@ -22,12 +22,12 @@ from libpince import utils, debugcore
 class QHexModel(QAbstractTableModel):
     def __init__(self, row_count, column_count, parent=None):
         super().__init__(parent)
-        self.data_array = []
         self.breakpoint_list = set()
         self.row_count = row_count
         self.column_count = column_count
         self.current_address = 0
         offset = row_count*column_count
+        self.data_array = ["??"]*offset
         self.cell_animation = [0]*offset
         self.cell_change_color = QColor(QColorConstants.Red)
         self.breakpoint_color = QColor(QColorConstants.Green)
