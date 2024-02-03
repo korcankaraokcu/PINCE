@@ -3046,6 +3046,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         menu.addSeparator()
         add_address = menu.addAction(f"{tr.ADD_TO_ADDRESS_LIST}[Ctrl+A]")
         menu.addSeparator()
+        copy_selection = menu.addAction(f"{tr.COPY}[Ctrl+C]")
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
         menu.addSeparator()
         watchpoint_menu = menu.addMenu(tr.SET_WATCHPOINT)
@@ -3066,6 +3067,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             go_to: self.exec_hex_view_go_to_dialog,
             disassemble: lambda: self.disassemble_expression(hex(addr), append_to_travel_history=True),
             add_address: self.exec_hex_view_add_address_dialog,
+            copy_selection: self.copy_hex_view_selection,
             refresh: self.refresh_hex_view,
             watchpoint_write: lambda: self.toggle_watchpoint(addr, length, typedefs.WATCHPOINT_TYPE.WRITE_ONLY),
             watchpoint_read: lambda: self.toggle_watchpoint(addr, length, typedefs.WATCHPOINT_TYPE.READ_ONLY),
@@ -3105,6 +3107,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             desc, address, vt = manual_address_dialog.get_values()
             self.parent().add_entry_to_addresstable(desc, address, vt)
             self.parent().update_address_table()
+
+    def copy_hex_view_selection(self):
+        data = debugcore.hex_dump(self.hex_selection_address_begin, self.get_hex_selection_length())
+        if self.focusWidget() == self.tableView_HexView_Ascii:
+            display_text = utils.aob_to_str(data)
+        else:
+            display_text = " ".join(data)
+        app.clipboard().setText(display_text)
 
     def hex_view_scroll_up(self):
         self.verticalScrollBar_HexView.setValue(1)
@@ -3816,6 +3826,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
              lambda: self.disassemble_expression(hex(self.hex_selection_address_begin), append_to_travel_history=True)),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_A), self.exec_hex_view_add_address_dialog),
+            (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C), self.copy_hex_view_selection),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh_hex_view),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageUp), self.hex_view_scroll_up),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageDown), self.hex_view_scroll_down),
