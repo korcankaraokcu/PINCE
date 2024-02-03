@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt6.QtGui import QKeyEvent, QWheelEvent
 from PyQt6.QtWidgets import QTableView, QAbstractItemView
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QItemSelectionModel, QModelIndex, Qt
 from GUI.ItemDelegates.HexDelegate import QHexDelegate
 from GUI.AbstractTableModels.HexModel import QHexModel
 from libpince import utils, debugcore, typedefs
@@ -50,6 +50,13 @@ class QHexView(QTableView):
             self.edit(self.currentIndex())
         else:
             return super().keyPressEvent(event)
+
+    def selectionCommand(self, index: QModelIndex, event: QKeyEvent):
+        if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
+            # Disable multi-selection when Ctrl key is pressed
+            return QItemSelectionModel.SelectionFlag.ClearAndSelect
+        else:
+            return super().selectionCommand(index, event)
 
     def resize_to_contents(self):
         size = self.columnWidth(0) * self.model().columnCount()
