@@ -130,7 +130,7 @@ if __name__ == '__main__':
 instances = []  # Holds temporary instances that will be deleted later on
 
 # settings
-current_settings_version = "30"  # Increase version by one if you change settings
+current_settings_version = "31"  # Increase version by one if you change settings
 update_table = bool
 table_update_interval = int
 freeze_interval = int
@@ -627,6 +627,9 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("interrupt_signal", "SIGINT")
         self.settings.setValue("handle_signals", json.dumps(default_signals))
         self.settings.endGroup()
+        self.settings.beginGroup("Java")
+        self.settings.setValue("ignore_segfault", True)
+        self.settings.endGroup()
         self.settings.beginGroup("Misc")
         self.settings.setValue("version", current_settings_version)
         self.settings.endGroup()
@@ -642,8 +645,14 @@ class MainForm(QMainWindow, MainWindow):
         gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
         interrupt_signal = self.settings.value("Debug/interrupt_signal", type=str)
         handle_signals = json.loads(self.settings.value("Debug/handle_signals", type=str))
+        java_ignore_segfault = self.settings.value("Java/ignore_segfault", type=bool)
+        pid = debugcore.currentpid
         debugcore.set_logging(gdb_logging)
         debugcore.handle_signals(handle_signals)
+        # Not a great method but okayish until the implementation of the libpince engine and the java dissector
+        # "jps" command could be used instead if we ever need to install openjdk
+        if pid != -1 and java_ignore_segfault and utils.get_process_name(pid).startswith("java"):
+            debugcore.handle_signal("SIGSEGV", False, True)
         debugcore.set_interrupt_signal(interrupt_signal)  # Needs to be called after handle_signals
 
     def apply_settings(self):
@@ -2441,6 +2450,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
         self.settings.setValue("Debug/interrupt_signal", self.comboBox_InterruptSignal.currentText())
+        self.settings.setValue("Java/ignore_segfault", self.checkBox_JavaSegfault.isChecked())
         if self.handle_signals_data:
             self.settings.setValue("Debug/handle_signals", self.handle_signals_data)
         super().accept()
@@ -2507,6 +2517,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.comboBox_InterruptSignal.addItems([f"SIG{x}" for x in range(signal.SIGRTMIN, signal.SIGRTMAX+1)])
         self.comboBox_InterruptSignal.setCurrentIndex(self.comboBox_InterruptSignal.findText(cur_signal))
         self.comboBox_InterruptSignal.setStyleSheet("combobox-popup: 0;")  # maxVisibleItems doesn't work otherwise
+        self.checkBox_JavaSegfault.setChecked(self.settings.value("Java/ignore_segfault", type=bool))
 
     def change_display(self, index):
         self.stackedWidget.setCurrentIndex(index)

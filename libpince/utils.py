@@ -43,17 +43,17 @@ def get_process_list():
 
 
 #:tag:Processes
-def get_process_name(pid):
+def get_process_name(pid: int | str) -> str:
     """Returns the process name of given pid
 
     Args:
-        pid (int): PID of the process
+        pid (int, str): PID of the process
 
     Returns:
         str: Process name
     """
-    with open("/proc/"+str(pid)+"/comm") as f:
-        return f.read()[:-1]
+    with open(f"/proc/{pid}/comm") as f:
+        return f.read().splitlines()[0]
 
 
 #:tag:Processes

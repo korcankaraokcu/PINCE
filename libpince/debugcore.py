@@ -460,7 +460,7 @@ def set_interrupt_signal(signal_name):
 
 
 #:tag:Debug
-def handle_signal(signal_name, stop, pass_to_program):
+def handle_signal(signal_name: str, stop: bool, pass_to_program: bool) -> None:
     """Decides on what will GDB do when the process recieves a signal
 
     Args:
