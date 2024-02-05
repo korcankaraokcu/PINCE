@@ -57,6 +57,11 @@
            <string>Debug</string>
           </property>
          </item>
+         <item>
+          <property name="text">
+           <string>Java</string>
+          </property>
+         </item>
         </widget>
        </item>
        <item>
@@ -716,6 +721,30 @@ Patterns at former positions have higher priority if regex is off</string>
               </spacer>
              </item>
             </layout>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_6">
+          <layout class="QGridLayout" name="gridLayout_7">
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="checkBox_JavaSegfault">
+             <property name="text">
+              <string>Ignore SIGSEGV if the process is Java (overrides signal settings if enabled)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <spacer name="verticalSpacer_6">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>

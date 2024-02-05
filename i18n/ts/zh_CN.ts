@@ -237,6 +237,11 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Java</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Auto-update address table</source>
       <translation>自动更新地址表</translation>
     </message>
@@ -355,6 +360,11 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Interruption signal</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Ignore SIGSEGV if the process is Java (overrides signal settings if enabled)</source>
       <translation type="unfinished" />
     </message>
     <message>
