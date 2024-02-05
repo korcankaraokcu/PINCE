@@ -90,9 +90,6 @@
                      <property name="text">
                       <string>Auto-update address table</string>
                      </property>
-                     <property name="checked">
-                      <bool>true</bool>
-                     </property>
                     </widget>
                    </item>
                   </layout>
@@ -117,11 +114,7 @@
                      </widget>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="lineEdit_UpdateInterval">
-                      <property name="text">
-                       <string notr="true">500</string>
-                      </property>
-                     </widget>
+                     <widget class="QLineEdit" name="lineEdit_UpdateInterval"/>
                     </item>
                     <item>
                      <widget class="QLabel" name="label_2">
@@ -178,9 +171,6 @@
                         <height>0</height>
                        </size>
                       </property>
-                      <property name="text">
-                       <string notr="true">100</string>
-                      </property>
                      </widget>
                     </item>
                     <item>
@@ -224,9 +214,6 @@
                  <property name="text">
                   <string>Async</string>
                  </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
                 </widget>
                </item>
                <item>
@@ -234,18 +221,12 @@
                  <property name="text">
                   <string>Command</string>
                  </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
                 </widget>
                </item>
                <item>
                 <widget class="QCheckBox" name="checkBox_OutputModeCommandInfo">
                  <property name="text">
                   <string>Command info</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
@@ -486,27 +467,11 @@ Patterns at former positions have higher priority if regex is off</string>
                  <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_6">
                    <item>
-                    <spacer name="horizontalSpacer_2">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
                     <layout class="QVBoxLayout" name="verticalLayout_7">
                      <item>
                       <widget class="QRadioButton" name="radioButton_SimpleDLopenCall">
                        <property name="text">
                         <string>Simp&amp;le dlopen call</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
                        </property>
                       </widget>
                      </item>
@@ -566,9 +531,6 @@ Patterns at former positions have higher priority if regex is off</string>
               <widget class="QCheckBox" name="checkBox_BringDisassembleToFront">
                <property name="text">
                 <string>Bring disassemble screen to front when the inferior is stopped</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -641,11 +603,7 @@ Patterns at former positions have higher priority if regex is off</string>
                 </layout>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_GDBPath">
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
+                <widget class="QPushButton" name="pushButton_GDBPath"/>
                </item>
               </layout>
              </item>
@@ -729,7 +687,7 @@ Patterns at former positions have higher priority if regex is off</string>
            <item row="0" column="0">
             <widget class="QCheckBox" name="checkBox_JavaSegfault">
              <property name="text">
-              <string>Ignore SIGSEGV if the process is Java (overrides signal settings if enabled)</string>
+              <string>Ignore SIGSEGV for Java processes (overrides signal settings if enabled)</string>
              </property>
             </widget>
            </item>
