@@ -362,7 +362,7 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Ignore SIGSEGV if the process is Java (overrides signal settings if enabled)</source>
+      <source>Ignore SIGSEGV for Java processes (overrides signal settings if enabled)</source>
       <translation type="unfinished" />
     </message>
     <message>
