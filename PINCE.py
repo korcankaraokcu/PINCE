@@ -567,7 +567,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_About.clicked.connect(self.pushButton_About_clicked)
         self.pushButton_AddAddressManually.clicked.connect(self.pushButton_AddAddressManually_clicked)
         self.pushButton_MemoryView.clicked.connect(self.pushButton_MemoryView_clicked)
-        self.pushButton_RefreshAdressTable.clicked.connect(lambda: self.update_address_table(use_cache=False))
+        self.pushButton_RefreshAdressTable.clicked.connect(self.pushButton_RefreshAdressTable_clicked)
         self.pushButton_CopyToAddressTable.clicked.connect(self.copy_to_address_table)
         self.pushButton_CleanAddressTable.clicked.connect(self.clear_address_table)
         self.tableWidget_valuesearchtable.cellDoubleClicked.connect(
@@ -1033,8 +1033,7 @@ class MainForm(QMainWindow, MainWindow):
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete), self.delete_records),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B), self.browse_region_for_selected_row),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D), self.disassemble_selected_row),
-            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R),
-             lambda: self.update_address_table(use_cache=False)),
+            (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.pushButton_RefreshAdressTable_clicked),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space), self.toggle_records),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Space),
              lambda: self.toggle_records(True)),
@@ -1056,7 +1055,7 @@ class MainForm(QMainWindow, MainWindow):
         except KeyError:
             self.treeWidget_AddressTable.keyPressEvent_original(event)
 
-    def update_address_table(self, use_cache=True):
+    def update_address_table(self):
         global exp_cache
         if debugcore.currentpid == -1 or self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
@@ -1076,7 +1075,7 @@ class MainForm(QMainWindow, MainWindow):
             parent = row.parent()
             if parent and expression.startswith(('+', '-')):
                 expression = parent.data(ADDR_COL, Qt.ItemDataRole.UserRole+1)+expression
-            if use_cache and expression in exp_cache:
+            if expression in exp_cache:
                 address = exp_cache[expression]
             elif expression.startswith(('+', '-')):  # If parent has an empty address
                 address = expression
@@ -1138,6 +1137,11 @@ class MainForm(QMainWindow, MainWindow):
             desc, address_expr, vt = manual_address_dialog.get_values()
             self.add_entry_to_addresstable(desc, address_expr, vt)
             self.update_address_table()
+
+    def pushButton_RefreshAdressTable_clicked(self):
+        global exp_cache
+        exp_cache.clear()
+        self.update_address_table()
 
     def pushButton_MemoryView_clicked(self):
         self.memory_view_window.showMaximized()
