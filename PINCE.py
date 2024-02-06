@@ -1203,7 +1203,7 @@ class MainForm(QMainWindow, MainWindow):
             else:
                 self.pushButton_NewFirstScan_clicked()
             return
-        
+
     def lineEdit_Scan_on_key_press_event(self, event):
         self.handle_line_edit_scan_key_press_event(event)
         self.lineEdit_Scan.keyPressEvent_original(event)
@@ -1664,7 +1664,7 @@ class MainForm(QMainWindow, MainWindow):
 
             if not frozen_state_toggled and is_checked:
                 # user clicked the text, iterate through the freeze type
-                if frozen.freeze_type == typedefs.FREEZE_TYPE.DECREMENT: 
+                if frozen.freeze_type == typedefs.FREEZE_TYPE.DECREMENT:
                     # decrement is the last freeze type
                     self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT)
                 else:
@@ -1777,7 +1777,7 @@ class MainForm(QMainWindow, MainWindow):
     def read_address_table_recursively(self, row):
         return self.read_address_table_entries(row, True) + \
                ([self.read_address_table_recursively(row.child(i)) for i in range(row.childCount())],)
-    
+
     # Flashing Attach Button when the process is not attached
     def flash_attach_button(self):
         if not self.flashAttachButton:
@@ -1844,7 +1844,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         if index.row() == -1 and row_count == 1:
             # autoselect first row if there is only one row
             self.tableWidget_ProcessTable.setCurrentCell(0, 0)
-            
+
         current_item = self.tableWidget_ProcessTable.item(self.tableWidget_ProcessTable.currentIndex().row(), 0)
         if current_item is None:
             QMessageBox.information(self, tr.ERROR, tr.SELECT_PROCESS)
@@ -2604,7 +2604,7 @@ class HandleSignalsDialogForm(QDialog, HandleSignalsDialog):
             else:
                 checkbox.setCheckState(Qt.CheckState.Unchecked)
         self.tableWidget_Signals.resizeColumnsToContents()
-            
+
 
     def create_checkbox_widget(self):
         widget = QWidget()
