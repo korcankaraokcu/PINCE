@@ -646,14 +646,16 @@ class MainForm(QMainWindow, MainWindow):
         interrupt_signal = self.settings.value("Debug/interrupt_signal", type=str)
         handle_signals = json.loads(self.settings.value("Debug/handle_signals", type=str))
         java_ignore_segfault = self.settings.value("Java/ignore_segfault", type=bool)
-        pid = debugcore.currentpid
         debugcore.set_logging(gdb_logging)
-        debugcore.handle_signals(handle_signals)
-        # Not a great method but okayish until the implementation of the libpince engine and the java dissector
-        # "jps" command could be used instead if we ever need to install openjdk
-        if pid != -1 and java_ignore_segfault and utils.get_process_name(pid).startswith("java"):
-            debugcore.handle_signal("SIGSEGV", False, True)
-        debugcore.set_interrupt_signal(interrupt_signal)  # Needs to be called after handle_signals
+
+        # Don't handle signals if a process isn't present, a small optimization to gain time on launch and detach
+        if debugcore.currentpid != -1:
+            debugcore.handle_signals(handle_signals)
+            # Not a great method but okayish until the implementation of the libpince engine and the java dissector
+            # "jps" command could be used instead if we ever need to install openjdk
+            if java_ignore_segfault and utils.get_process_name(debugcore.currentpid).startswith("java"):
+                debugcore.handle_signal("SIGSEGV", False, True)
+            debugcore.set_interrupt_signal(interrupt_signal)  # Needs to be called after handle_signals
 
     def apply_settings(self):
         global update_table
