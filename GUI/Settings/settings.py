@@ -2,8 +2,6 @@ import libpince.typedefs as typedefs
 
 current_settings_version = "32"  # Increase version by one if you change settings
 
-
-locale: str = ""
 # Unused, will be re-added in the future
 code_injection_method: int = 0
 

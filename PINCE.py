@@ -30,9 +30,10 @@ from GUI.Settings.settings import current_settings_version, gdb_logging, default
 gi.require_version('Gtk', '3.0')
 
 from tr.tr import TranslationConstants as tr
+from tr.tr import language_list, get_locale
 
 from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
-    QRegularExpressionValidator, QShortcut, QColorConstants
+    QRegularExpressionValidator, QShortcut, QColorConstants, QStandardItemModel, QStandardItem
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
     QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
     QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
@@ -91,22 +92,6 @@ from GUI.AbstractTableModels.AsciiModel import QAsciiModel
 from GUI.Validators.HexValidator import QHexValidator
 
 from operator import add as opAdd, sub as opSub
-
-# TODO: Carry all settings related things to their own script if possible
-language_list = [
-    ("English", "en_US"),
-    ("Italiano", "it_IT"),
-    ("简体中文", "zh_CN")
-]
-
-
-def get_locale():
-    system_locale = QLocale.system().name()
-    for _, locale in language_list:
-        if system_locale == locale:
-            return locale
-    return language_list[0][1]
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -575,7 +560,6 @@ class MainForm(QMainWindow, MainWindow):
         settings.gdb_output_mode = typedefs.gdb_output_mode(*settings.gdb_output_mode)
         self.auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
         self.auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
-        settings.locale = self.settings.value("General/locale", type=str)
         app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(),
                                              self.settings.value("General/logo_path", type=str))))
         app.setPalette(get_theme(self.settings.value("General/theme", type=str)))
@@ -2279,6 +2263,22 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.comboBox_Logo.currentIndexChanged.connect(self.comboBox_Logo_current_index_changed)
         self.comboBox_Theme.currentIndexChanged.connect(self.comboBox_Theme_current_index_changed)
         self.pushButton_HandleSignals.clicked.connect(self.pushButton_HandleSignals_clicked)
+        cur_loc = self.settings.value("General/locale", type=str)
+
+        locale_model = QStandardItemModel()
+        for loc, name in language_list.items():
+            item = QStandardItem()
+            item.setData(name, Qt.ItemDataRole.DisplayRole)
+            item.setData(loc, Qt.ItemDataRole.UserRole)
+            locale_model.appendRow(item)
+
+        self.comboBox_Language.setModel(locale_model)
+        self.comboBox_Language.setCurrentText(language_list.get(cur_loc, "en_US"))
+        self.comboBox_Language.currentIndexChanged.connect(
+            lambda _: QMessageBox.information(self, tr.INFO, tr.LANG_RESET))
+
+        self.comboBox_Language.setCurrentText(cur_loc)
+
         self.config_gui()
 
     def accept(self):
@@ -2327,10 +2327,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 return
         self.settings.setValue("General/auto_attach_list", self.lineEdit_AutoAttachList.text())
         self.settings.setValue("General/auto_attach_regex", self.checkBox_AutoAttachRegex.isChecked())
-        new_locale = language_list[self.comboBox_Language.currentIndex()][1]
+        new_locale = self.comboBox_Language.currentData(Qt.ItemDataRole.UserRole)
         self.settings.setValue("General/locale", new_locale)
-        if locale != new_locale:
-            QMessageBox.information(self, tr.INFO, tr.LANG_RESET)
+
         self.settings.setValue("General/logo_path", self.comboBox_Logo.currentText())
         self.settings.setValue("General/theme", self.comboBox_Theme.currentText())
         for hotkey in Hotkeys.get_hotkeys():
@@ -2376,12 +2375,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.checkBox_OutputModeCommandInfo.setChecked(output_mode.command_info)
         self.lineEdit_AutoAttachList.setText(self.settings.value("General/auto_attach_list", type=str))
         self.checkBox_AutoAttachRegex.setChecked(self.settings.value("General/auto_attach_regex", type=bool))
-        self.comboBox_Language.clear()
-        cur_loc = self.settings.value("General/locale", type=str)
-        for lang, loc in language_list:
-            self.comboBox_Language.addItem(lang)
-            if loc == cur_loc:
-                self.comboBox_Language.setCurrentIndex(self.comboBox_Language.count()-1)
+
         with QSignalBlocker(self.comboBox_Theme):
             self.comboBox_Theme.clear()
             cur_theme = self.settings.value("General/theme", type=str)
