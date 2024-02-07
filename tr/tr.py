@@ -1,4 +1,14 @@
-from PyQt6.QtCore import QObject, QT_TR_NOOP, QT_TRANSLATE_NOOP
+from PyQt6.QtCore import QObject, QLocale, QT_TR_NOOP, QT_TRANSLATE_NOOP
+
+language_list = {
+    "en_US": "English",
+    "it_IT": "Italiano",
+    "zh_CN": "简体中文"
+}
+
+def get_locale():
+    system_locale = QLocale.system().name()
+    return language_list.get(system_locale, "en_US")
 
 # This handles the default translations for QDialogButtonBox.StandardButton
 # Some of the standard button labels have an ampersand (&). It's used to denote an access key or keyboard shortcut
