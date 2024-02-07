@@ -20,7 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import gi
 
+import GUI.Settings.settings as settings
 from GUI.Settings.hotkeys import Hotkeys
+from GUI.Settings.settings import current_settings_version, gdb_logging, default_signals
 
 # This fixes GTK version mismatch issues and crashes on gnome
 # See #153 and #159 for more information
@@ -129,47 +131,6 @@ if __name__ == '__main__':
     tr.translate()
 
 instances = []  # Holds temporary instances that will be deleted later on
-
-# settings
-current_settings_version = "31"  # Increase version by one if you change settings
-update_table = bool
-table_update_interval = int
-freeze_interval = int
-gdb_output_mode = tuple
-auto_attach_list = str
-auto_attach_regex = bool
-locale = str
-logo_path = str
-theme = str
-
-code_injection_method = int
-bring_disassemble_to_front = bool
-instructions_per_scroll = int
-gdb_path = str
-gdb_logging = bool
-interrupt_signal = str
-handle_signals = list
-
-# Due to community feedback, these signals are disabled by default: SIGUSR1, SIGUSR2, SIGPWR, SIGXCPU, SIGXFSZ, SIGSYS
-# Rest is the same with GDB defaults
-default_signals = [
-    ["SIGHUP", True, True], ["SIGINT", True, False], ["SIGQUIT", True, True], ["SIGILL", True, True],
-    ["SIGTRAP", True, False], ["SIGABRT", True, True], ["SIGEMT", True, True], ["SIGFPE", True, True],
-    ["SIGKILL", True, True], ["SIGBUS", True, True], ["SIGSEGV", True, True], ["SIGSYS", False, True],
-    ["SIGPIPE", True, True], ["SIGALRM", False, True], ["SIGTERM", True, True], ["SIGURG", False, True],
-    ["SIGSTOP", True, True], ["SIGTSTP", True, True], ["SIGCONT", True, True], ["SIGCHLD", False, True],
-    ["SIGTTIN", True, True], ["SIGTTOU", True, True], ["SIGIO", False, True], ["SIGXCPU", False, True],
-    ["SIGXFSZ", False, True], ["SIGVTALRM", False, True], ["SIGPROF", False, True], ["SIGWINCH", False, True],
-    ["SIGLOST", True, True], ["SIGUSR1", False, True], ["SIGUSR2", False, True], ["SIGPWR", False, True],
-    ["SIGPOLL", False, True], ["SIGWIND", True, True], ["SIGPHONE", True, True], ["SIGWAITING", False, True],
-    ["SIGLWP", False, True], ["SIGDANGER", True, True], ["SIGGRANT", True, True], ["SIGRETRACT", True, True],
-    ["SIGMSG", True, True], ["SIGSOUND", True, True], ["SIGSAK", True, True], ["SIGPRIO", False, True],
-    ["SIGCANCEL", False, True], ["SIGINFO", True, True], ["EXC_BAD_ACCESS", True, True],
-    ["EXC_BAD_INSTRUCTION", True, True], ["EXC_ARITHMETIC", True, True], ["EXC_EMULATION", True, True],
-    ["EXC_SOFTWARE", True, True], ["EXC_BREAKPOINT", True, True], ["SIGLIBRT", False, True]
-]
-for x in range(32, 128):  # Add signals SIG32-SIG127
-    default_signals.append([f"SIG{x}", True, True])
 
 # represents the index of columns in instructions restore table
 INSTR_ADDR_COL = 0
@@ -398,6 +359,12 @@ class CheckInferiorStatus(QThread):
 
 
 class MainForm(QMainWindow, MainWindow):
+    table_update_interval: int = 500
+    freeze_interval: int = 100
+    update_table: bool = True
+    auto_attach_list: str = ""
+    auto_attach_regex: bool = False
+
     def __init__(self):
         """
             Declare regular expressions for hexadecimal and decimal input
@@ -431,6 +398,10 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 110)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.settings = QSettings()
+        self.memory_view_window = MemoryViewWindowForm(self)
+        self.about_widget = AboutWidgetForm()
+        self.await_exit_thread = AwaitProcessExit()
+
         if not os.path.exists(self.settings.fileName()):
             self.set_default_settings()
         try:
@@ -449,14 +420,11 @@ class MainForm(QMainWindow, MainWindow):
             self.settings.clear()
             self.set_default_settings()
         try:
-            debugcore.init_gdb(gdb_path)
+            debugcore.init_gdb(settings.gdb_path)
         except pexpect.EOF:
             InputDialogForm(item_list=[(tr.GDB_INIT_ERROR, None)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
         else:
             self.apply_after_init()
-        self.memory_view_window = MemoryViewWindowForm(self)
-        self.about_widget = AboutWidgetForm()
-        self.await_exit_thread = AwaitProcessExit()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
         self.check_status_thread = CheckInferiorStatus()
@@ -544,12 +512,12 @@ class MainForm(QMainWindow, MainWindow):
     # Using python objects causes issues when filenames change
     def set_default_settings(self):
         self.settings.beginGroup("General")
-        self.settings.setValue("auto_update_address_table", True)
-        self.settings.setValue("address_table_update_interval", 500)
-        self.settings.setValue("freeze_interval", 100)
+        self.settings.setValue("auto_update_address_table", MainForm.update_table)
+        self.settings.setValue("address_table_update_interval", MainForm.table_update_interval)
+        self.settings.setValue("freeze_interval", MainForm.freeze_interval)
         self.settings.setValue("gdb_output_mode", json.dumps([True, True, True]))
-        self.settings.setValue("auto_attach_list", "")
-        self.settings.setValue("auto_attach_regex", False)
+        self.settings.setValue("auto_attach_list", MainForm.auto_attach_list)
+        self.settings.setValue("auto_attach_regex", MainForm.auto_attach_regex)
         self.settings.setValue("locale", get_locale())
         self.settings.setValue("logo_path", "ozgurozbek/pince_small_transparent.png")
         self.settings.setValue("theme", "System Default")
@@ -563,7 +531,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.endGroup()
         self.settings.beginGroup("Disassemble")
         self.settings.setValue("bring_disassemble_to_front", False)
-        self.settings.setValue("instructions_per_scroll", 2)
+        self.settings.setValue("instructions_per_scroll", MemoryViewWindowForm.instructions_per_scroll)
         self.settings.endGroup()
         self.settings.beginGroup("Debug")
         self.settings.setValue("gdb_path", typedefs.PATHS.GDB)
@@ -580,78 +548,61 @@ class MainForm(QMainWindow, MainWindow):
         self.apply_settings()
 
     def apply_after_init(self):
-        global gdb_logging
-        global interrupt_signal
-        global handle_signals
         global exp_cache
 
         exp_cache.clear()
-        gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
-        interrupt_signal = self.settings.value("Debug/interrupt_signal", type=str)
-        handle_signals = json.loads(self.settings.value("Debug/handle_signals", type=str))
+        settings.gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
+        settings.interrupt_signal = self.settings.value("Debug/interrupt_signal", type=str)
+        settings.handle_signals = json.loads(self.settings.value("Debug/handle_signals", type=str))
         java_ignore_segfault = self.settings.value("Java/ignore_segfault", type=bool)
-        debugcore.set_logging(gdb_logging)
+        debugcore.set_logging(settings.gdb_logging)
 
         # Don't handle signals if a process isn't present, a small optimization to gain time on launch and detach
         if debugcore.currentpid != -1:
-            debugcore.handle_signals(handle_signals)
+            debugcore.handle_signals(settings.handle_signals)
             # Not a great method but okayish until the implementation of the libpince engine and the java dissector
             # "jps" command could be used instead if we ever need to install openjdk
             if java_ignore_segfault and utils.get_process_name(debugcore.currentpid).startswith("java"):
                 debugcore.handle_signal("SIGSEGV", False, True)
-            debugcore.set_interrupt_signal(interrupt_signal)  # Needs to be called after handle_signals
+            debugcore.set_interrupt_signal(settings.interrupt_signal)  # Needs to be called after handle_signals
 
     def apply_settings(self):
-        global update_table
-        global table_update_interval
-        global gdb_output_mode
-        global auto_attach_list
-        global auto_attach_regex
-        global locale
-        global logo_path
-        global theme
-        global code_injection_method
-        global bring_disassemble_to_front
-        global instructions_per_scroll
-        global gdb_path
-        global freeze_interval
 
-        update_table = self.settings.value("General/auto_update_address_table", type=bool)
-        table_update_interval = self.settings.value("General/address_table_update_interval", type=int)
-        freeze_interval = self.settings.value("General/freeze_interval", type=int)
-        gdb_output_mode = json.loads(self.settings.value("General/gdb_output_mode", type=str))
-        gdb_output_mode = typedefs.gdb_output_mode(*gdb_output_mode)
-        auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
-        auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
-        locale = self.settings.value("General/locale", type=str)
-        logo_path = self.settings.value("General/logo_path", type=str)
-        app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
-        theme = self.settings.value("General/theme", type=str)
-        app.setPalette(get_theme(theme))
-        debugcore.set_gdb_output_mode(gdb_output_mode)
+        self.update_table = self.settings.value("General/auto_update_address_table", type=bool)
+        self.table_update_interval = self.settings.value("General/address_table_update_interval", type=int)
+        self.freeze_interval = self.settings.value("General/freeze_interval", type=int)
+        settings.gdb_output_mode = json.loads(self.settings.value("General/gdb_output_mode", type=str))
+        settings.gdb_output_mode = typedefs.gdb_output_mode(*settings.gdb_output_mode)
+        self.auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
+        self.auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
+        settings.locale = self.settings.value("General/locale", type=str)
+        app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(),
+                                             self.settings.value("General/logo_path", type=str))))
+        app.setPalette(get_theme(self.settings.value("General/theme", type=str)))
+        debugcore.set_gdb_output_mode(settings.gdb_output_mode)
         for hotkey in Hotkeys.get_hotkeys():
             hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
         try:
             self.memory_view_window.set_dynamic_debug_hotkeys()
         except AttributeError:
             pass
-        code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
-        bring_disassemble_to_front = self.settings.value("Disassemble/bring_disassemble_to_front", type=bool)
-        instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
-        gdb_path = self.settings.value("Debug/gdb_path", type=str)
+        settings.code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
+        self.memory_view_window.bring_disassemble_to_front = self.settings.value("Disassemble/bring_disassemble_to_front", type=bool)
+        self.memory_view_window.instructions_per_scroll = self.settings.value("Disassemble/instructions_per_scroll", type=int)
+        settings.gdb_path = self.settings.value("Debug/gdb_path", type=str)
         if debugcore.gdb_initialized:
             self.apply_after_init()
 
     # Check if any process should be attached to automatically
     # Patterns at former positions have higher priority if regex is off
     def auto_attach(self):
-        if not auto_attach_list:
+        if not self.auto_attach_list:
             return
-        if auto_attach_regex:
+        if self.auto_attach_regex:
             try:
-                compiled_re = re.compile(auto_attach_list)
+                compiled_re = re.compile(self.auto_attach_list)
             except:
-                print("Auto-attach failed: " + auto_attach_list + " isn't a valid regex")
+                print("Auto-attach failed: " + self.auto_attach_list + " isn't a valid regex")
                 return
             for pid, _, name in utils.get_process_list():
                 if compiled_re.search(name):
@@ -659,7 +610,7 @@ class MainForm(QMainWindow, MainWindow):
                     self.flashAttachButton = False
                     return
         else:
-            for target in auto_attach_list.split(";"):
+            for target in self.auto_attach_list.split(";"):
                 for pid, _, name in utils.get_process_list():
                     if name.find(target) != -1:
                         self.attach_to_pid(pid)
@@ -1387,7 +1338,7 @@ class MainForm(QMainWindow, MainWindow):
 
     # Returns: a bool value indicates whether the operation succeeded.
     def attach_to_pid(self, pid):
-        attach_result = debugcore.attach(pid, gdb_path)
+        attach_result = debugcore.attach(pid, settings.gdb_path)
         if attach_result == typedefs.ATTACH_RESULT.SUCCESSFUL:
             self.apply_after_init()
             scanmem.pid(pid)
@@ -1474,7 +1425,7 @@ class MainForm(QMainWindow, MainWindow):
         self.lineEdit_Scan.setText("")
         self.reset_scan()
         self.on_status_running()
-        debugcore.init_gdb(gdb_path)
+        debugcore.init_gdb(settings.gdb_path)
         self.apply_after_init()
         self.flashAttachButton = True
         self.flashAttachButtonTimer.start(100)
@@ -1533,12 +1484,12 @@ class MainForm(QMainWindow, MainWindow):
 
     # Loop restarts itself to wait for function execution, same for the functions below
     def address_table_loop(self):
-        if update_table and not exiting:
+        if self.update_table and not exiting:
             try:
                 self.update_address_table()
             except:
                 traceback.print_exc()
-        self.address_table_timer.start(table_update_interval)
+        self.address_table_timer.start(self.table_update_interval)
 
     def search_table_loop(self):
         if not exiting:
@@ -1554,7 +1505,7 @@ class MainForm(QMainWindow, MainWindow):
                 self.freeze()
             except:
                 traceback.print_exc()
-        self.freeze_timer.start(freeze_interval)
+        self.freeze_timer.start(self.freeze_interval)
 
     # ----------------------------------------------------
 
@@ -2388,7 +2339,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             injection_method = typedefs.INJECTION_METHOD.DLOPEN
         elif self.radioButton_AdvancedInjection.isChecked():
             injection_method = typedefs.INJECTION_METHOD.ADVANCED
-        self.settings.setValue("CodeInjection/code_injection_method", injection_method)
+        self.settings.setValue("CodeInjection/code_injection_method", settings.code_injection_method)
         self.settings.setValue("Disassemble/bring_disassemble_to_front",
                                self.checkBox_BringDisassembleToFront.isChecked())
         self.settings.setValue("Disassemble/instructions_per_scroll", current_instructions_shown)
@@ -2450,11 +2401,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         for hotkey in Hotkeys.get_hotkeys():
             self.listWidget_Functions.addItem(hotkey.desc)
             self.hotkey_to_value[hotkey.name] = self.settings.value("Hotkeys/" + hotkey.name)
-        injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
-        if injection_method == typedefs.INJECTION_METHOD.DLOPEN:
+        settings.code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
+        if settings.code_injection_method == typedefs.INJECTION_METHOD.DLOPEN:
             self.radioButton_SimpleDLopenCall.setChecked(True)
-        elif injection_method == typedefs.INJECTION_METHOD.ADVANCED:
+        elif settings.code_injection_method == typedefs.INJECTION_METHOD.ADVANCED:
             self.radioButton_AdvancedInjection.setChecked(True)
+
         self.checkBox_BringDisassembleToFront.setChecked(
             self.settings.value("Disassemble/bring_disassemble_to_front", type=bool))
         self.lineEdit_InstructionsPerScroll.setText(
@@ -2728,6 +2680,8 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     process_stopped = pyqtSignal()
     process_running = pyqtSignal()
+    bring_disassemble_to_front: bool = False
+    instructions_per_scroll: int = 3
 
     def set_dynamic_debug_hotkeys(self):
         self.actionBreak.setText(tr.BREAK.format(Hotkeys.break_hotkey.get_active_key()))
@@ -3122,9 +3076,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         #    self.bDisassemblyScrolling = False
         #    return
         if current_value < midst:
-            self.tableWidget_Disassemble_scroll("previous", instructions_per_scroll)
+            self.tableWidget_Disassemble_scroll("previous", self.instructions_per_scroll)
         else:
-            self.tableWidget_Disassemble_scroll("next", instructions_per_scroll)
+            self.tableWidget_Disassemble_scroll("next", self.instructions_per_scroll)
         guiutils.center_scroll_bar(self.verticalScrollBar_Disassemble)
         self.bDisassemblyScrolling = False
 
@@ -3471,7 +3425,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if self.tableWidget_Stack.rowCount() == 0:
             self.update_stack()
         self.refresh_hex_view()
-        if bring_disassemble_to_front:
+        if self.bring_disassemble_to_front:
             self.showMaximized()
             self.activateWindow()
         try:
@@ -3737,9 +3691,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         steps = event.angleDelta()
         if steps.y() > 0:
-            self.tableWidget_Disassemble_scroll("previous", instructions_per_scroll)
+            self.tableWidget_Disassemble_scroll("previous", self.instructions_per_scroll)
         else:
-            self.tableWidget_Disassemble_scroll("next", instructions_per_scroll)
+            self.tableWidget_Disassemble_scroll("next", self.instructions_per_scroll)
 
     def disassemble_check_viewport(self, where, instruction_count):
         if debugcore.currentpid == -1:
