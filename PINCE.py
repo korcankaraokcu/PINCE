@@ -322,15 +322,12 @@ REF_STR_VAL_COL = 2
 REF_CALL_ADDR_COL = 0
 REF_CALL_COUNT_COL = 1
 
-# used for automatically updating the values in the saved address tree widget
-# see UpdateAddressTableThread
-saved_addresses_changed_list = list()
-
 # GDB expression cache
 # TODO: Try to find a fast and non-gdb way to calculate symbols so we don't need this
 # This is one of the few tricks we do to minimize examine_expression calls
 # This solution might bring problems if the symbols are changing frequently
-# Currently only address_table_loop uses this so user can refresh symbols with a button press
+# Pressing the refresh button in the address table or attaching to a new process will clear this cache
+# Currently only used in address_table_loop
 exp_cache = {}
 
 # vars for communication with the non blocking threads
