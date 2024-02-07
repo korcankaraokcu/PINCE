@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import gi
 
+from GUI.Settings.hotkeys import Hotkeys
+
 # This fixes GTK version mismatch issues and crashes on gnome
 # See #153 and #159 for more information
 # This line can be deleted when GTK 4.0 properly runs on all supported systems
@@ -28,12 +30,12 @@ gi.require_version('Gtk', '3.0')
 from tr.tr import TranslationConstants as tr
 
 from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
-    QKeyEvent, QRegularExpressionValidator, QShortcut, QColorConstants
+    QRegularExpressionValidator, QShortcut, QColorConstants
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
     QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
     QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
-    QItemSelectionModel, QTimer, QModelIndex, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
+    QItemSelectionModel, QTimer, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
     QLocale, QSignalBlocker, QItemSelection
 from typing import Final
 from time import sleep, time
@@ -86,7 +88,6 @@ from GUI.AbstractTableModels.HexModel import QHexModel
 from GUI.AbstractTableModels.AsciiModel import QAsciiModel
 from GUI.Validators.HexValidator import QHexValidator
 
-from keyboard import add_hotkey, remove_hotkey
 from operator import add as opAdd, sub as opSub
 
 # TODO: Carry all settings related things to their own script if possible
@@ -140,60 +141,6 @@ auto_attach_regex = bool
 locale = str
 logo_path = str
 theme = str
-
-
-class Hotkeys:
-    class Hotkey:
-        def __init__(self, name="", desc="", default="", func=None, custom="", handle=None):
-            self.name = name
-            self.desc = desc
-            self.default = default
-            self.func = func
-            self.custom = custom
-            if default == "" or func is None:
-                self.handle = handle
-            else:
-                self.handle = add_hotkey(default, func)
-
-        def change_key(self, custom):
-            if self.handle is not None:
-                remove_hotkey(self.handle)
-                self.handle = None
-            self.custom = custom
-            if custom == '':
-                return
-            self.handle = add_hotkey(custom.lower(), self.func)
-
-        def change_func(self, func):
-            self.func = func
-            if self.handle is not None:
-                remove_hotkey(self.handle)
-            if self.custom != "":
-                self.handle = add_hotkey(self.custom, func)
-            elif self.default != "":
-                self.handle = add_hotkey(self.default, func)
-
-        def get_active_key(self):
-            if self.custom == "":
-                return self.default
-            return self.custom
-
-    pause_hotkey = Hotkey("pause_hotkey", tr.PAUSE_HOTKEY, "F1")
-    break_hotkey = Hotkey("break_hotkey", tr.BREAK_HOTKEY, "F2")
-    continue_hotkey = Hotkey("continue_hotkey", tr.CONTINUE_HOTKEY, "F3")
-    toggle_attach_hotkey = Hotkey("toggle_attach_hotkey", tr.TOGGLE_ATTACH_HOTKEY, "Shift+F10")
-    exact_scan_hotkey = Hotkey("exact_scan_hotkey", tr.EXACT_SCAN_HOTKEY, "")
-    increased_scan_hotkey = Hotkey("increased_scan_hotkey", tr.INC_SCAN_HOTKEY, "")
-    decreased_scan_hotkey = Hotkey("decreased_scan_hotkey", tr.DEC_SCAN_HOTKEY, "")
-    changed_scan_hotkey = Hotkey("changed_scan_hotkey", tr.CHANGED_SCAN_HOTKEY, "")
-    unchanged_scan_hotkey = Hotkey("unchanged_scan_hotkey", tr.UNCHANGED_SCAN_HOTKEY, "")
-
-    @staticmethod
-    def get_hotkeys():
-        return Hotkeys.pause_hotkey, Hotkeys.break_hotkey, Hotkeys.continue_hotkey, Hotkeys.toggle_attach_hotkey, \
-            Hotkeys.exact_scan_hotkey, Hotkeys.increased_scan_hotkey, Hotkeys.decreased_scan_hotkey, \
-            Hotkeys.changed_scan_hotkey, Hotkeys.unchanged_scan_hotkey
-
 
 code_injection_method = int
 bring_disassemble_to_front = bool
@@ -2536,7 +2483,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if index == -1:
             self.keySequenceEdit_Hotkey.clear()
         else:
-            self.hotkey_to_value[Hotkeys.get_hotkeys()[index].name] = self.keySequenceEdit_Hotkey.keySequence().toString()
+            self.hotkey_to_value[
+                Hotkeys.get_hotkeys()[index].name] = self.keySequenceEdit_Hotkey.keySequence().toString()
 
     def pushButton_ClearHotkey_clicked(self):
         self.keySequenceEdit_Hotkey.clear()
