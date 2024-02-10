@@ -922,6 +922,8 @@ class MainForm(QMainWindow, MainWindow):
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_V), lambda: self.paste_records(True)),
             (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Return),
              self.treeWidget_AddressTable_edit_value),
+            (QKeyCombination(Qt.KeyboardModifier.KeypadModifier, Qt.Key.Key_Enter),
+             self.treeWidget_AddressTable_edit_value),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Return),
              self.treeWidget_AddressTable_edit_desc),
             (QKeyCombination(Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return),
