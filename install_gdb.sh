@@ -19,7 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # This script installs a specific gdb version locally, the default installation script doesn't need this anymore, you can use it as a fallback if system gdb is being problematic
 # After installing a local gdb, you must specify its binary location via the Settings->Debug
 
-GDB_VERSION="gdb-11.2"
+echo "This script will install GDB locally in the gdb_pince folder"
+echo "To see the available GDB versions, visit -> https://ftp.gnu.org/gnu/gdb/"
+read -r -p "Enter the GDB version number (e.g., 14.1): " version_number
+
+GDB_VERSION="gdb-$version_number"
 
 if [ -z "$NUM_MAKE_JOBS" ]; then
     NUM_MAKE_JOBS=$(lscpu -p=core | uniq | awk '!/#/' | wc -l)
@@ -36,20 +40,20 @@ mkdir -p gdb_pince
 cd gdb_pince || exit
 
 # clean the directory if another installation happened
-rm -rf $GDB_VERSION
+rm -rf "$GDB_VERSION"
 
-if [ ! -e ${GDB_VERSION}.tar.gz ] ; then
-    wget "http://ftp.gnu.org/gnu/gdb/${GDB_VERSION}.tar.gz"
+if [ ! -e "${GDB_VERSION}".tar.gz ] ; then
+    wget "http://ftp.gnu.org/gnu/gdb/${GDB_VERSION}.tar.gz" || exit
 fi
-tar -zxvf ${GDB_VERSION}.tar.gz
-cd $GDB_VERSION || exit
+tar -zxvf "${GDB_VERSION}".tar.gz
+cd "$GDB_VERSION" || exit
 echo "-------------------------------------------------------------------------"
 echo "DISCLAIMER"
 echo "-------------------------------------------------------------------------"
 echo "If you're not on debian or a similar distro with the 'apt' package manager the follow will not work if you don't have gcc and g++ installed"
 echo "Please install them manually for this to work, this issue will be addressed at a later date"
 
-sudo apt-get install python3-dev libgmp3-dev
+sudo apt-get install python3-dev libgmp3-dev libmpc-dev
 
 CC=gcc CXX=g++ ./configure --prefix="$(pwd)" --with-python=python3 && make -j"$NUM_MAKE_JOBS" MAKEINFO=true && sudo make -C gdb install
 
