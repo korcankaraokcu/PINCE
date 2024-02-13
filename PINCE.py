@@ -22,7 +22,6 @@ import gi
 
 import GUI.Settings.settings as settings
 from GUI.Settings.hotkeys import Hotkeys
-from GUI.Settings.settings import current_settings_version, gdb_logging, default_signals
 
 # This fixes GTK version mismatch issues and crashes on gnome
 # See #153 and #159 for more information
@@ -100,14 +99,14 @@ if __name__ == '__main__':
     app.setApplicationName("PINCE")
     QSettings.setPath(QSettings.Format.NativeFormat, QSettings.Scope.UserScope,
                       utils.get_user_path(typedefs.USER_PATHS.CONFIG))
-    settings = QSettings()
+    settings_instance = QSettings()
     translator = QTranslator()
     try:
-        locale = settings.value("General/locale", type=str)
+        locale = settings_instance.value("General/locale", type=str)
     except SystemError:
         # We're reading the settings for the first time here
         # If there's an error due to python objects, clear settings
-        settings.clear()
+        settings_instance.clear()
         locale = None
     if not locale:
         locale = get_locale()
@@ -394,7 +393,7 @@ class MainForm(QMainWindow, MainWindow):
         except Exception as e:
             print("An exception occurred while reading settings version\n", e)
             settings_version = None
-        if settings_version != current_settings_version:
+        if settings_version != settings.current_settings_version:
             print("Settings version mismatch, rolling back to the default configuration")
             self.settings.clear()
             self.set_default_settings()
@@ -522,13 +521,13 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("gdb_path", typedefs.PATHS.GDB)
         self.settings.setValue("gdb_logging", False)
         self.settings.setValue("interrupt_signal", "SIGINT")
-        self.settings.setValue("handle_signals", json.dumps(default_signals))
+        self.settings.setValue("handle_signals", json.dumps(settings.default_signals))
         self.settings.endGroup()
         self.settings.beginGroup("Java")
         self.settings.setValue("ignore_segfault", True)
         self.settings.endGroup()
         self.settings.beginGroup("Misc")
-        self.settings.setValue("version", current_settings_version)
+        self.settings.setValue("version", settings.current_settings_version)
         self.settings.endGroup()
         self.apply_settings()
 
@@ -552,7 +551,6 @@ class MainForm(QMainWindow, MainWindow):
             debugcore.set_interrupt_signal(settings.interrupt_signal)  # Needs to be called after handle_signals
 
     def apply_settings(self):
-
         self.update_table = self.settings.value("General/auto_update_address_table", type=bool)
         self.table_update_interval = self.settings.value("General/address_table_update_interval", type=int)
         self.freeze_interval = self.settings.value("General/freeze_interval", type=int)
@@ -560,6 +558,7 @@ class MainForm(QMainWindow, MainWindow):
         settings.gdb_output_mode = typedefs.gdb_output_mode(*settings.gdb_output_mode)
         self.auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
         self.auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
+        settings.locale = self.settings.value("General/locale", type=str)
         app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(),
                                              self.settings.value("General/logo_path", type=str))))
         app.setPalette(get_theme(self.settings.value("General/theme", type=str)))
@@ -2250,9 +2249,28 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.set_default_settings = set_default_settings_func
         self.hotkey_to_value = {}  # Dict[str:str]-->Dict[Hotkey.name:settings_value]
         self.handle_signals_data = ""
-        self.listWidget_Options.currentRowChanged.connect(self.change_display)
         icons_directory = guiutils.get_icons_directory()
         self.pushButton_GDBPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
+        locale_model = QStandardItemModel()
+        for loc, name in language_list.items():
+            item = QStandardItem()
+            item.setData(name, Qt.ItemDataRole.DisplayRole)
+            item.setData(loc, Qt.ItemDataRole.UserRole)
+            locale_model.appendRow(item)
+        self.comboBox_Language.setModel(locale_model)
+        self.comboBox_InterruptSignal.addItem("SIGINT")
+        self.comboBox_InterruptSignal.addItems([f"SIG{x}" for x in range(signal.SIGRTMIN, signal.SIGRTMAX+1)])
+        self.comboBox_InterruptSignal.setStyleSheet("combobox-popup: 0;")  # maxVisibleItems doesn't work otherwise
+        self.comboBox_Theme.addItems(theme_list)
+        logo_directory = utils.get_logo_directory()
+        logo_list = utils.search_files(logo_directory, "\.(png|jpg|jpeg|svg)$")
+        for logo in logo_list:
+            self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
+        for hotkey in Hotkeys.get_hotkeys():
+            self.listWidget_Functions.addItem(hotkey.desc)
+        self.config_gui()
+
+        self.listWidget_Options.currentRowChanged.connect(self.change_display)
         self.listWidget_Functions.currentRowChanged.connect(self.listWidget_Functions_current_row_changed)
         self.keySequenceEdit_Hotkey.keySequenceChanged.connect(self.keySequenceEdit_Hotkey_key_sequence_changed)
         self.pushButton_ClearHotkey.clicked.connect(self.pushButton_ClearHotkey_clicked)
@@ -2263,23 +2281,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.comboBox_Logo.currentIndexChanged.connect(self.comboBox_Logo_current_index_changed)
         self.comboBox_Theme.currentIndexChanged.connect(self.comboBox_Theme_current_index_changed)
         self.pushButton_HandleSignals.clicked.connect(self.pushButton_HandleSignals_clicked)
-        cur_loc = self.settings.value("General/locale", type=str)
-
-        locale_model = QStandardItemModel()
-        for loc, name in language_list.items():
-            item = QStandardItem()
-            item.setData(name, Qt.ItemDataRole.DisplayRole)
-            item.setData(loc, Qt.ItemDataRole.UserRole)
-            locale_model.appendRow(item)
-
-        self.comboBox_Language.setModel(locale_model)
-        self.comboBox_Language.setCurrentText(language_list.get(cur_loc, "en_US"))
-        self.comboBox_Language.currentIndexChanged.connect(
-            lambda _: QMessageBox.information(self, tr.INFO, tr.LANG_RESET))
-
-        self.comboBox_Language.setCurrentText(cur_loc)
-
-        self.config_gui()
 
     def accept(self):
         try:
@@ -2328,8 +2329,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/auto_attach_list", self.lineEdit_AutoAttachList.text())
         self.settings.setValue("General/auto_attach_regex", self.checkBox_AutoAttachRegex.isChecked())
         new_locale = self.comboBox_Language.currentData(Qt.ItemDataRole.UserRole)
+        if new_locale != settings.locale:
+            QMessageBox.information(self, tr.INFO, tr.LANG_RESET)
         self.settings.setValue("General/locale", new_locale)
-
         self.settings.setValue("General/logo_path", self.comboBox_Logo.currentText())
         self.settings.setValue("General/theme", self.comboBox_Theme.currentText())
         for hotkey in Hotkeys.get_hotkeys():
@@ -2338,7 +2340,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             injection_method = typedefs.INJECTION_METHOD.DLOPEN
         elif self.radioButton_AdvancedInjection.isChecked():
             injection_method = typedefs.INJECTION_METHOD.ADVANCED
-        self.settings.setValue("CodeInjection/code_injection_method", settings.code_injection_method)
+        self.settings.setValue("CodeInjection/code_injection_method", injection_method)
         self.settings.setValue("Disassemble/bring_disassemble_to_front",
                                self.checkBox_BringDisassembleToFront.isChecked())
         self.settings.setValue("Disassemble/instructions_per_scroll", current_instructions_shown)
@@ -2375,30 +2377,20 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.checkBox_OutputModeCommandInfo.setChecked(output_mode.command_info)
         self.lineEdit_AutoAttachList.setText(self.settings.value("General/auto_attach_list", type=str))
         self.checkBox_AutoAttachRegex.setChecked(self.settings.value("General/auto_attach_regex", type=bool))
-
+        current_locale = self.settings.value("General/locale", type=str)
+        self.comboBox_Language.setCurrentText(language_list.get(current_locale, "en_US"))
         with QSignalBlocker(self.comboBox_Theme):
-            self.comboBox_Theme.clear()
-            cur_theme = self.settings.value("General/theme", type=str)
-            for thm in theme_list:
-                self.comboBox_Theme.addItem(thm)
-                if thm == cur_theme:
-                    self.comboBox_Theme.setCurrentIndex(self.comboBox_Theme.count()-1)
-        logo_directory = utils.get_logo_directory()
-        logo_list = utils.search_files(logo_directory, "\.(png|jpg|jpeg|svg)$")
+            self.comboBox_Theme.setCurrentText(self.settings.value("General/theme", type=str))
         with QSignalBlocker(self.comboBox_Logo):
-            self.comboBox_Logo.clear()
-            for logo in logo_list:
-                self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
-            self.comboBox_Logo.setCurrentIndex(logo_list.index(self.settings.value("General/logo_path", type=str)))
-        self.listWidget_Functions.clear()
+            self.comboBox_Logo.setCurrentText(self.settings.value("General/logo_path", type=str))
         self.hotkey_to_value.clear()
         for hotkey in Hotkeys.get_hotkeys():
-            self.listWidget_Functions.addItem(hotkey.desc)
             self.hotkey_to_value[hotkey.name] = self.settings.value("Hotkeys/" + hotkey.name)
-        settings.code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
-        if settings.code_injection_method == typedefs.INJECTION_METHOD.DLOPEN:
+        self.listWidget_Functions_current_row_changed(self.listWidget_Functions.currentRow())
+        code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
+        if code_injection_method == typedefs.INJECTION_METHOD.DLOPEN:
             self.radioButton_SimpleDLopenCall.setChecked(True)
-        elif settings.code_injection_method == typedefs.INJECTION_METHOD.ADVANCED:
+        elif code_injection_method == typedefs.INJECTION_METHOD.ADVANCED:
             self.radioButton_AdvancedInjection.setChecked(True)
 
         self.checkBox_BringDisassembleToFront.setChecked(
@@ -2407,12 +2399,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             str(self.settings.value("Disassemble/instructions_per_scroll", type=int)))
         self.lineEdit_GDBPath.setText(str(self.settings.value("Debug/gdb_path", type=str)))
         self.checkBox_GDBLogging.setChecked(self.settings.value("Debug/gdb_logging", type=bool))
-        cur_signal = self.settings.value("Debug/interrupt_signal", type=str)
-        self.comboBox_InterruptSignal.clear()
-        self.comboBox_InterruptSignal.addItem("SIGINT")
-        self.comboBox_InterruptSignal.addItems([f"SIG{x}" for x in range(signal.SIGRTMIN, signal.SIGRTMAX+1)])
-        self.comboBox_InterruptSignal.setCurrentIndex(self.comboBox_InterruptSignal.findText(cur_signal))
-        self.comboBox_InterruptSignal.setStyleSheet("combobox-popup: 0;")  # maxVisibleItems doesn't work otherwise
+        self.comboBox_InterruptSignal.setCurrentText(self.settings.value("Debug/interrupt_signal", type=str))
         self.checkBox_JavaSegfault.setChecked(self.settings.value("Java/ignore_segfault", type=bool))
 
     def change_display(self, index):
@@ -5419,14 +5406,14 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         log_path = utils.get_logging_file(debugcore.currentpid)
         self.setWindowTitle(tr.LOG_FILE.format(debugcore.currentpid))
         self.label_FilePath.setText(tr.LOG_CONTENTS.format(log_path, 20000))
-        logging_status = f"<font color=blue>{tr.ON}</font>" if gdb_logging else f"<font color=red>{tr.OFF}</font>"
-        self.label_LoggingStatus.setText(f"<b>{tr.LOG_STATUS.format(logging_status)}</b>")
+        log_status = f"<font color=blue>{tr.ON}</font>" if settings.gdb_logging else f"<font color=red>{tr.OFF}</font>"
+        self.label_LoggingStatus.setText(f"<b>{tr.LOG_STATUS.format(log_status)}</b>")
         try:
             log_file = open(log_path)
         except OSError:
             self.textBrowser_LogContent.clear()
             error_message = tr.LOG_READ_ERROR.format(log_path) + "\n"
-            if not gdb_logging:
+            if not settings.gdb_logging:
                 error_message += tr.SETTINGS_ENABLE_LOG
             self.textBrowser_LogContent.setText(error_message)
             return
