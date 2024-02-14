@@ -113,6 +113,7 @@ if __name__ == '__main__':
     translator.load(f'i18n/qm/{locale}.qm')
     app.installTranslator(translator)
     tr.translate()
+    hotkeys = Hotkeys()  # Create the instance after translations to ensure hotkeys are translated
 
 instances = []  # Holds temporary instances that will be deleted later on
 
@@ -362,15 +363,15 @@ class MainForm(QMainWindow, MainWindow):
         self.setupUi(self)
         self.hotkey_to_shortcut = {}
         hotkey_to_func = {
-            Hotkeys.pause_hotkey: self.pause_hotkey_pressed,
-            Hotkeys.break_hotkey: self.break_hotkey_pressed,
-            Hotkeys.continue_hotkey: self.continue_hotkey_pressed,
-            Hotkeys.toggle_attach_hotkey: self.toggle_attach_hotkey_pressed,
-            Hotkeys.exact_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.EXACT),
-            Hotkeys.increased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.INCREASED),
-            Hotkeys.decreased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.DECREASED),
-            Hotkeys.changed_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.CHANGED),
-            Hotkeys.unchanged_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.UNCHANGED)
+            hotkeys.pause_hotkey: self.pause_hotkey_pressed,
+            hotkeys.break_hotkey: self.break_hotkey_pressed,
+            hotkeys.continue_hotkey: self.continue_hotkey_pressed,
+            hotkeys.toggle_attach_hotkey: self.toggle_attach_hotkey_pressed,
+            hotkeys.exact_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.EXACT),
+            hotkeys.increased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.INCREASED),
+            hotkeys.decreased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.DECREASED),
+            hotkeys.changed_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.CHANGED),
+            hotkeys.unchanged_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.UNCHANGED)
         }
         for hotkey, func in hotkey_to_func.items():
             hotkey.change_func(func)
@@ -507,7 +508,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("theme", "System Default")
         self.settings.endGroup()
         self.settings.beginGroup("Hotkeys")
-        for hotkey in Hotkeys.get_hotkeys():
+        for hotkey in hotkeys.get_hotkeys():
             self.settings.setValue(hotkey.name, hotkey.default)
         self.settings.endGroup()
         self.settings.beginGroup("CodeInjection")
@@ -563,7 +564,7 @@ class MainForm(QMainWindow, MainWindow):
                                              self.settings.value("General/logo_path", type=str))))
         app.setPalette(get_theme(self.settings.value("General/theme", type=str)))
         debugcore.set_gdb_output_mode(settings.gdb_output_mode)
-        for hotkey in Hotkeys.get_hotkeys():
+        for hotkey in hotkeys.get_hotkeys():
             hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
         try:
             self.memory_view_window.set_dynamic_debug_hotkeys()
@@ -2266,7 +2267,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         logo_list = utils.search_files(logo_directory, "\.(png|jpg|jpeg|svg)$")
         for logo in logo_list:
             self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
-        for hotkey in Hotkeys.get_hotkeys():
+        for hotkey in hotkeys.get_hotkeys():
             self.listWidget_Functions.addItem(hotkey.desc)
         self.config_gui()
 
@@ -2334,7 +2335,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/locale", new_locale)
         self.settings.setValue("General/logo_path", self.comboBox_Logo.currentText())
         self.settings.setValue("General/theme", self.comboBox_Theme.currentText())
-        for hotkey in Hotkeys.get_hotkeys():
+        for hotkey in hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
         if self.radioButton_SimpleDLopenCall.isChecked():
             injection_method = typedefs.INJECTION_METHOD.DLOPEN
@@ -2384,7 +2385,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         with QSignalBlocker(self.comboBox_Logo):
             self.comboBox_Logo.setCurrentText(self.settings.value("General/logo_path", type=str))
         self.hotkey_to_value.clear()
-        for hotkey in Hotkeys.get_hotkeys():
+        for hotkey in hotkeys.get_hotkeys():
             self.hotkey_to_value[hotkey.name] = self.settings.value("Hotkeys/" + hotkey.name)
         self.listWidget_Functions_current_row_changed(self.listWidget_Functions.currentRow())
         code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
@@ -2409,7 +2410,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if index == -1:
             self.keySequenceEdit_Hotkey.clear()
         else:
-            self.keySequenceEdit_Hotkey.setKeySequence(self.hotkey_to_value[Hotkeys.get_hotkeys()[index].name])
+            self.keySequenceEdit_Hotkey.setKeySequence(self.hotkey_to_value[hotkeys.get_hotkeys()[index].name])
 
     def keySequenceEdit_Hotkey_key_sequence_changed(self):
         index = self.listWidget_Functions.currentIndex().row()
@@ -2417,7 +2418,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             self.keySequenceEdit_Hotkey.clear()
         else:
             self.hotkey_to_value[
-                Hotkeys.get_hotkeys()[index].name] = self.keySequenceEdit_Hotkey.keySequence().toString()
+                hotkeys.get_hotkeys()[index].name] = self.keySequenceEdit_Hotkey.keySequence().toString()
 
     def pushButton_ClearHotkey_clicked(self):
         self.keySequenceEdit_Hotkey.clear()
@@ -2665,9 +2666,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     instructions_per_scroll: int = 3
 
     def set_dynamic_debug_hotkeys(self):
-        self.actionBreak.setText(tr.BREAK.format(Hotkeys.break_hotkey.get_active_key()))
-        self.actionRun.setText(tr.RUN.format(Hotkeys.continue_hotkey.get_active_key()))
-        self.actionToggle_Attach.setText(tr.TOGGLE_ATTACH.format(Hotkeys.toggle_attach_hotkey.get_active_key()))
+        self.actionBreak.setText(tr.BREAK.format(hotkeys.break_hotkey.get_active_key()))
+        self.actionRun.setText(tr.RUN.format(hotkeys.continue_hotkey.get_active_key()))
+        self.actionToggle_Attach.setText(tr.TOGGLE_ATTACH.format(hotkeys.toggle_attach_hotkey.get_active_key()))
 
     def set_debug_menu_shortcuts(self):
         self.shortcut_step = QShortcut(QKeySequence("F7"), self)
