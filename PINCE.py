@@ -32,7 +32,7 @@ from tr.tr import TranslationConstants as tr
 from tr.tr import language_list, get_locale
 
 from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
-    QRegularExpressionValidator, QShortcut, QColorConstants, QStandardItemModel, QStandardItem
+    QRegularExpressionValidator, QShortcut, QColorConstants, QStandardItemModel, QStandardItem, QCloseEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
     QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
     QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
@@ -114,8 +114,6 @@ if __name__ == '__main__':
     app.installTranslator(translator)
     tr.translate()
     hotkeys = Hotkeys()  # Create the instance after translations to ensure hotkeys are translated
-
-instances = []  # Holds temporary instances that will be deleted later on
 
 # represents the index of columns in instructions restore table
 INSTR_ADDR_COL = 0
@@ -239,7 +237,7 @@ class WorkerSignals(QObject):
 
 class Worker(QRunnable):
     def __init__(self, fn, *args, **kwargs):
-        super(Worker, self).__init__()
+        super().__init__()
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
@@ -311,7 +309,7 @@ class AwaitAsyncOutput(QThread):
     async_output_ready = pyqtSignal(str)
 
     def __init__(self):
-        super(AwaitAsyncOutput, self).__init__()
+        super().__init__()
         self.queue_active = True
 
     def run(self):
@@ -375,7 +373,6 @@ class MainForm(QMainWindow, MainWindow):
         }
         for hotkey, func in hotkey_to_func.items():
             hotkey.change_func(func)
-        guiutils.center(self)
         self.treeWidget_AddressTable.setColumnWidth(FROZEN_COL, 50)
         self.treeWidget_AddressTable.setColumnWidth(DESC_COL, 150)
         self.treeWidget_AddressTable.setColumnWidth(ADDR_COL, 150)
@@ -384,7 +381,6 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.settings = QSettings()
         self.memory_view_window = MemoryViewWindowForm(self)
-        self.about_widget = AboutWidgetForm()
         self.await_exit_thread = AwaitProcessExit()
 
         if not os.path.exists(self.settings.fileName()):
@@ -407,7 +403,7 @@ class MainForm(QMainWindow, MainWindow):
         try:
             debugcore.init_gdb(settings.gdb_path)
         except pexpect.EOF:
-            InputDialogForm(item_list=[(tr.GDB_INIT_ERROR, None)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
+            InputDialogForm(self, [(tr.GDB_INIT_ERROR, None)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
         else:
             self.apply_after_init()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
@@ -492,6 +488,7 @@ class MainForm(QMainWindow, MainWindow):
         self.flashAttachButton_gradiantState = 0
         self.flashAttachButtonTimer.start(100)
         self.auto_attach()
+        guiutils.center(self)
 
     # Please refrain from using python specific objects in settings, use json-compatible ones instead
     # Using python objects causes issues when filenames change
@@ -737,7 +734,7 @@ class MainForm(QMainWindow, MainWindow):
         address = selected_row.text(ADDR_COL).strip("P->")  # @todo Maybe rework address grabbing logic in the future
         address_data = selected_row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
         if isinstance(address_data, typedefs.PointerType):
-            selection_dialog = TrackSelectorDialogForm()
+            selection_dialog = TrackSelectorDialogForm(self)
             selection_dialog.exec()
             if not selection_dialog.selection:
                 return
@@ -752,7 +749,7 @@ class MainForm(QMainWindow, MainWindow):
             byte_len = value_type.length
         else:
             byte_len = typedefs.index_to_valuetype_dict[value_type.value_index][0]
-        TrackWatchpointWidgetForm(address, byte_len, watchpoint_type, self).show()
+        TrackWatchpointWidgetForm(self, address, byte_len, watchpoint_type)
 
     def browse_region_for_selected_row(self):
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
@@ -895,7 +892,7 @@ class MainForm(QMainWindow, MainWindow):
             last_item.setExpanded(True)
 
     def create_group(self):
-        dialog = InputDialogForm(item_list=[(tr.ENTER_DESCRIPTION, tr.GROUP)])
+        dialog = InputDialogForm(self, [(tr.ENTER_DESCRIPTION, tr.GROUP)])
         if dialog.exec():
             desc = dialog.get_values()
             self.add_entry_to_addresstable(desc, "0x0")
@@ -1011,7 +1008,7 @@ class MainForm(QMainWindow, MainWindow):
 
     # gets the information from the dialog then adds it to addresstable
     def pushButton_AddAddressManually_clicked(self):
-        manual_address_dialog = ManualAddressDialogForm()
+        manual_address_dialog = ManualAddressDialogForm(self)
         if manual_address_dialog.exec():
             desc, address_expr, vt = manual_address_dialog.get_values()
             self.add_entry_to_addresstable(desc, address_expr, vt)
@@ -1030,16 +1027,17 @@ class MainForm(QMainWindow, MainWindow):
         utils.execute_command_as_user('python3 -m webbrowser "https://github.com/korcankaraokcu/PINCE/wiki"')
 
     def pushButton_About_clicked(self):
-        self.about_widget.show()
-        self.about_widget.activateWindow()
+        about_widget = AboutWidgetForm(self)
+        about_widget.show()
+        about_widget.activateWindow()
 
     def pushButton_Settings_clicked(self):
-        settings_dialog = SettingsDialogForm(self.set_default_settings)
+        settings_dialog = SettingsDialogForm(self, self.set_default_settings)
         if settings_dialog.exec():
             self.apply_settings()
 
     def pushButton_Console_clicked(self):
-        console_widget = ConsoleWidgetForm()
+        console_widget = ConsoleWidgetForm(self)
         console_widget.showMaximized()
 
     def checkBox_Hex_stateChanged(self, state):
@@ -1374,7 +1372,7 @@ class MainForm(QMainWindow, MainWindow):
     def clear_address_table(self):
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
-        confirm_dialog = InputDialogForm(item_list=[(tr.CLEAR_TABLE,)])
+        confirm_dialog = InputDialogForm(self, [(tr.CLEAR_TABLE,)])
         if confirm_dialog.exec():
             self.treeWidget_AddressTable.clear()
 
@@ -1579,7 +1577,7 @@ class MainForm(QMainWindow, MainWindow):
             return
         value = row.text(VALUE_COL)
         value_index = row.data(TYPE_COL, Qt.ItemDataRole.UserRole).value_index
-        dialog = InputDialogForm(item_list=[(tr.ENTER_VALUE, value)], parsed_index=0, value_index=value_index)
+        dialog = InputDialogForm(self, [(tr.ENTER_VALUE, value)], 0, value_index)
         if dialog.exec():
             new_value = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
@@ -1599,7 +1597,7 @@ class MainForm(QMainWindow, MainWindow):
         if not row:
             return
         description = row.text(DESC_COL)
-        dialog = InputDialogForm(item_list=[(tr.ENTER_DESCRIPTION, description)])
+        dialog = InputDialogForm(self, [(tr.ENTER_DESCRIPTION, description)])
         if dialog.exec():
             description_text = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
@@ -1610,7 +1608,7 @@ class MainForm(QMainWindow, MainWindow):
         if not row:
             return
         desc, address_expr, vt = self.read_address_table_entries(row)
-        manual_address_dialog = ManualAddressDialogForm(description=desc, address=address_expr, value_type=vt)
+        manual_address_dialog = ManualAddressDialogForm(self, desc, address_expr, vt)
         manual_address_dialog.setWindowTitle(tr.EDIT_ADDRESS)
         if manual_address_dialog.exec():
             desc, address_expr, vt = manual_address_dialog.get_values()
@@ -1622,7 +1620,7 @@ class MainForm(QMainWindow, MainWindow):
         if not row:
             return
         vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-        dialog = EditTypeDialogForm(value_type=vt)
+        dialog = EditTypeDialogForm(self, vt)
         if dialog.exec():
             vt = dialog.get_values()
             for row in self.treeWidget_AddressTable.selectedItems():
@@ -1683,15 +1681,15 @@ class MainForm(QMainWindow, MainWindow):
 # process select window
 class ProcessForm(QMainWindow, ProcessWindow):
     def __init__(self, parent=None):
-        super().__init__(parent=parent)
+        super().__init__(parent)
         self.setupUi(self)
-        guiutils.center_to_parent(self)
         self.refresh_process_table(self.tableWidget_ProcessTable, utils.get_process_list())
         self.pushButton_Close.clicked.connect(self.close)
         self.pushButton_Open.clicked.connect(self.pushButton_Open_clicked)
         self.pushButton_CreateProcess.clicked.connect(self.pushButton_CreateProcess_clicked)
         self.lineEdit_SearchProcess.textChanged.connect(self.generate_new_list)
         self.tableWidget_ProcessTable.itemDoubleClicked.connect(self.pushButton_Open_clicked)
+        guiutils.center_to_parent(self)
 
     # refreshes process list
     def generate_new_list(self):
@@ -1741,7 +1739,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
         file_path = QFileDialog.getOpenFileName(self, tr.SELECT_BINARY)[0]
         if file_path:
             items = [(tr.ENTER_OPTIONAL_ARGS, ""), (tr.LD_PRELOAD_OPTIONAL, "")]
-            arg_dialog = InputDialogForm(item_list=items)
+            arg_dialog = InputDialogForm(self, items)
             if arg_dialog.exec():
                 args, ld_preload_path = arg_dialog.get_values()
             else:
@@ -1754,8 +1752,8 @@ class ProcessForm(QMainWindow, ProcessWindow):
 
 # Add Address Manually Dialog
 class ManualAddressDialogForm(QDialog, ManualAddressDialog):
-    def __init__(self, parent=None, description=tr.NO_DESCRIPTION, address="0x", value_type=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent, description=tr.NO_DESCRIPTION, address="0x", value_type=None):
+        super().__init__(parent)
         self.setupUi(self)
         vt = typedefs.ValueType() if not value_type else value_type
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
@@ -1811,6 +1809,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.pushButton_RemoveOffset.clicked.connect(self.removeOffsetLayout)
         self.label_Value.contextMenuEvent = self.label_Value_context_menu_event
         self.update_value()
+        guiutils.center_to_parent(self)
 
     def label_Value_context_menu_event(self, event):
         menu = QMenu()
@@ -1922,7 +1921,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.update_value()
 
     def reject(self):
-        super(ManualAddressDialogForm, self).reject()
+        super().reject()
 
     def accept(self):
         if self.label_Length.isVisible():
@@ -1935,7 +1934,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             if not length > 0:
                 QMessageBox.information(self, tr.ERROR, tr.LENGTH_GT)
                 return
-        super(ManualAddressDialogForm, self).accept()
+        super().accept()
 
     def get_values(self):
         description = self.lineEdit_Description.text()
@@ -1991,8 +1990,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
 
 class EditTypeDialogForm(QDialog, EditTypeDialog):
-    def __init__(self, parent=None, value_type=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent, value_type=None):
+        super().__init__(parent)
         self.setupUi(self)
         vt = typedefs.ValueType() if not value_type else value_type
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
@@ -2029,6 +2028,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         self.checkBox_Hex.stateChanged.connect(self.repr_changed)
         app.processEvents()
         self.adjustSize()
+        guiutils.center_to_parent(self)
 
     def comboBox_ValueType_current_index_changed(self):
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
@@ -2049,7 +2049,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.checkBox_Signed.setEnabled(True)
 
     def reject(self):
-        super(EditTypeDialogForm, self).reject()
+        super().reject()
 
     def accept(self):
         if self.label_Length.isVisible():
@@ -2062,7 +2062,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             if not length > 0:
                 QMessageBox.information(self, tr.ERROR, tr.LENGTH_GT)
                 return
-        super(EditTypeDialogForm, self).accept()
+        super().accept()
 
     def get_values(self):
         value_index = self.comboBox_ValueType.currentIndex()
@@ -2083,12 +2083,13 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
 
 
 class TrackSelectorDialogForm(QDialog, TrackSelectorDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
         self.selection = None
         self.pushButton_Pointer.clicked.connect(lambda: self.change_selection("pointer"))
         self.pushButton_Pointed.clicked.connect(lambda: self.change_selection("pointed"))
+        guiutils.center_to_parent(self)
 
     def change_selection(self, selection):
         self.selection = selection
@@ -2096,13 +2097,10 @@ class TrackSelectorDialogForm(QDialog, TrackSelectorDialog):
 
 
 class LoadingDialogForm(QDialog, LoadingDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
-        self.setWindowFlags(self.windowFlags() | Qt.WindowType.FramelessWindowHint)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        if parent:
-            guiutils.center_to_parent(self)
+        self.setWindowFlags(self.windowFlags())
         self.keyPressEvent = QEvent.ignore
 
         # Make use of this background_thread when you spawn a LoadingDialogForm
@@ -2111,7 +2109,7 @@ class LoadingDialogForm(QDialog, LoadingDialog):
         # Check refresh_table method of FunctionsInfoWidgetForm for exemplary usage
         self.background_thread = self.BackgroundThread()
         self.background_thread.output_ready.connect(self.accept)
-        self.pushButton_Cancel.clicked.connect(self.cancel_thread)
+        self.pushButton_Cancel.clicked.connect(self.close)
         media_directory = utils.get_media_directory()
         self.movie = QMovie(media_directory + "/LoadingDialog/ajax-loader.gif", QByteArray())
         self.label_Animated.setMovie(self.movie)
@@ -2119,15 +2117,20 @@ class LoadingDialogForm(QDialog, LoadingDialog):
         self.movie.setCacheMode(QMovie.CacheMode.CacheAll)
         self.movie.setSpeed(100)
         self.movie.start()
+        guiutils.center_to_parent(self)
 
-    # This function only cancels the last command sent
-    # Override this if you want to do dangerous stuff like, God forbid, background_thread.terminate()
+    # TODO: This function only cancels the last command sent, redesign this if it's needed to cancel non-gdb functions
     def cancel_thread(self):
         debugcore.cancel_last_command()
+        self.background_thread.wait()
 
     def exec(self):
         self.background_thread.start()
-        super(LoadingDialogForm, self).exec()
+        super().exec()
+
+    def closeEvent(self, event: QCloseEvent):
+        self.cancel_thread()
+        super().closeEvent(event)
 
     class BackgroundThread(QThread):
         output_ready = pyqtSignal(object)
@@ -2157,9 +2160,9 @@ class InputDialogForm(QDialog, InputDialog):
     # that points the current index of the QComboBox, for instance: ["0", "1", 1] will create a QCombobox with the items
     # "0" and "1" then will set current index to 1 (which is the item "1")
     # label_alignment is optional
-    def __init__(self, parent=None, item_list=None, parsed_index=-1, value_index=typedefs.VALUE_INDEX.INT32,
+    def __init__(self, parent, item_list=None, parsed_index=-1, value_index=typedefs.VALUE_INDEX.INT32,
                  buttons=(QDialogButtonBox.StandardButton.Ok, QDialogButtonBox.StandardButton.Cancel)):
-        super().__init__(parent=parent)
+        super().__init__(parent)
         self.setupUi(self)
         for button in buttons:
             self.buttonBox.addButton(button)
@@ -2203,6 +2206,7 @@ class InputDialogForm(QDialog, InputDialog):
             break
         self.parsed_index = parsed_index
         self.value_index = value_index
+        guiutils.center_to_parent(self)
 
     def get_text(self, item):
         try:
@@ -2221,16 +2225,17 @@ class InputDialogForm(QDialog, InputDialog):
             if utils.parse_string(self.get_text(item), self.value_index) is None:
                 QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
                 return
-        super(InputDialogForm, self).accept()
+        super().accept()
 
 
 class TextEditDialogForm(QDialog, TextEditDialog):
-    def __init__(self, parent=None, text=""):
-        super().__init__(parent=parent)
+    def __init__(self, parent, text=""):
+        super().__init__(parent)
         self.setupUi(self)
         self.textEdit.setPlainText(str(text))
         self.accept_shortcut = QShortcut(QKeySequence("Ctrl+Return"), self)
         self.accept_shortcut.activated.connect(self.accept)
+        guiutils.center_to_parent(self)
 
     def get_values(self):
         return self.textEdit.toPlainText()
@@ -2239,12 +2244,12 @@ class TextEditDialogForm(QDialog, TextEditDialog):
         if QKeyEvent.key() == Qt.Key.Key_Enter:
             pass
         else:
-            super(TextEditDialogForm, self).keyPressEvent(QKeyEvent)
+            super().keyPressEvent(QKeyEvent)
 
 
 class SettingsDialogForm(QDialog, SettingsDialog):
-    def __init__(self, set_default_settings_func, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent, set_default_settings_func):
+        super().__init__(parent)
         self.setupUi(self)
         self.settings = QSettings()
         self.set_default_settings = set_default_settings_func
@@ -2282,6 +2287,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.comboBox_Logo.currentIndexChanged.connect(self.comboBox_Logo_current_index_changed)
         self.comboBox_Theme.currentIndexChanged.connect(self.comboBox_Theme_current_index_changed)
         self.pushButton_HandleSignals.clicked.connect(self.pushButton_HandleSignals_clicked)
+        guiutils.center_to_parent(self)
 
     def accept(self):
         try:
@@ -2308,10 +2314,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             QMessageBox.information(self, tr.ERROR, tr.INTERVAL_ASSERT_NEGATIVE)
             return
         elif current_table_update_interval == 0 or current_freeze_interval == 0:
-            if not InputDialogForm(item_list=[(tr.ASKING_FOR_TROUBLE,)]).exec():  # Easter egg
+            if not InputDialogForm(self, [(tr.ASKING_FOR_TROUBLE,)]).exec():  # Easter egg
                 return
         elif current_table_update_interval < 100:
-            if not InputDialogForm(item_list=[(tr.UPDATE_ASSERT_GT.format(100),)]).exec():
+            if not InputDialogForm(self, [(tr.UPDATE_ASSERT_GT.format(100),)]).exec():
                 return
 
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
@@ -2348,7 +2354,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         selected_gdb_path = self.lineEdit_GDBPath.text()
         current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
         if selected_gdb_path != current_gdb_path:
-            if InputDialogForm(item_list=[(tr.GDB_RESET,)]).exec():
+            if InputDialogForm(self, [(tr.GDB_RESET,)]).exec():
                 debugcore.init_gdb(selected_gdb_path)
         self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
@@ -2424,7 +2430,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.keySequenceEdit_Hotkey.clear()
 
     def pushButton_ResetSettings_clicked(self):
-        confirm_dialog = InputDialogForm(item_list=[(tr.RESET_DEFAULT_SETTINGS,)])
+        confirm_dialog = InputDialogForm(self, [(tr.RESET_DEFAULT_SETTINGS,)])
         if confirm_dialog.exec():
             self.set_default_settings()
             self.handle_signals_data = ""
@@ -2460,14 +2466,14 @@ class SettingsDialogForm(QDialog, SettingsDialog):
     def pushButton_HandleSignals_clicked(self):
         if not self.handle_signals_data:
             self.handle_signals_data = self.settings.value("Debug/handle_signals", type=str)
-        signal_dialog = HandleSignalsDialogForm(self.handle_signals_data)
+        signal_dialog = HandleSignalsDialogForm(self, self.handle_signals_data)
         if signal_dialog.exec():
             self.handle_signals_data = signal_dialog.get_values()
 
 
 class HandleSignalsDialogForm(QDialog, HandleSignalsDialog):
-    def __init__(self, signal_data, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent, signal_data):
+        super().__init__(parent)
         self.setupUi(self)
         self.signal_data = json.loads(signal_data)
         self.tableWidget_Signals.setRowCount(len(self.signal_data))
@@ -2486,6 +2492,7 @@ class HandleSignalsDialogForm(QDialog, HandleSignalsDialog):
             else:
                 checkbox.setCheckState(Qt.CheckState.Unchecked)
         self.tableWidget_Signals.resizeColumnsToContents()
+        guiutils.center_to_parent(self)
 
 
     def create_checkbox_widget(self):
@@ -2513,12 +2520,10 @@ class HandleSignalsDialogForm(QDialog, HandleSignalsDialog):
 
 
 class ConsoleWidgetForm(QWidget, ConsoleWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
-        global instances
-        instances.append(self)
-        guiutils.center(self)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.completion_model = QStringListModel()
         self.completer = QCompleter()
         self.completer.setModel(self.completion_model)
@@ -2545,6 +2550,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.lineEdit.keyPressEvent_original = self.lineEdit.keyPressEvent
         self.lineEdit.keyPressEvent = self.lineEdit_key_press_event
         self.reset_console_text()
+        guiutils.center_to_parent(self)
 
     def communicate(self):
         self.current_history_index = -1
@@ -2584,7 +2590,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.textBrowser.ensureCursorVisible()
 
     def enter_multiline_mode(self):
-        multiline_dialog = TextEditDialogForm(text=self.lineEdit.text())
+        multiline_dialog = TextEditDialogForm(self, self.lineEdit.text())
         if multiline_dialog.exec():
             self.lineEdit.setText(multiline_dialog.get_values())
             self.communicate()
@@ -2629,17 +2635,15 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         else:
             self.finish_completion()
 
-    def closeEvent(self, QCloseEvent):
+    def closeEvent(self, event):
         self.await_async_output_thread.stop()
-        global instances
-        instances.remove(self)
 
 
 class AboutWidgetForm(QTabWidget, AboutWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
-        guiutils.center(self)
+        self.setWindowFlags(Qt.WindowType.Window)
 
         # This section has untranslated text since it's just a placeholder
         license_text = open("COPYING").read()
@@ -2657,6 +2661,7 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
         self.textBrowser_Contributors.append("#THANKS#")
         self.textBrowser_Contributors.append("#######\n")
         self.textBrowser_Contributors.append(thanks_text)
+        guiutils.center_to_parent(self)
 
 
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
@@ -2717,12 +2722,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def initialize_help_context_menu(self):
         self.actionlibpince.triggered.connect(self.actionlibpince_triggered)
 
-    def __init__(self, parent=None):
-        super().__init__()
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
-        self.parent = lambda: parent
-        guiutils.center(self)
         self.updating_memoryview = False
+        self.stacktrace_info_widget = StackTraceInfoWidgetForm(self)
+        self.float_registers_widget = FloatRegisterWidgetForm(self)
         self.process_stopped.connect(self.on_process_stop)
         self.process_running.connect(self.on_process_running)
         self.set_debug_menu_shortcuts()
@@ -2743,6 +2748,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.splitter_MainMiddle.setStretchFactor(1, 1)
         self.widget_StackView.resize(660, self.widget_StackView.height())
         self.widget_Registers.resize(330, self.widget_Registers.height())
+        guiutils.center(self)
 
     def initialize_register_view(self):
         self.pushButton_ShowFloatRegisters.clicked.connect(self.pushButton_ShowFloatRegisters_clicked)
@@ -2838,7 +2844,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_update_timer.start(200)
 
     def show_trace_window(self):
-        TraceInstructionsWindowForm(prompt_dialog=False)
+        TraceInstructionsWindowForm(self, prompt_dialog=False)
 
     def step_instruction(self):
         if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING or \
@@ -2872,7 +2878,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_address(current_address_text)
         bytes_aob = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
-        EditInstructionDialogForm(current_address, bytes_aob, self).exec()
+        EditInstructionDialogForm(self, current_address, bytes_aob).exec()
 
     def nop_instruction(self):
         if debugcore.currentpid == -1:
@@ -2981,13 +2987,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def exec_hex_view_edit_dialog(self):
         if debugcore.currentpid == -1:
             return
-        HexEditDialogForm(self.hex_selection_address_begin, self.get_hex_selection_length()).exec()
+        HexEditDialogForm(self, self.hex_selection_address_begin, self.get_hex_selection_length()).exec()
         self.refresh_hex_view()
 
     def exec_hex_view_go_to_dialog(self):
         if debugcore.currentpid == -1:
             return
-        go_to_dialog = InputDialogForm(item_list=[(tr.ENTER_EXPRESSION, hex(self.hex_selection_address_begin))])
+        go_to_dialog = InputDialogForm(self, [(tr.ENTER_EXPRESSION, hex(self.hex_selection_address_begin))])
         if go_to_dialog.exec():
             expression = go_to_dialog.get_values()
             dest_address = debugcore.examine_expression(expression).address
@@ -3000,9 +3006,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         vt = typedefs.ValueType(typedefs.VALUE_INDEX.AOB, self.get_hex_selection_length())
-        manual_address_dialog = ManualAddressDialogForm(address=hex(self.hex_selection_address_begin), value_type=vt)
-        if manual_address_dialog.exec():
-            desc, address, vt = manual_address_dialog.get_values()
+        address_dialog = ManualAddressDialogForm(self, address=hex(self.hex_selection_address_begin), value_type=vt)
+        if address_dialog.exec():
+            desc, address, vt = address_dialog.get_values()
             self.parent().add_entry_to_addresstable(desc, address, vt)
             self.parent().update_address_table()
 
@@ -3410,16 +3416,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if self.bring_disassemble_to_front:
             self.showMaximized()
             self.activateWindow()
-        try:
-            if self.stacktrace_info_widget.isVisible():
-                self.stacktrace_info_widget.update_stacktrace()
-        except AttributeError:
-            pass
-        try:
-            if self.float_registers_widget.isVisible():
-                self.float_registers_widget.update_registers()
-        except AttributeError:
-            pass
+        if self.stacktrace_info_widget.isVisible():
+            self.stacktrace_info_widget.update_stacktrace()
+        if self.float_registers_widget.isVisible():
+            self.float_registers_widget.update_registers()
         app.processEvents()
         time1 = time()
         print("UPDATED MEMORYVIEW IN:" + str(time1 - time0))
@@ -3436,8 +3436,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             condition_line_edit_text = breakpoints[0].condition
         else:
             condition_line_edit_text = ""
-        condition_dialog = InputDialogForm(
-            item_list=[(tr.ENTER_BP_CONDITION, condition_line_edit_text, Qt.AlignmentFlag.AlignLeft)])
+        items = [(tr.ENTER_BP_CONDITION, condition_line_edit_text, Qt.AlignmentFlag.AlignLeft)]
+        condition_dialog = InputDialogForm(self, items)
         if condition_dialog.exec():
             condition = condition_dialog.get_values()
             for bp in breakpoints:
@@ -3917,7 +3917,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_address(current_address_text)
-        dissect_code_dialog = DissectCodeDialogForm(int_address=int(current_address, 16))
+        dissect_code_dialog = DissectCodeDialogForm(self, int(current_address, 16))
         dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
         dissect_code_dialog.exec()
         self.refresh_disassemble_view()
@@ -3929,7 +3929,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         current_address = utils.extract_address(current_address_text)
         current_address_int = int(current_address, 16)
-        examine_referrers_widget = ExamineReferrersWidgetForm(current_address_int, self)
+        examine_referrers_widget = ExamineReferrersWidgetForm(self, current_address_int)
         examine_referrers_widget.show()
 
     def exec_trace_instructions_dialog(self):
@@ -3940,7 +3940,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_address(current_address_text)
-        TraceInstructionsWindowForm(current_address, parent=self)
+        TraceInstructionsWindowForm(self, current_address)
 
     def exec_track_breakpoint_dialog(self):
         if debugcore.currentpid == -1:
@@ -3949,11 +3949,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_address(current_address_text)
         current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
-        register_expression_dialog = InputDialogForm(item_list=[(tr.ENTER_TRACK_BP_EXPRESSION, "")])
+        register_expression_dialog = InputDialogForm(self, [(tr.ENTER_TRACK_BP_EXPRESSION, "")])
         if register_expression_dialog.exec():
             exp = register_expression_dialog.get_values()
-            track_breakpoint_widget = TrackBreakpointWidgetForm(current_address, current_instruction, exp, self)
-            track_breakpoint_widget.show()
+            TrackBreakpointWidgetForm(self, current_address, current_instruction, exp)
 
     def exec_disassemble_go_to_dialog(self):
         if debugcore.currentpid == -1:
@@ -3964,7 +3963,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_address(current_address_text)
 
-        go_to_dialog = InputDialogForm(item_list=[(tr.ENTER_EXPRESSION, current_address)])
+        go_to_dialog = InputDialogForm(self, [(tr.ENTER_EXPRESSION, current_address)])
         if go_to_dialog.exec():
             traveled_exp = go_to_dialog.get_values()
             self.disassemble_expression(traveled_exp, append_to_travel_history=True)
@@ -3975,7 +3974,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if int_address in self.tableWidget_Disassemble.bookmarks:
             QMessageBox.information(app.focusWidget(), tr.ERROR, tr.ALREADY_BOOKMARKED)
             return
-        comment_dialog = InputDialogForm(item_list=[(tr.ENTER_BOOKMARK_COMMENT, "")])
+        comment_dialog = InputDialogForm(self, [(tr.ENTER_BOOKMARK_COMMENT, "")])
         if comment_dialog.exec():
             comment = comment_dialog.get_values()
         else:
@@ -3987,7 +3986,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         current_comment = self.tableWidget_Disassemble.bookmarks[int_address]
-        comment_dialog = InputDialogForm(item_list=[(tr.ENTER_BOOKMARK_COMMENT, current_comment)])
+        comment_dialog = InputDialogForm(self, [(tr.ENTER_BOOKMARK_COMMENT, current_comment)])
         if comment_dialog.exec():
             new_comment = comment_dialog.get_values()
         else:
@@ -4010,8 +4009,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionStackTrace_Info_triggered(self):
         if debugcore.currentpid == -1:
             return
-        self.stacktrace_info_widget = StackTraceInfoWidgetForm()
+        self.stacktrace_info_widget.update_stacktrace()
+        guiutils.center_to_parent(self.stacktrace_info_widget)
         self.stacktrace_info_widget.show()
+        self.stacktrace_info_widget.activateWindow()
 
     def actionBreakpoints_triggered(self):
         if debugcore.currentpid == -1:
@@ -4027,7 +4028,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         functions_info_widget.show()
 
     def actionGDB_Log_File_triggered(self):
-        log_file_widget = LogFileWidgetForm()
+        log_file_widget = LogFileWidgetForm(self)
         log_file_widget.showMaximized()
 
     def actionMemory_Regions_triggered(self):
@@ -4041,6 +4042,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         restore_instructions_widget = RestoreInstructionsWidgetForm(self)
         restore_instructions_widget.show()
+        restore_instructions_widget.activateWindow()
 
     def actionReferenced_Strings_triggered(self):
         if debugcore.currentpid == -1:
@@ -4067,7 +4069,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionCall_Function_triggered(self):
         if debugcore.currentpid == -1:
             return
-        call_dialog = InputDialogForm(item_list=[(tr.ENTER_CALL_EXPRESSION, "")])
+        call_dialog = InputDialogForm(self, [(tr.ENTER_CALL_EXPRESSION, "")])
         if call_dialog.exec():
             result = debugcore.call_function_from_inferior(call_dialog.get_values())
             if result[0]:
@@ -4080,36 +4082,33 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         start_address = int(self.disassemble_currently_displayed_address, 16)
         end_address = start_address + 0x30000
-        search_opcode_widget = SearchOpcodeWidgetForm(hex(start_address), hex(end_address), self)
+        search_opcode_widget = SearchOpcodeWidgetForm(self, hex(start_address), hex(end_address))
         search_opcode_widget.show()
 
     def actionDissect_Code_triggered(self):
         if debugcore.currentpid == -1:
             return
-        self.dissect_code_dialog = DissectCodeDialogForm()
-        self.dissect_code_dialog.exec()
+        dissect_code_dialog = DissectCodeDialogForm(self)
+        dissect_code_dialog.exec()
         self.refresh_disassemble_view()
 
     def actionlibpince_triggered(self):
-        libpince_widget = LibpinceReferenceWidgetForm(is_window=True)
+        libpince_widget = LibpinceReferenceWidgetForm(self)
         libpince_widget.showMaximized()
 
     def pushButton_ShowFloatRegisters_clicked(self):
         if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
-        self.float_registers_widget = FloatRegisterWidgetForm()
+        self.float_registers_widget.update_registers()
+        guiutils.center_to_parent(self.float_registers_widget)
         self.float_registers_widget.show()
-        guiutils.center_to_window(self.float_registers_widget, self.widget_Registers)
+        self.float_registers_widget.activateWindow()
 
 
 class BookmarkWidgetForm(QWidget, BookmarkWidget):
-    def __init__(self, parent=None):
-        super().__init__()
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
-        self.parent = lambda: parent
-        global instances
-        instances.append(self)
-        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.listWidget.contextMenuEvent = self.listWidget_context_menu_event
         self.listWidget.currentRowChanged.connect(self.change_display)
@@ -4119,6 +4118,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.shortcut_refresh = QShortcut(QKeySequence("R"), self)
         self.shortcut_refresh.activated.connect(self.refresh_table)
         self.refresh_table()
+        guiutils.center_to_parent(self)
 
     def refresh_table(self):
         self.listWidget.clear()
@@ -4140,7 +4140,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.parent().disassemble_expression(utils.extract_address(item.text()), append_to_travel_history=True)
 
     def exec_add_entry_dialog(self):
-        entry_dialog = InputDialogForm(item_list=[(tr.ENTER_EXPRESSION, "")])
+        entry_dialog = InputDialogForm(self, [(tr.ENTER_EXPRESSION, "")])
         if entry_dialog.exec():
             text = entry_dialog.get_values()
             address = debugcore.examine_expression(text).address
@@ -4194,17 +4194,12 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.parent().delete_bookmark(current_address)
         self.refresh_table()
 
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
-
 
 class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
         self.setWindowFlags(Qt.WindowType.Window)
-        self.update_registers()
         self.tableWidget_FPU.itemDoubleClicked.connect(self.set_register)
         self.tableWidget_XMM.itemDoubleClicked.connect(self.set_register)
 
@@ -4233,7 +4228,7 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         current_register = current_table_widget.item(current_row, FLOAT_REGISTERS_NAME_COL).text()
         current_value = current_table_widget.item(current_row, FLOAT_REGISTERS_VALUE_COL).text()
         label_text = tr.ENTER_REGISTER_VALUE.format(current_register.upper())
-        register_dialog = InputDialogForm(item_list=[(label_text, current_value)])
+        register_dialog = InputDialogForm(self, [(label_text, current_value)])
         if register_dialog.exec():
             if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
                 return
@@ -4244,13 +4239,11 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
 
 
 class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
-        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.listWidget_ReturnAddresses.currentRowChanged.connect(self.update_frame_info)
-        self.update_stacktrace()
 
     def update_stacktrace(self):
         self.listWidget_ReturnAddresses.clear()
@@ -4268,13 +4261,9 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
 
 
 class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
-    def __init__(self, parent=None):
-        super().__init__()
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
-        self.parent = lambda: parent
-        global instances
-        instances.append(self)
-        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
 
         # Saving the original function because super() doesn't work when we override functions like this
@@ -4283,6 +4272,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         self.tableWidget_Instructions.contextMenuEvent = self.tableWidget_Instructions_context_menu_event
         self.tableWidget_Instructions.itemDoubleClicked.connect(self.tableWidget_Instructions_double_clicked)
         self.refresh()
+        guiutils.center_to_parent(self)
 
     def tableWidget_Instructions_context_menu_event(self, event):
         selected_row = guiutils.get_current_row(self.tableWidget_Instructions)
@@ -4345,19 +4335,11 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
         current_address = utils.extract_address(current_address_text)
         self.parent().disassemble_expression(current_address, append_to_travel_history=True)
 
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
-
 
 class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
-    def __init__(self, parent=None):
-        super().__init__()
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
-        self.parent = lambda: parent
-        global instances
-        instances.append(self)
-        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.tableWidget_BreakpointInfo.contextMenuEvent = self.tableWidget_BreakpointInfo_context_menu_event
 
@@ -4366,6 +4348,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         self.tableWidget_BreakpointInfo.keyPressEvent = self.tableWidget_BreakpointInfo_key_press_event
         self.tableWidget_BreakpointInfo.itemDoubleClicked.connect(self.tableWidget_BreakpointInfo_double_clicked)
         self.refresh()
+        guiutils.center_to_parent(self)
 
     def refresh(self):
         break_info = debugcore.get_breakpoint_info()
@@ -4410,7 +4393,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         self.tableWidget_BreakpointInfo.keyPressEvent_original(event)
 
     def exec_enable_count_dialog(self, current_address):
-        hit_count_dialog = InputDialogForm(item_list=[(tr.ENTER_HIT_COUNT.format(1), "")])
+        hit_count_dialog = InputDialogForm(self, [(tr.ENTER_HIT_COUNT.format(1), "")])
         if hit_count_dialog.exec():
             count = hit_count_dialog.get_values()
             try:
@@ -4490,19 +4473,11 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
             else:
                 self.parent().hex_dump_address(current_address_int)
 
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
-
 
 class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
-    def __init__(self, address, length, watchpoint_type, parent=None):
-        super().__init__()
+    def __init__(self, parent, address, length, watchpoint_type):
+        super().__init__(parent)
         self.setupUi(self)
-        self.parent = lambda: parent
-        global instances
-        instances.append(self)
-        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.update_timer = QTimer(timeout=self.update_list)
         self.stopped = False
@@ -4528,6 +4503,8 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.tableWidget_Opcodes.itemDoubleClicked.connect(self.tableWidget_Opcodes_item_double_clicked)
         self.tableWidget_Opcodes.selectionModel().currentChanged.connect(self.tableWidget_Opcodes_current_changed)
         self.update_timer.start(100)
+        guiutils.center_to_parent(self)
+        self.show()
 
     def update_list(self):
         info = debugcore.get_track_watchpoint_info(self.breakpoints)
@@ -4576,25 +4553,21 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.stopped = True
         self.pushButton_Stop.setText(tr.CLOSE)
 
-    def closeEvent(self, QCloseEvent):
-        global instances
+    def closeEvent(self, event: QCloseEvent):
         self.update_timer.stop()
-        if not self.stopped:
-            debugcore.delete_breakpoint(self.address)
-        watchpoint_file = utils.get_track_watchpoint_file(debugcore.currentpid, self.breakpoints)
-        if os.path.exists(watchpoint_file):
-            os.remove(watchpoint_file)
-        self.deleteLater()
-        instances.remove(self)
+        if self.breakpoints:
+            if not self.stopped:
+                debugcore.delete_breakpoint(self.address)
+            watchpoint_file = utils.get_track_watchpoint_file(debugcore.currentpid, self.breakpoints)
+            if os.path.exists(watchpoint_file):
+                os.remove(watchpoint_file)
+        super().closeEvent(event)
 
 
 class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
-    def __init__(self, address, instruction, register_expressions, parent=None):
-        super().__init__()
+    def __init__(self, parent, address, instruction, register_expressions):
+        super().__init__(parent)
         self.setupUi(self)
-        self.parent = lambda: parent
-        global instances
-        instances.append(self)
         self.update_list_timer = QTimer(timeout=self.update_list)
         self.update_values_timer = QTimer(timeout=self.update_values)
         self.stopped = False
@@ -4602,7 +4575,6 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.info = {}
         self.last_selected_row = 0
         self.setWindowFlags(Qt.WindowType.Window)
-        guiutils.center_to_parent(self)
         self.setWindowTitle(tr.ACCESSED_BY_INSTRUCTION.format(instruction))
         self.breakpoint = debugcore.track_breakpoint(address, register_expressions)
         if not self.breakpoint:
@@ -4617,6 +4589,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.update_list_timer.start(100)
         self.update_values_timer.start(500)
         self.parent().refresh_disassemble_view()
+        guiutils.center_to_parent(self)
+        self.show()
 
     def update_list(self):
         info = debugcore.get_track_breakpoint_info(self.breakpoint)
@@ -4669,24 +4643,24 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.pushButton_Stop.setText(tr.CLOSE)
         self.parent().refresh_disassemble_view()
 
-    def closeEvent(self, QCloseEvent):
-        global instances
+    def closeEvent(self, event: QCloseEvent):
         self.update_list_timer.stop()
         self.update_values_timer.stop()
-        if not self.stopped:
-            debugcore.delete_breakpoint(self.address)
-        breakpoint_file = utils.get_track_breakpoint_file(debugcore.currentpid, self.breakpoint)
-        if os.path.exists(breakpoint_file):
-            os.remove(breakpoint_file)
+        if self.breakpoint:
+            if not self.stopped:
+                debugcore.delete_breakpoint(self.address)
+            breakpoint_file = utils.get_track_breakpoint_file(debugcore.currentpid, self.breakpoint)
+            if os.path.exists(breakpoint_file):
+                os.remove(breakpoint_file)
         self.parent().refresh_disassemble_view()
-        self.deleteLater()
-        instances.remove(self)
+        super().closeEvent(event)
 
 
 class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
+        guiutils.center_to_parent(self)
 
     def get_values(self):
         max_trace_count = int(self.lineEdit_MaxTraceCount.text())
@@ -4706,7 +4680,7 @@ class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
 
     def accept(self):
         if int(self.lineEdit_MaxTraceCount.text()) >= 1:
-            super(TraceInstructionsPromptDialogForm, self).accept()
+            super().accept()
         else:
             QMessageBox.information(self, tr.ERROR, tr.MAX_TRACE_COUNT_ASSERT_GT.format(1))
 
@@ -4714,8 +4688,8 @@ class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
 class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
     widget_closed = pyqtSignal()
 
-    def __init__(self, address, breakpoint, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent, address, breakpoint):
+        super().__init__(parent)
         self.setupUi(self)
         self.status_to_text = {
             typedefs.TRACE_STATUS.IDLE: tr.WAITING_FOR_BREAKPOINT,
@@ -4724,7 +4698,6 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
             typedefs.TRACE_STATUS.FINISHED: tr.TRACING_COMPLETED
         }
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)
-        guiutils.center(self)
         self.address = address
         self.breakpoint = breakpoint
         media_directory = utils.get_media_directory()
@@ -4740,6 +4713,7 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         self.status_timer.setInterval(30)
         self.status_timer.timeout.connect(self.change_status)
         self.status_timer.start()
+        guiutils.center_to_parent(self)
 
     def change_status(self):
         status_info = debugcore.get_trace_instructions_status(self.breakpoint)
@@ -4752,7 +4726,7 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
             self.label_StatusText.setText(self.status_to_text[status_info[0]])
         app.processEvents()
 
-    def closeEvent(self, QCloseEvent):
+    def closeEvent(self, event: QCloseEvent):
         self.status_timer.stop()
         self.label_StatusText.setText(tr.PROCESSING_DATA)
         self.pushButton_Cancel.setVisible(False)
@@ -4766,16 +4740,13 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
                 app.processEvents()
         debugcore.delete_breakpoint(self.address)
         self.widget_closed.emit()
+        super().closeEvent(event)
 
 
 class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
-    def __init__(self, address="", prompt_dialog=True, parent=None):
-        super().__init__()
+    def __init__(self, parent, address="", prompt_dialog=True):
+        super().__init__(parent)
         self.setupUi(self)
-        self.parent = lambda: parent
-        global instances
-        instances.append(self)
-        guiutils.center(self)
         self.address = address
         self.trace_data = None
         self.treeWidget_InstructionInfo.currentItemChanged.connect(self.display_collected_data)
@@ -4784,10 +4755,11 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.actionOpen.triggered.connect(self.load_file)
         self.actionSave.triggered.connect(self.save_file)
         self.splitter.setStretchFactor(0, 1)
+        guiutils.center_to_parent(self)
         if not prompt_dialog:
             self.showMaximized()
             return
-        prompt_dialog = TraceInstructionsPromptDialogForm()
+        prompt_dialog = TraceInstructionsPromptDialogForm(self)
         if prompt_dialog.exec():
             params = (address,) + prompt_dialog.get_values()
             breakpoint = debugcore.trace_instructions(*params)
@@ -4797,7 +4769,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
                 return
             self.showMaximized()
             self.breakpoint = breakpoint
-            self.wait_dialog = TraceInstructionsWaitWidgetForm(address, breakpoint, self)
+            self.wait_dialog = TraceInstructionsWaitWidgetForm(self, address, breakpoint)
             self.wait_dialog.widget_closed.connect(self.show_trace_info)
             self.wait_dialog.show()
         else:
@@ -4885,19 +4857,11 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         if address:
             self.parent().disassemble_expression(address, append_to_travel_history=True)
 
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
-
 
 class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
-    def __init__(self, parent=None):
-        super().__init__()
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
-        self.parent = lambda: parent
-        global instances
-        instances.append(self)
-        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.textBrowser_AddressInfo.setFixedHeight(100)
         self.pushButton_Search.clicked.connect(self.refresh_table)
@@ -4909,6 +4873,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         icons_directory = guiutils.get_icons_directory()
         self.pushButton_Help.setIcon(QIcon(QPixmap(icons_directory + "/help.png")))
         self.pushButton_Help.clicked.connect(self.pushButton_Help_clicked)
+        guiutils.center_to_parent(self)
 
     def refresh_table(self):
         input_text = self.lineEdit_SearchInput.text()
@@ -4984,17 +4949,13 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.parent().disassemble_expression(address, append_to_travel_history=True)
 
     def pushButton_Help_clicked(self):
-        InputDialogForm(item_list=[(tr.FUNCTIONS_INFO_HELPER, None, Qt.AlignmentFlag.AlignLeft)],
+        InputDialogForm(self, [(tr.FUNCTIONS_INFO_HELPER, None, Qt.AlignmentFlag.AlignLeft)],
                         buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
-
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
 
 
 class EditInstructionDialogForm(QDialog, EditInstructionDialog):
-    def __init__(self, address, bytes_aob, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent, address, bytes_aob):
+        super().__init__(parent)
         self.setupUi(self)
         self.orig_bytes = bytes_aob
         self.lineEdit_Address.setText(address)
@@ -5002,6 +4963,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
         self.lineEdit_Bytes_text_edited()
         self.lineEdit_Bytes.textEdited.connect(self.lineEdit_Bytes_text_edited)
         self.lineEdit_Instruction.textEdited.connect(self.lineEdit_Instruction_text_edited)
+        guiutils.center_to_parent(self)
 
     def set_valid(self, valid):
         if valid:
@@ -5049,23 +5011,24 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
             if new_length < old_length:
                 bytes_aob += " 90"*(old_length-new_length)  # Append NOPs if we are short on bytes
             elif new_length > old_length:
-                if not InputDialogForm(item_list=[(tr.NEW_OPCODE.format(new_length, old_length),)]).exec():
+                if not InputDialogForm(self, [(tr.NEW_OPCODE.format(new_length, old_length),)]).exec():
                     return
             debugcore.modify_instruction(address, bytes_aob)
         self.parent().refresh_hex_view()
         self.parent().refresh_disassemble_view()
-        super(EditInstructionDialogForm, self).accept()
+        super().accept()
 
 
 class HexEditDialogForm(QDialog, HexEditDialog):
-    def __init__(self, address, length=20, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent, address, length=20):
+        super().__init__(parent)
         self.setupUi(self)
         self.lineEdit_Length.setValidator(QHexValidator(999, self))
         self.lineEdit_Address.setText(hex(address))
         self.lineEdit_Length.setText(str(length))
         self.refresh_view()
         self.lineEdit_AsciiView.selectionChanged.connect(self.lineEdit_AsciiView_selection_changed)
+        guiutils.center_to_parent(self)
 
         # TODO: Implement this
         # self.lineEdit_HexView.selectionChanged.connect(self.lineEdit_HexView_selection_changed)
@@ -5134,7 +5097,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
             return
         value = self.lineEdit_HexView.text()
         debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, value)
-        super(HexEditDialogForm, self).accept()
+        super().accept()
 
 
 # This widget will be replaced with auto-generated documentation in the future, no need to translate
@@ -5142,16 +5105,12 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
     def convert_to_modules(self, module_strings):
         return [eval(item) for item in module_strings]
 
-    def __init__(self, is_window=False, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
         self.found_count = 0
         self.current_found = 0
-        global instances
-        instances.append(self)
-        if is_window:
-            guiutils.center(self)
-            self.setWindowFlags(Qt.WindowType.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.show_typedefs()
         self.splitter.setStretchFactor(0, 1)
         self.widget_Resources.resize(700, self.widget_Resources.height())
@@ -5176,6 +5135,7 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         self.treeWidget_ResourceTree.contextMenuEvent = self.treeWidget_ResourceTree_context_menu_event
         self.treeWidget_ResourceTree.expanded.connect(self.resize_resource_tree)
         self.treeWidget_ResourceTree.collapsed.connect(self.resize_resource_tree)
+        guiutils.center_to_parent(self)
 
     def tableWidget_ResourceTable_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -5383,18 +5343,11 @@ class LibpinceReferenceWidgetForm(QWidget, LibpinceReferenceWidget):
         self.widget_TypeDefs.show()
         self.pushButton_ShowTypeDefs.setText("Hide typedefs")
 
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
-
 
 class LogFileWidgetForm(QWidget, LogFileWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
-        guiutils.center(self)
-        global instances
-        instances.append(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.contents = ""
         self.refresh_contents()
@@ -5402,6 +5355,7 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         self.refresh_timer.setInterval(500)
         self.refresh_timer.timeout.connect(self.refresh_contents)
         self.refresh_timer.start()
+        guiutils.center_to_parent(self)
 
     def refresh_contents(self):
         log_path = utils.get_logging_file(debugcore.currentpid)
@@ -5437,20 +5391,15 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
             self.textBrowser_LogContent.ensureCursorVisible()
         log_file.close()
 
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
+    def closeEvent(self, event: QCloseEvent):
         self.refresh_timer.stop()
+        super().closeEvent(event)
 
 
 class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
-    def __init__(self, start="", end="", parent=None):
-        super().__init__()
+    def __init__(self, parent, start="", end=""):
+        super().__init__(parent)
         self.setupUi(self)
-        self.parent = lambda: parent
-        global instances
-        instances.append(self)
-        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.lineEdit_Start.setText(start)
         self.lineEdit_End.setText(end)
@@ -5463,6 +5412,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         self.shortcut_search.activated.connect(self.refresh_table)
         self.tableWidget_Opcodes.itemDoubleClicked.connect(self.tableWidget_Opcodes_item_double_clicked)
         self.tableWidget_Opcodes.contextMenuEvent = self.tableWidget_Opcodes_context_menu_event
+        guiutils.center_to_parent(self)
 
     def refresh_table(self):
         start_address = self.lineEdit_Start.text()
@@ -5493,7 +5443,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         self.tableWidget_Opcodes.setSortingEnabled(True)
 
     def pushButton_Help_clicked(self):
-        InputDialogForm(item_list=[(tr.SEARCH_OPCODE_HELPER, None, Qt.AlignmentFlag.AlignLeft)],
+        InputDialogForm(self, [(tr.SEARCH_OPCODE_HELPER, None, Qt.AlignmentFlag.AlignLeft)],
                         buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
 
     def tableWidget_Opcodes_item_double_clicked(self, index):
@@ -5524,25 +5474,18 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         except KeyError:
             pass
 
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
-
 
 class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
-    def __init__(self, parent=None):
-        super().__init__()
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
-        self.parent = lambda: parent
-        global instances
-        instances.append(self)
-        guiutils.center(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.refresh_table()
         self.tableWidget_MemoryRegions.contextMenuEvent = self.tableWidget_MemoryRegions_context_menu_event
         self.tableWidget_MemoryRegions.itemDoubleClicked.connect(self.tableWidget_MemoryRegions_item_double_clicked)
         self.shortcut_refresh = QShortcut(QKeySequence("R"), self)
         self.shortcut_refresh.activated.connect(self.refresh_table)
+        guiutils.center_to_parent(self)
 
     def refresh_table(self):
         memory_regions = utils.get_regions(debugcore.currentpid)
@@ -5590,16 +5533,12 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         address_int = int(address.split("-")[0], 16)
         self.parent().hex_dump_address(address_int)
 
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
-
 
 class DissectCodeDialogForm(QDialog, DissectCodeDialog):
     scan_finished_signal = pyqtSignal()
 
-    def __init__(self, parent=None, int_address=-1):
-        super().__init__(parent=parent)
+    def __init__(self, parent, int_address=-1):
+        super().__init__(parent)
         self.setupUi(self)
         self.init_pre_scan_gui()
         self.update_dissect_results()
@@ -5623,6 +5562,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         else:
             if self.tableWidget_ExecutableMemoryRegions.rowCount() > 0:
                 self.tableWidget_ExecutableMemoryRegions.selectRow(0)
+        guiutils.center_to_parent(self)
 
     class BackgroundThread(QThread):
         output_ready = pyqtSignal()
@@ -5713,25 +5653,23 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
             self.refresh_timer.start()
             self.background_thread.start()
 
-    def closeEvent(self, QCloseEvent):
+    def closeEvent(self, event: QCloseEvent):
         debugcore.cancel_dissect_code()
         self.refresh_timer.stop()
+        super().closeEvent(event)
 
 
 class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
-    def __init__(self, parent=None):
-        super().__init__()
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
         guiutils.fill_value_combobox(self.comboBox_ValueType, typedefs.VALUE_INDEX.STRING_UTF8)
-        self.parent = lambda: parent
-        global instances
-        instances.append(self)
-        guiutils.center_to_parent(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.tableWidget_References.setColumnWidth(REF_STR_ADDR_COL, 150)
         self.tableWidget_References.setColumnWidth(REF_STR_COUNT_COL, 80)
         self.splitter.setStretchFactor(0, 1)
         self.listWidget_Referrers.resize(400, self.listWidget_Referrers.height())
+        guiutils.center_to_parent(self)
         self.hex_len = 16 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 else 8
         str_dict, jmp_dict, call_dict = debugcore.get_dissect_code_data()
         str_dict_len, jmp_dict_len, call_dict_len = len(str_dict), len(jmp_dict), len(call_dict)
@@ -5739,9 +5677,9 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         jmp_dict.close()
         call_dict.close()
         if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
-            confirm_dialog = InputDialogForm(item_list=[(tr.DISSECT_CODE,)])
+            confirm_dialog = InputDialogForm(self, [(tr.DISSECT_CODE,)])
             if confirm_dialog.exec():
-                dissect_code_dialog = DissectCodeDialogForm()
+                dissect_code_dialog = DissectCodeDialogForm(self)
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
                 dissect_code_dialog.exec()
         self.refresh_table()
@@ -5849,23 +5787,16 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         except KeyError:
             pass
 
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
-
 
 class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
-    def __init__(self, parent=None):
-        super().__init__()
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setupUi(self)
-        self.parent = lambda: parent
-        global instances
-        instances.append(self)
-        guiutils.center_to_parent(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.tableWidget_References.setColumnWidth(REF_CALL_ADDR_COL, 480)
         self.splitter.setStretchFactor(0, 1)
         self.listWidget_Referrers.resize(400, self.listWidget_Referrers.height())
+        guiutils.center_to_parent(self)
         self.hex_len = 16 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 else 8
         str_dict, jmp_dict, call_dict = debugcore.get_dissect_code_data()
         str_dict_len, jmp_dict_len, call_dict_len = len(str_dict), len(jmp_dict), len(call_dict)
@@ -5873,9 +5804,9 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         jmp_dict.close()
         call_dict.close()
         if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
-            confirm_dialog = InputDialogForm(item_list=[(tr.DISSECT_CODE,)])
+            confirm_dialog = InputDialogForm(self, [(tr.DISSECT_CODE,)])
             if confirm_dialog.exec():
-                dissect_code_dialog = DissectCodeDialogForm()
+                dissect_code_dialog = DissectCodeDialogForm(self)
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
                 dissect_code_dialog.exec()
         self.refresh_table()
@@ -5976,19 +5907,11 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         except KeyError:
             pass
 
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
-
 
 class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
-    def __init__(self, int_address, parent=None):
-        super().__init__()
+    def __init__(self, parent, int_address):
+        super().__init__(parent)
         self.setupUi(self)
-        self.parent = lambda: parent
-        global instances
-        instances.append(self)
-        guiutils.center_to_parent(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.splitter.setStretchFactor(0, 1)
         self.textBrowser_DisasInfo.resize(600, self.textBrowser_DisasInfo.height())
@@ -6003,6 +5926,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         self.pushButton_Search.clicked.connect(self.refresh_table)
         self.shortcut_search = QShortcut(QKeySequence("Return"), self)
         self.shortcut_search.activated.connect(self.refresh_table)
+        guiutils.center_to_parent(self)
 
     def pad_hex(self, hex_str):
         index = hex_str.find(" ")
@@ -6098,10 +6022,6 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
             actions[action]()
         except KeyError:
             pass
-
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
 
 
 def handle_exit():

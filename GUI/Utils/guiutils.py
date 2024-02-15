@@ -43,24 +43,13 @@ def center(window: QWidget):
 
 #:tag:GUI
 def center_to_parent(window: QWidget):
-    """Center the given window to it's parent
+    """Center the given window to its parent
 
     Args:
-        window (QWidget): The window that'll be centered to it's parent
+        window (QWidget): The window that'll be centered to its parent
     """
     parent: QWidget = window.parent()
-    window.move(parent.frameGeometry().center() - window.frameGeometry().center())
-
-
-#:tag:GUI
-def center_to_window(window_secondary: QWidget, window_main: QWidget):
-    """Center the given window_secondary to window_main
-
-    Args:
-        window_secondary (QQWidget): The window that'll be centered to window_main
-        window_main (QWidget): The window that window_secondary will centered to
-    """
-    window_secondary.move(window_main.frameGeometry().center() - window_secondary.frameGeometry().center())
+    window.move(parent.frameGeometry().center() - window.rect().center())
 
 
 #:tag:GUI

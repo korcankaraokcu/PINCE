@@ -15,10 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt6.QtWidgets import QLabel
-from PyQt6.QtGui import QCursor
+from PyQt6.QtGui import QCursor, QMouseEvent, QEnterEvent
 from PyQt6.QtCore import Qt
 from libpince import debugcore, typedefs
 from PINCE import InputDialogForm
+from GUI.Utils import guiutils
 from tr.tr import TranslationConstants as tr
 
 
@@ -35,16 +36,19 @@ class QFlagRegisterLabel(QLabel):
             self.setStyleSheet("")
         self.setText(new)
 
-    def enterEvent(self, QEvent):
+    def enterEvent(self, event: QEnterEvent):
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        super().enterEvent(event)
 
-    def mouseDoubleClickEvent(self, QMouseEvent):
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        if event.button() != Qt.MouseButton.LeftButton or debugcore.currentpid == -1 or \
+                debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
         registers = debugcore.read_registers()
         current_flag = self.objectName().lower()
         label_text = tr.ENTER_FLAG_VALUE.format(self.objectName())
-        register_dialog = InputDialogForm(item_list=[(label_text, ["0", "1", int(registers[current_flag])])])
+        parent = guiutils.search_parents_by_function(self, "set_debug_menu_shortcuts")
+        register_dialog = InputDialogForm(parent, [(label_text, ["0", "1", int(registers[current_flag])])])
         if register_dialog.exec():
             if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
                 return
