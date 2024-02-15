@@ -106,31 +106,7 @@ A full PR will look like this:
 Here are some notes that explains some of the caveats and hacks, they also include a timestamp. As we upgrade the libraries and the methods we are working with,
 some of these notes might become obsolete. You are free to test and provide solutions to these tricks
 
-- 27/3/2017 - All GUI classes that will be instanced multiple times must contain these code blocks to prevent getting removed by garbage collector:
-```python
-    global instances
-    instances.append(self)
-
-    def closeEvent(self, QCloseEvent):
-        global instances
-        instances.remove(self)
-```
-If you need to only create one instance of a GUI class, use this instead to create the instance:
-```python
-    try:
-        self.window.show()
-    except AttributeError:
-        self.window = WindowForm(self)  # self parameter is optional
-        self.window.show()
-    self.window.activateWindow()
-```
-If you need to pass self as a parameter, please don't use `super().__init__(parent=parent)` in the child class, it makes Qt hide the child window. Use this in the child instead:
-```python
-    super().__init__()
-    self.parent = lambda: parent  # A quick hack to make other functions see the correct parent(). But Qt won't see it, so there'll be no bugs
-```
-
-- 28/8/2018 - All QMessageBoxes that's called from outside of their classes(via parent() etc.) must use 'QApplication.focusWidget()' instead of 'self' in their first parameter.
+- 28/08/2018 - All QMessageBoxes that's called from outside of their classes(via parent() etc.) must use 'QApplication.focusWidget()' instead of 'self' in their first parameter.
 Refer to issue #57 for more information
 
 - 23/11/2018 - Don't use get_current_item or get_current_row within currentItemChanged or currentChanged signals.
@@ -139,7 +115,10 @@ Qt doesn't update selected rows on first currentChanged or currentItemChanged ca
 - 22/05/2023 - For QTableWidget and QTableView, disabling wordWrap and using ScrollPerPixel as the horizontal scroll mode can help the user experience.
 Consider doing these when creating a new QTableWidget or QTableView
 
-- 2/9/2018 - All functions with docstrings should have their subfunctions written after their docstrings. For instance:
+- 15/02/2024 - Don't always trust the "Adjust Size" button of the Qt Designer, it might expand widgets much more than needed, especially for smaller widgets. Consider the use cases
+and adjust manually. This also helps functions like `guiutils.center_to_parent` work properly
+
+- 02/09/2018 - All functions with docstrings should have their subfunctions written after their docstrings. For instance:
 ```python
     def test():
         """documentation for test"""
@@ -168,11 +147,11 @@ OSError and ValueError exceptions. For instance:
 ```
 OSError handles I/O related errors and ValueError handles the off_t limit error that prints "cannot fit 'int' into an offset-sized integer"
 
-- 12/9/2018 - All namedtuples must have the same field name with their variable names. This makes the namedtuple transferable via pickle. For instance:
+- 12/09/2018 - All namedtuples must have the same field name with their variable names. This makes the namedtuple transferable via pickle. For instance:
 ```python
     tuple_examine_expression = collections.namedtuple("tuple_examine_expression", "all address symbol")
 ```
-- 6/10/2016 - HexView section of MemoryViewerWindow.ui: Changed listWidget_HexView_Address to tableWidget_HexView_Address in order to prevent possible future visual bugs.
+- 06/10/2016 - HexView section of MemoryViewerWindow.ui: Changed listWidget_HexView_Address to tableWidget_HexView_Address in order to prevent possible future visual bugs.
 Logically, it should stay as a listwidget considering its functionality. But it doesn't play nice with the other neighboring tablewidgets in different pyqt versions,
 forcing me to use magic numbers for adjusting, which is a bit hackish
 
