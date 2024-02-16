@@ -4493,6 +4493,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         else:
             raise Exception("Watchpoint type is invalid: " + str(watchpoint_type))
         self.setWindowTitle(string)
+        guiutils.center_to_parent(self)  # Called before the QMessageBox to center its position properly
         self.breakpoints = debugcore.track_watchpoint(address, length, watchpoint_type)
         if not self.breakpoints:
             QMessageBox.information(self, tr.ERROR, tr.TRACK_WATCHPOINT_FAILED.format(address))
@@ -4503,7 +4504,6 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.tableWidget_Opcodes.itemDoubleClicked.connect(self.tableWidget_Opcodes_item_double_clicked)
         self.tableWidget_Opcodes.selectionModel().currentChanged.connect(self.tableWidget_Opcodes_current_changed)
         self.update_timer.start(100)
-        guiutils.center_to_parent(self)
         self.show()
 
     def update_list(self):
@@ -4576,6 +4576,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.last_selected_row = 0
         self.setWindowFlags(Qt.WindowType.Window)
         self.setWindowTitle(tr.ACCESSED_BY_INSTRUCTION.format(instruction))
+        guiutils.center_to_parent(self)  # Called before the QMessageBox to center its position properly
         self.breakpoint = debugcore.track_breakpoint(address, register_expressions)
         if not self.breakpoint:
             QMessageBox.information(self, tr.ERROR, tr.TRACK_BREAKPOINT_FAILED.format(address))
@@ -4589,7 +4590,6 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.update_list_timer.start(100)
         self.update_values_timer.start(500)
         self.parent().refresh_disassemble_view()
-        guiutils.center_to_parent(self)
         self.show()
 
     def update_list(self):
