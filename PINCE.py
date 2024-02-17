@@ -32,7 +32,8 @@ from tr.tr import TranslationConstants as tr
 from tr.tr import language_list, get_locale
 
 from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
-    QRegularExpressionValidator, QShortcut, QColorConstants, QStandardItemModel, QStandardItem, QCloseEvent
+    QRegularExpressionValidator, QShortcut, QColorConstants, QStandardItemModel, QStandardItem, QCloseEvent, \
+    QKeyEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
     QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
     QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
@@ -465,6 +466,8 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_CleanAddressTable.clicked.connect(self.clear_address_table)
         self.tableWidget_valuesearchtable.cellDoubleClicked.connect(
             self.tableWidget_valuesearchtable_cell_double_clicked)
+        self.tableWidget_valuesearchtable.keyPressEvent_original = self.tableWidget_valuesearchtable.keyPressEvent
+        self.tableWidget_valuesearchtable.keyPressEvent = self.tableWidget_valuesearchtable_key_press_event
         self.treeWidget_AddressTable.itemClicked.connect(self.treeWidget_AddressTable_item_clicked)
         self.treeWidget_AddressTable.itemDoubleClicked.connect(self.treeWidget_AddressTable_item_double_clicked)
         self.treeWidget_AddressTable.expanded.connect(self.resize_address_table)
@@ -1209,11 +1212,7 @@ class MainForm(QMainWindow, MainWindow):
         self.progress_bar_timer.stop()
         self.progressBar.setValue(100)
         matches = scanmem.matches()
-        match_count = scanmem.get_match_count()
-        if match_count > 1000:
-            self.label_MatchCount.setText(tr.MATCH_COUNT_LIMITED.format(match_count, 1000))
-        else:
-            self.label_MatchCount.setText(tr.MATCH_COUNT.format(match_count))
+        self.update_match_count()
         self.tableWidget_valuesearchtable.setRowCount(0)
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         length = self._scan_to_length(current_type)
@@ -1250,6 +1249,13 @@ class MainForm(QMainWindow, MainWindow):
         if type_index == typedefs.SCAN_INDEX.STRING:
             return len(self.lineEdit_Scan.text())
         return 0
+    
+    def update_match_count(self):
+        match_count = scanmem.get_match_count()
+        if match_count > 1000:
+            self.label_MatchCount.setText(tr.MATCH_COUNT_LIMITED.format(match_count, 1000))
+        else:
+            self.label_MatchCount.setText(tr.MATCH_COUNT.format(match_count))
 
     def tableWidget_valuesearchtable_cell_double_clicked(self, row, col):
         current_item = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL)
@@ -1258,6 +1264,29 @@ class MainForm(QMainWindow, MainWindow):
         vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
         self.add_entry_to_addresstable(tr.NO_DESCRIPTION, current_item.text(), vt)
         self.update_address_table()
+
+    def tableWidget_valuesearchtable_key_press_event(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Delete:
+            # get selected rows
+            selected_rows = self.tableWidget_valuesearchtable.selectedItems()
+            if not selected_rows:
+                return
+
+            # get the row indexes
+            rows = set()
+            for item in selected_rows:
+                rows.add(item.row())
+
+            scanmem.send_command("delete {}".format(",".join([str(row) for row in rows])))
+
+            # remove the rows from the table - removing in reverse sorted order to avoid index issues
+            for row in sorted(rows, reverse=True):
+                self.tableWidget_valuesearchtable.removeRow(row)
+            self.update_match_count()
+
+            return
+        
+        self.tableWidget_valuesearchtable.keyPressEvent_original(event)
 
     def comboBox_ValueType_current_index_changed(self):
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
