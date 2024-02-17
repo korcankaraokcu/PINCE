@@ -134,7 +134,6 @@ class Ui_MainWindow(object):
         self.tableWidget_valuesearchtable.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.tableWidget_valuesearchtable.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tableWidget_valuesearchtable.setAlternatingRowColors(True)
-        self.tableWidget_valuesearchtable.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.tableWidget_valuesearchtable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.tableWidget_valuesearchtable.setShowGrid(False)
         self.tableWidget_valuesearchtable.setObjectName("tableWidget_valuesearchtable")
