@@ -1731,7 +1731,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             self.close()
-        elif event.key() == Qt.Key.Key_Return:
+        elif event.key() == Qt.Key.Key_Return or event.key() == Qt.Key.Key_Enter:
             self.pushButton_Open_clicked()
         elif event.key() == Qt.Key.Key_F1:
             self.pushButton_CreateProcess_clicked()
