@@ -2309,7 +2309,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
         self.listWidget_Functions.currentRowChanged.connect(self.listWidget_Functions_current_row_changed)
-        self.keySequenceEdit_Hotkey.keySequenceChanged.connect(self.keySequenceEdit_Hotkey_key_sequence_changed)
         self.pushButton_ClearHotkey.clicked.connect(self.pushButton_ClearHotkey_clicked)
         self.pushButton_ResetSettings.clicked.connect(self.pushButton_ResetSettings_clicked)
         self.pushButton_GDBPath.clicked.connect(self.pushButton_GDBPath_clicked)
@@ -2318,6 +2317,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.comboBox_Logo.currentIndexChanged.connect(self.comboBox_Logo_current_index_changed)
         self.comboBox_Theme.currentIndexChanged.connect(self.comboBox_Theme_current_index_changed)
         self.pushButton_HandleSignals.clicked.connect(self.pushButton_HandleSignals_clicked)
+        self.lineEdit_Hotkey.keyPressEvent = self.lineEdit_Hotkey_key_pressed_event
         guiutils.center_to_parent(self)
 
     def accept(self):
@@ -2445,20 +2445,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
     def listWidget_Functions_current_row_changed(self, index):
         if index == -1:
-            self.keySequenceEdit_Hotkey.clear()
+            self.lineEdit_Hotkey.clear()
         else:
-            self.keySequenceEdit_Hotkey.setKeySequence(self.hotkey_to_value[hotkeys.get_hotkeys()[index].name])
-
-    def keySequenceEdit_Hotkey_key_sequence_changed(self):
-        index = self.listWidget_Functions.currentIndex().row()
-        if index == -1:
-            self.keySequenceEdit_Hotkey.clear()
-        else:
-            self.hotkey_to_value[
-                hotkeys.get_hotkeys()[index].name] = self.keySequenceEdit_Hotkey.keySequence().toString()
+            self.lineEdit_Hotkey.setText(self.hotkey_to_value[hotkeys.get_hotkeys()[index].name])    
 
     def pushButton_ClearHotkey_clicked(self):
-        self.keySequenceEdit_Hotkey.clear()
+        self.lineEdit_Hotkey.clear()
 
     def pushButton_ResetSettings_clicked(self):
         confirm_dialog = InputDialogForm(self, [(tr.RESET_DEFAULT_SETTINGS,)])
@@ -2501,6 +2493,60 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if signal_dialog.exec():
             self.handle_signals_data = signal_dialog.get_values()
 
+    def lineEdit_Hotkey_key_pressed_event(self, event: QKeyEvent):
+        """
+        Overriding the default keyPressEvent of QLineEdit to get the key combination
+        :param event: QKeyEvent
+
+        Pressing the hotkey will set the text of the QLineEdit to the key combination.
+        System hotkeys will still take precedence over the hotkeys set in PINCE.
+        Known issues: 
+        - AltGr key is not recognized as a modifier key. Do not use AltGr in hotkeys.
+        - Keypad calculation keys are recognized by the default handle as well.
+            This is limited to certain keyboard layouts.
+        - Comma/Period keys are not recognized by the keyboard library.
+        """
+        keyCombination = event.keyCombination()
+        mod = keyCombination.keyboardModifiers()
+        key_mod_str = ""
+        key_text = ""
+        if mod & Qt.KeyboardModifier.ControlModifier:
+            key_mod_str += "ctrl+"
+        if mod & Qt.KeyboardModifier.AltModifier:
+            key_mod_str += "alt+"
+        if mod & Qt.KeyboardModifier.ShiftModifier:
+            key_mod_str += "shift+"
+        if mod & Qt.KeyboardModifier.MetaModifier:
+            key_mod_str += "meta+"
+        if mod & Qt.KeyboardModifier.KeypadModifier:
+            # Comma/Period keys are not defined by keyboard library thus using default handle
+            if not event.key() == Qt.Key.Key_Period or Qt.Key.Key_Comma:
+                key_mod_str += "num "
+                # keypad calculation keys need custom text
+                if event.key() == Qt.Key.Key_Plus:
+                    key_text = "add"
+                elif event.key() == Qt.Key.Key_Minus:
+                    key_text = "sub"
+                elif event.key() == Qt.Key.Key_Asterisk:
+                    key_text = "multiply"
+                elif event.key() == Qt.Key.Key_Slash:
+                    key_text = "divide"
+                elif event.key() == Qt.Key.Key_Enter:
+                    key_text = "enter"
+
+        # remove trailing + if only modifier keys are pressed
+        if event.text() == "":
+            key_mod_str = key_mod_str[:-1]
+        hotkey_str = key_mod_str + (key_text or event.text())
+
+        # moved from old keySequenceChanged event
+        self.lineEdit_Hotkey.setText(hotkey_str)
+        index = self.listWidget_Functions.currentIndex().row()
+        if index == -1:
+            self.lineEdit_Hotkey.clear()
+        else:
+            self.hotkey_to_value[
+                hotkeys.get_hotkeys()[index].name] = self.lineEdit_Hotkey.text()
 
 class HandleSignalsDialogForm(QDialog, HandleSignalsDialog):
     def __init__(self, parent, signal_data):

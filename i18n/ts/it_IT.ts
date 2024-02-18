@@ -189,12 +189,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/TextEditDialog.ui" line="0" />
-      <location filename="../../GUI/LoadingDialog.ui" line="0" />
-      <source>Dialog</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
       <location filename="../../GUI/LoadingDialog.ui" line="0" />
       <source>Processing</source>
       <translation type="unfinished" />
@@ -317,6 +311,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Press shortcut</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Clear</source>
       <translation type="unfinished" />
     </message>
@@ -368,6 +367,11 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Reset Settings</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/TextEditDialog.ui" line="0" />
+      <source>Dialog</source>
       <translation type="unfinished" />
     </message>
     <message>
