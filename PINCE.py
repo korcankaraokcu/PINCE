@@ -346,7 +346,7 @@ class MainForm(QMainWindow, MainWindow):
     table_update_interval: int = 500
     freeze_interval: int = 100
     update_table: bool = True
-    auto_attach_list: str = ""
+    auto_attach: str = ""
     auto_attach_regex: bool = False
 
     def __init__(self):
@@ -383,6 +383,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings = QSettings()
         self.memory_view_window = MemoryViewWindowForm(self)
         self.await_exit_thread = AwaitProcessExit()
+        self.auto_attach_timer = QTimer(timeout=self.auto_attach_loop)
 
         if not os.path.exists(self.settings.fileName()):
             self.set_default_settings()
@@ -490,7 +491,6 @@ class MainForm(QMainWindow, MainWindow):
         self.flashAttachButtonTimer.timeout.connect(self.flash_attach_button)
         self.flashAttachButton_gradiantState = 0
         self.flashAttachButtonTimer.start(100)
-        self.auto_attach()
         guiutils.center(self)
 
     # Please refrain from using python specific objects in settings, use json-compatible ones instead
@@ -501,7 +501,7 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.setValue("address_table_update_interval", MainForm.table_update_interval)
         self.settings.setValue("freeze_interval", MainForm.freeze_interval)
         self.settings.setValue("gdb_output_mode", json.dumps([True, True, True]))
-        self.settings.setValue("auto_attach_list", MainForm.auto_attach_list)
+        self.settings.setValue("auto_attach", MainForm.auto_attach)
         self.settings.setValue("auto_attach_regex", MainForm.auto_attach_regex)
         self.settings.setValue("locale", get_locale())
         self.settings.setValue("logo_path", "ozgurozbek/pince_small_transparent.png")
@@ -557,8 +557,12 @@ class MainForm(QMainWindow, MainWindow):
         self.freeze_interval = self.settings.value("General/freeze_interval", type=int)
         settings.gdb_output_mode = json.loads(self.settings.value("General/gdb_output_mode", type=str))
         settings.gdb_output_mode = typedefs.gdb_output_mode(*settings.gdb_output_mode)
-        self.auto_attach_list = self.settings.value("General/auto_attach_list", type=str)
+        self.auto_attach = self.settings.value("General/auto_attach", type=str)
         self.auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
+        if self.auto_attach:
+            self.auto_attach_timer.start(100)
+        else:
+            self.auto_attach_timer.stop()
         settings.locale = self.settings.value("General/locale", type=str)
         app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(),
                                              self.settings.value("General/logo_path", type=str))))
@@ -579,26 +583,24 @@ class MainForm(QMainWindow, MainWindow):
 
     # Check if any process should be attached to automatically
     # Patterns at former positions have higher priority if regex is off
-    def auto_attach(self):
-        if not self.auto_attach_list:
+    def auto_attach_loop(self):
+        if debugcore.currentpid != -1:
             return
         if self.auto_attach_regex:
             try:
-                compiled_re = re.compile(self.auto_attach_list)
+                compiled_re = re.compile(self.auto_attach)
             except:
-                print("Auto-attach failed: " + self.auto_attach_list + " isn't a valid regex")
+                print(f"Auto-attach failed: {self.auto_attach} isn't a valid regex")
                 return
             for pid, _, name in utils.get_process_list():
                 if compiled_re.search(name):
-                    self.attach_to_pid(pid)
-                    self.flashAttachButton = False
+                    self.attach_to_pid(int(pid))
                     return
         else:
-            for target in self.auto_attach_list.split(";"):
+            for target in self.auto_attach.split(";"):
                 for pid, _, name in utils.get_process_list():
                     if name.find(target) != -1:
-                        self.attach_to_pid(pid)
-                        self.flashAttachButton = False
+                        self.attach_to_pid(int(pid))
                         return
 
     # Keyboard package has an issue with exceptions, any trigger function that throws an exception stops the event loop
@@ -1350,7 +1352,7 @@ class MainForm(QMainWindow, MainWindow):
             QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
 
     # Returns: a bool value indicates whether the operation succeeded.
-    def attach_to_pid(self, pid):
+    def attach_to_pid(self, pid: int):
         attach_result = debugcore.attach(pid, settings.gdb_path)
         if attach_result == typedefs.ATTACH_RESULT.SUCCESSFUL:
             self.apply_after_init()
@@ -2360,11 +2362,11 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/gdb_output_mode", json.dumps(output_mode))
         if self.checkBox_AutoAttachRegex.isChecked():
             try:
-                re.compile(self.lineEdit_AutoAttachList.text())
+                re.compile(self.lineEdit_AutoAttach.text())
             except:
-                QMessageBox.information(self, tr.ERROR, tr.IS_INVALID_REGEX.format(self.lineEdit_AutoAttachList.text()))
+                QMessageBox.information(self, tr.ERROR, tr.IS_INVALID_REGEX.format(self.lineEdit_AutoAttach.text()))
                 return
-        self.settings.setValue("General/auto_attach_list", self.lineEdit_AutoAttachList.text())
+        self.settings.setValue("General/auto_attach", self.lineEdit_AutoAttach.text())
         self.settings.setValue("General/auto_attach_regex", self.checkBox_AutoAttachRegex.isChecked())
         new_locale = self.comboBox_Language.currentData(Qt.ItemDataRole.UserRole)
         if new_locale != settings.locale:
@@ -2413,7 +2415,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.checkBox_OutputModeAsync.setChecked(output_mode.async_output)
         self.checkBox_OutputModeCommand.setChecked(output_mode.command_output)
         self.checkBox_OutputModeCommandInfo.setChecked(output_mode.command_info)
-        self.lineEdit_AutoAttachList.setText(self.settings.value("General/auto_attach_list", type=str))
+        self.lineEdit_AutoAttach.setText(self.settings.value("General/auto_attach", type=str))
         self.checkBox_AutoAttachRegex.setChecked(self.settings.value("General/auto_attach_regex", type=bool))
         current_locale = self.settings.value("General/locale", type=str)
         self.comboBox_Language.setCurrentText(language_list.get(current_locale, "en_US"))
@@ -2475,11 +2477,11 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
     def checkBox_AutoAttachRegex_state_changed(self):
         if self.checkBox_AutoAttachRegex.isChecked():
-            self.lineEdit_AutoAttachList.setPlaceholderText(tr.MOUSE_OVER_EXAMPLES)
-            self.lineEdit_AutoAttachList.setToolTip(tr.AUTO_ATTACH_TOOLTIP)
+            self.lineEdit_AutoAttach.setPlaceholderText(tr.MOUSE_OVER_EXAMPLES)
+            self.lineEdit_AutoAttach.setToolTip(tr.AUTO_ATTACH_TOOLTIP)
         else:
-            self.lineEdit_AutoAttachList.setPlaceholderText(tr.SEPARATE_PROCESSES_WITH.format(";"))
-            self.lineEdit_AutoAttachList.setToolTip("")
+            self.lineEdit_AutoAttach.setPlaceholderText(tr.SEPARATE_PROCESSES_WITH.format(";"))
+            self.lineEdit_AutoAttach.setToolTip("")
 
     def comboBox_Logo_current_index_changed(self):
         logo_path = self.comboBox_Logo.currentText()

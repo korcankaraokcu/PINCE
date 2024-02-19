@@ -15,7 +15,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib, distorm3
 from . import typedefs, regexes
 from keystone import Ks, KsError, KS_ARCH_X86, KS_MODE_32, KS_MODE_64
@@ -27,8 +26,9 @@ from pygdbmi import gdbmiparser
 ks_32 = Ks(KS_ARCH_X86, KS_MODE_32)
 ks_64 = Ks(KS_ARCH_X86, KS_MODE_64)
 
+
 #:tag:Processes
-def get_process_list():
+def get_process_list() -> list[str, str, str]:
     """Returns a list of processes
 
     Returns:
