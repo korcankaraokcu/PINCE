@@ -254,12 +254,12 @@
 Patterns at former positions have higher priority if regex is off</string>
                  </property>
                  <property name="text">
-                  <string>Auto-attach on start</string>
+                  <string>Auto-attach to processes named</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="lineEdit_AutoAttachList"/>
+                <widget class="QLineEdit" name="lineEdit_AutoAttach"/>
                </item>
                <item>
                 <widget class="QCheckBox" name="checkBox_AutoAttachRegex">
