@@ -2534,10 +2534,15 @@ class SettingsDialogForm(QDialog, SettingsDialog):
                 elif event.key() == Qt.Key.Key_Enter:
                     key_text = "enter"
 
-        # remove trailing + if only modifier keys are pressed
-        if event.text() == "":
+        mod_keys = [Qt.Key.Key_Control, Qt.Key.Key_Alt, Qt.Key.Key_Shift, Qt.Key.Key_Meta, Qt.Key.Key_AltGr]
+        if event.key() not in mod_keys:
+            # get the text of the key, not the printable text of the event, which may differ from the key.
+            key_text = QKeySequence(event.key()).toString() 
+        else:
+            # remove trailing + if only modifier keys are pressed
             key_mod_str = key_mod_str[:-1]
-        hotkey_str = key_mod_str + (key_text or event.text())
+
+        hotkey_str = key_mod_str + key_text
 
         # moved from old keySequenceChanged event
         self.lineEdit_Hotkey.setText(hotkey_str)
