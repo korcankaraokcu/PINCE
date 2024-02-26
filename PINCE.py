@@ -2516,11 +2516,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if len(pressed_events) == 0:
             # the keypress time was so short its not recognized by keyboard lib.
             return
-        # last event is always the pressed key. the others are modifiers
-        last_event:KeyboardEvent = list(pressed_events)[-1]
-        
-        print(f"Modifiers: {last_event.modifiers}, Is Keypad: {last_event.is_keypad}, Name: {last_event.name}, Scan Code: {last_event.scan_code}")
-
         hotkey_string = ""
         for ev in pressed_events:
             # replacing keys like ! with their respective base key
@@ -2528,12 +2523,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             # keyboard does recognize meta key (win key) as alt, setting manually
             if ev.scan_code == 125 or ev.scan_code == 126:
                 ev.name = "windows"
-            
             hotkey_string += ev.name + "+"
         
         # remove the last plus
         hotkey_string = hotkey_string[:-1]
-        print(hotkey_string)
 
         # moved from old keySequenceChanged event
         self.lineEdit_Hotkey.setText(hotkey_string)
