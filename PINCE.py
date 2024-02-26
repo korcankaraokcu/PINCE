@@ -33,14 +33,14 @@ from tr.tr import language_list, get_locale
 
 from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
     QRegularExpressionValidator, QShortcut, QColorConstants, QStandardItemModel, QStandardItem, QCloseEvent, \
-    QKeyEvent
+    QKeyEvent, QFocusEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
     QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
     QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
     QItemSelectionModel, QTimer, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
     QLocale, QSignalBlocker, QItemSelection
-from typing import Final
+from typing import Final, Dict
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect, json, select
 
@@ -92,6 +92,10 @@ from GUI.AbstractTableModels.AsciiModel import QAsciiModel
 from GUI.Validators.HexValidator import QHexValidator
 
 from operator import add as opAdd, sub as opSub
+
+from keyboard import KeyboardEvent, _pressed_events
+from keyboard._nixkeyboard import to_name
+import utils as u
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -565,7 +569,13 @@ class MainForm(QMainWindow, MainWindow):
         app.setPalette(get_theme(self.settings.value("General/theme", type=str)))
         debugcore.set_gdb_output_mode(settings.gdb_output_mode)
         for hotkey in hotkeys.get_hotkeys():
-            hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
+            try:
+                hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
+            except:
+                # if the hotkey cannot be applied for whatever reason, reset it to the default
+                self.settings.setValue("Hotkeys/" + hotkey.name, hotkey.default)
+                hotkey.change_key(hotkey.default)
+
         try:
             self.memory_view_window.set_dynamic_debug_hotkeys()
         except AttributeError:
@@ -2318,6 +2328,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.comboBox_Theme.currentIndexChanged.connect(self.comboBox_Theme_current_index_changed)
         self.pushButton_HandleSignals.clicked.connect(self.pushButton_HandleSignals_clicked)
         self.lineEdit_Hotkey.keyPressEvent = self.lineEdit_Hotkey_key_pressed_event
+        #self.lineEdit_Hotkey.focusInEvent = self.lineEdit_Hotkey_focus_in_event
         guiutils.center_to_parent(self)
 
     def accept(self):
@@ -2495,57 +2506,37 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
     def lineEdit_Hotkey_key_pressed_event(self, event: QKeyEvent):
         """
-        Overriding the default keyPressEvent of QLineEdit to get the key combination
-        :param event: QKeyEvent
+        Instead of relying on the QT Event, we grab input from keyboard lib directly.
+        This reduces the amount of parsing from keys necessary and catches some more edge cases.
 
-        Pressing the hotkey will set the text of the QLineEdit to the key combination.
-        System hotkeys will still take precedence over the hotkeys set in PINCE.
-        Known issues: 
-        - AltGr key is not recognized as a modifier key. Do not use AltGr in hotkeys.
-        - Keypad calculation keys are recognized by the default handle as well.
-            This is limited to certain keyboard layouts.
-        - Comma/Period keys are not recognized by the keyboard library.
+        One final caveat exists: system hotkeys or system wide defined hotkeys (xserver)
+        take precedence over this lib and are not caught completely.
         """
-        keyCombination = event.keyCombination()
-        mod = keyCombination.keyboardModifiers()
-        key_mod_str = ""
-        key_text = ""
-        if mod & Qt.KeyboardModifier.ControlModifier:
-            key_mod_str += "ctrl+"
-        if mod & Qt.KeyboardModifier.AltModifier:
-            key_mod_str += "alt+"
-        if mod & Qt.KeyboardModifier.ShiftModifier:
-            key_mod_str += "shift+"
-        if mod & Qt.KeyboardModifier.MetaModifier:
-            key_mod_str += "meta+"
-        if mod & Qt.KeyboardModifier.KeypadModifier:
-            # Comma/Period keys are not defined by keyboard library thus using default handle
-            if not event.key() == Qt.Key.Key_Period or Qt.Key.Key_Comma:
-                key_mod_str += "num "
-                # keypad calculation keys need custom text
-                if event.key() == Qt.Key.Key_Plus:
-                    key_text = "add"
-                elif event.key() == Qt.Key.Key_Minus:
-                    key_text = "sub"
-                elif event.key() == Qt.Key.Key_Asterisk:
-                    key_text = "multiply"
-                elif event.key() == Qt.Key.Key_Slash:
-                    key_text = "divide"
-                elif event.key() == Qt.Key.Key_Enter:
-                    key_text = "enter"
+        pressed_events = list(_pressed_events.values())
+        if len(pressed_events) == 0:
+            # the keypress time was so short its not recognized by keyboard lib.
+            return
+        # last event is always the pressed key. the others are modifiers
+        last_event:KeyboardEvent = list(pressed_events)[-1]
+        
+        print(f"Modifiers: {last_event.modifiers}, Is Keypad: {last_event.is_keypad}, Name: {last_event.name}, Scan Code: {last_event.scan_code}")
 
-        mod_keys = [Qt.Key.Key_Control, Qt.Key.Key_Alt, Qt.Key.Key_Shift, Qt.Key.Key_Meta, Qt.Key.Key_AltGr]
-        if event.key() not in mod_keys:
-            # get the text of the key, not the printable text of the event, which may differ from the key.
-            key_text = QKeySequence(event.key()).toString() 
-        else:
-            # remove trailing + if only modifier keys are pressed
-            key_mod_str = key_mod_str[:-1]
-
-        hotkey_str = key_mod_str + key_text
+        hotkey_string = ""
+        for ev in pressed_events:
+            # replacing keys like ! with their respective base key
+            ev.name = to_name[(ev.scan_code, ())][-1]
+            # keyboard does recognize meta key (win key) as alt, setting manually
+            if ev.scan_code == 125 or ev.scan_code == 126:
+                ev.name = "windows"
+            
+            hotkey_string += ev.name + "+"
+        
+        # remove the last plus
+        hotkey_string = hotkey_string[:-1]
+        print(hotkey_string)
 
         # moved from old keySequenceChanged event
-        self.lineEdit_Hotkey.setText(hotkey_str)
+        self.lineEdit_Hotkey.setText(hotkey_string)
         index = self.listWidget_Functions.currentIndex().row()
         if index == -1:
             self.lineEdit_Hotkey.clear()
