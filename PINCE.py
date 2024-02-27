@@ -93,6 +93,9 @@ from GUI.Validators.HexValidator import QHexValidator
 
 from operator import add as opAdd, sub as opSub
 
+from keyboard import KeyboardEvent, _pressed_events
+from keyboard._nixkeyboard import to_name
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setOrganizationName("PINCE")
@@ -569,7 +572,13 @@ class MainForm(QMainWindow, MainWindow):
         app.setPalette(get_theme(self.settings.value("General/theme", type=str)))
         debugcore.set_gdb_output_mode(settings.gdb_output_mode)
         for hotkey in hotkeys.get_hotkeys():
-            hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
+            try:
+                hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
+            except:
+                # if the hotkey cannot be applied for whatever reason, reset it to the default
+                self.settings.setValue("Hotkeys/" + hotkey.name, hotkey.default)
+                hotkey.change_key(hotkey.default)
+
         try:
             self.memory_view_window.set_dynamic_debug_hotkeys()
         except AttributeError:
@@ -2311,7 +2320,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
         self.listWidget_Functions.currentRowChanged.connect(self.listWidget_Functions_current_row_changed)
-        self.keySequenceEdit_Hotkey.keySequenceChanged.connect(self.keySequenceEdit_Hotkey_key_sequence_changed)
         self.pushButton_ClearHotkey.clicked.connect(self.pushButton_ClearHotkey_clicked)
         self.pushButton_ResetSettings.clicked.connect(self.pushButton_ResetSettings_clicked)
         self.pushButton_GDBPath.clicked.connect(self.pushButton_GDBPath_clicked)
@@ -2320,6 +2328,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.comboBox_Logo.currentIndexChanged.connect(self.comboBox_Logo_current_index_changed)
         self.comboBox_Theme.currentIndexChanged.connect(self.comboBox_Theme_current_index_changed)
         self.pushButton_HandleSignals.clicked.connect(self.pushButton_HandleSignals_clicked)
+        self.lineEdit_Hotkey.keyPressEvent = self.lineEdit_Hotkey_key_pressed_event
         guiutils.center_to_parent(self)
 
     def accept(self):
@@ -2447,20 +2456,12 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
     def listWidget_Functions_current_row_changed(self, index):
         if index == -1:
-            self.keySequenceEdit_Hotkey.clear()
+            self.lineEdit_Hotkey.clear()
         else:
-            self.keySequenceEdit_Hotkey.setKeySequence(self.hotkey_to_value[hotkeys.get_hotkeys()[index].name])
-
-    def keySequenceEdit_Hotkey_key_sequence_changed(self):
-        index = self.listWidget_Functions.currentIndex().row()
-        if index == -1:
-            self.keySequenceEdit_Hotkey.clear()
-        else:
-            self.hotkey_to_value[
-                hotkeys.get_hotkeys()[index].name] = self.keySequenceEdit_Hotkey.keySequence().toString()
+            self.lineEdit_Hotkey.setText(self.hotkey_to_value[hotkeys.get_hotkeys()[index].name])    
 
     def pushButton_ClearHotkey_clicked(self):
-        self.keySequenceEdit_Hotkey.clear()
+        self.lineEdit_Hotkey.clear()
 
     def pushButton_ResetSettings_clicked(self):
         confirm_dialog = InputDialogForm(self, [(tr.RESET_DEFAULT_SETTINGS,)])
@@ -2503,6 +2504,38 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if signal_dialog.exec():
             self.handle_signals_data = signal_dialog.get_values()
 
+    def lineEdit_Hotkey_key_pressed_event(self, event: QKeyEvent):
+        """
+        Instead of relying on the QT Event, we grab input from keyboard lib directly.
+        This reduces the amount of parsing from keys necessary and catches some more edge cases.
+
+        One final caveat exists: system hotkeys or system wide defined hotkeys (xserver)
+        take precedence over the keyboard lib and are not caught completely.
+        """
+        pressed_events:list[KeyboardEvent] = list(_pressed_events.values())
+        if len(pressed_events) == 0:
+            # the keypress time was so short its not recognized by keyboard lib.
+            return
+        hotkey_string = ""
+        for ev in pressed_events:
+            # replacing keys with their respective base key, e.g "!" --> "1"
+            ev.name = to_name[(ev.scan_code, ())][-1]
+            # keyboard does recognize meta key (win key) as alt, setting manually
+            if ev.scan_code == 125 or ev.scan_code == 126:
+                ev.name = "windows"
+            hotkey_string += ev.name + "+"
+        
+        # remove the last plus
+        hotkey_string = hotkey_string[:-1]
+
+        # moved from old keySequenceChanged event
+        self.lineEdit_Hotkey.setText(hotkey_string)
+        index = self.listWidget_Functions.currentIndex().row()
+        if index == -1:
+            self.lineEdit_Hotkey.clear()
+        else:
+            self.hotkey_to_value[
+                hotkeys.get_hotkeys()[index].name] = self.lineEdit_Hotkey.text()
 
 class HandleSignalsDialogForm(QDialog, HandleSignalsDialog):
     def __init__(self, parent, signal_data):
