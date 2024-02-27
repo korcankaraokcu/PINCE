@@ -402,7 +402,14 @@ Patterns at former positions have higher priority if regex is off</string>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QKeySequenceEdit" name="keySequenceEdit_Hotkey"/>
+                  <widget class="QLineEdit" name="lineEdit_Hotkey">
+                   <property name="readOnly">
+                    <bool>true</bool>
+                   </property>
+                   <property name="placeholderText">
+                    <string>Press shortcut</string>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </item>

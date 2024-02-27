@@ -313,6 +313,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Press shortcut</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Clear</source>
       <translation>清除</translation>
     </message>
