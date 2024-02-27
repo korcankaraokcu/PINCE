@@ -33,14 +33,14 @@ from tr.tr import language_list, get_locale
 
 from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
     QRegularExpressionValidator, QShortcut, QColorConstants, QStandardItemModel, QStandardItem, QCloseEvent, \
-    QKeyEvent, QFocusEvent
+    QKeyEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
     QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
     QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
     QItemSelectionModel, QTimer, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
     QLocale, QSignalBlocker, QItemSelection
-from typing import Final, Dict
+from typing import Final
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect, json, select
 
@@ -95,7 +95,6 @@ from operator import add as opAdd, sub as opSub
 
 from keyboard import KeyboardEvent, _pressed_events
 from keyboard._nixkeyboard import to_name
-import utils as u
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -2328,7 +2327,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.comboBox_Theme.currentIndexChanged.connect(self.comboBox_Theme_current_index_changed)
         self.pushButton_HandleSignals.clicked.connect(self.pushButton_HandleSignals_clicked)
         self.lineEdit_Hotkey.keyPressEvent = self.lineEdit_Hotkey_key_pressed_event
-        #self.lineEdit_Hotkey.focusInEvent = self.lineEdit_Hotkey_focus_in_event
         guiutils.center_to_parent(self)
 
     def accept(self):
@@ -2510,15 +2508,15 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         This reduces the amount of parsing from keys necessary and catches some more edge cases.
 
         One final caveat exists: system hotkeys or system wide defined hotkeys (xserver)
-        take precedence over this lib and are not caught completely.
+        take precedence over the keyboard lib and are not caught completely.
         """
-        pressed_events = list(_pressed_events.values())
+        pressed_events:list[KeyboardEvent] = list(_pressed_events.values())
         if len(pressed_events) == 0:
             # the keypress time was so short its not recognized by keyboard lib.
             return
         hotkey_string = ""
         for ev in pressed_events:
-            # replacing keys like ! with their respective base key
+            # replacing keys with their respective base key, e.g "!" --> "1"
             ev.name = to_name[(ev.scan_code, ())][-1]
             # keyboard does recognize meta key (win key) as alt, setting manually
             if ev.scan_code == 125 or ev.scan_code == 126:
