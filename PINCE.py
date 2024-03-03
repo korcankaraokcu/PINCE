@@ -1792,7 +1792,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.widget_Pointer.hide()
         else:
             self.checkBox_IsPointer.setChecked(True)
-            self.lineEdit_Address.setEnabled(False)
+            self.lineEdit_Address.setReadOnly(True)
             self.lineEdit_PtrStartAddress.setText(address.get_base_address())
             self.create_offsets_list(address)
             self.widget_Pointer.show()
@@ -1934,7 +1934,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def checkBox_IsPointer_state_changed(self):
         if self.checkBox_IsPointer.isChecked():
-            self.lineEdit_Address.setEnabled(False)
+            self.lineEdit_Address.setReadOnly(True)
             self.lineEdit_PtrStartAddress.setText(self.lineEdit_Address.text())
             if len(self.offsetsList) == 0:
                 self.addOffsetLayout(False)
@@ -1942,7 +1942,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         else:
             self.lineEdit_Address.setText(self.lineEdit_PtrStartAddress.text())
             self.lineEdit_PtrStartAddress.setText("")
-            self.lineEdit_Address.setEnabled(True)
+            self.lineEdit_Address.setReadOnly(False)
             self.widget_Pointer.hide()
         self.update_value()
 
