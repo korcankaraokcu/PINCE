@@ -249,8 +249,7 @@ def append_shortcut_to_tooltip(qt_object: QObject, shortcut: QShortcut):
 validator_map:dict[str,QRegularExpressionValidator|None] = {
     "int": QRegularExpressionValidator(QRegularExpression(regexes.decimal_number.pattern)),  # integers
     "int_hex": QRegularExpressionValidator(QRegularExpression(regexes.hex_number.pattern)),  # hexadecimals
-    "float": QRegularExpressionValidator(QRegularExpression(regexes.float_number.pattern)),
-    # floats, should work fine with the small amount of testing I did
+    "float": QRegularExpressionValidator(QRegularExpression(regexes.float_number.pattern)),  # floats
     "bytearray": QRegularExpressionValidator(QRegularExpression(regexes.bytearray_input.pattern)),
     # array of bytes
     "string": None
