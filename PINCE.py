@@ -32,13 +32,13 @@ from tr.tr import TranslationConstants as tr
 from tr.tr import language_list, get_locale
 
 from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
-    QRegularExpressionValidator, QShortcut, QColorConstants, QStandardItemModel, QStandardItem, QCloseEvent, \
+    QShortcut, QColorConstants, QStandardItemModel, QStandardItem, QCloseEvent, \
     QKeyEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
     QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
     QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
-    QItemSelectionModel, QTimer, QStringListModel, QRegularExpression, QRunnable, QObject, QThreadPool, \
+    QItemSelectionModel, QTimer, QStringListModel, QRunnable, QObject, QThreadPool, \
     QLocale, QSignalBlocker, QItemSelection
 from typing import Final
 from time import sleep, time
@@ -353,14 +353,6 @@ class MainForm(QMainWindow, MainWindow):
     auto_attach_regex: bool = False
 
     def __init__(self):
-        """
-            Declare regular expressions for hexadecimal and decimal input
-            to be used in checkBox_Hex_stateChanged (or anywhere else that
-            they are needed).
-        """
-        self.qRegExp_hex: Final[QRegularExpression] = QRegularExpression("(0x)?[A-Fa-f0-9]*$")
-        self.qRegExp_dec: Final[QRegularExpression] = QRegularExpression("-?[0-9]*")
-
         super().__init__()
         self.setupUi(self)
         self.hotkey_to_shortcut = {}
@@ -449,10 +441,8 @@ class MainForm(QMainWindow, MainWindow):
         guiutils.fill_endianness_combobox(self.comboBox_Endianness)
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
-        self.lineEdit_Scan.setValidator(
-            QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan))
-        self.lineEdit_Scan2.setValidator(
-            QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan2))
+        self.lineEdit_Scan.setValidator(guiutils.validator_map.get("int"))
+        self.lineEdit_Scan2.setValidator(guiutils.validator_map.get("int"))
         self.lineEdit_Scan.keyPressEvent_original = self.lineEdit_Scan.keyPressEvent
         self.lineEdit_Scan2.keyPressEvent_original = self.lineEdit_Scan2.keyPressEvent
         self.lineEdit_Scan.keyPressEvent = self.lineEdit_Scan_on_key_press_event
@@ -1059,12 +1049,12 @@ class MainForm(QMainWindow, MainWindow):
     def checkBox_Hex_stateChanged(self, state):
         if Qt.CheckState(state) == Qt.CheckState.Checked:
             # allows only things that are hex, can also start with 0x
-            self.lineEdit_Scan.setValidator(QRegularExpressionValidator(self.qRegExp_hex, parent=self.lineEdit_Scan))
-            self.lineEdit_Scan2.setValidator(QRegularExpressionValidator(self.qRegExp_hex, parent=self.lineEdit_Scan2))
+            self.lineEdit_Scan.setValidator(guiutils.validator_map.get("int_hex"))
+            self.lineEdit_Scan2.setValidator(guiutils.validator_map.get("int_hex"))
         else:
             # sets it back to integers only
-            self.lineEdit_Scan.setValidator(QRegularExpressionValidator(self.qRegExp_dec, parent=self.lineEdit_Scan))
-            self.lineEdit_Scan2.setValidator(QRegularExpressionValidator(self.qRegExp_dec, parent=self.lineEdit_Scan2))
+            self.lineEdit_Scan.setValidator(guiutils.validator_map.get("int"))
+            self.lineEdit_Scan2.setValidator(guiutils.validator_map.get("int"))
 
     def pushButton_NewFirstScan_clicked(self):
         if debugcore.currentpid == -1:
@@ -1303,15 +1293,6 @@ class MainForm(QMainWindow, MainWindow):
 
     def comboBox_ValueType_current_index_changed(self):
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
-        validator_map = {
-            "int": QRegularExpressionValidator(QRegularExpression("-?[0-9]*"), parent=self.lineEdit_Scan),  # integers
-            "float": QRegularExpressionValidator(QRegularExpression("-?[0-9]+[.,]?[0-9]*")),
-            # floats, should work fine with the small amount of testing I did
-            "bytearray": QRegularExpressionValidator(QRegularExpression("^(([A-Fa-f0-9?]{2} +)+)$"),
-                                                     parent=self.lineEdit_Scan),
-            # array of bytes
-            "string": None
-        }
         scanmem_type = typedefs.scan_index_to_scanmem_dict[current_type]
         validator_str = scanmem_type  # used to get the correct validator
 
@@ -1319,14 +1300,17 @@ class MainForm(QMainWindow, MainWindow):
         if "int" in validator_str:
             validator_str = "int"
             self.checkBox_Hex.setEnabled(True)
+            # keep hex validator if hex is checked
+            if (self.checkBox_Hex.isChecked()):
+                validator_str = "int_hex"
         else:
             self.checkBox_Hex.setChecked(False)
             self.checkBox_Hex.setEnabled(False)
         if "float" in validator_str or validator_str == "number":
             validator_str = "float"
 
-        self.lineEdit_Scan.setValidator(validator_map[validator_str])
-        self.lineEdit_Scan2.setValidator(validator_map[validator_str])
+        self.lineEdit_Scan.setValidator(guiutils.validator_map[validator_str])
+        self.lineEdit_Scan2.setValidator(guiutils.validator_map[validator_str])
         scanmem.send_command("option scan_data_type {}".format(scanmem_type))
         # according to scanmem instructions you should always do `reset` after changing type
         scanmem.reset()

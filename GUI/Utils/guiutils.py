@@ -16,8 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from PyQt6.QtWidgets import QWidget, QScrollBar, QTableWidget, QComboBox, QMenu, QLayout
-from PyQt6.QtCore import QObject
-from PyQt6.QtGui import QShortcut
+from PyQt6.QtCore import QObject, QRegularExpression
+from PyQt6.QtGui import QShortcut, QRegularExpressionValidator
 from libpince import utils, typedefs, regexes
 from tr.tr import TranslationConstants as tr
 
@@ -243,3 +243,15 @@ def append_shortcut_to_tooltip(qt_object: QObject, shortcut: QShortcut):
         shortcut (QShortcut): Self-explanatory
     """
     qt_object.setToolTip(qt_object.toolTip() + "[" + shortcut.key().toString() + "]")
+
+#:tag:GUI
+#:tag:CONSTANTS
+validator_map:dict[str,QRegularExpressionValidator|None] = {
+    "int": QRegularExpressionValidator(QRegularExpression(regexes.decimal_number.pattern)),  # integers
+    "int_hex": QRegularExpressionValidator(QRegularExpression(regexes.hex_number.pattern)),  # hexadecimals
+    "float": QRegularExpressionValidator(QRegularExpression(regexes.float_number.pattern)),
+    # floats, should work fine with the small amount of testing I did
+    "bytearray": QRegularExpressionValidator(QRegularExpression(regexes.bytearray_input.pattern)),
+    # array of bytes
+    "string": None
+}
