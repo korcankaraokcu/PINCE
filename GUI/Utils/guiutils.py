@@ -22,6 +22,15 @@ from libpince import utils, typedefs, regexes
 from tr.tr import TranslationConstants as tr
 
 #:tag:GUI
+validator_map: dict[str, QRegularExpressionValidator | None] = {
+    "int": QRegularExpressionValidator(QRegularExpression(regexes.decimal_number.pattern)),  # integers
+    "int_hex": QRegularExpressionValidator(QRegularExpression(regexes.hex_number_gui.pattern)),  # hexadecimals
+    "float": QRegularExpressionValidator(QRegularExpression(regexes.float_number.pattern)),  # floats
+    "bytearray": QRegularExpressionValidator(QRegularExpression(regexes.bytearray_input.pattern)),  # array of bytes
+    "string": None
+}
+
+#:tag:GUI
 def get_icons_directory():
     """Gets the directory of the icons
 
@@ -243,14 +252,3 @@ def append_shortcut_to_tooltip(qt_object: QObject, shortcut: QShortcut):
         shortcut (QShortcut): Self-explanatory
     """
     qt_object.setToolTip(qt_object.toolTip() + "[" + shortcut.key().toString() + "]")
-
-#:tag:GUI
-#:tag:CONSTANTS
-validator_map:dict[str,QRegularExpressionValidator|None] = {
-    "int": QRegularExpressionValidator(QRegularExpression(regexes.decimal_number.pattern)),  # integers
-    "int_hex": QRegularExpressionValidator(QRegularExpression(regexes.hex_number_gui.pattern)),  # hexadecimals
-    "float": QRegularExpressionValidator(QRegularExpression(regexes.float_number.pattern)),  # floats
-    "bytearray": QRegularExpressionValidator(QRegularExpression(regexes.bytearray_input.pattern)),
-    # array of bytes
-    "string": None
-}
