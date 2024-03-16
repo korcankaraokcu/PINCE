@@ -22,13 +22,13 @@
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
       <source>Hex</source>
-      <translation type="unfinished">十六进制</translation>
+      <translation>十六进制</translation>
     </message>
     <message>
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
       <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
       <source>Signed</source>
-      <translation type="unfinished" />
+      <translation>有符号</translation>
     </message>
     <message>
       <location filename="../../GUI/HexEditDialog.ui" line="0" />
@@ -151,7 +151,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
       <source>Endianness</source>
-      <translation type="unfinished" />
+      <translation>字节序</translation>
     </message>
     <message>
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
@@ -172,12 +172,12 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
       <location filename="../../GUI/HandleSignalsDialog.ui" line="0" />
       <source>Stop &amp; Print</source>
-      <translation type="unfinished" />
+      <translation>停止和打印</translation>
     </message>
     <message>
       <location filename="../../GUI/HandleSignalsDialog.ui" line="0" />
       <source>Pass to Program</source>
-      <translation type="unfinished" />
+      <translation>传递到程序</translation>
     </message>
     <message>
       <location filename="../../GUI/HexEditDialog.ui" line="0" />
@@ -212,7 +212,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Hotkeys</source>
-      <translation>快捷键</translation>
+      <translation>热键</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -232,7 +232,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Java</source>
-      <translation type="unfinished" />
+      <translation>Java</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -279,7 +279,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Auto-attach to processes named</source>
-      <translation type="unfinished" />
+      <translation>自动附加到的进程名为</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -299,7 +299,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Theme</source>
-      <translation type="unfinished" />
+      <translation>主题</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -309,12 +309,12 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Hotkey</source>
-      <translation>快捷键</translation>
+      <translation>热键</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Press shortcut</source>
-      <translation type="unfinished" />
+      <translation>按下快捷键</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -359,12 +359,12 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Interruption signal</source>
-      <translation type="unfinished" />
+      <translation>中断信号</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Ignore SIGSEGV for Java processes (overrides signal settings if enabled)</source>
-      <translation type="unfinished" />
+      <translation>忽略 Java 进程的分段错误（SIGSEGV）（如果启用，将会覆盖信号设置）</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -1202,92 +1202,92 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>OK</source>
-      <translation type="unfinished" />
+      <translation>确认</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>&amp;Open</source>
-      <translation type="unfinished" />
+      <translation>打开[&amp;O]</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>&amp;Save</source>
-      <translation type="unfinished" />
+      <translation>保存[&amp;S]</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Cancel</source>
-      <translation type="unfinished">取消</translation>
+      <translation>取消</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Close</source>
-      <translation type="unfinished">关闭</translation>
+      <translation>关闭</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Discard</source>
-      <translation type="unfinished" />
+      <translation>撤销</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Apply</source>
-      <translation type="unfinished" />
+      <translation>应用</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Reset</source>
-      <translation type="unfinished" />
+      <translation>复位</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Restore Defaults</source>
-      <translation type="unfinished" />
+      <translation>恢复为默认</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Help</source>
-      <translation type="unfinished">帮助</translation>
+      <translation>帮助</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Save All</source>
-      <translation type="unfinished" />
+      <translation>全部保存</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>&amp;Yes</source>
-      <translation type="unfinished" />
+      <translation>是[&amp;Y]</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>&amp;No</source>
-      <translation type="unfinished" />
+      <translation>否[&amp;N]</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Abort</source>
-      <translation type="unfinished" />
+      <translation>关于</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Retry</source>
-      <translation type="unfinished" />
+      <translation>重试</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Ignore</source>
-      <translation type="unfinished">忽略</translation>
+      <translation>忽略</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>N&amp;o to All</source>
-      <translation type="unfinished" />
+      <translation>全部否[&amp;o]</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Yes to &amp;All</source>
-      <translation type="unfinished" />
+      <translation>全部是[&amp;A]</translation>
     </message>
   </context>
   <context>
@@ -1405,7 +1405,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Toggle attach/detach</source>
-      <translation>切换附加/分离</translation>
+      <translation>切换附加 / 分离</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -1489,12 +1489,12 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Toggle</source>
-      <translation type="unfinished" />
+      <translation>切换</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Toggle including children</source>
-      <translation type="unfinished" />
+      <translation>切换包括子项</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -1534,22 +1534,22 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Cut</source>
-      <translation type="unfinished" />
+      <translation>剪切</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Copy</source>
-      <translation type="unfinished" />
+      <translation>复制</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Paste</source>
-      <translation type="unfinished" />
+      <translation>粘贴</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Paste inside</source>
-      <translation type="unfinished" />
+      <translation>粘贴在里</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -1569,17 +1569,17 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Add to a new group</source>
-      <translation type="unfinished" />
+      <translation>加入一个新组</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Create a new group</source>
-      <translation type="unfinished" />
+      <translation>创建一个新组</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Group</source>
-      <translation type="unfinished" />
+      <translation>组</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -2276,7 +2276,7 @@ $28 是分配的便利变量
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Enter the new value of flag {}</source>
-      <translation type="unfinished" />
+      <translation>输入标志（flag）{}的新值</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -2682,12 +2682,12 @@ Proceed?</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Show in HexView</source>
-      <translation type="unfinished" />
+      <translation>在十六进制视图中显示</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Show in Disassembler</source>
-      <translation type="unfinished" />
+      <translation>在反汇编器中显示</translation>
     </message>
   </context>
 </TS>
