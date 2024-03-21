@@ -201,6 +201,7 @@ if [ ! -d ".venv/PINCE" ]; then
 	python3 -m venv .venv/PINCE
 fi
 . .venv/PINCE/bin/activate
+pip3 install --upgrade pip
 
 # shellcheck disable=SC2086
 pip3 install -r requirements.txt || exit_on_error
