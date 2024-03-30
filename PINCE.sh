@@ -30,4 +30,4 @@ fi
 # Preserve env vars to keep settings like theme preferences.
 # Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
 # so we need to force PATH preservation with venv activated user's PATH.
-sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 python3 PINCE.py
+sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 .venv/PINCE/bin/python3 PINCE.py
