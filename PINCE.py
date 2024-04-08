@@ -1789,6 +1789,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
         self.lineEdit_Description.setText(description)
         self.offsetsList = []
+        self.offsetDerefLabels = []
+        self.offsetTextLabels = []
         if not isinstance(address, typedefs.PointerChainRequest):
             self.lineEdit_Address.setText(address)
             self.widget_Pointer.hide()
@@ -1870,11 +1872,16 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         offsetLayout.addWidget(buttonRight)
         # TODO: Replace this spacer with address calculation per offset
         spacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding)
+        derefLabel = QLabel(offsetFrame)
+        derefLabel.setText("-> <font color=red>??</font>")
+        offsetLayout.addWidget(derefLabel)
         offsetLayout.addItem(spacer)
         buttonLeft.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opSub))
         buttonRight.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opAdd))
 
         self.offsetsList.append(offsetFrame)
+        self.offsetDerefLabels.append(derefLabel)
+        self.offsetTextLabels.append(offsetText)
         self.verticalLayout_Pointers.insertWidget(0, self.offsetsList[-1])
         if should_update:
             self.update_value()
@@ -1886,7 +1893,25 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         frame.deleteLater()
         self.verticalLayout_Pointers.removeWidget(frame)
         del self.offsetsList[-1]
+        del self.offsetDerefLabels[-1]
+        del self.offsetTextLabels[-1]
         self.update_value()
+
+    def update_deref_labels(self, pointer_chain_result: typedefs.PointerChainResult):
+        if pointer_chain_result != None:
+            self.label_BaseAddressDeref.setText(f"-> {hex(pointer_chain_result.pointer_chain[0])}")
+            for index, derefLabel in enumerate(self.offsetDerefLabels):
+                previousDeref = hex(pointer_chain_result.pointer_chain[index])
+                currentDeref = hex(pointer_chain_result.pointer_chain[index+1])
+                offsetText = self.offsetTextLabels[index].text()
+                if index != len(self.offsetDerefLabels) - 1:
+                    derefLabel.setText(f"[{previousDeref}+{offsetText}] -> {currentDeref}")
+                else:
+                    derefLabel.setText(f"{previousDeref}+{offsetText} = {currentDeref}")
+        else:
+            self.label_BaseAddressDeref.setText(f"-> <font color=red>??</font>")
+            for derefLabel in self.offsetDerefLabels:
+                derefLabel.setText(f"-> <font color=red>??</font>")
 
     def update_value(self):
         if self.checkBox_IsPointer.isChecked():
@@ -1899,6 +1924,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             else:
                 address_text = "??"
             self.lineEdit_Address.setText(address_text)
+            self.update_deref_labels(pointer_chain_result)
         else:
             address = debugcore.examine_expression(self.lineEdit_Address.text()).address
         if self.checkBox_Hex.isChecked():
