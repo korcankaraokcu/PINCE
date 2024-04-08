@@ -737,13 +737,13 @@ class MainForm(QMainWindow, MainWindow):
             return
         address = selected_row.text(ADDR_COL).strip("P->")  # @todo Maybe rework address grabbing logic in the future
         address_data = selected_row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
-        if isinstance(address_data, typedefs.PointerType):
+        if isinstance(address_data, typedefs.PointerChainRequest):
             selection_dialog = TrackSelectorDialogForm(self)
             selection_dialog.exec()
             if not selection_dialog.selection:
                 return
             if selection_dialog.selection == "pointer":
-                address = address_data.get_base_address()
+                address = address_data.get_base_address_as_str()
         value_type = selected_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
         if typedefs.VALUE_INDEX.is_string(value_type.value_index):
             value_text = selected_row.text(VALUE_COL)
@@ -850,7 +850,7 @@ class MainForm(QMainWindow, MainWindow):
 
             # Deserialize the address_expr & value_type param
             if type(rec[1]) in [list, tuple]:
-                address_expr = typedefs.PointerType(*rec[1])
+                address_expr = typedefs.PointerChainType(*rec[1])
             else:
                 address_expr = rec[1]
             value_type = typedefs.ValueType(*rec[2])
@@ -950,7 +950,7 @@ class MainForm(QMainWindow, MainWindow):
                 break
             it += 1
             address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
-            if isinstance(address_data, typedefs.PointerType):
+            if isinstance(address_data, typedefs.PointerChainRequest):
                 expression = address_data.base_address
             else:
                 expression = address_data
@@ -971,14 +971,16 @@ class MainForm(QMainWindow, MainWindow):
                 address = debugcore.examine_expression(expression).address
                 exp_cache[expression] = address
             vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-            if isinstance(address_data, typedefs.PointerType):
+            if isinstance(address_data, typedefs.PointerChainRequest):
                 # The original base could be a symbol so we have to save it
                 # This little hack avoids the unnecessary examine_expression call
                 # TODO: Consider implementing exp_cache inside libpince so we don't need this hack
+                pointer_chain_req = address_data
                 if address:
-                    old_base = address_data.base_address  # save the old base
-                    address_data.base_address = address
-                    address = debugcore.read_pointer(address_data)
+                    old_base = pointer_chain_req.base_address  # save the old base
+                    pointer_chain_req.base_address = address
+                    pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
+                    address = pointer_chain_result.get_final_address()
                     address_data.base_address = old_base  # then set it back
                     if address:
                         address = hex(address)
@@ -1667,7 +1669,7 @@ class MainForm(QMainWindow, MainWindow):
         description = row.text(DESC_COL)
         if serialize:
             address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
-            if isinstance(address_data, typedefs.PointerType):
+            if isinstance(address_data, typedefs.PointerChainRequest):
                 address_expr = address_data.serialize()
             else:
                 address_expr = address_data
@@ -1787,13 +1789,13 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
         self.lineEdit_Description.setText(description)
         self.offsetsList = []
-        if not isinstance(address, typedefs.PointerType):
+        if not isinstance(address, typedefs.PointerChainRequest):
             self.lineEdit_Address.setText(address)
             self.widget_Pointer.hide()
         else:
             self.checkBox_IsPointer.setChecked(True)
             self.lineEdit_Address.setReadOnly(True)
-            self.lineEdit_PtrStartAddress.setText(address.get_base_address())
+            self.lineEdit_PtrStartAddress.setText(address.get_base_address_as_str())
             self.create_offsets_list(address)
             self.widget_Pointer.show()
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
@@ -1888,10 +1890,12 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def update_value(self):
         if self.checkBox_IsPointer.isChecked():
-            pointer_type = typedefs.PointerType(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
-            address = debugcore.read_pointer(pointer_type)
-            if address != None:
-                address_text = hex(address)
+            pointer_chain_req = typedefs.PointerChainRequest(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
+            pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
+            address = None
+            if pointer_chain_result != None:
+                address_text = pointer_chain_result.get_final_address_as_hex()
+                address = pointer_chain_result.get_final_address()
             else:
                 address_text = "??"
             self.lineEdit_Address.setText(address_text)
@@ -1981,7 +1985,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         vt = typedefs.ValueType(value_index, length, zero_terminate, value_repr, endian)
         if self.checkBox_IsPointer.isChecked():
-            address = typedefs.PointerType(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
+            address = typedefs.PointerChainRequest(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
         return description, address, vt
 
     def get_offsets_int_list(self):
@@ -1995,11 +1999,11 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             offsetsIntList.append(offsetValue)
         return offsetsIntList
 
-    def create_offsets_list(self, address):
-        if not isinstance(address, typedefs.PointerType):
-            raise TypeError("Passed non-pointer type to create_offsets_list!")
+    def create_offsets_list(self, pointer_chain_req: typedefs.PointerChainRequest):
+        if not isinstance(pointer_chain_req, typedefs.PointerChainRequest):
+            raise TypeError("Passed non-PointerChainRequest type to create_offsets_list!")
 
-        for offset in address.offsets_list:
+        for offset in pointer_chain_req.offsets_list:
             self.addOffsetLayout(False)
             frame = self.offsetsList[-1]
             frame.layout().itemAt(1).widget().setText(hex(offset))
