@@ -757,18 +757,18 @@ def inject_with_dlopen_call(library_path):
 
 
 #:tag:MemoryRW
-def read_pointer(pointer_type):
-    """Reads the address pointed by this pointer
+def read_pointer_chain(pointer_request: typedefs.PointerChainRequest) -> typedefs.PointerChainResult | None:
+    """Reads the addresses pointed by this pointer chain
 
     Args:
-        pointer_type (PointerType): typedefs.PointerType class containing a base_address and an offsets list
+        pointer_request (typedefs.PointerChainRequest): class containing a base_address and an offsets list
 
     Returns:
-        int: Final pointed address after dereferencing this pointer and it's offsets list
+        typedefs.PointerChainResult: Class containing every pointer dereference result while walking the chain
         None: If an error occurs while reading the given pointer
     """
-    if not isinstance(pointer_type, typedefs.PointerType):
-        raise TypeError("Passed non-PointerType to read_pointer!")
+    if not isinstance(pointer_request, typedefs.PointerChainRequest):
+        raise TypeError("Passed non-PointerChainRequest type to read_pointer_chain!")
 
     if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32:
         value_index = typedefs.VALUE_INDEX.INT32
@@ -777,26 +777,31 @@ def read_pointer(pointer_type):
 
     # Simple addresses first, examine_expression takes much longer time, especially for larger tables
     try:
-        start_address = int(pointer_type.base_address, 0)
+        start_address = int(pointer_request.base_address, 0)
     except (ValueError, TypeError):
-        start_address = examine_expression(pointer_type.base_address).address
+        start_address = examine_expression(pointer_request.base_address).address
+
+    pointer_results: typedefs.PointerChainResult = typedefs.PointerChainResult()
     try:
         with memory_handle() as mem_handle:
-            final_address = deref_address = read_memory(start_address, value_index, mem_handle=mem_handle)
+            # Dereference the first address which is the base or (base + offset)
+            deref_address = read_memory(start_address, value_index, mem_handle=mem_handle)
             if deref_address is None:  # deref would be None if read an invalid address region
                 return None
+            pointer_results.pointer_chain.append(deref_address)
 
-            for index, offset in enumerate(pointer_type.offsets_list):
+            for index, offset in enumerate(pointer_request.offsets_list):
                 offset_address = deref_address + offset
-                if index != len(pointer_type.offsets_list) - 1:  # CE derefs every offset except for the last one
+                if index != len(pointer_request.offsets_list) - 1:  # CE derefs every offset except for the last one
                     deref_address = read_memory(offset_address, value_index, mem_handle=mem_handle)
                     if deref_address is None:
                         return None
                 else:
-                    final_address = offset_address
+                    deref_address = offset_address
+                pointer_results.pointer_chain.append(deref_address)
     except OSError:
-        final_address = start_address
-    return final_address
+        return None
+    return pointer_results
 
 
 def memory_handle():

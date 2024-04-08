@@ -462,21 +462,40 @@ class ValueType:
         return returned_string
 
 
-class PointerType:
-    def __init__(self, base_address, offsets_list=None):
+class PointerChainResult:
+    def __init__(self):
+        self.pointer_chain: list[int] = []
+
+    def get_pointer_by_index(self, index) -> int | None:
+        if index >= size(self.pointer_chain):
+            return None
+        return self.pointer_chain[index]
+
+    def get_final_address(self) -> int | None:
+        return self.pointer_chain[-1] if self.pointer_chain else None
+
+    def get_final_address_as_hex(self) -> str | None:
+        """
+        Returns the hex representation of this pointer chain's final/destination address
+        """
+        return hex(self.pointer_chain[-1]) if self.pointer_chain else None
+
+
+class PointerChainRequest:
+    def __init__(self, base_address: str | int, offsets_list: list[int] = None):
         """
         Args:
-            base_address (str, int): The base address of where this pointer starts from. Can be str expression or int.
+            base_address (str, int): The base address of where this pointer chain starts from. Can be str expression or int.
             offsets_list (list): List of offsets to reach the final pointed data. Can be None for no offsets.
             Last offset in list won't be dereferenced to emulate CE behaviour.
         """
-        self.base_address = base_address
-        self.offsets_list = [] if not offsets_list else offsets_list
+        self.base_address: str | int = base_address
+        self.offsets_list: list[int] = [] if not offsets_list else offsets_list
 
-    def serialize(self):
+    def serialize(self) -> tuple[str | int, list[int]]:
         return self.base_address, self.offsets_list
 
-    def get_base_address(self):
+    def get_base_address_as_str(self) -> str:
         """
         Returns the text representation of this pointer's base address
         """
