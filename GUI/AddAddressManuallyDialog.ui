@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>240</width>
-    <height>431</height>
+    <width>262</width>
+    <height>486</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -221,6 +221,13 @@
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
            <widget class="QLineEdit" name="lineEdit_PtrStartAddress"/>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_BaseAddressDeref">
+            <property name="text">
+             <string>-&gt; &lt;font color=red&gt;??&lt;/font&gt;</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
