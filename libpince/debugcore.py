@@ -765,7 +765,7 @@ def read_pointer_chain(pointer_request: typedefs.PointerChainRequest) -> typedef
 
     Returns:
         typedefs.PointerChainResult: Class containing every pointer dereference result while walking the chain
-        None: If an error occurs while reading the given pointer
+        None: If an error occurs while reading the given pointer chain
     """
     if not isinstance(pointer_request, typedefs.PointerChainRequest):
         raise TypeError("Passed non-PointerChainRequest type to read_pointer_chain!")
@@ -786,16 +786,22 @@ def read_pointer_chain(pointer_request: typedefs.PointerChainRequest) -> typedef
         with memory_handle() as mem_handle:
             # Dereference the first address which is the base or (base + offset)
             deref_address = read_memory(start_address, value_index, mem_handle=mem_handle)
-            if deref_address is None:  # deref would be None if read an invalid address region
+            if deref_address is None:
+                # Simply return None because no point reading further if base is not valid
                 return None
             pointer_results.pointer_chain.append(deref_address)
 
             for index, offset in enumerate(pointer_request.offsets_list):
+                # If deref_address is 0, we found an invalid read in the chain
+                # so we can just keep adding 0 until the end of offsets list
+                if deref_address == 0:
+                    pointer_results.pointer_chain.append(0)
+                    continue
                 offset_address = deref_address + offset
                 if index != len(pointer_request.offsets_list) - 1:  # CE derefs every offset except for the last one
                     deref_address = read_memory(offset_address, value_index, mem_handle=mem_handle)
                     if deref_address is None:
-                        return None
+                        deref_address = 0
                 else:
                     deref_address = offset_address
                 pointer_results.pointer_chain.append(deref_address)
