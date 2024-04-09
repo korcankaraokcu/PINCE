@@ -850,7 +850,7 @@ class MainForm(QMainWindow, MainWindow):
 
             # Deserialize the address_expr & value_type param
             if type(rec[1]) in [list, tuple]:
-                address_expr = typedefs.PointerChainType(*rec[1])
+                address_expr = typedefs.PointerChainRequest(*rec[1])
             else:
                 address_expr = rec[1]
             value_type = typedefs.ValueType(*rec[2])
