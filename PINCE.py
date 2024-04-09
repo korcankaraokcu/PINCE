@@ -1901,13 +1901,23 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         if pointer_chain_result != None:
             self.label_BaseAddressDeref.setText(f"-> {hex(pointer_chain_result.pointer_chain[0])}")
             for index, derefLabel in enumerate(self.offsetDerefLabels):
-                previousDeref = hex(pointer_chain_result.pointer_chain[index])
-                currentDeref = hex(pointer_chain_result.pointer_chain[index+1])
+                previousDerefValue = pointer_chain_result.pointer_chain[index]
+                if previousDerefValue == 0:
+                    previousDerefText = "<font color=red>??</font>"
+                else:
+                    previousDerefText = hex(previousDerefValue)
+
+                currentDerefValue = pointer_chain_result.pointer_chain[index+1]
+                if currentDerefValue == 0:
+                    currentDerefText = "<font color=red>??</font>"
+                else:
+                    currentDerefText = hex(currentDerefValue)
+
                 offsetText = self.offsetTextLabels[index].text()
                 if index != len(self.offsetDerefLabels) - 1:
-                    derefLabel.setText(f"[{previousDeref}+{offsetText}] -> {currentDeref}")
+                    derefLabel.setText(f"[{previousDerefText}+{offsetText}] -> {currentDerefText}")
                 else:
-                    derefLabel.setText(f"{previousDeref}+{offsetText} = {currentDeref}")
+                    derefLabel.setText(f"{previousDerefText}+{offsetText} = {currentDerefText}")
         else:
             self.label_BaseAddressDeref.setText(f"-> <font color=red>??</font>")
             for derefLabel in self.offsetDerefLabels:
