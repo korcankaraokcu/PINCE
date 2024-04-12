@@ -32,15 +32,13 @@ from tr.tr import TranslationConstants as tr
 from tr.tr import language_list, get_locale
 
 from PyQt6.QtGui import QIcon, QMovie, QPixmap, QCursor, QKeySequence, QColor, QTextCharFormat, QBrush, QTextCursor, \
-    QShortcut, QColorConstants, QStandardItemModel, QStandardItem, QCloseEvent, \
-    QKeyEvent
+    QShortcut, QColorConstants, QStandardItemModel, QStandardItem, QCloseEvent, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QDialog, QWidget, QTabWidget, \
     QMenu, QFileDialog, QAbstractItemView, QTreeWidgetItem, QTreeWidgetItemIterator, QCompleter, QLabel, QLineEdit, \
     QComboBox, QDialogButtonBox, QCheckBox, QHBoxLayout, QPushButton, QFrame, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QByteArray, QSettings, QEvent, QKeyCombination, QTranslator, \
     QItemSelectionModel, QTimer, QStringListModel, QRunnable, QObject, QThreadPool, \
     QLocale, QSignalBlocker, QItemSelection
-from typing import Final
 from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect, json, select
 
@@ -1783,6 +1781,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def __init__(self, parent, description=tr.NO_DESCRIPTION, address="0x", value_type=None):
         super().__init__(parent)
         self.setupUi(self)
+        self.lineEdit_PtrStartAddress.setFixedWidth(180)
+        self.lineEdit_Address.setFixedWidth(180)
         vt = typedefs.ValueType() if not value_type else value_type
         self.lineEdit_Length.setValidator(QHexValidator(99, self))
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
@@ -1865,12 +1865,12 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         offsetLayout.addWidget(buttonLeft)
         offsetText = QLineEdit(offsetFrame)
         offsetText.setText(hex(0))
+        offsetText.setFixedWidth(80)
         offsetText.textChanged.connect(self.update_value)
         offsetLayout.addWidget(offsetText)
         buttonRight = QPushButton(">", offsetFrame)
         buttonRight.setFixedWidth(40)
         offsetLayout.addWidget(buttonRight)
-        # TODO: Replace this spacer with address calculation per offset
         spacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding)
         derefLabel = QLabel(offsetFrame)
         derefLabel.setText("-> <font color=red>??</font>")
@@ -1899,21 +1899,22 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def update_deref_labels(self, pointer_chain_result: typedefs.PointerChainResult):
         if pointer_chain_result != None:
-            self.label_BaseAddressDeref.setText(f"-> {hex(pointer_chain_result.pointer_chain[0])}")
+            base_deref = hex(pointer_chain_result.pointer_chain[0]).upper().replace("X","x")
+            self.label_BaseAddressDeref.setText(f"-> {base_deref}")
             for index, derefLabel in enumerate(self.offsetDerefLabels):
                 previousDerefValue = pointer_chain_result.pointer_chain[index]
                 if previousDerefValue == 0:
                     previousDerefText = "<font color=red>??</font>"
                 else:
-                    previousDerefText = hex(previousDerefValue)
+                    previousDerefText = hex(previousDerefValue).upper().replace("X","x")
 
                 currentDerefValue = pointer_chain_result.pointer_chain[index+1]
                 if currentDerefValue == 0:
                     currentDerefText = "<font color=red>??</font>"
                 else:
-                    currentDerefText = hex(currentDerefValue)
+                    currentDerefText = hex(currentDerefValue).upper().replace("X","x")
 
-                offsetText = self.offsetTextLabels[index].text()
+                offsetText = self.offsetTextLabels[index].text().upper().replace("X","x")
                 if index != len(self.offsetDerefLabels) - 1:
                     derefLabel.setText(f"[{previousDerefText}+{offsetText}] -> {currentDerefText}")
                 else:
