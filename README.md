@@ -82,14 +82,17 @@ Want to help? Check out [CONTRIBUTING.md](CONTRIBUTING.md)
 # License
 GPLv3+. See [COPYING](COPYING) file for details
 
-# Supported platforms
+# Officially supported platforms
 PINCE should technically run on any distro that comes with **Python 3.10+** and **PyQt 6.6+** installed or available in the package manager, but below is the list of distros that we officially support, as in we actively test on these and help with issues:
 - Ubuntu 22.04+
 - Debian 12+ (or Testing)
 - Archlinux
 - Fedora 35+
 
-Should your distro not be officially supported, the installer can still try to install it for you by picking one of the base package managers appropriate for your distro but please **do not open** an issue if it does not work for you
+Should your distro not be officially supported, the installer can still try to install it for you by picking one of the base package managers appropriate for your distro but please **do not open an issue on GitHub** if it does not work for you.
+
+If this happens and you can't figure out why, we might be able to guide you into making PINCE run in our Discord server, under the #issues channel, but remember that we only actively test the installer and PINCE on the distros listed above.
+
 # Trusted Sources
   * [Official github page](https://github.com/korcankaraokcu/PINCE)
   * [AUR package for Archlinux](https://aur.archlinux.org/packages/pince-git/)
