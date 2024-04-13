@@ -978,10 +978,12 @@ class MainForm(QMainWindow, MainWindow):
                     old_base = pointer_chain_req.base_address  # save the old base
                     pointer_chain_req.base_address = address
                     pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
-                    address = pointer_chain_result.get_final_address()
+                    if pointer_chain_result and pointer_chain_result.get_final_address():
+                        address = pointer_chain_result.get_final_address_as_hex()
+                    else:
+                        address = None
                     address_data.base_address = old_base  # then set it back
                     if address:
-                        address = hex(address)
                         row.setText(ADDR_COL, f'P->{address}')
                     else:
                         row.setText(ADDR_COL, 'P->??')
