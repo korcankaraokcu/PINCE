@@ -88,6 +88,7 @@ from GUI.RestoreInstructionsWidget import Ui_Form as RestoreInstructionsWidget
 from GUI.AbstractTableModels.HexModel import QHexModel
 from GUI.AbstractTableModels.AsciiModel import QAsciiModel
 from GUI.Validators.HexValidator import QHexValidator
+from GUI.ManualAddressDialogUtils.PointerChainOffset import PointerChainOffset
 
 from operator import add as opAdd, sub as opSub
 
@@ -1790,9 +1791,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
         self.lineEdit_Description.setText(description)
-        self.offsetsList = []
-        self.offsetDerefLabels = []
-        self.offsetTextLabels = []
+        self.lineEdit_Description.setFixedWidth(180)
+        self.offsetsList:list[PointerChainOffset] = []
         if not isinstance(address, typedefs.PointerChainRequest):
             self.lineEdit_Address.setText(address)
             self.widget_Pointer.hide()
@@ -1858,33 +1858,10 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             pass
 
     def addOffsetLayout(self, should_update=True):
-        offsetFrame = QFrame(self.widget_Pointer)
-        offsetLayout = QHBoxLayout(offsetFrame)
-        offsetLayout.setContentsMargins(0, 3, 0, 3)
-        offsetFrame.setLayout(offsetLayout)
-        buttonLeft = QPushButton("<", offsetFrame)
-        buttonLeft.setFixedWidth(40)
-        offsetLayout.addWidget(buttonLeft)
-        offsetText = QLineEdit(offsetFrame)
-        offsetText.setText(hex(0))
-        offsetText.setFixedWidth(80)
-        offsetText.textChanged.connect(self.update_value)
-        offsetLayout.addWidget(offsetText)
-        buttonRight = QPushButton(">", offsetFrame)
-        buttonRight.setFixedWidth(40)
-        offsetLayout.addWidget(buttonRight)
-        spacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding)
-        derefLabel = QLabel(offsetFrame)
-        derefLabel.setText("-> <font color=red>??</font>")
-        offsetLayout.addWidget(derefLabel)
-        offsetLayout.addItem(spacer)
-        buttonLeft.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opSub))
-        buttonRight.clicked.connect(lambda: self.on_offset_arrow_clicked(offsetText, opAdd))
-
+        offsetFrame = PointerChainOffset(len(self.offsetsList), self.widget_Pointer)
         self.offsetsList.append(offsetFrame)
-        self.offsetDerefLabels.append(derefLabel)
-        self.offsetTextLabels.append(offsetText)
         self.verticalLayout_Pointers.insertWidget(0, self.offsetsList[-1])
+        offsetFrame.offset_changed_signal.connect(self.update_value)
         if should_update:
             self.update_value()
 
@@ -1895,36 +1872,34 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         frame.deleteLater()
         self.verticalLayout_Pointers.removeWidget(frame)
         del self.offsetsList[-1]
-        del self.offsetDerefLabels[-1]
-        del self.offsetTextLabels[-1]
         self.update_value()
 
     def update_deref_labels(self, pointer_chain_result: typedefs.PointerChainResult):
         if pointer_chain_result != None:
             base_deref = hex(pointer_chain_result.pointer_chain[0]).upper().replace("X","x")
-            self.label_BaseAddressDeref.setText(f"-> {base_deref}")
-            for index, derefLabel in enumerate(self.offsetDerefLabels):
-                previousDerefValue = pointer_chain_result.pointer_chain[index]
-                if previousDerefValue == 0:
-                    previousDerefText = "<font color=red>??</font>"
+            self.label_BaseAddressDeref.setText(f" → {base_deref}")
+            for index, offsetFrame in enumerate(self.offsetsList):
+                previousDerefText = self.caps_hex_or_error_indicator(pointer_chain_result.pointer_chain[index])
+                currentDerefText = self.caps_hex_or_error_indicator(pointer_chain_result.pointer_chain[index + 1])
+                offsetText = self.caps_hex(offsetFrame.offsetText.text())
+                operationalSign = "" if offsetText.startswith("-") else "+"
+                calculation = f"{previousDerefText}{operationalSign}{offsetText}"
+                if index != len(self.offsetsList) - 1:
+                    offsetFrame.update_deref_label(f" [{calculation}] → {currentDerefText}")
                 else:
-                    previousDerefText = hex(previousDerefValue).upper().replace("X","x")
-
-                currentDerefValue = pointer_chain_result.pointer_chain[index+1]
-                if currentDerefValue == 0:
-                    currentDerefText = "<font color=red>??</font>"
-                else:
-                    currentDerefText = hex(currentDerefValue).upper().replace("X","x")
-
-                offsetText = self.offsetTextLabels[index].text().upper().replace("X","x")
-                if index != len(self.offsetDerefLabels) - 1:
-                    derefLabel.setText(f"[{previousDerefText}+{offsetText}] -> {currentDerefText}")
-                else:
-                    derefLabel.setText(f"{previousDerefText}+{offsetText} = {currentDerefText}")
+                    offsetFrame.update_deref_label(f" {calculation} = {currentDerefText}")
         else:
-            self.label_BaseAddressDeref.setText(f"-> <font color=red>??</font>")
-            for derefLabel in self.offsetDerefLabels:
-                derefLabel.setText(f"-> <font color=red>??</font>")
+            self.label_BaseAddressDeref.setText(" → <font color=red>??</font>")
+            for offsetFrame in self.offsetsList:
+                offsetFrame.update_deref_label(" → <font color=red>??</font>")
+
+    def caps_hex_or_error_indicator(self, hex_int:int):
+        if hex_int == 0:
+            return "<font color=red>??</font>"
+        return self.caps_hex(hex(hex_int))
+
+    def caps_hex(self, hex_str:str):
+        return hex_str.upper().replace("X","x")
 
     def update_value(self):
         if self.checkBox_IsPointer.isChecked():
@@ -2056,6 +2031,9 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         sizeVal = typedefs.index_to_valuetype_dict[self.comboBox_ValueType.currentIndex()][0]
         offsetValue = operator_func(offsetValue, sizeVal)
         offsetTextWidget.setText(hex(offsetValue))
+
+    def get_type_size(self):
+        return typedefs.index_to_valuetype_dict[self.comboBox_ValueType.currentIndex()][0]
 
 
 class EditTypeDialogForm(QDialog, EditTypeDialog):
