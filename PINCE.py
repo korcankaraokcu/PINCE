@@ -1792,7 +1792,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
         self.lineEdit_Description.setText(description)
         self.lineEdit_Description.setFixedWidth(180)
-        self.offsetsList:list[PointerChainOffset] = []
+        self.offsetsList: list[PointerChainOffset] = []
         if not isinstance(address, typedefs.PointerChainRequest):
             self.lineEdit_Address.setText(address)
             self.widget_Pointer.hide()
@@ -1893,12 +1893,12 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             for offsetFrame in self.offsetsList:
                 offsetFrame.update_deref_label(" → <font color=red>??</font>")
 
-    def caps_hex_or_error_indicator(self, address:int):
+    def caps_hex_or_error_indicator(self, address: int):
         if address == 0:
             return "<font color=red>??</font>"
         return self.caps_hex(hex(address))
 
-    def caps_hex(self, hex_str:str):
+    def caps_hex(self, hex_str: str):
         return hex_str.upper().replace("X","x")
 
     def update_value(self):
