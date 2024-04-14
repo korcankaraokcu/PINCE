@@ -227,6 +227,9 @@
             <property name="text">
              <string>-&gt; &lt;font color=red&gt;??&lt;/font&gt;</string>
             </property>
+            <property name="textInteractionFlags">
+             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+            </property>
            </widget>
           </item>
          </layout>
@@ -278,6 +281,12 @@
      </item>
      <item>
       <widget class="QLineEdit" name="lineEdit_Description">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
         <string/>
        </property>
