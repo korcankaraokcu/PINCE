@@ -1893,10 +1893,10 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             for offsetFrame in self.offsetsList:
                 offsetFrame.update_deref_label(" → <font color=red>??</font>")
 
-    def caps_hex_or_error_indicator(self, hex_int:int):
-        if hex_int == 0:
+    def caps_hex_or_error_indicator(self, address:int):
+        if address == 0:
             return "<font color=red>??</font>"
-        return self.caps_hex(hex(hex_int))
+        return self.caps_hex(hex(address))
 
     def caps_hex(self, hex_str:str):
         return hex_str.upper().replace("X","x")
