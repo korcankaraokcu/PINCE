@@ -9,7 +9,7 @@ from GUI.Utils import guiutils
 class PointerChainOffset(QFrame):
     offset_changed_signal = pyqtSignal(name="offsetChanged")
 
-    def __init__(self, offset_index:int, parent:QWidget|None=None):
+    def __init__(self, offset_index:int, parent: QWidget|None=None):
         super().__init__(parent)
         self.offset_index = offset_index
         self.initUI()
@@ -56,7 +56,7 @@ class PointerChainOffset(QFrame):
     def offset_changed(self):
         self.offset_changed_signal.emit()
 
-    def update_deref_label(self, text:str):
+    def update_deref_label(self, text: str):
         self.derefLabel.setText(text)
 
     
