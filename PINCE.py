@@ -95,7 +95,7 @@ from keyboard import KeyboardEvent, _pressed_events
 from keyboard._nixkeyboard import to_name
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    app = QApplication([])
     app.setOrganizationName("PINCE")
     app.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
     app.setApplicationName("PINCE")
