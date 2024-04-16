@@ -81,7 +81,7 @@ frame_address = compile(r"frame\s+at\s+" + hex_number_grouped.pattern)  # frame 
 return_address = compile(r"saved.*=\s+" + hex_number_grouped.pattern)  # saved rip = 0x7f633a853fe4
 trace_instructions_ret = compile(r":\s+ret")  # 0x7f71a4dc5ff8 <poll+72>:	ret
 trace_instructions_call = compile(r":\s+call")  # 0x7f71a4dc5fe4 <poll+52>:	call   0x7f71a4de1100
-dissect_code_valid_address = compile(r"(\s+|\[|,)" + hex_number.pattern + "(\s+|\]|,|$)")
+dissect_code_valid_address = compile(r"(\s+|\[|,)" + hex_number.pattern + r"(\s+|\]|,|$)")
 alphanumerics = compile(r"\w+")
 file_with_extension = compile(r".+?\.\w+")
 offset_expression = compile(r"[/*+\-][0-9a-fA-FxX/*+\-\[\]]+$")
