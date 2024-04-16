@@ -2338,7 +2338,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.comboBox_InterruptSignal.setStyleSheet("combobox-popup: 0;")  # maxVisibleItems doesn't work otherwise
         self.comboBox_Theme.addItems(theme_list)
         logo_directory = utils.get_logo_directory()
-        logo_list = utils.search_files(logo_directory, "\.(png|jpg|jpeg|svg)$")
+        logo_list = utils.search_files(logo_directory, r"\.(png|jpg|jpeg|svg)$")
         for logo in logo_list:
             self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
         for hotkey in hotkeys.get_hotkeys():

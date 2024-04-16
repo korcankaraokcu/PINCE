@@ -137,7 +137,7 @@ class TranslationConstants(QObject):
     AUTO_ATTACH_TOOLTIP = QT_TR_NOOP("asdf|qwer --> search for asdf or qwer\n"
                                      "[as]df --> search for both adf and sdf\n"
                                      "Use the char \\ to escape special chars such as [\n"
-                                     "\[asdf\] --> search for opcodes that contain [asdf]")
+                                     r"\[asdf\] --> search for opcodes that contain [asdf]")
     SEPARATE_PROCESSES_WITH = QT_TR_NOOP("Separate processes with {}")
     SELECT_GDB_BINARY = QT_TR_NOOP("Select the gdb binary")
     QUIT_SESSION_CRASH = QT_TR_NOOP("Quitting current session will crash PINCE")
@@ -316,7 +316,7 @@ class TranslationConstants(QObject):
                                       "call|rax --> search for opcodes that contain call or rax\n"
                                       "[re]cx --> search for both rcx and ecx\n"
                                       "Use the char \\ to escape special chars such as [\n"
-                                      "\[rsp\] --> search for opcodes that contain [rsp]")
+                                      r"\[rsp\] --> search for opcodes that contain [rsp]")
     COPY_ADDRESSES = QT_TR_NOOP("Copy Addresses")
     COPY_OFFSET = QT_TR_NOOP("Copy Offset")
     COPY_PATH = QT_TR_NOOP("Copy Path")

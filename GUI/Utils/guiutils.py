@@ -119,7 +119,7 @@ def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.
 
 #:tag:GUI
 def get_current_row(tablewidget: QTableWidget):
-    """Returns the currently selected row index for the given QTableWidget
+    r"""Returns the currently selected row index for the given QTableWidget
     If you try to use only selectionModel().currentIndex().row() for this purpose, you'll get the last selected row even
     if it was unselected afterwards. This is why this function exists, it checks the selection state before returning
     the selected row
@@ -145,7 +145,7 @@ def get_current_row(tablewidget: QTableWidget):
 
 #:tag:GUI
 def get_current_item(tablewidget: QTableWidget):
-    """Returns the currently selected item for the given QTableWidget
+    r"""Returns the currently selected item for the given QTableWidget
     If you try to use only selectionModel().currentItem() for this purpose, you'll get the last selected item even
     if it was unselected afterwards. This is why this function exists, it checks the selection state before returning
     the selected item. Unlike get_current_row, this function can be used with QTreeWidget

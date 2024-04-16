@@ -1430,7 +1430,7 @@ def get_breakpoint_info() -> list[typedefs.tuple_breakpoint_info]:
     raw_info = send_command("-break-list")
     # Temporary fix for https://sourceware.org/bugzilla/show_bug.cgi?id=9659
     # TODO:Delete this line when gdb or pygdbmi fixes the problem
-    raw_info = re.sub("script={(.*?)}", "script=[\g<1>]", raw_info)  # Please refer to issue #53
+    raw_info = re.sub(r"script={(.*?)}", r"script=[\g<1>]", raw_info)  # Please refer to issue #53
     for item in utils.parse_response(raw_info)['payload']['BreakpointTable']['body']:
         item = defaultdict(lambda: "", item)
         number, breakpoint_type, disp, enabled, address, what, condition, hit_count, enable_count = \
