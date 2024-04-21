@@ -1169,7 +1169,7 @@ class MainForm(QMainWindow, MainWindow):
     # :doc:
     # adds things like 0x when searching for etc, basically just makes the line valid for scanmem
     # this should cover most things, more things might be added later if need be
-    def validate_search(self, search_for, search_for2):
+    def validate_search(self, search_for: str, search_for2: str):
         type_index = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
         symbol_map = {
             typedefs.SCAN_TYPE.INCREASED: "+",
@@ -1194,10 +1194,13 @@ class MainForm(QMainWindow, MainWindow):
         elif scan_index == typedefs.SCAN_INDEX.STRING:
             search_for = "\" " + search_for
         elif self.checkBox_Hex.isChecked():
-            if not search_for.startswith("0x"):
-                search_for = "0x" + search_for
-            if not search_for2.startswith("0x"):
-                search_for2 = "0x" + search_for2
+            if not search_for.startswith(("0x", "-0x")):
+                negative_str = "-" if search_for.startswith("-") else ""
+                search_for = negative_str + "0x" + search_for.lstrip("-")
+            if not search_for2.startswith(("0x", "-0x")):
+                negative_str = "-" if search_for.startswith("-") else ""
+                search_for2 = negative_str + "0x" + search_for2.lstrip("-")
+                
         if type_index == typedefs.SCAN_TYPE.BETWEEN:
             return search_for + ".." + search_for2
         cmp_symbols = {
