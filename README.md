@@ -3,9 +3,9 @@
 TODO: Include build status with the title when test coverage increases and Travis is maintained
 [![Build Status](https://travis-ci.org/korcankaraokcu/PINCE.svg?branch=master)](https://travis-ci.org/korcankaraokcu/PINCE)
 -->
-PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB), focused on games. However, it can be used for any reverse-engineering related stuff. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE is in development right now, read [Features](#features) part of the project to see what is done and [Roadmap](CONTRIBUTING.md#roadmap) part to see what is currently planned. Also, please read [Wiki Page](https://github.com/korcankaraokcu/PINCE/wiki) of the project to understand how PINCE works.  
+PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB), focused on games. However, it can be used for any reverse-engineering related stuff. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE is in development right now, read [Features](#features) part of the project to see what is done and [Roadmap](CONTRIBUTING.md#roadmap) part to see what is currently planned. Also, please read [Wiki Page](https://github.com/korcankaraokcu/PINCE/wiki) of the project to understand how PINCE works.
 
-### [Feel free to join our discord server!](https://discord.gg/jVt3BzTSpz)  
+### [Feel free to join our discord server!](https://discord.gg/jVt3BzTSpz)
 
 *Disclaimer: Do not trust to any source other than [Trusted Sources](#trusted-sources) that claims to have the source code or package for PINCE and remember to report them **immediately***
 
@@ -24,7 +24,8 @@ Pre-release screenshots:
 ![pince8](https://user-images.githubusercontent.com/5638719/219640488-61a8df17-405b-45ae-9b29-f9d214eb8571.png)
 ![pince9](https://user-images.githubusercontent.com/5638719/219640522-85cac1a9-e425-4b4f-abeb-a61104caa618.png)
 
-# Features  
+# Features
+
 - **Memory searching:** PINCE uses a specialized fork of [libscanmem](https://github.com/brkzlr/scanmem-PINCE) to search the memory efficiently
 - **Background Execution:** PINCE uses background execution by default, allowing users to run GDB commands while process is running
 - **Variable Inspection&Modification**
@@ -60,39 +61,76 @@ Pre-release screenshots:
   * See [here](https://github.com/korcankaraokcu/PINCE/wiki/Extending-PINCE-with-.so-files)
 
 # Installing
-```
-git clone --recursive https://github.com/korcankaraokcu/PINCE
-cd PINCE
-sh install_pince.sh
-```
-~~For Archlinux, you can also use the [AUR package](https://aur.archlinux.org/packages/pince-git/) as an alternative~~ Currently outdated, use the installation script
 
-If you like to uninstall PINCE, just delete this folder, almost everything is installed locally. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them if you want
+With the installation script :
+
+```shell
+$ git clone --recursive https://github.com/korcankaraokcu/PINCE
+$ cd PINCE
+$ sh install_pince.sh
+```
+
+On Arch Linux, you can use the provided AUR package [pince-git]((https://aur.archlinux.org/packages/pince-git/)) :
+
+```shell
+$ yay -S pince-git
+```
+
+On Nix/NixOS, use the provided flake :
+
+```shell
+$ git clone --recursive https://github.com/korcankaraokcu/PINCE
+$ nix develop
+# or, with direnv
+# $ direnv allow .
+$ build-libscanmem
+```
+
+If you like to uninstall PINCE, just delete this folder, almost everything is installed locally. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them if you want.
 
 ***Notes:***
 - If you are having problems with your default gdb version, you can use the `install_gdb.sh` script to install another version locally. Read the comments in it for more information
 - Check https://github.com/korcankaraokcu/PINCE/issues/116 for a possible fix if you encounter `'GtkSettings' has no property named 'gtk-fallback-icon-theme'`
 
-# Running PINCE  
-Just run ```sh PINCE.sh``` in the PINCE directory
+# Running PINCE
+
+Just run the following in the PINCE directory :
+
+```shell
+$ sh PINCE.sh
+```
+
+On Nix/NixOS, run :
+
+```shell
+$ nix develop
+# or, with direnv
+# $ direnv allow .
+$ pince
+```
 
 # Contributing
+
 Want to help? Check out [CONTRIBUTING.md](CONTRIBUTING.md)
 
 # License
+
 GPLv3+. See [COPYING](COPYING) file for details
 
 # Officially supported platforms
+
 PINCE should technically run on any distro that comes with **Python 3.10+** and **PyQt 6.6+** installed or available in the package manager, but below is the list of distros that we officially support, as in we actively test on these and help with issues:
 - Ubuntu 22.04+
 - Debian 12+ (or Testing)
 - Archlinux
 - Fedora 35+
+- NixOS 23.11
 
 Should your distro not be officially supported, the installer can still try to install it for you by picking one of the base package managers appropriate for your distro but please **do not open an issue on GitHub** if it does not work for you.
 
 If this happens and you can't figure out why, we might be able to guide you into making PINCE run in our Discord server, under the #issues channel, but remember that we only actively test the installer and PINCE on the distros listed above.
 
 # Trusted Sources
-  * [Official github page](https://github.com/korcankaraokcu/PINCE)
-  * [AUR package for Archlinux](https://aur.archlinux.org/packages/pince-git/)
+
+* [Official github page](https://github.com/korcankaraokcu/PINCE)
+* [AUR package for Archlinux](https://aur.archlinux.org/packages/pince-git/)
