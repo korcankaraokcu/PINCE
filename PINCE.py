@@ -397,7 +397,10 @@ class MainForm(QMainWindow, MainWindow):
             self.settings.clear()
             self.set_default_settings()
         try:
-            debugcore.init_gdb(settings.gdb_path)
+            gdb_path = settings.gdb_path
+            if os.environ.get("APPDIR"):
+                gdb_path = utils.get_default_gdb_path()
+            debugcore.init_gdb(gdb_path)
         except pexpect.EOF:
             InputDialogForm(self, [(tr.GDB_INIT_ERROR, None)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
         else:
@@ -1439,12 +1442,15 @@ class MainForm(QMainWindow, MainWindow):
         self.lineEdit_Scan.setText("")
         self.reset_scan()
         self.on_status_running()
-        debugcore.init_gdb(settings.gdb_path)
         self.apply_after_init()
         self.flashAttachButton = True
         self.flashAttachButtonTimer.start(100)
         self.label_SelectedProcess.setText(tr.NO_PROCESS_SELECTED)
         self.memory_view_window.setWindowTitle(tr.NO_PROCESS_SELECTED)
+        gdb_path = settings.gdb_path
+        if os.environ.get("APPDIR"):
+            gdb_path = utils.get_default_gdb_path()
+        debugcore.init_gdb(gdb_path)
 
     def on_status_detached(self):
         self.label_SelectedProcess.setStyleSheet("color: blue")

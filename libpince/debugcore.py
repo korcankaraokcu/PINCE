@@ -483,7 +483,7 @@ def handle_signals(signal_list):
 
 
 #:tag:GDBCommunication
-def init_gdb(gdb_path=typedefs.PATHS.GDB):
+def init_gdb(gdb_path=utils.get_default_gdb_path()):
     """Spawns gdb and initializes/resets some of the global variables
 
     Args:
@@ -569,7 +569,7 @@ def init_referenced_dicts(pid):
 
 
 #:tag:Debug
-def attach(pid, gdb_path=typedefs.PATHS.GDB):
+def attach(pid, gdb_path=utils.get_default_gdb_path()):
     """Attaches gdb to the target and initializes some of the global variables
 
     Args:
@@ -613,7 +613,7 @@ def attach(pid, gdb_path=typedefs.PATHS.GDB):
 
 
 #:tag:Debug
-def create_process(process_path, args="", ld_preload_path="", gdb_path=typedefs.PATHS.GDB):
+def create_process(process_path, args="", ld_preload_path="", gdb_path=utils.get_default_gdb_path()):
     """Creates a new process for debugging and initializes some of the global variables
     Current process will be detached even if the create_process call fails
     Make sure to save your data before calling this monstrosity
