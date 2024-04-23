@@ -1442,7 +1442,6 @@ class MainForm(QMainWindow, MainWindow):
         self.lineEdit_Scan.setText("")
         self.reset_scan()
         self.on_status_running()
-        self.apply_after_init()
         self.flashAttachButton = True
         self.flashAttachButtonTimer.start(100)
         self.label_SelectedProcess.setText(tr.NO_PROCESS_SELECTED)
@@ -1451,6 +1450,7 @@ class MainForm(QMainWindow, MainWindow):
         if os.environ.get("APPDIR"):
             gdb_path = utils.get_default_gdb_path()
         debugcore.init_gdb(gdb_path)
+        self.apply_after_init()
 
     def on_status_detached(self):
         self.label_SelectedProcess.setStyleSheet("color: blue")
