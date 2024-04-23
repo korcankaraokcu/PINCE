@@ -1102,6 +1102,13 @@ def get_user_path(user_path):
     return os.path.join(homedir, user_path)
 
 
+def get_default_gdb_path():
+    appdir = os.environ.get("APPDIR")
+    if appdir:
+        return appdir + "/usr/bin/gdb"
+    return typedefs.PATHS.GDB
+
+
 #:tag:Tools
 def execute_script(file_path):
     """Loads and executes the script in the given path

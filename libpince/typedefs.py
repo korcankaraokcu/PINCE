@@ -25,7 +25,7 @@ class CONST_TIME:
 
 
 class PATHS:
-    GDB = "/bin/gdb"
+    GDB = "/bin/gdb" # Use utils.get_default_gdb_path()
     TMP = "/tmp/PINCE/"  # Use utils.get_tmp_path()
     IPC = "/dev/shm/PINCE_IPC/"  # Use utils.get_ipc_path()
     FROM_PINCE = "/from_PINCE"  # Use utils.get_from_pince_file()
