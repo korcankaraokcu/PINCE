@@ -1,6 +1,6 @@
 #!/bin/bash
 : '
-Copyright (C) 2024 brkzlr <https://github.com/brkzlr>
+Copyright (C) 2024 brkzlr <brkozler@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,6 +24,33 @@ case $PACKAGEDIR in
 	*) echo "package.sh is not in PINCE/ci folder!"; exit 1;;
 esac
 cd $PACKAGEDIR
+
+# Check what distro we use for lrelease path
+LSB_RELEASE="$(command -v lsb_release)"
+if [ -n "$LSB_RELEASE" ]; then
+    OS_NAME="$(${LSB_RELEASE} -d -s)"
+else
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    OS_NAME="$NAME"
+fi
+case $OS_NAME in
+*SUSE*)
+	LRELEASE_CMD="lrelease6"
+	;;
+*Arch*)
+	LRELEASE_CMD="/usr/lib/qt6/bin/lrelease"
+	;;
+*Fedora*)
+	LRELEASE_CMD="lrelease-qt6"
+	;;
+*Debian*|*Ubuntu*)
+	LRELEASE_CMD="/usr/lib/qt6/bin/lrelease"
+	;;
+*)
+	LRELEASE_CMD="$(which lrelease6)" # Placeholder
+	;;
+esac
 
 # Download necessary tools
 wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
@@ -66,6 +93,11 @@ make -j"$NUM_MAKE_JOBS"
 cp --preserve .libs/libscanmem.so ../libpince/libscanmem
 cp --preserve wrappers/scanmem.py ../libpince/libscanmem
 cd ..
+
+# Compile translations
+${LRELEASE_CMD} i18n/ts/*
+mkdir -p i18n/qm
+mv i18n/ts/*.qm i18n/qm/
 
 # Copy necessary PINCE folders/files to inside AppDir
 cp -r GUI i18n libpince media tr AUTHORS COPYING COPYING.CC-BY PINCE.py THANKS ci/AppDir/opt/PINCE/
