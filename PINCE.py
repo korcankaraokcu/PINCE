@@ -113,7 +113,8 @@ if __name__ == '__main__':
         locale = None
     if not locale:
         locale = get_locale()
-    translator.load(f'i18n/qm/{locale}.qm')
+    locale_file = utils.get_script_directory() + f'/i18n/qm/{locale}.qm'
+    translator.load(locale_file)
     app.installTranslator(translator)
     tr.translate()
     hotkeys = Hotkeys()  # Create the instance after translations to ensure hotkeys are translated
