@@ -21,7 +21,7 @@
     - [tests](./libpince/gdb_python_scripts/tests) - An example for .so extension, read more [here](https://github.com/korcankaraokcu/PINCE/wiki/Extending-PINCE-with-.so-files)
 
 # Code Style
-Formatting style is black defaults, except line length is 120. You can use black without parameters since we already use `pyproject.toml` for this setting
+Formatting style is black defaults, except line length is 120. You can use black without parameters since we already use `pyproject.toml` for this setting. Please do not format automatically generated files under GUI folder. Your changes will be overwritten by Qt Designer. More info at [UI Files](#ui-files)
 - Max characters per line: 120
 - Variable naming for libpince:
   - Classes: PascalCase
