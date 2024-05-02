@@ -78,8 +78,17 @@ def get_flag_registers():
     contents_send = OrderedDict()
     bitwise_flags = bin(int(gdb.parse_and_eval("$eflags")))[2:]
     reversed_bitwise_flags = "".join(reversed(bitwise_flags))
-    (contents_send["cf"], contents_send["pf"], contents_send["af"], contents_send["zf"], contents_send["sf"],
-     contents_send["tf"], contents_send["if"], contents_send["df"], contents_send["of"]) = ["0"] * 9
+    (
+        contents_send["cf"],
+        contents_send["pf"],
+        contents_send["af"],
+        contents_send["zf"],
+        contents_send["sf"],
+        contents_send["tf"],
+        contents_send["if"],
+        contents_send["df"],
+        contents_send["of"],
+    ) = ["0"] * 9
     try:
         contents_send["cf"] = reversed_bitwise_flags[0]
         contents_send["pf"] = reversed_bitwise_flags[2]
@@ -126,7 +135,7 @@ def examine_expression(expression: str, regions=None):
                 offset = "+0"
             index = regexes.index.search(expression)
             if index:
-                expression = expression[:index.start()]
+                expression = expression[: index.start()]
                 index = int(index.group(1))
             else:
                 index = 0
@@ -135,7 +144,7 @@ def examine_expression(expression: str, regions=None):
                 if len(start_address_list) > index:
                     address = start_address_list[index]
                     try:
-                        address = hex(eval(address+offset))
+                        address = hex(eval(address + offset))
                     except Exception as e:
                         print(e)
                         return typedefs.tuple_examine_expression(None, None, None)

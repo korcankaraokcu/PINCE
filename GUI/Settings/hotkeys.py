@@ -20,7 +20,7 @@ class Hotkey:
             remove_hotkey(self.handle)
             self.handle = None
         self.custom = custom
-        if custom == '':
+        if custom == "":
             return
         self.handle = add_hotkey(custom.lower(), self.func)
 

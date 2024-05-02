@@ -1,15 +1,13 @@
 from PyQt6.QtCore import QObject, QLocale, QT_TR_NOOP, QT_TRANSLATE_NOOP
 from collections import OrderedDict
 
-language_list = OrderedDict([
-    ("en_US", "English"),
-    ("it_IT", "Italiano"),
-    ("zh_CN", "简体中文")
-])
+language_list = OrderedDict([("en_US", "English"), ("it_IT", "Italiano"), ("zh_CN", "简体中文")])
+
 
 def get_locale():
     system_locale = QLocale.system().name()
     return system_locale if system_locale in language_list else "en_US"
+
 
 # This handles the default translations for QDialogButtonBox.StandardButton
 # Some of the standard button labels have an ampersand (&). It's used to denote an access key or keyboard shortcut
@@ -54,9 +52,11 @@ class TranslationConstants(QObject):
     SUCCESS = QT_TR_NOOP("Success")
     INFO = QT_TR_NOOP("Information")
     GDB_INIT = QT_TR_NOOP("GDB isn't initialized yet")
-    GDB_INIT_ERROR = QT_TR_NOOP("Unable to initialize GDB\n"
-                                "You might want to reinstall GDB or use the system GDB\n"
-                                "To change the current GDB path, check Settings->Debug")
+    GDB_INIT_ERROR = QT_TR_NOOP(
+        "Unable to initialize GDB\n"
+        "You might want to reinstall GDB or use the system GDB\n"
+        "To change the current GDB path, check Settings->Debug"
+    )
     EDIT = QT_TR_NOOP("Edit")
     SHOW_HEX = QT_TR_NOOP("Show as hexadecimal")
     SHOW_DEC = QT_TR_NOOP("Show as decimal")
@@ -125,19 +125,22 @@ class TranslationConstants(QObject):
     INSTRUCTION_ASSERT_LT = QT_TR_NOOP("Instruction count cannot be lower than {}")
     INTERVAL_ASSERT_NEGATIVE = QT_TR_NOOP("Interval cannot be a negative number")
     ASKING_FOR_TROUBLE = QT_TR_NOOP("You are asking for it, aren't you?")
-    UPDATE_ASSERT_GT = QT_TR_NOOP("Update interval should be bigger than {} ms\n"
-                                  "Setting update interval less than {} ms may cause slowdown\n"
-                                  "Proceed?")
+    UPDATE_ASSERT_GT = QT_TR_NOOP(
+        "Update interval should be bigger than {} ms\n"
+        "Setting update interval less than {} ms may cause slowdown\n"
+        "Proceed?"
+    )
     IS_INVALID_REGEX = QT_TR_NOOP("{} isn't a valid regex")
     LANG_RESET = QT_TR_NOOP("Language settings will take effect upon the next restart")
     GDB_RESET = QT_TR_NOOP("You have changed the GDB path, reset GDB now?")
-    RESET_DEFAULT_SETTINGS = QT_TR_NOOP("This will reset to the default settings\n"
-                                        "Proceed?")
+    RESET_DEFAULT_SETTINGS = QT_TR_NOOP("This will reset to the default settings\n" "Proceed?")
     MOUSE_OVER_EXAMPLES = QT_TR_NOOP("Mouse over on this text for examples")
-    AUTO_ATTACH_TOOLTIP = QT_TR_NOOP("asdf|qwer --> search for asdf or qwer\n"
-                                     "[as]df --> search for both adf and sdf\n"
-                                     "Use the char \\ to escape special chars such as [\n"
-                                     r"\[asdf\] --> search for opcodes that contain [asdf]")
+    AUTO_ATTACH_TOOLTIP = QT_TR_NOOP(
+        "asdf|qwer --> search for asdf or qwer\n"
+        "[as]df --> search for both adf and sdf\n"
+        "Use the char \\ to escape special chars such as [\n"
+        r"\[asdf\] --> search for opcodes that contain [asdf]"
+    )
     SEPARATE_PROCESSES_WITH = QT_TR_NOOP("Separate processes with {}")
     SELECT_GDB_BINARY = QT_TR_NOOP("Select the gdb binary")
     QUIT_SESSION_CRASH = QT_TR_NOOP("Quitting current session will crash PINCE")
@@ -167,7 +170,8 @@ class TranslationConstants(QObject):
         "---------------------------------------------------------------------------------------------------\n"
         "You can change the output mode from bottom right\n"
         "Changing output mode only affects commands sent. Any other output coming from external sources"
-        "(e.g async output) will be shown in MI format")
+        "(e.g async output) will be shown in MI format"
+    )
     BREAK = QT_TR_NOOP("Break[{}]")
     RUN = QT_TR_NOOP("Run[{}]")
     TOGGLE_ATTACH = QT_TR_NOOP("Toggle Attach[{}]")
@@ -192,12 +196,13 @@ class TranslationConstants(QObject):
     MV_PAUSED = QT_TR_NOOP("Memory Viewer - Paused")
     MV_DEBUGGING = QT_TR_NOOP("Memory Viewer - Currently debugging {}")
     MV_RUNNING = QT_TR_NOOP("Memory Viewer - Running")
-    ENTER_BP_CONDITION = QT_TR_NOOP("Enter the expression for condition, for instance:\n\n"
-                                    "$eax==0x523\n"
-                                    "$rax>0 && ($rbp<0 || $rsp==0)\n"
-                                    "printf($r10)==3")
-    BP_CONDITION_FAILED = QT_TR_NOOP("Failed to set condition for address {}\n"
-                                     "Check terminal for details")
+    ENTER_BP_CONDITION = QT_TR_NOOP(
+        "Enter the expression for condition, for instance:\n\n"
+        "$eax==0x523\n"
+        "$rax>0 && ($rbp<0 || $rsp==0)\n"
+        "printf($r10)==3"
+    )
+    BP_CONDITION_FAILED = QT_TR_NOOP("Failed to set condition for address {}\n" "Check terminal for details")
     FULL_STACK = QT_TR_NOOP("Full Stack")
     COPY_RETURN_ADDRESS = QT_TR_NOOP("Copy Return Address")
     COPY_FRAME_ADDRESS = QT_TR_NOOP("Copy Frame Address")
@@ -225,16 +230,18 @@ class TranslationConstants(QObject):
     COPY_OPCODE = QT_TR_NOOP("Copy Opcode")
     COPY_COMMENT = QT_TR_NOOP("Copy Comment")
     COPY_ALL = QT_TR_NOOP("Copy All")
-    ENTER_TRACK_BP_EXPRESSION = QT_TR_NOOP("Enter the register expression(s) you want to track\n"
-                                           "Register names must start with $\n"
-                                           "Each expression must be separated with a comma\n\n"
-                                           "For instance:\n"
-                                           "Let's say the instruction is mov [rax+rbx],30\n"
-                                           "Then you should enter $rax+$rbx\n"
-                                           "So PINCE can track address [rax+rbx]\n\n"
-                                           "Another example:\n"
-                                           "If you enter $rax,$rbx*$rcx+4,$rbp\n"
-                                           "PINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]")
+    ENTER_TRACK_BP_EXPRESSION = QT_TR_NOOP(
+        "Enter the register expression(s) you want to track\n"
+        "Register names must start with $\n"
+        "Each expression must be separated with a comma\n\n"
+        "For instance:\n"
+        "Let's say the instruction is mov [rax+rbx],30\n"
+        "Then you should enter $rax+$rbx\n"
+        "So PINCE can track address [rax+rbx]\n\n"
+        "Another example:\n"
+        "If you enter $rax,$rbx*$rcx+4,$rbp\n"
+        "PINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]"
+    )
     ALREADY_BOOKMARKED = QT_TR_NOOP("This address has already been bookmarked")
     ENTER_BOOKMARK_COMMENT = QT_TR_NOOP("Enter the comment for bookmarked address")
     SELECT_SO_FILE = QT_TR_NOOP("Select the .so file")
@@ -243,15 +250,17 @@ class TranslationConstants(QObject):
     SHARED_OBJECT_TYPE = QT_TR_NOOP("Shared object library (*.so)")
     FILE_INJECTED = QT_TR_NOOP("The file has been injected")
     FILE_INJECT_FAILED = QT_TR_NOOP("Failed to inject the .so file")
-    ENTER_CALL_EXPRESSION = QT_TR_NOOP("Enter the expression for the function that'll be called from the inferior\n"
-                                       "You can view functions list from View->Functions\n\n"
-                                       "For instance:\n"
-                                       'Calling printf("1234") will yield something like this\n'
-                                       '↓\n'
-                                       '$28 = 4\n\n'
-                                       '$28 is the assigned convenience variable\n'
-                                       '4 is the result\n'
-                                       'You can use the assigned variable from the GDB Console')
+    ENTER_CALL_EXPRESSION = QT_TR_NOOP(
+        "Enter the expression for the function that'll be called from the inferior\n"
+        "You can view functions list from View->Functions\n\n"
+        "For instance:\n"
+        'Calling printf("1234") will yield something like this\n'
+        "↓\n"
+        "$28 = 4\n\n"
+        "$28 is the assigned convenience variable\n"
+        "4 is the result\n"
+        "You can use the assigned variable from the GDB Console"
+    )
     CALL_EXPRESSION_FAILED = QT_TR_NOOP("Failed to call the expression {}")
     INVALID_EXPRESSION = QT_TR_NOOP("Invalid expression or address")
     INVALID_ENTRY = QT_TR_NOOP("Invalid entries detected, refreshing the page")
@@ -288,21 +297,26 @@ class TranslationConstants(QObject):
     EXPAND_ALL = QT_TR_NOOP("Expand All")
     COLLAPSE_ALL = QT_TR_NOOP("Collapse All")
     DEFINED = QT_TR_NOOP("DEFINED")
-    DEFINED_SYMBOL = QT_TR_NOOP("This symbol is defined. You can use its body as a gdb expression. For instance:\n\n"
-                                "void func(param) can be used as 'func' as a gdb expression")
+    DEFINED_SYMBOL = QT_TR_NOOP(
+        "This symbol is defined. You can use its body as a gdb expression. For instance:\n\n"
+        "void func(param) can be used as 'func' as a gdb expression"
+    )
     COPY_SYMBOL = QT_TR_NOOP("Copy Symbol")
-    FUNCTIONS_INFO_HELPER = QT_TR_NOOP("\tHere's some useful regex tips:\n"
-                                       "^quaso --> search for everything that starts with quaso\n"
-                                       "[ab]cd --> search for both acd and bcd\n\n"
-                                       "\tHow to interpret symbols:\n"
-                                       "A symbol that looks like 'func(param)@plt' consists of 3 pieces\n"
-                                       "func, func(param), func(param)@plt\n"
-                                       "These 3 functions will have different addresses\n"
-                                       "@plt means this function is a subroutine for the original one\n"
-                                       "There can be more than one of the same function\n"
-                                       "It means that the function is overloaded")
-    NEW_OPCODE = QT_TR_NOOP("New opcode is {} bytes long but old opcode is only {} bytes long\n"
-                            "This will cause an overflow, proceed?")
+    FUNCTIONS_INFO_HELPER = QT_TR_NOOP(
+        "\tHere's some useful regex tips:\n"
+        "^quaso --> search for everything that starts with quaso\n"
+        "[ab]cd --> search for both acd and bcd\n\n"
+        "\tHow to interpret symbols:\n"
+        "A symbol that looks like 'func(param)@plt' consists of 3 pieces\n"
+        "func, func(param), func(param)@plt\n"
+        "These 3 functions will have different addresses\n"
+        "@plt means this function is a subroutine for the original one\n"
+        "There can be more than one of the same function\n"
+        "It means that the function is overloaded"
+    )
+    NEW_OPCODE = QT_TR_NOOP(
+        "New opcode is {} bytes long but old opcode is only {} bytes long\n" "This will cause an overflow, proceed?"
+    )
     IS_INVALID_EXPRESSION = QT_TR_NOOP("{} isn't a valid expression")
     LOG_FILE = QT_TR_NOOP("Log File of PID {}")
     LOG_CONTENTS = QT_TR_NOOP("Contents of {} (only last {} bytes are shown)")
@@ -312,11 +326,13 @@ class TranslationConstants(QObject):
     LOG_READ_ERROR = QT_TR_NOOP("Unable to read log file at {}")
     SETTINGS_ENABLE_LOG = QT_TR_NOOP("Go to Settings->Debug to enable logging")
     INVALID_REGEX = QT_TR_NOOP("Invalid Regex")
-    SEARCH_OPCODE_HELPER = QT_TR_NOOP("\tHere's some useful regex examples:\n"
-                                      "call|rax --> search for opcodes that contain call or rax\n"
-                                      "[re]cx --> search for both rcx and ecx\n"
-                                      "Use the char \\ to escape special chars such as [\n"
-                                      r"\[rsp\] --> search for opcodes that contain [rsp]")
+    SEARCH_OPCODE_HELPER = QT_TR_NOOP(
+        "\tHere's some useful regex examples:\n"
+        "call|rax --> search for opcodes that contain call or rax\n"
+        "[re]cx --> search for both rcx and ecx\n"
+        "Use the char \\ to escape special chars such as [\n"
+        r"\[rsp\] --> search for opcodes that contain [rsp]"
+    )
     COPY_ADDRESSES = QT_TR_NOOP("Copy Addresses")
     COPY_OFFSET = QT_TR_NOOP("Copy Offset")
     COPY_PATH = QT_TR_NOOP("Copy Path")
@@ -326,8 +342,7 @@ class TranslationConstants(QObject):
     SCAN_FINISHED = QT_TR_NOOP("Scan finished")
     SCAN_CANCELED = QT_TR_NOOP("Scan was canceled")
     SELECT_ONE_REGION = QT_TR_NOOP("Select at least one region")
-    DISSECT_CODE = QT_TR_NOOP("You need to dissect code first\n"
-                              "Proceed?")
+    DISSECT_CODE = QT_TR_NOOP("You need to dissect code first\n" "Proceed?")
     WAITING_FOR_BREAKPOINT = QT_TR_NOOP("Waiting for breakpoint to trigger")
     TRACING_CANCELED = QT_TR_NOOP("Tracing has been canceled")
     TRACING_COMPLETED = QT_TR_NOOP("Tracing has been completed")

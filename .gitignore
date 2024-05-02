@@ -2,6 +2,7 @@ __pycache__/
 .idea/*
 .vscode/*
 !.vscode/launch.json
+!.vscode/settings.json
 libscanmem.so*
 libpince/libscanmem/*
 *.directory

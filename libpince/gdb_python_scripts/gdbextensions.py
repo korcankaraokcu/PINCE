@@ -285,8 +285,13 @@ class GetTrackWatchpointInfo(gdb.Command):
         register_info.update(gdbutils.get_segment_registers())
         float_info = gdbutils.get_float_registers()
         disas_info = gdb.execute("disas " + previous_pc_address + ",+40", to_string=True).replace("=>", "  ")
-        track_watchpoint_dict[breakpoints][current_pc_int] = [count, previous_pc_address, register_info, float_info,
-                                                              disas_info]
+        track_watchpoint_dict[breakpoints][current_pc_int] = [
+            count,
+            previous_pc_address,
+            register_info,
+            float_info,
+            disas_info,
+        ]
         track_watchpoint_file = utils.get_track_watchpoint_file(pid, breakpoints)
         pickle.dump(track_watchpoint_dict[breakpoints], open(track_watchpoint_file, "wb"))
 
@@ -343,8 +348,17 @@ class TraceInstructions(gdb.Command):
         super(TraceInstructions, self).__init__("pince-trace-instructions", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        (breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers,
-         collect_flag_registers, collect_segment_registers, collect_float_registers) = eval(arg)
+        (
+            breakpoint,
+            max_trace_count,
+            stop_condition,
+            step_mode,
+            stop_after_trace,
+            collect_general_registers,
+            collect_flag_registers,
+            collect_segment_registers,
+            collect_float_registers,
+        ) = eval(arg)
         gdb.execute("delete " + breakpoint)
         trace_status_file = utils.get_trace_instructions_status_file(pid, breakpoint)
 
@@ -378,8 +392,10 @@ class TraceInstructions(gdb.Command):
             current_index += 1
             tree.append([(line_info, collect_dict), current_root_index, []])
             tree[current_root_index][2].append(current_index)  # Add a child
-            status_info = (typedefs.TRACE_STATUS.TRACING,
-                           line_info + "\n(" + str(x + 1) + "/" + str(max_trace_count) + ")")
+            status_info = (
+                typedefs.TRACE_STATUS.TRACING,
+                line_info + "\n(" + str(x + 1) + "/" + str(max_trace_count) + ")",
+            )
             pickle.dump(status_info, open(trace_status_file, "wb"))
             if regexes.trace_instructions_ret.search(line_info):
                 if tree[current_root_index][1] is None:  # If no parents exist
@@ -488,7 +504,7 @@ class DissectCode(gdb.Command):
         ref_jmp_count = len(referenced_jumps_dict)
         ref_call_count = len(referenced_calls_dict)
         for region_index, (start_addr, end_addr) in enumerate(region_list):
-            region_info = start_addr+"-"+end_addr, str(region_index + 1) + " / " + str(region_count)
+            region_info = start_addr + "-" + end_addr, str(region_index + 1) + " / " + str(region_count)
             start_addr = int(start_addr, 16)  # Becomes address of the last disassembled instruction later on
             end_addr = int(end_addr, 16)
             region_finished = False
@@ -499,8 +515,12 @@ class DissectCode(gdb.Command):
                     region_finished = True
                 else:
                     offset = buffer
-                status_info = region_info + (hex(start_addr)[2:] + "-" + hex(start_addr + offset)[2:],
-                                             ref_str_count, ref_jmp_count, ref_call_count)
+                status_info = region_info + (
+                    hex(start_addr)[2:] + "-" + hex(start_addr + offset)[2:],
+                    ref_str_count,
+                    ref_jmp_count,
+                    ref_call_count,
+                )
                 pickle.dump(status_info, open(dissect_code_status_file, "wb"))
                 try:
                     self.memory.seek(start_addr)
@@ -514,7 +534,7 @@ class DissectCode(gdb.Command):
                         del disas_data[-1]  # Get rid of last 4 instructions to ensure correct bytecode translation
                 else:
                     last_disas_addr = 0
-                for (instruction_offset, size, instruction, hexdump) in disas_data:
+                for instruction_offset, size, instruction, hexdump in disas_data:
                     if isinstance(instruction, bytes):
                         instruction = instruction.decode()
                     if instruction.startswith("J") or instruction.startswith("LOOP"):

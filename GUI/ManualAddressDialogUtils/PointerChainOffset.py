@@ -3,13 +3,13 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from operator import add as opAdd, sub as opSub
 
 from GUI.Utils import guiutils
-    
+
 
 # Only intended to be used by ManualAddressForm
 class PointerChainOffset(QFrame):
     offset_changed_signal = pyqtSignal(name="offsetChanged")
 
-    def __init__(self, offset_index: int, parent: QWidget|None = None):
+    def __init__(self, offset_index: int, parent: QWidget | None = None):
         super().__init__(parent)
         self.offset_index = offset_index
         self.initUI()
@@ -41,7 +41,7 @@ class PointerChainOffset(QFrame):
 
     def get_offset_as_int(self):
         return int(self.offsetText.text(), 16)
-    
+
     def on_offset_arrow_clicked(self, offsetTextWidget, operator_func):
         offsetText = offsetTextWidget.text()
         try:
@@ -58,5 +58,3 @@ class PointerChainOffset(QFrame):
 
     def update_deref_label(self, text: str):
         self.derefLabel.setText(text)
-
-    
