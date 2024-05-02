@@ -21,7 +21,7 @@
     - [tests](./libpince/gdb_python_scripts/tests) - An example for .so extension, read more [here](https://github.com/korcankaraokcu/PINCE/wiki/Extending-PINCE-with-.so-files)
 
 # Code Style
-The rules are about the same with PEP-8, with some changes. While they are not strict, I'd like you to follow them for consistency
+Formatting style is black defaults, except line length is 120. You can use black without parameters since we already use `pyproject.toml` for this setting
 - Max characters per line: 120
 - Variable naming for libpince:
   - Classes: PascalCase
@@ -54,10 +54,7 @@ The reason behind Qt class member naming convention is that when this project fi
 So, to have an idea about the type of the variable we are working with, I've come up with that naming idea. It's an old habit if anything.
 It could maybe replaced with something else after a refactorization
 
-About the max characters per line, I used to use PyCharm when I first started this project years ago. 120 characters is a limit brought by PyCharm,
-I've quit using PyCharm eventually but I think the limit makes the code look quite nice. PEP-8 suggests a limit of 79 characters, which is a bit too short to be frank.
-So I think it's good to keep this old habit. This limit however, is not strict at all. A few characters passing the limit is ok, sometimes going for a newline
-messes up the readability, trust your guts and decide for yourself
+About the max characters per line, I used to use PyCharm when I first started this project years ago. 120 characters is a limit brought by PyCharm, I've quit using PyCharm eventually but I think the limit makes the code look quite nice. Black suggests a limit of 88 characters, which is a bit short to be frank. So I think it's good to keep this old habit, especially considering that docstrings have also followed this rule for a long time now. This limit for docstrings however, is not strict at all. A few characters passing the limit is ok, sometimes going for a newline messes up the readability, trust your guts and decide for yourself
 
 # UI Files
 You need to have [Qt6 Designer](https://pkgs.org/search/?q=designer&on=files) and [pyuic6](https://pkgs.org/search/?q=pyuic6&on=files) installed. If there are no available packages for your distro, install [pyqt6-tools](https://pypi.org/project/pyqt6-tools/) instead  

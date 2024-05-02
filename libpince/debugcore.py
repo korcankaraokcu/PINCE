@@ -22,7 +22,7 @@ import pexpect, os, sys, ctypes, pickle, json, shelve, re, struct, io
 from . import utils, typedefs, regexes
 
 self_pid = os.getpid()
-libc = ctypes.CDLL('libc.so.6')
+libc = ctypes.CDLL("libc.so.6")
 system_endianness = typedefs.ENDIANNESS.LITTLE if sys.byteorder == "little" else typedefs.ENDIANNESS.BIG
 
 #:tag:GDBInformation
@@ -134,21 +134,21 @@ mem_file = "/proc/" + str(currentpid) + "/mem"
 # A string. Determines which signal to use to interrupt the process
 interrupt_signal = "SIGINT"
 
-'''
+"""
 When PINCE was first launched, it used gdb 7.7.1, which is a very outdated version of gdb
 interpreter-exec mi command of gdb showed some buggy behaviour at that time
 Because of that, PINCE couldn't support gdb/mi commands for a while
 But PINCE is now updated with the new versions of gdb as much as possible and the interpreter-exec works much better
 So, old parts of codebase still get their required information by parsing gdb console output
 New parts can try to rely on gdb/mi output
-'''
+"""
 
-'''
+"""
 Functions that require breakpoint commands, such as track_watchpoint and track_breakpoint, requires process to be
 stopped beforehand. If the process is running before we give the breakpoint its commands, there's a chance that the
 breakpoint will be triggered before we give it commands. The process must be stopped to avoid this race condition
 It's also necessary to stop the process to run commands like "watch"
-'''
+"""
 
 
 #:tag:GDBCommunication
@@ -172,8 +172,9 @@ def cancel_last_command():
 
 
 #:tag:GDBCommunication
-def send_command(command, control=False, cli_output=False, send_with_file=False, file_contents_send=None,
-                 recv_with_file=False):
+def send_command(
+    command, control=False, cli_output=False, send_with_file=False, file_contents_send=None, recv_with_file=False
+):
     """Issues the command sent, raises an exception if the inferior is running or no inferior has been selected
 
     Args:
@@ -286,7 +287,7 @@ def state_observe_thread():
                         print(f"Process terminated (PID:{currentpid})")
                         process_exited_condition.notify_all()
                         return
-            
+
             # For multiline outputs, only the last async event is important
             # Get the last match only to optimize parsing
             stop_info = matches[-1][0]
@@ -513,12 +514,14 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     last_gdb_command = ""
 
     libpince_dir = utils.get_libpince_directory()
-    is_appimage = os.environ.get('APPDIR')
+    is_appimage = os.environ.get("APPDIR")
     python_home_env = f"PYTHONHOME={os.environ.get('PYTHONHOME')}" if is_appimage else ""
-    child = pexpect.spawn(f'sudo -E --preserve-env=PATH LC_NUMERIC=C {python_home_env} {gdb_path} --nx --interpreter=mi',
-                          cwd=libpince_dir,
-                          env=os.environ,
-                          encoding="utf-8")
+    child = pexpect.spawn(
+        f"sudo -E --preserve-env=PATH LC_NUMERIC=C {python_home_env} {gdb_path} --nx --interpreter=mi",
+        cwd=libpince_dir,
+        env=os.environ,
+        encoding="utf-8",
+    )
     child.setecho(False)
     child.delaybeforesend = 0
     child.timeout = None
@@ -557,8 +560,8 @@ def set_pince_paths():
     libpince_dir = utils.get_libpince_directory()
     pince_dir = os.path.dirname(libpince_dir)
     gdbinit_aa_dir = utils.get_user_path(typedefs.USER_PATHS.GDBINIT_AA)
-    send_command('set $GDBINIT_AA_PATH=' + '"' + gdbinit_aa_dir + '"')
-    send_command('set $PINCE_PATH=' + '"' + pince_dir + '"')
+    send_command("set $GDBINIT_AA_PATH=" + '"' + gdbinit_aa_dir + '"')
+    send_command("set $PINCE_PATH=" + '"' + pince_dir + '"')
     send_command("source gdb_python_scripts/gdbextensions.py")
 
 
@@ -596,7 +599,7 @@ def attach(pid, gdb_path=utils.get_default_gdb_path()):
         (lambda: not utils.is_process_valid(pid), typedefs.ATTACH_RESULT.PROCESS_NOT_VALID),
         (lambda: pid == currentpid, typedefs.ATTACH_RESULT.ALREADY_DEBUGGING),
         (lambda: traced_by is not None, typedefs.ATTACH_RESULT.ALREADY_TRACED),
-        (lambda: not can_attach(pid), typedefs.ATTACH_RESULT.PERM_DENIED)
+        (lambda: not can_attach(pid), typedefs.ATTACH_RESULT.PERM_DENIED),
     ]
     for control_func, attach_result in pid_control_list:
         if control_func():
@@ -826,8 +829,15 @@ def memory_handle():
 
 
 #:tag:MemoryRW
-def read_memory(address, value_index, length=None, zero_terminate=True, value_repr=typedefs.VALUE_REPR.UNSIGNED,
-                endian=typedefs.ENDIANNESS.HOST, mem_handle=None):
+def read_memory(
+    address,
+    value_index,
+    length=None,
+    zero_terminate=True,
+    value_repr=typedefs.VALUE_REPR.UNSIGNED,
+    endian=typedefs.ENDIANNESS.HOST,
+    mem_handle=None,
+):
     """Reads value from the given address
 
     Args:
@@ -901,13 +911,13 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
         encoding, option = typedefs.string_index_to_encoding_dict[value_index]
         returned_string = data_read.decode(encoding, option)
         if zero_terminate:
-            if returned_string.startswith('\x00'):
-                returned_string = '\x00'
+            if returned_string.startswith("\x00"):
+                returned_string = "\x00"
             else:
-                returned_string = returned_string.split('\x00')[0]
+                returned_string = returned_string.split("\x00")[0]
         return returned_string[0:length]
     elif value_index is typedefs.VALUE_INDEX.AOB:
-        return " ".join(format(n, '02x') for n in data_read)
+        return " ".join(format(n, "02x") for n in data_read)
     else:
         is_integer = typedefs.VALUE_INDEX.is_integer(value_index)
         if is_integer and value_repr == typedefs.VALUE_REPR.SIGNED:
@@ -919,8 +929,13 @@ def read_memory(address, value_index, length=None, zero_terminate=True, value_re
 
 
 #:tag:MemoryRW
-def write_memory(address: str | int, value_index: int, value: str | int | float | list[int], zero_terminate=True,
-                 endian=typedefs.ENDIANNESS.HOST):
+def write_memory(
+    address: str | int,
+    value_index: int,
+    value: str | int | float | list[int],
+    zero_terminate=True,
+    endian=typedefs.ENDIANNESS.HOST,
+):
     """Sets the given value to the given address
 
     If any errors occurs while setting value to the according address, it'll be ignored but the information about
@@ -1010,8 +1025,9 @@ def examine_expression(expression):
     """
     if currentpid == -1:
         return typedefs.tuple_examine_expression(None, None, None)
-    return send_command("pince-examine-expressions", send_with_file=True, file_contents_send=[expression],
-                        recv_with_file=True)[0]
+    return send_command(
+        "pince-examine-expressions", send_with_file=True, file_contents_send=[expression], recv_with_file=True
+    )[0]
 
 
 def examine_expressions(expression_list):
@@ -1027,8 +1043,9 @@ def examine_expressions(expression_list):
         return []
     if currentpid == -1:
         return [typedefs.tuple_examine_expression(None, None, None) for _ in range(len(expression_list))]
-    return send_command("pince-examine-expressions", send_with_file=True, file_contents_send=expression_list,
-                        recv_with_file=True)
+    return send_command(
+        "pince-examine-expressions", send_with_file=True, file_contents_send=expression_list, recv_with_file=True
+    )
 
 
 #:tag:GDBExpressions
@@ -1049,8 +1066,9 @@ def parse_and_eval(expression, cast=str):
         cast: Self-explanatory
         None: If casting fails
     """
-    return send_command("pince-parse-and-eval", send_with_file=True, file_contents_send=(expression, cast),
-                        recv_with_file=True)
+    return send_command(
+        "pince-parse-and-eval", send_with_file=True, file_contents_send=(expression, cast), recv_with_file=True
+    )
 
 
 #:tag:Threads
@@ -1158,8 +1176,12 @@ def search_functions(expression, case_sensitive=False):
         Please don't try to write a symbol parser for every single language out there, it's an overkill
         https://sourceware.org/bugzilla/show_bug.cgi?id=23899
     """
-    return send_command("pince-search-functions", send_with_file=True, file_contents_send=(expression, case_sensitive),
-                        recv_with_file=True)
+    return send_command(
+        "pince-search-functions",
+        send_with_file=True,
+        file_contents_send=(expression, case_sensitive),
+        recv_with_file=True,
+    )
 
 
 #:tag:InferiorInformation
@@ -1236,9 +1258,26 @@ def set_register_flag(flag, value):
         raise Exception(value + " isn't valid value. It can be only 0 or 1")
     if flag not in typedefs.REGISTERS.FLAG:
         raise Exception(flag + " isn't a valid flag, must be a member of typedefs.REGISTERS.FLAG")
-    eflags_hex_value = hex(int(
-        registers["of"] + registers["df"] + registers["if"] + registers["tf"] + registers["sf"] + registers[
-            "zf"] + "0" + registers["af"] + "0" + registers["pf"] + "0" + registers["cf"], 2))
+    eflags_hex_value = hex(
+        int(
+            registers["of"]
+            + registers["df"]
+            + registers["if"]
+            + registers["tf"]
+            + registers["sf"]
+            + registers["zf"]
+            + "0"
+            + registers["af"]
+            + "0"
+            + registers["pf"]
+            + "0"
+            + registers["cf"],
+            2,
+        )
+    )
+    a = 5
+    b = 3
+
     set_convenience_variable("eflags", eflags_hex_value)
 
 
@@ -1329,7 +1368,7 @@ def hex_dump(address, offset):
             pass
         for item in range(offset):
             try:
-                current_item = " ".join(format(n, '02x') for n in FILE.read(1))
+                current_item = " ".join(format(n, "02x") for n in FILE.read(1))
             except OSError:
                 current_item = "??"
                 try:
@@ -1368,7 +1407,7 @@ def nop_instruction(start_address, length_of_instr):
     if start_address not in modified_instructions_dict:
         modified_instructions_dict[start_address] = old_aob
 
-    nop_aob = '90 ' * length_of_instr
+    nop_aob = "90 " * length_of_instr
     write_memory(start_address, typedefs.VALUE_INDEX.AOB, nop_aob)
 
 
@@ -1436,11 +1475,19 @@ def get_breakpoint_info() -> list[typedefs.tuple_breakpoint_info]:
     # Temporary fix for https://sourceware.org/bugzilla/show_bug.cgi?id=9659
     # TODO:Delete this line when gdb or pygdbmi fixes the problem
     raw_info = re.sub(r"script={(.*?)}", r"script=[\g<1>]", raw_info)  # Please refer to issue #53
-    for item in utils.parse_response(raw_info)['payload']['BreakpointTable']['body']:
+    for item in utils.parse_response(raw_info)["payload"]["BreakpointTable"]["body"]:
         item = defaultdict(lambda: "", item)
-        number, breakpoint_type, disp, enabled, address, what, condition, hit_count, enable_count = \
-            item['number'], item['type'], item['disp'], item['enabled'], item['addr'], item['what'], item['cond'], \
-            item['times'], item['enable']
+        number, breakpoint_type, disp, enabled, address, what, condition, hit_count, enable_count = (
+            item["number"],
+            item["type"],
+            item["disp"],
+            item["enabled"],
+            item["addr"],
+            item["what"],
+            item["cond"],
+            item["times"],
+            item["enable"],
+        )
         if address == "<MULTIPLE>":
             multiple_break_data[number] = (breakpoint_type, disp, condition, hit_count)
             continue
@@ -1462,8 +1509,10 @@ def get_breakpoint_info() -> list[typedefs.tuple_breakpoint_info]:
             else:
                 size = 1
         returned_list.append(
-            typedefs.tuple_breakpoint_info(number, breakpoint_type, disp, enabled, address, size, on_hit, hit_count,
-                                            enable_count, condition))
+            typedefs.tuple_breakpoint_info(
+                number, breakpoint_type, disp, enabled, address, size, on_hit, hit_count, enable_count, condition
+            )
+        )
     return returned_list
 
 
@@ -1482,12 +1531,12 @@ def get_breakpoints_in_range(address: str | int, length: int = 1) -> list[typede
     breakpoint_list = []
     if type(address) != int:
         address = int(address, 0)
-    max_address = max(address, address+length-1)
-    min_address = min(address, address+length-1)
+    max_address = max(address, address + length - 1)
+    min_address = min(address, address + length - 1)
     breakpoint_info = get_breakpoint_info()
     for item in breakpoint_info:
         breakpoint_address = int(item.address, 16)
-        if not (max_address < breakpoint_address or min_address > breakpoint_address+item.size-1):
+        if not (max_address < breakpoint_address or min_address > breakpoint_address + item.size - 1):
             breakpoint_list.append(item)
     return breakpoint_list
 
@@ -1514,8 +1563,9 @@ def hardware_breakpoint_available() -> bool:
 
 
 #:tag:BreakWatchpoints
-def add_breakpoint(expression, breakpoint_type=typedefs.BREAKPOINT_TYPE.HARDWARE,
-                   on_hit=typedefs.BREAKPOINT_ON_HIT.BREAK):
+def add_breakpoint(
+    expression, breakpoint_type=typedefs.BREAKPOINT_TYPE.HARDWARE, on_hit=typedefs.BREAKPOINT_ON_HIT.BREAK
+):
     """Adds a breakpoint at the address evaluated by the given expression. Uses a software breakpoint if all hardware
     breakpoint slots are being used
 
@@ -1552,10 +1602,15 @@ def add_breakpoint(expression, breakpoint_type=typedefs.BREAKPOINT_TYPE.HARDWARE
     else:
         return
 
+
 @execute_with_temporary_interruption
 #:tag:BreakWatchpoints
-def add_watchpoint(expression: str, length: int = 4, watchpoint_type: int = typedefs.WATCHPOINT_TYPE.BOTH,
-                   on_hit: int = typedefs.BREAKPOINT_ON_HIT.BREAK) -> list[str]:
+def add_watchpoint(
+    expression: str,
+    length: int = 4,
+    watchpoint_type: int = typedefs.WATCHPOINT_TYPE.BOTH,
+    on_hit: int = typedefs.BREAKPOINT_ON_HIT.BREAK,
+) -> list[str]:
     """Adds a watchpoint at the address evaluated by the given expression
 
     Args:
@@ -1743,10 +1798,9 @@ def track_watchpoint(expression, length, watchpoint_type):
     if not breakpoints:
         return
     for breakpoint in breakpoints:
-        send_command("commands " + breakpoint
-                     + "\npince-get-track-watchpoint-info " + str(breakpoints)
-                     + "\nc&"
-                     + "\nend")
+        send_command(
+            "commands " + breakpoint + "\npince-get-track-watchpoint-info " + str(breakpoints) + "\nc&" + "\nend"
+        )
     return breakpoints
 
 
@@ -1795,10 +1849,16 @@ def track_breakpoint(expression, register_expressions):
     breakpoint = add_breakpoint(expression, on_hit=typedefs.BREAKPOINT_ON_HIT.FIND_ADDR)
     if not breakpoint:
         return
-    send_command("commands " + breakpoint
-                 + "\npince-get-track-breakpoint-info " + register_expressions.replace(" ", "") + "," + breakpoint
-                 + "\nc&"
-                 + "\nend")
+    send_command(
+        "commands "
+        + breakpoint
+        + "\npince-get-track-breakpoint-info "
+        + register_expressions.replace(" ", "")
+        + ","
+        + breakpoint
+        + "\nc&"
+        + "\nend"
+    )
     return breakpoint
 
 
@@ -1827,10 +1887,18 @@ def get_track_breakpoint_info(breakpoint):
 
 @execute_with_temporary_interruption
 #:tag:Tools
-def trace_instructions(expression, max_trace_count=1000, trigger_condition="", stop_condition="",
-                       step_mode=typedefs.STEP_MODE.SINGLE_STEP,
-                       stop_after_trace=False, collect_general_registers=True, collect_flag_registers=True,
-                       collect_segment_registers=True, collect_float_registers=True):
+def trace_instructions(
+    expression,
+    max_trace_count=1000,
+    trigger_condition="",
+    stop_condition="",
+    step_mode=typedefs.STEP_MODE.SINGLE_STEP,
+    stop_after_trace=False,
+    collect_general_registers=True,
+    collect_flag_registers=True,
+    collect_segment_registers=True,
+    collect_float_registers=True,
+):
     """Starts tracing instructions at the address evaluated by the given expression
     There can be only one tracing process at a time, calling this function without waiting the first tracing process
     meet an end may cause bizarre behaviour
@@ -1866,11 +1934,17 @@ def trace_instructions(expression, max_trace_count=1000, trigger_condition="", s
     trace_status_file = utils.get_trace_instructions_status_file(currentpid, breakpoint)
     pickle.dump(contents_send, open(trace_status_file, "wb"))
     param_str = (
-        breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_general_registers,
-        collect_flag_registers, collect_segment_registers, collect_float_registers)
-    send_command("commands " + breakpoint
-                 + "\npince-trace-instructions " + str(param_str)
-                 + "\nend")
+        breakpoint,
+        max_trace_count,
+        stop_condition,
+        step_mode,
+        stop_after_trace,
+        collect_general_registers,
+        collect_flag_registers,
+        collect_segment_registers,
+        collect_float_registers,
+    )
+    send_command("commands " + breakpoint + "\npince-trace-instructions " + str(param_str) + "\nend")
     return breakpoint
 
 
@@ -2100,8 +2174,9 @@ def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, refere
 
 
 #:tag:Tools
-def search_referenced_strings(searched_str, value_index=typedefs.VALUE_INDEX.STRING_UTF8, case_sensitive=False,
-                              enable_regex=False):
+def search_referenced_strings(
+    searched_str, value_index=typedefs.VALUE_INDEX.STRING_UTF8, case_sensitive=False, enable_regex=False
+):
     """Searches for given str in the referenced strings
 
     Args:

@@ -20,12 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import collections.abc, queue, sys
 
+
 class CONST_TIME:
     GDB_INPUT_SLEEP = sys.float_info.min
 
 
 class PATHS:
-    GDB = "/bin/gdb" # Use utils.get_default_gdb_path()
+    GDB = "/bin/gdb"  # Use utils.get_default_gdb_path()
     TMP = "/tmp/PINCE/"  # Use utils.get_tmp_path()
     IPC = "/dev/shm/PINCE_IPC/"  # Use utils.get_ipc_path()
     FROM_PINCE = "/from_PINCE"  # Use utils.get_from_pince_file()
@@ -49,7 +50,12 @@ class USER_PATHS:
 
     @staticmethod
     def get_init_files():
-        return USER_PATHS.GDBINIT, USER_PATHS.GDBINIT_AA, USER_PATHS.PINCEINIT, USER_PATHS.PINCEINIT_AA
+        return (
+            USER_PATHS.GDBINIT,
+            USER_PATHS.GDBINIT_AA,
+            USER_PATHS.PINCEINIT,
+            USER_PATHS.PINCEINIT_AA,
+        )
 
 
 class INFERIOR_STATUS:
@@ -128,8 +134,25 @@ class TOGGLE_ATTACH:
 
 class REGISTERS:
     GENERAL_32 = ["eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp", "eip"]
-    GENERAL_64 = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip", "r8", "r9", "r10", "r11", "r12",
-                  "r13", "r14", "r15"]
+    GENERAL_64 = [
+        "rax",
+        "rbx",
+        "rcx",
+        "rdx",
+        "rsi",
+        "rdi",
+        "rbp",
+        "rsp",
+        "rip",
+        "r8",
+        "r9",
+        "r10",
+        "r11",
+        "r12",
+        "r13",
+        "r14",
+        "r15",
+    ]
     SEGMENT = ["cs", "ss", "ds", "es", "fs", "gs"]
     FLAG = ["cf", "pf", "af", "zf", "sf", "tf", "if", "df", "of"]
 
@@ -210,78 +233,86 @@ on_hit_to_text_dict = {
     BREAKPOINT_ON_HIT.BREAK: "Break",
     BREAKPOINT_ON_HIT.FIND_CODE: "Find Code",
     BREAKPOINT_ON_HIT.FIND_ADDR: "Find Address",
-    BREAKPOINT_ON_HIT.TRACE: "Trace"
+    BREAKPOINT_ON_HIT.TRACE: "Trace",
 }
 
 # Represents the texts at indexes in the address table
 # TODO: This class is mostly an UI helper, maybe integrate it into the the UI completely in the future?
-index_to_text_dict = collections.OrderedDict([
-    (VALUE_INDEX.INT8, "Int8"),
-    (VALUE_INDEX.INT16, "Int16"),
-    (VALUE_INDEX.INT32, "Int32"),
-    (VALUE_INDEX.INT64, "Int64"),
-    (VALUE_INDEX.FLOAT32, "Float32"),
-    (VALUE_INDEX.FLOAT64, "Float64"),
-    (VALUE_INDEX.STRING_ASCII, "String_ASCII"),
-    (VALUE_INDEX.STRING_UTF8, "String_UTF8"),
-    (VALUE_INDEX.STRING_UTF16, "String_UTF16"),
-    (VALUE_INDEX.STRING_UTF32, "String_UTF32"),
-    (VALUE_INDEX.AOB, "ByteArray")
-])
+index_to_text_dict = collections.OrderedDict(
+    [
+        (VALUE_INDEX.INT8, "Int8"),
+        (VALUE_INDEX.INT16, "Int16"),
+        (VALUE_INDEX.INT32, "Int32"),
+        (VALUE_INDEX.INT64, "Int64"),
+        (VALUE_INDEX.FLOAT32, "Float32"),
+        (VALUE_INDEX.FLOAT64, "Float64"),
+        (VALUE_INDEX.STRING_ASCII, "String_ASCII"),
+        (VALUE_INDEX.STRING_UTF8, "String_UTF8"),
+        (VALUE_INDEX.STRING_UTF16, "String_UTF16"),
+        (VALUE_INDEX.STRING_UTF32, "String_UTF32"),
+        (VALUE_INDEX.AOB, "ByteArray"),
+    ]
+)
 
 text_to_index_dict = collections.OrderedDict()
 for key in index_to_text_dict:
     text_to_index_dict[index_to_text_dict[key]] = key
 
-scanmem_result_to_index_dict = collections.OrderedDict([
-    ("I8", VALUE_INDEX.INT8),
-    ("I8u", VALUE_INDEX.INT8),
-    ("I8s", VALUE_INDEX.INT8),
-    ("I16", VALUE_INDEX.INT16),
-    ("I16u", VALUE_INDEX.INT16),
-    ("I16s", VALUE_INDEX.INT16),
-    ("I32", VALUE_INDEX.INT32),
-    ("I32u", VALUE_INDEX.INT32),
-    ("I32s", VALUE_INDEX.INT32),
-    ("I64", VALUE_INDEX.INT64),
-    ("I64u", VALUE_INDEX.INT64),
-    ("I64s", VALUE_INDEX.INT64),
-    ("F32", VALUE_INDEX.FLOAT32),
-    ("F64", VALUE_INDEX.FLOAT64),
-    ("string", VALUE_INDEX.STRING_UTF8),
-    ("bytearray", VALUE_INDEX.AOB)
-])
+scanmem_result_to_index_dict = collections.OrderedDict(
+    [
+        ("I8", VALUE_INDEX.INT8),
+        ("I8u", VALUE_INDEX.INT8),
+        ("I8s", VALUE_INDEX.INT8),
+        ("I16", VALUE_INDEX.INT16),
+        ("I16u", VALUE_INDEX.INT16),
+        ("I16s", VALUE_INDEX.INT16),
+        ("I32", VALUE_INDEX.INT32),
+        ("I32u", VALUE_INDEX.INT32),
+        ("I32s", VALUE_INDEX.INT32),
+        ("I64", VALUE_INDEX.INT64),
+        ("I64u", VALUE_INDEX.INT64),
+        ("I64s", VALUE_INDEX.INT64),
+        ("F32", VALUE_INDEX.FLOAT32),
+        ("F64", VALUE_INDEX.FLOAT64),
+        ("string", VALUE_INDEX.STRING_UTF8),
+        ("bytearray", VALUE_INDEX.AOB),
+    ]
+)
 
 # Represents the texts at indexes in scan combobox
 # TODO: Same as index_to_text_dict, consider integrating into UI completely
-scan_index_to_text_dict = collections.OrderedDict([
-    (SCAN_INDEX.INT_ANY, "Int(any)"),
-    (SCAN_INDEX.INT8, "Int8"),
-    (SCAN_INDEX.INT16, "Int16"),
-    (SCAN_INDEX.INT32, "Int32"),
-    (SCAN_INDEX.INT64, "Int64"),
-    (SCAN_INDEX.FLOAT_ANY, "Float(any)"),
-    (SCAN_INDEX.FLOAT32, "Float32"),
-    (SCAN_INDEX.FLOAT64, "Float64"),
-    (SCAN_INDEX.ANY, "Any(int, float)"),
-    (SCAN_INDEX.STRING, "String"),
-    (VALUE_INDEX.AOB, "ByteArray")
-])
+scan_index_to_text_dict = collections.OrderedDict(
+    [
+        (SCAN_INDEX.INT_ANY, "Int(any)"),
+        (SCAN_INDEX.INT8, "Int8"),
+        (SCAN_INDEX.INT16, "Int16"),
+        (SCAN_INDEX.INT32, "Int32"),
+        (SCAN_INDEX.INT64, "Int64"),
+        (SCAN_INDEX.FLOAT_ANY, "Float(any)"),
+        (SCAN_INDEX.FLOAT32, "Float32"),
+        (SCAN_INDEX.FLOAT64, "Float64"),
+        (SCAN_INDEX.ANY, "Any(int, float)"),
+        (SCAN_INDEX.STRING, "String"),
+        (VALUE_INDEX.AOB, "ByteArray"),
+    ]
+)
 
 # Used in scan_data_type option of scanmem
-scan_index_to_scanmem_dict = collections.OrderedDict([
-    (SCAN_INDEX.INT_ANY, "int"),
-    (SCAN_INDEX.INT8, "int8"),
-    (SCAN_INDEX.INT16, "int16"),
-    (SCAN_INDEX.INT32, "int32"),
-    (SCAN_INDEX.INT64, "int64"),
-    (SCAN_INDEX.FLOAT_ANY, "float"),
-    (SCAN_INDEX.FLOAT32, "float32"),
-    (SCAN_INDEX.FLOAT64, "float64"),
-    (SCAN_INDEX.ANY, "number"),
-    (SCAN_INDEX.STRING, "string"),
-    (VALUE_INDEX.AOB, "bytearray")
-])
+scan_index_to_scanmem_dict = collections.OrderedDict(
+    [
+        (SCAN_INDEX.INT_ANY, "int"),
+        (SCAN_INDEX.INT8, "int8"),
+        (SCAN_INDEX.INT16, "int16"),
+        (SCAN_INDEX.INT32, "int32"),
+        (SCAN_INDEX.INT64, "int64"),
+        (SCAN_INDEX.FLOAT_ANY, "float"),
+        (SCAN_INDEX.FLOAT32, "float32"),
+        (SCAN_INDEX.FLOAT64, "float64"),
+        (SCAN_INDEX.ANY, "number"),
+        (SCAN_INDEX.STRING, "string"),
+        (VALUE_INDEX.AOB, "bytearray"),
+    ]
+)
 
 
 # TODO: Same as index_to_text_dict, consider integrating into UI completely
@@ -301,11 +332,26 @@ class SCAN_TYPE:
     @staticmethod
     def get_list(scan_mode):
         if scan_mode == SCAN_MODE.NEW:
-            return [SCAN_TYPE.EXACT, SCAN_TYPE.LESS, SCAN_TYPE.MORE, SCAN_TYPE.BETWEEN, SCAN_TYPE.UNKNOWN]
+            return [
+                SCAN_TYPE.EXACT,
+                SCAN_TYPE.LESS,
+                SCAN_TYPE.MORE,
+                SCAN_TYPE.BETWEEN,
+                SCAN_TYPE.UNKNOWN,
+            ]
         else:
-            return [SCAN_TYPE.EXACT, SCAN_TYPE.INCREASED, SCAN_TYPE.INCREASED_BY, SCAN_TYPE.DECREASED,
-                    SCAN_TYPE.DECREASED_BY, SCAN_TYPE.LESS, SCAN_TYPE.MORE, SCAN_TYPE.BETWEEN,
-                    SCAN_TYPE.CHANGED, SCAN_TYPE.UNCHANGED]
+            return [
+                SCAN_TYPE.EXACT,
+                SCAN_TYPE.INCREASED,
+                SCAN_TYPE.INCREASED_BY,
+                SCAN_TYPE.DECREASED,
+                SCAN_TYPE.DECREASED_BY,
+                SCAN_TYPE.LESS,
+                SCAN_TYPE.MORE,
+                SCAN_TYPE.BETWEEN,
+                SCAN_TYPE.CHANGED,
+                SCAN_TYPE.UNCHANGED,
+            ]
 
 
 class SCAN_MODE:
@@ -319,10 +365,12 @@ class SCAN_SCOPE:
     FULL_RW = 3
     FULL = 4
 
+
 class ENDIANNESS:
     HOST = 0
     LITTLE = 1
     BIG = 2
+
 
 string_index_to_encoding_dict = {
     VALUE_INDEX.STRING_UTF8: ["utf-8", "surrogateescape"],
@@ -350,7 +398,7 @@ index_to_valuetype_dict = {
     VALUE_INDEX.STRING_UTF8: [None, None],
     VALUE_INDEX.STRING_UTF16: [None, None],
     VALUE_INDEX.STRING_UTF32: [None, None],
-    VALUE_INDEX.AOB: [None, None]
+    VALUE_INDEX.AOB: [None, None],
 }
 
 # Check gdbutils for an exemplary usage
@@ -360,34 +408,38 @@ index_to_struct_pack_dict = {
     VALUE_INDEX.INT32: "I",
     VALUE_INDEX.INT64: "Q",
     VALUE_INDEX.FLOAT32: "f",
-    VALUE_INDEX.FLOAT64: "d"
+    VALUE_INDEX.FLOAT64: "d",
 }
 
 # Format: {tag:tag_description}
-tag_to_string = collections.OrderedDict([
-    ("MemoryRW", "Memory Read/Write"),
-    ("ValueType", "Value Type"),
-    ("Injection", "Injection"),
-    ("Debug", "Debugging"),
-    ("BreakWatchpoints", "Breakpoints&Watchpoints"),
-    ("Threads", "Threads"),
-    ("Registers", "Registers"),
-    ("Stack", "Stack&StackTrace"),
-    ("Assembly", "Disassemble&Assemble"),
-    ("GDBExpressions", "GDB Expressions"),
-    ("GDBCommunication", "GDB Communication"),
-    ("Tools", "Tools"),
-    ("Utilities", "Utilities"),
-    ("Processes", "Processes"),
-    ("GUI", "GUI"),
-    ("ConditionsLocks", "Conditions&Locks"),
-    ("GDBInformation", "GDB Information"),
-    ("InferiorInformation", "Inferior Information"),
-])
+tag_to_string = collections.OrderedDict(
+    [
+        ("MemoryRW", "Memory Read/Write"),
+        ("ValueType", "Value Type"),
+        ("Injection", "Injection"),
+        ("Debug", "Debugging"),
+        ("BreakWatchpoints", "Breakpoints&Watchpoints"),
+        ("Threads", "Threads"),
+        ("Registers", "Registers"),
+        ("Stack", "Stack&StackTrace"),
+        ("Assembly", "Disassemble&Assemble"),
+        ("GDBExpressions", "GDB Expressions"),
+        ("GDBCommunication", "GDB Communication"),
+        ("Tools", "Tools"),
+        ("Utilities", "Utilities"),
+        ("Processes", "Processes"),
+        ("GUI", "GUI"),
+        ("ConditionsLocks", "Conditions&Locks"),
+        ("GDBInformation", "GDB Information"),
+        ("InferiorInformation", "Inferior Information"),
+    ]
+)
 
 # size-->int, any other field-->str
-tuple_breakpoint_info = collections.namedtuple("tuple_breakpoint_info", "number breakpoint_type \
-                                                disp enabled address size on_hit hit_count enable_count condition")
+tuple_breakpoint_info = collections.namedtuple(
+    "tuple_breakpoint_info",
+    "number breakpoint_type disp enabled address size on_hit hit_count enable_count condition",
+)
 
 # start, end-->int, perms-->str, file_name-->str
 tuple_region_info = collections.namedtuple("tuple_region_info", "start end perms file_name")
@@ -412,8 +464,14 @@ class Frozen:
 
 
 class ValueType:
-    def __init__(self, value_index=VALUE_INDEX.INT32, length=10, zero_terminate=True,
-                 value_repr=VALUE_REPR.UNSIGNED, endian=ENDIANNESS.HOST):
+    def __init__(
+        self,
+        value_index=VALUE_INDEX.INT32,
+        length=10,
+        zero_terminate=True,
+        value_repr=VALUE_REPR.UNSIGNED,
+        endian=ENDIANNESS.HOST,
+    ):
         """
         Args:
             value_index (int): Determines the type of data. Can be a member of VALUE_INDEX
@@ -430,7 +488,13 @@ class ValueType:
         self.endian = endian
 
     def serialize(self):
-        return self.value_index, self.length, self.zero_terminate, self.value_repr, self.endian
+        return (
+            self.value_index,
+            self.length,
+            self.zero_terminate,
+            self.value_repr,
+            self.endian,
+        )
 
     def text(self):
         """Returns the text representation according to its members
@@ -467,7 +531,7 @@ class PointerChainResult:
         self.pointer_chain: list[int] = []
 
     def get_pointer_by_index(self, index) -> int | None:
-        if index >= size(self.pointer_chain):
+        if index >= len(self.pointer_chain):
             return None
         return self.pointer_chain[index]
 
@@ -537,4 +601,3 @@ class KeyboardModifiersTupleDict(collections.abc.Mapping):
 
     def __len__(self):
         return len(self._storage)
-

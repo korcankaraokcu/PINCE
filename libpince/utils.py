@@ -83,7 +83,7 @@ def get_regions(pid):
     Returns:
         list: List of (start_address, end_address, permissions, map_offset, device_node, inode, path) -> all str
     """
-    with open("/proc/"+str(pid)+"/maps") as f:
+    with open("/proc/" + str(pid) + "/maps") as f:
         regions = []
         for line in f.read().splitlines():
             regions.append(regexes.maps.match(line).groups())
@@ -108,7 +108,7 @@ def get_region_dict(pid: int) -> dict[str, list[str]]:
         if not path:
             continue
         _, tail = os.path.split(path)
-        start_addr = "0x"+start_addr
+        start_addr = "0x" + start_addr
         short_name = regexes.file_with_extension.search(tail)
         if short_name:
             short_name = short_name.group(0)
@@ -165,8 +165,9 @@ def filter_regions(pid, attribute, regex, case_sensitive=False):
     Returns:
         list: List of (start_address, end_address, permissions, map_offset, device_node, inode, path) -> all str
     """
-    index = ["start_address", "end_address", "permissions",
-             "map_offset", "device_node", "inode", "path"].index(attribute)
+    index = ["start_address", "end_address", "permissions", "map_offset", "device_node", "inode", "path"].index(
+        attribute
+    )
     if index == -1:
         raise Exception("Invalid attribute")
     if case_sensitive:
@@ -753,19 +754,19 @@ def aob_to_str(list_of_bytes, encoding="ascii"):
     ### make an actual list of bytes
     hexString = ""
     byteList = list_of_bytes
-    if (isinstance(list_of_bytes, list)):
+    if isinstance(list_of_bytes, list):
         byteList = list_of_bytes
     else:
         byteList = []
         byteList.append(list_of_bytes)
     for sByte in byteList:
-        if (sByte == "??"):
-            hexString += f'{63:02x}' # replace ?? with a single ?
+        if sByte == "??":
+            hexString += f"{63:02x}"  # replace ?? with a single ?
         else:
-            if (isinstance(sByte, int)):
-                byte=sByte
+            if isinstance(sByte, int):
+                byte = sByte
             else:
-                byte=int(sByte,16)
+                byte = int(sByte, 16)
             """NOTE: replacing non-printable chars with a period will
             have an adverse effect on the ability to edit hex/ASCII data
             since the editor dialog will replace the hex bytes with 2e rather
@@ -774,11 +775,11 @@ def aob_to_str(list_of_bytes, encoding="ascii"):
             So for now, don't replace them -- but be aware that this clutters
             the ascii text in the memory view and does not look 'neat'
             """
-            #if ( (byte < 32) or (byte > 126) ):
+            # if ( (byte < 32) or (byte > 126) ):
             #    hexString += f'{46:02x}' # replace non-printable chars with a period (.)
-            #else:
-            hexString += f'{byte:02x}'
-    hexBytes=bytes.fromhex(hexString)
+            # else:
+            hexString += f"{byte:02x}"
+    hexBytes = bytes.fromhex(hexString)
     return hexBytes.decode(encoding, "surrogateescape")
 
 
@@ -794,7 +795,7 @@ def str_to_aob(string, encoding="ascii"):
         str: AoB equivalent of the given string
     """
     s = str(binascii.hexlify(string.encode(encoding, "surrogateescape")), encoding)
-    return " ".join(s[i:i + 2] for i in range(0, len(s), 2))
+    return " ".join(s[i : i + 2] for i in range(0, len(s), 2))
 
 
 #:tag:GDBExpressions
@@ -838,10 +839,12 @@ def split_symbol(symbol_string):
         elif letter == "(":
             p_count -= 1
             if p_count == 0:
-                returned_list.append((symbol_string[:-(index + 1)]))
+                returned_list.append((symbol_string[: -(index + 1)]))
                 break
-            assert p_count >= 0, symbol_string + " contains unhealthy amount of left parentheses\nGotta give him some" \
-                                                 ' right parentheses. Like Bob always says "everyone needs a friend"'
+            assert p_count >= 0, (
+                symbol_string + " contains unhealthy amount of left parentheses\nGotta give him some"
+                ' right parentheses. Like Bob always says "everyone needs a friend"'
+            )
     assert p_count == 0, symbol_string + " contains unbalanced parentheses"
     if "@plt" in symbol_string:
         returned_list.append(symbol_string.rsplit("@plt", maxsplit=1)[0])
@@ -1181,8 +1184,8 @@ def ignore_exceptions(func):
         try:
             func(*args, **kwargs)
         except:
-            #print(f' Args: {args}' )
-            #print(f' Kwargs: {kwargs}' )
+            # print(f' Args: {args}' )
+            # print(f' Kwargs: {kwargs}' )
             traceback.print_exc()
 
     return wrapper

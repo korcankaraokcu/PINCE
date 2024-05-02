@@ -225,7 +225,7 @@
           <item>
            <widget class="QLabel" name="label_BaseAddressDeref">
             <property name="text">
-             <string>-&gt; &lt;font color=red&gt;??&lt;/font&gt;</string>
+             <string notr="true">-&gt; &lt;font color=red&gt;??&lt;/font&gt;</string>
             </property>
             <property name="textInteractionFlags">
              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>

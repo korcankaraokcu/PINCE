@@ -14,6 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt6.QtGui import QColor, QColorConstants
 from libpince import utils, debugcore
@@ -26,9 +27,9 @@ class QHexModel(QAbstractTableModel):
         self.row_count = row_count
         self.column_count = column_count
         self.current_address = 0
-        offset = row_count*column_count
-        self.data_array = ["??"]*offset
-        self.cell_animation = [0]*offset
+        offset = row_count * column_count
+        self.data_array = ["??"] * offset
+        self.cell_animation = [0] * offset
         self.cell_change_color = QColor(QColorConstants.Red)
         self.breakpoint_color = QColor(QColorConstants.Green)
         self.breakpoint_color.setAlpha(96)
@@ -49,7 +50,7 @@ class QHexModel(QAbstractTableModel):
                 address = self.current_address + index
                 if utils.modulo_address(address, debugcore.inferior_arch) in self.breakpoint_list:
                     return self.breakpoint_color
-                self.cell_change_color.setAlpha(20*self.cell_animation[index])
+                self.cell_change_color.setAlpha(20 * self.cell_animation[index])
                 return self.cell_change_color
             elif int_role == Qt.ItemDataRole.DisplayRole:
                 return self.display_data(index)
@@ -74,13 +75,13 @@ class QHexModel(QAbstractTableModel):
             for i in range(bp.size):
                 self.breakpoint_list.add(utils.modulo_address(breakpoint_address + i, debugcore.inferior_arch))
         self.current_address = int_address
-        self.cell_animation = [0]*offset
+        self.cell_animation = [0] * offset
         self.layoutChanged.emit()
 
     def update_loop(self, updated_array):
         for index, item in enumerate(self.cell_animation):
             if item > 0:
-                self.cell_animation[index] = item-1
+                self.cell_animation[index] = item - 1
         for index, item in enumerate(updated_array):
             if item != self.data_array[index]:
                 self.cell_animation[index] = 6

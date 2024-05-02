@@ -1,16 +1,11 @@
 from PyQt6.QtGui import QColor, QPalette
 
-theme_list = [
-    "Dark",
-    "Light",
-    "System Default",
-    "Wong (Colorblind Friendly)"
-]
+theme_list = ["Dark", "Light", "System Default", "Wong (Colorblind Friendly)"]
 
 grp_dict = {
     "ACTIVE": QPalette.ColorGroup.Active,
     "INACTIVE": QPalette.ColorGroup.Inactive,
-    "DISABLED": QPalette.ColorGroup.Disabled
+    "DISABLED": QPalette.ColorGroup.Disabled,
 }
 
 role_dict = {
@@ -33,7 +28,7 @@ role_dict = {
     "ALTERNATE_BASE": QPalette.ColorRole.AlternateBase,
     "TOOLTIP_BASE": QPalette.ColorRole.ToolTipBase,
     "TOOLTIP_TEXT": QPalette.ColorRole.ToolTipText,
-    "PLACEHOLDER_TEXT": QPalette.ColorRole.PlaceholderText
+    "PLACEHOLDER_TEXT": QPalette.ColorRole.PlaceholderText,
 }
 
 
@@ -68,7 +63,7 @@ def get_theme(theme_name):
                 "ALTERNATE_BASE": "#120F18",
                 "TOOLTIP_BASE": "#FFFFDC",
                 "TOOLTIP_TEXT": "#000000",
-                "PLACEHOLDER_TEXT": "#80FFFFFF"
+                "PLACEHOLDER_TEXT": "#80FFFFFF",
             }
 
             dark_dict = {
@@ -94,7 +89,7 @@ def get_theme(theme_name):
                     "ALTERNATE_BASE": "#241F31",
                     "TOOLTIP_BASE": "#FFFFDC",
                     "TOOLTIP_TEXT": "#000000",
-                    "PLACEHOLDER_TEXT": "#80FFFFFF"
+                    "PLACEHOLDER_TEXT": "#80FFFFFF",
                 },
             }
             return apply_palette(dark_dict)
@@ -119,7 +114,7 @@ def get_theme(theme_name):
                 "ALTERNATE_BASE": "#F7F7F7",
                 "TOOLTIP_BASE": "#FFFFDC",
                 "TOOLTIP_TEXT": "#000000",
-                "PLACEHOLDER_TEXT": "#80000000"
+                "PLACEHOLDER_TEXT": "#80000000",
             }
 
             light_dict = {
@@ -145,7 +140,7 @@ def get_theme(theme_name):
                     "ALTERNATE_BASE": "#F7F7F7",
                     "TOOLTIP_BASE": "#FFFFDC",
                     "TOOLTIP_TEXT": "#000000",
-                    "PLACEHOLDER_TEXT": "#80000000"
+                    "PLACEHOLDER_TEXT": "#80000000",
                 },
             }
             return apply_palette(light_dict)
@@ -172,7 +167,7 @@ def get_theme(theme_name):
                 "ALTERNATE_BASE": "#E69F00",
                 "TOOLTIP_BASE": "#FFFFDC",
                 "TOOLTIP_TEXT": "#000000",
-                "PLACEHOLDER_TEXT": "#80000000"
+                "PLACEHOLDER_TEXT": "#80000000",
             }
 
             wong_dict = {
@@ -198,7 +193,7 @@ def get_theme(theme_name):
                     "ALTERNATE_BASE": "#919191",
                     "TOOLTIP_BASE": "#000000",
                     "TOOLTIP_TEXT": "#FFFFFF",
-                    "PLACEHOLDER_TEXT": "#80000000"
+                    "PLACEHOLDER_TEXT": "#80000000",
                 },
             }
             return apply_palette(wong_dict)

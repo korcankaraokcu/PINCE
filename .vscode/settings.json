@@ -1,0 +1,13 @@
+{
+    "[python]": {
+        "diffEditor.ignoreTrimWhitespace": false,
+        "editor.formatOnType": true,
+        "editor.wordBasedSuggestions": "off",
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.formatOnSaveTimeout": 2000
+    },
+    "black-formatter.args": [
+        "--line-length=120"
+    ]
+}

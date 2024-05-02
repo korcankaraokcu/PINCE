@@ -6,6 +6,7 @@ _is_str = lambda x: isinstance(x, str)
 _is_number = lambda x: isinstance(x, int)
 _is_list = lambda x: isinstance(x, (list, tuple))
 
+
 def parse_hotkey(hotkey):
     ## function to replace keyboard.parse_hotkey() with fix for literal '+' in hotkey strings
     """
@@ -36,7 +37,7 @@ def parse_hotkey(hotkey):
 
     steps = []
     # since we dont have spaces in hotkey strings, we can ignore whitespace in the regex
-    for step in _re.split(r'(?<!keypad ),(?!$|,)', hotkey):
-        keys = _re.split(r'(?<=\+)\+(?=(?:(?:\+\+\w))|[\w ])|(?:(?<!keypad )(?<= |[\w,/*\-÷])\+)|\+(?=\+$)', step)
+    for step in _re.split(r"(?<!keypad ),(?!$|,)", hotkey):
+        keys = _re.split(r"(?<=\+)\+(?=(?:(?:\+\+\w))|[\w ])|(?:(?<!keypad )(?<= |[\w,/*\-÷])\+)|\+(?=\+$)", step)
         steps.append(tuple(key_to_scan_codes(key) for key in keys))
     return tuple(steps)

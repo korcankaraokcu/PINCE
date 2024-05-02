@@ -38,11 +38,14 @@ entry_point = compile(r"Entry\s+point:\s+" + hex_number_grouped.pattern)
 # The command will always start with the word "source", check debugcore.send_command function for the cause
 gdb_command_source = lambda command_file: compile(r"&\".*source\s" + command_file + r"\\n\"")  # &"command\n"
 # 0x00007fd81d4c7400 <__printf+0>:\t48 81 ec d8 00 00 00\tsub    rsp,0xd8\n
-disassemble_output = compile(r"""
+disassemble_output = compile(
+    r"""
     ([0-9a-fA-F]+.*)\\t                     # Address with symbol
     (.*?[0-9a-fA-F]{2})\s*\\t               # Bytes, ignore padding
     (.+)\\n                                 # Opcode
-""", VERBOSE)
+""",
+    VERBOSE,
+)
 info_functions_non_debugging = compile(hex_number_grouped.pattern + r"\s+(.*)")
 max_completions_reached = compile(r"\*\*\*\s+List\s+may\s+be\s+truncated,\s+max-completions\s+reached\.\s+\*\*\*")
 
@@ -52,19 +55,25 @@ instruction_follow = compile(r"(j|call|loop).*\s+" + hex_number_grouped.pattern)
 docstring_variable = compile(r"(\w+)\s*=")
 docstring_function_or_variable = compile(r"def\s+(\w+)|" + docstring_variable.pattern)
 whitespaces = compile(r"\s+")
-ps = compile(r"""
+ps = compile(
+    r"""
     \s+(\d+)\s+                             # PID
     (\S+)\s+                                # Username
     (.*)$                                   # Process name
-""", VERBOSE)
-maps = compile(r"""
+""",
+    VERBOSE,
+)
+maps = compile(
+    r"""
     ([0-9a-f]+)-([0-9a-f]+)\s+              # Address (start-end)
     (\S+)\s+                                # Permissions
     ([0-9a-f]+)\s+                          # Map offset
     (\S+)\s+                                # Device node
     (\d+)\s+                                # Inode
     (.*)$                                   # Pathname
-""", VERBOSE)
+""",
+    VERBOSE,
+)
 
 # --------------------------------------------guiutils------------------------------------------------------------------
 
@@ -72,7 +81,7 @@ reference_mark = compile(r"\{\d*\}")
 float_number = compile(r"-?[0-9]+[.,]?[0-9]*")
 bytearray_input = compile(r"^(([A-Fa-f0-9?]{2} +)+)$")
 decimal_number = compile(r"-?\d+")
-hex_number_gui = compile(r"-?(0x)?[0-9a-fA-F]*") # contains optional 0x prefix
+hex_number_gui = compile(r"-?(0x)?[0-9a-fA-F]*")  # contains optional 0x prefix
 
 # --------------------------------------------gdbextensions------------------------------------------------------
 

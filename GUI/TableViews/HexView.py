@@ -14,6 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 from PyQt6.QtGui import QKeyEvent, QWheelEvent
 from PyQt6.QtWidgets import QTableView, QAbstractItemView
 from PyQt6.QtCore import QItemSelectionModel, QModelIndex, Qt

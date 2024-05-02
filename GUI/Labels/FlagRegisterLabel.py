@@ -14,6 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtGui import QCursor, QMouseEvent, QEnterEvent
 from PyQt6.QtCore import Qt
@@ -41,8 +42,11 @@ class QFlagRegisterLabel(QLabel):
         super().enterEvent(event)
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
-        if event.button() != Qt.MouseButton.LeftButton or debugcore.currentpid == -1 or \
-                debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+        if (
+            event.button() != Qt.MouseButton.LeftButton
+            or debugcore.currentpid == -1
+            or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
+        ):
             return
         registers = debugcore.read_registers()
         current_flag = self.objectName().lower()

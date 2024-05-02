@@ -27,8 +27,9 @@ validator_map: dict[str, QRegularExpressionValidator | None] = {
     "int_hex": QRegularExpressionValidator(QRegularExpression(regexes.hex_number_gui.pattern)),  # hexadecimals
     "float": QRegularExpressionValidator(QRegularExpression(regexes.float_number.pattern)),  # floats
     "bytearray": QRegularExpressionValidator(QRegularExpression(regexes.bytearray_input.pattern)),  # array of bytes
-    "string": None
+    "string": None,
 }
+
 
 #:tag:GUI
 def get_icons_directory():
@@ -110,7 +111,7 @@ def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.
     endianness_text = [
         (typedefs.ENDIANNESS.HOST, tr.HOST),
         (typedefs.ENDIANNESS.LITTLE, tr.LITTLE),
-        (typedefs.ENDIANNESS.BIG, tr.BIG)
+        (typedefs.ENDIANNESS.BIG, tr.BIG),
     ]
     for endian, text in endianness_text:
         combobox.addItem(text, endian)
@@ -192,9 +193,12 @@ def delete_menu_entries(menu: QMenu, QAction_list: list):
             if action.isSeparator():
                 actions = menu.actions()
                 current_index = actions.index(action)
-                if len(actions) == 1 or (current_index == 0 and actions[1].isSeparator()) or \
-                        (current_index == -1 and actions[-2].isSeparator()) or \
-                        (actions[current_index - 1].isSeparator() and actions[current_index + 1].isSeparator()):
+                if (
+                    len(actions) == 1
+                    or (current_index == 0 and actions[1].isSeparator())
+                    or (current_index == -1 and actions[-2].isSeparator())
+                    or (actions[current_index - 1].isSeparator() and actions[current_index + 1].isSeparator())
+                ):
                     menu.removeAction(action)
 
     remove_entries(menu)
