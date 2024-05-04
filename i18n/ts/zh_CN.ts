@@ -221,8 +221,8 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Disassemble</source>
-      <translation>反汇编</translation>
+      <source>Memory View</source>
+      <translation type="unfinished">内存查看器</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -338,13 +338,23 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Bring disassemble screen to front when the inferior is stopped</source>
-      <translation>在程序（inferior）停止运行时，将反汇编（disassemble）屏幕置于前台显示</translation>
+      <source>Bring Memory View to front when the inferior is stopped</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Instructions shown per scroll</source>
-      <translation>每次滚动时显示的指令数量</translation>
+      <source>Instructions shown per scroll in Disassembly View</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Bytes shown per scroll in Hex View</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>0x</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -1760,16 +1770,6 @@ To change the current GDB path, check Settings-&gt;Debug</source>
       <location filename="../../tr/tr.py" line="0" />
       <source>Freeze interval must be an int</source>
       <translation>冻结间隔必须是 int</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Instruction count must be an int</source>
-      <translation>指令计数必须是 int</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Instruction count cannot be lower than {}</source>
-      <translation>指令计数不能低于 {}</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />

@@ -220,7 +220,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Disassemble</source>
+      <source>Memory View</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -336,12 +336,22 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Bring disassemble screen to front when the inferior is stopped</source>
+      <source>Bring Memory View to front when the inferior is stopped</source>
       <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Instructions shown per scroll</source>
+      <source>Instructions shown per scroll in Disassembly View</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>Bytes shown per scroll in Hex View</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/SettingsDialog.ui" line="0" />
+      <source>0x</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -1755,16 +1765,6 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Freeze interval must be an int</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Instruction count must be an int</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Instruction count cannot be lower than {}</source>
       <translation type="unfinished" />
     </message>
     <message>
