@@ -353,11 +353,6 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>0x</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>GDB Path</source>
       <translation>GDB 路径</translation>
     </message>
@@ -1760,35 +1755,6 @@ To change the current GDB path, check Settings-&gt;Debug</source>
       <location filename="../../tr/tr.py" line="0" />
       <source>Can't parse the input</source>
       <translation>无法解析输入</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Update interval must be an int</source>
-      <translation>更新间隔必须是 int</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Freeze interval must be an int</source>
-      <translation>冻结间隔必须是 int</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Interval cannot be a negative number</source>
-      <translation>间隔不能为负数</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>You are asking for it, aren't you?</source>
-      <translation>这是你自找的，不是吗？</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Update interval should be bigger than {} ms
-Setting update interval less than {} ms may cause slowdown
-Proceed?</source>
-      <translation>更新间隔应大于 {} 毫秒
-将更新间隔设置为小于 {} 毫秒可能会导致速度变慢
-继续？</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />

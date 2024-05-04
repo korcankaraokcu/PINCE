@@ -2472,32 +2472,10 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         guiutils.center_to_parent(self)
 
     def accept(self):
-        try:
-            current_table_update_interval = int(self.lineEdit_UpdateInterval.text())
-        except:
-            QMessageBox.information(self, tr.ERROR, tr.UPDATE_ASSERT_INT)
-            return
-        try:
-            current_freeze_interval = int(self.lineEdit_FreezeInterval.text())
-        except:
-            QMessageBox.information(self, tr.ERROR, tr.FREEZE_ASSERT_INT)
-            return
-        if not self.checkBox_AutoUpdateAddressTable.isChecked():
-            pass
-        elif current_table_update_interval < 0 or current_freeze_interval < 0:
-            QMessageBox.information(self, tr.ERROR, tr.INTERVAL_ASSERT_NEGATIVE)
-            return
-        elif current_table_update_interval == 0 or current_freeze_interval == 0:
-            if not InputDialogForm(self, [(tr.ASKING_FOR_TROUBLE,)]).exec():  # Easter egg
-                return
-        elif current_table_update_interval < 100:
-            if not InputDialogForm(self, [(tr.UPDATE_ASSERT_GT.format(100),)]).exec():
-                return
-
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         if self.checkBox_AutoUpdateAddressTable.isChecked():
-            self.settings.setValue("General/address_table_update_interval", current_table_update_interval)
-        self.settings.setValue("General/freeze_interval", current_freeze_interval)
+            self.settings.setValue("General/address_table_update_interval", self.spinBox_UpdateInterval.value())
+        self.settings.setValue("General/freeze_interval", self.spinBox_FreezeInterval.value())
         output_mode = [
             self.checkBox_OutputModeAsync.isChecked(),
             self.checkBox_OutputModeCommand.isChecked(),
@@ -2552,10 +2530,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.checkBox_AutoUpdateAddressTable.setChecked(
             self.settings.value("General/auto_update_address_table", type=bool)
         )
-        self.lineEdit_UpdateInterval.setText(
-            str(self.settings.value("General/address_table_update_interval", type=int))
-        )
-        self.lineEdit_FreezeInterval.setText(str(self.settings.value("General/freeze_interval", type=int)))
+        self.spinBox_UpdateInterval.setValue(self.settings.value("General/address_table_update_interval", type=int))
+        self.spinBox_FreezeInterval.setValue(self.settings.value("General/freeze_interval", type=int))
         output_mode = json.loads(self.settings.value("General/gdb_output_mode", type=str))
         output_mode = typedefs.gdb_output_mode(*output_mode)
         self.checkBox_OutputModeAsync.setChecked(output_mode.async_output)
