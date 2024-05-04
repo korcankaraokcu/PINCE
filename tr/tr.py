@@ -119,15 +119,6 @@ class TranslationConstants(QObject):
     LENGTH_NOT_VALID = QT_TR_NOOP("Length is not valid")
     LENGTH_GT = QT_TR_NOOP("Length must be greater than 0")
     PARSE_ERROR = QT_TR_NOOP("Can't parse the input")
-    UPDATE_ASSERT_INT = QT_TR_NOOP("Update interval must be an int")
-    FREEZE_ASSERT_INT = QT_TR_NOOP("Freeze interval must be an int")
-    INTERVAL_ASSERT_NEGATIVE = QT_TR_NOOP("Interval cannot be a negative number")
-    ASKING_FOR_TROUBLE = QT_TR_NOOP("You are asking for it, aren't you?")
-    UPDATE_ASSERT_GT = QT_TR_NOOP(
-        "Update interval should be bigger than {} ms\n"
-        "Setting update interval less than {} ms may cause slowdown\n"
-        "Proceed?"
-    )
     IS_INVALID_REGEX = QT_TR_NOOP("{} isn't a valid regex")
     LANG_RESET = QT_TR_NOOP("Language settings will take effect upon the next restart")
     GDB_RESET = QT_TR_NOOP("You have changed the GDB path, reset GDB now?")

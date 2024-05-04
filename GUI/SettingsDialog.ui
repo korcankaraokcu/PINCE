@@ -73,7 +73,7 @@
           </size>
          </property>
          <property name="currentIndex">
-          <number>3</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="page">
           <layout class="QGridLayout" name="gridLayout_2">
@@ -114,7 +114,17 @@
                      </widget>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="lineEdit_UpdateInterval"/>
+                     <widget class="QSpinBox" name="spinBox_UpdateInterval">
+                      <property name="minimum">
+                       <number>100</number>
+                      </property>
+                      <property name="maximum">
+                       <number>10000</number>
+                      </property>
+                      <property name="singleStep">
+                       <number>100</number>
+                      </property>
+                     </widget>
                     </item>
                     <item>
                      <widget class="QLabel" name="label_2">
@@ -158,18 +168,15 @@
                      </widget>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="lineEdit_FreezeInterval">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
+                     <widget class="QSpinBox" name="spinBox_FreezeInterval">
+                      <property name="minimum">
+                       <number>100</number>
                       </property>
-                      <property name="baseSize">
-                       <size>
-                        <width>20</width>
-                        <height>0</height>
-                       </size>
+                      <property name="maximum">
+                       <number>10000</number>
+                      </property>
+                      <property name="singleStep">
+                       <number>100</number>
                       </property>
                      </widget>
                     </item>
@@ -580,7 +587,7 @@ Patterns at former positions have higher priority if regex is off</string>
                <item>
                 <widget class="QSpinBox" name="spinBox_BytesPerScroll">
                  <property name="prefix">
-                  <string>0x</string>
+                  <string notr="true">0x</string>
                  </property>
                  <property name="maximum">
                   <number>4096</number>

@@ -351,11 +351,6 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>0x</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>GDB Path</source>
       <translation type="unfinished" />
     </message>
@@ -1755,33 +1750,6 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Can't parse the input</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Update interval must be an int</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Freeze interval must be an int</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Interval cannot be a negative number</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>You are asking for it, aren't you?</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Update interval should be bigger than {} ms
-Setting update interval less than {} ms may cause slowdown
-Proceed?</source>
       <translation type="unfinished" />
     </message>
     <message>
