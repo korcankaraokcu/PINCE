@@ -560,9 +560,10 @@ class MainForm(QMainWindow, MainWindow):
         self.settings.beginGroup("CodeInjection")
         self.settings.setValue("code_injection_method", typedefs.INJECTION_METHOD.DLOPEN)
         self.settings.endGroup()
-        self.settings.beginGroup("Disassemble")
-        self.settings.setValue("bring_disassemble_to_front", False)
+        self.settings.beginGroup("MemoryView")
+        self.settings.setValue("show_memory_view_on_stop", False)
         self.settings.setValue("instructions_per_scroll", MemoryViewWindowForm.instructions_per_scroll)
+        self.settings.setValue("bytes_per_scroll", MemoryViewWindowForm.bytes_per_scroll)
         self.settings.endGroup()
         self.settings.beginGroup("Debug")
         self.settings.setValue("gdb_path", typedefs.PATHS.GDB)
@@ -628,12 +629,13 @@ class MainForm(QMainWindow, MainWindow):
         except AttributeError:
             pass
         settings.code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
-        self.memory_view_window.bring_disassemble_to_front = self.settings.value(
-            "Disassemble/bring_disassemble_to_front", type=bool
+        self.memory_view_window.show_memory_view_on_stop = self.settings.value(
+            "MemoryView/show_memory_view_on_stop", type=bool
         )
         self.memory_view_window.instructions_per_scroll = self.settings.value(
-            "Disassemble/instructions_per_scroll", type=int
+            "MemoryView/instructions_per_scroll", type=int
         )
+        self.memory_view_window.bytes_per_scroll = self.settings.value("MemoryView/bytes_per_scroll", type=int)
         settings.gdb_path = self.settings.value("Debug/gdb_path", type=str)
         if debugcore.gdb_initialized:
             self.apply_after_init()
@@ -2480,14 +2482,6 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         except:
             QMessageBox.information(self, tr.ERROR, tr.FREEZE_ASSERT_INT)
             return
-        try:
-            current_instructions_shown = int(self.lineEdit_InstructionsPerScroll.text())
-        except:
-            QMessageBox.information(self, tr.ERROR, tr.INSTRUCTION_ASSERT_INT)
-            return
-        if current_instructions_shown < 1:
-            QMessageBox.information(self, tr.ERROR, tr.INSTRUCTION_ASSERT_LT.format(1))
-            return
         if not self.checkBox_AutoUpdateAddressTable.isChecked():
             pass
         elif current_table_update_interval < 0 or current_freeze_interval < 0:
@@ -2531,10 +2525,9 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         elif self.radioButton_AdvancedInjection.isChecked():
             injection_method = typedefs.INJECTION_METHOD.ADVANCED
         self.settings.setValue("CodeInjection/code_injection_method", injection_method)
-        self.settings.setValue(
-            "Disassemble/bring_disassemble_to_front", self.checkBox_BringDisassembleToFront.isChecked()
-        )
-        self.settings.setValue("Disassemble/instructions_per_scroll", current_instructions_shown)
+        self.settings.setValue("MemoryView/show_memory_view_on_stop", self.checkBox_ShowMemoryViewOnStop.isChecked())
+        self.settings.setValue("MemoryView/instructions_per_scroll", self.spinBox_InstructionsPerScroll.value())
+        self.settings.setValue("MemoryView/bytes_per_scroll", self.spinBox_BytesPerScroll.value())
         selected_gdb_path = self.lineEdit_GDBPath.text()
         current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
         if selected_gdb_path != current_gdb_path:
@@ -2586,12 +2579,11 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         elif code_injection_method == typedefs.INJECTION_METHOD.ADVANCED:
             self.radioButton_AdvancedInjection.setChecked(True)
 
-        self.checkBox_BringDisassembleToFront.setChecked(
-            self.settings.value("Disassemble/bring_disassemble_to_front", type=bool)
+        self.checkBox_ShowMemoryViewOnStop.setChecked(
+            self.settings.value("MemoryView/show_memory_view_on_stop", type=bool)
         )
-        self.lineEdit_InstructionsPerScroll.setText(
-            str(self.settings.value("Disassemble/instructions_per_scroll", type=int))
-        )
+        self.spinBox_InstructionsPerScroll.setValue(self.settings.value("MemoryView/instructions_per_scroll", type=int))
+        self.spinBox_BytesPerScroll.setValue(self.settings.value("MemoryView/bytes_per_scroll", type=int))
         self.lineEdit_GDBPath.setText(str(self.settings.value("Debug/gdb_path", type=str)))
         self.checkBox_GDBLogging.setChecked(self.settings.value("Debug/gdb_logging", type=bool))
         self.comboBox_InterruptSignal.setCurrentText(self.settings.value("Debug/interrupt_signal", type=str))
@@ -2881,8 +2873,9 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     process_stopped = pyqtSignal()
     process_running = pyqtSignal()
-    bring_disassemble_to_front: bool = False
+    show_memory_view_on_stop: bool = False
     instructions_per_scroll: int = 3
+    bytes_per_scroll: int = 0x40
 
     def set_dynamic_debug_hotkeys(self):
         self.actionBreak.setText(tr.BREAK.format(hotkeys.break_hotkey.get_active_key()))
@@ -3261,9 +3254,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         #    return
         current_address = self.hex_model.current_address
         if current_value < midst:
-            next_address = current_address - 0x40
+            next_address = current_address - self.bytes_per_scroll
         else:
-            next_address = current_address + 0x40
+            next_address = current_address + self.bytes_per_scroll
         self.hex_dump_address(next_address)
         guiutils.center_scroll_bar(self.verticalScrollBar_HexView)
         self.bHexViewScrolling = False
@@ -3635,7 +3628,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if self.tableWidget_Stack.rowCount() == 0:
             self.update_stack()
         self.refresh_hex_view()
-        if self.bring_disassemble_to_front:
+        if self.show_memory_view_on_stop:
             self.showMaximized()
             self.activateWindow()
         if self.stacktrace_info_widget.isVisible():
@@ -3941,9 +3934,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         steps = event.angleDelta()
         current_address = self.hex_model.current_address
         if steps.y() > 0:
-            next_address = current_address - 0x40
+            next_address = current_address - self.bytes_per_scroll
         else:
-            next_address = current_address + 0x40
+            next_address = current_address + self.bytes_per_scroll
         self.hex_dump_address(next_address)
 
     def widget_HexView_key_press_event(self, event):

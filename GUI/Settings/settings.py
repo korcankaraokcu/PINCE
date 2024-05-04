@@ -1,6 +1,6 @@
 import libpince.typedefs as typedefs
 
-current_settings_version = "34"  # Increase version by one if you change settings
+current_settings_version = "35"  # Increase version by one if you change settings
 
 # Unused, will be re-added in the future
 code_injection_method: int = 0

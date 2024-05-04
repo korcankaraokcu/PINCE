@@ -49,7 +49,7 @@
          </item>
          <item>
           <property name="text">
-           <string>Disassemble</string>
+           <string>Memory View</string>
           </property>
          </item>
          <item>
@@ -73,7 +73,7 @@
           </size>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="page">
           <layout class="QGridLayout" name="gridLayout_2">
@@ -535,30 +535,66 @@ Patterns at former positions have higher priority if regex is off</string>
            <item row="0" column="0">
             <layout class="QVBoxLayout" name="verticalLayout_10">
              <item>
-              <widget class="QCheckBox" name="checkBox_BringDisassembleToFront">
+              <widget class="QCheckBox" name="checkBox_ShowMemoryViewOnStop">
                <property name="text">
-                <string>Bring disassemble screen to front when the inferior is stopped</string>
+                <string>Bring Memory View to front when the inferior is stopped</string>
                </property>
               </widget>
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_10">
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_9">
-                 <item>
-                  <widget class="QLabel" name="label_6">
-                   <property name="text">
-                    <string>Instructions shown per scroll</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="lineEdit_InstructionsPerScroll"/>
-                 </item>
-                </layout>
+                <widget class="QLabel" name="label_6">
+                 <property name="text">
+                  <string>Instructions shown per scroll in Disassembly View</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="spinBox_InstructionsPerScroll"/>
                </item>
                <item>
                 <spacer name="horizontalSpacer_6">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_19">
+               <item>
+                <widget class="QLabel" name="label_16">
+                 <property name="text">
+                  <string>Bytes shown per scroll in Hex View</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="spinBox_BytesPerScroll">
+                 <property name="prefix">
+                  <string>0x</string>
+                 </property>
+                 <property name="maximum">
+                  <number>4096</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>16</number>
+                 </property>
+                 <property name="displayIntegerBase">
+                  <number>16</number>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_2">
                  <property name="orientation">
                   <enum>Qt::Horizontal</enum>
                  </property>

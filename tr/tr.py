@@ -121,8 +121,6 @@ class TranslationConstants(QObject):
     PARSE_ERROR = QT_TR_NOOP("Can't parse the input")
     UPDATE_ASSERT_INT = QT_TR_NOOP("Update interval must be an int")
     FREEZE_ASSERT_INT = QT_TR_NOOP("Freeze interval must be an int")
-    INSTRUCTION_ASSERT_INT = QT_TR_NOOP("Instruction count must be an int")
-    INSTRUCTION_ASSERT_LT = QT_TR_NOOP("Instruction count cannot be lower than {}")
     INTERVAL_ASSERT_NEGATIVE = QT_TR_NOOP("Interval cannot be a negative number")
     ASKING_FOR_TROUBLE = QT_TR_NOOP("You are asking for it, aren't you?")
     UPDATE_ASSERT_GT = QT_TR_NOOP(
