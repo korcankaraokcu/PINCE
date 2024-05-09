@@ -1999,7 +1999,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def update_deref_labels(self, pointer_chain_result: typedefs.PointerChainResult):
         if pointer_chain_result != None:
-            base_deref = hex(pointer_chain_result.pointer_chain[0]).upper().replace("X", "x")
+            base_deref = utils.caps_hex(hex(pointer_chain_result.pointer_chain[0]))
             self.label_BaseAddressDeref.setText(f" → {base_deref}")
             for index, offsetFrame in enumerate(self.offsetsList):
                 previousDerefText = self.caps_hex_or_error_indicator(pointer_chain_result.pointer_chain[index])
@@ -2019,10 +2019,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def caps_hex_or_error_indicator(self, address: int):
         if address == 0:
             return "<font color=red>??</font>"
-        return self.caps_hex(hex(address))
-
-    def caps_hex(self, hex_str: str):
-        return hex_str.upper().replace("X", "x")
+        return utils.caps_hex(hex(address))
 
     def update_value(self):
         if self.checkBox_IsPointer.isChecked():
@@ -3023,6 +3020,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.verticalHeader().setDefaultSectionSize(
             self.tableView_HexView_Hex.verticalHeader().defaultSectionSize()
         )
+        self.tableWidget_HexView_Address.verticalHeader().setMaximumSectionSize(
+            self.tableView_HexView_Hex.verticalHeader().maximumSectionSize()
+        )
 
         self.hex_update_timer = QTimer(timeout=self.hex_update_loop)
         self.hex_update_timer.start(200)
@@ -3391,7 +3391,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_HexView_Address.setRowCount(HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
         for row, current_offset in enumerate(range(HEX_VIEW_ROW_COUNT)):
             row_address = hex(utils.modulo_address(int_address + current_offset * 16, debugcore.inferior_arch))
-            self.tableWidget_HexView_Address.setItem(row, 0, QTableWidgetItem(row_address))
+            self.tableWidget_HexView_Address.setItem(row, 0, QTableWidgetItem(utils.caps_hex(row_address)))
         tableWidget_HexView_column_size = self.tableWidget_HexView_Address.sizeHintForColumn(0) + 5
         self.tableWidget_HexView_Address.setMaximumWidth(tableWidget_HexView_column_size)
         self.tableWidget_HexView_Address.setMinimumWidth(tableWidget_HexView_column_size)

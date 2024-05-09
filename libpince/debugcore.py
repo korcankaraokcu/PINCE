@@ -1375,7 +1375,7 @@ def hex_dump(address, offset):
                     FILE.seek(1, io.SEEK_CUR)  # Necessary since read() failed to execute
                 except (OSError, ValueError):
                     pass
-            hex_byte_list.append(current_item)
+            hex_byte_list.append(utils.caps_hex(current_item))
     return hex_byte_list
 
 

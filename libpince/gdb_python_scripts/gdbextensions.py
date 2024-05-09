@@ -114,6 +114,8 @@ class ReadRegisters(gdb.Command):
 
     def invoke(self, arg, from_tty):
         registers = gdbutils.get_general_registers()
+        for key, value in registers.items():
+            registers[key] = utils.caps_hex(value)
         registers.update(gdbutils.get_flag_registers())
         registers.update(gdbutils.get_segment_registers())
         send_to_pince(registers)
