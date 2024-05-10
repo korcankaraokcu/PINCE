@@ -740,12 +740,13 @@ def assemble(instructions, address, inferior_arch):
 
 
 #:tag:ValueType
-def aob_to_str(list_of_bytes, encoding="ascii"):
+def aob_to_str(list_of_bytes, encoding="ascii", replace_unprintable=True):
     """Converts given array of hex strings to str
 
     Args:
         list_of_bytes (list): Must be returned from debugcore.hex_dump()
         encoding (str): See here-->https://docs.python.org/3/library/codecs.html#standard-encodings
+        replace_unprintable (bool): If True, replaces non-printable characters with a period (.)
 
     Returns:
         str: str equivalent of array
@@ -767,18 +768,10 @@ def aob_to_str(list_of_bytes, encoding="ascii"):
                 byte = sByte
             else:
                 byte = int(sByte, 16)
-            """NOTE: replacing non-printable chars with a period will
-            have an adverse effect on the ability to edit hex/ASCII data
-            since the editor dialog will replace the hex bytes with 2e rather
-            than replacing only the edited bytes.
-
-            So for now, don't replace them -- but be aware that this clutters
-            the ascii text in the memory view and does not look 'neat'
-            """
-            # if ( (byte < 32) or (byte > 126) ):
-            #    hexString += f'{46:02x}' # replace non-printable chars with a period (.)
-            # else:
-            hexString += f"{byte:02x}"
+            if replace_unprintable and ((byte < 32) or (byte > 126)):
+                hexString += f"{46:02x}"  # replace non-printable chars with a period (.)
+            else:
+                hexString += f"{byte:02x}"
     hexBytes = bytes.fromhex(hexString)
     return hexBytes.decode(encoding, "surrogateescape")
 
@@ -1189,3 +1182,9 @@ def ignore_exceptions(func):
             traceback.print_exc()
 
     return wrapper
+
+
+#:tag:Utilities
+def upper_hex(hex_str: str):
+    """Converts the given hex string to uppercase while keeping the 'x' character lowercase"""
+    return hex_str.upper().replace("X", "x")
