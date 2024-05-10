@@ -787,7 +787,7 @@ def str_to_aob(string, encoding="ascii"):
     Returns:
         str: AoB equivalent of the given string
     """
-    s = str(binascii.hexlify(string.encode(encoding, "surrogateescape")), encoding)
+    s = str(binascii.hexlify(string.encode(encoding, "surrogateescape")), encoding).upper()
     return " ".join(s[i : i + 2] for i in range(0, len(s), 2))
 
 
