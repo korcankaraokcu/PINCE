@@ -30,8 +30,10 @@ class QHexView(QTableView):
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setMinimumSectionSize(21)
         self.verticalHeader().setDefaultSectionSize(21)
+        self.verticalHeader().setMaximumSectionSize(21)
         self.horizontalHeader().setMinimumSectionSize(25)
         self.horizontalHeader().setDefaultSectionSize(25)
+        self.horizontalHeader().setMaximumSectionSize(25)
         self.setStyleSheet("QTableView {background-color: transparent;}")
         self.setShowGrid(False)
         self.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
@@ -65,10 +67,12 @@ class QHexView(QTableView):
         self.setMaximumWidth(size)
 
     def on_editor_close(self):
+        if not self.delegate.editor.isModified():
+            return
         model: QHexModel = self.model()
         cell = self.currentIndex()
         index = cell.row() * model.columnCount() + cell.column()
         address = utils.modulo_address(model.current_address + index, debugcore.inferior_arch)
-        data = self.delegate.editor.text()
+        data = self.delegate.editor.text().upper()
         debugcore.write_memory(address, self.write_type, data, False)
         model.update_index(index, data)
