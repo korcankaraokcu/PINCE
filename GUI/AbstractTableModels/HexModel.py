@@ -92,5 +92,5 @@ class QHexModel(QAbstractTableModel):
         data = self.translate_data(data)
         if self.data_array[index] != data:
             self.cell_animation[index] = 6
-            self.data_array[index] = utils.caps_hex(data)
+            self.data_array[index] = utils.upper_hex(data)
             self.layoutChanged.emit()

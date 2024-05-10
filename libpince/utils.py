@@ -740,12 +740,13 @@ def assemble(instructions, address, inferior_arch):
 
 
 #:tag:ValueType
-def aob_to_str(list_of_bytes, encoding="ascii"):
+def aob_to_str(list_of_bytes, encoding="ascii", replace_unprintable=True):
     """Converts given array of hex strings to str
 
     Args:
         list_of_bytes (list): Must be returned from debugcore.hex_dump()
         encoding (str): See here-->https://docs.python.org/3/library/codecs.html#standard-encodings
+        replace_unprintable (bool): If True, replaces non-printable characters with a period (.)
 
     Returns:
         str: str equivalent of array
@@ -767,7 +768,7 @@ def aob_to_str(list_of_bytes, encoding="ascii"):
                 byte = sByte
             else:
                 byte = int(sByte, 16)
-            if (byte < 32) or (byte > 126):
+            if replace_unprintable and ((byte < 32) or (byte > 126)):
                 hexString += f"{46:02x}"  # replace non-printable chars with a period (.)
             else:
                 hexString += f"{byte:02x}"
@@ -1184,6 +1185,6 @@ def ignore_exceptions(func):
 
 
 #:tag:Utilities
-def caps_hex(hex_str: str):
+def upper_hex(hex_str: str):
     """Converts the given hex string to uppercase while keeping the 'x' character lowercase"""
     return hex_str.upper().replace("X", "x")
