@@ -1234,6 +1234,7 @@ class MainForm(QMainWindow, MainWindow):
     def comboBox_ScanType_init(self):
         scan_type_text = {
             typedefs.SCAN_TYPE.EXACT: tr.EXACT,
+            typedefs.SCAN_TYPE.NOT: tr.NOT,
             typedefs.SCAN_TYPE.INCREASED: tr.INCREASED,
             typedefs.SCAN_TYPE.INCREASED_BY: tr.INCREASED_BY,
             typedefs.SCAN_TYPE.DECREASED: tr.DECREASED,

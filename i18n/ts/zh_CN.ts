@@ -2557,6 +2557,11 @@ Proceed?</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Not</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Exact</source>
       <translation>精确</translation>
     </message>

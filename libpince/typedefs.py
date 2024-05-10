@@ -328,12 +328,14 @@ class SCAN_TYPE:
     CHANGED = 8
     UNCHANGED = 9
     UNKNOWN = 10
+    NOT = 11
 
     @staticmethod
     def get_list(scan_mode):
         if scan_mode == SCAN_MODE.NEW:
             return [
                 SCAN_TYPE.EXACT,
+                SCAN_TYPE.NOT,
                 SCAN_TYPE.LESS,
                 SCAN_TYPE.MORE,
                 SCAN_TYPE.BETWEEN,
@@ -342,6 +344,7 @@ class SCAN_TYPE:
         else:
             return [
                 SCAN_TYPE.EXACT,
+                SCAN_TYPE.NOT,
                 SCAN_TYPE.INCREASED,
                 SCAN_TYPE.INCREASED_BY,
                 SCAN_TYPE.DECREASED,
