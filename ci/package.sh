@@ -63,18 +63,25 @@ chmod +x $CONDAPLUGIN
 
 # Create cleanup function to remove remaining deps/files
 cleanup () {
-	rm AppRun.sh
-	rm -rf ./AppDir
-	rm -rf ./_temp_home
-	rm $DEPLOYTOOL*
-	rm $CONDAPLUGIN*
+	cd $PACKAGEDIR
+	# Remove everything outside of package.sh and AppImage output
+	ls --hide=package.sh --hide=PINCE*.AppImage | xargs rm -rf
 }
 trap cleanup EXIT
+
+# Error checking function
+exit_on_failure() {
+    if [ "$?" -ne 0 ]; then
+        echo
+        echo "Error occured while creating AppImage! Check the log above!"
+        exit 1
+    fi
+}
 
 # Create AppImage's AppDir with a Conda environment pre-baked
 # containing our required pip packages
 export PIP_REQUIREMENTS="-r ../requirements.txt"
-$DEPLOYTOOL --appdir AppDir -pconda
+$DEPLOYTOOL --appdir AppDir -pconda || exit_on_failure
 
 # Create PINCE directory
 mkdir -p AppDir/opt/PINCE
@@ -87,14 +94,14 @@ if [ ! -d "libpince/libscanmem" ]; then
 	mkdir libpince/libscanmem
 fi
 cd libscanmem-PINCE
-cmake -DCMAKE_BUILD_TYPE=Release .
-make -j"$NUM_MAKE_JOBS"
+cmake -DCMAKE_BUILD_TYPE=Release . || exit_on_failure
+make -j"$NUM_MAKE_JOBS" || exit_on_failure
 cp --preserve libscanmem.so ../libpince/libscanmem
 cp --preserve wrappers/scanmem.py ../libpince/libscanmem
 cd ..
 
 # Compile translations
-${LRELEASE_CMD} i18n/ts/*
+${LRELEASE_CMD} i18n/ts/* || exit_on_failure
 mkdir -p i18n/qm
 mv i18n/ts/*.qm i18n/qm/
 
@@ -135,8 +142,8 @@ wget "https://ftp.gnu.org/gnu/gdb/gdb-14.2.tar.gz"
 tar xvf gdb-14.2.tar.gz
 rm gdb-14.2.tar.gz
 cd gdb-14.2
-./configure --with-python="$(readlink -f ../wrapper.sh)" --prefix=/usr
-make -j"$NUM_MAKE_JOBS"
+./configure --with-python="$(readlink -f ../wrapper.sh)" --prefix=/usr || exit_on_failure
+make -j"$NUM_MAKE_JOBS" || exit_on_failure
 make install DESTDIR=$INSTALLDIR
 cd ..
 rm -rf gdb-14.2
@@ -171,4 +178,4 @@ chmod +x AppRun.sh
 
 # Package AppDir into AppImage
 export LD_LIBRARY_PATH="$(readlink -f ./AppDir/usr/conda/lib)"
-$DEPLOYTOOL --appdir AppDir/ --output appimage --custom-apprun AppRun.sh
+$DEPLOYTOOL --appdir AppDir/ --output appimage --custom-apprun AppRun.sh || exit_on_failure
