@@ -87,10 +87,9 @@ if [ ! -d "libpince/libscanmem" ]; then
 	mkdir libpince/libscanmem
 fi
 cd libscanmem-PINCE
-sh autogen.sh
-./configure --prefix="$(pwd)"
+cmake -DCMAKE_BUILD_TYPE=Release .
 make -j"$NUM_MAKE_JOBS"
-cp --preserve .libs/libscanmem.so ../libpince/libscanmem
+cp --preserve libscanmem.so ../libpince/libscanmem
 cp --preserve wrappers/scanmem.py ../libpince/libscanmem
 cd ..
 
