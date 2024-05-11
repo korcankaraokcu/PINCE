@@ -1106,6 +1106,10 @@ class MainForm(QMainWindow, MainWindow):
         if debugcore.currentpid == -1:
             return
         search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
+        
+        if self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole) == typedefs.SCAN_TYPE.NOT:
+            search_for = "!= " + search_for
+        
         self.QWidget_Toolbox.setEnabled(False)
         self.progressBar.setValue(0)
         self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
@@ -1249,6 +1253,11 @@ class MainForm(QMainWindow, MainWindow):
         current_type = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
         self.comboBox_ScanType.clear()
         items = typedefs.SCAN_TYPE.get_list(self.scan_mode)
+
+        # Delete Not option if Value_Type selected is AOB or STRING
+        if self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole) == typedefs.SCAN_INDEX.AOB or self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole) == typedefs.SCAN_INDEX.STRING:
+            del items[1]    # Corresponds to NOT in "get_list()" return
+
         old_index = 0
         for index, type_index in enumerate(items):
             if current_type == type_index:
@@ -1422,6 +1431,8 @@ class MainForm(QMainWindow, MainWindow):
             self.checkBox_Hex.setEnabled(False)
         if "float" in validator_str or validator_str == "number":
             validator_str = "float"
+
+        self.comboBox_ScanType_init()
 
         self.lineEdit_Scan.setValidator(guiutils.validator_map[validator_str])
         self.lineEdit_Scan2.setValidator(guiutils.validator_map[validator_str])
