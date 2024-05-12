@@ -23,8 +23,10 @@ from libpince import typedefs
 class QAsciiView(QHexView):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.horizontalHeader().setMinimumSectionSize(15)
-        self.horizontalHeader().setDefaultSectionSize(15)
+        # 12 is minimum size with current font, otherwise it will be cut off
+        self.horizontalHeader().setMinimumSectionSize(12)
+        self.horizontalHeader().setDefaultSectionSize(12)
+        self.horizontalHeader().setMaximumSectionSize(12)
         self.write_type = typedefs.VALUE_INDEX.STRING_UTF8
         self.delegate = QHexDelegate(1, ".+")
         self.delegate.closeEditor.connect(self.on_editor_close)

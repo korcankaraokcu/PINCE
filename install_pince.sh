@@ -57,8 +57,7 @@ exit_on_error() {
 
 # assumes you're in libscanmem directory
 compile_libscanmem() {
-    sh autogen.sh || return 1
-    ./configure --prefix="$(pwd)" || return 1
+    cmake -DCMAKE_BUILD_TYPE=Release . || return 1
     make -j"$NUM_MAKE_JOBS" || return 1
     chown -R "${CURRENT_USER}":"${CURRENT_USER}" . # give permissions for normal user to change file
     return 0
@@ -75,16 +74,17 @@ install_libscanmem() {
     (
         echo "Entering libscanmem directory"
         cd libscanmem-PINCE || return 1
-        if [ -d "./.libs" ]; then
+        if [ -f "./libscanmem.so" ]; then
             echo "Recompile libscanmem? [y/n]"
             read -r answer
             if echo "$answer" | grep -iq "^[Yy]"; then
+                make clean
                 compile_libscanmem || return 1
             fi
         else
             compile_libscanmem || return 1
         fi
-        cp --preserve .libs/libscanmem.so ../libpince/libscanmem/
+        cp --preserve libscanmem.so ../libpince/libscanmem/
         cp --preserve wrappers/scanmem.py ../libpince/libscanmem
         echo "Exiting libscanmem directory"
     ) || return 1
@@ -126,11 +126,11 @@ ask_pkg_mgr() {
 }
 
 # About xcb packages -> https://github.com/cdgriffith/FastFlix/wiki/Common-questions-and-problems
-PKG_NAMES_ALL="python3-pip gdb libtool"
+PKG_NAMES_ALL="python3-pip gdb cmake"
 PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-dev python3-venv pkg-config qt6-l10n-tools libcairo2-dev libgirepository1.0-dev libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev libxcb-cursor0"
 PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc python3-devel qt6-tools-linguist typelib-1_0-Gtk-3_0 cairo-devel gobject-introspection-devel make"
 PKG_NAMES_FEDORA="$PKG_NAMES_ALL python3-devel qt6-linguist redhat-lsb cairo-devel gobject-introspection-devel cairo-gobject-devel"
-PKG_NAMES_ARCH="python-pip qt6-tools gdb lsb-release pkgconf gobject-introspection-runtime" # arch defaults to py3 nowadays
+PKG_NAMES_ARCH="python-pip qt6-tools gdb cmake lsb-release pkgconf gobject-introspection-runtime" # arch defaults to py3 nowadays
 
 INSTALL_COMMAND="install"
 

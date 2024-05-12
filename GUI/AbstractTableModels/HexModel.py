@@ -88,7 +88,7 @@ class QHexModel(QAbstractTableModel):
         self.data_array = updated_array
         self.layoutChanged.emit()
 
-    def update_index(self, index, data):
+    def update_index(self, index: int, data: str):
         data = self.translate_data(data)
         if self.data_array[index] != data:
             self.cell_animation[index] = 6
