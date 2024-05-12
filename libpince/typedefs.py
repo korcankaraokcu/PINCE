@@ -331,9 +331,10 @@ class SCAN_TYPE:
     NOT = 11
 
     @staticmethod
-    def get_list(scan_mode):
+    def get_list(scan_mode, value_type):
+        list = []
         if scan_mode == SCAN_MODE.NEW:
-            return [
+            list = [
                 SCAN_TYPE.EXACT,
                 SCAN_TYPE.NOT,
                 SCAN_TYPE.LESS,
@@ -342,7 +343,7 @@ class SCAN_TYPE:
                 SCAN_TYPE.UNKNOWN,
             ]
         else:
-            return [
+            list = [
                 SCAN_TYPE.EXACT,
                 SCAN_TYPE.NOT,
                 SCAN_TYPE.INCREASED,
@@ -356,6 +357,11 @@ class SCAN_TYPE:
                 SCAN_TYPE.UNCHANGED,
             ]
 
+        # Delete Not option
+        if value_type == SCAN_INDEX.AOB or value_type == SCAN_INDEX.STRING:
+            del list[1]
+        
+        return list
 
 class SCAN_MODE:
     NEW = 0

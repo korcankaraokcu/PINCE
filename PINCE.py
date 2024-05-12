@@ -1106,10 +1106,6 @@ class MainForm(QMainWindow, MainWindow):
         if debugcore.currentpid == -1:
             return
         search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
-        
-        if self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole) == typedefs.SCAN_TYPE.NOT:
-            search_for = "!= " + search_for
-        
         self.QWidget_Toolbox.setEnabled(False)
         self.progressBar.setValue(0)
         self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
@@ -1251,13 +1247,9 @@ class MainForm(QMainWindow, MainWindow):
             typedefs.SCAN_TYPE.UNKNOWN: tr.UNKNOWN_VALUE,
         }
         current_type = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
+        value_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         self.comboBox_ScanType.clear()
-        items = typedefs.SCAN_TYPE.get_list(self.scan_mode)
-
-        # Delete Not option if Value_Type selected is AOB or STRING
-        if self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole) == typedefs.SCAN_INDEX.AOB or self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole) == typedefs.SCAN_INDEX.STRING:
-            del items[1]    # Corresponds to NOT in "get_list()" return
-
+        items = typedefs.SCAN_TYPE.get_list(self.scan_mode, value_type)
         old_index = 0
         for index, type_index in enumerate(items):
             if current_type == type_index:
@@ -1328,6 +1320,9 @@ class MainForm(QMainWindow, MainWindow):
         }
         if type_index in cmp_symbols:
             return cmp_symbols[type_index] + " " + search_for
+
+        if type_index == typedefs.SCAN_TYPE.NOT:
+            search_for = "!= " + search_for
         return search_for
 
     def pushButton_NextScan_clicked(self):
