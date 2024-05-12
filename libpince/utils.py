@@ -1177,8 +1177,6 @@ def ignore_exceptions(func):
         try:
             func(*args, **kwargs)
         except:
-            # print(f' Args: {args}' )
-            # print(f' Kwargs: {kwargs}' )
             traceback.print_exc()
 
     return wrapper
@@ -1187,4 +1185,7 @@ def ignore_exceptions(func):
 #:tag:Utilities
 def upper_hex(hex_str: str):
     """Converts the given hex string to uppercase while keeping the 'x' character lowercase"""
+    # check if the given string is a hex string, if not return the string as is
+    if not regexes.hex_number_gui.match(hex_str):
+        return hex_str
     return hex_str.upper().replace("X", "x")
