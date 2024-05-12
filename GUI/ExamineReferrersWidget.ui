@@ -67,6 +67,11 @@
        </item>
        <item>
         <widget class="QListWidget" name="listWidget_Referrers">
+         <property name="font">
+          <font>
+           <family>Monospace</family>
+          </font>
+         </property>
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
          </property>
@@ -75,6 +80,11 @@
       </layout>
      </widget>
      <widget class="QTextBrowser" name="textBrowser_DisasInfo">
+      <property name="font">
+       <font>
+        <family>Monospace</family>
+       </font>
+      </property>
       <property name="lineWrapMode">
        <enum>QTextEdit::NoWrap</enum>
       </property>

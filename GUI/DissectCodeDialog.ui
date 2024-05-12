@@ -20,6 +20,11 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <widget class="QTableWidget" name="tableWidget_ExecutableMemoryRegions">
+      <property name="font">
+       <font>
+        <family>Monospace</family>
+       </font>
+      </property>
       <property name="editTriggers">
        <set>QAbstractItemView::NoEditTriggers</set>
       </property>

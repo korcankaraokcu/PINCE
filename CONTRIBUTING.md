@@ -115,6 +115,8 @@ Consider doing these when creating a new QTableWidget or QTableView
 - 15/02/2024 - Don't always trust the "Adjust Size" button of the Qt Designer, it might expand widgets much more than needed, especially for smaller widgets. Consider the use cases
 and adjust manually. This also helps functions like `guiutils.center_to_parent` work properly
 
+- 13/05/2024 - Monospace font and `utils.upper_hex` function greatly improve readability if the text area includes hex data, consider using those when creating new text areas. Memory Viewer is a good example for this
+
 - 02/09/2018 - All functions with docstrings should have their subfunctions written after their docstrings. For instance:
 ```python
     def test():

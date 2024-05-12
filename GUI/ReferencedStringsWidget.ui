@@ -64,6 +64,11 @@
        </item>
        <item>
         <widget class="QTableWidget" name="tableWidget_References">
+         <property name="font">
+          <font>
+           <family>Monospace</family>
+          </font>
+         </property>
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
          </property>
@@ -138,6 +143,11 @@
       </layout>
      </widget>
      <widget class="QListWidget" name="listWidget_Referrers">
+      <property name="font">
+       <font>
+        <family>Monospace</family>
+       </font>
+      </property>
       <property name="editTriggers">
        <set>QAbstractItemView::NoEditTriggers</set>
       </property>

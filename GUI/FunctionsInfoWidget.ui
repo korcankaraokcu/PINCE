@@ -16,6 +16,11 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="2" column="0">
     <widget class="QTableWidget" name="tableWidget_SymbolInfo">
+     <property name="font">
+      <font>
+       <family>Monospace</family>
+      </font>
+     </property>
      <property name="editTriggers">
       <set>QAbstractItemView::NoEditTriggers</set>
      </property>
@@ -91,7 +96,13 @@
     </layout>
    </item>
    <item row="1" column="0">
-    <widget class="QTextBrowser" name="textBrowser_AddressInfo"/>
+    <widget class="QTextBrowser" name="textBrowser_AddressInfo">
+     <property name="font">
+      <font>
+       <family>Monospace</family>
+      </font>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
