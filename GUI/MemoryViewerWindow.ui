@@ -191,7 +191,7 @@
               <x>0</x>
               <y>0</y>
               <width>335</width>
-              <height>330</height>
+              <height>342</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_8">
@@ -1329,7 +1329,7 @@
               <x>0</x>
               <y>0</y>
               <width>492</width>
-              <height>212</height>
+              <height>200</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_11">
@@ -1508,7 +1508,7 @@
               <widget class="QTableWidget" name="tableWidget_StackTrace">
                <property name="font">
                 <font>
-                 <pointsize>9</pointsize>
+                 <family>Monospace</family>
                 </font>
                </property>
                <property name="editTriggers">
@@ -1570,7 +1570,7 @@
               <widget class="QTableWidget" name="tableWidget_Stack">
                <property name="font">
                 <font>
-                 <pointsize>9</pointsize>
+                 <family>Monospace</family>
                 </font>
                </property>
                <property name="editTriggers">

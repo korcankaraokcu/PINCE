@@ -37,6 +37,11 @@
    </item>
    <item row="1" column="0">
     <widget class="QTextBrowser" name="textBrowser_LogContent">
+     <property name="font">
+      <font>
+       <family>Monospace</family>
+      </font>
+     </property>
      <property name="lineWrapMode">
       <enum>QTextEdit::NoWrap</enum>
      </property>

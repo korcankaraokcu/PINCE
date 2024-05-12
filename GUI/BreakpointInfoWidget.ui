@@ -23,6 +23,11 @@
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
      <widget class="QTableWidget" name="tableWidget_BreakpointInfo">
+      <property name="font">
+       <font>
+        <family>Monospace</family>
+       </font>
+      </property>
       <property name="editTriggers">
        <set>QAbstractItemView::NoEditTriggers</set>
       </property>
@@ -105,7 +110,13 @@
    </attribute>
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QTextBrowser" name="textBrowser_BreakpointInfo"/>
+     <widget class="QTextBrowser" name="textBrowser_BreakpointInfo">
+      <property name="font">
+       <font>
+        <family>Monospace</family>
+       </font>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

@@ -92,6 +92,11 @@
    </item>
    <item row="2" column="0">
     <widget class="QTableWidget" name="tableWidget_Opcodes">
+     <property name="font">
+      <font>
+       <family>Monospace</family>
+      </font>
+     </property>
      <property name="editTriggers">
       <set>QAbstractItemView::NoEditTriggers</set>
      </property>
