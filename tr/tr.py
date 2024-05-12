@@ -335,6 +335,7 @@ class TranslationConstants(QObject):
     WAITING_FOR_BREAKPOINT = QT_TR_NOOP("Waiting for breakpoint to trigger")
     TRACING_CANCELED = QT_TR_NOOP("Tracing has been canceled")
     TRACING_COMPLETED = QT_TR_NOOP("Tracing has been completed")
+    NOT = QT_TR_NOOP("Not")
     EXACT = QT_TR_NOOP("Exact")
     INCREASED = QT_TR_NOOP("Increased")
     INCREASED_BY = QT_TR_NOOP("Increased by")
