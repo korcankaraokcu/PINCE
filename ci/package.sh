@@ -81,6 +81,7 @@ exit_on_failure() {
 # Create AppImage's AppDir with a Conda environment pre-baked
 # containing our required pip packages
 export PIP_REQUIREMENTS="-r ../requirements.txt"
+export CONDA_PACKAGES="libstdcxx-ng" # Need this to get libstdc++ higher than 6.0.29
 $DEPLOYTOOL --appdir AppDir -pconda || exit_on_failure
 
 # Create PINCE directory
