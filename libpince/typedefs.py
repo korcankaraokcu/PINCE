@@ -332,7 +332,6 @@ class SCAN_TYPE:
 
     @staticmethod
     def get_list(scan_mode, value_type):
-        list = []
         if scan_mode == SCAN_MODE.NEW:
             list = [
                 SCAN_TYPE.EXACT,
@@ -359,8 +358,9 @@ class SCAN_TYPE:
 
         if value_type == SCAN_INDEX.AOB or value_type == SCAN_INDEX.STRING:
             del list[1]
-        
+
         return list
+
 
 class SCAN_MODE:
     NEW = 0
