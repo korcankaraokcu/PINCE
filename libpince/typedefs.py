@@ -357,7 +357,6 @@ class SCAN_TYPE:
                 SCAN_TYPE.UNCHANGED,
             ]
 
-        # Delete Not option
         if value_type == SCAN_INDEX.AOB or value_type == SCAN_INDEX.STRING:
             del list[1]
         

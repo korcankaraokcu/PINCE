@@ -1428,7 +1428,6 @@ class MainForm(QMainWindow, MainWindow):
             validator_str = "float"
 
         self.comboBox_ScanType_init()
-
         self.lineEdit_Scan.setValidator(guiutils.validator_map[validator_str])
         self.lineEdit_Scan2.setValidator(guiutils.validator_map[validator_str])
         scanmem.send_command("option scan_data_type {}".format(scanmem_type))
