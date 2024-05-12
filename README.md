@@ -59,22 +59,39 @@ Pre-release screenshots:
 - **Extendable with .so files at runtime**
   * See [here](https://github.com/korcankaraokcu/PINCE/wiki/Extending-PINCE-with-.so-files)
 
-# Installing
+# Installing and running PINCE
+### Users:
+- No need to install. Just grab the latest AppImage over at [Releases](https://github.com/korcankaraokcu/PINCE/releases) and run the following commands in the same folder:
+```bash
+chmod +x PINCE-x86_64.AppImage
+sudo -E ./PINCE-x86_64.AppImage
 ```
+- Our AppImage should run on any distro that is as new or newer than Ubuntu 22.04. Anything older than this might not work and is not officially supported.
+- For Arch users, there's also an [AUR package](https://aur.archlinux.org/packages/pince-git/) but please bear in mind that **we're not the maintainers of the AUR package and it's not officially supported by us**.
+  - Please do not open an Issue unless you can reproduce the issue you're experiencing on our AppImages or local install.
+
+### Developers and Contributors:
+- If you want to have a local install of PINCE so you can modify code or contribute with PRs, you'll have to use our installer script in the repo to setup a venv dev environment.
+- To install local dev environment, run the following commands in a terminal anywhere you'd like to have the PINCE folder:
+```bash
 git clone --recursive https://github.com/korcankaraokcu/PINCE
 cd PINCE
 sh install_pince.sh
 ```
-~~For Archlinux, you can also use the [AUR package](https://aur.archlinux.org/packages/pince-git/) as an alternative~~ Currently outdated, use the installation script
-
-If you like to uninstall PINCE, just delete this folder, almost everything is installed locally. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them if you want
+- Make sure to check our [Officially supported platforms](#officially-supported-platforms) section below. Our installer might not work on distros that are not listed there, but it will still try to install using packages from supported distros, just follow the on-screen instructions.
+- If installer fails trying to install on an unsupported distro, you're on your own on trying to get the local dev environment up and running. Check `install_pince.sh` to get an idea about what you might need.
+- If you'd like to uninstall PINCE, just delete this folder, almost everything is installed locally. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them as well if you want.
 
 ***Notes:***
 - If you are having problems with your default gdb version, you can use the `install_gdb.sh` script to install another version locally. Read the comments in it for more information
 - Check https://github.com/korcankaraokcu/PINCE/issues/116 for a possible fix if you encounter `'GtkSettings' has no property named 'gtk-fallback-icon-theme'`
 
-# Running PINCE  
-Just run ```sh PINCE.sh``` in the PINCE directory
+# Officially supported platforms
+Local dev installs of PINCE should technically run on any distro that comes with **Python 3.10+** and **PyQt 6.6+** installed or available in the package manager, but below is the list of distros that we officially support, as in we actively test on these and help with issues:
+- Ubuntu 22.04+
+- Debian 12+ (or Testing)
+- Arch Linux
+- Fedora 35+
 
 # Contributing
 Want to help? Check out [CONTRIBUTING.md](CONTRIBUTING.md)
@@ -82,17 +99,5 @@ Want to help? Check out [CONTRIBUTING.md](CONTRIBUTING.md)
 # License
 GPLv3+. See [COPYING](COPYING) file for details
 
-# Officially supported platforms
-PINCE should technically run on any distro that comes with **Python 3.10+** and **PyQt 6.6+** installed or available in the package manager, but below is the list of distros that we officially support, as in we actively test on these and help with issues:
-- Ubuntu 22.04+
-- Debian 12+ (or Testing)
-- Archlinux
-- Fedora 35+
-
-Should your distro not be officially supported, the installer can still try to install it for you by picking one of the base package managers appropriate for your distro but please **do not open an issue on GitHub** if it does not work for you.
-
-If this happens and you can't figure out why, we might be able to guide you into making PINCE run in our Discord server, under the #issues channel, but remember that we only actively test the installer and PINCE on the distros listed above.
-
 # Trusted Sources
   * [Official github page](https://github.com/korcankaraokcu/PINCE)
-  * [AUR package for Archlinux](https://aur.archlinux.org/packages/pince-git/)
