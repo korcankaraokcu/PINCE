@@ -1234,6 +1234,7 @@ class MainForm(QMainWindow, MainWindow):
     def comboBox_ScanType_init(self):
         scan_type_text = {
             typedefs.SCAN_TYPE.EXACT: tr.EXACT,
+            typedefs.SCAN_TYPE.NOT: tr.NOT,
             typedefs.SCAN_TYPE.INCREASED: tr.INCREASED,
             typedefs.SCAN_TYPE.INCREASED_BY: tr.INCREASED_BY,
             typedefs.SCAN_TYPE.DECREASED: tr.DECREASED,
@@ -1246,8 +1247,9 @@ class MainForm(QMainWindow, MainWindow):
             typedefs.SCAN_TYPE.UNKNOWN: tr.UNKNOWN_VALUE,
         }
         current_type = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
+        value_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         self.comboBox_ScanType.clear()
-        items = typedefs.SCAN_TYPE.get_list(self.scan_mode)
+        items = typedefs.SCAN_TYPE.get_list(self.scan_mode, value_type)
         old_index = 0
         for index, type_index in enumerate(items):
             if current_type == type_index:
@@ -1318,6 +1320,9 @@ class MainForm(QMainWindow, MainWindow):
         }
         if type_index in cmp_symbols:
             return cmp_symbols[type_index] + " " + search_for
+
+        if type_index == typedefs.SCAN_TYPE.NOT:
+            search_for = "!= " + search_for
         return search_for
 
     def pushButton_NextScan_clicked(self):
@@ -1422,6 +1427,7 @@ class MainForm(QMainWindow, MainWindow):
         if "float" in validator_str or validator_str == "number":
             validator_str = "float"
 
+        self.comboBox_ScanType_init()
         self.lineEdit_Scan.setValidator(guiutils.validator_map[validator_str])
         self.lineEdit_Scan2.setValidator(guiutils.validator_map[validator_str])
         scanmem.send_command("option scan_data_type {}".format(scanmem_type))
