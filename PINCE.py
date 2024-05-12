@@ -2004,7 +2004,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             for index, offsetFrame in enumerate(self.offsetsList):
                 previousDerefText = self.caps_hex_or_error_indicator(pointer_chain_result.pointer_chain[index])
                 currentDerefText = self.caps_hex_or_error_indicator(pointer_chain_result.pointer_chain[index + 1])
-                offsetText = self.upper_hex(offsetFrame.offsetText.text())
+                offsetText = utils.upper_hex(offsetFrame.offsetText.text())
                 operationalSign = "" if offsetText.startswith("-") else "+"
                 calculation = f"{previousDerefText}{operationalSign}{offsetText}"
                 if index != len(self.offsetsList) - 1:
