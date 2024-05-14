@@ -134,6 +134,8 @@ from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
 from GUI.RestoreInstructionsWidget import Ui_Form as RestoreInstructionsWidget
+from GUI.PointerScanDialog import Ui_Dialog as PointerScanDialog
+from GUI.PointerScannerWindow import Ui_MainWindow as PointerScannerWindow
 
 from GUI.AbstractTableModels.HexModel import QHexModel
 from GUI.AbstractTableModels.AsciiModel import QAsciiModel
@@ -723,6 +725,8 @@ class MainForm(QMainWindow, MainWindow):
         browse_region = menu.addAction(f"{tr.BROWSE_MEMORY_REGION}[Ctrl+B]")
         disassemble = menu.addAction(f"{tr.DISASSEMBLE_ADDRESS}[Ctrl+D]")
         menu.addSeparator()
+        pointer_scan = menu.addAction(tr.POINTER_SCAN)
+        menu.addSeparator()
         what_writes = menu.addAction(tr.WHAT_WRITES)
         what_reads = menu.addAction(tr.WHAT_READS)
         what_accesses = menu.addAction(tr.WHAT_ACCESSES)
@@ -746,6 +750,7 @@ class MainForm(QMainWindow, MainWindow):
                 freeze_menu.menuAction(),
                 browse_region,
                 disassemble,
+                pointer_scan,
                 what_writes,
                 what_reads,
                 what_accesses,
@@ -793,6 +798,7 @@ class MainForm(QMainWindow, MainWindow):
             freeze_dec: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.DECREMENT),
             browse_region: self.browse_region_for_selected_row,
             disassemble: self.disassemble_selected_row,
+            pointer_scan: self.exec_pointer_scan_dialog,
             what_writes: lambda: self.exec_track_watchpoint_widget(typedefs.WATCHPOINT_TYPE.WRITE_ONLY),
             what_reads: lambda: self.exec_track_watchpoint_widget(typedefs.WATCHPOINT_TYPE.READ_ONLY),
             what_accesses: lambda: self.exec_track_watchpoint_widget(typedefs.WATCHPOINT_TYPE.BOTH),
@@ -807,6 +813,16 @@ class MainForm(QMainWindow, MainWindow):
             actions[action]()
         except KeyError:
             pass
+
+    def exec_pointer_scan_dialog(self):
+        selected_row = guiutils.get_current_item(self.treeWidget_AddressTable)
+        if not selected_row:
+            return
+        address = selected_row.text(ADDR_COL).strip("P->")
+        dialog = PointerScanDialogForm(self, address)
+        if dialog.exec():
+            pointer_window = PointerScannerWindowForm(self)
+            pointer_window.show()
 
     def exec_track_watchpoint_widget(self, watchpoint_type):
         selected_row = guiutils.get_current_item(self.treeWidget_AddressTable)
@@ -6280,6 +6296,27 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
             actions[action]()
         except KeyError:
             pass
+
+
+class PointerScanDialogForm(QDialog, PointerScanDialog):
+    def __init__(self, parent, address):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.lineEdit_Address.setText(address)
+        guiutils.center_to_parent(self)
+
+
+class PointerScannerWindowForm(QMainWindow, PointerScannerWindow):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.tableWidget_ScanResult.hide()
+        self.actionRescan_memory.triggered.connect(self.rescan)
+        guiutils.center_to_parent(self)
+
+    def rescan(self):
+        dialog = PointerScanDialogForm(self, "0x0")
+        dialog.exec()
 
 
 def handle_exit():
