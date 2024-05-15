@@ -333,31 +333,42 @@ class SCAN_TYPE:
     @staticmethod
     def get_list(scan_mode, value_type):
         if scan_mode == SCAN_MODE.NEW:
-            list = [
-                SCAN_TYPE.EXACT,
-                SCAN_TYPE.NOT,
-                SCAN_TYPE.LESS,
-                SCAN_TYPE.MORE,
-                SCAN_TYPE.BETWEEN,
-                SCAN_TYPE.UNKNOWN,
-            ]
-        else:
-            list = [
-                SCAN_TYPE.EXACT,
-                SCAN_TYPE.NOT,
-                SCAN_TYPE.INCREASED,
-                SCAN_TYPE.INCREASED_BY,
-                SCAN_TYPE.DECREASED,
-                SCAN_TYPE.DECREASED_BY,
-                SCAN_TYPE.LESS,
-                SCAN_TYPE.MORE,
-                SCAN_TYPE.BETWEEN,
-                SCAN_TYPE.CHANGED,
-                SCAN_TYPE.UNCHANGED,
-            ]
+            if value_type != SCAN_INDEX.AOB and value_type != SCAN_INDEX.STRING:
+                list = [
+                    SCAN_TYPE.EXACT,
+                    SCAN_TYPE.NOT,
+                    SCAN_TYPE.LESS,
+                    SCAN_TYPE.MORE,
+                    SCAN_TYPE.BETWEEN,
+                    SCAN_TYPE.UNKNOWN,
+                ]
+            else:
+                list = [
+                    SCAN_TYPE.EXACT,
+                    SCAN_TYPE.UNKNOWN,
+                ]
 
-        if value_type == SCAN_INDEX.AOB or value_type == SCAN_INDEX.STRING:
-            del list[1]
+        else:
+            if value_type != SCAN_INDEX.AOB and value_type != SCAN_INDEX.STRING:
+                list = [
+                    SCAN_TYPE.EXACT,
+                    SCAN_TYPE.NOT,
+                    SCAN_TYPE.INCREASED,
+                    SCAN_TYPE.INCREASED_BY,
+                    SCAN_TYPE.DECREASED,
+                    SCAN_TYPE.DECREASED_BY,
+                    SCAN_TYPE.LESS,
+                    SCAN_TYPE.MORE,
+                    SCAN_TYPE.BETWEEN,
+                    SCAN_TYPE.CHANGED,
+                    SCAN_TYPE.UNCHANGED,
+                ]
+            else:
+                list = [
+                    SCAN_TYPE.EXACT,
+                    SCAN_TYPE.CHANGED,
+                    SCAN_TYPE.UNCHANGED,
+                ]
 
         return list
 
