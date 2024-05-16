@@ -3,8 +3,8 @@ __pycache__/
 .vscode/*
 !.vscode/launch.json
 !.vscode/settings.json
-libscanmem.so*
 libpince/libscanmem/*
+libpince/libptrscan/*
 *.directory
 *.lprof
 *.qm

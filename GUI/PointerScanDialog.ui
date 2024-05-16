@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>386</width>
-    <height>320</height>
+    <height>390</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -31,7 +31,7 @@
        <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -53,12 +53,15 @@
          <property name="minimum">
           <number>1</number>
          </property>
+         <property name="value">
+          <number>3</number>
+         </property>
         </widget>
        </item>
        <item>
         <spacer name="horizontalSpacer_7">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -80,7 +83,17 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_ScanRangeStart"/>
+        <widget class="QSpinBox" name="spinBox_ScanRangeStart">
+         <property name="prefix">
+          <string>0x</string>
+         </property>
+         <property name="maximum">
+          <number>16777215</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="label_4">
@@ -90,12 +103,28 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_ScanRangeEnd"/>
+        <widget class="QSpinBox" name="spinBox_ScanRangeEnd">
+         <property name="suffix">
+          <string/>
+         </property>
+         <property name="prefix">
+          <string>0x</string>
+         </property>
+         <property name="maximum">
+          <number>16777215</number>
+         </property>
+         <property name="value">
+          <number>1000</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="horizontalSpacer_6">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -108,21 +137,124 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <layout class="QHBoxLayout" name="horizontalLayout_7">
        <item>
-        <widget class="QLabel" name="label_5">
+        <widget class="QCheckBox" name="checkBox_Path">
          <property name="text">
-          <string>LRange</string>
+          <string>Save Results To File</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_LRange"/>
+        <widget class="QLineEdit" name="lineEdit_Path">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="dragEnabled">
+          <bool>false</bool>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="clearButtonEnabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_PathBrowse">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Browse</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_8">
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_8">
+       <item>
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Optional Parameters (0 or empty will use defaults)</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Last Offset Scan Range</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_ScanLRangeStart">
+         <property name="prefix">
+          <string>0x</string>
+         </property>
+         <property name="maximum">
+          <number>16777215</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>&lt;-&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="spinBox_ScanLRangeEnd">
+         <property name="prefix">
+          <string>0x</string>
+         </property>
+         <property name="maximum">
+          <number>16777215</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>16</number>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="horizontalSpacer_5">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -146,14 +278,17 @@
        <item>
         <widget class="QSpinBox" name="spinBox_Node">
          <property name="minimum">
-          <number>1</number>
+          <number>0</number>
+         </property>
+         <property name="value">
+          <number>0</number>
          </property>
         </widget>
        </item>
        <item>
         <spacer name="horizontalSpacer_4">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -170,7 +305,7 @@
        <item>
         <widget class="QLabel" name="label_7">
          <property name="text">
-          <string>Last Offset (optional)</string>
+          <string>Last Offset Value</string>
          </property>
         </widget>
        </item>
@@ -180,7 +315,7 @@
        <item>
         <spacer name="horizontalSpacer_2">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -197,17 +332,24 @@
        <item>
         <widget class="QLabel" name="label_8">
          <property name="text">
-          <string>Max Result Count</string>
+          <string>Max Results</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_Max"/>
+        <widget class="QSpinBox" name="spinBox_Max">
+         <property name="maximum">
+          <number>1000</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="horizontalSpacer_3">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -222,14 +364,14 @@
      <item>
       <widget class="QCheckBox" name="checkBox_Cycle">
        <property name="text">
-        <string>Circular Reference</string>
+        <string>Solve Circular References</string>
        </property>
       </widget>
      </item>
      <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
-        <enum>Qt::Vertical</enum>
+        <enum>Qt::Orientation::Vertical</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -242,10 +384,10 @@
      <item>
       <widget class="QDialogButtonBox" name="buttonBox">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="standardButtons">
-        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+        <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
        </property>
       </widget>
      </item>
