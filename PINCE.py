@@ -2850,9 +2850,10 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
         self.setWindowFlags(Qt.WindowType.Window)
 
         # This section has untranslated text since it's just a placeholder
-        license_text = open("COPYING").read()
-        authors_text = open("AUTHORS").read()
-        thanks_text = open("THANKS").read()
+        pince_dir = utils.get_script_directory()
+        license_text = open(f"{pince_dir}/COPYING").read()
+        authors_text = open(f"{pince_dir}/AUTHORS").read()
+        thanks_text = open(f"{pince_dir}/THANKS").read()
         self.textBrowser_License.setPlainText(license_text)
         self.textBrowser_Contributors.append(
             "This is only a placeholder, this section may look different when the project finishes"
