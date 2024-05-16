@@ -1189,3 +1189,7 @@ def upper_hex(hex_str: str):
     if not regexes.hex_number_gui.match(hex_str):
         return hex_str
     return hex_str.upper().replace("X", "x")
+
+
+def return_optional_int(val: int) -> int | None:
+    return None if val == 0 else val

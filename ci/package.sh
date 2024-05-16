@@ -101,6 +101,17 @@ cp --preserve libscanmem.so ../libpince/libscanmem
 cp --preserve wrappers/scanmem.py ../libpince/libscanmem
 cd ..
 
+# Install libptrscan
+if [ ! -d "libpince/libptrscan" ]; then
+	mkdir libpince/libptrscan
+fi
+pushd libpince/libptrscan
+wget https://github.com/kekeimiku/PointerSearcher-X/releases/download/v0.7.3-dylib/libptrscan_pince-x86_64-unknown-linux-gnu.zip || exit_on_failure
+unzip -j -u libptrscan_pince-x86_64-unknown-linux-gnu.zip || exit_on_failure
+rm -f libptrscan_pince-x86_64-unknown-linux-gnu.zip
+mv libptrscan_pince.so libptrscan.so
+popd
+
 # Compile translations
 ${LRELEASE_CMD} i18n/ts/* || exit_on_failure
 mkdir -p i18n/qm
