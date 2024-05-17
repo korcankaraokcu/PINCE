@@ -6310,7 +6310,10 @@ class PointerScanDialogForm(QDialog, PointerScanDialog):
         guiutils.center_to_parent(self)
         self.checkBox_Path.stateChanged.connect(self.checkBox_Path_stateChanged)
         self.pushButton_PathBrowse.clicked.connect(self.pushButton_PathBrowse_clicked)
-        self.buttonBox.accepted.connect(self.buttonBox_accepted)
+        self.scan_button = self.buttonBox.addButton("Scan", QDialogButtonBox.ButtonRole.ActionRole)
+        if self.scan_button:
+            self.scan_button.clicked.connect(self.scan_button_clicked)
+        self.ptrscan_thread: Worker | None = None
 
     def checkBox_Path_stateChanged(self, state: Qt.CheckState):
         if Qt.CheckState(state) == Qt.CheckState.Checked:
@@ -6329,7 +6332,17 @@ class PointerScanDialogForm(QDialog, PointerScanDialog):
                 filename = filename + ".scandata"
             self.lineEdit_Path.setText(filename)
 
-    def buttonBox_accepted(self):
+    def reject(self):
+        if self.ptrscan_thread:
+            return
+        return super().reject()
+
+    def scan_button_clicked(self):
+        global threadpool
+        if debugcore.currentpid == -1:
+            return
+        self.scan_button.setText("Scanning")
+        self.buttonBox.setEnabled(False)
         params: FFIParam = FFIParam()
         try:
             addr_val = int(self.lineEdit_Address.text(), 16)
@@ -6362,7 +6375,12 @@ class PointerScanDialogForm(QDialog, PointerScanDialog):
                 os.remove(filename)
         else:
             filename = None
-        ptrscan.scan_pointer_chain(params, filename)
+        self.ptrscan_thread = Worker(ptrscan.scan_pointer_chain, params, filename)
+        self.ptrscan_thread.signals.finished.connect(self.ptrscan_callback)
+        threadpool.start(self.ptrscan_thread)
+
+    def ptrscan_callback(self):
+        self.accept()
 
 
 class PointerScannerWindowForm(QMainWindow, PointerScannerWindow):
