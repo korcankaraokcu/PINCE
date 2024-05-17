@@ -53,11 +53,11 @@ case $OS_NAME in
 esac
 
 # Download necessary tools
-wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+curl -L -O https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
 DEPLOYTOOL=./linuxdeploy-x86_64.AppImage
 chmod +x $DEPLOYTOOL
 
-wget https://raw.githubusercontent.com/TheAssassin/linuxdeploy-plugin-conda/master/linuxdeploy-plugin-conda.sh
+curl -L -O https://raw.githubusercontent.com/TheAssassin/linuxdeploy-plugin-conda/master/linuxdeploy-plugin-conda.sh
 CONDAPLUGIN=./linuxdeploy-plugin-conda.sh
 chmod +x $CONDAPLUGIN
 
@@ -106,9 +106,9 @@ if [ ! -d "libpince/libptrscan" ]; then
 	mkdir libpince/libptrscan
 fi
 pushd libpince/libptrscan
-wget https://github.com/kekeimiku/PointerSearcher-X/releases/download/v0.7.3-dylib/libptrscan_pince-x86_64-unknown-linux-gnu.zip || exit_on_failure
-unzip -j -u libptrscan_pince-x86_64-unknown-linux-gnu.zip || exit_on_failure
-rm -f libptrscan_pince-x86_64-unknown-linux-gnu.zip
+curl -L -o libptrscan.tar.gz https://github.com/kekeimiku/PointerSearcher-X/releases/download/v0.7.3-dylib/libptrscan_pince-x86_64-unknown-linux-gnu.tar.gz || exit_on_failure
+tar xf libptrscan.tar.gz --strip-components 1 || exit_on_failure
+rm -f libptrscan.tar.gz
 mv libptrscan_pince.so libptrscan.so
 popd
 
@@ -150,8 +150,8 @@ INSTALLDIR=$(pwd)/AppDir
 export CONDA_PREFIX="$(readlink -f $INSTALLDIR/usr/conda)"
 
 # Grab latest GDB at time of writing and compile it with our conda Python
-wget "https://ftp.gnu.org/gnu/gdb/gdb-14.2.tar.gz"
-tar xvf gdb-14.2.tar.gz
+curl -L -O "https://ftp.gnu.org/gnu/gdb/gdb-14.2.tar.gz"
+tar xf gdb-14.2.tar.gz
 rm gdb-14.2.tar.gz
 cd gdb-14.2
 ./configure --with-python="$(readlink -f ../wrapper.sh)" --prefix=/usr || exit_on_failure
