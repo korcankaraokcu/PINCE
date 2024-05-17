@@ -99,7 +99,7 @@ install_libptrscan() {
         chown -R "${CURRENT_USER}":"${CURRENT_USER}" libpince/libptrscan
     fi
     (
-		pushd libpince/libptrscan
+		cd libpince/libptrscan
 		# Source code download as we might be forced to distribute it due to licence
 		curl -L -O https://github.com/kekeimiku/PointerSearcher-X/archive/refs/tags/v0.7.3-dylib.tar.gz || return 1
 		# Actual .so and py wrapper
@@ -107,7 +107,7 @@ install_libptrscan() {
 		tar xf libptrscan.tar.gz --strip-components 1 || return 1
 		rm -f libptrscan.tar.gz
 		mv libptrscan_pince.so libptrscan.so
-		popd
+		cd ../..
     ) || return 1
     return 0
 }
