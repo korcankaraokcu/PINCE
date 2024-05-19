@@ -350,85 +350,9 @@ class TraceInstructions(gdb.Command):
         super(TraceInstructions, self).__init__("pince-trace-instructions", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        (
-            breakpoint,
-            max_trace_count,
-            stop_condition,
-            step_mode,
-            stop_after_trace,
-            collect_general_registers,
-            collect_flag_registers,
-            collect_segment_registers,
-            collect_float_registers,
-        ) = eval(arg)
-        gdb.execute("delete " + breakpoint)
-        trace_status_file = utils.get_trace_instructions_status_file(pid, breakpoint)
-
-        # The reason we don't use a tree class is to make the tree json-compatible
-        # tree format-->[node1, node2, node3, ...]
-        # node-->[(line_info, register_dict), parent_index, child_index_list]
-        tree = []
-        current_index = 0  # Avoid calling len()
-        current_root_index = 0
-        root_index = 0
-
-        # Root always be an empty node, it's up to you to use or delete it
-        tree.append([("", None), None, []])
-        for x in range(max_trace_count):
-            try:
-                output = pickle.load(open(trace_status_file, "rb"))
-                if output[0] == typedefs.TRACE_STATUS.CANCELED:
-                    break
-            except:
-                pass
-            line_info = gdb.execute("x/i $pc", to_string=True).splitlines()[0].split(maxsplit=1)[1]
-            collect_dict = OrderedDict()
-            if collect_general_registers:
-                collect_dict.update(gdbutils.get_general_registers())
-            if collect_flag_registers:
-                collect_dict.update(gdbutils.get_flag_registers())
-            if collect_segment_registers:
-                collect_dict.update(gdbutils.get_segment_registers())
-            if collect_float_registers:
-                collect_dict.update(gdbutils.get_float_registers())
-            current_index += 1
-            tree.append([(line_info, collect_dict), current_root_index, []])
-            tree[current_root_index][2].append(current_index)  # Add a child
-            status_info = (
-                typedefs.TRACE_STATUS.TRACING,
-                line_info + "\n(" + str(x + 1) + "/" + str(max_trace_count) + ")",
-            )
-            pickle.dump(status_info, open(trace_status_file, "wb"))
-            if regexes.trace_instructions_ret.search(line_info):
-                if tree[current_root_index][1] is None:  # If no parents exist
-                    current_index += 1
-                    tree.append([("", None), None, [current_root_index]])
-                    tree[current_root_index][1] = current_index  # Set new parent
-                    current_root_index = current_index  # current_node=current_node.parent
-                    root_index = current_root_index  # set new root
-                else:
-                    current_root_index = tree[current_root_index][1]  # current_node=current_node.parent
-            elif step_mode == typedefs.STEP_MODE.SINGLE_STEP:
-                if regexes.trace_instructions_call.search(line_info):
-                    current_root_index = current_index
-            if stop_condition:
-                try:
-                    if str(gdb.parse_and_eval(stop_condition)) == "1":
-                        break
-                except:
-                    pass
-            if step_mode == typedefs.STEP_MODE.SINGLE_STEP:
-                gdb.execute("stepi", to_string=True)
-            elif step_mode == typedefs.STEP_MODE.STEP_OVER:
-                gdb.execute("nexti", to_string=True)
-        status_info = (typedefs.TRACE_STATUS.PROCESSING, "")
-        pickle.dump(status_info, open(trace_status_file, "wb"))
-        trace_instructions_file = utils.get_trace_instructions_file(pid, breakpoint)
-        json.dump((tree, root_index), open(trace_instructions_file, "w"))
-        status_info = (typedefs.TRACE_STATUS.FINISHED, "")
-        pickle.dump(status_info, open(trace_status_file, "wb"))
-        if not stop_after_trace:
-            gdb.execute("c&")
+        trace_status_file = utils.get_trace_status_file(pid, arg)
+        with open(trace_status_file, "w") as trace_file:
+            trace_file.write(str(typedefs.TRACE_STATUS.TRACING))
 
 
 class InitSoFile(gdb.Command):

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from threading import Lock, Thread, Condition
 from time import sleep, time
 from collections import OrderedDict, defaultdict
-import pexpect, os, sys, ctypes, pickle, json, shelve, re, struct, io
+import pexpect, os, sys, ctypes, pickle, shelve, re, struct, io
 from . import utils, typedefs, regexes
 
 self_pid = os.getpid()
@@ -112,6 +112,9 @@ gdb_async_output = typedefs.RegisterQueue()
 # Use the function cancel_last_command to make use of this variable
 # Return value of the current send_command call will be an empty string
 cancel_send_command = False
+
+# A boolean value. Used by state_observe_thread to check if a tracing session is active
+active_trace = False
 
 #:tag:GDBInformation
 #:doc:
@@ -301,7 +304,7 @@ def state_observe_thread():
                 inferior_status = typedefs.INFERIOR_STATUS.STOPPED
             else:
                 inferior_status = typedefs.INFERIOR_STATUS.RUNNING
-            if old_status != inferior_status:
+            if old_status != inferior_status and not active_trace:
                 with status_changed_condition:
                     status_changed_condition.notify_all()
 
@@ -386,15 +389,17 @@ def can_attach(pid):
 
 
 #:tag:Debug
-def wait_for_stop(timeout=1):
+def wait_for_stop(timeout=0):
     """Block execution till the inferior stops
 
     Args:
-        timeout (float): Timeout time in seconds
+        timeout (float): Timeout time in seconds, passing 0 will wait for stop indefinitely
     """
     remaining_time = timeout
     while inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
         sleep(typedefs.CONST_TIME.GDB_INPUT_SLEEP)
+        if timeout == 0:
+            continue
         remaining_time -= typedefs.CONST_TIME.GDB_INPUT_SLEEP
         if remaining_time < 0:
             break
@@ -1885,128 +1890,136 @@ def get_track_breakpoint_info(breakpoint):
     return output
 
 
-@execute_with_temporary_interruption
-#:tag:Tools
-def trace_instructions(
-    expression,
-    max_trace_count=1000,
-    trigger_condition="",
-    stop_condition="",
-    step_mode=typedefs.STEP_MODE.SINGLE_STEP,
-    stop_after_trace=False,
-    collect_general_registers=True,
-    collect_flag_registers=True,
-    collect_segment_registers=True,
-    collect_float_registers=True,
-):
-    """Starts tracing instructions at the address evaluated by the given expression
-    There can be only one tracing process at a time, calling this function without waiting the first tracing process
-    meet an end may cause bizarre behaviour
-    Use get_trace_instructions_info() to get info about the breakpoint you set
+class Tracer:
+    def __init__(self) -> None:
+        """Use set_breakpoint after init"""
+        self.breakpoint = ""
+        self.max_trace_count = 1000
+        self.stop_condition = ""
+        self.step_mode = typedefs.STEP_MODE.SINGLE_STEP
+        self.stop_after_trace = False
+        self.collect_registers = True
+        self.trace_status = typedefs.TRACE_STATUS.IDLE
+        self.current_trace_count = 0
+        self.trace_data = []
 
-    Args:
-        expression (str): Any gdb expression
-        max_trace_count (int): Maximum number of steps will be taken while tracing. Must be greater than or equal to 1
-        trigger_condition (str): Optional, any gdb expression. Tracing will start if the condition is met
-        stop_condition (str): Optional, any gdb expression. Tracing will stop whenever the condition is met
-        step_mode (int): Can be a member of typedefs.STEP_MODE
-        stop_after_trace (bool): Inferior won't be continuing after the tracing process
-        collect_general_registers (bool): Collect general registers while stepping
-        collect_flag_registers (bool): Collect flag registers while stepping
-        collect_segment_registers (bool): Collect segment registers while stepping
-        collect_float_registers (bool): Collect float registers while stepping
+    @execute_with_temporary_interruption
+    def set_breakpoint(
+        self,
+        expression: str,
+        max_trace_count: int = 1000,
+        trigger_condition: str = "",
+        stop_condition: str = "",
+        step_mode: typedefs.STEP_MODE = typedefs.STEP_MODE.SINGLE_STEP,
+        stop_after_trace: bool = False,
+        collect_registers: bool = True,
+    ) -> str:
+        """Sets the breakpoint for tracing instructions at the address evaluated by the given expression
+        There can be only one trace at a time, don't call this function twice before the first trace finishes
+        Use tracer_loop with a thread to start the actual tracing event
 
-    Returns:
-        str: Number of the breakpoint set
-        None: If fails to set any breakpoint or if max_trace_count is not valid
-    """
-    if max_trace_count < 1:
-        print("max_trace_count must be greater than or equal to 1")
-        return
-    if type(max_trace_count) != int:
-        print("max_trace_count must be an integer")
-        return
-    breakpoint = add_breakpoint(expression, on_hit=typedefs.BREAKPOINT_ON_HIT.TRACE)
-    if not breakpoint:
-        return
-    modify_breakpoint(expression, typedefs.BREAKPOINT_MODIFY.CONDITION, condition=trigger_condition)
-    contents_send = (typedefs.TRACE_STATUS.IDLE, "")
-    trace_status_file = utils.get_trace_instructions_status_file(currentpid, breakpoint)
-    pickle.dump(contents_send, open(trace_status_file, "wb"))
-    param_str = (
-        breakpoint,
-        max_trace_count,
-        stop_condition,
-        step_mode,
-        stop_after_trace,
-        collect_general_registers,
-        collect_flag_registers,
-        collect_segment_registers,
-        collect_float_registers,
-    )
-    send_command("commands " + breakpoint + "\npince-trace-instructions " + str(param_str) + "\nend")
-    return breakpoint
+        Args:
+            expression (str): Any gdb expression
+            max_trace_count (int): Maximum number of steps taken while tracing. Must be greater than or equal to 1
+            trigger_condition (str): Optional, any gdb expression. Tracing will start if the condition is met
+            stop_condition (str): Optional, any gdb expression. Tracing will stop whenever the condition is met
+            step_mode (int): Can be a member of typedefs.STEP_MODE
+            stop_after_trace (bool): Inferior won't be continuing after the tracing process
+            collect_registers (bool): Collect registers while stepping
 
+        Returns:
+            str: Number of the breakpoint set
+            None: If fails to set any breakpoint or if max_trace_count is not valid
+        """
+        if max_trace_count < 1:
+            print("max_trace_count must be greater than or equal to 1")
+            return
+        if type(max_trace_count) != int:
+            print("max_trace_count must be an integer")
+            return
+        breakpoint = add_breakpoint(expression, on_hit=typedefs.BREAKPOINT_ON_HIT.TRACE)
+        if not breakpoint:
+            return
+        modify_breakpoint(expression, typedefs.BREAKPOINT_MODIFY.CONDITION, condition=trigger_condition)
+        self.trace_status = typedefs.TRACE_STATUS.IDLE
+        (
+            self.breakpoint,
+            self.max_trace_count,
+            self.stop_condition,
+            self.step_mode,
+            self.stop_after_trace,
+            self.collect_registers,
+        ) = (breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_registers)
+        send_command("commands " + breakpoint + "\npince-trace-instructions " + breakpoint + "\nend")
+        return breakpoint
 
-#:tag:Tools
-def get_trace_instructions_info(breakpoint):
-    """Gathers the information of the tracing process for the given breakpoint
+    def tracer_loop(self):
+        global active_trace
+        active_trace = True
+        self.current_trace_count = 0
+        trace_status_file = utils.get_trace_status_file(currentpid, self.breakpoint)
+        while self.trace_status == typedefs.TRACE_STATUS.IDLE:
+            try:
+                with open(trace_status_file, "r") as trace_file:
+                    self.trace_status = int(trace_file.read())
+            except (ValueError, FileNotFoundError):
+                pass
+        delete_breakpoint(self.breakpoint)
+        self.trace_status = typedefs.TRACE_STATUS.TRACING
 
-    Args:
-        breakpoint (str): breakpoint number, must be returned from trace_instructions()
+        # The reason we don't use a tree class is to make the tree json-compatible
+        # tree format-->[node1, node2, node3, ...]
+        # node-->[(line_info, register_dict), parent_index, child_index_list]
+        tree = []
+        current_index = 0  # Avoid calling len()
+        current_root_index = 0
+        root_index = 0
 
-    Returns:
-        list: [node1, node2, node3, ...]
-        node-->[(line_info, register_dict), parent_index, child_index_list]
-        If an error occurs while reading, an empty list returned instead
+        # Root always be an empty node, it's up to you to use or delete it
+        tree.append([("", None), None, []])
+        for x in range(self.max_trace_count):
+            if self.trace_status == typedefs.TRACE_STATUS.CANCELED:
+                break
+            line_info = send_command("x/i $pc", cli_output=True).splitlines()[0].split(maxsplit=1)[1]
+            collect_dict = OrderedDict()
+            if self.collect_registers:
+                collect_dict.update(read_registers())
+                collect_dict.update(read_float_registers())
+            current_index += 1
+            tree.append([(line_info, collect_dict), current_root_index, []])
+            tree[current_root_index][2].append(current_index)  # Add a child
+            self.current_trace_count = x + 1
+            if regexes.trace_instructions_ret.search(line_info):
+                if tree[current_root_index][1] is None:  # If no parents exist
+                    current_index += 1
+                    tree.append([("", None), None, [current_root_index]])
+                    tree[current_root_index][1] = current_index  # Set new parent
+                    current_root_index = current_index  # current_node=current_node.parent
+                    root_index = current_root_index  # set new root
+                else:
+                    current_root_index = tree[current_root_index][1]  # current_node=current_node.parent
+            elif self.step_mode == typedefs.STEP_MODE.SINGLE_STEP:
+                if regexes.trace_instructions_call.search(line_info):
+                    current_root_index = current_index
+            if self.stop_condition:
+                try:
+                    if str(parse_and_eval(self.stop_condition)) == "1":
+                        break
+                except:
+                    pass
+            if self.step_mode == typedefs.STEP_MODE.SINGLE_STEP:
+                step_instruction()
+            elif self.step_mode == typedefs.STEP_MODE.STEP_OVER:
+                step_over_instruction()
+            wait_for_stop()
+        self.trace_data = (tree, root_index)
+        self.trace_status = typedefs.TRACE_STATUS.FINISHED
+        active_trace = False
+        if not self.stop_after_trace:
+            continue_inferior()
 
-        Check PINCE.TraceInstructionsWindowForm.show_trace_info() to see how to traverse the tree
-        If you just want to search something in the trace data, you can enumerate the tree instead of traversing
-        Root always be an empty node, it's up to you to use or delete it
-        Any "call" instruction creates a node in SINGLE_STEP mode
-        Any "ret" instruction creates a parent regardless of the mode
-    """
-    trace_instructions_file = utils.get_trace_instructions_file(currentpid, breakpoint)
-    try:
-        output = json.load(open(trace_instructions_file, "r"), object_pairs_hook=OrderedDict)
-    except:
-        output = []
-    return output
-
-
-#:tag:Tools
-def get_trace_instructions_status(breakpoint):
-    """Returns the current state of tracing process for given breakpoint
-
-    Args:
-        breakpoint (str): breakpoint number, must be returned from trace_instructions()
-
-    Returns:
-        tuple:(status_id, status_str)
-
-        status_id-->(int) A member of typedefs.TRACE_STATUS
-        status_str-->(str) Status string, only used with typedefs.TRACE_STATUS.TRACING
-
-        Returns a tuple of (None, "") if fails to gather info
-    """
-    trace_status_file = utils.get_trace_instructions_status_file(currentpid, breakpoint)
-    try:
-        output = pickle.load(open(trace_status_file, "rb"))
-    except:
-        output = None, ""
-    return output
-
-
-#:tag:Tools
-def cancel_trace_instructions(breakpoint):
-    """Finishes the trace instruction process early on for the given breakpoint
-
-    Args:
-        breakpoint (str): breakpoint number, must be returned from trace_instructions()
-    """
-    status_info = (typedefs.TRACE_STATUS.CANCELED, "")
-    trace_status_file = utils.get_trace_instructions_status_file(currentpid, breakpoint)
-    pickle.dump(status_info, open(trace_status_file, "wb"))
+    def cancel_trace(self):
+        self.trace_status = typedefs.TRACE_STATUS.CANCELED
 
 
 #:tag:Tools

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>306</width>
-    <height>381</height>
+    <width>269</width>
+    <height>294</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -74,39 +74,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="checkBox_GeneralRegisters">
+      <widget class="QCheckBox" name="checkBox_CollectRegisters">
        <property name="text">
-        <string>Collect general registers</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="checkBox_FlagRegisters">
-       <property name="text">
-        <string>Collect flag registers</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="checkBox_SegmentRegisters">
-       <property name="text">
-        <string>Collect segment registers</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="checkBox_FloatRegisters">
-       <property name="text">
-        <string>Collect float registers</string>
+        <string>Collect registers</string>
        </property>
        <property name="checked">
         <bool>true</bool>

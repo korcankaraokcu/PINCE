@@ -4953,21 +4953,8 @@ class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
         else:
             step_mode = typedefs.STEP_MODE.SINGLE_STEP
         stop_after_trace = self.checkBox_StopAfterTrace.isChecked()
-        collect_general_registers = self.checkBox_GeneralRegisters.isChecked()
-        collect_flag_registers = self.checkBox_FlagRegisters.isChecked()
-        collect_segment_registers = self.checkBox_SegmentRegisters.isChecked()
-        collect_float_registers = self.checkBox_FloatRegisters.isChecked()
-        return (
-            max_trace_count,
-            trigger_condition,
-            stop_condition,
-            step_mode,
-            stop_after_trace,
-            collect_general_registers,
-            collect_flag_registers,
-            collect_segment_registers,
-            collect_float_registers,
-        )
+        collect_registers = self.checkBox_CollectRegisters.isChecked()
+        return max_trace_count, trigger_condition, stop_condition, step_mode, stop_after_trace, collect_registers
 
     def accept(self):
         if int(self.lineEdit_MaxTraceCount.text()) >= 1:
@@ -4979,18 +4966,17 @@ class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
 class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
     widget_closed = pyqtSignal()
 
-    def __init__(self, parent, address, breakpoint):
+    def __init__(self, parent, address: str, tracer: debugcore.Tracer):
         super().__init__(parent)
         self.setupUi(self)
         self.status_to_text = {
             typedefs.TRACE_STATUS.IDLE: tr.WAITING_FOR_BREAKPOINT,
             typedefs.TRACE_STATUS.CANCELED: tr.TRACING_CANCELED,
-            typedefs.TRACE_STATUS.PROCESSING: tr.PROCESSING_DATA,
             typedefs.TRACE_STATUS.FINISHED: tr.TRACING_COMPLETED,
         }
-        self.setWindowFlags(self.windowFlags() | Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.Window)
         self.address = address
-        self.breakpoint = breakpoint
+        self.tracer = tracer
         media_directory = utils.get_media_directory()
         self.movie = QMovie(media_directory + "/TraceInstructionsWaitWidget/ajax-loader.gif", QByteArray())
         self.label_Animated.setMovie(self.movie)
@@ -5000,33 +4986,31 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         self.movie.setSpeed(100)
         self.movie.start()
         self.pushButton_Cancel.clicked.connect(self.close)
+        tracer_thread = Worker(tracer.tracer_loop)
+        tracer_thread.signals.finished.connect(self.close)
+        threadpool.start(tracer_thread)
         self.status_timer = QTimer()
-        self.status_timer.setInterval(30)
+        self.status_timer.setInterval(50)
         self.status_timer.timeout.connect(self.change_status)
         self.status_timer.start()
         guiutils.center_to_parent(self)
 
     def change_status(self):
-        status_info = debugcore.get_trace_instructions_status(self.breakpoint)
-        if status_info[0] == typedefs.TRACE_STATUS.FINISHED or status_info[0] == typedefs.TRACE_STATUS.PROCESSING:
-            self.close()
-            return
-        if status_info[0] == typedefs.TRACE_STATUS.TRACING:
-            self.label_StatusText.setText(status_info[1])
+        if self.tracer.trace_status == typedefs.TRACE_STATUS.TRACING:
+            self.label_StatusText.setText(f"{self.tracer.current_trace_count} / {self.tracer.max_trace_count}")
         else:
-            self.label_StatusText.setText(self.status_to_text[status_info[0]])
+            self.label_StatusText.setText(self.status_to_text[self.tracer.trace_status])
         app.processEvents()
 
     def closeEvent(self, event: QCloseEvent):
         self.status_timer.stop()
-        self.label_StatusText.setText(tr.PROCESSING_DATA)
+        self.label_StatusText.setText(tr.TRACING_COMPLETED)
         self.pushButton_Cancel.setVisible(False)
         self.adjustSize()
         app.processEvents()
-        status_info = debugcore.get_trace_instructions_status(self.breakpoint)
-        if status_info[0] == typedefs.TRACE_STATUS.TRACING or status_info[0] == typedefs.TRACE_STATUS.PROCESSING:
-            debugcore.cancel_trace_instructions(self.breakpoint)
-            while debugcore.get_trace_instructions_status(self.breakpoint)[0] != typedefs.TRACE_STATUS.FINISHED:
+        if self.tracer.trace_status == typedefs.TRACE_STATUS.TRACING:
+            self.tracer.cancel_trace()
+            while self.tracer.trace_status != typedefs.TRACE_STATUS.FINISHED:
                 sleep(0.1)
                 app.processEvents()
         debugcore.delete_breakpoint(self.address)
@@ -5039,7 +5023,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         super().__init__(parent)
         self.setupUi(self)
         self.address = address
-        self.trace_data = None
+        self.tracer = debugcore.Tracer()
         self.treeWidget_InstructionInfo.currentItemChanged.connect(self.display_collected_data)
         self.treeWidget_InstructionInfo.itemDoubleClicked.connect(self.treeWidget_InstructionInfo_item_double_clicked)
         self.treeWidget_InstructionInfo.contextMenuEvent = self.treeWidget_InstructionInfo_context_menu_event
@@ -5053,14 +5037,13 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         prompt_dialog = TraceInstructionsPromptDialogForm(self)
         if prompt_dialog.exec():
             params = (address,) + prompt_dialog.get_values()
-            breakpoint = debugcore.trace_instructions(*params)
+            breakpoint = self.tracer.set_breakpoint(*params)
             if not breakpoint:
                 QMessageBox.information(self, tr.ERROR, tr.BREAKPOINT_FAILED.format(address))
                 self.close()
                 return
             self.showMaximized()
-            self.breakpoint = breakpoint
-            self.wait_dialog = TraceInstructionsWaitWidgetForm(self, address, breakpoint)
+            self.wait_dialog = TraceInstructionsWaitWidgetForm(self, address, self.tracer)
             self.wait_dialog.widget_closed.connect(self.show_trace_info)
             self.wait_dialog.show()
         else:
@@ -5076,19 +5059,11 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
                 self.textBrowser_RegisterInfo.verticalScrollBar().minimum()
             )
 
-    def show_trace_info(self, trace_data=None):
+    def show_trace_info(self):
         self.treeWidget_InstructionInfo.setStyleSheet("QTreeWidget::item{ height: 16px; }")
         parent = QTreeWidgetItem(self.treeWidget_InstructionInfo)
         self.treeWidget_InstructionInfo.setRootIndex(self.treeWidget_InstructionInfo.indexFromItem(parent))
-        if trace_data:
-            trace_tree, current_root_index = trace_data
-        else:
-            trace_data = debugcore.get_trace_instructions_info(self.breakpoint)
-            if trace_data:
-                trace_tree, current_root_index = trace_data
-            else:
-                return
-        self.trace_data = copy.deepcopy(trace_data)
+        trace_tree, current_root_index = copy.deepcopy(self.tracer.trace_data)
         while current_root_index is not None:
             try:
                 current_index = trace_tree[current_root_index][2][0]  # Get the first child
@@ -5111,7 +5086,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         file_path = QFileDialog.getSaveFileName(self, tr.SAVE_TRACE_FILE, trace_file_path, tr.FILE_TYPES_TRACE)[0]
         if file_path:
             file_path = utils.append_file_extension(file_path, "trace")
-            if not utils.save_file(self.trace_data, file_path):
+            if not utils.save_file(self.tracer.trace_data, file_path):
                 QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
 
     def load_file(self):
@@ -5123,7 +5098,8 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
                 QMessageBox.information(self, tr.ERROR, tr.FILE_LOAD_ERROR.format(file_path))
                 return
             self.treeWidget_InstructionInfo.clear()
-            self.show_trace_info(content)
+            self.tracer.trace_data = content
+            self.show_trace_info()
 
     def treeWidget_InstructionInfo_context_menu_event(self, event):
         menu = QMenu()
@@ -6318,6 +6294,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         except KeyError:
             pass
 
+
 class PointerScanDialogForm(QDialog, PointerScanDialog):
     def __init__(self, parent, address):
         super().__init__(parent)
@@ -6344,7 +6321,9 @@ class PointerScanDialogForm(QDialog, PointerScanDialog):
 
     def pushButton_PathBrowse_clicked(self):
         scan_filter = "Pointer Scan Data (*.scandata)"
-        filename, _ = QFileDialog.getSaveFileName(parent=self, caption="Select a pointer map file", filter=scan_filter, initialFilter=scan_filter)
+        filename, _ = QFileDialog.getSaveFileName(
+            parent=self, caption="Select a pointer map file", filter=scan_filter, initialFilter=scan_filter
+        )
         if filename != "":
             if not re.search(r"\.scandata$", filename):
                 filename = filename + ".scandata"
@@ -6386,9 +6365,9 @@ class PointerScanDialogForm(QDialog, PointerScanDialog):
         params.last(last_val)
         params.max(utils.return_optional_int(self.spinBox_Max.value()))
         params.cycle(self.checkBox_Cycle.isChecked())
-        modules = ptrscan.list_modules_pince() # TODO: maybe cache this and let user refresh with a button
-        ptrscan.set_modules(modules) # TODO: maybe cache this and let user refresh with a button
-        ptrscan.create_pointer_map() # TODO: maybe cache this and let user refresh with a button
+        modules = ptrscan.list_modules_pince()  # TODO: maybe cache this and let user refresh with a button
+        ptrscan.set_modules(modules)  # TODO: maybe cache this and let user refresh with a button
+        ptrscan.create_pointer_map()  # TODO: maybe cache this and let user refresh with a button
         if self.ptrmap_filename and os.path.isfile(self.ptrmap_filename):
             os.remove(self.ptrmap_filename)
         self.ptrscan_thread = InterruptableWorker(ptrscan.scan_pointer_chain, params, self.ptrmap_filename)
@@ -6415,7 +6394,9 @@ class PointerScannerWindowForm(QMainWindow, PointerScannerWindow):
 
     def actionOpen_triggered(self):
         scan_filter = "Pointer Scan Data (*.scandata)"
-        filename, _ = QFileDialog.getOpenFileName(parent=self, caption="Select a pointer map file", filter=scan_filter, initialFilter=scan_filter)
+        filename, _ = QFileDialog.getOpenFileName(
+            parent=self, caption="Select a pointer map file", filter=scan_filter, initialFilter=scan_filter
+        )
         if filename != "":
             self.textEdit.clear()
             with open(filename) as file:
@@ -6425,7 +6406,9 @@ class PointerScannerWindowForm(QMainWindow, PointerScannerWindow):
 
     def actionSaveAs_triggered(self):
         scan_filter = "Pointer Scan Data (*.scandata)"
-        filename, _ = QFileDialog.getSaveFileName(parent=self, caption="Select a pointer map file", filter=scan_filter, initialFilter=scan_filter)
+        filename, _ = QFileDialog.getSaveFileName(
+            parent=self, caption="Select a pointer map file", filter=scan_filter, initialFilter=scan_filter
+        )
         if filename != "":
             if not re.search(r"\.scandata$", filename):
                 filename = filename + ".scandata"
