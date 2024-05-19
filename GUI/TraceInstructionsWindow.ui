@@ -21,6 +21,11 @@
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="QTreeWidget" name="treeWidget_InstructionInfo">
+       <property name="font">
+        <font>
+         <family>Monospace</family>
+        </font>
+       </property>
        <property name="editTriggers">
         <set>QAbstractItemView::NoEditTriggers</set>
        </property>
@@ -33,7 +38,13 @@
         </property>
        </column>
       </widget>
-      <widget class="QTextBrowser" name="textBrowser_RegisterInfo"/>
+      <widget class="QTextBrowser" name="textBrowser_RegisterInfo">
+       <property name="font">
+        <font>
+         <family>Monospace</family>
+        </font>
+       </property>
+      </widget>
      </widget>
     </item>
    </layout>
