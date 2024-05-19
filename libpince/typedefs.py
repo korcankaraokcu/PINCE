@@ -109,8 +109,7 @@ class TRACE_STATUS:
     IDLE = 1
     TRACING = 2
     CANCELED = 3
-    PROCESSING = 4
-    FINISHED = 5
+    FINISHED = 4
 
 
 class STOP_REASON:

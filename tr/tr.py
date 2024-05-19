@@ -278,7 +278,6 @@ class TranslationConstants(QObject):
     ACCESSED_BY = QT_TR_NOOP("Accessed by {}")
     DELETE_BREAKPOINT_FAILED = QT_TR_NOOP("Unable to delete breakpoint at expression {}")
     MAX_TRACE_COUNT_ASSERT_GT = QT_TR_NOOP("Max trace count must be greater than or equal to {}")
-    PROCESSING_DATA = QT_TR_NOOP("Processing the collected data")
     SAVE_TRACE_FILE = QT_TR_NOOP("Save trace file")
 
     # Same applies here, keep (*.trace) and (*)

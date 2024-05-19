@@ -384,20 +384,6 @@ def get_track_breakpoint_file(pid, breakpoint):
     return get_ipc_path(pid) + "/" + breakpoint + "_track_breakpoint.txt"
 
 
-#:tag:Tools
-def get_trace_instructions_file(pid, breakpoint):
-    """Get the path of trace instructions file for given pid and breakpoint
-
-    Args:
-        pid (int,str): PID of the process
-        breakpoint (str): breakpoint number
-
-    Returns:
-        str: Path of trace instructions file
-    """
-    return get_tmp_path(pid) + "/" + breakpoint + "_trace.txt"
-
-
 #:tag:Utilities
 def append_file_extension(string, extension):
     """Appends the given extension to the given string if it doesn't end with the given extension
@@ -477,15 +463,15 @@ def load_file(file_path, load_method="json"):
 
 
 #:tag:Tools
-def get_trace_instructions_status_file(pid, breakpoint):
-    """Get the path of trace instructions status file for given pid and breakpoint
+def get_trace_status_file(pid, breakpoint):
+    """Get the path of trace status file for given pid and breakpoint
 
     Args:
         pid (int,str): PID of the process
         breakpoint (str): breakpoint number
 
     Returns:
-        str: Path of trace instructions status file
+        str: Path of trace status file
     """
     return get_ipc_path(pid) + "/" + breakpoint + "_trace_status.txt"
 
