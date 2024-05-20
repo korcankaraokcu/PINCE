@@ -689,17 +689,22 @@ class MainForm(QMainWindow, MainWindow):
     # Instead of using Qt functions, try to use their signals to prevent crashes
     @utils.ignore_exceptions
     def pause_hotkey_pressed(self):
-        debugcore.interrupt_inferior(typedefs.STOP_REASON.PAUSE)
+        if not debugcore.active_trace:
+            debugcore.interrupt_inferior(typedefs.STOP_REASON.PAUSE)
 
     @utils.ignore_exceptions
     def break_hotkey_pressed(self):
-        debugcore.interrupt_inferior()
+        if not debugcore.active_trace:
+            debugcore.interrupt_inferior()
 
     @utils.ignore_exceptions
     def continue_hotkey_pressed(self):
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
-            return
-        debugcore.continue_inferior()
+        if not (
+            debugcore.currentpid == -1
+            or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
+            or debugcore.active_trace
+        ):
+            debugcore.continue_inferior()
 
     @utils.ignore_exceptions
     def toggle_attach_hotkey_pressed(self):
@@ -3074,31 +3079,31 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         TraceInstructionsWindowForm(self, prompt_dialog=False)
 
     def step_instruction(self):
-        if (
+        if not (
             debugcore.currentpid == -1
+            or debugcore.active_trace
             or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
             or self.updating_memoryview
         ):
-            return
-        debugcore.step_instruction()
+            debugcore.step_instruction()
 
     def step_over_instruction(self):
-        if (
+        if not (
             debugcore.currentpid == -1
+            or debugcore.active_trace
             or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
             or self.updating_memoryview
         ):
-            return
-        debugcore.step_over_instruction()
+            debugcore.step_over_instruction()
 
     def execute_till_return(self):
-        if (
+        if not (
             debugcore.currentpid == -1
+            or debugcore.active_trace
             or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
             or self.updating_memoryview
         ):
-            return
-        debugcore.execute_till_return()
+            debugcore.execute_till_return()
 
     def set_address(self):
         if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
