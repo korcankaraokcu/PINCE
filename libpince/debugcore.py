@@ -295,16 +295,17 @@ def state_observe_thread():
             # Get the last match only to optimize parsing
             stop_info = matches[-1][0]
             if stop_info:
-                bp_num = regexes.breakpoint_number.search(stop_info)
-
-                # Return -1 for invalid breakpoints to ignore racing conditions
-                if bp_num and breakpoint_on_hit_dict.get(bp_num.group(1), -1) != typedefs.BREAKPOINT_ON_HIT.BREAK:
-                    return
                 stop_reason = typedefs.STOP_REASON.DEBUG
                 inferior_status = typedefs.INFERIOR_STATUS.STOPPED
             else:
                 inferior_status = typedefs.INFERIOR_STATUS.RUNNING
-            if old_status != inferior_status and not active_trace:
+            bp_num = regexes.breakpoint_number.search(stop_info)
+            # Return -1 for invalid breakpoints to ignore racing conditions
+            if not (
+                old_status == inferior_status
+                or (bp_num and breakpoint_on_hit_dict.get(bp_num.group(1), -1) != typedefs.BREAKPOINT_ON_HIT.BREAK)
+                or active_trace
+            ):
                 with status_changed_condition:
                     status_changed_condition.notify_all()
 
