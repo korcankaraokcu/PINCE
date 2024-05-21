@@ -815,7 +815,13 @@ class MainForm(QMainWindow, MainWindow):
                 guiutils.delete_menu_entries(menu, [toggle_children])
             guiutils.delete_menu_entries(menu, [pointer_scanner])
             if debugcore.currentpid == -1:
+                browse_region.setEnabled(False)
+                disassemble.setEnabled(False)
                 pointer_scan.setEnabled(False)
+            if not debugcore.is_attached():
+                what_writes.setEnabled(False)
+                what_reads.setEnabled(False)
+                what_accesses.setEnabled(False)
         font_size = self.treeWidget_AddressTable.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
