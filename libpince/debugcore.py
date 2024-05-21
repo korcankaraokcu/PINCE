@@ -113,7 +113,7 @@ gdb_async_output = typedefs.RegisterQueue()
 # Return value of the current send_command call will be an empty string
 cancel_send_command = False
 
-# A boolean value. Used by state_observe_thread to check if a tracing session is active
+# A boolean value. Used by state_observe_thread to check if a trace session is active
 active_trace = False
 
 #:tag:GDBInformation
@@ -1893,8 +1893,8 @@ def get_track_breakpoint_info(breakpoint):
 
 class Tracer:
     def __init__(self) -> None:
-        """Use tracer_loop after init, then set_breakpoint. There can be only one trace at a time
-        Don't create a new trace object before finishing the last one"""
+        """Use set_breakpoint after init and if it succeeds, use tracer_loop within a thread
+        There can be only one trace session at a time. Don't create new trace sessions before finishing the last one"""
         self.expression = ""
         self.max_trace_count = 1000
         self.stop_condition = ""
@@ -1955,6 +1955,7 @@ class Tracer:
         return breakpoint
 
     def tracer_loop(self):
+        """The main tracer loop, call within a thread"""
         global active_trace
         active_trace = True
         self.current_trace_count = 0
@@ -2021,6 +2022,7 @@ class Tracer:
             continue_inferior()
 
     def cancel_trace(self):
+        """Prematurely ends the trace session, trace data will still be collected"""
         self.cancel = True
 
 
