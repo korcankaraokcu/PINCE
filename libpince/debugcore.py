@@ -1893,8 +1893,9 @@ def get_track_breakpoint_info(breakpoint):
 
 class Tracer:
     def __init__(self) -> None:
-        """Use set_breakpoint after init"""
-        self.breakpoint = ""
+        """Use tracer_loop after init, then set_breakpoint. There can be only one trace at a time
+        Don't create a new trace object before finishing the last one"""
+        self.expression = ""
         self.max_trace_count = 1000
         self.stop_condition = ""
         self.step_mode = typedefs.STEP_MODE.SINGLE_STEP
@@ -1903,6 +1904,8 @@ class Tracer:
         self.trace_status = typedefs.TRACE_STATUS.IDLE
         self.current_trace_count = 0
         self.trace_data = []
+        self.cancel = False
+        utils.change_trace_status(currentpid, self.trace_status)
 
     @execute_with_temporary_interruption
     def set_breakpoint(
@@ -1916,8 +1919,6 @@ class Tracer:
         collect_registers: bool = True,
     ) -> str:
         """Sets the breakpoint for tracing instructions at the address evaluated by the given expression
-        There can be only one trace at a time, don't call this function twice before the first trace finishes
-        Use tracer_loop with a thread to start the actual tracing event
 
         Args:
             expression (str): Any gdb expression
@@ -1942,30 +1943,30 @@ class Tracer:
         if not breakpoint:
             return
         modify_breakpoint(expression, typedefs.BREAKPOINT_MODIFY.CONDITION, condition=trigger_condition)
-        self.trace_status = typedefs.TRACE_STATUS.IDLE
         (
-            self.breakpoint,
+            self.expression,
             self.max_trace_count,
             self.stop_condition,
             self.step_mode,
             self.stop_after_trace,
             self.collect_registers,
-        ) = (breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_registers)
-        send_command("commands " + breakpoint + "\npince-trace-instructions " + breakpoint + "\nend")
+        ) = (expression, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_registers)
+        send_command("commands " + breakpoint + "\npince-trace-instructions\nend")
         return breakpoint
 
     def tracer_loop(self):
         global active_trace
         active_trace = True
         self.current_trace_count = 0
-        trace_status_file = utils.get_trace_status_file(currentpid, self.breakpoint)
-        while self.trace_status == typedefs.TRACE_STATUS.IDLE:
+        trace_status_file = utils.get_trace_status_file(currentpid)
+        while self.trace_status == typedefs.TRACE_STATUS.IDLE and not self.cancel:
             try:
                 with open(trace_status_file, "r") as trace_file:
                     self.trace_status = int(trace_file.read())
             except (ValueError, FileNotFoundError):
                 pass
-        delete_breakpoint(self.breakpoint)
+            sleep(0.1)
+        delete_breakpoint(self.expression)
         self.trace_status = typedefs.TRACE_STATUS.TRACING
 
         # The reason we don't use a tree class is to make the tree json-compatible
@@ -1979,7 +1980,7 @@ class Tracer:
         # Root always be an empty node, it's up to you to use or delete it
         tree.append([("", None), None, []])
         for x in range(self.max_trace_count):
-            if self.trace_status == typedefs.TRACE_STATUS.CANCELED:
+            if self.cancel:
                 break
             line_info = send_command("x/i $pc", cli_output=True).splitlines()[0].split(maxsplit=1)[1]
             collect_dict = OrderedDict()
@@ -2020,7 +2021,7 @@ class Tracer:
             continue_inferior()
 
     def cancel_trace(self):
-        self.trace_status = typedefs.TRACE_STATUS.CANCELED
+        self.cancel = True
 
 
 #:tag:Tools

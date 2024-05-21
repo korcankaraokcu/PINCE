@@ -350,9 +350,7 @@ class TraceInstructions(gdb.Command):
         super(TraceInstructions, self).__init__("pince-trace-instructions", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        trace_status_file = utils.get_trace_status_file(pid, arg)
-        with open(trace_status_file, "w") as trace_file:
-            trace_file.write(str(typedefs.TRACE_STATUS.TRACING))
+        utils.change_trace_status(pid, typedefs.TRACE_STATUS.TRACING)
 
 
 class InitSoFile(gdb.Command):

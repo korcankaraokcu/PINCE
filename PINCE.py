@@ -4976,7 +4976,6 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         self.setupUi(self)
         self.status_to_text = {
             typedefs.TRACE_STATUS.IDLE: tr.WAITING_FOR_BREAKPOINT,
-            typedefs.TRACE_STATUS.CANCELED: tr.TRACING_CANCELED,
             typedefs.TRACE_STATUS.FINISHED: tr.TRACING_COMPLETED,
         }
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.Window)
@@ -5018,7 +5017,6 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
             while self.tracer.trace_status != typedefs.TRACE_STATUS.FINISHED:
                 sleep(0.1)
                 app.processEvents()
-        debugcore.delete_breakpoint(self.address)
         self.widget_closed.emit()
         super().closeEvent(event)
 

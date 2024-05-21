@@ -463,17 +463,28 @@ def load_file(file_path, load_method="json"):
 
 
 #:tag:Tools
-def get_trace_status_file(pid, breakpoint):
-    """Get the path of trace status file for given pid and breakpoint
+def get_trace_status_file(pid):
+    """Get the path of trace status file for given pid
 
     Args:
         pid (int,str): PID of the process
-        breakpoint (str): breakpoint number
 
     Returns:
         str: Path of trace status file
     """
-    return get_ipc_path(pid) + "/" + breakpoint + "_trace_status.txt"
+    return get_ipc_path(pid) + "/_trace_status.txt"
+
+
+def change_trace_status(pid: int | str, trace_status: int):
+    """Change trace status for given pid
+
+    Args:
+        pid (int,str): PID of the process
+        trace_status (int): New trace status, can be a member of typedefs.TRACE_STATUS
+    """
+    trace_status_file = get_trace_status_file(pid)
+    with open(trace_status_file, "w") as trace_file:
+        trace_file.write(str(trace_status))
 
 
 #:tag:Tools

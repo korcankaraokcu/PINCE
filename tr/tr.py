@@ -333,7 +333,6 @@ class TranslationConstants(QObject):
     SELECT_ONE_REGION = QT_TR_NOOP("Select at least one region")
     DISSECT_CODE = QT_TR_NOOP("You need to dissect code first\n" "Proceed?")
     WAITING_FOR_BREAKPOINT = QT_TR_NOOP("Waiting for breakpoint to trigger")
-    TRACING_CANCELED = QT_TR_NOOP("Tracing has been canceled")
     TRACING_COMPLETED = QT_TR_NOOP("Tracing has been completed")
     NOT = QT_TR_NOOP("Not")
     EXACT = QT_TR_NOOP("Exact")
