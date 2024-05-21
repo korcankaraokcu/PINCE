@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'PointerScanDialog.ui'
+# Form implementation generated from reading ui file 'PointerScanSearchDialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.7.0
 #
@@ -167,7 +167,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Pointer Scan"))
+        Dialog.setWindowTitle(_translate("Dialog", "Scan for Pointers"))
         self.label.setText(_translate("Dialog", "Address"))
         self.label_2.setText(_translate("Dialog", "Depth"))
         self.label_3.setText(_translate("Dialog", "Scan Range"))

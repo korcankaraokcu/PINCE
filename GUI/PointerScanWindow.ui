@@ -51,6 +51,13 @@
     <item row="0" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
+       <widget class="QPushButton" name="pushButton_Sort">
+        <property name="text">
+         <string>Sort</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="pushButton_Clear">
         <property name="text">
          <string>Clear</string>
@@ -93,14 +100,15 @@
     <addaction name="actionOpen"/>
     <addaction name="actionSaveAs"/>
    </widget>
-   <widget class="QMenu" name="menuRe_scan">
+   <widget class="QMenu" name="menuActions">
     <property name="title">
-     <string>Poi&amp;nter Scanner</string>
+     <string>Actio&amp;ns</string>
     </property>
-    <addaction name="actionRescan_memory"/>
+    <addaction name="actionScan"/>
+    <addaction name="actionFilter"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuRe_scan"/>
+   <addaction name="menuActions"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
@@ -113,9 +121,14 @@
     <string>&amp;Save As...</string>
    </property>
   </action>
-  <action name="actionRescan_memory">
+  <action name="actionScan">
    <property name="text">
-    <string>&amp;Rescan memory</string>
+    <string>&amp;Scan</string>
+   </property>
+  </action>
+  <action name="actionFilter">
+   <property name="text">
+    <string>&amp;Filter</string>
    </property>
   </action>
  </widget>

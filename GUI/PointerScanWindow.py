@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'PointerScannerWindow.ui'
+# Form implementation generated from reading ui file 'PointerScanWindow.ui'
 #
 # Created by: PyQt6 UI code generator 6.7.0
 #
@@ -34,6 +34,9 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.tableWidget_ScanResult, 2, 0, 1, 1)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
+        self.pushButton_Sort = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.pushButton_Sort.setObjectName("pushButton_Sort")
+        self.horizontalLayout.addWidget(self.pushButton_Sort)
         self.pushButton_Clear = QtWidgets.QPushButton(parent=self.centralwidget)
         self.pushButton_Clear.setObjectName("pushButton_Clear")
         self.horizontalLayout.addWidget(self.pushButton_Clear)
@@ -49,8 +52,8 @@ class Ui_MainWindow(object):
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(parent=self.menubar)
         self.menuFile.setObjectName("menuFile")
-        self.menuRe_scan = QtWidgets.QMenu(parent=self.menubar)
-        self.menuRe_scan.setObjectName("menuRe_scan")
+        self.menuActions = QtWidgets.QMenu(parent=self.menubar)
+        self.menuActions.setObjectName("menuActions")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -59,13 +62,16 @@ class Ui_MainWindow(object):
         self.actionOpen.setObjectName("actionOpen")
         self.actionSaveAs = QtGui.QAction(parent=MainWindow)
         self.actionSaveAs.setObjectName("actionSaveAs")
-        self.actionRescan_memory = QtGui.QAction(parent=MainWindow)
-        self.actionRescan_memory.setObjectName("actionRescan_memory")
+        self.actionScan = QtGui.QAction(parent=MainWindow)
+        self.actionScan.setObjectName("actionScan")
+        self.actionFilter = QtGui.QAction(parent=MainWindow)
+        self.actionFilter.setObjectName("actionFilter")
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionSaveAs)
-        self.menuRe_scan.addAction(self.actionRescan_memory)
+        self.menuActions.addAction(self.actionScan)
+        self.menuActions.addAction(self.actionFilter)
         self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuRe_scan.menuAction())
+        self.menubar.addAction(self.menuActions.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -74,9 +80,11 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Pointer Scanner"))
         self.tableWidget_ScanResult.setSortingEnabled(True)
+        self.pushButton_Sort.setText(_translate("MainWindow", "Sort"))
         self.pushButton_Clear.setText(_translate("MainWindow", "Clear"))
         self.menuFile.setTitle(_translate("MainWindow", "Fi&le"))
-        self.menuRe_scan.setTitle(_translate("MainWindow", "Poi&nter Scanner"))
+        self.menuActions.setTitle(_translate("MainWindow", "Actio&ns"))
         self.actionOpen.setText(_translate("MainWindow", "&Open"))
         self.actionSaveAs.setText(_translate("MainWindow", "&Save As..."))
-        self.actionRescan_memory.setText(_translate("MainWindow", "&Rescan memory"))
+        self.actionScan.setText(_translate("MainWindow", "&Scan"))
+        self.actionFilter.setText(_translate("MainWindow", "&Filter"))
