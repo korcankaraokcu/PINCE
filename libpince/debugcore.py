@@ -1852,6 +1852,7 @@ def track_breakpoint(expression, register_expressions):
     breakpoint = add_breakpoint(expression, on_hit=typedefs.BREAKPOINT_ON_HIT.FIND_ADDR)
     if not breakpoint:
         return
+    # TODO: When we switch to LLDB, remove c& and only continue if there isn't an active trace, same for track_watchpoint
     send_command(
         "commands "
         + breakpoint
@@ -1953,8 +1954,6 @@ class Tracer:
 
     def tracer_loop(self):
         """The main tracer loop, call within a thread"""
-        global active_trace
-        active_trace = True
         self.current_trace_count = 0
         trace_status_file = utils.get_trace_status_file(currentpid)
         while not (self.trace_status != typedefs.TRACE_STATUS.IDLE or self.cancel or currentpid == -1):
@@ -1964,6 +1963,8 @@ class Tracer:
             except (ValueError, FileNotFoundError):
                 pass
             sleep(0.1)
+        global active_trace
+        active_trace = True
         delete_breakpoint(self.expression)
         self.trace_status = typedefs.TRACE_STATUS.TRACING
 
