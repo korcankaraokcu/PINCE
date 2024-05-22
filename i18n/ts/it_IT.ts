@@ -199,6 +199,97 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
       <translation>Annulla</translation>
     </message>
     <message>
+      <location filename="../../GUI/PointerScanFilterDialog.ui" line="0" />
+      <source>Filter Pointers</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanFilterDialog.ui" line="0" />
+      <source>File 1:</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/PointerScanFilterDialog.ui" line="0" />
+      <location filename="../../GUI/PointerScanFilterDialog.ui" line="0" />
+      <source>Browse</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanFilterDialog.ui" line="0" />
+      <source>File 2:</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>Scan for Pointers</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>Address</source>
+      <translation type="unfinished">Indirizzo</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>Depth</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>Scan Range</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>0x</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>&lt;-&gt;</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>File Path:</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>Optional Parameters (0 or empty will use defaults)</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>Last Offset Scan Range</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>Minimum Chain Length</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>Last Offset Value</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>Max Results</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
+      <source>Solve Circular References</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
       <source>Settings</source>
       <translation>Impostazioni</translation>
@@ -431,22 +522,7 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-      <source>Collect general registers</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-      <source>Collect flag registers</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-      <source>Collect segment registers</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-      <source>Collect float registers</source>
+      <source>Collect registers</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -916,6 +992,51 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Endianness:</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanWindow.ui" line="0" />
+      <source>Pointer Scanner</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanWindow.ui" line="0" />
+      <source>Sort</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanWindow.ui" line="0" />
+      <source>Clear</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanWindow.ui" line="0" />
+      <source>Fi&amp;le</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanWindow.ui" line="0" />
+      <source>Actio&amp;ns</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanWindow.ui" line="0" />
+      <source>&amp;Open</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanWindow.ui" line="0" />
+      <source>&amp;Save As...</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanWindow.ui" line="0" />
+      <source>&amp;Scan</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/PointerScanWindow.ui" line="0" />
+      <source>&amp;Filter</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -1550,6 +1671,16 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Paste inside</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Pointer scan for this address</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Open pointer scanner</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -2298,11 +2429,6 @@ You can use the assigned variable from the GDB Console</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Processing the collected data</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
       <source>Save trace file</source>
       <translation type="unfinished" />
     </message>
@@ -2472,11 +2598,6 @@ Proceed?</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Waiting for breakpoint to trigger</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Tracing has been canceled</source>
       <translation type="unfinished" />
     </message>
     <message>

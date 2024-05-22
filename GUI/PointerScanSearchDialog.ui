@@ -6,9 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>386</width>
+    <width>404</width>
     <height>390</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>404</width>
+    <height>390</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>404</width>
+    <height>390</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Scan for Pointers</string>
@@ -139,9 +151,9 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_7">
        <item>
-        <widget class="QCheckBox" name="checkBox_Path">
+        <widget class="QLabel" name="label_10">
          <property name="text">
-          <string>Save Results To File</string>
+          <string>File Path:</string>
          </property>
         </widget>
        </item>
@@ -167,25 +179,12 @@
        <item>
         <widget class="QPushButton" name="pushButton_PathBrowse">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="text">
           <string>Browse</string>
          </property>
         </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_8">
-         <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </item>
