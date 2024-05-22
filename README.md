@@ -70,11 +70,10 @@ sudo -E ./PINCE-x86_64.AppImage
 - To install local dev environment, run the following commands in a terminal anywhere you'd like to have the PINCE folder:
 ```bash
 git clone --recursive https://github.com/korcankaraokcu/PINCE
-cd PINCE
-sh install_pince.sh
+sh PINCE/install.sh
 ```
 - Make sure to check our [Officially supported platforms](#officially-supported-platforms) section below. Our installer might not work on distros that are not listed there, but it will still try to install using packages from supported distros, just follow the on-screen instructions.
-- If installer fails trying to install on an unsupported distro, you're on your own on trying to get the local dev environment up and running. Check `install_pince.sh` to get an idea about what you might need.
+- If installer fails trying to install on an unsupported distro, you're on your own on trying to get the local dev environment up and running. Check `install.sh` to get an idea about what you might need.
 - If you'd like to uninstall PINCE, just delete this folder, almost everything is installed locally. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them as well if you want.
 
 ***Notes:***

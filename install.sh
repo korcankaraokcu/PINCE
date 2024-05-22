@@ -16,15 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
 
-# this file cannot (or any file) be named `install.sh` since libtoolize(automake) will not work properly if it does
-# it will create the necessary files in PINCEs directory instead of libscanmem's, which will result in having to run `sh autogen.sh`
-# twice, see this link https://github.com/protocolbuffers/protobuf/issues/149#issuecomment-473092810
-
 if [ "$(id -u)" = "0" ]; then
 	echo "Please do not run this script as root!"
 	exit 1
 fi
 
+SCRIPTDIR=$(cd -- "$(dirname -- "$0")" && pwd -P)
+cd $SCRIPTDIR
 if [ ! -d ".git" ]; then
 	echo "Error! Could not find \".git\" folder!"
 	echo "This can happen if you downloaded the ZIP file instead of cloning through git."
