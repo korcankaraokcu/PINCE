@@ -4,7 +4,7 @@
 - [install.sh](./install.sh) - Installation script
 - [compile_ts.sh](./compile_ts.sh) - Gathers translation information from various sources and compiles them into ts files
 - [fix_ts.py](./fix_ts.py) - Fixes line information issue, used within [compile_ts.sh](./compile_ts.sh)
-- [install_gdb.sh](./install_gdb.sh) - PINCE normally uses system GDB but in cases where system GDB is unavailable, this script is used to compile GDB locally
+- [compile_gdb.sh](./compile_gdb.sh) - PINCE normally uses system GDB but in cases where system GDB is unavailable, this script is used to compile GDB locally
 - [GUI](./GUI) - Contains Qt Designer forms and their respective codes along with utility functions and custom Qt classes
 - [media](./media) - Contains media files such as logos and icons
 - [tr](./tr) - Contains translation constants
