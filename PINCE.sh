@@ -23,7 +23,7 @@ fi
 
 SCRIPTDIR=$(cd -- "$(dirname -- "$0")" && pwd -P)
 if [ ! -d "${SCRIPTDIR}/.venv/PINCE" ]; then
-	echo "Please run \"sh install_pince.sh\" first!"
+	echo "Please run \"sh install.sh\" first!"
 	exit 1
 fi
 . ${SCRIPTDIR}/.venv/PINCE/bin/activate

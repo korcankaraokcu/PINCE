@@ -1,14 +1,14 @@
 # Code Structure
 - [PINCE.py](./PINCE.py) - The main file, it contains everything from GUI logic to libpince communication. A chonky boi, will be trimmed in the future
 - [PINCE.sh](./PINCE.sh) - Launch script
-- [install_pince.sh](./install_pince.sh) - Installation script
+- [install.sh](./install.sh) - Installation script
 - [compile_ts.sh](./compile_ts.sh) - Gathers translation information from various sources and compiles them into ts files
 - [fix_ts.py](./fix_ts.py) - Fixes line information issue, used within [compile_ts.sh](./compile_ts.sh)
 - [install_gdb.sh](./install_gdb.sh) - PINCE normally uses system GDB but in cases where system GDB is unavailable, this script is used to compile GDB locally
 - [GUI](./GUI) - Contains Qt Designer forms and their respective codes along with utility functions and custom Qt classes
 - [media](./media) - Contains media files such as logos and icons
 - [tr](./tr) - Contains translation constants
-- [i18n](./i18n) - Contains translation files. `ts` files are created with Qt Linguist and [compile_ts.sh](./compile_ts.sh), `qm` files are created within the last section of [install_pince.sh](./install_pince.sh)
+- [i18n](./i18n) - Contains translation files. `ts` files are created with Qt Linguist and [compile_ts.sh](./compile_ts.sh), `qm` files are created within the last section of [install.sh](./install.sh)
 - ### **[libpince](./libpince)**
   - [debugcore.py](./libpince/debugcore.py) - Everything related to communicating with GDB and debugging
   - [utils.py](./libpince/utils.py) - Contains generic utility functions such as parsing, file creation, documentation etc
@@ -75,7 +75,7 @@ Follow the steps below:
 You can skip this step if you only want to edit already existing files
 - Edit ts files in [/i18n/ts](./i18n/ts) with the linguist and then save them. After saving the files, run the [compile_ts.sh](./compile_ts.sh) script.
 This script fixes inconsistencies between Qt6 Linguist and pylupdate6, also removes line information so the git history stays cleaner
-- To test your translations, use [install_pince.sh](./install_pince.sh). The last part of the installation script also compiles ts files to qm files so PINCE can process them.
+- To test your translations, use [install.sh](./install.sh). The last part of the installation script also compiles ts files to qm files so PINCE can process them.
 When asked to recompile libscanmem, enter no
 
 Make sure that you read the comments in [tr.py](./tr/tr.py). Some of the translations have caveats that might interest you
