@@ -6329,25 +6329,14 @@ class PointerScanSearchDialogForm(QDialog, PointerScanSearchDialog):
     def __init__(self, parent, address) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.lineEdit_Address.setText(address)
         guiutils.center_to_parent(self)
-        self.checkBox_Path.stateChanged.connect(self.checkBox_Path_stateChanged)
+        self.lineEdit_Address.setText(address)
+        self.lineEdit_Path.setText(os.getcwd() + f"/{utils.get_process_name(debugcore.currentpid)}.scandata")
         self.pushButton_PathBrowse.clicked.connect(self.pushButton_PathBrowse_clicked)
         self.scan_button: QPushButton | None = self.buttonBox.addButton("Scan", QDialogButtonBox.ButtonRole.ActionRole)
         if self.scan_button:
             self.scan_button.clicked.connect(self.scan_button_clicked)
         self.ptrscan_thread: InterruptableWorker | None = None
-        self.ptrmap_filename: str | None = None
-
-    def checkBox_Path_stateChanged(self, state: Qt.CheckState) -> None:
-        if Qt.CheckState(state) == Qt.CheckState.Checked:
-            self.pushButton_PathBrowse.setEnabled(True)
-            self.ptrmap_filename = f"{utils.get_process_name(debugcore.currentpid)}.scandata"
-            self.lineEdit_Path.setText(os.getcwd() + f"/{self.ptrmap_filename}")
-        else:
-            self.pushButton_PathBrowse.setEnabled(False)
-            self.ptrmap_filename = None
-            self.lineEdit_Path.clear()
 
     def pushButton_PathBrowse_clicked(self) -> None:
         scan_filter: str = "Pointer Scan Data (*.scandata)"
@@ -6358,7 +6347,6 @@ class PointerScanSearchDialogForm(QDialog, PointerScanSearchDialog):
         if filename != "":
             if not re.search(r"\.scandata$", filename):
                 filename = filename + ".scandata"
-            self.ptrmap_filename = filename
             self.lineEdit_Path.setText(filename)
 
     def reject(self) -> None:
@@ -6372,7 +6360,6 @@ class PointerScanSearchDialogForm(QDialog, PointerScanSearchDialog):
         self.scan_button.setText("Scanning")
         self.scan_button.setEnabled(False)
         self.pushButton_PathBrowse.setEnabled(False)
-        self.checkBox_Path.setEnabled(False)
         params: FFIParam = FFIParam()
         try:
             addr_val = int(self.lineEdit_Address.text(), 16)
@@ -6398,9 +6385,10 @@ class PointerScanSearchDialogForm(QDialog, PointerScanSearchDialog):
         params.cycle(self.checkBox_Cycle.isChecked())
         ptrscan.set_modules(ptrscan.list_modules_pince())  # TODO: maybe cache this and let user refresh with a button
         ptrscan.create_pointer_map()  # TODO: maybe cache this and let user refresh with a button
-        if self.ptrmap_filename and os.path.isfile(self.ptrmap_filename):
-            os.remove(self.ptrmap_filename)
-        self.ptrscan_thread = InterruptableWorker(ptrscan.scan_pointer_chain, params, self.ptrmap_filename)
+        ptrmap_file_path = self.lineEdit_Path.text()
+        if os.path.isfile(ptrmap_file_path):
+            os.remove(ptrmap_file_path)
+        self.ptrscan_thread = InterruptableWorker(ptrscan.scan_pointer_chain, params, ptrmap_file_path)
         self.ptrscan_thread.signals.finished.connect(self.ptrscan_callback)
         self.ptrscan_thread.start()
 
