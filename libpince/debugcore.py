@@ -178,15 +178,15 @@ def cancel_last_command():
 def send_command(
     command, control=False, cli_output=False, send_with_file=False, file_contents_send=None, recv_with_file=False
 ):
-    """Issues the command sent, raises an exception if the inferior is running or no inferior has been selected
+    """Issues the command sent, raises an exception if gdb isn't initiated
 
     Args:
         command (str): The command that'll be sent
         control (bool): This param should be True if the command sent is ctrl+key instead of the regular command
-        cli_output (bool): If True, returns the readable parsed cli output instead of gdb/mi garbage
+        cli_output (bool): If True, returns a readable cli output instead of gdb/mi output
         send_with_file (bool): Custom commands declared in gdbextensions.py requires file communication. If
         called command has any parameters, pass this as True
-        file_contents_send (any type that pickle.dump supports): Arguments for the called custom gdb command
+        file_contents_send (any): Arguments for the custom gdb command called
         recv_with_file (bool): Pass this as True if the called custom gdb command returns something
 
     Examples:
@@ -1281,9 +1281,6 @@ def set_register_flag(flag, value):
             2,
         )
     )
-    a = 5
-    b = 3
-
     set_convenience_variable("eflags", eflags_hex_value)
 
 
