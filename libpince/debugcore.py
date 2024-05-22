@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from threading import Lock, Thread, Condition
 from time import sleep, time
 from collections import OrderedDict, defaultdict
-import pexpect, os, sys, ctypes, pickle, shelve, re, struct, io
+import pexpect, os, sys, ctypes, pickle, shelve, re, struct, io, traceback
 from . import utils, typedefs, regexes
 
 self_pid = os.getpid()
@@ -1957,7 +1957,7 @@ class Tracer:
         active_trace = True
         self.current_trace_count = 0
         trace_status_file = utils.get_trace_status_file(currentpid)
-        while self.trace_status == typedefs.TRACE_STATUS.IDLE and not self.cancel:
+        while not (self.trace_status != typedefs.TRACE_STATUS.IDLE or self.cancel or currentpid == -1):
             try:
                 with open(trace_status_file, "r") as trace_file:
                     self.trace_status = int(trace_file.read())
@@ -1977,41 +1977,44 @@ class Tracer:
 
         # Root always be an empty node, it's up to you to use or delete it
         tree.append([("", None), None, []])
-        for x in range(self.max_trace_count):
-            if self.cancel:
-                break
-            line_info = send_command("x/i $pc", cli_output=True).splitlines()[0].split(maxsplit=1)[1]
-            collect_dict = OrderedDict()
-            if self.collect_registers:
-                collect_dict.update(read_registers())
-                collect_dict.update(read_float_registers())
-            current_index += 1
-            tree.append([(line_info, collect_dict), current_root_index, []])
-            tree[current_root_index][2].append(current_index)  # Add a child
-            self.current_trace_count = x + 1
-            if regexes.trace_instructions_ret.search(line_info):
-                if tree[current_root_index][1] is None:  # If no parents exist
-                    current_index += 1
-                    tree.append([("", None), None, [current_root_index]])
-                    tree[current_root_index][1] = current_index  # Set new parent
-                    current_root_index = current_index  # current_node=current_node.parent
-                    root_index = current_root_index  # set new root
-                else:
-                    current_root_index = tree[current_root_index][1]  # current_node=current_node.parent
-            elif self.step_mode == typedefs.STEP_MODE.SINGLE_STEP:
-                if regexes.trace_instructions_call.search(line_info):
-                    current_root_index = current_index
-            if self.stop_condition:
-                try:
-                    if str(parse_and_eval(self.stop_condition)) == "1":
-                        break
-                except:
-                    pass
-            if self.step_mode == typedefs.STEP_MODE.SINGLE_STEP:
-                step_instruction()
-            elif self.step_mode == typedefs.STEP_MODE.STEP_OVER:
-                step_over_instruction()
-            wait_for_stop()
+        try:  # In case process exits during the trace session
+            for x in range(self.max_trace_count):
+                if self.cancel or currentpid == -1:
+                    break
+                line_info = send_command("x/i $pc", cli_output=True).splitlines()[0].split(maxsplit=1)[1]
+                collect_dict = OrderedDict()
+                if self.collect_registers:
+                    collect_dict.update(read_registers())
+                    collect_dict.update(read_float_registers())
+                current_index += 1
+                tree.append([(line_info, collect_dict), current_root_index, []])
+                tree[current_root_index][2].append(current_index)  # Add a child
+                self.current_trace_count = x + 1
+                if regexes.trace_instructions_ret.search(line_info):
+                    if tree[current_root_index][1] is None:  # If no parents exist
+                        current_index += 1
+                        tree.append([("", None), None, [current_root_index]])
+                        tree[current_root_index][1] = current_index  # Set new parent
+                        current_root_index = current_index  # current_node=current_node.parent
+                        root_index = current_root_index  # set new root
+                    else:
+                        current_root_index = tree[current_root_index][1]  # current_node=current_node.parent
+                elif self.step_mode == typedefs.STEP_MODE.SINGLE_STEP:
+                    if regexes.trace_instructions_call.search(line_info):
+                        current_root_index = current_index
+                if self.stop_condition:
+                    try:
+                        if str(parse_and_eval(self.stop_condition)) == "1":
+                            break
+                    except:
+                        pass
+                if self.step_mode == typedefs.STEP_MODE.SINGLE_STEP:
+                    step_instruction()
+                elif self.step_mode == typedefs.STEP_MODE.STEP_OVER:
+                    step_over_instruction()
+                wait_for_stop()
+        except:
+            traceback.print_exc()
         self.trace_data = (tree, root_index)
         self.trace_status = typedefs.TRACE_STATUS.FINISHED
         active_trace = False
