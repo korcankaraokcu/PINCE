@@ -5005,14 +5005,13 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
             typedefs.TRACE_STATUS.IDLE: tr.WAITING_FOR_BREAKPOINT,
             typedefs.TRACE_STATUS.FINISHED: tr.TRACING_COMPLETED,
         }
-        self.setWindowFlags(self.windowFlags() | Qt.WindowType.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.address = address
         self.tracer = tracer
         media_directory = utils.get_media_directory()
         self.movie = QMovie(media_directory + "/TraceInstructionsWaitWidget/ajax-loader.gif", QByteArray())
         self.label_Animated.setMovie(self.movie)
         self.movie.setScaledSize(QSize(215, 100))
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.movie.setCacheMode(QMovie.CacheMode.CacheAll)
         self.movie.setSpeed(100)
         self.movie.start()

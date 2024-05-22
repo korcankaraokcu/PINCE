@@ -119,25 +119,6 @@ and adjust manually. This also helps functions like `guiutils.center_to_parent` 
 
 - 13/05/2024 - Monospace font and `utils.upper_hex` function greatly improve readability if the text area includes hex data, consider using those when creating new text areas. Memory Viewer is a good example for this
 
-- 02/09/2018 - All functions with docstrings should have their subfunctions written after their docstrings. For instance:
-```python
-    def test():
-        """documentation for test"""
-        def subtest():
-            return
-        return
-```
-If test is declared like above, `test.__doc__` will return "documentation for test" correctly. This is the correct documentation
-```python
-    def test():
-        def subtest():
-            return
-        """documentation for test"""
-        return
-```
-If test is declared like above, `test.__doc__` will return a null string because subtest blocks the docstring. This is the wrong documentation
-All functions that has a subfunction can be found with the regex `def.*:.*\s+def`
-
 - 2/9/2018 - Seek methods of all file handles that read directly from the memory(/proc/pid/mem etc.) should be wrapped in a try/except block that catches both
 OSError and ValueError exceptions. For instance:
 ```python
@@ -171,7 +152,6 @@ These tasks are ordered by importance but feel free to pick any of them. Further
 - Consider implementing a GUI for catchpoints. This is currently done via GDB Console
 - Implement speedhack
 - Implement unrandomizer
-- Implement pointer-scan
 - Automatic function bypassing(make it return the desired value, hook specific parts etc.)
 - Implement auto-ESP&aimbot
 - Implement thread info widget

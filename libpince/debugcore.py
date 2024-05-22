@@ -1852,7 +1852,8 @@ def track_breakpoint(expression, register_expressions):
     breakpoint = add_breakpoint(expression, on_hit=typedefs.BREAKPOINT_ON_HIT.FIND_ADDR)
     if not breakpoint:
         return
-    # TODO: When we switch to LLDB, remove c& and only continue if there isn't an active trace, same for track_watchpoint
+    # TODO (lldb): When we switch to LLDB, remove c& and only continue if there isn't an active trace
+    # Apply the same for track_watchpoint
     send_command(
         "commands "
         + breakpoint
@@ -1901,7 +1902,7 @@ class Tracer:
         self.collect_registers = True
         self.trace_status = typedefs.TRACE_STATUS.IDLE
         self.current_trace_count = 0
-        self.trace_data = []
+        self.trace_data = ([], None)
         self.cancel = False
         utils.change_trace_status(currentpid, self.trace_status)
 
