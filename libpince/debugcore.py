@@ -398,10 +398,10 @@ def wait_for_stop(timeout=0):
     """
     remaining_time = timeout
     while inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
-        sleep(typedefs.CONST_TIME.GDB_INPUT_SLEEP)
+        sleep(0.0001)
         if timeout == 0:
             continue
-        remaining_time -= typedefs.CONST_TIME.GDB_INPUT_SLEEP
+        remaining_time -= 0.0001
         if remaining_time < 0:
             break
 
@@ -424,7 +424,7 @@ def interrupt_inferior(interrupt_reason=typedefs.STOP_REASON.DEBUG):
             os.system(f"kill -{sig_num} {currentpid}")
         else:
             os.system(f"kill -s {interrupt_signal} {currentpid}")
-    wait_for_stop()
+    wait_for_stop(1)
     stop_reason = interrupt_reason
 
 
