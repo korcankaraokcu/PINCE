@@ -710,7 +710,6 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
       <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-      <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
       <location filename="../../GUI/LogFileWidget.ui" line="0" />
       <source>Form</source>
       <translation type="unfinished" />
@@ -805,6 +804,11 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
       <source>Return Address</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
+      <source>Tracer Status</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -1750,6 +1754,21 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Shared object library (*.so)</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Trace File (*.trace);;All Files (*)</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Pointer Scan Data (*.scandata);;All files (*)</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Clear address table?</source>
       <translation type="unfinished" />
     </message>
@@ -2264,11 +2283,6 @@ PINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Shared object library (*.so)</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
       <source>The file has been injected</source>
       <translation type="unfinished" />
     </message>
@@ -2434,11 +2448,6 @@ You can use the assigned variable from the GDB Console</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Trace File (*.trace);;All Files (*)</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
       <source>Open trace file</source>
       <translation type="unfinished" />
     </message>
@@ -2450,6 +2459,31 @@ You can use the assigned variable from the GDB Console</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Collapse All</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Select a pointer map file</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Scan</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Scanning</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Filter</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Filtering</source>
       <translation type="unfinished" />
     </message>
     <message>

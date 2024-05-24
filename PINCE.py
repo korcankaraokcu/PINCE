@@ -1504,8 +1504,7 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow.show()
 
     def pushButton_Open_clicked(self):
-        pct_file_path = utils.get_user_path(typedefs.USER_PATHS.CHEAT_TABLES)
-        file_paths = QFileDialog.getOpenFileNames(self, tr.OPEN_PCT_FILE, pct_file_path, tr.FILE_TYPES_PCT)[0]
+        file_paths, _ = QFileDialog.getOpenFileNames(self, tr.OPEN_PCT_FILE, None, tr.FILE_TYPES_PCT)
         if not file_paths:
             return
         self.clear_address_table()
@@ -1521,8 +1520,7 @@ class MainForm(QMainWindow, MainWindow):
             )
 
     def pushButton_Save_clicked(self):
-        pct_file_path = utils.get_user_path(typedefs.USER_PATHS.CHEAT_TABLES)
-        file_path = QFileDialog.getSaveFileName(self, tr.SAVE_PCT_FILE, pct_file_path, tr.FILE_TYPES_PCT)[0]
+        file_path, _ = QFileDialog.getSaveFileName(self, tr.SAVE_PCT_FILE, None, tr.FILE_TYPES_PCT)
         if not file_path:
             return
         content = [
@@ -1964,7 +1962,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
 
     def pushButton_CreateProcess_clicked(self):
-        file_path = QFileDialog.getOpenFileName(self, tr.SELECT_BINARY)[0]
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_BINARY)
         if file_path:
             items = [(tr.ENTER_OPTIONAL_ARGS, ""), (tr.LD_PRELOAD_OPTIONAL, "")]
             arg_dialog = InputDialogForm(self, items)
@@ -2678,7 +2676,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
 
     def pushButton_GDBPath_clicked(self):
         current_path = self.lineEdit_GDBPath.text()
-        file_path = QFileDialog.getOpenFileName(self, tr.SELECT_GDB_BINARY, os.path.dirname(current_path))[0]
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_GDB_BINARY, os.path.dirname(current_path))
         if file_path:
             self.lineEdit_GDBPath.setText(file_path)
 
@@ -4363,7 +4361,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionInject_so_file_triggered(self):
         if debugcore.currentpid == -1:
             return
-        file_path = QFileDialog.getOpenFileName(self, tr.SELECT_SO_FILE, "", tr.SHARED_OBJECT_TYPE)[0]
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_SO_FILE, "", tr.SHARED_OBJECT_TYPE)
         if file_path:
             if debugcore.inject_with_dlopen_call(file_path):
                 QMessageBox.information(self, tr.SUCCESS, tr.FILE_INJECTED)
@@ -5111,16 +5109,14 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.treeWidget_InstructionInfo.expandAll()
 
     def save_file(self):
-        trace_file_path = utils.get_user_path(typedefs.USER_PATHS.TRACE_INSTRUCTIONS)
-        file_path = QFileDialog.getSaveFileName(self, tr.SAVE_TRACE_FILE, trace_file_path, tr.FILE_TYPES_TRACE)[0]
+        file_path, _ = QFileDialog.getSaveFileName(self, tr.SAVE_TRACE_FILE, None, tr.FILE_TYPES_TRACE)
         if file_path:
             file_path = utils.append_file_extension(file_path, "trace")
             if not utils.save_file(self.tracer.trace_data, file_path):
                 QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
 
     def load_file(self):
-        trace_file_path = utils.get_user_path(typedefs.USER_PATHS.TRACE_INSTRUCTIONS)
-        file_path = QFileDialog.getOpenFileName(self, tr.OPEN_TRACE_FILE, trace_file_path, tr.FILE_TYPES_TRACE)[0]
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.OPEN_TRACE_FILE, None, tr.FILE_TYPES_TRACE)
         if file_path:
             content = utils.load_file(file_path)
             if content is None:
@@ -6332,17 +6328,13 @@ class PointerScanSearchDialogForm(QDialog, PointerScanSearchDialog):
         self.lineEdit_Address.setText(address)
         self.lineEdit_Path.setText(os.getcwd() + f"/{utils.get_process_name(debugcore.currentpid)}.scandata")
         self.pushButton_PathBrowse.clicked.connect(self.pushButton_PathBrowse_clicked)
-        self.scan_button: QPushButton | None = self.buttonBox.addButton("Scan", QDialogButtonBox.ButtonRole.ActionRole)
+        self.scan_button = self.buttonBox.addButton(tr.SCAN, QDialogButtonBox.ButtonRole.ActionRole)
         if self.scan_button:
             self.scan_button.clicked.connect(self.scan_button_clicked)
         self.ptrscan_thread: InterruptableWorker | None = None
 
     def pushButton_PathBrowse_clicked(self) -> None:
-        scan_filter: str = "Pointer Scan Data (*.scandata)"
-        filename: str
-        filename, _ = QFileDialog.getSaveFileName(
-            parent=self, caption="Select a pointer map file", filter=scan_filter, initialFilter=scan_filter
-        )
+        filename, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
         if filename != "":
             if not re.search(r"\.scandata$", filename):
                 filename = filename + ".scandata"
@@ -6356,7 +6348,7 @@ class PointerScanSearchDialogForm(QDialog, PointerScanSearchDialog):
     def scan_button_clicked(self) -> None:
         if debugcore.currentpid == -1 or self.scan_button == None:
             return
-        self.scan_button.setText("Scanning")
+        self.scan_button.setText(tr.SCANNING)
         self.scan_button.setEnabled(False)
         self.pushButton_PathBrowse.setEnabled(False)
         params: FFIParam = FFIParam()
@@ -6402,20 +6394,14 @@ class PointerScanFilterDialogForm(QDialog, PointerScanFilterDialog):
         guiutils.center_to_parent(self)
         self.pushButton_File1Browse.clicked.connect(self.pushButton_File1Browse_clicked)
         self.pushButton_File2Browse.clicked.connect(self.pushButton_File2Browse_clicked)
-        self.filter_button: QPushButton | None = self.buttonBox.addButton(
-            "Filter", QDialogButtonBox.ButtonRole.ActionRole
-        )
+        self.filter_button = self.buttonBox.addButton(tr.FILTER, QDialogButtonBox.ButtonRole.ActionRole)
         if self.filter_button:
             self.filter_button.clicked.connect(self.filter_button_clicked)
             self.filter_button.setEnabled(False)
         self.filter_result: list[str] | None = None
 
     def browse_scandata_file(self, file_path_field: QLineEdit) -> None:
-        scan_filter: str = "Pointer Scan Data (*.scandata)"
-        filename: str
-        filename, _ = QFileDialog.getOpenFileName(
-            parent=self, caption="Select a pointer map file", filter=scan_filter, initialFilter=scan_filter
-        )
+        filename, _ = QFileDialog.getOpenFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
         if filename != "":
             file_path_field.setText(filename)
             self.check_filterable_state()
@@ -6434,7 +6420,7 @@ class PointerScanFilterDialogForm(QDialog, PointerScanFilterDialog):
         if self.lineEdit_File1Path.text() == "" or self.lineEdit_File2Path.text() == "" or self.filter_button == None:
             return
         self.filter_button.setEnabled(False)
-        self.filter_button.setText("Filtering")
+        self.filter_button.setText(tr.FILTERING)
         lines: list[str]
         with open(self.lineEdit_File1Path.text()) as file:
             lines = file.read().split(os.linesep)
@@ -6485,22 +6471,14 @@ class PointerScanWindowForm(QMainWindow, PointerScanWindow):
         self.textEdit.setText(os.linesep.join(text_list))
 
     def actionOpen_triggered(self) -> None:
-        scan_filter: str = "Pointer Scan Data (*.scandata)"
-        filename: str
-        filename, _ = QFileDialog.getOpenFileName(
-            parent=self, caption="Select a pointer map file", filter=scan_filter, initialFilter=scan_filter
-        )
+        filename, _ = QFileDialog.getOpenFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
         if filename != "":
             self.textEdit.clear()
             with open(filename) as file:
                 self.textEdit.setText(file.read())
 
     def actionSaveAs_triggered(self) -> None:
-        scan_filter: str = "Pointer Scan Data (*.scandata)"
-        filename: str
-        filename, _ = QFileDialog.getSaveFileName(
-            parent=self, caption="Select a pointer map file", filter=scan_filter, initialFilter=scan_filter
-        )
+        filename, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
         if filename != "":
             if not re.search(r"\.scandata$", filename):
                 filename = filename + ".scandata"

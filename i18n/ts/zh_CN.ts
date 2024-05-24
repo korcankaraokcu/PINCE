@@ -712,7 +712,6 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
       <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-      <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
       <location filename="../../GUI/LogFileWidget.ui" line="0" />
       <source>Form</source>
       <translation>表格</translation>
@@ -808,6 +807,11 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
       <source>Return Address</source>
       <translation>返回地址</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
+      <source>Tracer Status</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
@@ -1754,6 +1758,21 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Shared object library (*.so)</source>
+      <translation>共享对象库 (*.so)</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Trace File (*.trace);;All Files (*)</source>
+      <translation>追踪文件 (*.trace);;所有文件 (*)</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Pointer Scan Data (*.scandata);;All files (*)</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Clear address table?</source>
       <translation>清除地址表？</translation>
     </message>
@@ -2307,11 +2326,6 @@ PINCE 将追踪地址 [rax]，[rbx*rcx+4] 和 [rbp]</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Shared object library (*.so)</source>
-      <translation>共享对象库 (*.so)</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
       <source>The file has been injected</source>
       <translation>此文件已被注入</translation>
     </message>
@@ -2487,11 +2501,6 @@ $28 是分配的便利变量
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Trace File (*.trace);;All Files (*)</source>
-      <translation>追踪文件 (*.trace);;所有文件 (*)</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
       <source>Open trace file</source>
       <translation>打开追踪文件</translation>
     </message>
@@ -2504,6 +2513,31 @@ $28 是分配的便利变量
       <location filename="../../tr/tr.py" line="0" />
       <source>Collapse All</source>
       <translation>收起全部</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Select a pointer map file</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Scan</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Scanning</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Filter</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Filtering</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
