@@ -1045,10 +1045,8 @@ def get_module_name(module):
 #:tag:Utilities
 def init_user_files():
     """Initializes user files"""
-    for directory in typedefs.USER_PATHS.get_init_directories():
-        path = get_user_path(directory)
-        if not os.path.exists(path):
-            os.makedirs(path)
+    if not os.path.exists(typedefs.USER_PATHS.ROOT):
+        os.makedirs(typedefs.USER_PATHS.ROOT)
     for file in typedefs.USER_PATHS.get_init_files():
         file = get_user_path(file)
         try:

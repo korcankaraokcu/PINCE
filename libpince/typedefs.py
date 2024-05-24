@@ -36,17 +36,11 @@ class PATHS:
 class USER_PATHS:
     # Use utils.get_user_path() to make use of these
     CONFIG = ".config/"
-    ROOT = CONFIG + "PINCE/PINCE_USER_FILES/"
-    TRACE_INSTRUCTIONS = ROOT + "TraceInstructions/"
-    CHEAT_TABLES = ROOT + "CheatTables/"
+    ROOT = CONFIG + "PINCE/"
     GDBINIT = ROOT + "gdbinit"
     GDBINIT_AA = ROOT + "gdbinit_after_attach"
     PINCEINIT = ROOT + "pinceinit.py"
     PINCEINIT_AA = ROOT + "pinceinit_after_attach.py"
-
-    @staticmethod
-    def get_init_directories():
-        return USER_PATHS.ROOT, USER_PATHS.TRACE_INSTRUCTIONS, USER_PATHS.CHEAT_TABLES
 
     @staticmethod
     def get_init_files():

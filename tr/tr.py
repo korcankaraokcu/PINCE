@@ -93,7 +93,11 @@ class TranslationConstants(QObject):
     # Keep (*.pct) and (*) while translating, it doesn't matter where it stays within the sentence
     # For instance, you can keep (*) in the beginning of the sentence for right-to-left languages like arabic
     # All entries are separated by ;; Please try to respect the original order of the file types
+    # Apply the same to similar entries below
     FILE_TYPES_PCT = QT_TR_NOOP("PINCE Cheat Table (*.pct);;All files (*)")
+    SHARED_OBJECT_TYPE = QT_TR_NOOP("Shared object library (*.so)")
+    FILE_TYPES_TRACE = QT_TR_NOOP("Trace File (*.trace);;All Files (*)")
+    FILE_TYPES_SCANDATA = QT_TR_NOOP("Pointer Scan Data (*.scandata);;All files (*)")
     CLEAR_TABLE = QT_TR_NOOP("Clear address table?")
     FILE_LOAD_ERROR = QT_TR_NOOP("File {} is inaccessible or contains invalid content")
     SAVE_PCT_FILE = QT_TR_NOOP("Save PCT file")
@@ -236,9 +240,6 @@ class TranslationConstants(QObject):
     ALREADY_BOOKMARKED = QT_TR_NOOP("This address has already been bookmarked")
     ENTER_BOOKMARK_COMMENT = QT_TR_NOOP("Enter the comment for bookmarked address")
     SELECT_SO_FILE = QT_TR_NOOP("Select the .so file")
-
-    # Same applies here, keep (*.so)
-    SHARED_OBJECT_TYPE = QT_TR_NOOP("Shared object library (*.so)")
     FILE_INJECTED = QT_TR_NOOP("The file has been injected")
     FILE_INJECT_FAILED = QT_TR_NOOP("Failed to inject the .so file")
     ENTER_CALL_EXPRESSION = QT_TR_NOOP(
@@ -280,12 +281,14 @@ class TranslationConstants(QObject):
     DELETE_BREAKPOINT_FAILED = QT_TR_NOOP("Unable to delete breakpoint at expression {}")
     MAX_TRACE_COUNT_ASSERT_GT = QT_TR_NOOP("Max trace count must be greater than or equal to {}")
     SAVE_TRACE_FILE = QT_TR_NOOP("Save trace file")
-
-    # Same applies here, keep (*.trace) and (*)
-    FILE_TYPES_TRACE = QT_TR_NOOP("Trace File (*.trace);;All Files (*)")
     OPEN_TRACE_FILE = QT_TR_NOOP("Open trace file")
     EXPAND_ALL = QT_TR_NOOP("Expand All")
     COLLAPSE_ALL = QT_TR_NOOP("Collapse All")
+    SELECT_POINTER_MAP = QT_TR_NOOP("Select a pointer map file")
+    SCAN = QT_TR_NOOP("Scan")
+    SCANNING = QT_TR_NOOP("Scanning")
+    FILTER = QT_TR_NOOP("Filter")
+    FILTERING = QT_TR_NOOP("Filtering")
     DEFINED = QT_TR_NOOP("DEFINED")
     DEFINED_SYMBOL = QT_TR_NOOP(
         "This symbol is defined. You can use its body as a gdb expression. For instance:\n\n"
