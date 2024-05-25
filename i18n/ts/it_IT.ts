@@ -1749,7 +1749,7 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>PINCE Cheat Table (*.pct);;All files (*)</source>
+      <source>PINCE Cheat Table (*.pct)</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -1759,12 +1759,12 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Trace File (*.trace);;All Files (*)</source>
+      <source>Trace File (*.trace)</source>
       <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Pointer Scan Data (*.scandata);;All files (*)</source>
+      <source>Pointer Scan Data (*.scandata)</source>
       <translation type="unfinished" />
     </message>
     <message>

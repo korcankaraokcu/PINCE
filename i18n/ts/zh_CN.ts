@@ -1753,8 +1753,8 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>PINCE Cheat Table (*.pct);;All files (*)</source>
-      <translation>PINCE 作弊表 (*.pct);;所有文件 (*)</translation>
+      <source>PINCE Cheat Table (*.pct)</source>
+      <translation>PINCE 作弊表 (*.pct)</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
@@ -1763,12 +1763,12 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Trace File (*.trace);;All Files (*)</source>
-      <translation>追踪文件 (*.trace);;所有文件 (*)</translation>
+      <source>Trace File (*.trace)</source>
+      <translation>追踪文件 (*.trace)</translation>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Pointer Scan Data (*.scandata);;All files (*)</source>
+      <source>Pointer Scan Data (*.scandata)</source>
       <translation type="unfinished" />
     </message>
     <message>
