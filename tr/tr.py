@@ -90,9 +90,8 @@ class TranslationConstants(QObject):
     NO_DESCRIPTION = QT_TR_NOOP("No Description")
     OPEN_PCT_FILE = QT_TR_NOOP("Open PCT file(s)")
 
-    # Keep (*.pct) and (*) while translating, it doesn't matter where it stays within the sentence
-    # For instance, you can keep (*) in the beginning of the sentence for right-to-left languages like arabic
-    # All entries are separated by ;; Please try to respect the original order of the file types
+    # Keep file extensions such as (*.pct) while translating, it doesn't matter where it stays within the sentence
+    # For instance, you can keep (*.pct) in the beginning of the sentence for right-to-left languages like arabic
     # Apply the same to similar entries below
     FILE_TYPES_PCT = QT_TR_NOOP("PINCE Cheat Table (*.pct)")
     SHARED_OBJECT_TYPE = QT_TR_NOOP("Shared object library (*.so)")
