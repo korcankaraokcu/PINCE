@@ -94,10 +94,10 @@ class TranslationConstants(QObject):
     # For instance, you can keep (*) in the beginning of the sentence for right-to-left languages like arabic
     # All entries are separated by ;; Please try to respect the original order of the file types
     # Apply the same to similar entries below
-    FILE_TYPES_PCT = QT_TR_NOOP("PINCE Cheat Table (*.pct);;All files (*)")
+    FILE_TYPES_PCT = QT_TR_NOOP("PINCE Cheat Table (*.pct)")
     SHARED_OBJECT_TYPE = QT_TR_NOOP("Shared object library (*.so)")
-    FILE_TYPES_TRACE = QT_TR_NOOP("Trace File (*.trace);;All Files (*)")
-    FILE_TYPES_SCANDATA = QT_TR_NOOP("Pointer Scan Data (*.scandata);;All files (*)")
+    FILE_TYPES_TRACE = QT_TR_NOOP("Trace File (*.trace)")
+    FILE_TYPES_SCANDATA = QT_TR_NOOP("Pointer Scan Data (*.scandata)")
     CLEAR_TABLE = QT_TR_NOOP("Clear address table?")
     FILE_LOAD_ERROR = QT_TR_NOOP("File {} is inaccessible or contains invalid content")
     SAVE_PCT_FILE = QT_TR_NOOP("Save PCT file")

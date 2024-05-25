@@ -6328,17 +6328,16 @@ class PointerScanSearchDialogForm(QDialog, PointerScanSearchDialog):
         self.lineEdit_Address.setText(address)
         self.lineEdit_Path.setText(os.getcwd() + f"/{utils.get_process_name(debugcore.currentpid)}.scandata")
         self.pushButton_PathBrowse.clicked.connect(self.pushButton_PathBrowse_clicked)
-        self.scan_button = self.buttonBox.addButton(tr.SCAN, QDialogButtonBox.ButtonRole.ActionRole)
+        self.scan_button: QPushButton | None = self.buttonBox.addButton(tr.SCAN, QDialogButtonBox.ButtonRole.ActionRole)
         if self.scan_button:
             self.scan_button.clicked.connect(self.scan_button_clicked)
         self.ptrscan_thread: InterruptableWorker | None = None
 
     def pushButton_PathBrowse_clicked(self) -> None:
-        filename, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
-        if filename != "":
-            if not re.search(r"\.scandata$", filename):
-                filename = filename + ".scandata"
-            self.lineEdit_Path.setText(filename)
+        file_path, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
+        if file_path != "":
+            file_path = utils.append_file_extension(file_path, "scandata")
+            self.lineEdit_Path.setText(file_path)
 
     def reject(self) -> None:
         if self.ptrscan_thread:
@@ -6394,16 +6393,18 @@ class PointerScanFilterDialogForm(QDialog, PointerScanFilterDialog):
         guiutils.center_to_parent(self)
         self.pushButton_File1Browse.clicked.connect(self.pushButton_File1Browse_clicked)
         self.pushButton_File2Browse.clicked.connect(self.pushButton_File2Browse_clicked)
-        self.filter_button = self.buttonBox.addButton(tr.FILTER, QDialogButtonBox.ButtonRole.ActionRole)
+        self.filter_button: QPushButton | None = self.buttonBox.addButton(
+            tr.FILTER, QDialogButtonBox.ButtonRole.ActionRole
+        )
         if self.filter_button:
             self.filter_button.clicked.connect(self.filter_button_clicked)
             self.filter_button.setEnabled(False)
         self.filter_result: list[str] | None = None
 
     def browse_scandata_file(self, file_path_field: QLineEdit) -> None:
-        filename, _ = QFileDialog.getOpenFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
-        if filename != "":
-            file_path_field.setText(filename)
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
+        if file_path != "":
+            file_path_field.setText(file_path)
             self.check_filterable_state()
 
     def check_filterable_state(self) -> None:
@@ -6471,18 +6472,17 @@ class PointerScanWindowForm(QMainWindow, PointerScanWindow):
         self.textEdit.setText(os.linesep.join(text_list))
 
     def actionOpen_triggered(self) -> None:
-        filename, _ = QFileDialog.getOpenFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
-        if filename != "":
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
+        if file_path != "":
             self.textEdit.clear()
-            with open(filename) as file:
+            with open(file_path) as file:
                 self.textEdit.setText(file.read())
 
     def actionSaveAs_triggered(self) -> None:
-        filename, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
-        if filename != "":
-            if not re.search(r"\.scandata$", filename):
-                filename = filename + ".scandata"
-            with open(filename, "w") as file:
+        file_path, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
+        if file_path != "":
+            file_path = utils.append_file_extension(file_path, "scandata")
+            with open(file_path, "w") as file:
                 file.write(self.textEdit.toPlainText())
 
     def scan_triggered(self) -> None:
