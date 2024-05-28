@@ -641,7 +641,7 @@ Patterns at former positions have higher priority if regex is off</string>
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_10">
                  <item>
-                  <widget class="QLabel" name="label_7">
+                  <widget class="QLabel" name="label_GDBPath">
                    <property name="text">
                     <string>GDB Path</string>
                    </property>

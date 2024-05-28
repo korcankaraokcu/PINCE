@@ -2575,12 +2575,13 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("MemoryView/show_memory_view_on_stop", self.checkBox_ShowMemoryViewOnStop.isChecked())
         self.settings.setValue("MemoryView/instructions_per_scroll", self.spinBox_InstructionsPerScroll.value())
         self.settings.setValue("MemoryView/bytes_per_scroll", self.spinBox_BytesPerScroll.value())
-        selected_gdb_path = self.lineEdit_GDBPath.text()
-        current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
-        if selected_gdb_path != current_gdb_path:
-            if InputDialogForm(self, [(tr.GDB_RESET,)]).exec():
-                debugcore.init_gdb(selected_gdb_path)
-        self.settings.setValue("Debug/gdb_path", selected_gdb_path)
+        if not os.environ.get("APPDIR"):
+            selected_gdb_path = self.lineEdit_GDBPath.text()
+            current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
+            if selected_gdb_path != current_gdb_path:
+                if InputDialogForm(self, [(tr.GDB_RESET,)]).exec():
+                    debugcore.init_gdb(selected_gdb_path)
+            self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
         self.settings.setValue("Debug/interrupt_signal", self.comboBox_InterruptSignal.currentText())
         self.settings.setValue("Java/ignore_segfault", self.checkBox_JavaSegfault.isChecked())
@@ -2630,6 +2631,13 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.spinBox_InstructionsPerScroll.setValue(self.settings.value("MemoryView/instructions_per_scroll", type=int))
         self.spinBox_BytesPerScroll.setValue(self.settings.value("MemoryView/bytes_per_scroll", type=int))
         self.lineEdit_GDBPath.setText(str(self.settings.value("Debug/gdb_path", type=str)))
+        if os.environ.get("APPDIR"):
+            self.label_GDBPath.setDisabled(True)
+            self.label_GDBPath.setToolTip(tr.APPIMAGE_SETTING_GDB)
+            self.lineEdit_GDBPath.setDisabled(True)
+            self.lineEdit_GDBPath.setToolTip(tr.APPIMAGE_SETTING_GDB)
+            self.pushButton_GDBPath.setDisabled(True)
+            self.pushButton_GDBPath.setToolTip(tr.APPIMAGE_SETTING_GDB)
         self.checkBox_GDBLogging.setChecked(self.settings.value("Debug/gdb_logging", type=bool))
         self.comboBox_InterruptSignal.setCurrentText(self.settings.value("Debug/interrupt_signal", type=str))
         self.checkBox_JavaSegfault.setChecked(self.settings.value("Java/ignore_segfault", type=bool))
