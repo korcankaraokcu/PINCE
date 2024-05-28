@@ -1951,6 +1951,11 @@ Use the char \ to escape special chars such as [
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>This setting is unused in AppImage builds</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Select the gdb binary</source>
       <translation>选择 GDB 的可执行文件</translation>
     </message>
