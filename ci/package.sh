@@ -82,7 +82,7 @@ exit_on_failure() {
 # containing our required pip packages
 export PIP_REQUIREMENTS="-r ../requirements.txt"
 # Need this to get libstdc++ higher than default 6.0.29 and libxcb-cursor for Debian family
-export CONDA_PACKAGES="libstdcxx-ng xcb-util-cursor"
+export CONDA_PACKAGES="libstdcxx-ng;xcb-util-cursor"
 $DEPLOYTOOL --appdir AppDir -pconda || exit_on_failure
 
 # Create PINCE directory
