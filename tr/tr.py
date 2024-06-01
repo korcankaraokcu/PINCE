@@ -136,7 +136,7 @@ class TranslationConstants(QObject):
         r"\[asdf\] --> search for opcodes that contain [asdf]"
     )
     SEPARATE_PROCESSES_WITH = QT_TR_NOOP("Separate processes with {}")
-    APPIMAGE_SETTING_GDB = QT_TR_NOOP("This setting is unused in AppImage builds")
+    UNUSED_APPIMAGE_SETTING = QT_TR_NOOP("This setting is unused in AppImage builds")
     SELECT_GDB_BINARY = QT_TR_NOOP("Select the gdb binary")
     QUIT_SESSION_CRASH = QT_TR_NOOP("Quitting current session will crash PINCE")
     CONT_SESSION_CRASH = QT_TR_NOOP("Use global hotkeys or the commands 'interrupt' and 'c&' to stop/run the inferior")
