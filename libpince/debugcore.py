@@ -1018,7 +1018,24 @@ def disassemble(expression, offset_or_address):
     return disas_data
 
 
-#:tag:GDBExpressions
+def convert_to_hex(expression):
+    """Converts numeric values in the expression into their hex equivalents
+    Respects edge cases like indexed maps and keeps indexes as decimals
+
+    Args:
+        expression (str): Any gdb expression
+
+    Returns:
+        str: Converted str
+    """
+    # TODO (lldb): We'll most likely write our own expression parser once we switch to lldb
+    # Merge this function with examine_expression and gdbutils.examine_expression once that happens
+    return regexes.expression_with_hex.sub(
+        lambda m: "0x" + m.group(1) if m.group(1) and not examine_expression(m.group(1)).symbol else m.group(0),
+        expression,
+    )
+
+
 def examine_expression(expression):
     """Evaluates the given expression and returns evaluated value, address and symbol
 

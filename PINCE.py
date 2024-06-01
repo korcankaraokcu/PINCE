@@ -2095,9 +2095,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def update_value(self):
         if self.checkBox_IsPointer.isChecked():
-            pointer_chain_req = typedefs.PointerChainRequest(
-                self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list()
-            )
+            hex_converted_expr = debugcore.convert_to_hex(self.lineEdit_PtrStartAddress.text())
+            pointer_chain_req = typedefs.PointerChainRequest(hex_converted_expr, self.get_offsets_int_list())
             pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
             address = None
             if pointer_chain_result != None:
@@ -2108,7 +2107,8 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_Address.setText(address_text)
             self.update_deref_labels(pointer_chain_result)
         else:
-            address = debugcore.examine_expression(self.lineEdit_Address.text()).address
+            hex_converted_expr = debugcore.convert_to_hex(self.lineEdit_Address.text())
+            address = debugcore.examine_expression(hex_converted_expr).address
         if self.checkBox_Hex.isChecked():
             value_repr = typedefs.VALUE_REPR.HEX
         elif self.checkBox_Signed.isChecked():
@@ -2176,7 +2176,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def get_values(self):
         description = self.lineEdit_Description.text()
-        address = self.lineEdit_Address.text()
         length = self.lineEdit_Length.text()
         try:
             length = int(length, 0)
@@ -2193,7 +2192,10 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         vt = typedefs.ValueType(value_index, length, zero_terminate, value_repr, endian)
         if self.checkBox_IsPointer.isChecked():
-            address = typedefs.PointerChainRequest(self.lineEdit_PtrStartAddress.text(), self.get_offsets_int_list())
+            base_expression = debugcore.convert_to_hex(self.lineEdit_PtrStartAddress.text())
+            address = typedefs.PointerChainRequest(base_expression, self.get_offsets_int_list())
+        else:
+            address = debugcore.convert_to_hex(self.lineEdit_Address.text())
         return description, address, vt
 
     def get_offsets_int_list(self):
