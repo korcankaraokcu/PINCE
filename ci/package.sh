@@ -185,7 +185,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 export APPDIR="$(dirname "$0")"
 export PYTHONHOME=$APPDIR/usr/conda
-$APPDIR/usr/bin/python3 $APPDIR/opt/PINCE/PINCE.py
+LD_LIBRARY_PATH=$PYTHONHOME/lib $APPDIR/usr/bin/python3 $APPDIR/opt/PINCE/PINCE.py
 EOF
 chmod +x AppRun.sh
 
