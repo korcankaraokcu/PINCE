@@ -185,9 +185,12 @@ if [ "$(id -u)" != "0" ]; then
 fi
 export APPDIR="$(dirname "$0")"
 export PYTHONHOME=$APPDIR/usr/conda
-LD_LIBRARY_PATH=$PYTHONHOME/lib $APPDIR/usr/bin/python3 $APPDIR/opt/PINCE/PINCE.py
+$APPDIR/usr/bin/python3 $APPDIR/opt/PINCE/PINCE.py
 EOF
 chmod +x AppRun.sh
+
+# Patch libqxcb's runpath (not rpath) to point to our packaged libxcb-cursor to fix X11 issues
+patchelf --add-rpath "\$ORIGIN/../../../../../../" AppDir/usr/conda/lib/python3.12/site-packages/PyQt6/Qt6/plugins/platforms/libqxcb.so
 
 # Package AppDir into AppImage
 export LD_LIBRARY_PATH="$(readlink -f ./AppDir/usr/conda/lib)"
