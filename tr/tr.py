@@ -202,6 +202,8 @@ class TranslationConstants(QObject):
     COPY_RETURN_ADDRESS = QT_TR_NOOP("Copy Return Address")
     COPY_FRAME_ADDRESS = QT_TR_NOOP("Copy Frame Address")
     STACKTRACE = QT_TR_NOOP("Stacktrace")
+    SHOW_FROM_BP_REGISTER = QT_TR_NOOP("Show from BP register")
+    SHOW_FROM_SP_REGISTER = QT_TR_NOOP("Show from SP register")
     COPY_ADDRESS = QT_TR_NOOP("Copy Address")
     COPY_VALUE = QT_TR_NOOP("Copy Value")
     COPY_POINTS_TO = QT_TR_NOOP("Copy Points to")

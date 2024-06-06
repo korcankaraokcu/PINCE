@@ -2174,6 +2174,16 @@ Check terminal for details</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Show from BP register</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Show from SP register</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Address</source>
       <translation>复制地址</translation>
     </message>

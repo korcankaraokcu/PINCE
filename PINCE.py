@@ -2932,6 +2932,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     show_memory_view_on_stop: bool = False
     instructions_per_scroll: int = 3
     bytes_per_scroll: int = 0x40
+    stack_from_base_pointer = False
 
     def set_dynamic_debug_hotkeys(self):
         self.actionBreak.setText(tr.BREAK.format(hotkeys.break_hotkey.get_active_key()))
@@ -3822,7 +3823,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def update_stack(self):
         if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             return
-        stack_info = debugcore.get_stack_info()
+        stack_info = debugcore.get_stack_info(from_base_pointer=self.stack_from_base_pointer)
         self.tableWidget_Stack.setRowCount(0)
         self.tableWidget_Stack.setRowCount(len(stack_info))
         for row, item in enumerate(stack_info):
@@ -3867,6 +3868,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_Stack.item(row, column).text())
 
+        def show_stack_from_base_pointer(base_pointer):
+            self.stack_from_base_pointer = base_pointer
+            self.update_stack()
+
         selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if selected_row == -1:
             current_address = None
@@ -3875,6 +3880,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             current_address = utils.extract_address(current_address_text)
         menu = QMenu()
         switch_to_stacktrace = menu.addAction(tr.STACKTRACE)
+        show_from_base_pointer = None
+        show_from_stack_pointer = None
+        if debugcore.inferior_status != typedefs.INFERIOR_STATUS.RUNNING:
+            if not self.stack_from_base_pointer:
+                show_from_base_pointer = menu.addAction(tr.SHOW_FROM_BP_REGISTER)
+            else:
+                show_from_stack_pointer = menu.addAction(tr.SHOW_FROM_SP_REGISTER)
         menu.addSeparator()
         clipboard_menu = menu.addMenu(tr.COPY_CLIPBOARD)
         copy_address = clipboard_menu.addAction(tr.COPY_ADDRESS)
@@ -3894,6 +3906,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         action = menu.exec(event.globalPos())
         actions = {
             switch_to_stacktrace: lambda: self.set_stack_widget(self.StackTrace),
+            show_from_base_pointer: lambda: show_stack_from_base_pointer(True),
+            show_from_stack_pointer: lambda: show_stack_from_base_pointer(False),
             copy_address: lambda: copy_to_clipboard(selected_row, STACK_POINTER_ADDRESS_COL),
             copy_value: lambda: copy_to_clipboard(selected_row, STACK_VALUE_COL),
             copy_points_to: lambda: copy_to_clipboard(selected_row, STACK_POINTS_TO_COL),
