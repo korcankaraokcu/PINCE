@@ -2174,12 +2174,7 @@ Check terminal for details</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Show from BP register</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Show from SP register</source>
+      <source>Toggle stack from BP/SP register</source>
       <translation type="unfinished" />
     </message>
     <message>

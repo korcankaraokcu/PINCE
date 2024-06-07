@@ -1315,7 +1315,7 @@ def get_stacktrace_info():
 
 
 #:tag:Stack
-def get_stack_info(from_base_pointer=False):
+def get_stack_info(from_base_pointer: bool = False) -> list[str]:
     """Returns information about current stack
     Also can view stack from EBP or RBP register
 
