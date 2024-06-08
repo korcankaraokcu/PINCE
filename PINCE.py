@@ -3833,6 +3833,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Stack.resizeColumnToContents(STACK_POINTER_ADDRESS_COL)
         self.tableWidget_Stack.resizeColumnToContents(STACK_VALUE_COL)
 
+    def toggle_stack_from_sp_bp(self):
+            self.stack_from_base_pointer = not self.stack_from_base_pointer
+            self.update_stack()
+
     def tableWidget_Stack_key_press_event(self, event):
         if debugcore.currentpid == -1:
             return
@@ -3868,10 +3872,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         def copy_to_clipboard(row, column):
             app.clipboard().setText(self.tableWidget_Stack.item(row, column).text())
 
-        def toggle_stack_from_sp_bp():
-            self.stack_from_base_pointer = not self.stack_from_base_pointer
-            self.update_stack()
-
         selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if selected_row == -1:
             current_address = None
@@ -3880,9 +3880,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             current_address = utils.extract_address(current_address_text)
         menu = QMenu()
         switch_to_stacktrace = menu.addAction(tr.STACKTRACE)
-        toggle_stack_pointer = None
+        toggle_stack_pointer = menu.addAction(tr.TOGGLE_STACK_FROM_SP_BP)
         if debugcore.inferior_status != typedefs.INFERIOR_STATUS.RUNNING:
-            toggle_stack_pointer = menu.addAction(tr.TOGGLE_STACK_FROM_SP_BP)
+            toggle_stack_pointer.setEnabled(True)
+        else:
+            toggle_stack_pointer.setEnabled(False)
         menu.addSeparator()
         clipboard_menu = menu.addMenu(tr.COPY_CLIPBOARD)
         copy_address = clipboard_menu.addAction(tr.COPY_ADDRESS)
@@ -3902,7 +3904,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         action = menu.exec(event.globalPos())
         actions = {
             switch_to_stacktrace: lambda: self.set_stack_widget(self.StackTrace),
-            toggle_stack_pointer: lambda: toggle_stack_from_sp_bp(),
+            toggle_stack_pointer: self.toggle_stack_from_sp_bp,
             copy_address: lambda: copy_to_clipboard(selected_row, STACK_POINTER_ADDRESS_COL),
             copy_value: lambda: copy_to_clipboard(selected_row, STACK_VALUE_COL),
             copy_points_to: lambda: copy_to_clipboard(selected_row, STACK_POINTS_TO_COL),
