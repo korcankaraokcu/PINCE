@@ -3881,9 +3881,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         menu = QMenu()
         switch_to_stacktrace = menu.addAction(tr.STACKTRACE)
         toggle_stack_pointer = menu.addAction(tr.TOGGLE_STACK_FROM_SP_BP)
-        if debugcore.inferior_status != typedefs.INFERIOR_STATUS.RUNNING:
-            toggle_stack_pointer.setEnabled(True)
-        else:
+        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             toggle_stack_pointer.setEnabled(False)
         menu.addSeparator()
         clipboard_menu = menu.addMenu(tr.COPY_CLIPBOARD)
