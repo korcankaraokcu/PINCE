@@ -175,14 +175,23 @@ class GetStackInfo(gdb.Command):
         if gdbutils.current_arch == typedefs.INFERIOR_ARCH.ARCH_64:
             chunk_size = 8
             int_format = "Q"
-            sp_register = "rsp"
+
+            if arg == "from-base-pointer":
+                stack_register = "rbp"
+            else:
+                stack_register = "rsp"
         else:
             chunk_size = 4
             int_format = "I"
-            sp_register = "esp"
-        sp_address = gdbutils.examine_expression(f"${sp_register}").address
+
+            if arg == "from-base-pointer":
+                stack_register = "ebp"
+            else:
+                stack_register = "esp"
+
+        sp_address = gdbutils.examine_expression(f"${stack_register}").address
         if not sp_address:
-            print(f"Cannot get the value of ${sp_register}")
+            print(f"Cannot get the value of ${stack_register}")
             send_to_pince(stack_info_list)
             return
         sp_address = int(sp_address, 16)
@@ -195,7 +204,7 @@ class GetStackInfo(gdb.Command):
                 return
             for index in range(int(4096 / chunk_size)):
                 current_offset = chunk_size * index
-                stack_indicator = hex(sp_address + current_offset) + "(" + sp_register + "+" + hex(current_offset) + ")"
+                stack_indicator = hex(sp_address + current_offset) + "(" + stack_register + "+" + hex(current_offset) + ")"
                 try:
                     FILE.seek(old_position)
                     read = FILE.read(chunk_size)

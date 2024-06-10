@@ -2142,6 +2142,11 @@ Check terminal for details</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Toggle stack from BP/SP register</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Copy Address</source>
       <translation type="unfinished" />
     </message>
