@@ -1315,8 +1315,9 @@ def get_stacktrace_info():
 
 
 #:tag:Stack
-def get_stack_info():
+def get_stack_info(from_base_pointer: bool = False) -> list[str]:
     """Returns information about current stack
+    Also can view stack from EBP or RBP register
 
     Returns:
         list: A list of str values in this format--▼
@@ -1329,7 +1330,10 @@ def get_stack_info():
         if points to a symbol-->(ptr)<function_name>
         pointer_info becomes a null string if pointer isn't valid
     """
-    return send_command("pince-get-stack-info", recv_with_file=True)
+    if from_base_pointer:
+        return send_command("pince-get-stack-info from-base-pointer", recv_with_file=True)
+    else:
+        return send_command("pince-get-stack-info", recv_with_file=True)
 
 
 #:tag:Stack
