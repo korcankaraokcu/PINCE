@@ -1077,9 +1077,10 @@ def parse_and_eval(expression, cast=str):
     Use examine_expression if your data can be expressed as an address or a symbol, use this function otherwise
     Unlike examine_expression, this function can read data that has void type or multiple type representations
     For instance:
-        $eflags has both str and int reprs
-        $_siginfo is a struct with many fields
-        x64 register convenience vars such as $rax are void if the process is x86
+
+    - $eflags has both str and int reprs
+    - $_siginfo is a struct with many fields
+    - x64 register convenience vars such as $rax are void if the process is x86
 
     Args:
         expression (str): Any gdb expression
@@ -1352,7 +1353,8 @@ def get_stack_frame_info(index):
         index (int,str): Index of the frame
 
     Returns:
-        str: Information that looks like this--▼
+        str: Information that looks like this::
+
         Stack level 0, frame at 0x7ffc5f87f6a0:
             rip = 0x7fd1d639412d in poll (../sysdeps/unix/syscall-template.S:81); saved rip = 0x7fd1d27fcfe4
             called by frame at 0x7ffc5f87f700
