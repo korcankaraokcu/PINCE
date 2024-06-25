@@ -91,7 +91,7 @@ from PyQt6.QtCore import (
     QItemSelection,
 )
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, pexpect, json, select
+import os, sys, traceback, signal, re, copy, io, queue, collections, ast, json, select
 
 from libpince import utils, debugcore, typedefs
 from libpince.libscanmem.scanmem import Scanmem
@@ -477,15 +477,13 @@ class MainForm(QMainWindow, MainWindow):
             print("An exception occurred while loading settings, rolling back to the default configuration\n", e)
             self.settings.clear()
             self.set_default_settings()
-        try:
-            gdb_path = settings.gdb_path
-            if os.environ.get("APPDIR"):
-                gdb_path = utils.get_default_gdb_path()
-            debugcore.init_gdb(gdb_path)
-        except pexpect.EOF:
-            InputDialogForm(self, [(tr.GDB_INIT_ERROR, None)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
-        else:
+        gdb_path = settings.gdb_path
+        if os.environ.get("APPDIR"):
+            gdb_path = utils.get_default_gdb_path()
+        if debugcore.init_gdb(gdb_path):
             self.apply_after_init()
+        else:
+            InputDialogForm(self, [(tr.GDB_INIT_ERROR, None)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
         self.check_status_thread = CheckInferiorStatus()
@@ -3834,8 +3832,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Stack.resizeColumnToContents(STACK_VALUE_COL)
 
     def toggle_stack_from_sp_bp(self):
-            self.stack_from_base_pointer = not self.stack_from_base_pointer
-            self.update_stack()
+        self.stack_from_base_pointer = not self.stack_from_base_pointer
+        self.update_stack()
 
     def tableWidget_Stack_key_press_event(self, event):
         if debugcore.currentpid == -1:
