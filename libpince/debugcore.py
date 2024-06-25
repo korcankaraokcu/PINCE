@@ -332,7 +332,9 @@ def state_observe_thread():
                 if gdb_output_mode.async_output:
                     print(child.before)
                 gdb_async_output.broadcast_message(child.before)
-    except (OSError, ValueError):
+    except (OSError, ValueError, pexpect.EOF) as e:
+        if isinstance(e, pexpect.EOF):
+            print("\nEOF exception caught within pexpect, here's the contents of child.before:\n" + child.before)
         print("Exiting state_observe_thread")
 
 
@@ -496,6 +498,9 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     Args:
         gdb_path (str): Path of the gdb binary
 
+    Returns:
+        bool: True if initialization is successful, False otherwise
+
     Note:
         Calling init_gdb() will reset the current session
     """
@@ -531,7 +536,11 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     child.setecho(False)
     child.delaybeforesend = 0
     child.timeout = None
-    child.expect_exact("(gdb)")
+    try:
+        child.expect_exact("(gdb)")
+    except pexpect.EOF:
+        print("\nEOF exception caught within pexpect, here's the contents of child.before:\n" + child.before)
+        return False
     status_thread = Thread(target=state_observe_thread)
     status_thread.daemon = True
     status_thread.start()
@@ -542,6 +551,7 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     set_pince_paths()
     send_command("source " + utils.get_user_path(typedefs.USER_PATHS.GDBINIT))
     utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT))
+    return True
 
 
 #:tag:GDBCommunication
