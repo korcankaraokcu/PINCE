@@ -26,6 +26,7 @@ from libpince import utils, debugcore, typedefs
 class QHexView(QTableView):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setWordWrap(False)
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setMinimumSectionSize(21)
