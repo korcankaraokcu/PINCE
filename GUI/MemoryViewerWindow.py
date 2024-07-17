@@ -705,6 +705,7 @@ class Ui_MainWindow_MemoryView(object):
         self.tableWidget_HexView_Address.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tableWidget_HexView_Address.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.tableWidget_HexView_Address.setShowGrid(False)
+        self.tableWidget_HexView_Address.setWordWrap(False)
         self.tableWidget_HexView_Address.setObjectName("tableWidget_HexView_Address")
         self.tableWidget_HexView_Address.setColumnCount(1)
         self.tableWidget_HexView_Address.setRowCount(0)
