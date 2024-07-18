@@ -3073,6 +3073,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.ascii_model = QAsciiModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
         self.tableView_HexView_Hex.setModel(self.hex_model)
         self.tableView_HexView_Ascii.setModel(self.ascii_model)
+        # Adjust cell sizes after setting model to ensure correct size
+        self.tableView_HexView_Hex.adjust_cell_size(2)
+        self.tableView_HexView_Ascii.adjust_cell_size(1)
 
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
         # Saving the original function because super() doesn't work when we override functions like this
@@ -3099,6 +3102,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.scrollArea_Hex.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.tableWidget_HexView_Address.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.tableWidget_HexView_Address.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.tableWidget_HexView_Address.verticalHeader().setMinimumSectionSize(
+            self.tableView_HexView_Hex.verticalHeader().minimumSectionSize()
+        )
         self.tableWidget_HexView_Address.verticalHeader().setDefaultSectionSize(
             self.tableView_HexView_Hex.verticalHeader().defaultSectionSize()
         )

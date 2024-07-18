@@ -29,12 +29,6 @@ class QHexView(QTableView):
         self.setWordWrap(False)
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
-        self.verticalHeader().setMinimumSectionSize(21)
-        self.verticalHeader().setDefaultSectionSize(21)
-        self.verticalHeader().setMaximumSectionSize(21)
-        self.horizontalHeader().setMinimumSectionSize(25)
-        self.horizontalHeader().setDefaultSectionSize(25)
-        self.horizontalHeader().setMaximumSectionSize(25)
         self.setStyleSheet("QTableView {background-color: transparent;}")
         self.setShowGrid(False)
         self.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
@@ -45,6 +39,17 @@ class QHexView(QTableView):
         self.delegate = QHexDelegate()
         self.delegate.closeEditor.connect(self.on_editor_close)
         self.setItemDelegate(self.delegate)
+
+    def adjust_cell_size(self, char_count: int):
+        font_metrics = self.fontMetrics()
+        col_width = font_metrics.horizontalAdvance("F" * char_count) + 4 * char_count
+        row_height = font_metrics.height()
+        self.horizontalHeader().setMinimumSectionSize(col_width)
+        self.horizontalHeader().setDefaultSectionSize(col_width)
+        self.horizontalHeader().setMaximumSectionSize(col_width)
+        self.verticalHeader().setMinimumSectionSize(row_height)
+        self.verticalHeader().setDefaultSectionSize(row_height)
+        self.verticalHeader().setMaximumSectionSize(row_height)
 
     def wheelEvent(self, event: QWheelEvent):
         event.ignore()
