@@ -271,7 +271,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addLayout(self.horizontalLayout_9, 1, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 678, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 678, 23))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
 
@@ -280,6 +280,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
+        self.treeWidget_AddressTable.setSortingEnabled(True)
         self.treeWidget_AddressTable.headerItem().setText(0, _translate("MainWindow", "Freeze"))
         self.treeWidget_AddressTable.headerItem().setToolTip(0, _translate("MainWindow", "Freeze the value"))
         self.treeWidget_AddressTable.headerItem().setText(1, _translate("MainWindow", "Description"))

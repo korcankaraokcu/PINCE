@@ -548,6 +548,7 @@ class MainForm(QMainWindow, MainWindow):
         self.treeWidget_AddressTable.itemDoubleClicked.connect(self.treeWidget_AddressTable_item_double_clicked)
         self.treeWidget_AddressTable.expanded.connect(self.resize_address_table)
         self.treeWidget_AddressTable.collapsed.connect(self.resize_address_table)
+        self.treeWidget_AddressTable.header().setSortIndicatorClearable(True)
         icons_directory = guiutils.get_icons_directory()
         self.pushButton_AttachProcess.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
