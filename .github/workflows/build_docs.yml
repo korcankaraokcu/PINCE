@@ -18,6 +18,13 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Install Dependencies
+      run: |
+        python3 -m venv .venv/PINCE
+        . .venv/PINCE/bin/activate
+        pip3 install --upgrade pip
+        pip3 install -r requirements.txt
+
     - name: Install Sphinx
       run: |
         cd docs
