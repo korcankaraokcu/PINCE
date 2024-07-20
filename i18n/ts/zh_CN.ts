@@ -967,16 +967,6 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>B&amp;its</source>
-      <translation>比特[&amp;i]</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>&amp;Decimal</source>
-      <translation>数字[&amp;D]</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Hex</source>
       <translation>十六进制</translation>
     </message>

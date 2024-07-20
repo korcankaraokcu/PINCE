@@ -965,16 +965,6 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>B&amp;its</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>&amp;Decimal</source>
-      <translation>&amp;Decimale</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Hex</source>
       <translation type="unfinished" />
     </message>
