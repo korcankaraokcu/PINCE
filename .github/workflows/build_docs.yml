@@ -1,0 +1,46 @@
+name: Deploy Sphinx Docs to GitHub Pages
+
+on:
+  push:
+    tags:
+      - "v*.*"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        sudo apt install libgirepository1.0-dev
+        python3 -m venv .venv/PINCE
+        . .venv/PINCE/bin/activate
+        pip3 install --upgrade pip
+        pip3 install -r requirements.txt
+
+    - name: Install Sphinx
+      run: |
+        cd docs
+        ./install_sphinx.sh
+
+    - name: Build docs
+      run: |
+        cd docs
+        ./build_html.sh
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs/build/html
+        publish_branch: gh-pages
+        force_orphan: true
+        keep_files: false
