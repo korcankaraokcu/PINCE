@@ -5,6 +5,7 @@ __pycache__/
 !.vscode/settings.json
 libpince/libscanmem/*
 libpince/libptrscan/*
+docs/build/*
 *.directory
 *.lprof
 *.qm
