@@ -18,7 +18,7 @@ jobs:
       with:
         python-version: '3.12'
 
-    - name: Install Dependencies
+    - name: Install dependencies
       run: |
         sudo apt install libgirepository1.0-dev
         python3 -m venv .venv/PINCE
