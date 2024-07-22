@@ -2,8 +2,8 @@ name: Deploy Sphinx Docs to GitHub Pages
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - "v*.*"
 
 jobs:
   deploy:
@@ -41,6 +41,6 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./docs/build/html
-        publish_branch: gh-pages-test
+        publish_branch: gh-pages
         force_orphan: true
         keep_files: false
