@@ -664,50 +664,6 @@ Patterns at former positions have higher priority if regex is off</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>libpince Reference</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Search</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>typedefs(Type Definitions)</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Value</source>
-      <translation type="unfinished">Valore</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Item Name</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Source File</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Resources(Mouse-over items to see docstrings)</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Hide typedefs</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
       <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
       <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
       <location filename="../../GUI/LogFileWidget.ui" line="0" />
@@ -760,6 +716,12 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
       <source>Referenced Strings and Values</source>
       <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+      <source>Value</source>
+      <translation type="unfinished">Valore</translation>
     </message>
     <message>
       <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />

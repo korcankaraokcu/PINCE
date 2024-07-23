@@ -666,50 +666,6 @@ Patterns at former positions have higher priority if regex is off</source>
       <translation>请输入正则表达式。如果不输入任何内容，则会显示所有函数</translation>
     </message>
     <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>libpince Reference</source>
-      <translation>libpince 引用</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Search</source>
-      <translation>搜索</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>typedefs(Type Definitions)</source>
-      <translation>typedefs(类型定义)</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Value</source>
-      <translation>值</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Item Name</source>
-      <translation>条目名</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Source File</source>
-      <translation>源文件</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Resources(Mouse-over items to see docstrings)</source>
-      <translation>资源（将鼠标悬停在项目上以查看文档字符串）</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/LibpinceReferenceWidget.ui" line="0" />
-      <source>Hide typedefs</source>
-      <translation>隐藏 typedefs</translation>
-    </message>
-    <message>
       <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
       <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
       <location filename="../../GUI/LogFileWidget.ui" line="0" />
@@ -762,6 +718,12 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
       <source>Referenced Strings and Values</source>
       <translation>引用的字符串和值</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+      <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+      <source>Value</source>
+      <translation>值</translation>
     </message>
     <message>
       <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
