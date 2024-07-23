@@ -142,7 +142,6 @@ So, after learning how to contribute, you are wondering where to start now. You 
 These tasks are ordered by importance but feel free to pick any of them. Further details can be discussed in the PINCE discord server
 - Implement libpince engine
 - Implement multi-line code injection, this will also help with previously dropped inject_with_advanced_injection
-- Migrate to Sphinx documentation from the custom libpince documentation
 - Libpince support for Mono and Java (symbol recognition, calling functions, dissect obj tree etc.)
 - Move GUI classes of PINCE.py to their own files
 - Extend documentation to GUI parts. Libpince has 100% documentation coverage but GUI doesn't
