@@ -27,7 +27,6 @@ ks_32 = Ks(KS_ARCH_X86, KS_MODE_32)
 ks_64 = Ks(KS_ARCH_X86, KS_MODE_64)
 
 
-#:tag:Processes
 def get_process_list() -> list[str, str, str]:
     """Returns a list of processes
 
@@ -42,7 +41,6 @@ def get_process_list() -> list[str, str, str]:
     return process_list
 
 
-#:tag:Processes
 def get_process_name(pid: int | str) -> str:
     """Returns the process name of given pid
 
@@ -56,7 +54,6 @@ def get_process_name(pid: int | str) -> str:
         return f.read().splitlines()[0]
 
 
-#:tag:Processes
 def search_processes(process_name):
     """Searches processes and returns a list of the ones that contain process_name
 
@@ -73,7 +70,6 @@ def search_processes(process_name):
     return processlist
 
 
-#:tag:Processes
 def get_regions(pid):
     """Returns memory regions of a process
 
@@ -90,7 +86,6 @@ def get_regions(pid):
         return regions
 
 
-#:tag:Processes
 def get_region_dict(pid: int) -> dict[str, list[str]]:
     """Returns memory regions of a process as a dictionary where key is the path tail and value is the list of the
     corresponding start addresses of the tail, empty paths will be ignored. Also adds shortcuts for file extensions,
@@ -125,7 +120,6 @@ def get_region_dict(pid: int) -> dict[str, list[str]]:
     return region_dict
 
 
-#:tag:Processes
 def get_region_info(pid, address):
     """Finds the closest valid starting/ending address and region to given address, assuming given address is in the
     valid address range
@@ -151,7 +145,6 @@ def get_region_info(pid, address):
             return typedefs.tuple_region_info(start, end, perms, file_name)
 
 
-#:tag:Processes
 def filter_regions(pid, attribute, regex, case_sensitive=False):
     """Filters memory regions by searching for the given regex within the given attribute
 
@@ -181,7 +174,6 @@ def filter_regions(pid, attribute, regex, case_sensitive=False):
     return filtered_regions
 
 
-#:tag:Processes
 def is_traced(pid):
     """Check if the process corresponding to given pid traced by any other process
 
@@ -203,7 +195,6 @@ def is_traced(pid):
                 return get_process_name(tracer_pid)
 
 
-#:tag:Processes
 def is_process_valid(pid):
     """Check if the process corresponding to given pid is valid
 
@@ -216,7 +207,6 @@ def is_process_valid(pid):
     return os.path.exists("/proc/%d" % pid)
 
 
-#:tag:Utilities
 def get_script_directory():
     """Get main script directory
 
@@ -226,7 +216,6 @@ def get_script_directory():
     return sys.path[0]
 
 
-#:tag:Utilities
 def get_media_directory():
     """Get media directory
 
@@ -236,7 +225,6 @@ def get_media_directory():
     return get_script_directory() + "/media"
 
 
-#:tag:Utilities
 def get_logo_directory():
     """Get logo directory
 
@@ -246,7 +234,6 @@ def get_logo_directory():
     return get_script_directory() + "/media/logo"
 
 
-#:tag:Utilities
 def get_libpince_directory():
     """Get libpince directory
 
@@ -260,7 +247,6 @@ def get_libpince_directory():
     return os.path.dirname(os.path.realpath(__file__))
 
 
-#:tag:GDBCommunication
 def delete_ipc_path(pid):
     """Deletes the IPC directory of given pid
 
@@ -272,7 +258,6 @@ def delete_ipc_path(pid):
         shutil.rmtree(path)
 
 
-#:tag:GDBCommunication
 def create_ipc_path(pid):
     """Creates the IPC directory of given pid
 
@@ -291,7 +276,6 @@ def create_ipc_path(pid):
     open(command_file, "w").close()
 
 
-#:tag:GDBCommunication
 def create_tmp_path(pid):
     """Creates the tmp directory of given pid
 
@@ -304,7 +288,6 @@ def create_tmp_path(pid):
     os.makedirs(path)
 
 
-#:tag:GDBCommunication
 def get_ipc_path(pid):
     """Get the IPC directory of given pid
 
@@ -317,7 +300,6 @@ def get_ipc_path(pid):
     return typedefs.PATHS.IPC + str(pid)
 
 
-#:tag:GDBCommunication
 def get_tmp_path(pid):
     """Get the tmp directory of given pid
 
@@ -330,7 +312,6 @@ def get_tmp_path(pid):
     return typedefs.PATHS.TMP + str(pid)
 
 
-#:tag:GDBCommunication
 def get_logging_file(pid):
     """Get the path of gdb logfile of given pid
 
@@ -343,7 +324,6 @@ def get_logging_file(pid):
     return get_tmp_path(pid) + "/gdb_log.txt"
 
 
-#:tag:GDBCommunication
 def get_gdb_command_file(pid):
     """Get the path of gdb command file of given pid
 
@@ -356,7 +336,6 @@ def get_gdb_command_file(pid):
     return get_ipc_path(pid) + "/gdb_command.txt"
 
 
-#:tag:BreakWatchpoints
 def get_track_watchpoint_file(pid, watchpoint_list):
     """Get the path of track watchpoint file for given pid and watchpoint
 
@@ -370,7 +349,6 @@ def get_track_watchpoint_file(pid, watchpoint_list):
     return get_ipc_path(pid) + "/" + str(watchpoint_list) + "_track_watchpoint.txt"
 
 
-#:tag:BreakWatchpoints
 def get_track_breakpoint_file(pid, breakpoint):
     """Get the path of track breakpoint file for given pid and breakpoint
 
@@ -384,7 +362,6 @@ def get_track_breakpoint_file(pid, breakpoint):
     return get_ipc_path(pid) + "/" + breakpoint + "_track_breakpoint.txt"
 
 
-#:tag:Utilities
 def append_file_extension(string, extension):
     """Appends the given extension to the given string if it doesn't end with the given extension
 
@@ -399,7 +376,6 @@ def append_file_extension(string, extension):
     return string if string.endswith("." + extension) else string + "." + extension
 
 
-#:tag:Utilities
 def save_file(data, file_path, save_method="json"):
     """Saves the specified data to given path
 
@@ -432,7 +408,6 @@ def save_file(data, file_path, save_method="json"):
         return False
 
 
-#:tag:Utilities
 def load_file(file_path, load_method="json"):
     """Loads data from the given path
 
@@ -462,7 +437,6 @@ def load_file(file_path, load_method="json"):
     return output
 
 
-#:tag:Tools
 def get_trace_status_file(pid):
     """Get the path of trace status file for given pid
 
@@ -487,7 +461,6 @@ def change_trace_status(pid: int | str, trace_status: int):
         trace_file.write(str(trace_status))
 
 
-#:tag:Tools
 def get_dissect_code_status_file(pid):
     """Get the path of dissect code status file for given pid
 
@@ -500,7 +473,6 @@ def get_dissect_code_status_file(pid):
     return get_ipc_path(pid) + "/dissect_code_status.txt"
 
 
-#:tag:Tools
 def get_referenced_strings_file(pid):
     """Get the path of referenced strings dict file for given pid
 
@@ -513,7 +485,6 @@ def get_referenced_strings_file(pid):
     return get_tmp_path(pid) + "/referenced_strings_dict.txt"
 
 
-#:tag:Tools
 def get_referenced_jumps_file(pid):
     """Get the path of referenced jumps dict file for given pid
 
@@ -526,7 +497,6 @@ def get_referenced_jumps_file(pid):
     return get_tmp_path(pid) + "/referenced_jumps_dict.txt"
 
 
-#:tag:Tools
 def get_referenced_calls_file(pid):
     """Get the path of referenced strings dict file for given pid
 
@@ -539,7 +509,6 @@ def get_referenced_calls_file(pid):
     return get_tmp_path(pid) + "/referenced_calls_dict.txt"
 
 
-#:tag:GDBCommunication
 def get_from_pince_file(pid):
     """Get the path of IPC file sent to custom gdb commands from PINCE for given pid
 
@@ -552,7 +521,6 @@ def get_from_pince_file(pid):
     return get_ipc_path(pid) + typedefs.PATHS.FROM_PINCE
 
 
-#:tag:GDBCommunication
 def get_to_pince_file(pid):
     """Get the path of IPC file sent to PINCE from custom gdb commands for given pid
 
@@ -565,7 +533,6 @@ def get_to_pince_file(pid):
     return get_ipc_path(pid) + typedefs.PATHS.TO_PINCE
 
 
-#:tag:ValueType
 def parse_string(string: str, value_index: int):
     """Parses the string according to the given value_index
 
@@ -637,7 +604,6 @@ def parse_string(string: str, value_index: int):
         return string
 
 
-#:tag:Assembly
 def instruction_follow_address(string):
     """Searches for the location changing instructions such as Jcc, CALL and LOOPcc in the given string. Returns the hex
     address the instruction jumps to
@@ -654,7 +620,6 @@ def instruction_follow_address(string):
         return result.group(2)
 
 
-#:tag:Utilities
 def extract_address(string):
     """Extracts hex address from the given string
 
@@ -670,7 +635,6 @@ def extract_address(string):
         return result.group(0)
 
 
-#:tag:Utilities
 def modulo_address(int_address, arch_type):
     """Calculates the modulo of the given integer based on the given architecture type to make sure that it doesn't
     exceed the borders of the given architecture type (0xffffffff->x86, 0xffffffffffffffff->x64)
@@ -689,7 +653,6 @@ def modulo_address(int_address, arch_type):
     raise Exception("arch_type must be a member of typedefs.INFERIOR_ARCH")
 
 
-#:tag:Utilities
 def get_opcodes(address, aob, inferior_arch):
     """Returns the instructions from the given array of bytes
 
@@ -714,7 +677,6 @@ def get_opcodes(address, aob, inferior_arch):
     return "; ".join([data[2] for data in disas_data])
 
 
-#:tag:Utilities
 def assemble(instructions, address, inferior_arch):
     """Assembles the given instructions
 
@@ -736,7 +698,6 @@ def assemble(instructions, address, inferior_arch):
         print(e)
 
 
-#:tag:ValueType
 def aob_to_str(list_of_bytes, encoding="ascii", replace_unprintable=True):
     """Converts given array of hex strings to str
 
@@ -773,7 +734,6 @@ def aob_to_str(list_of_bytes, encoding="ascii", replace_unprintable=True):
     return hexBytes.decode(encoding, "surrogateescape")
 
 
-#:tag:ValueType
 def str_to_aob(string, encoding="ascii"):
     """Converts given string to aob string
 
@@ -788,7 +748,6 @@ def str_to_aob(string, encoding="ascii"):
     return " ".join(s[i : i + 2] for i in range(0, len(s), 2))
 
 
-#:tag:GDBExpressions
 def split_symbol(symbol_string):
     """Splits symbol part of typedefs.tuple_function_info into smaller fractions
     Fraction count depends on the the symbol_string. See Examples section for demonstration
@@ -842,7 +801,6 @@ def split_symbol(symbol_string):
     return returned_list
 
 
-#:tag:Utilities
 def execute_command_as_user(command):
     """Executes given command as user
 
@@ -851,183 +809,6 @@ def execute_command_as_user(command):
     """
     uid, gid = get_user_ids()
     os.system("sudo -Eu '#" + uid + "' " + command)
-
-
-#:tag:Utilities
-def get_docstrings(modules, search_for=""):
-    """Gathers docstrings from a list of modules
-    For now, this function only supports variables and functions
-    See get_variable_comments function to learn documenting variables in PINCE style
-
-    Args:
-        modules (list): A list of modules
-        search_for (str): String that will be searched in variables and functions
-
-    Returns:
-        dict: A dict containing docstrings for documented variables and functions
-        Format-->{variable1:docstring1, variable2:docstring2, ...}
-    """
-    element_dict = {}
-    variable_comment_dict = get_variable_comments(modules)
-    for item in modules:
-        for key, value in item.__dict__.items():
-            name_with_module = get_module_name(item) + "." + key
-            if name_with_module in variable_comment_dict:
-                element_dict[name_with_module] = variable_comment_dict[name_with_module]
-            else:
-                element_dict[name_with_module] = value.__doc__
-    for item in list(element_dict):
-        if item.split(".")[-1].find(search_for) == -1:
-            del element_dict[item]
-    return element_dict
-
-
-#:tag:Utilities
-def get_variable_comments(modules, search_for=""):
-    r"""Gathers comments from a list of modules
-    Python normally doesn't allow modifying __doc__ variable of the variables
-    This function is designed to bring a solution to this problem
-    The documentation must be PINCE style. It must start with this--> "#:doc:"
-    See examples for more details
-
-    Args:
-        modules (list): A list of modules
-        search_for (str): String that will be searched in variables
-
-    Returns:
-        dict: A dict containing docstrings for documented variables
-        Format-->{variable1:docstring1, variable2:docstring2, ...}
-
-    Example for single line comments:
-        Code--▼
-            #:doc:
-            #Documentation for the variable
-            some_variable = blablabla
-        Returns--▼
-            {"some_variable":"Documentation for the variable"}
-
-    Example for multi line comments:
-        Code--▼
-            #:doc:
-            '''Some Header
-            Documentation for the variable
-            Some Ending Word'''
-            some_variable = blablabla
-        Returns--▼
-            {"some_variable":"Some Header\nDocumentation for the variable\nSome Ending Word"}
-    """
-    comment_dict = {}
-    source_files = []
-    for module in modules:
-        source_files.append(module.__file__)
-    for index, file_path in enumerate(source_files):
-        source_file = open(file_path, "r")
-        lines = source_file.readlines()
-        for row, line in enumerate(lines):
-            stripped_line = line.strip()
-            if stripped_line.startswith("#:doc:"):
-                docstring_list = []
-                while True:
-                    row += 1
-                    current_line = lines[row].strip()
-                    if current_line.startswith("#"):
-                        docstring_list.append(current_line.replace("#", "", 1))
-                    elif current_line.startswith("'''"):
-                        current_line = current_line.replace("'''", "", 1)
-                        if current_line.endswith("'''"):
-                            current_line = current_line.replace("'''", "")
-                            docstring_list.append(current_line)
-                            continue
-                        docstring_list.append(current_line)
-                        while True:
-                            row += 1
-                            current_line = lines[row].strip()
-                            if current_line.endswith("'''"):
-                                current_line = current_line.replace("'''", "")
-                                docstring_list.append(current_line)
-                                break
-                            docstring_list.append(current_line)
-                    else:
-                        while True:
-                            stripped_current_line = regexes.docstring_variable.search(current_line)
-                            if stripped_current_line:
-                                variable = stripped_current_line.group(1)
-                                break
-                            row += 1
-                            current_line = lines[row].strip()
-                        break
-                if variable.find(search_for) == -1:
-                    continue
-                comment_dict[get_module_name(modules[index]) + "." + variable] = "\n".join(docstring_list)
-    return comment_dict
-
-
-#:tag:Utilities
-def get_tags(modules, tag_to_string, search_for=""):
-    """Gathers tags from a python source file
-    The documentation must be PINCE style. It must start like this--> "#:tag:tag_name"
-    For now, tagging system only supports variables and functions
-    See examples for more details
-
-    Args:
-        modules (list): A list of modules
-        tag_to_string (dict): A dictionary that holds tag descriptions in this format-->{tag:tag_description}
-        Check typedefs.tag_to_string for an example
-        search_for (str): String that will be searched in tags
-
-    Returns:
-        dict: A dict containing tag keys for tagged variables
-        Format-->{tag1_desc:variable_list1, tag2_desc:variable_list2, ...}
-
-    Examples:
-        Code--▼
-            #:tag:tag_name
-            #Documentation for the variable
-            some_variable = blablabla
-
-            or
-
-            #:tag:tag_name
-            def func_name(...)
-        Returns--▼
-            {tag_to_string["tag_name"]:list of some_variables or func_names that have the tag tag_name}
-    """
-    tag_dict = {}
-    source_files = []
-    for module in modules:
-        source_files.append(module.__file__)
-    for index, file_path in enumerate(source_files):
-        source_file = open(file_path, "r")
-        lines = source_file.readlines()
-        for row, line in enumerate(lines):
-            stripped_line = line.strip()
-            if stripped_line.startswith("#:tag:"):
-                tag = stripped_line.replace("#:tag:", "", 1)
-                while True:
-                    row += 1
-                    current_line = lines[row].strip()
-                    stripped_current_line = regexes.docstring_function_or_variable.search(current_line)
-                    if stripped_current_line:
-                        for item in stripped_current_line.groups():
-                            if item:
-                                if item.find(search_for) == -1:
-                                    break
-                                item = get_module_name(modules[index]) + "." + item
-                                try:
-                                    tag_dict[tag].append(item)
-                                except KeyError:
-                                    tag_dict[tag] = [item]
-                                break
-                            else:
-                                continue
-                        break
-    ordered_tag_dict = OrderedDict()
-    for tag, desc in tag_to_string.items():
-        if tag in tag_dict:
-            ordered_tag_dict[desc] = tag_dict[tag]
-        else:
-            continue
-    return ordered_tag_dict
 
 
 def get_module_name(module):
@@ -1042,7 +823,6 @@ def get_module_name(module):
     return module.__name__.replace(module.__package__ + ".", "", 1)
 
 
-#:tag:Utilities
 def init_user_files():
     """Initializes user files"""
     root_path = get_user_path(typedefs.USER_PATHS.ROOT)
@@ -1056,7 +836,6 @@ def init_user_files():
             open(file, "w").close()
 
 
-#:tag:Utilities
 def get_user_ids():
     """Gets uid and gid of the current user
 
@@ -1068,7 +847,6 @@ def get_user_ids():
     return uid, gid
 
 
-#:tag:Utilities
 def get_user_home_dir():
     """Returns the home directory of the current user
 
@@ -1079,7 +857,6 @@ def get_user_home_dir():
     return pwd.getpwuid(int(uid)).pw_dir
 
 
-#:tag:Utilities
 def get_user_path(user_path):
     """Returns the specified user path for the current user
 
@@ -1101,7 +878,6 @@ def get_default_gdb_path():
     return typedefs.PATHS.GDB
 
 
-#:tag:Tools
 def execute_script(file_path):
     """Loads and executes the script in the given path
 
@@ -1130,7 +906,6 @@ def execute_script(file_path):
     return module, None
 
 
-#:tag:Utilities
 def parse_response(response, line_num=0):
     """Parses the given GDB/MI output. Wraps gdbmiparser.parse_response
     debugcore.send_command returns an additional "^done" output because of the "source" command
@@ -1146,7 +921,6 @@ def parse_response(response, line_num=0):
     return gdbmiparser.parse_response(response.splitlines()[line_num])
 
 
-#:tag:Utilities
 def search_files(directory, regex):
     """Searches the files in given directory for given regex recursively
 
@@ -1165,7 +939,6 @@ def search_files(directory, regex):
     return sorted(file_list)
 
 
-#:tag:Utilities
 def ignore_exceptions(func):
     """A decorator to ignore exceptions"""
 
@@ -1178,7 +951,6 @@ def ignore_exceptions(func):
     return wrapper
 
 
-#:tag:Utilities
 def upper_hex(hex_str: str):
     """Converts the given hex string to uppercase while keeping the 'x' character lowercase"""
     # check if the given string is a hex string, if not return the string as is

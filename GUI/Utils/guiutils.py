@@ -21,7 +21,6 @@ from PyQt6.QtGui import QShortcut, QRegularExpressionValidator
 from libpince import utils, typedefs, regexes
 from tr.tr import TranslationConstants as tr
 
-#:tag:GUI
 validator_map: dict[str, QRegularExpressionValidator | None] = {
     "int": QRegularExpressionValidator(QRegularExpression(regexes.decimal_number.pattern)),  # integers
     "int_hex": QRegularExpressionValidator(QRegularExpression(regexes.hex_number_gui.pattern)),  # hexadecimals
@@ -31,7 +30,6 @@ validator_map: dict[str, QRegularExpressionValidator | None] = {
 }
 
 
-#:tag:GUI
 def get_icons_directory():
     """Gets the directory of the icons
 
@@ -41,7 +39,6 @@ def get_icons_directory():
     return utils.get_script_directory() + "/media/icons"
 
 
-#:tag:GUI
 def center(window: QWidget):
     """Center the given window to desktop
 
@@ -51,7 +48,6 @@ def center(window: QWidget):
     window.frameGeometry().moveCenter(window.screen().availableGeometry().center())
 
 
-#:tag:GUI
 def center_to_parent(window: QWidget):
     """Center the given window to its parent
 
@@ -62,7 +58,6 @@ def center_to_parent(window: QWidget):
     window.move(parent.frameGeometry().center() - window.rect().center())
 
 
-#:tag:GUI
 def center_scroll_bar(scrollbar: QScrollBar):
     """Center the given scrollbar
 
@@ -74,7 +69,6 @@ def center_scroll_bar(scrollbar: QScrollBar):
     scrollbar.setValue((maximum + minimum) // 2)
 
 
-#:tag:GUI
 def resize_to_contents(tablewidget: QTableWidget):
     """Resizes the columns of the given QTableWidget to its contents
     This also fixes the stretch problem of the last column
@@ -87,7 +81,6 @@ def resize_to_contents(tablewidget: QTableWidget):
     tablewidget.horizontalHeader().resizeSection(tablewidget.columnCount() - 1, default_size)
 
 
-#:tag:GUI
 def fill_value_combobox(combobox: QComboBox, current_index: int = typedefs.VALUE_INDEX.INT32):
     """Fills the given QComboBox with value_index strings
 
@@ -100,7 +93,6 @@ def fill_value_combobox(combobox: QComboBox, current_index: int = typedefs.VALUE
     combobox.setCurrentIndex(current_index)
 
 
-#:tag:GUI
 def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.ENDIANNESS.HOST):
     """Fills the given QComboBox with endianness strings
 
@@ -118,7 +110,6 @@ def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.
     combobox.setCurrentIndex(current_index)
 
 
-#:tag:GUI
 def get_current_row(tablewidget: QTableWidget):
     r"""Returns the currently selected row index for the given QTableWidget
     If you try to use only selectionModel().currentIndex().row() for this purpose, you'll get the last selected row even
@@ -144,7 +135,6 @@ def get_current_row(tablewidget: QTableWidget):
     return -1
 
 
-#:tag:GUI
 def get_current_item(tablewidget: QTableWidget):
     r"""Returns the currently selected item for the given QTableWidget
     If you try to use only selectionModel().currentItem() for this purpose, you'll get the last selected item even
@@ -169,7 +159,6 @@ def get_current_item(tablewidget: QTableWidget):
         return tablewidget.currentItem()
 
 
-#:tag:GUI
 def delete_menu_entries(menu: QMenu, QAction_list: list):
     """Deletes given QActions from the QMenu recursively and cleans up the remaining redundant separators and menus
     Doesn't support menus that includes types other than actions, separators and menus
@@ -206,7 +195,6 @@ def delete_menu_entries(menu: QMenu, QAction_list: list):
 
 
 # TODO: This is a really bad design pattern, remove this function after moving classes to their own files
-#:tag:GUI
 def search_parents_by_function(qt_object: QObject, func_name: str):
     """Search for func_name in the parents of given QObject. Once function is found, parent that possesses func_name
     is returned
@@ -221,7 +209,6 @@ def search_parents_by_function(qt_object: QObject, func_name: str):
             return qt_object
 
 
-#:tag:GUI
 def get_layout_widgets(layout: QLayout):
     """Returns the widgets of a QLayout as a list
 
@@ -234,7 +221,6 @@ def get_layout_widgets(layout: QLayout):
     return [layout.itemAt(x).widget() for x in range(layout.count())]
 
 
-#:tag:GUI
 def contains_reference_mark(string: str):
     """Checks if given string contains the reference mark
 
@@ -247,7 +233,6 @@ def contains_reference_mark(string: str):
     return True if regexes.reference_mark.search(string) else False
 
 
-#:tag:GUI
 def append_shortcut_to_tooltip(qt_object: QObject, shortcut: QShortcut):
     """Appends key string of the given QShortcut to the toolTip of the given QObject
 
