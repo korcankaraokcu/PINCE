@@ -452,7 +452,7 @@ class MainForm(QMainWindow, MainWindow):
         self.treeWidget_AddressTable.setColumnWidth(DESC_COL, 150)
         self.treeWidget_AddressTable.setColumnWidth(ADDR_COL, 150)
         self.treeWidget_AddressTable.setColumnWidth(TYPE_COL, 150)
-        self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 110)
+        self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 120)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.tableWidget_valuesearchtable.horizontalHeader().setSortIndicatorClearable(True)
         self.settings = QSettings()
@@ -1426,6 +1426,7 @@ class MainForm(QMainWindow, MainWindow):
             row += 1
             if row == 1000:
                 break
+        self.tableWidget_valuesearchtable.resizeColumnsToContents()
         self.tableWidget_valuesearchtable.setSortingEnabled(True)
         self.QWidget_Toolbox.setEnabled(True)
 
