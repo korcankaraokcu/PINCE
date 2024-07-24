@@ -136,6 +136,7 @@ class Ui_MainWindow(object):
         self.tableWidget_valuesearchtable.setAlternatingRowColors(True)
         self.tableWidget_valuesearchtable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.tableWidget_valuesearchtable.setShowGrid(False)
+        self.tableWidget_valuesearchtable.setWordWrap(False)
         self.tableWidget_valuesearchtable.setObjectName("tableWidget_valuesearchtable")
         self.tableWidget_valuesearchtable.setColumnCount(3)
         self.tableWidget_valuesearchtable.setRowCount(0)
