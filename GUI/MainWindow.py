@@ -282,6 +282,7 @@ class Ui_MainWindow(object):
         self.pushButton_Console.setToolTip(_translate("MainWindow", "Open a gdb console"))
         self.pushButton_Settings.setToolTip(_translate("MainWindow", "Configure options"))
         self.label_MatchCount.setText(_translate("MainWindow", "Match count: 0"))
+        self.tableWidget_valuesearchtable.setSortingEnabled(True)
         item = self.tableWidget_valuesearchtable.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Address"))
         item = self.tableWidget_valuesearchtable.horizontalHeaderItem(1)

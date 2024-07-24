@@ -454,6 +454,7 @@ class MainForm(QMainWindow, MainWindow):
         self.treeWidget_AddressTable.setColumnWidth(TYPE_COL, 150)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 110)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
+        self.tableWidget_valuesearchtable.horizontalHeader().setSortIndicatorClearable(True)
         self.settings = QSettings()
         self.memory_view_window = MemoryViewWindowForm(self)
         self.await_exit_thread = AwaitProcessExit()
@@ -1401,6 +1402,7 @@ class MainForm(QMainWindow, MainWindow):
         length = self._scan_to_length(current_type)
         mem_handle = debugcore.memory_handle()
         row = 0  # go back to using n when unknown issue gets fixed
+        self.tableWidget_valuesearchtable.setSortingEnabled(False)
         for n, address, offset, region_type, val, result_type in matches:
             address = "0x" + address
             result = result_type.split(" ")[0]
@@ -1424,6 +1426,7 @@ class MainForm(QMainWindow, MainWindow):
             row += 1
             if row == 1000:
                 break
+        self.tableWidget_valuesearchtable.setSortingEnabled(True)
         self.QWidget_Toolbox.setEnabled(True)
 
     def _scan_to_length(self, type_index):
@@ -1716,6 +1719,7 @@ class MainForm(QMainWindow, MainWindow):
             mem_handle = debugcore.memory_handle()
             for row_index in range(row_count):
                 address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
+                value_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_VALUE_COL)
                 previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
                 value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
                 address = address_item.text()
@@ -1724,10 +1728,9 @@ class MainForm(QMainWindow, MainWindow):
                         address, value_index, length, value_repr=value_repr, endian=endian, mem_handle=mem_handle
                     )
                 )
-                value_item = QTableWidgetItem(new_value)
                 if new_value != previous_text:
                     value_item.setForeground(QBrush(QColor(255, 0, 0)))
-                self.tableWidget_valuesearchtable.setItem(row_index, SEARCH_TABLE_VALUE_COL, value_item)
+                    value_item.setText(new_value)
 
     def freeze(self):
         if debugcore.currentpid == -1:
