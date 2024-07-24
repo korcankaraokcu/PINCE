@@ -152,12 +152,6 @@
         </layout>
        </widget>
        <widget class="QWidget" name="widget_Registers" native="true">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>0</height>
-         </size>
-        </property>
         <property name="font">
          <font>
           <family>Monospace</family>

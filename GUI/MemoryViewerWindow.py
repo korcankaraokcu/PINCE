@@ -71,7 +71,6 @@ class Ui_MainWindow_MemoryView(object):
         self.verticalScrollBar_Disassemble.setObjectName("verticalScrollBar_Disassemble")
         self.gridLayout_2.addWidget(self.verticalScrollBar_Disassemble, 0, 1, 1, 1)
         self.widget_Registers = QtWidgets.QWidget(parent=self.splitter_Disassemble_Registers)
-        self.widget_Registers.setMinimumSize(QtCore.QSize(0, 0))
         font = QtGui.QFont()
         font.setFamily("Monospace")
         self.widget_Registers.setFont(font)
