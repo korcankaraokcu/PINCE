@@ -76,7 +76,6 @@
            <property name="font">
             <font>
              <family>Monospace</family>
-             <pointsize>9</pointsize>
             </font>
            </property>
            <property name="verticalScrollBarPolicy">
@@ -190,8 +189,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>335</width>
-              <height>342</height>
+              <width>344</width>
+              <height>343</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_8">
@@ -225,7 +224,6 @@
                    <property name="font">
                     <font>
                      <family>Monospace</family>
-                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="text">
@@ -300,7 +298,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -313,7 +310,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -326,7 +322,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -339,7 +334,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -352,7 +346,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -365,7 +358,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -378,7 +370,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -391,7 +382,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -424,7 +414,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -437,7 +426,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -450,7 +438,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -463,7 +450,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -476,7 +462,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -489,7 +474,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -502,7 +486,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -515,7 +498,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -537,7 +519,6 @@
                            <property name="font">
                             <font>
                              <family>Monospace</family>
-                             <pointsize>9</pointsize>
                             </font>
                            </property>
                            <property name="text">
@@ -614,7 +595,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -627,7 +607,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -640,7 +619,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -653,7 +631,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -666,7 +643,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -679,7 +655,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -692,7 +667,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -705,7 +679,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -718,7 +691,6 @@
                              <property name="font">
                               <font>
                                <family>Monospace</family>
-                               <pointsize>9</pointsize>
                               </font>
                              </property>
                              <property name="text">
@@ -754,7 +726,6 @@
                    <property name="font">
                     <font>
                      <family>Monospace</family>
-                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="text">
@@ -784,7 +755,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -797,7 +767,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -817,7 +786,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -830,7 +798,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -850,7 +817,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -863,7 +829,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -883,7 +848,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -896,7 +860,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -916,7 +879,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -929,7 +891,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -949,7 +910,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -962,7 +922,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -982,7 +941,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -995,7 +953,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -1015,7 +972,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -1028,7 +984,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -1048,7 +1003,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -1061,7 +1015,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -1094,7 +1047,6 @@
                    <property name="font">
                     <font>
                      <family>Monospace</family>
-                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="text">
@@ -1124,7 +1076,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -1137,7 +1088,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -1170,7 +1120,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -1183,7 +1132,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -1216,7 +1164,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -1229,7 +1176,6 @@
                        <property name="font">
                         <font>
                          <family>Monospace</family>
-                         <pointsize>9</pointsize>
                         </font>
                        </property>
                        <property name="text">
@@ -1246,7 +1192,6 @@
                    <property name="font">
                     <font>
                      <family>Monospace</family>
-                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="text">
@@ -1329,7 +1274,7 @@
               <x>0</x>
               <y>0</y>
               <width>492</width>
-              <height>200</height>
+              <height>197</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_11">
@@ -1631,7 +1576,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">
