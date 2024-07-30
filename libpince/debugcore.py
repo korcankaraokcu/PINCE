@@ -1175,11 +1175,11 @@ def read_registers():
     return send_command("pince-read-registers", recv_with_file=True)
 
 
-def read_float_registers():
+def read_float_registers() -> OrderedDict[str, str]:
     """Returns the current floating point registers
 
     Returns:
-        dict: A dict that holds floating point registers. Check typedefs.REGISTERS.FLOAT for the full list
+        OrderedDict[str, str]: A dict that holds floating point registers. Check typedefs.REGISTERS.FLOAT for the full list
 
     Note:
         Returned xmm values are based on xmm.v4_float

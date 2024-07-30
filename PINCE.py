@@ -4534,13 +4534,16 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         self.tableWidget_FPU.setRowCount(0)
         self.tableWidget_FPU.setRowCount(8)
         self.tableWidget_XMM.setRowCount(0)
-        self.tableWidget_XMM.setRowCount(8)
-        float_registers = debugcore.read_float_registers()
-        for row, (st, xmm) in enumerate(zip(typedefs.REGISTERS.FLOAT.ST, typedefs.REGISTERS.FLOAT.XMM)):
-            self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(st))
-            self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(float_registers[st]))
-            self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(xmm))
-            self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(float_registers[xmm]))
+        self.tableWidget_XMM.setRowCount(16)
+        float_registers = list(debugcore.read_float_registers().items())
+        st_registers = float_registers[:8]
+        xmm_registers = float_registers[8:]
+        for row, (name, value) in enumerate(st_registers):
+            self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(name))
+            self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(value))
+        for row, (name, value) in enumerate(xmm_registers):
+            self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(name))
+            self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(value))
 
     def set_register(self, index):
         if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:

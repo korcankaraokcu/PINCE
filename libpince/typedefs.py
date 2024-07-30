@@ -151,7 +151,8 @@ class REGISTERS:
 
     class FLOAT:
         ST = ["st" + str(i) for i in range(8)]
-        XMM = ["xmm" + str(i) for i in range(8)]
+        XMM_32 = ["xmm" + str(i) for i in range(8)]
+        XMM_64 = ["xmm" + str(i) for i in range(16)]
 
 
 class FREEZE_TYPE:
