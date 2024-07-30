@@ -116,7 +116,11 @@ def get_float_registers():
     for register in typedefs.REGISTERS.FLOAT.ST:
         value = gdb.parse_and_eval("$" + register)
         contents_send[register] = str(value)
-    for register in typedefs.REGISTERS.FLOAT.XMM:
+    if current_arch == typedefs.INFERIOR_ARCH.ARCH_64:
+        xmm_registers = typedefs.REGISTERS.FLOAT.XMM_64
+    else:
+        xmm_registers = typedefs.REGISTERS.FLOAT.XMM_32
+    for register in xmm_registers:
         value = gdb.parse_and_eval("$" + register + ".v4_float")
         contents_send[register] = str(value)
     return contents_send
