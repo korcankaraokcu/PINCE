@@ -38,7 +38,7 @@ from PyQt6.QtGui import (
     QCursor,
     QKeySequence,
     QColor,
-    QTextCharFormat,
+    QContextMenuEvent,
     QBrush,
     QTextCursor,
     QShortcut,
@@ -544,6 +544,7 @@ class MainForm(QMainWindow, MainWindow):
         )
         self.tableWidget_valuesearchtable.keyPressEvent_original = self.tableWidget_valuesearchtable.keyPressEvent
         self.tableWidget_valuesearchtable.keyPressEvent = self.tableWidget_valuesearchtable_key_press_event
+        self.tableWidget_valuesearchtable.contextMenuEvent = self.tableWidget_valuesearchtable_context_menu_event
         self.treeWidget_AddressTable.itemClicked.connect(self.treeWidget_AddressTable_item_clicked)
         self.treeWidget_AddressTable.itemDoubleClicked.connect(self.treeWidget_AddressTable_item_double_clicked)
         self.treeWidget_AddressTable.expanded.connect(self.resize_address_table)
@@ -736,6 +737,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def treeWidget_AddressTable_context_menu_event(self, event):
         current_row = guiutils.get_current_item(self.treeWidget_AddressTable)
+        current_address = current_row.text(ADDR_COL) if current_row else None
         header = self.treeWidget_AddressTable.headerItem()
         menu = QMenu()
         delete_record = menu.addAction(f"{tr.DELETE}[Del]")
@@ -839,8 +841,8 @@ class MainForm(QMainWindow, MainWindow):
             freeze_default: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT),
             freeze_inc: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.INCREMENT),
             freeze_dec: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.DECREMENT),
-            browse_region: self.browse_region_for_selected_row,
-            disassemble: self.disassemble_selected_row,
+            browse_region: lambda: self.browse_region_for_address(current_address),
+            disassemble: lambda: self.disassemble_for_address(current_address),
             pointer_scanner: self.exec_pointer_scanner,
             pointer_scan: self.exec_pointer_scan,
             what_writes: lambda: self.exec_track_watchpoint_widget(typedefs.WATCHPOINT_TYPE.WRITE_ONLY),
@@ -896,21 +898,16 @@ class MainForm(QMainWindow, MainWindow):
             byte_len = typedefs.index_to_valuetype_dict[value_type.value_index][0]
         TrackWatchpointWidgetForm(self, address, byte_len, watchpoint_type)
 
-    def browse_region_for_selected_row(self):
-        row = guiutils.get_current_item(self.treeWidget_AddressTable)
-        if row:
-            self.memory_view_window.hex_dump_address(int(row.text(ADDR_COL).strip("P->"), 16))
+    def browse_region_for_address(self, address: str):
+        if address:
+            self.memory_view_window.hex_dump_address(int(address.strip("P->"), 16))
             self.memory_view_window.show()
             self.memory_view_window.activateWindow()
 
-    def disassemble_selected_row(self):
-        row = guiutils.get_current_item(self.treeWidget_AddressTable)
-        if row:
-            if self.memory_view_window.disassemble_expression(
-                row.text(ADDR_COL).strip("P->"), append_to_travel_history=True
-            ):
-                self.memory_view_window.show()
-                self.memory_view_window.activateWindow()
+    def disassemble_for_address(self, address: str):
+        if address and self.memory_view_window.disassemble_expression(address.strip("P->"), append_history=True):
+            self.memory_view_window.show()
+            self.memory_view_window.activateWindow()
 
     def change_freeze_type(self, freeze_type):
         for row in self.treeWidget_AddressTable.selectedItems():
@@ -1050,15 +1047,20 @@ class MainForm(QMainWindow, MainWindow):
         for item in self.treeWidget_AddressTable.selectedItems():
             (item.parent() or root).removeChild(item)
 
-    def treeWidget_AddressTable_key_press_event(self, event):
+    def treeWidget_AddressTable_key_press_event(self, event: QKeyEvent):
+        current_row = guiutils.get_current_item(self.treeWidget_AddressTable)
+        current_address = current_row.text(ADDR_COL) if current_row else None
         actions = typedefs.KeyboardModifiersTupleDict(
             [
                 (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete), self.delete_records),
                 (
                     QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B),
-                    self.browse_region_for_selected_row,
+                    lambda: self.browse_region_for_address(current_address),
                 ),
-                (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D), self.disassemble_selected_row),
+                (
+                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
+                    lambda: self.disassemble_for_address(current_address),
+                ),
                 (
                     QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R),
                     self.pushButton_RefreshAdressTable_clicked,
@@ -1453,27 +1455,90 @@ class MainForm(QMainWindow, MainWindow):
         self.update_address_table()
 
     def tableWidget_valuesearchtable_key_press_event(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Delete:
-            # get selected rows
-            selected_rows = self.tableWidget_valuesearchtable.selectedItems()
-            if not selected_rows:
-                return
+        current_item = self.tableWidget_valuesearchtable.currentItem()
+        if debugcore.currentpid == -1 or not current_item:
+            return
+        current_address = self.tableWidget_valuesearchtable.item(current_item.row(), SEARCH_TABLE_ADDRESS_COL).text()
+        actions = typedefs.KeyboardModifiersTupleDict(
+            [
+                (
+                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C),
+                    self.copy_valuesearchtable_selection,
+                ),
+                (
+                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B),
+                    lambda: self.browse_region_for_address(current_address),
+                ),
+                (
+                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
+                    lambda: self.disassemble_for_address(current_address),
+                ),
+                (
+                    QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete),
+                    self.delete_valuesearchtable_selection,
+                ),
+            ]
+        )
+        try:
+            actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
+        except KeyError:
+            self.tableWidget_valuesearchtable.keyPressEvent_original(event)
 
-            # get the row indexes
-            rows = set()
-            for item in selected_rows:
-                rows.add(item.row())
+    def tableWidget_valuesearchtable_context_menu_event(self, event: QContextMenuEvent) -> None:
+        selected_indexes = self.tableWidget_valuesearchtable.selectionModel().selectedRows()
+        if debugcore.currentpid == -1 or not selected_indexes:
+            return
+        current_row = self.tableWidget_valuesearchtable.currentItem().row()
+        address = self.tableWidget_valuesearchtable.item(current_row, SEARCH_TABLE_ADDRESS_COL).text()
+        menu = QMenu()
+        if len(selected_indexes) > 1:
+            copy_selection = menu.addAction(f"{tr.COPY_ADDRESSES}[Ctrl+C]")
+        else:
+            copy_selection = menu.addAction(f"{tr.COPY_ADDRESS}[Ctrl+C]")
+        menu.addSeparator()
+        browse_region = menu.addAction(f"{tr.BROWSE_MEMORY_REGION}[Ctrl+B]")
+        disassemble = menu.addAction(f"{tr.DISASSEMBLE_ADDRESS}[Ctrl+D]")
+        menu.addSeparator()
+        delete_selection = menu.addAction(f"{tr.DELETE_SELECTION}[Del]")
+        font_size = self.tableWidget_valuesearchtable.font().pointSize()
+        menu.setStyleSheet(f"font-size: {font_size}pt;")
+        action = menu.exec(event.globalPos())
+        actions = {
+            copy_selection: self.copy_valuesearchtable_selection,
+            browse_region: lambda: self.browse_region_for_address(address),
+            disassemble: lambda: self.disassemble_for_address(address),
+            delete_selection: self.delete_valuesearchtable_selection
+        }
+        try:
+            actions[action]()
+        except KeyError:
+            pass
 
-            scanmem.send_command("delete {}".format(",".join([str(row) for row in rows])))
+    def copy_valuesearchtable_selection(self):
+        selected_indexes = self.tableWidget_valuesearchtable.selectionModel().selectedRows()
+        address_list = []
+        for index in selected_indexes:
+            row = index.row()
+            address = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL).text()
+            address_list.append(address)
+        app.clipboard().setText(" ".join(address_list))
 
-            # remove the rows from the table - removing in reverse sorted order to avoid index issues
-            for row in sorted(rows, reverse=True):
-                self.tableWidget_valuesearchtable.removeRow(row)
-            self.update_match_count()
-
+    def delete_valuesearchtable_selection(self):
+        selected_rows = self.tableWidget_valuesearchtable.selectedItems()
+        if not selected_rows:
             return
 
-        self.tableWidget_valuesearchtable.keyPressEvent_original(event)
+        # get the row indexes
+        rows = set()
+        for item in selected_rows:
+            rows.add(item.row())
+
+        scanmem.send_command("delete {}".format(",".join([str(row) for row in rows])))
+
+        # remove the rows from the table - removing in reverse sorted order to avoid index issues
+        for row in sorted(rows, reverse=True):
+            self.tableWidget_valuesearchtable.removeRow(row)
+        self.update_match_count()
 
     def comboBox_ValueType_current_index_changed(self):
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
@@ -3251,7 +3316,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         actions = {
             edit: self.exec_hex_view_edit_dialog,
             go_to: self.exec_hex_view_go_to_dialog,
-            disassemble: lambda: self.disassemble_expression(hex(addr), append_to_travel_history=True),
+            disassemble: lambda: self.disassemble_expression(hex(addr), append_history=True),
             add_address: self.exec_hex_view_add_address_dialog,
             copy_selection: self.copy_hex_view_selection,
             refresh: self.refresh_hex_view,
@@ -3509,7 +3574,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     # offset can also be an address as hex str
     # returns True if the given expression is disassembled correctly, False if not
-    def disassemble_expression(self, expression, offset="+200", append_to_travel_history=False):
+    def disassemble_expression(self, expression, offset="+200", append_history=False):
         if debugcore.currentpid == -1:
             return
         disas_data = debugcore.disassemble(expression, offset)
@@ -3629,7 +3694,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         # We append the old record to travel history as last action because we wouldn't like to see unnecessary
         # addresses in travel history if any error occurs while displaying the next location
-        if append_to_travel_history:
+        if append_history:
             self.tableWidget_Disassemble.travel_history.append(previous_first_address)
         self.disassemble_currently_displayed_address = current_first_address
         return True
@@ -3861,7 +3926,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack),
                     (
                         QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
-                        lambda: self.disassemble_expression(current_address, append_to_travel_history=True),
+                        lambda: self.disassemble_expression(current_address, append_history=True),
                     ),
                     (
                         QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H),
@@ -3914,7 +3979,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             copy_value: lambda: copy_to_clipboard(selected_row, STACK_VALUE_COL),
             copy_points_to: lambda: copy_to_clipboard(selected_row, STACK_POINTS_TO_COL),
             refresh: self.update_stack,
-            show_in_disas: lambda: self.disassemble_expression(current_address, append_to_travel_history=True),
+            show_in_disas: lambda: self.disassemble_expression(current_address, append_history=True),
             show_in_hex: lambda: self.hex_dump_address(int(current_address, 16)),
         }
         try:
@@ -3937,7 +4002,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             if points_to_text.startswith("(str)"):
                 self.hex_dump_address(int(current_address, 16))
             else:
-                self.disassemble_expression(current_address, append_to_travel_history=True)
+                self.disassemble_expression(current_address, append_history=True)
 
     def tableWidget_StackTrace_double_click(self, index):
         if debugcore.currentpid == -1:
@@ -3946,7 +4011,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if index.column() == STACKTRACE_RETURN_ADDRESS_COL:
             current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_RETURN_ADDRESS_COL).text()
             current_address = utils.extract_address(current_address_text)
-            self.disassemble_expression(current_address, append_to_travel_history=True)
+            self.disassemble_expression(current_address, append_history=True)
         if index.column() == STACKTRACE_FRAME_ADDRESS_COL:
             current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_FRAME_ADDRESS_COL).text()
             current_address = utils.extract_address(current_address_text)
@@ -4022,9 +4087,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_G), self.exec_hex_view_go_to_dialog),
                 (
                     QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
-                    lambda: self.disassemble_expression(
-                        hex(self.hex_selection_address_begin), append_to_travel_history=True
-                    ),
+                    lambda: self.disassemble_expression(hex(self.hex_selection_address_begin), append_history=True),
                 ),
                 (
                     QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_A),
@@ -4129,7 +4192,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
         )
         if address:
-            self.disassemble_expression(address, append_to_travel_history=True)
+            self.disassemble_expression(address, append_history=True)
 
     def disassemble_go_back(self):
         if debugcore.currentpid == -1:
@@ -4235,7 +4298,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         except KeyError:
             pass
         if action in bookmark_actions:
-            self.disassemble_expression(utils.extract_address(action.text()), append_to_travel_history=True)
+            self.disassemble_expression(utils.extract_address(action.text()), append_history=True)
 
     def dissect_current_region(self):
         if debugcore.currentpid == -1:
@@ -4294,7 +4357,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         go_to_dialog = InputDialogForm(self, [(tr.ENTER_EXPRESSION, current_address)])
         if go_to_dialog.exec():
             traveled_exp = go_to_dialog.get_values()
-            self.disassemble_expression(traveled_exp, append_to_travel_history=True)
+            self.disassemble_expression(traveled_exp, append_history=True)
 
     def bookmark_address(self, int_address):
         if debugcore.currentpid == -1:
@@ -4464,7 +4527,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.lineEdit_Comment.setText(self.parent().tableWidget_Disassemble.bookmarks[int(current_address, 16)])
 
     def listWidget_item_double_clicked(self, item):
-        self.parent().disassemble_expression(utils.extract_address(item.text()), append_to_travel_history=True)
+        self.parent().disassemble_expression(utils.extract_address(item.text()), append_history=True)
 
     def exec_add_entry_dialog(self):
         entry_dialog = InputDialogForm(self, [(tr.ENTER_EXPRESSION, "")])
@@ -4660,7 +4723,7 @@ class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
     def tableWidget_Instructions_double_clicked(self, index):
         current_address_text = self.tableWidget_Instructions.item(index.row(), INSTR_ADDR_COL).text()
         current_address = utils.extract_address(current_address_text)
-        self.parent().disassemble_expression(current_address, append_to_travel_history=True)
+        self.parent().disassemble_expression(current_address, append_history=True)
 
 
 class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
@@ -4807,7 +4870,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         else:
             current_breakpoint_type = self.tableWidget_BreakpointInfo.item(index.row(), BREAK_TYPE_COL).text()
             if "breakpoint" in current_breakpoint_type:
-                self.parent().disassemble_expression(current_address, append_to_travel_history=True)
+                self.parent().disassemble_expression(current_address, append_history=True)
             else:
                 self.parent().hex_dump_address(current_address_int)
 
@@ -4876,7 +4939,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
 
     def tableWidget_Opcodes_item_double_clicked(self, index):
         self.parent().memory_view_window.disassemble_expression(
-            self.tableWidget_Opcodes.item(index.row(), TRACK_WATCHPOINT_ADDR_COL).text(), append_to_travel_history=True
+            self.tableWidget_Opcodes.item(index.row(), TRACK_WATCHPOINT_ADDR_COL).text(), append_history=True
         )
         self.parent().memory_view_window.show()
         self.parent().memory_view_window.activateWindow()
@@ -5176,7 +5239,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             return
         address = utils.extract_address(current_item.trace_data[0])
         if address:
-            self.parent().disassemble_expression(address, append_to_travel_history=True)
+            self.parent().disassemble_expression(address, append_history=True)
 
 
 class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
@@ -5267,7 +5330,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         address = self.tableWidget_SymbolInfo.item(index.row(), FUNCTIONS_INFO_ADDR_COL).text()
         if address == tr.DEFINED:
             return
-        self.parent().disassemble_expression(address, append_to_travel_history=True)
+        self.parent().disassemble_expression(address, append_history=True)
 
     def pushButton_Help_clicked(self):
         InputDialogForm(
@@ -5533,7 +5596,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
     def tableWidget_Opcodes_item_double_clicked(self, index):
         row = index.row()
         address = self.tableWidget_Opcodes.item(row, SEARCH_OPCODE_ADDR_COL).text()
-        self.parent().disassemble_expression(utils.extract_address(address), append_to_travel_history=True)
+        self.parent().disassemble_expression(utils.extract_address(address), append_history=True)
 
     def tableWidget_Opcodes_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -5828,7 +5891,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         self.parent().hex_dump_address(int(address, 16))
 
     def listWidget_Referrers_item_double_clicked(self, item):
-        self.parent().disassemble_expression(utils.extract_address(item.text()), append_to_travel_history=True)
+        self.parent().disassemble_expression(utils.extract_address(item.text()), append_history=True)
 
     def tableWidget_References_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -5945,10 +6008,10 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
     def tableWidget_References_item_double_clicked(self, index):
         row = index.row()
         address = self.tableWidget_References.item(row, REF_CALL_ADDR_COL).text()
-        self.parent().disassemble_expression(utils.extract_address(address), append_to_travel_history=True)
+        self.parent().disassemble_expression(utils.extract_address(address), append_history=True)
 
     def listWidget_Referrers_item_double_clicked(self, item):
-        self.parent().disassemble_expression(utils.extract_address(item.text()), append_to_travel_history=True)
+        self.parent().disassemble_expression(utils.extract_address(item.text()), append_history=True)
 
     def tableWidget_References_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -6082,7 +6145,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         self.textBrowser_DisasInfo.ensureCursorVisible()
 
     def listWidget_Referrers_item_double_clicked(self, item):
-        self.parent().disassemble_expression(utils.extract_address(item.text()), append_to_travel_history=True)
+        self.parent().disassemble_expression(utils.extract_address(item.text()), append_history=True)
 
     def listWidget_Referrers_context_menu_event(self, event):
         def copy_to_clipboard(row):

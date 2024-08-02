@@ -15,11 +15,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from PyQt6.QtWidgets import QWidget, QScrollBar, QTableWidget, QComboBox, QMenu, QLayout
+from PyQt6.QtWidgets import (
+    QWidget,
+    QScrollBar,
+    QTableWidget,
+    QTableWidgetItem,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QListWidget,
+    QListWidgetItem,
+    QComboBox,
+    QMenu,
+    QLayout,
+)
 from PyQt6.QtCore import QObject, QRegularExpression
 from PyQt6.QtGui import QShortcut, QRegularExpressionValidator
 from libpince import utils, typedefs, regexes
 from tr.tr import TranslationConstants as tr
+from typing import overload
 
 validator_map: dict[str, QRegularExpressionValidator | None] = {
     "int": QRegularExpressionValidator(QRegularExpression(regexes.decimal_number.pattern)),  # integers
@@ -135,14 +148,26 @@ def get_current_row(tablewidget: QTableWidget):
     return -1
 
 
-def get_current_item(tablewidget: QTableWidget):
-    r"""Returns the currently selected item for the given QTableWidget
+@overload
+def get_current_item(listwidget: QListWidget) -> QListWidgetItem | None: ...
+
+
+@overload
+def get_current_item(tablewidget: QTableWidget) -> QTableWidgetItem | None: ...
+
+
+@overload
+def get_current_item(treewidget: QTreeWidget) -> QTreeWidgetItem | None: ...
+
+
+def get_current_item(widget: QListWidget | QTableWidget | QTreeWidget):
+    r"""Returns the currently selected item for the given widget
     If you try to use only selectionModel().currentItem() for this purpose, you'll get the last selected item even
     if it was unselected afterwards. This is why this function exists, it checks the selection state before returning
     the selected item. Unlike get_current_row, this function can be used with QTreeWidget
 
     Args:
-        tablewidget (QTableWidget): Self-explanatory
+        widget (QListWidget | QTableWidget | QTreeWidget): Self-explanatory
 
     Returns:
         Any: Currently selected item. Returns None if nothing is selected
@@ -155,8 +180,8 @@ def get_current_item(tablewidget: QTableWidget):
 
         For developers: You can use the regex \.current.*\.connect to search signals if a cleanup is needed
     """
-    if tablewidget.selectionModel().selectedRows():
-        return tablewidget.currentItem()
+    if widget.selectionModel().selectedRows():
+        return widget.currentItem()
 
 
 def delete_menu_entries(menu: QMenu, QAction_list: list):
