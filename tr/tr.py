@@ -71,6 +71,7 @@ class TranslationConstants(QObject):
     BROWSE_MEMORY_REGION = QT_TR_NOOP("Browse this memory region")
     DISASSEMBLE_ADDRESS = QT_TR_NOOP("Disassemble this address")
     DELETE = QT_TR_NOOP("Delete")
+    DELETE_SELECTION = QT_TR_NOOP("Delete selection")
     CUT = QT_TR_NOOP("Cut")
     COPY = QT_TR_NOOP("Copy")
     PASTE = QT_TR_NOOP("Paste")
