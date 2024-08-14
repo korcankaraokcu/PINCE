@@ -47,6 +47,7 @@ from PyQt6.QtGui import (
     QStandardItem,
     QCloseEvent,
     QKeyEvent,
+    QMouseEvent,
 )
 from PyQt6.QtWidgets import (
     QApplication,
@@ -138,6 +139,7 @@ from GUI.RestoreInstructionsWidget import Ui_Form as RestoreInstructionsWidget
 from GUI.PointerScanSearchDialog import Ui_Dialog as PointerScanSearchDialog
 from GUI.PointerScanFilterDialog import Ui_Dialog as PointerScanFilterDialog
 from GUI.PointerScanWindow import Ui_MainWindow as PointerScanWindow
+from GUI.ScanRegionsDialog import Ui_Dialog as ScanRegionsDialog
 
 from GUI.AbstractTableModels.HexModel import QHexModel
 from GUI.AbstractTableModels.AsciiModel import QAsciiModel
@@ -515,6 +517,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_UndoScan.clicked.connect(self.pushButton_UndoScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
+        self.pushButton_ScanRegions.clicked.connect(self.pushButton_ScanRegions_clicked)
         self.scan_mode = typedefs.SCAN_MODE.NEW
         self.pushButton_NewFirstScan_clicked()
         self.comboBox_ScanScope_init()
@@ -1394,6 +1397,10 @@ class MainForm(QMainWindow, MainWindow):
         self.scan_values()
         self.pushButton_UndoScan.setEnabled(True)
 
+    def pushButton_ScanRegions_clicked(self):
+        scan_regions_dialog = ScanRegionsDialogForm(self)
+        scan_regions_dialog.exec()
+
     def scan_callback(self):
         self.progress_bar_timer.stop()
         self.progressBar.setValue(100)
@@ -1507,7 +1514,7 @@ class MainForm(QMainWindow, MainWindow):
             copy_selection: self.copy_valuesearchtable_selection,
             browse_region: lambda: self.browse_region_for_address(address),
             disassemble: lambda: self.disassemble_for_address(address),
-            delete_selection: self.delete_valuesearchtable_selection
+            delete_selection: self.delete_valuesearchtable_selection,
         }
         try:
             actions[action]()
@@ -6344,6 +6351,78 @@ class PointerScanWindowForm(QMainWindow, PointerScanWindow):
                 return
             self.textEdit.clear()
             self.textEdit.setText(os.linesep.join(filter_result))
+
+
+class ScanRegionsDialogForm(QDialog, ScanRegionsDialog):
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
+        self.setupUi(self)
+        regions_text = scanmem.send_command("lregions", True).decode("utf-8")
+        regex = re.compile(r"\[\s*(\d+)\] (\w+),\s+(\d+) bytes,\s+(\w+),\s+(\w+),\s+([rwx-]+),\s+(.+)")
+        data = regex.findall(regions_text)
+        self.tableWidget_Regions.setRowCount(len(data))
+        for row, (region_id, start_address, size, region_type, load_address, perms, file) in enumerate(data):
+            id_item = QTableWidgetItem(region_id)
+            id_item.setCheckState(Qt.CheckState.Unchecked)
+            self.tableWidget_Regions.setItem(row, 0, id_item)
+            self.tableWidget_Regions.setItem(row, 1, QTableWidgetItem(start_address))
+            self.tableWidget_Regions.setItem(row, 2, QTableWidgetItem(size))
+            self.tableWidget_Regions.setItem(row, 3, QTableWidgetItem(region_type))
+            self.tableWidget_Regions.setItem(row, 4, QTableWidgetItem(load_address))
+            self.tableWidget_Regions.setItem(row, 5, QTableWidgetItem(perms))
+            self.tableWidget_Regions.setItem(row, 6, QTableWidgetItem(file))
+        self.tableWidget_Regions.resizeColumnsToContents()
+        guiutils.center_to_parent(self)
+        self.tableWidget_Regions.mousePressEvent_original = self.tableWidget_Regions.mousePressEvent
+        self.tableWidget_Regions.mousePressEvent = self.tableWidget_Regions_mouse_press_event
+        self.tableWidget_Regions.mouseReleaseEvent_original = self.tableWidget_Regions.mouseReleaseEvent
+        self.tableWidget_Regions.mouseReleaseEvent = self.tableWidget_Regions_mouse_release_event
+        self.tableWidget_Regions.keyPressEvent_original = self.tableWidget_Regions.keyPressEvent
+        self.tableWidget_Regions.keyPressEvent = self.tableWidget_Regions_key_press_event
+        self.pushButton_Invert.clicked.connect(self.invert_selection)
+
+    def tableWidget_Regions_mouse_press_event(self, event: QMouseEvent) -> None:
+        self.tableWidget_Regions.mousePressEvent_original(event)
+        item = self.tableWidget_Regions.itemAt(event.pos())
+        if item and item.column() == 0:
+            row = item.row()
+            self.tableWidget_Regions.selectRow(row)
+
+    def tableWidget_Regions_mouse_release_event(self, event: QMouseEvent) -> None:
+        self.tableWidget_Regions.mouseReleaseEvent_original(event)
+        item = self.tableWidget_Regions.itemAt(event.pos())
+        if item and item.column() == 0:
+            new_state = item.checkState()
+            for selected_item in self.tableWidget_Regions.selectedItems():
+                if selected_item.column() == 0:
+                    selected_item.setCheckState(new_state)
+
+    def tableWidget_Regions_key_press_event(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Space:
+            current_row = self.tableWidget_Regions.currentRow()
+            if current_row != -1:
+                cur_state = self.tableWidget_Regions.item(current_row, 0).checkState()
+                new_state = Qt.CheckState.Unchecked if cur_state == Qt.CheckState.Checked else Qt.CheckState.Checked
+                for selected_item in self.tableWidget_Regions.selectedItems():
+                    if selected_item.column() == 0:
+                        selected_item.setCheckState(new_state)
+        else:
+            self.tableWidget_Regions.keyPressEvent_original(event)
+
+    def invert_selection(self) -> None:
+        for row in range(self.tableWidget_Regions.rowCount()):
+            item = self.tableWidget_Regions.item(row, 0)
+            cur_state = item.checkState()
+            new_state = Qt.CheckState.Unchecked if cur_state == Qt.CheckState.Checked else Qt.CheckState.Checked
+            item.setCheckState(new_state)
+
+    def accept(self) -> None:
+        for row in range(self.tableWidget_Regions.rowCount()):
+            item = self.tableWidget_Regions.item(row, 0)
+            if item.checkState() == Qt.CheckState.Checked:
+                region_id = int(item.text())
+                scanmem.send_command(f"dregion {region_id}")
+        return super().accept()
 
 
 def handle_exit():

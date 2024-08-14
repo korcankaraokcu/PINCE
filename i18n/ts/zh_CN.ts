@@ -143,6 +143,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
       <translation>多个条目用分号（;）分隔</translation>
     </message>
     <message>
+      <location filename="../../GUI/ScanRegionsDialog.ui" line="0" />
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
       <source>Type</source>
@@ -289,6 +290,51 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
       <location filename="../../GUI/PointerScanSearchDialog.ui" line="0" />
       <source>Solve Circular References</source>
       <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/ScanRegionsDialog.ui" line="0" />
+      <source>Manage Scan Regions</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/ScanRegionsDialog.ui" line="0" />
+      <source>Selected regions will be deleted from the current scan</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/ScanRegionsDialog.ui" line="0" />
+      <source>Invert Selection</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/ScanRegionsDialog.ui" line="0" />
+      <source>ID</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/ScanRegionsDialog.ui" line="0" />
+      <source>Start Address</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/ScanRegionsDialog.ui" line="0" />
+      <source>Size(bytes)</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/ScanRegionsDialog.ui" line="0" />
+      <source>Load Address</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/ScanRegionsDialog.ui" line="0" />
+      <source>Perms</source>
+      <translation type="unfinished">权限</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/ScanRegionsDialog.ui" line="0" />
+      <source>File</source>
+      <translation type="unfinished">文件</translation>
     </message>
     <message>
       <location filename="../../GUI/SettingsDialog.ui" line="0" />
@@ -951,6 +997,11 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Endianness:</source>
       <translation>字节序：</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Manage Scan Regions</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../GUI/PointerScanWindow.ui" line="0" />

@@ -233,6 +233,9 @@ class Ui_MainWindow(object):
         self.comboBox_Endianness.setObjectName("comboBox_Endianness")
         self.horizontalLayout_3.addWidget(self.comboBox_Endianness)
         self.verticalLayout_4.addLayout(self.horizontalLayout_3)
+        self.pushButton_ScanRegions = QtWidgets.QPushButton(parent=self.widget)
+        self.pushButton_ScanRegions.setObjectName("pushButton_ScanRegions")
+        self.verticalLayout_4.addWidget(self.pushButton_ScanRegions)
         spacerItem4 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
         self.verticalLayout_4.addItem(spacerItem4)
         self.horizontalLayout_4.addWidget(self.widget)
@@ -298,4 +301,5 @@ class Ui_MainWindow(object):
         self.label_2.setText(_translate("MainWindow", "Value Type:"))
         self.label_ScanScope.setText(_translate("MainWindow", "Scan Scope:"))
         self.label_3.setText(_translate("MainWindow", "Endianness:"))
+        self.pushButton_ScanRegions.setText(_translate("MainWindow", "Manage Scan Regions"))
 from GUI.TreeWidgets.AddressTree import QAddressTree
