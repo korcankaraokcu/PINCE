@@ -781,14 +781,14 @@ def memory_handle():
 
 
 def read_memory(
-    address,
-    value_index,
-    length=None,
-    zero_terminate=True,
-    value_repr=typedefs.VALUE_REPR.UNSIGNED,
-    endian=typedefs.ENDIANNESS.HOST,
-    mem_handle=None,
-):
+    address: str | int,
+    value_index: int,
+    length: int = 0,
+    zero_terminate: bool = True,
+    value_repr: int = typedefs.VALUE_REPR.UNSIGNED,
+    endian: int = typedefs.ENDIANNESS.HOST,
+    mem_handle: io.BufferedReader | None = None,
+) -> str | float | int | None:
     """Reads value from the given address
 
     Args:
@@ -800,7 +800,7 @@ def read_memory(
         value_index is STRING. Ignored otherwise
         value_repr (int): Can be a member of typedefs.VALUE_REPR. Only usable with integer types
         endian (int): Can be a member of typedefs.ENDIANNESS
-        mem_handle (BinaryIO): A file handle that points to the memory file of the current process
+        mem_handle (io.BufferedReader, None): A file handle that points to the memory file of the current process
         This parameter is used for optimization, See memory_handle
         Don't forget to close the handle after you're done if you use this parameter manually
 

@@ -1809,8 +1809,11 @@ class MainForm(QMainWindow, MainWindow):
         if debugcore.currentpid == -1:
             return
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
-        while it.value():
+        while True:
             row = it.value()
+            if not row:
+                break
+            it += 1
             if row.checkState(FROZEN_COL) == Qt.CheckState.Checked:
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 address = row.text(ADDR_COL).strip("P->")
@@ -1819,6 +1822,8 @@ class MainForm(QMainWindow, MainWindow):
                 freeze_type = frozen.freeze_type
                 if typedefs.VALUE_INDEX.is_number(vt.value_index):
                     new_value = debugcore.read_memory(address, vt.value_index, endian=vt.endian)
+                    if new_value == None:
+                        continue
                     if (
                         freeze_type == typedefs.FREEZE_TYPE.INCREMENT
                         and new_value > value
@@ -1829,7 +1834,6 @@ class MainForm(QMainWindow, MainWindow):
                         debugcore.write_memory(address, vt.value_index, new_value, endian=vt.endian)
                         continue
                 debugcore.write_memory(address, vt.value_index, value, vt.zero_terminate, vt.endian)
-            it += 1
 
     def treeWidget_AddressTable_item_clicked(self, row: QTreeWidgetItem, column: int):
         if column == FROZEN_COL:
