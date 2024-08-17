@@ -3,6 +3,7 @@ name: Release AppImage
 on:
   push:
     tags:
+      - "v*.*"
       - "v*.*.*"
 
 jobs:
