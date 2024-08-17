@@ -508,6 +508,10 @@ class MainForm(QMainWindow, MainWindow):
         guiutils.append_shortcut_to_tooltip(self.pushButton_Save, self.shortcut_save_file)
 
         # Saving the original function because super() doesn't work when we override functions like this
+        self.treeWidget_AddressTable.mousePressEvent_original = self.treeWidget_AddressTable.mousePressEvent
+        self.treeWidget_AddressTable.mousePressEvent = self.treeWidget_AddressTable_mouse_press_event
+        self.treeWidget_AddressTable.mouseReleaseEvent_original = self.treeWidget_AddressTable.mouseReleaseEvent
+        self.treeWidget_AddressTable.mouseReleaseEvent = self.treeWidget_AddressTable_mouse_release_event
         self.treeWidget_AddressTable.keyPressEvent_original = self.treeWidget_AddressTable.keyPressEvent
         self.treeWidget_AddressTable.keyPressEvent = self.treeWidget_AddressTable_key_press_event
         self.treeWidget_AddressTable.contextMenuEvent = self.treeWidget_AddressTable_context_menu_event
@@ -548,11 +552,11 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.keyPressEvent_original = self.tableWidget_valuesearchtable.keyPressEvent
         self.tableWidget_valuesearchtable.keyPressEvent = self.tableWidget_valuesearchtable_key_press_event
         self.tableWidget_valuesearchtable.contextMenuEvent = self.tableWidget_valuesearchtable_context_menu_event
-        self.treeWidget_AddressTable.itemClicked.connect(self.treeWidget_AddressTable_item_clicked)
         self.treeWidget_AddressTable.itemDoubleClicked.connect(self.treeWidget_AddressTable_item_double_clicked)
         self.treeWidget_AddressTable.expanded.connect(self.resize_address_table)
         self.treeWidget_AddressTable.collapsed.connect(self.resize_address_table)
         self.treeWidget_AddressTable.header().setSortIndicatorClearable(True)
+        self.treeWidget_AddressTable.header().setSortIndicator(-1, Qt.SortOrder.AscendingOrder)  # Clear sort indicator
         icons_directory = guiutils.get_icons_directory()
         self.pushButton_AttachProcess.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
@@ -912,34 +916,51 @@ class MainForm(QMainWindow, MainWindow):
             self.memory_view_window.show()
             self.memory_view_window.activateWindow()
 
-    def change_freeze_type(self, freeze_type):
-        for row in self.treeWidget_AddressTable.selectedItems():
-            frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
-            frozen.freeze_type = freeze_type
-
-            if freeze_type == typedefs.FREEZE_TYPE.DEFAULT:
+    def change_freeze_type(self, freeze_type: int | None = None, row: QTreeWidgetItem | None = None) -> None:
+        if freeze_type == None:
+            # No type has been specified, iterate through the freeze types
+            # This usually happens if user clicks the freeze type text instead of the checkbox
+            frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+            if frozen.freeze_type == typedefs.FREEZE_TYPE.DECREMENT:
+                # Decrement is the last freeze type
+                freeze_type = typedefs.FREEZE_TYPE.DEFAULT
+            else:
+                freeze_type = frozen.freeze_type + 1
+        rows = [row] if row else self.treeWidget_AddressTable.selectedItems()
+        for row in rows:
+            frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+            if row.checkState(FROZEN_COL) == Qt.CheckState.Checked:
+                frozen.freeze_type = freeze_type
+                if freeze_type == typedefs.FREEZE_TYPE.DEFAULT:
+                    row.setText(FROZEN_COL, "")
+                    row.setForeground(FROZEN_COL, QBrush())
+                elif freeze_type == typedefs.FREEZE_TYPE.INCREMENT:
+                    row.setText(FROZEN_COL, "▲")
+                    row.setForeground(FROZEN_COL, QBrush(QColor(0, 255, 0)))
+                elif freeze_type == typedefs.FREEZE_TYPE.DECREMENT:
+                    row.setText(FROZEN_COL, "▼")
+                    row.setForeground(FROZEN_COL, QBrush(QColor(255, 0, 0)))
+            else:
+                frozen.freeze_type = typedefs.FREEZE_TYPE.DEFAULT
                 row.setText(FROZEN_COL, "")
                 row.setForeground(FROZEN_COL, QBrush())
-            elif freeze_type == typedefs.FREEZE_TYPE.INCREMENT:
-                row.setText(FROZEN_COL, "▲")
-                row.setForeground(FROZEN_COL, QBrush(QColor(0, 255, 0)))
-            elif freeze_type == typedefs.FREEZE_TYPE.DECREMENT:
-                row.setText(FROZEN_COL, "▼")
-                row.setForeground(FROZEN_COL, QBrush(QColor(255, 0, 0)))
 
     def toggle_records(self, toggle_children=False):
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
-        if row:
+        selected_items = self.treeWidget_AddressTable.selectedItems()
+        # If only one item is selected and then clicked while ctrl is being held
+        # There'll be no selected rows even with a current row present
+        if row and selected_items:
+            if not row.isSelected():
+                row = selected_items[0]
             check_state = row.checkState(FROZEN_COL)
             new_state = Qt.CheckState.Checked if check_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
-            for row in self.treeWidget_AddressTable.selectedItems():
-                row.setCheckState(FROZEN_COL, new_state)
-                self.treeWidget_AddressTable_item_clicked(row, FROZEN_COL)
+            for row in selected_items:
+                self.handle_freeze_change(row, new_state)
                 if toggle_children:
                     for index in range(row.childCount()):
                         child = row.child(index)
-                        child.setCheckState(FROZEN_COL, new_state)
-                        self.treeWidget_AddressTable_item_clicked(child, FROZEN_COL)
+                        self.handle_freeze_change(child, new_state)
 
     def cut_records(self):
         self.copy_records()
@@ -1050,6 +1071,37 @@ class MainForm(QMainWindow, MainWindow):
         for item in self.treeWidget_AddressTable.selectedItems():
             (item.parent() or root).removeChild(item)
 
+    def treeWidget_AddressTable_mouse_press_event(self, event: QMouseEvent) -> None:
+        self.treeWidget_AddressTable.mousePressEvent_original(event)
+        item = self.treeWidget_AddressTable.itemAt(event.pos())
+        column = self.treeWidget_AddressTable.columnAt(event.pos().x())
+        # Qt doesn't select rows when checkboxes are clicked
+        # Ensure that the row is selected when frozen col is clicked
+        if item and column == FROZEN_COL:
+            item.setSelected(True)
+
+    def treeWidget_AddressTable_mouse_release_event(self, event: QMouseEvent) -> None:
+        item = self.treeWidget_AddressTable.itemAt(event.pos())
+        column = self.treeWidget_AddressTable.columnAt(event.pos().x())
+        if item and column == FROZEN_COL:
+            old_state = item.checkState(FROZEN_COL)
+            self.treeWidget_AddressTable.mouseReleaseEvent_original(event)
+            new_state = item.checkState(FROZEN_COL)
+            item.setSelected(True)
+            box_clicked = old_state != new_state
+            current_item = self.treeWidget_AddressTable.currentItem()
+            if not box_clicked and new_state == Qt.CheckState.Checked:
+                self.change_freeze_type(row=current_item)
+                frozen: typedefs.Frozen = current_item.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+                freeze_type = frozen.freeze_type
+            for selected_item in self.treeWidget_AddressTable.selectedItems():
+                if box_clicked:
+                    self.handle_freeze_change(selected_item, new_state)
+                elif new_state == Qt.CheckState.Checked:
+                    self.change_freeze_type(freeze_type, selected_item)
+        else:
+            self.treeWidget_AddressTable.mouseReleaseEvent_original(event)
+
     def treeWidget_AddressTable_key_press_event(self, event: QKeyEvent):
         current_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         current_address = current_row.text(ADDR_COL) if current_row else None
@@ -1069,6 +1121,7 @@ class MainForm(QMainWindow, MainWindow):
                     self.pushButton_RefreshAdressTable_clicked,
                 ),
                 (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space), self.toggle_records),
+                (QKeyCombination(Qt.KeyboardModifier.ShiftModifier, Qt.Key.Key_Space), self.toggle_records),
                 (
                     QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Space),
                     lambda: self.toggle_records(True),
@@ -1835,35 +1888,25 @@ class MainForm(QMainWindow, MainWindow):
                         continue
                 debugcore.write_memory(address, vt.value_index, value, vt.zero_terminate, vt.endian)
 
-    def treeWidget_AddressTable_item_clicked(self, row: QTreeWidgetItem, column: int):
-        if column == FROZEN_COL:
-            frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
-            is_checked = row.checkState(FROZEN_COL) == Qt.CheckState.Checked
-            is_frozen = frozen.enabled
+    def handle_freeze_change(self, row: QTreeWidgetItem, check_state: Qt.CheckState) -> None:
+        frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+        is_checked = check_state == Qt.CheckState.Checked
+        frozen_state_toggled = (is_checked and not frozen.enabled) or (not is_checked and frozen.enabled)
+        row.setCheckState(FROZEN_COL, check_state)
+        # this helps determine whether the user clicked checkbox or the text
+        # if the user clicked the text, change the freeze type
 
-            frozen_state_toggled = is_checked and not is_frozen or not is_checked and is_frozen
-            # this helps determine whether the user clicked checkbox or the text
-            # if the user clicked the text, change the freeze type
-
-            if not frozen_state_toggled and is_checked:
-                # user clicked the text, iterate through the freeze type
-                if frozen.freeze_type == typedefs.FREEZE_TYPE.DECREMENT:
-                    # decrement is the last freeze type
-                    self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT)
-                else:
-                    self.change_freeze_type(frozen.freeze_type + 1)
-
-            if frozen_state_toggled:
-                if is_checked:
-                    frozen.enabled = True
-                    # reapply the freeze type, to reflect the current freeze type in the UI
-                    # otherwise the UI will show DEFAULT freeze type after enabling instead of the actual type
-                    self.change_freeze_type(frozen.freeze_type)
-                    vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-                    frozen.value = utils.parse_string(row.text(VALUE_COL), vt.value_index)
-                else:
-                    frozen.enabled = False  # it has just been toggled off
-                    self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT)
+        if frozen_state_toggled:
+            if is_checked:
+                frozen.enabled = True
+                # reapply the freeze type, to reflect the current freeze type in the UI
+                # otherwise the UI will show DEFAULT freeze type after enabling instead of the actual type
+                self.change_freeze_type(frozen.freeze_type, row)
+                vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+                frozen.value = utils.parse_string(row.text(VALUE_COL), vt.value_index)
+            else:
+                frozen.enabled = False  # it has just been toggled off
+                self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT, row)
 
     def treeWidget_AddressTable_change_repr(self, new_repr):
         value_type = guiutils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.ItemDataRole.UserRole)
