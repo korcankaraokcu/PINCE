@@ -3,7 +3,7 @@ name: Deploy Sphinx Docs to GitHub Pages
 on:
   push:
     tags:
-      - "v*.*"
+      - "v*.*.*"
   workflow_dispatch:
 
 jobs:
