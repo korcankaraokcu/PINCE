@@ -13,16 +13,10 @@ PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB)
 
 Pre-release screenshots:
 
-![pince0](https://user-images.githubusercontent.com/5638719/219640001-b99f96a2-bffb-4b61-99a1-b187713897e2.png)
-![pince1](https://user-images.githubusercontent.com/5638719/219640254-40152be1-8e97-4d26-a313-62a56b9fe1a5.png)
-![pince2](https://user-images.githubusercontent.com/5638719/219706426-56c233f5-b047-4a8f-b090-ab439b98ef3a.png)
-![pince3](https://user-images.githubusercontent.com/5638719/219640353-bb733c19-9ce7-4baf-81ce-4306c658fbe6.png)
-![pince4](https://user-images.githubusercontent.com/5638719/219640370-a73c1796-8d2b-4d31-a63c-aa0b41f9f608.png)
-![pince5](https://user-images.githubusercontent.com/5638719/219640384-62a384c8-cc32-45ef-b975-e310674302c2.png)
-![pince6](https://user-images.githubusercontent.com/5638719/219640402-e03768b3-4e88-4c75-9d73-29dfbb69b3c0.png)
-![pince7](https://user-images.githubusercontent.com/5638719/219640469-8b496c67-b074-4c9a-9890-9e52227cf75d.png)
-![pince8](https://user-images.githubusercontent.com/5638719/219640488-61a8df17-405b-45ae-9b29-f9d214eb8571.png)
-![pince9](https://user-images.githubusercontent.com/5638719/219640522-85cac1a9-e425-4b4f-abeb-a61104caa618.png)
+![pince1](https://github.com/user-attachments/assets/7344c33d-3ea7-408a-8a5b-793f0b4c78ec)
+![pince2](https://github.com/user-attachments/assets/271cbbe7-b588-48e0-b939-f59e82f36812)
+![pince3](https://github.com/user-attachments/assets/479b4f56-7b62-4100-a3d9-3f9cd11ff5b8)
+![pince4](https://github.com/user-attachments/assets/08d8a6fe-6960-481b-9b55-aa550f860dc7)
 
 # Features  
 - **Memory scanning:** PINCE uses a specialized fork of [libscanmem](https://github.com/brkzlr/scanmem-PINCE) to scan the memory efficiently
