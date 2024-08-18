@@ -12,7 +12,7 @@
 - [i18n](./i18n) - Contains translation files. `ts` files are created with Qt Linguist and [compile_ts.sh](./compile_ts.sh), `qm` files are created within the last section of [install.sh](./install.sh)
 - ### **[libpince](./libpince)**
   - [debugcore.py](./libpince/debugcore.py) - Everything related to communicating with GDB and debugging
-  - [utils.py](./libpince/utils.py) - Contains generic utility functions such as parsing, file creation, documentation etc
+  - [utils.py](./libpince/utils.py) - Contains generic utility functions such as parsing, file creation, process querying etc
   - [typedefs.py](./libpince/typedefs.py) - Contains all constants and variable definitions
   - [regexes.py](./libpince/regexes.py) - Contains regexes for parsing GDB output and other things
   - [injection](./libpince/injection) - An example for injecting .so files
