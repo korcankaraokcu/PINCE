@@ -11,8 +11,6 @@ PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB)
 
 *Disclaimer: **YOU** are responsible for your actions. PINCE does **NOT** take any responsibility for the damage caused by the users*
 
-Pre-release screenshots:
-
 ![pince1](https://github.com/user-attachments/assets/7344c33d-3ea7-408a-8a5b-793f0b4c78ec)
 ![pince2](https://github.com/user-attachments/assets/271cbbe7-b588-48e0-b939-f59e82f36812)
 ![pince3](https://github.com/user-attachments/assets/479b4f56-7b62-4100-a3d9-3f9cd11ff5b8)
