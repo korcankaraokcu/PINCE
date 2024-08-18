@@ -8,6 +8,7 @@
 - [GUI](./GUI) - Contains Qt Designer forms and their respective codes along with utility functions and custom Qt classes
 - [media](./media) - Contains media files such as logos and icons
 - [tr](./tr) - Contains translation constants
+- [docs](./docs) - Contains Sphinx documentation. The build files are automatically generated in the `gh-pages` branch.
 - [i18n](./i18n) - Contains translation files. `ts` files are created with Qt Linguist and [compile_ts.sh](./compile_ts.sh), `qm` files are created within the last section of [install.sh](./install.sh)
 - ### **[libpince](./libpince)**
   - [debugcore.py](./libpince/debugcore.py) - Everything related to communicating with GDB and debugging
@@ -57,6 +58,13 @@ So, to have an idea about the type of the variable we are working with, I've com
 It could maybe replaced with something else after a refactorization
 
 About the max characters per line, I used to use PyCharm when I first started this project years ago. 120 characters is a limit brought by PyCharm, I've quit using PyCharm eventually but I think the limit makes the code look quite nice. Black suggests a limit of 88 characters, which is a bit short to be frank. So I think it's good to keep this old habit, especially considering that docstrings have also followed this rule for a long time now. This limit for docstrings however, is not strict at all. A few characters passing the limit is ok, sometimes going for a newline messes up the readability, trust your guts and decide for yourself
+
+# Documentation
+We use Google style documentation and type hints. A good example would be `get_breakpoints_in_range` function in [debugcore.py](./libpince/debugcore.py). Root folder of libpince has 100% documentation coverage so a pull request regarding libpince has to be documented. For other places, it's enough to document the parts you think that'd be confusing to read later on. You are not obliged to document everything in other places as we are also quite lax with it
+
+We use Sphinx to automatically generate html files from the docs and napoleon extension to convert Google style docs to reStructuredText. To test locally, `cd` into the [docs](./docs) directory and execute `sh install_sphinx.sh`. This will install Sphinx and its extensions within the venv. After this, You can modify [source files](./docs/source) and then build html files with `sh build_html.sh` to test your changes. To create source files for multiple modules automatically, `sphinx-apidoc` can be used. For single modules, you can edit the source files manually (like I did with `guiutils`)
+
+[build_docs.yml](.github/workflows/build_docs.yml) workflow is responsible for automatic html generation, it gets triggered automatically whenever there's a new release or manually whenever necessary. The workflow generates files within the `gh-pages` branch. It's an orphaned branch so it can be deleted without affecting the history
 
 # UI Files
 You need to have [Qt6 Designer](https://pkgs.org/search/?q=designer&on=files) and [pyuic6](https://pkgs.org/search/?q=pyuic6&on=files) installed. If there are no available packages for your distro, install [pyqt6-tools](https://pypi.org/project/pyqt6-tools/) instead  
