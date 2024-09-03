@@ -3136,6 +3136,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def initialize_register_view(self):
         self.pushButton_ShowFloatRegisters.clicked.connect(self.pushButton_ShowFloatRegisters_clicked)
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+            self.pushButton_ShowFloatRegisters.setEnabled(False)
 
     def initialize_stack_view(self):
         self.stackedWidget_StackScreens.setCurrentWidget(self.StackTrace)
@@ -3819,6 +3821,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.activateWindow()
         if self.stacktrace_info_widget.isVisible():
             self.stacktrace_info_widget.update_stacktrace()
+        self.pushButton_ShowFloatRegisters.setEnabled(True)
         if self.float_registers_widget.isVisible():
             self.float_registers_widget.update_registers()
         app.processEvents()
@@ -3828,6 +3831,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def on_process_running(self):
         self.setWindowTitle(tr.MV_RUNNING)
+        self.pushButton_ShowFloatRegisters.setEnabled(False)
 
     def add_breakpoint_condition(self, int_address, length=1):
         if debugcore.currentpid == -1:
