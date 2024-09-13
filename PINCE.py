@@ -1664,6 +1664,11 @@ class MainForm(QMainWindow, MainWindow):
             self.apply_after_init()
             scanmem.pid(pid)
             ptrscan.set_process(pid)
+            if debugcore.get_inferior_arch() == typedefs.INFERIOR_ARCH.ARCH_64:
+                ptr_size = 8
+            else:
+                ptr_size = 4
+            ptrscan.set_bitness(ptr_size)
             self.on_new_process()
             process_signals.attach.emit()
 
