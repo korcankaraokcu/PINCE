@@ -753,6 +753,8 @@ class MainForm(QMainWindow, MainWindow):
         edit_address = edit_menu.addAction(f"{header.text(ADDR_COL)}[Ctrl+Alt+Enter]")
         edit_type = edit_menu.addAction(f"{header.text(TYPE_COL)}[Alt+Enter]")
         edit_value = edit_menu.addAction(f"{header.text(VALUE_COL)}[Enter]")
+        edit_offset = edit_menu.addAction("Offset[Shift+Enter]")
+
         show_hex = menu.addAction(tr.SHOW_HEX)
         show_dec = menu.addAction(tr.SHOW_DEC)
         show_unsigned = menu.addAction(tr.SHOW_UNSIGNED)
@@ -839,6 +841,7 @@ class MainForm(QMainWindow, MainWindow):
             edit_address: self.treeWidget_AddressTable_edit_address,
             edit_type: self.treeWidget_AddressTable_edit_type,
             edit_value: self.treeWidget_AddressTable_edit_value,
+            edit_offset: self.treeWidget_AddressTable_edit_offset,
             show_hex: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.HEX),
             show_dec: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.UNSIGNED),
             show_unsigned: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.UNSIGNED),
@@ -1137,6 +1140,14 @@ class MainForm(QMainWindow, MainWindow):
                 (
                     QKeyCombination(Qt.KeyboardModifier.KeypadModifier, Qt.Key.Key_Enter),
                     self.treeWidget_AddressTable_edit_value,
+                ),
+                (
+                    QKeyCombination(Qt.KeyboardModifier.ShiftModifier, Qt.Key.Key_Return),
+                    self.treeWidget_AddressTable_edit_offset,
+                ),
+                (
+                    QKeyCombination(Qt.KeyboardModifier.ShiftModifier, Qt.Key.Key_Enter),
+                    self.treeWidget_AddressTable_edit_offset,
                 ),
                 (
                     QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Return),
@@ -1940,6 +1951,25 @@ class MainForm(QMainWindow, MainWindow):
                 frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 frozen.value = parsed_value
                 debugcore.write_memory(address, vt.value_index, parsed_value, vt.zero_terminate, vt.endian)
+            self.update_address_table()
+
+    def treeWidget_AddressTable_edit_offset(self):
+        row = guiutils.get_current_item(self.treeWidget_AddressTable)
+        if not row:
+            return
+
+        dialog = InputDialogForm(self, item_list=[("Offset addresses by:",'')])
+        if dialog.exec():
+            offset_value = dialog.get_values()
+            offset_int = int(offset_value, 16)
+            print(offset_value)
+            print(offset_int)
+            for row in self.treeWidget_AddressTable.selectedItems():
+                desc, address_expr, value_type = self.read_address_table_entries(row)
+                address = row.text(ADDR_COL).strip("P->")
+                address_int = int(address, 16)
+                address_new = hex(address_int + offset_int)
+                self.change_address_table_entries(row, desc, address_new, value_type)
             self.update_address_table()
 
     def treeWidget_AddressTable_edit_desc(self):
