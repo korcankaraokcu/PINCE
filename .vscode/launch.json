@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "Debug PINCE",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "stopOnEntry": false,
