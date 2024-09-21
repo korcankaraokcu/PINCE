@@ -15,12 +15,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib, distorm3
+import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib
 from . import typedefs, regexes
+from capstone import Cs, CsError, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
 from keystone import Ks, KsError, KS_ARCH_X86, KS_MODE_32, KS_MODE_64
 from collections import OrderedDict
 from importlib.machinery import SourceFileLoader
 from pygdbmi import gdbmiparser
+
+# Capstone initialization
+cs_32 = Cs(CS_ARCH_X86, CS_MODE_32)
+cs_64 = Cs(CS_ARCH_X86, CS_MODE_64)
 
 # Keystone initialization
 ks_32 = Ks(KS_ARCH_X86, KS_MODE_32)
@@ -666,15 +671,19 @@ def get_opcodes(address, aob, inferior_arch):
         None: If there was an error
     """
     if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64:
-        disas_option = distorm3.Decode64Bits
-    elif inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32:
-        disas_option = distorm3.Decode32Bits
+        disassembler = cs_64
+    else:
+        disassembler = cs_32
+    disassembler.skipdata = True
     try:
         bytecode = bytes.fromhex(aob.replace(" ", ""))
     except ValueError:
         return
-    disas_data = distorm3.Decode(address, bytecode, disas_option)
-    return "; ".join([data[2] for data in disas_data])
+    try:
+        disas_data = disassembler.disasm_lite(bytecode, address)
+        return "; ".join([f"{data[2]} {data[3]}" if data[3] != "" else data[2] for data in disas_data])
+    except CsError as e:
+        print(e)
 
 
 def assemble(instructions, address, inferior_arch):
