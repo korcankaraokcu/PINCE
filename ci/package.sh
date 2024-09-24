@@ -107,10 +107,9 @@ if [ ! -d "libpince/libptrscan" ]; then
 	mkdir libpince/libptrscan
 fi
 cd libpince/libptrscan
-curl -L -o libptrscan.tar.gz https://github.com/kekeimiku/PointerSearcher-X/releases/download/v0.7.3-dylib/libptrscan_pince-x86_64-unknown-linux-gnu.tar.gz || exit_on_failure
+curl -L -o libptrscan.tar.gz https://github.com/kekeimiku/PointerSearcher-X/releases/download/v0.7.4-dylib/libptrscan_pince-x86_64-unknown-linux-gnu.tar.gz || exit_on_failure
 tar xf libptrscan.tar.gz --strip-components 1 || exit_on_failure
 rm -f libptrscan.tar.gz
-mv libptrscan_pince.so libptrscan.so
 cd ../..
 
 # Compile translations
