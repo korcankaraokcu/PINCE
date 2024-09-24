@@ -1,5 +1,5 @@
 # Code Structure
-- [PINCE.py](./PINCE.py) - The main file, it contains everything from GUI logic to libpince communication. A chonky boi, will be trimmed in the future
+- [PINCE.py](./PINCE.py) - The main file, it contains everything from GUI logic to libpince communication. A chonky boi on a diet, see below for information about ongoing refactoring
 - [PINCE.sh](./PINCE.sh) - Launch script
 - [install.sh](./install.sh) - Installation script
 - [compile_ts.sh](./compile_ts.sh) - Gathers translation information from various sources and compiles them into ts files
@@ -20,6 +20,19 @@
     - [gdbextensions.py](./libpince/gdb_python_scripts/gdbextensions.py) - Contains custom GDB commands
     - [gdbutils.py](./libpince/gdb_python_scripts/gdbutils.py) - Contains utility functions for GDB commands
     - [tests](./libpince/gdb_python_scripts/tests) - An example for .so extension, read more [here](https://github.com/korcankaraokcu/PINCE/wiki/Extending-PINCE-with-.so-files)
+
+**About GUI file structure refactoring**: PINCE.py currently holds all of the GUI logic classes and this makes PINCE.py grow larger as the project progresses. To prevent this, all GUI logic will be carried to their respective folders and the GUI folder will follow this structure:
+```
+GUI/
+|-- Utils/
+|-- Other Generalized Folders/ (if needed)
+|-- Example/
+│   |-- Form/
+│   │   |-- ExampleWidget.ui (Designer UI file)
+│   │   |-- ExampleWidget.py (Auto-generated from the UI file)
+│   |-- Example.py (Form logic)
+│   |-- CustomQClass.py (Helper class)
+```
 
 # Code Style
 Formatting style is [Black](https://github.com/psf/black) defaults, except line length is 120. You can use Black without parameters since we already use `pyproject.toml` for this setting.
