@@ -31,8 +31,9 @@ GUI/
 │   │   |-- ExampleWidget.ui (Designer UI file)
 │   │   |-- ExampleWidget.py (Auto-generated from the UI file)
 │   |-- Example.py (Form logic)
-│   |-- CustomQClass.py (Helper class)
+│   |-- CustomClass.py (Helper class)
 ```
+A good example of the structure above can be seen in [ManageScanRegions](./GUI/ManageScanRegions)
 
 # Code Style
 Formatting style is [Black](https://github.com/psf/black) defaults, except line length is 120. You can use Black without parameters since we already use `pyproject.toml` for this setting.

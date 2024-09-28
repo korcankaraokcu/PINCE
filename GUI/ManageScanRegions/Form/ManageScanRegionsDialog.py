@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'ScanRegionsDialog.ui'
+# Form implementation generated from reading ui file 'ManageScanRegionsDialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.2
 #
@@ -26,7 +26,7 @@ class Ui_Dialog(object):
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
-        self.tableWidget_Regions = QtWidgets.QTableWidget(parent=Dialog)
+        self.tableWidget_Regions = QScanRegionTable(parent=Dialog)
         font = QtGui.QFont()
         font.setFamily("Monospace")
         self.tableWidget_Regions.setFont(font)
@@ -86,3 +86,4 @@ class Ui_Dialog(object):
         item.setText(_translate("Dialog", "Perms"))
         item = self.tableWidget_Regions.horizontalHeaderItem(6)
         item.setText(_translate("Dialog", "File"))
+from GUI.ManageScanRegions.ScanRegionTable import QScanRegionTable

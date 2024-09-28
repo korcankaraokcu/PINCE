@@ -46,7 +46,7 @@
     </layout>
    </item>
    <item row="1" column="0">
-    <widget class="QTableWidget" name="tableWidget_Regions">
+    <widget class="QScanRegionTable" name="tableWidget_Regions">
      <property name="font">
       <font>
        <family>Monospace</family>
@@ -125,6 +125,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QScanRegionTable</class>
+   <extends>QTableWidget</extends>
+   <header location="global">GUI.ManageScanRegions.ScanRegionTable</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
