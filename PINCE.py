@@ -435,7 +435,7 @@ class MainForm(QMainWindow, MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.hotkey_to_shortcut = {}
+        self.deleted_regions: list[int] = []
         hotkey_to_func = {
             hotkeys.pause_hotkey: self.pause_hotkey_pressed,
             hotkeys.break_hotkey: self.break_hotkey_pressed,
@@ -1298,6 +1298,8 @@ class MainForm(QMainWindow, MainWindow):
             scanmem.send_command(f"option region_scan_level {search_scope}")
             scanmem.send_command(f"option endianness {endian}")
             scanmem.reset()
+            for region_id in self.deleted_regions:
+                debugcore.scanmem.send_command(f"dregion {region_id}")
             self.comboBox_ScanScope.setEnabled(False)
             self.comboBox_Endianness.setEnabled(False)
             self.scan_values()
@@ -1451,7 +1453,8 @@ class MainForm(QMainWindow, MainWindow):
 
     def pushButton_ScanRegions_clicked(self):
         scan_regions_dialog = ManageScanRegionsDialog(self)
-        scan_regions_dialog.exec()
+        if scan_regions_dialog.exec():
+            self.deleted_regions.extend(scan_regions_dialog.get_values())
 
     def scan_callback(self):
         self.progress_bar_timer.stop()
@@ -1736,6 +1739,7 @@ class MainForm(QMainWindow, MainWindow):
         self.scan_mode = typedefs.SCAN_MODE.NEW
         self.pushButton_NewFirstScan.setText(tr.FIRST_SCAN)
         scanmem.reset()
+        self.deleted_regions.clear()
         self.tableWidget_valuesearchtable.setRowCount(0)
         self.comboBox_ValueType.setEnabled(True)
         self.comboBox_ScanScope.setEnabled(True)

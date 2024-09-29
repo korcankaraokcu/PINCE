@@ -10,6 +10,7 @@ class ManageScanRegionsDialog(QDialog, ManageScanRegionsForm):
     def __init__(self, parent) -> None:
         super().__init__(parent)
         self.setupUi(self)
+        self.deleted_regions: list[int] = []
         regions_text = debugcore.scanmem.send_command("lregions", True).decode("utf-8")
         regex = re.compile(r"\[\s*(\d+)\] (\w+),\s+(\d+) bytes,\s+(\w+),\s+(\w+),\s+([rwx-]+),\s+(.+)")
         data = regex.findall(regions_text)
@@ -35,10 +36,14 @@ class ManageScanRegionsDialog(QDialog, ManageScanRegionsForm):
             new_state = Qt.CheckState.Unchecked if cur_state == Qt.CheckState.Checked else Qt.CheckState.Checked
             item.setCheckState(new_state)
 
+    def get_values(self) -> list[int]:
+        return self.deleted_regions
+
     def accept(self) -> None:
         for row in range(self.tableWidget_Regions.rowCount()):
             item = self.tableWidget_Regions.item(row, 0)
             if item.checkState() == Qt.CheckState.Checked:
                 region_id = int(item.text())
+                self.deleted_regions.append(region_id)
                 debugcore.scanmem.send_command(f"dregion {region_id}")
         return super().accept()
