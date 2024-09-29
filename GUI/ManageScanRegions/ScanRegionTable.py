@@ -26,8 +26,15 @@ class QScanRegionTable(QTableWidget):
     def keyPressEvent(self, event: QKeyEvent | None) -> None:
         if event.key() == Qt.Key.Key_Space:
             current_row = self.currentRow()
-            if current_row != -1:
-                cur_state = self.item(current_row, 0).checkState()
+            selected_indexes = self.selectedIndexes()
+            # If only one item is selected and then clicked while ctrl is being held
+            # There'll be no selected rows even with a current row present
+            if current_row != -1 and selected_indexes:
+                if self.currentItem().isSelected():
+                    selected_row = current_row
+                else:
+                    selected_row = selected_indexes[0].row()
+                cur_state = self.item(selected_row, 0).checkState()
                 new_state = Qt.CheckState.Unchecked if cur_state == Qt.CheckState.Checked else Qt.CheckState.Checked
                 for selected_item in self.selectedItems():
                     if selected_item.column() == 0:
