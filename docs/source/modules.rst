@@ -6,10 +6,10 @@ libpince
 
    libpince
 
-guiutils
-========
+GUI.Utils
+=========
 
 .. toctree::
    :maxdepth: 4
 
-   guiutils
+   gui_utils

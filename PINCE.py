@@ -69,7 +69,6 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QCheckBox,
     QHBoxLayout,
-    QPushButton,
 )
 from PyQt6.QtCore import (
     Qt,
@@ -84,8 +83,6 @@ from PyQt6.QtCore import (
     QItemSelectionModel,
     QTimer,
     QStringListModel,
-    QRunnable,
-    QObject,
     QThreadPool,
     QLocale,
     QSignalBlocker,
@@ -95,10 +92,9 @@ from time import sleep, time
 import os, sys, traceback, signal, re, copy, io, queue, collections, ast, json, select
 
 from libpince import utils, debugcore, typedefs
-from libpince.libptrscan.ptrscan import PointerScan, FFIRange, FFIParam
-from GUI.Settings.themes import get_theme
-from GUI.Settings.themes import theme_list
-from GUI.Utils import guiutils
+from libpince.debugcore import scanmem, ptrscan
+from GUI.Settings.themes import get_theme, theme_list
+from GUI.Utils import guiutils, guitypedefs
 
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
@@ -135,9 +131,8 @@ from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
 from GUI.RestoreInstructionsWidget import Ui_Form as RestoreInstructionsWidget
-from GUI.PointerScanSearchDialog import Ui_Dialog as PointerScanSearchDialog
-from GUI.PointerScanFilterDialog import Ui_Dialog as PointerScanFilterDialog
-from GUI.PointerScanWindow import Ui_MainWindow as PointerScanWindow
+from GUI.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
+from GUI.PointerScan.PointerScan import PointerScanWindow
 from GUI.ManageScanRegions.ManageScanRegions import ManageScanRegionsDialog
 
 from GUI.AbstractTableModels.HexModel import QHexModel
@@ -282,54 +277,11 @@ exp_cache = {}
 # vars for communication with the non blocking threads
 exiting = 0
 
-scanmem = debugcore.scanmem
-ptrscan = PointerScan(os.path.join(utils.get_libpince_directory(), "libptrscan", "libptrscan.so"))
-ptrscan.set_pointer_offset_symbol("->")
-
 threadpool = QThreadPool()
 # Placeholder number, may have to be changed in the future
 threadpool.setMaxThreadCount(10)
 
-
-class ProcessSignals(QObject):
-    attach = pyqtSignal()
-    exit = pyqtSignal()
-
-
-process_signals = ProcessSignals()
-
-
-class WorkerSignals(QObject):
-    finished = pyqtSignal()
-
-
-class Worker(QRunnable):
-    def __init__(self, fn, *args, **kwargs):
-        super().__init__()
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-        self.signals = WorkerSignals()
-
-    def run(self):
-        self.fn(*self.args, **self.kwargs)
-        self.signals.finished.emit()
-
-
-class InterruptableWorker(QThread):
-    def __init__(self, fn, *args, **kwargs):
-        super().__init__()
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-        self.signals = WorkerSignals()
-
-    def run(self):
-        self.fn(*self.args, **self.kwargs)
-        self.signals.finished.emit()
-
-    def stop(self):
-        self.terminate()
+process_signals = guitypedefs.ProcessSignals()
 
 
 def except_hook(exception_type, value, tb):
@@ -867,7 +819,7 @@ class MainForm(QMainWindow, MainWindow):
             pass
 
     def exec_pointer_scanner(self):
-        pointer_window = PointerScanWindowForm(self)
+        pointer_window = PointerScanWindow(self, process_signals)
         pointer_window.show()
 
     def exec_pointer_scan(self):
@@ -875,9 +827,9 @@ class MainForm(QMainWindow, MainWindow):
         if not selected_row:
             return
         address = selected_row.text(ADDR_COL).strip("P->")
-        pointer_window = PointerScanWindowForm(self)
+        pointer_window = PointerScanWindow(self, process_signals)
         pointer_window.show()
-        dialog = PointerScanSearchDialogForm(pointer_window, address)
+        dialog = PointerScanSearchDialog(pointer_window, address)
         dialog.exec()
 
     def exec_track_watchpoint_widget(self, watchpoint_type):
@@ -1231,7 +1183,7 @@ class MainForm(QMainWindow, MainWindow):
         self.progressBar.setValue(0)
         self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
         self.progress_bar_timer.start(100)
-        scan_thread = Worker(scanmem.send_command, search_for)
+        scan_thread = guitypedefs.Worker(scanmem.send_command, search_for)
         scan_thread.signals.finished.connect(self.scan_callback)
         threadpool.start(scan_thread)
 
@@ -1330,7 +1282,7 @@ class MainForm(QMainWindow, MainWindow):
         global threadpool
         if debugcore.currentpid == -1:
             return
-        undo_thread = Worker(scanmem.undo_scan)
+        undo_thread = guitypedefs.Worker(scanmem.undo_scan)
         undo_thread.signals.finished.connect(self.scan_callback)
         threadpool.start(undo_thread)
         self.pushButton_UndoScan.setEnabled(False)  # we can undo once so set it to false and re-enable at next scan
@@ -5171,7 +5123,7 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         self.movie.setSpeed(100)
         self.movie.start()
         self.pushButton_Cancel.clicked.connect(self.close)
-        tracer_thread = Worker(tracer.tracer_loop)
+        tracer_thread = guitypedefs.Worker(tracer.tracer_loop)
         tracer_thread.signals.finished.connect(self.close)
         threadpool.start(tracer_thread)
         self.status_timer = QTimer()
@@ -6231,185 +6183,6 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
             actions[action]()
         except KeyError:
             pass
-
-
-class PointerScanSearchDialogForm(QDialog, PointerScanSearchDialog):
-    def __init__(self, parent, address) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        guiutils.center_to_parent(self)
-        self.lineEdit_Address.setText(address)
-        self.lineEdit_Path.setText(os.getcwd() + f"/{utils.get_process_name(debugcore.currentpid)}.scandata")
-        self.pushButton_PathBrowse.clicked.connect(self.pushButton_PathBrowse_clicked)
-        self.scan_button: QPushButton | None = self.buttonBox.addButton(tr.SCAN, QDialogButtonBox.ButtonRole.ActionRole)
-        if self.scan_button:
-            self.scan_button.clicked.connect(self.scan_button_clicked)
-        self.ptrscan_thread: InterruptableWorker | None = None
-
-    def pushButton_PathBrowse_clicked(self) -> None:
-        file_path, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
-        if file_path != "":
-            file_path = utils.append_file_extension(file_path, "scandata")
-            self.lineEdit_Path.setText(file_path)
-
-    def reject(self) -> None:
-        if self.ptrscan_thread:
-            self.ptrscan_thread.stop()
-        return super().reject()
-
-    def scan_button_clicked(self) -> None:
-        if debugcore.currentpid == -1 or self.scan_button == None:
-            return
-        self.scan_button.setText(tr.SCANNING)
-        self.scan_button.setEnabled(False)
-        self.pushButton_PathBrowse.setEnabled(False)
-        params: FFIParam = FFIParam()
-        try:
-            addr_val = int(self.lineEdit_Address.text(), 16)
-        except ValueError:
-            addr_val = 0
-        params.addr(addr_val)
-        params.depth(self.spinBox_Depth.value())
-        params.srange(FFIRange(self.spinBox_ScanRangeStart.value(), self.spinBox_ScanRangeEnd.value()))
-        lrange_start: int = self.spinBox_ScanLRangeStart.value()
-        lrange_end: int = self.spinBox_ScanLRangeEnd.value()
-        if lrange_start == 0 and lrange_end == 0:
-            lrange_val = None
-        else:
-            lrange_val = FFIRange(lrange_start, lrange_end)
-        params.lrange(lrange_val)
-        params.node(utils.return_optional_int(self.spinBox_Node.value()))
-        try:
-            last_val = int(self.lineEdit_Last.text(), 16)
-        except ValueError:
-            last_val = None
-        params.last(last_val)
-        params.max(utils.return_optional_int(self.spinBox_Max.value()))
-        params.cycle(self.checkBox_Cycle.isChecked())
-        ptrscan.set_modules(ptrscan.list_modules_pince())  # TODO: maybe cache this and let user refresh with a button
-        ptrscan.create_pointer_map()  # TODO: maybe cache this and let user refresh with a button
-        ptrmap_file_path = self.lineEdit_Path.text()
-        if os.path.isfile(ptrmap_file_path):
-            os.remove(ptrmap_file_path)
-        self.ptrscan_thread = InterruptableWorker(ptrscan.scan_pointer_chain, params, ptrmap_file_path)
-        self.ptrscan_thread.signals.finished.connect(self.ptrscan_callback)
-        self.ptrscan_thread.start()
-
-    def ptrscan_callback(self) -> None:
-        self.accept()
-
-
-class PointerScanFilterDialogForm(QDialog, PointerScanFilterDialog):
-    def __init__(self, parent) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        guiutils.center_to_parent(self)
-        self.pushButton_File1Browse.clicked.connect(self.pushButton_File1Browse_clicked)
-        self.pushButton_File2Browse.clicked.connect(self.pushButton_File2Browse_clicked)
-        self.filter_button: QPushButton | None = self.buttonBox.addButton(
-            tr.FILTER, QDialogButtonBox.ButtonRole.ActionRole
-        )
-        if self.filter_button:
-            self.filter_button.clicked.connect(self.filter_button_clicked)
-            self.filter_button.setEnabled(False)
-        self.filter_result: list[str] | None = None
-
-    def browse_scandata_file(self, file_path_field: QLineEdit) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
-        if file_path != "":
-            file_path_field.setText(file_path)
-            self.check_filterable_state()
-
-    def check_filterable_state(self) -> None:
-        if self.lineEdit_File1Path.text() != "" and self.lineEdit_File2Path.text() != "" and self.filter_button:
-            self.filter_button.setEnabled(True)
-
-    def pushButton_File1Browse_clicked(self) -> None:
-        self.browse_scandata_file(self.lineEdit_File1Path)
-
-    def pushButton_File2Browse_clicked(self) -> None:
-        self.browse_scandata_file(self.lineEdit_File2Path)
-
-    def filter_button_clicked(self) -> None:
-        if self.lineEdit_File1Path.text() == "" or self.lineEdit_File2Path.text() == "" or self.filter_button == None:
-            return
-        self.filter_button.setEnabled(False)
-        self.filter_button.setText(tr.FILTERING)
-        lines: list[str]
-        with open(self.lineEdit_File1Path.text()) as file:
-            lines = file.read().split(os.linesep)
-        with open(self.lineEdit_File2Path.text()) as file:
-            lines.extend(file.read().split(os.linesep))
-        counts = collections.Counter(lines)
-        self.filter_result = list(set([line for line in lines if counts[line] > 1 and line != ""]))
-        self.accept()
-
-    def get_filter_result(self) -> list[str] | None:
-        return self.filter_result
-
-
-class PointerScanWindowForm(QMainWindow, PointerScanWindow):
-    def __init__(self, parent) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.tableWidget_ScanResult.hide()
-        process_signals.attach.connect(self.on_process_changed)
-        process_signals.exit.connect(self.on_process_changed)
-        self.pushButton_Clear.pressed.connect(self.pushButton_Clear_pressed)
-        self.pushButton_Sort.pressed.connect(self.pushButton_Sort_pressed)
-        self.actionOpen.triggered.connect(self.actionOpen_triggered)
-        self.actionSaveAs.triggered.connect(self.actionSaveAs_triggered)
-        self.actionScan.triggered.connect(self.scan_triggered)
-        self.actionFilter.triggered.connect(self.filter_triggered)
-        if debugcore.currentpid == -1:
-            self.actionScan.setEnabled(False)
-        guiutils.center_to_parent(self)
-
-    def on_process_changed(self) -> None:
-        val: bool = False if debugcore.currentpid == -1 else True
-        self.actionScan.setEnabled(val)
-
-    def pushButton_Clear_pressed(self) -> None:
-        self.textEdit.clear()
-
-    def pushButton_Sort_pressed(self) -> None:
-        text: str = self.textEdit.toPlainText()
-        if text == "":
-            return
-        text_list: list[str] = text.split(os.linesep)
-        # Sometimes files will have ending newlines.
-        # We want to get rid of them otherwise they'll be at top.
-        if text_list[-1] == "":
-            del text_list[-1]
-        text_list.sort()
-        self.textEdit.setText(os.linesep.join(text_list))
-
-    def actionOpen_triggered(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
-        if file_path != "":
-            self.textEdit.clear()
-            with open(file_path) as file:
-                self.textEdit.setText(file.read())
-
-    def actionSaveAs_triggered(self) -> None:
-        file_path, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
-        if file_path != "":
-            file_path = utils.append_file_extension(file_path, "scandata")
-            with open(file_path, "w") as file:
-                file.write(self.textEdit.toPlainText())
-
-    def scan_triggered(self) -> None:
-        dialog = PointerScanSearchDialogForm(self, "0x0")
-        dialog.exec()
-
-    def filter_triggered(self) -> None:
-        dialog = PointerScanFilterDialogForm(self)
-        if dialog.exec():
-            filter_result: list[str] | None = dialog.get_filter_result()
-            if filter_result == None:
-                return
-            self.textEdit.clear()
-            self.textEdit.setText(os.linesep.join(filter_result))
 
 
 def handle_exit():
