@@ -53,18 +53,17 @@ PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB)
 chmod +x PINCE-x86_64.AppImage
 sudo -E ./PINCE-x86_64.AppImage
 ```
-- Our AppImage should run on any distro that is as new or newer than Ubuntu 22.04. Anything older than this might not work and is not officially supported.
 - For Arch users, there's also an [AUR package](https://aur.archlinux.org/packages/pince-git/) but please bear in mind that **we're not the maintainers of the AUR package and it's not officially supported by us**.
   - Please do not open an Issue unless you can reproduce the issue you're experiencing on our AppImages or local install.
 
 ### Developers and Contributors:
-- If you want to have a local install of PINCE so you can modify code or contribute with PRs, you'll have to use our installer script in the repo to setup a venv dev environment.
+- If you want to have a local install of PINCE so you can modify code or contribute with PRs, you'll have to use our installer script in the repo to setup a venv dev environment or do it yourself.
 - To install local dev environment, run the following commands in a terminal anywhere you'd like to have the PINCE folder:
 ```bash
 git clone --recursive https://github.com/korcankaraokcu/PINCE
 sh PINCE/install.sh
 ```
-- Make sure to check our [Officially supported platforms](#officially-supported-platforms) section below. Our installer might not work on distros that are not listed there, but it will still try to install using packages from supported distros, just follow the on-screen instructions.
+- Make sure to check our [Officially supported platforms](#officially-supported-platforms) section below. Our installer might not work on distros that are not listed there, but it will still try to install using some package managers, just follow the on-screen instructions.
 - If installer fails trying to install on an unsupported distro, you're on your own on trying to get the local dev environment up and running. Check `install.sh` to get an idea about what you might need.
 - If you'd like to uninstall PINCE, just delete this folder, almost everything is installed locally. Config and user files of PINCE can be found in "~/.config/PINCE", you can manually delete them as well if you want.
 
@@ -73,11 +72,22 @@ sh PINCE/install.sh
 - Check https://github.com/korcankaraokcu/PINCE/issues/116 for a possible fix if you encounter `'GtkSettings' has no property named 'gtk-fallback-icon-theme'`
 
 # Officially supported platforms
+### AppImage
+Our AppImage should run on any distro that is as new or newer than Ubuntu 22.04. Anything older than this might not work and is not officially supported.
+
+### Local dev
 Local dev installs of PINCE should technically run on any distro that comes with **Python 3.10+** and **PyQt 6.6+** installed or available in the package manager, but below is the list of distros that we officially support, as in we actively test on these and help with issues:
-- Ubuntu 22.04+
-- Debian 12+ (or Testing)
+- Kubuntu 22.04+
 - Arch Linux
+
+Additionally the distros below are "partially" supported as our installer will try to install on them but ***they're not actively tested***:
+- Debian 12+ (or Testing)
 - Fedora 35+
+- OpenSUSE
+
+If you encounter issues installing and you're on one of these distros, feel free to open a PR fixing the installation process for your platform.
+
+***Anything not listed here is not officially supported at all so you're on your own!*** If your distro has any of the above as its base, try to use the installer anyway and pick the relevant package manager. If this still does not work, sorry, you're on your own.
 
 # Contributing
 Want to help? Check out [CONTRIBUTING.md](CONTRIBUTING.md)
