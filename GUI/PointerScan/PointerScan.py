@@ -3,18 +3,19 @@ from GUI.PointerScan.Form.PointerScanWindow import Ui_MainWindow as PointerScanW
 from GUI.PointerScanFilter.PointerScanFilter import PointerScanFilterDialog
 from GUI.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
 from GUI.Utils import guiutils
+from GUI.States import states
 from libpince import debugcore, utils
 from tr.tr import TranslationConstants as tr
 import os
 
 
 class PointerScanWindow(QMainWindow, PointerScanWindowForm):
-    def __init__(self, parent, process_signals) -> None:  # temporary fix
+    def __init__(self, parent) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.tableWidget_ScanResult.hide()
-        process_signals.attach.connect(self.on_process_changed)
-        process_signals.exit.connect(self.on_process_changed)
+        states.process_signals.attach.connect(self.on_process_changed)
+        states.process_signals.exit.connect(self.on_process_changed)
         self.pushButton_Clear.pressed.connect(self.pushButton_Clear_pressed)
         self.pushButton_Sort.pressed.connect(self.pushButton_Sort_pressed)
         self.actionOpen.triggered.connect(self.actionOpen_triggered)

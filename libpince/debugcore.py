@@ -66,11 +66,11 @@ lock_send_command = Lock()
 
 # This condition is notified whenever status of the inferior changes
 # Use the variable inferior_status to get information about inferior's status
-# See PINCE's CheckInferiorStatus class for an example
+# See CheckInferiorStatus class for an example
 status_changed_condition = Condition()
 
 # This condition is notified if the current inferior gets terminated
-# See PINCE's AwaitProcessExit class for an example
+# See AwaitProcessExit class for an example
 process_exited_condition = Condition()
 
 # This condition is notified if gdb starts to wait for the prompt output
@@ -81,7 +81,7 @@ gdb_waiting_for_prompt_condition = Condition()
 gdb_output = ""
 
 # An instance of typedefs.RegisterQueue. Updated whenever GDB receives an async event such as breakpoint modification
-# See PINCE's AwaitAsyncOutput class for an example of usage
+# See AwaitAsyncOutput class for an example of usage
 gdb_async_output = typedefs.RegisterQueue()
 
 # A boolean value. Used to cancel the last gdb command sent

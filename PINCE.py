@@ -83,13 +83,12 @@ from PyQt6.QtCore import (
     QItemSelectionModel,
     QTimer,
     QStringListModel,
-    QThreadPool,
     QLocale,
     QSignalBlocker,
     QItemSelection,
 )
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, queue, collections, ast, json, select
+import os, sys, traceback, signal, re, copy, io, collections, ast, json, select
 
 from libpince import utils, debugcore, typedefs
 from libpince.debugcore import scanmem, ptrscan
@@ -167,6 +166,8 @@ if __name__ == "__main__":
     app.installTranslator(translator)
     tr.translate()
     hotkeys = Hotkeys()  # Create the instance after translations to ensure hotkeys are translated
+    # DO NOT REMOVE THE IMPORT BELOW EVEN IF IT'S NOT REFERENCED HERE. It's used to initiate the state variables
+    from GUI.States import states  # Initiate the variables inside the module after QApplication instance is created
 
 # represents the index of columns in instructions restore table
 INSTR_ADDR_COL = 0
@@ -266,23 +267,6 @@ REF_STR_VAL_COL = 2
 REF_CALL_ADDR_COL = 0
 REF_CALL_COUNT_COL = 1
 
-# GDB expression cache
-# TODO: Try to find a fast and non-gdb way to calculate symbols so we don't need this
-# This is one of the few tricks we do to minimize examine_expression calls
-# This solution might bring problems if the symbols are changing frequently
-# Pressing the refresh button in the address table or attaching to a new process will clear this cache
-# Currently only used in address_table_loop
-exp_cache = {}
-
-# vars for communication with the non blocking threads
-exiting = 0
-
-threadpool = QThreadPool()
-# Placeholder number, may have to be changed in the future
-threadpool.setMaxThreadCount(10)
-
-process_signals = guitypedefs.ProcessSignals()
-
 
 def except_hook(exception_type, value, tb):
     focused_widget = app.focusWidget()
@@ -329,54 +313,6 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-# Checks if the inferior has been terminated
-class AwaitProcessExit(QThread):
-    process_exited = pyqtSignal()
-
-    def run(self):
-        while True:
-            with debugcore.process_exited_condition:
-                debugcore.process_exited_condition.wait()
-            self.process_exited.emit()
-
-
-# Await async output from gdb
-class AwaitAsyncOutput(QThread):
-    async_output_ready = pyqtSignal(str)
-
-    def __init__(self):
-        super().__init__()
-        self.queue_active = True
-
-    def run(self):
-        async_output_queue = debugcore.gdb_async_output.register_queue()
-        while self.queue_active:
-            try:
-                async_output = async_output_queue.get(timeout=5)
-            except queue.Empty:
-                pass
-            else:
-                self.async_output_ready.emit(async_output)
-        debugcore.gdb_async_output.delete_queue(async_output_queue)
-
-    def stop(self):
-        self.queue_active = False
-
-
-class CheckInferiorStatus(QThread):
-    process_stopped = pyqtSignal()
-    process_running = pyqtSignal()
-
-    def run(self):
-        while True:
-            with debugcore.status_changed_condition:
-                debugcore.status_changed_condition.wait()
-            if debugcore.inferior_status == typedefs.INFERIOR_STATUS.STOPPED:
-                self.process_stopped.emit()
-            elif debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
-                self.process_running.emit()
-
-
 class MainForm(QMainWindow, MainWindow):
     table_update_interval: int = 500
     freeze_interval: int = 100
@@ -410,7 +346,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.horizontalHeader().setSortIndicatorClearable(True)
         self.settings = QSettings()
         self.memory_view_window = MemoryViewWindowForm(self)
-        self.await_exit_thread = AwaitProcessExit()
+        self.await_exit_thread = guitypedefs.AwaitProcessExit()
         self.auto_attach_timer = QTimer(timeout=self.auto_attach_loop)
 
         if not os.path.exists(self.settings.fileName()):
@@ -439,12 +375,8 @@ class MainForm(QMainWindow, MainWindow):
             InputDialogForm(self, [(tr.GDB_INIT_ERROR, None)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
-        self.check_status_thread = CheckInferiorStatus()
-        self.check_status_thread.process_stopped.connect(self.on_status_stopped)
-        self.check_status_thread.process_running.connect(self.on_status_running)
-        self.check_status_thread.process_stopped.connect(self.memory_view_window.process_stopped)
-        self.check_status_thread.process_running.connect(self.memory_view_window.process_running)
-        self.check_status_thread.start()
+        states.status_thread.process_stopped.connect(self.on_status_stopped)
+        states.status_thread.process_running.connect(self.on_status_running)
         self.address_table_timer = QTimer(timeout=self.address_table_loop, singleShot=True)
         self.address_table_timer.start()
         self.search_table_timer = QTimer(timeout=self.search_table_loop, singleShot=True)
@@ -569,9 +501,7 @@ class MainForm(QMainWindow, MainWindow):
         self.apply_settings()
 
     def apply_after_init(self):
-        global exp_cache
-
-        exp_cache.clear()
+        states.exp_cache.clear()
         settings.gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
         settings.interrupt_signal = self.settings.value("Debug/interrupt_signal", type=str)
         settings.handle_signals = json.loads(self.settings.value("Debug/handle_signals", type=str))
@@ -819,7 +749,7 @@ class MainForm(QMainWindow, MainWindow):
             pass
 
     def exec_pointer_scanner(self):
-        pointer_window = PointerScanWindow(self, process_signals)
+        pointer_window = PointerScanWindow(self)
         pointer_window.show()
 
     def exec_pointer_scan(self):
@@ -827,7 +757,7 @@ class MainForm(QMainWindow, MainWindow):
         if not selected_row:
             return
         address = selected_row.text(ADDR_COL).strip("P->")
-        pointer_window = PointerScanWindow(self, process_signals)
+        pointer_window = PointerScanWindow(self)
         pointer_window.show()
         dialog = PointerScanSearchDialog(pointer_window, address)
         dialog.exec()
@@ -1111,7 +1041,6 @@ class MainForm(QMainWindow, MainWindow):
             self.treeWidget_AddressTable.keyPressEvent_original(event)
 
     def update_address_table(self):
-        global exp_cache
         if debugcore.currentpid == -1 or self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
@@ -1130,8 +1059,8 @@ class MainForm(QMainWindow, MainWindow):
             parent = row.parent()
             if parent and expression.startswith(("+", "-")):
                 expression = parent.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1) + expression
-            if expression in exp_cache:
-                address = exp_cache[expression]
+            if expression in states.exp_cache:
+                address = states.exp_cache[expression]
             elif expression.startswith(("+", "-")):  # If parent has an empty address
                 address = expression
             elif basic_math_exp.match(expression.replace(" ", "")):
@@ -1139,10 +1068,10 @@ class MainForm(QMainWindow, MainWindow):
                     address = hex(eval(expression))
                 except:
                     address = debugcore.examine_expression(expression).address
-                    exp_cache[expression] = address
+                    states.exp_cache[expression] = address
             else:
                 address = debugcore.examine_expression(expression).address
-                exp_cache[expression] = address
+                states.exp_cache[expression] = address
             vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
             if isinstance(address_data, typedefs.PointerChainRequest):
                 # The original base could be a symbol so we have to save it
@@ -1175,7 +1104,6 @@ class MainForm(QMainWindow, MainWindow):
             row.setText(VALUE_COL, value)
 
     def scan_values(self):
-        global threadpool
         if debugcore.currentpid == -1:
             return
         search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
@@ -1185,7 +1113,7 @@ class MainForm(QMainWindow, MainWindow):
         self.progress_bar_timer.start(100)
         scan_thread = guitypedefs.Worker(scanmem.send_command, search_for)
         scan_thread.signals.finished.connect(self.scan_callback)
-        threadpool.start(scan_thread)
+        states.threadpool.start(scan_thread)
 
     def resize_address_table(self):
         self.treeWidget_AddressTable.resizeColumnToContents(FROZEN_COL)
@@ -1199,8 +1127,7 @@ class MainForm(QMainWindow, MainWindow):
             self.update_address_table()
 
     def pushButton_RefreshAdressTable_clicked(self):
-        global exp_cache
-        exp_cache.clear()
+        states.exp_cache.clear()
         self.update_address_table()
 
     def pushButton_MemoryView_clicked(self):
@@ -1279,12 +1206,11 @@ class MainForm(QMainWindow, MainWindow):
         self.lineEdit_Scan2.keyPressEvent_original(event)
 
     def pushButton_UndoScan_clicked(self):
-        global threadpool
         if debugcore.currentpid == -1:
             return
         undo_thread = guitypedefs.Worker(scanmem.undo_scan)
         undo_thread.signals.finished.connect(self.scan_callback)
-        threadpool.start(undo_thread)
+        states.threadpool.start(undo_thread)
         self.pushButton_UndoScan.setEnabled(False)  # we can undo once so set it to false and re-enable at next scan
 
     def comboBox_ScanType_current_index_changed(self):
@@ -1624,7 +1550,7 @@ class MainForm(QMainWindow, MainWindow):
                 ptr_size = 4
             ptrscan.set_bitness(ptr_size)
             self.on_new_process()
-            process_signals.attach.emit()
+            states.process_signals.attach.emit()
 
             # TODO: This makes PINCE call on_process_stop twice when attaching
             # TODO: Signal design might have to change to something like mutexes eventually
@@ -1717,7 +1643,7 @@ class MainForm(QMainWindow, MainWindow):
             gdb_path = utils.get_default_gdb_path()
         debugcore.init_gdb(gdb_path)
         self.apply_after_init()
-        process_signals.exit.emit()
+        states.process_signals.exit.emit()
 
     def on_status_detached(self):
         self.label_SelectedProcess.setStyleSheet("color: blue")
@@ -1771,7 +1697,7 @@ class MainForm(QMainWindow, MainWindow):
 
     # Loop restarts itself to wait for function execution, same for the functions below
     def address_table_loop(self):
-        if self.update_table and not exiting:
+        if self.update_table and not states.exiting:
             try:
                 self.update_address_table()
             except:
@@ -1779,7 +1705,7 @@ class MainForm(QMainWindow, MainWindow):
         self.address_table_timer.start(self.table_update_interval)
 
     def search_table_loop(self):
-        if not exiting:
+        if not states.exiting:
             try:
                 self.update_search_table()
             except:
@@ -1787,7 +1713,7 @@ class MainForm(QMainWindow, MainWindow):
         self.search_table_timer.start(500)
 
     def freeze_loop(self):
-        if not exiting:
+        if not states.exiting:
             try:
                 self.freeze()
             except:
@@ -2872,7 +2798,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.continue_commands = ("c", "continue", "-exec-continue")
         self.input_history = [""]
         self.current_history_index = -1
-        self.await_async_output_thread = AwaitAsyncOutput()
+        self.await_async_output_thread = guitypedefs.AwaitAsyncOutput()
         self.await_async_output_thread.async_output_ready.connect(self.on_async_output)
         self.await_async_output_thread.start()
         self.pushButton_Send.clicked.connect(self.communicate)
@@ -3007,8 +2933,6 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
 
 
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
-    process_stopped = pyqtSignal()
-    process_running = pyqtSignal()
     show_memory_view_on_stop: bool = False
     instructions_per_scroll: int = 3
     bytes_per_scroll: int = 0x40
@@ -3072,8 +2996,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.updating_memoryview = False
         self.stacktrace_info_widget = StackTraceInfoWidgetForm(self)
         self.float_registers_widget = FloatRegisterWidgetForm(self)
-        self.process_stopped.connect(self.on_process_stop)
-        self.process_running.connect(self.on_process_running)
+        states.status_thread.process_stopped.connect(self.on_process_stop)
+        states.status_thread.process_running.connect(self.on_process_running)
         self.set_debug_menu_shortcuts()
         self.set_dynamic_debug_hotkeys()
         self.initialize_file_context_menu()
@@ -3535,7 +3459,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def hex_update_loop(self):
         offset = HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT
-        if debugcore.currentpid == -1 or exiting:
+        if debugcore.currentpid == -1 or states.exiting:
             updated_array = ["??"] * offset
         else:
             updated_array = debugcore.hex_dump(self.hex_model.current_address, offset)
@@ -5125,7 +5049,7 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         self.pushButton_Cancel.clicked.connect(self.close)
         tracer_thread = guitypedefs.Worker(tracer.tracer_loop)
         tracer_thread.signals.finished.connect(self.close)
-        threadpool.start(tracer_thread)
+        states.threadpool.start(tracer_thread)
         self.status_timer = QTimer()
         self.status_timer.setInterval(50)
         self.status_timer.timeout.connect(self.change_status)
@@ -6186,8 +6110,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
 
 
 def handle_exit():
-    global exiting
-    exiting = 1
+    states.exiting = True
 
 
 if __name__ == "__main__":
