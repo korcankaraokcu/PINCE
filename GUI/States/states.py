@@ -2,6 +2,7 @@ from PyQt6.QtCore import QThreadPool
 from GUI.Utils import guitypedefs
 
 process_signals = guitypedefs.ProcessSignals()
+setting_signals = guitypedefs.SettingSignals()
 
 status_thread = guitypedefs.CheckInferiorStatus()
 status_thread.start()
@@ -20,3 +21,19 @@ exp_cache = {}
 
 # Set to True when app is about to exit
 exiting = False
+
+hotkeys = guitypedefs.Hotkeys()
+
+# The variables below are used for quick global access to settings for optimization or simplification purposes
+# Initial values of these variables doesn't matter, they'll be set when apply_settings function is called
+# Please don't throw every single settings variable here, only add variables that needs to be accessed frequently
+update_table = False
+table_update_interval = 0
+freeze_interval = 0
+auto_attach = ""
+auto_attach_regex = False
+show_memory_view_on_stop = False
+instructions_per_scroll = 0
+bytes_per_scroll = 0
+gdb_path = ""
+gdb_logging = False

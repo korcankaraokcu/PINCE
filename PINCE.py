@@ -20,16 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import gi
 
-import GUI.Settings.settings as settings
-from GUI.Settings.hotkeys import Hotkeys
-
 # This fixes GTK version mismatch issues and crashes on gnome
 # See #153 and #159 for more information
 # This line can be deleted when GTK 4.0 properly runs on all supported systems
 gi.require_version("Gtk", "3.0")
-
-from tr.tr import TranslationConstants as tr
-from tr.tr import language_list, get_locale
 
 from PyQt6.QtGui import (
     QIcon,
@@ -88,10 +82,15 @@ from PyQt6.QtCore import (
     QItemSelection,
 )
 from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, collections, ast, json, select
+import os, sys, traceback, signal, re, copy, io, collections, ast, json, select, importlib
+
+from tr.tr import TranslationConstants as tr
+from tr.tr import language_list, get_locale
 
 from libpince import utils, debugcore, typedefs
 from libpince.debugcore import scanmem, ptrscan
+from GUI.States import states
+from GUI.Settings import settings
 from GUI.Settings.themes import get_theme, theme_list
 from GUI.Utils import guiutils, guitypedefs
 
@@ -165,9 +164,9 @@ if __name__ == "__main__":
     translator.load(locale_file)
     app.installTranslator(translator)
     tr.translate()
-    hotkeys = Hotkeys()  # Create the instance after translations to ensure hotkeys are translated
-    # DO NOT REMOVE THE IMPORT BELOW EVEN IF IT'S NOT REFERENCED HERE. It's used to initiate the state variables
-    from GUI.States import states  # Initiate the variables inside the module after QApplication instance is created
+    # Reload states after QApplication instance to ensure that variables are correctly initiated
+    # Reloading states after translations also ensures that hotkeys are correctly translated
+    importlib.reload(states)
 
 # represents the index of columns in instructions restore table
 INSTR_ADDR_COL = 0
@@ -314,26 +313,20 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 class MainForm(QMainWindow, MainWindow):
-    table_update_interval: int = 500
-    freeze_interval: int = 100
-    update_table: bool = True
-    auto_attach: str = ""
-    auto_attach_regex: bool = False
-
     def __init__(self):
         super().__init__()
         self.setupUi(self)
         self.deleted_regions: list[int] = []
         hotkey_to_func = {
-            hotkeys.pause_hotkey: self.pause_hotkey_pressed,
-            hotkeys.break_hotkey: self.break_hotkey_pressed,
-            hotkeys.continue_hotkey: self.continue_hotkey_pressed,
-            hotkeys.toggle_attach_hotkey: self.toggle_attach_hotkey_pressed,
-            hotkeys.exact_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.EXACT),
-            hotkeys.increased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.INCREASED),
-            hotkeys.decreased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.DECREASED),
-            hotkeys.changed_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.CHANGED),
-            hotkeys.unchanged_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.UNCHANGED),
+            states.hotkeys.pause_hotkey: self.pause_hotkey_pressed,
+            states.hotkeys.break_hotkey: self.break_hotkey_pressed,
+            states.hotkeys.continue_hotkey: self.continue_hotkey_pressed,
+            states.hotkeys.toggle_attach_hotkey: self.toggle_attach_hotkey_pressed,
+            states.hotkeys.exact_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.EXACT),
+            states.hotkeys.increased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.INCREASED),
+            states.hotkeys.decreased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.DECREASED),
+            states.hotkeys.changed_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.CHANGED),
+            states.hotkeys.unchanged_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.UNCHANGED),
         }
         for hotkey, func in hotkey_to_func.items():
             hotkey.change_func(func)
@@ -344,39 +337,25 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 120)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.tableWidget_valuesearchtable.horizontalHeader().setSortIndicatorClearable(True)
-        self.settings = QSettings()
         self.memory_view_window = MemoryViewWindowForm(self)
         self.await_exit_thread = guitypedefs.AwaitProcessExit()
         self.auto_attach_timer = QTimer(timeout=self.auto_attach_loop)
 
-        if not os.path.exists(self.settings.fileName()):
-            self.set_default_settings()
-        try:
-            settings_version = self.settings.value("Misc/version", type=str)
-        except Exception as e:
-            print("An exception occurred while reading settings version\n", e)
-            settings_version = None
-        if settings_version != settings.current_settings_version:
-            print("Settings version mismatch, rolling back to the default configuration")
-            self.settings.clear()
-            self.set_default_settings()
-        try:
-            self.apply_settings()
-        except Exception as e:
-            print("An exception occurred while loading settings, rolling back to the default configuration\n", e)
-            self.settings.clear()
-            self.set_default_settings()
-        gdb_path = settings.gdb_path
+        settings.init_settings()
+        self.settings_changed()
         if os.environ.get("APPDIR"):
             gdb_path = utils.get_default_gdb_path()
+        else:
+            gdb_path = states.gdb_path
         if debugcore.init_gdb(gdb_path):
-            self.apply_after_init()
+            settings.apply_after_init()
         else:
             InputDialogForm(self, [(tr.GDB_INIT_ERROR, None)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
         states.status_thread.process_stopped.connect(self.on_status_stopped)
         states.status_thread.process_running.connect(self.on_status_running)
+        states.setting_signals.changed.connect(self.settings_changed)
         self.address_table_timer = QTimer(timeout=self.address_table_loop, singleShot=True)
         self.address_table_timer.start()
         self.search_table_timer = QTimer(timeout=self.search_table_loop, singleShot=True)
@@ -460,122 +439,29 @@ class MainForm(QMainWindow, MainWindow):
         self.flashAttachButtonTimer.start(100)
         guiutils.center(self)
 
-    # Please refrain from using python specific objects in settings, use json-compatible ones instead
-    # Using python objects causes issues when filenames change
-    def set_default_settings(self):
-        self.settings.beginGroup("General")
-        self.settings.setValue("auto_update_address_table", MainForm.update_table)
-        self.settings.setValue("address_table_update_interval", MainForm.table_update_interval)
-        self.settings.setValue("freeze_interval", MainForm.freeze_interval)
-        self.settings.setValue("gdb_output_mode", json.dumps([True, True, True]))
-        self.settings.setValue("auto_attach", MainForm.auto_attach)
-        self.settings.setValue("auto_attach_regex", MainForm.auto_attach_regex)
-        self.settings.setValue("locale", get_locale())
-        self.settings.setValue("logo_path", "ozgurozbek/pince_small_transparent.png")
-        self.settings.setValue("theme", "System Default")
-        self.settings.endGroup()
-        self.settings.beginGroup("Hotkeys")
-        for hotkey in hotkeys.get_hotkeys():
-            self.settings.setValue(hotkey.name, hotkey.default)
-        self.settings.endGroup()
-        self.settings.beginGroup("CodeInjection")
-        self.settings.setValue("code_injection_method", typedefs.INJECTION_METHOD.DLOPEN)
-        self.settings.endGroup()
-        self.settings.beginGroup("MemoryView")
-        self.settings.setValue("show_memory_view_on_stop", False)
-        self.settings.setValue("instructions_per_scroll", MemoryViewWindowForm.instructions_per_scroll)
-        self.settings.setValue("bytes_per_scroll", MemoryViewWindowForm.bytes_per_scroll)
-        self.settings.endGroup()
-        self.settings.beginGroup("Debug")
-        self.settings.setValue("gdb_path", typedefs.PATHS.GDB)
-        self.settings.setValue("gdb_logging", False)
-        self.settings.setValue("interrupt_signal", "SIGINT")
-        self.settings.setValue("handle_signals", json.dumps(settings.default_signals))
-        self.settings.endGroup()
-        self.settings.beginGroup("Java")
-        self.settings.setValue("ignore_segfault", True)
-        self.settings.endGroup()
-        self.settings.beginGroup("Misc")
-        self.settings.setValue("version", settings.current_settings_version)
-        self.settings.endGroup()
-        self.apply_settings()
-
-    def apply_after_init(self):
-        states.exp_cache.clear()
-        settings.gdb_logging = self.settings.value("Debug/gdb_logging", type=bool)
-        settings.interrupt_signal = self.settings.value("Debug/interrupt_signal", type=str)
-        settings.handle_signals = json.loads(self.settings.value("Debug/handle_signals", type=str))
-        java_ignore_segfault = self.settings.value("Java/ignore_segfault", type=bool)
-        debugcore.set_logging(settings.gdb_logging)
-
-        # Don't handle signals if a process isn't present, a small optimization to gain time on launch and detach
-        if debugcore.currentpid != -1:
-            debugcore.handle_signals(settings.handle_signals)
-            # Not a great method but okayish until the implementation of the libpince engine and the java dissector
-            # "jps" command could be used instead if we ever need to install openjdk
-            if java_ignore_segfault and utils.get_process_name(debugcore.currentpid).startswith("java"):
-                debugcore.handle_signal("SIGSEGV", False, True)
-            debugcore.set_interrupt_signal(settings.interrupt_signal)  # Needs to be called after handle_signals
-
-    def apply_settings(self):
-        self.update_table = self.settings.value("General/auto_update_address_table", type=bool)
-        self.table_update_interval = self.settings.value("General/address_table_update_interval", type=int)
-        self.freeze_interval = self.settings.value("General/freeze_interval", type=int)
-        settings.gdb_output_mode = json.loads(self.settings.value("General/gdb_output_mode", type=str))
-        settings.gdb_output_mode = typedefs.gdb_output_mode(*settings.gdb_output_mode)
-        self.auto_attach = self.settings.value("General/auto_attach", type=str)
-        self.auto_attach_regex = self.settings.value("General/auto_attach_regex", type=bool)
-        if self.auto_attach:
+    def settings_changed(self):
+        if states.auto_attach:
             self.auto_attach_timer.start(100)
         else:
             self.auto_attach_timer.stop()
-        settings.locale = self.settings.value("General/locale", type=str)
-        app.setWindowIcon(
-            QIcon(os.path.join(utils.get_logo_directory(), self.settings.value("General/logo_path", type=str)))
-        )
-        app.setPalette(get_theme(self.settings.value("General/theme", type=str)))
-        debugcore.set_gdb_output_mode(settings.gdb_output_mode)
-        for hotkey in hotkeys.get_hotkeys():
-            try:
-                hotkey.change_key(self.settings.value("Hotkeys/" + hotkey.name))
-            except:
-                # if the hotkey cannot be applied for whatever reason, reset it to the default
-                self.settings.setValue("Hotkeys/" + hotkey.name, hotkey.default)
-                hotkey.change_key(hotkey.default)
-
-        try:
-            self.memory_view_window.set_dynamic_debug_hotkeys()
-        except AttributeError:
-            pass
-        settings.code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
-        self.memory_view_window.show_memory_view_on_stop = self.settings.value(
-            "MemoryView/show_memory_view_on_stop", type=bool
-        )
-        self.memory_view_window.instructions_per_scroll = self.settings.value(
-            "MemoryView/instructions_per_scroll", type=int
-        )
-        self.memory_view_window.bytes_per_scroll = self.settings.value("MemoryView/bytes_per_scroll", type=int)
-        settings.gdb_path = self.settings.value("Debug/gdb_path", type=str)
-        if debugcore.gdb_initialized:
-            self.apply_after_init()
 
     # Check if any process should be attached to automatically
     # Patterns at former positions have higher priority if regex is off
     def auto_attach_loop(self):
         if debugcore.currentpid != -1:
             return
-        if self.auto_attach_regex:
+        if states.auto_attach_regex:
             try:
-                compiled_re = re.compile(self.auto_attach)
+                compiled_re = re.compile(states.auto_attach)
             except:
-                print(f"Auto-attach failed: {self.auto_attach} isn't a valid regex")
+                print(f"Auto-attach failed: {states.auto_attach} isn't a valid regex")
                 return
             for pid, _, name in utils.get_process_list():
                 if compiled_re.search(name):
                     self.attach_to_pid(int(pid))
                     return
         else:
-            for target in self.auto_attach.split(";"):
+            for target in states.auto_attach.split(";"):
                 for pid, _, name in utils.get_process_list():
                     if name.find(target) != -1:
                         self.attach_to_pid(int(pid))
@@ -1143,9 +1029,7 @@ class MainForm(QMainWindow, MainWindow):
         about_widget.activateWindow()
 
     def pushButton_Settings_clicked(self):
-        settings_dialog = SettingsDialogForm(self, self.set_default_settings)
-        if settings_dialog.exec():
-            self.apply_settings()
+        SettingsDialogForm(self).exec()
 
     def pushButton_Console_clicked(self):
         console_widget = ConsoleWidgetForm(self)
@@ -1539,9 +1423,9 @@ class MainForm(QMainWindow, MainWindow):
 
     # Returns: a bool value indicates whether the operation succeeded.
     def attach_to_pid(self, pid: int):
-        attach_result = debugcore.attach(pid, settings.gdb_path)
+        attach_result = debugcore.attach(pid, states.gdb_path)
         if attach_result == typedefs.ATTACH_RESULT.SUCCESSFUL:
-            self.apply_after_init()
+            settings.apply_after_init()
             scanmem.pid(pid)
             ptrscan.set_process(pid)
             if debugcore.get_inferior_arch() == typedefs.INFERIOR_ARCH.ARCH_64:
@@ -1571,7 +1455,7 @@ class MainForm(QMainWindow, MainWindow):
     # Returns: a bool value indicates whether the operation succeeded.
     def create_new_process(self, file_path, args, ld_preload_path):
         if debugcore.create_process(file_path, args, ld_preload_path):
-            self.apply_after_init()
+            settings.apply_after_init()
             self.on_new_process()
             return True
         else:
@@ -1638,11 +1522,12 @@ class MainForm(QMainWindow, MainWindow):
         self.flashAttachButtonTimer.start(100)
         self.label_SelectedProcess.setText(tr.NO_PROCESS_SELECTED)
         self.memory_view_window.setWindowTitle(tr.NO_PROCESS_SELECTED)
-        gdb_path = settings.gdb_path
         if os.environ.get("APPDIR"):
             gdb_path = utils.get_default_gdb_path()
+        else:
+            gdb_path = states.gdb_path
         debugcore.init_gdb(gdb_path)
-        self.apply_after_init()
+        settings.apply_after_init()
         states.process_signals.exit.emit()
 
     def on_status_detached(self):
@@ -1697,12 +1582,12 @@ class MainForm(QMainWindow, MainWindow):
 
     # Loop restarts itself to wait for function execution, same for the functions below
     def address_table_loop(self):
-        if self.update_table and not states.exiting:
+        if states.update_table and not states.exiting:
             try:
                 self.update_address_table()
             except:
                 traceback.print_exc()
-        self.address_table_timer.start(self.table_update_interval)
+        self.address_table_timer.start(states.table_update_interval)
 
     def search_table_loop(self):
         if not states.exiting:
@@ -1718,7 +1603,7 @@ class MainForm(QMainWindow, MainWindow):
                 self.freeze()
             except:
                 traceback.print_exc()
-        self.freeze_timer.start(self.freeze_interval)
+        self.freeze_timer.start(states.freeze_interval)
 
     # ----------------------------------------------------
 
@@ -2507,11 +2392,10 @@ class TextEditDialogForm(QDialog, TextEditDialog):
 
 
 class SettingsDialogForm(QDialog, SettingsDialog):
-    def __init__(self, parent, set_default_settings_func):
+    def __init__(self, parent):
         super().__init__(parent)
         self.setupUi(self)
         self.settings = QSettings()
-        self.set_default_settings = set_default_settings_func
         self.hotkey_to_value = {}  # Dict[str:str]-->Dict[Hotkey.name:settings_value]
         self.handle_signals_data = ""
         icons_directory = guiutils.get_icons_directory()
@@ -2531,7 +2415,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         logo_list = utils.search_files(logo_directory, r"\.(png|jpg|jpeg|svg)$")
         for logo in logo_list:
             self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
-        for hotkey in hotkeys.get_hotkeys():
+        for hotkey in states.hotkeys.get_hotkeys():
             self.listWidget_Functions.addItem(hotkey.desc)
         self.config_gui()
 
@@ -2568,12 +2452,13 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("General/auto_attach", self.lineEdit_AutoAttach.text())
         self.settings.setValue("General/auto_attach_regex", self.checkBox_AutoAttachRegex.isChecked())
         new_locale = self.comboBox_Language.currentData(Qt.ItemDataRole.UserRole)
-        if new_locale != settings.locale:
+        current_locale = self.settings.value("General/locale", type=str)
+        if new_locale != current_locale:
             QMessageBox.information(self, tr.INFO, tr.LANG_RESET)
         self.settings.setValue("General/locale", new_locale)
         self.settings.setValue("General/logo_path", self.comboBox_Logo.currentText())
         self.settings.setValue("General/theme", self.comboBox_Theme.currentText())
-        for hotkey in hotkeys.get_hotkeys():
+        for hotkey in states.hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
         if self.radioButton_SimpleDLopenCall.isChecked():
             injection_method = typedefs.INJECTION_METHOD.DLOPEN
@@ -2585,8 +2470,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("MemoryView/bytes_per_scroll", self.spinBox_BytesPerScroll.value())
         if not os.environ.get("APPDIR"):
             selected_gdb_path = self.lineEdit_GDBPath.text()
-            current_gdb_path = self.settings.value("Debug/gdb_path", type=str)
-            if selected_gdb_path != current_gdb_path:
+            if selected_gdb_path != states.gdb_path:
                 if InputDialogForm(self, [(tr.GDB_RESET,)]).exec():
                     debugcore.init_gdb(selected_gdb_path)
             self.settings.setValue("Debug/gdb_path", selected_gdb_path)
@@ -2595,6 +2479,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.settings.setValue("Java/ignore_segfault", self.checkBox_JavaSegfault.isChecked())
         if self.handle_signals_data:
             self.settings.setValue("Debug/handle_signals", self.handle_signals_data)
+        settings.apply_settings()
         super().accept()
 
     def reject(self):
@@ -2624,7 +2509,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         with QSignalBlocker(self.comboBox_Logo):
             self.comboBox_Logo.setCurrentText(self.settings.value("General/logo_path", type=str))
         self.hotkey_to_value.clear()
-        for hotkey in hotkeys.get_hotkeys():
+        for hotkey in states.hotkeys.get_hotkeys():
             self.hotkey_to_value[hotkey.name] = self.settings.value("Hotkeys/" + hotkey.name)
         self.listWidget_Functions_current_row_changed(self.listWidget_Functions.currentRow())
         code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
@@ -2657,7 +2542,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if index == -1:
             self.lineEdit_Hotkey.clear()
         else:
-            self.lineEdit_Hotkey.setText(self.hotkey_to_value[hotkeys.get_hotkeys()[index].name])
+            self.lineEdit_Hotkey.setText(self.hotkey_to_value[states.hotkeys.get_hotkeys()[index].name])
 
     def pushButton_ClearHotkey_clicked(self):
         self.lineEdit_Hotkey.clear()
@@ -2665,7 +2550,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
     def pushButton_ResetSettings_clicked(self):
         confirm_dialog = InputDialogForm(self, [(tr.RESET_DEFAULT_SETTINGS,)])
         if confirm_dialog.exec():
-            self.set_default_settings()
+            settings.set_default_settings()
             self.handle_signals_data = ""
             self.config_gui()
 
@@ -2733,7 +2618,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if index == -1:
             self.lineEdit_Hotkey.clear()
         else:
-            self.hotkey_to_value[hotkeys.get_hotkeys()[index].name] = self.lineEdit_Hotkey.text()
+            self.hotkey_to_value[states.hotkeys.get_hotkeys()[index].name] = self.lineEdit_Hotkey.text()
 
 
 class HandleSignalsDialogForm(QDialog, HandleSignalsDialog):
@@ -2933,15 +2818,40 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
 
 
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
-    show_memory_view_on_stop: bool = False
-    instructions_per_scroll: int = 3
-    bytes_per_scroll: int = 0x40
-    stack_from_base_pointer: bool = False
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.updating_memoryview = False
+        self.stack_from_base_pointer = False
+        self.stacktrace_info_widget = StackTraceInfoWidgetForm(self)
+        self.float_registers_widget = FloatRegisterWidgetForm(self)
+        states.status_thread.process_stopped.connect(self.on_process_stop)
+        states.status_thread.process_running.connect(self.on_process_running)
+        states.setting_signals.changed.connect(self.set_dynamic_debug_hotkeys)
+        self.set_debug_menu_shortcuts()
+        self.set_dynamic_debug_hotkeys()
+        self.initialize_file_context_menu()
+        self.initialize_view_context_menu()
+        self.initialize_debug_context_menu()
+        self.initialize_tools_context_menu()
+        self.initialize_help_context_menu()
+        self.initialize_disassemble_view()
+        self.initialize_register_view()
+        self.initialize_stack_view()
+        self.initialize_hex_view()
+
+        self.label_HexView_Information.contextMenuEvent = self.label_HexView_Information_context_menu_event
+
+        self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
+        self.splitter_MainMiddle.setStretchFactor(1, 1)
+        self.widget_StackView.resize(660, self.widget_StackView.height())
+        self.widget_Registers.resize(330, self.widget_Registers.height())
+        guiutils.center(self)
 
     def set_dynamic_debug_hotkeys(self):
-        self.actionBreak.setText(tr.BREAK.format(hotkeys.break_hotkey.get_active_key()))
-        self.actionRun.setText(tr.RUN.format(hotkeys.continue_hotkey.get_active_key()))
-        self.actionToggle_Attach.setText(tr.TOGGLE_ATTACH.format(hotkeys.toggle_attach_hotkey.get_active_key()))
+        self.actionBreak.setText(tr.BREAK.format(states.hotkeys.break_hotkey.get_active_key()))
+        self.actionRun.setText(tr.RUN.format(states.hotkeys.continue_hotkey.get_active_key()))
+        self.actionToggle_Attach.setText(tr.TOGGLE_ATTACH.format(states.hotkeys.toggle_attach_hotkey.get_active_key()))
 
     def set_debug_menu_shortcuts(self):
         self.shortcut_step = QShortcut(QKeySequence("F7"), self)
@@ -2989,34 +2899,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def initialize_help_context_menu(self):
         self.actionlibpince.triggered.connect(self.actionlibpince_triggered)
-
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.setupUi(self)
-        self.updating_memoryview = False
-        self.stacktrace_info_widget = StackTraceInfoWidgetForm(self)
-        self.float_registers_widget = FloatRegisterWidgetForm(self)
-        states.status_thread.process_stopped.connect(self.on_process_stop)
-        states.status_thread.process_running.connect(self.on_process_running)
-        self.set_debug_menu_shortcuts()
-        self.set_dynamic_debug_hotkeys()
-        self.initialize_file_context_menu()
-        self.initialize_view_context_menu()
-        self.initialize_debug_context_menu()
-        self.initialize_tools_context_menu()
-        self.initialize_help_context_menu()
-        self.initialize_disassemble_view()
-        self.initialize_register_view()
-        self.initialize_stack_view()
-        self.initialize_hex_view()
-
-        self.label_HexView_Information.contextMenuEvent = self.label_HexView_Information_context_menu_event
-
-        self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
-        self.splitter_MainMiddle.setStretchFactor(1, 1)
-        self.widget_StackView.resize(660, self.widget_StackView.height())
-        self.widget_Registers.resize(330, self.widget_Registers.height())
-        guiutils.center(self)
 
     def initialize_register_view(self):
         self.pushButton_ShowFloatRegisters.clicked.connect(self.pushButton_ShowFloatRegisters_clicked)
@@ -3326,9 +3208,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         #    return
         current_address = self.hex_model.current_address
         if current_value < midst:
-            next_address = current_address - self.bytes_per_scroll
+            next_address = current_address - states.bytes_per_scroll
         else:
-            next_address = current_address + self.bytes_per_scroll
+            next_address = current_address + states.bytes_per_scroll
         self.hex_dump_address(next_address)
         guiutils.center_scroll_bar(self.verticalScrollBar_HexView)
         self.bHexViewScrolling = False
@@ -3351,9 +3233,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         #    self.bDisassemblyScrolling = False
         #    return
         if current_value < midst:
-            self.tableWidget_Disassemble_scroll("previous", self.instructions_per_scroll)
+            self.tableWidget_Disassemble_scroll("previous", states.instructions_per_scroll)
         else:
-            self.tableWidget_Disassemble_scroll("next", self.instructions_per_scroll)
+            self.tableWidget_Disassemble_scroll("next", states.instructions_per_scroll)
         guiutils.center_scroll_bar(self.verticalScrollBar_Disassemble)
         self.bDisassemblyScrolling = False
 
@@ -3700,7 +3582,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if self.tableWidget_Stack.rowCount() == 0:
             self.update_stack()
         self.refresh_hex_view()
-        if self.show_memory_view_on_stop:
+        if states.show_memory_view_on_stop:
             self.showMaximized()
             self.activateWindow()
         if self.stacktrace_info_widget.isVisible():
@@ -3976,9 +3858,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         steps = event.angleDelta()
         if steps.y() > 0:
-            self.tableWidget_Disassemble_scroll("previous", self.instructions_per_scroll)
+            self.tableWidget_Disassemble_scroll("previous", states.instructions_per_scroll)
         else:
-            self.tableWidget_Disassemble_scroll("next", self.instructions_per_scroll)
+            self.tableWidget_Disassemble_scroll("next", states.instructions_per_scroll)
 
     def disassemble_check_viewport(self, where, instruction_count):
         if debugcore.currentpid == -1:
@@ -4016,9 +3898,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         steps = event.angleDelta()
         current_address = self.hex_model.current_address
         if steps.y() > 0:
-            next_address = current_address - self.bytes_per_scroll
+            next_address = current_address - states.bytes_per_scroll
         else:
-            next_address = current_address + self.bytes_per_scroll
+            next_address = current_address + states.bytes_per_scroll
         self.hex_dump_address(next_address)
 
     def widget_HexView_key_press_event(self, event):
@@ -5446,14 +5328,14 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         log_path = utils.get_logging_file(debugcore.currentpid)
         self.setWindowTitle(tr.LOG_FILE.format(debugcore.currentpid))
         self.label_FilePath.setText(tr.LOG_CONTENTS.format(log_path, 20000))
-        log_status = f"<font color=blue>{tr.ON}</font>" if settings.gdb_logging else f"<font color=red>{tr.OFF}</font>"
+        log_status = f"<font color=blue>{tr.ON}</font>" if states.gdb_logging else f"<font color=red>{tr.OFF}</font>"
         self.label_LoggingStatus.setText(f"<b>{tr.LOG_STATUS.format(log_status)}</b>")
         try:
             log_file = open(log_path)
         except OSError:
             self.textBrowser_LogContent.clear()
             error_message = tr.LOG_READ_ERROR.format(log_path) + "\n"
-            if not settings.gdb_logging:
+            if not states.gdb_logging:
                 error_message += tr.SETTINGS_ENABLE_LOG
             self.textBrowser_LogContent.setText(error_message)
             return
