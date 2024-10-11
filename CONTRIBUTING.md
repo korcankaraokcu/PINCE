@@ -24,16 +24,18 @@
 **About GUI file structure refactoring**: PINCE.py currently holds all of the GUI logic classes and this makes PINCE.py grow larger as the project progresses. To prevent this, all GUI logic will be carried to their respective folders and the GUI folder will follow this structure:
 ```
 GUI/
+|-- Settings/
+|-- States/
 |-- Utils/
-|-- Other Generalized Folders/ (if needed)
-|-- Example/
-│   |-- Form/
-│   │   |-- ExampleWidget.ui (Designer UI file)
-│   │   |-- ExampleWidget.py (Auto-generated from the UI file)
-│   |-- Example.py (Form logic)
-│   |-- CustomClass.py (Helper class)
+|-- Widgets/
+|   |-- Example/
+│   |   |-- Form/
+│   |   │   |-- ExampleWidget.ui (Designer UI file)
+│   |   │   |-- ExampleWidget.py (Auto-generated from the UI file)
+│   |   |-- Example.py (Form logic)
+│   |   |-- CustomClass.py (Helper class)
 ```
-A good example of the structure above can be seen in [ManageScanRegions](./GUI/ManageScanRegions)
+A good example of the structure above can be seen in [ManageScanRegions](./GUI/Widgets/ManageScanRegions)
 
 # Code Style
 Formatting style is [Black](https://github.com/psf/black) defaults, except line length is 120. You can use Black without parameters since we already use `pyproject.toml` for this setting.

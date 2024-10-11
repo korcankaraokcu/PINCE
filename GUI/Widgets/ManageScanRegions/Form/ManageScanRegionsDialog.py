@@ -86,4 +86,4 @@ class Ui_Dialog(object):
         item.setText(_translate("Dialog", "Perms"))
         item = self.tableWidget_Regions.horizontalHeaderItem(6)
         item.setText(_translate("Dialog", "File"))
-from GUI.ManageScanRegions.ScanRegionTable import QScanRegionTable
+from GUI.Widgets.ManageScanRegions.ScanRegionTable import QScanRegionTable

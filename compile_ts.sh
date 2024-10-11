@@ -13,7 +13,7 @@ fi
 for ts in $list_ts; do
 	# Check if the locale is valid
 	if echo "$supported_locale_list" | grep -q "$(basename "$ts" .ts)"; then
-		pylupdate6 GUI/*.ui GUI/*/Form/*.ui tr/tr.py --no-obsolete --ts "$ts"
+		pylupdate6 GUI/*.ui GUI/Widgets/*/Form/*.ui tr/tr.py --no-obsolete --ts "$ts"
 		python3 fix_ts.py "$ts"
 	else
 		list_invalidts="$list_invalidts $ts"

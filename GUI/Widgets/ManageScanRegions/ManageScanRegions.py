@@ -1,12 +1,12 @@
 from PyQt6.QtWidgets import QDialog, QTableWidgetItem
 from PyQt6.QtCore import Qt
-from GUI.ManageScanRegions.Form.ManageScanRegionsDialog import Ui_Dialog as ManageScanRegionsForm
+from GUI.Widgets.ManageScanRegions.Form.ManageScanRegionsDialog import Ui_Dialog
 from GUI.Utils import guiutils
 from libpince import debugcore
 import re
 
 
-class ManageScanRegionsDialog(QDialog, ManageScanRegionsForm):
+class ManageScanRegionsDialog(QDialog, Ui_Dialog):
     def __init__(self, parent) -> None:
         super().__init__(parent)
         self.setupUi(self)

@@ -129,7 +129,7 @@
   <customwidget>
    <class>QScanRegionTable</class>
    <extends>QTableWidget</extends>
-   <header location="global">GUI.ManageScanRegions.ScanRegionTable</header>
+   <header location="global">GUI.Widgets.ManageScanRegions.ScanRegionTable</header>
   </customwidget>
  </customwidgets>
  <resources/>

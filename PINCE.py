@@ -129,9 +129,9 @@ from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
 from GUI.RestoreInstructionsWidget import Ui_Form as RestoreInstructionsWidget
-from GUI.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
-from GUI.PointerScan.PointerScan import PointerScanWindow
-from GUI.ManageScanRegions.ManageScanRegions import ManageScanRegionsDialog
+from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
+from GUI.Widgets.PointerScan.PointerScan import PointerScanWindow
+from GUI.Widgets.ManageScanRegions.ManageScanRegions import ManageScanRegionsDialog
 
 from GUI.AbstractTableModels.HexModel import QHexModel
 from GUI.AbstractTableModels.AsciiModel import QAsciiModel

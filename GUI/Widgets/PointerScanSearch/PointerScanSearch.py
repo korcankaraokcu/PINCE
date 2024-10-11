@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton
-from GUI.PointerScanSearch.Form.PointerScanSearchDialog import Ui_Dialog as PointerScanSearchForm
+from GUI.Widgets.PointerScanSearch.Form.PointerScanSearchDialog import Ui_Dialog
 from GUI.Utils import guiutils, guitypedefs
 from libpince import debugcore, utils
 from libpince.debugcore import ptrscan
@@ -8,7 +8,7 @@ from tr.tr import TranslationConstants as tr
 import os
 
 
-class PointerScanSearchDialog(QDialog, PointerScanSearchForm):
+class PointerScanSearchDialog(QDialog, Ui_Dialog):
     def __init__(self, parent, address) -> None:
         super().__init__(parent)
         self.setupUi(self)

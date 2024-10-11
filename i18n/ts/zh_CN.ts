@@ -143,7 +143,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
       <translation>多个条目用分号（;）分隔</translation>
     </message>
     <message>
-      <location filename="../../GUI/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
       <location filename="../../GUI/EditTypeDialog.ui" line="0" />
       <source>Type</source>
@@ -448,138 +448,138 @@ Patterns at former positions have higher priority if regex is off</source>
       <translation>指向的地址</translation>
     </message>
     <message>
-      <location filename="../../GUI/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
       <source>Manage Scan Regions</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
       <source>Selected regions will be deleted from the current scan</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
       <source>Invert Selection</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
       <source>ID</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
       <source>Start Address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
       <source>Size(bytes)</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
       <source>Load Address</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
       <source>Perms</source>
       <translation type="unfinished">权限</translation>
     </message>
     <message>
-      <location filename="../../GUI/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
       <source>File</source>
       <translation type="unfinished">文件</translation>
     </message>
     <message>
-      <location filename="../../GUI/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
       <source>Filter Pointers</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
       <source>File 1:</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-      <location filename="../../GUI/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
-      <location filename="../../GUI/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
       <source>Browse</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
       <source>File 2:</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>Scan for Pointers</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>Address</source>
       <translation type="unfinished">地址</translation>
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>Depth</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>Scan Range</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>0x</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>&lt;-&gt;</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>File Path:</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>Optional Parameters (0 or empty will use defaults)</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>Last Offset Scan Range</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>Minimum Chain Length</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>Last Offset Value</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>Max Results</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>Solve Circular References</source>
       <translation type="unfinished" />
     </message>
@@ -1075,47 +1075,47 @@ Patterns at former positions have higher priority if regex is off</source>
       <translation>保存为文本文件</translation>
     </message>
     <message>
-      <location filename="../../GUI/PointerScan/Form/PointerScanWindow.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
       <source>Pointer Scanner</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScan/Form/PointerScanWindow.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
       <source>Sort</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScan/Form/PointerScanWindow.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
       <source>Clear</source>
       <translation type="unfinished">清除</translation>
     </message>
     <message>
-      <location filename="../../GUI/PointerScan/Form/PointerScanWindow.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
       <source>Fi&amp;le</source>
       <translation type="unfinished">文件[&amp;l]</translation>
     </message>
     <message>
-      <location filename="../../GUI/PointerScan/Form/PointerScanWindow.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
       <source>Actio&amp;ns</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScan/Form/PointerScanWindow.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
       <source>&amp;Open</source>
       <translation type="unfinished">打开[&amp;O]</translation>
     </message>
     <message>
-      <location filename="../../GUI/PointerScan/Form/PointerScanWindow.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
       <source>&amp;Save As...</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScan/Form/PointerScanWindow.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
       <source>&amp;Scan</source>
       <translation type="unfinished" />
     </message>
     <message>
-      <location filename="../../GUI/PointerScan/Form/PointerScanWindow.ui" line="0" />
+      <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
       <source>&amp;Filter</source>
       <translation type="unfinished" />
     </message>

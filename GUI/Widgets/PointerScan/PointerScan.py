@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow, QFileDialog
-from GUI.PointerScan.Form.PointerScanWindow import Ui_MainWindow as PointerScanWindowForm
-from GUI.PointerScanFilter.PointerScanFilter import PointerScanFilterDialog
-from GUI.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
+from GUI.Widgets.PointerScan.Form.PointerScanWindow import Ui_MainWindow
+from GUI.Widgets.PointerScanFilter.PointerScanFilter import PointerScanFilterDialog
+from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
 from GUI.Utils import guiutils
 from GUI.States import states
 from libpince import debugcore, utils
@@ -9,7 +9,7 @@ from tr.tr import TranslationConstants as tr
 import os
 
 
-class PointerScanWindow(QMainWindow, PointerScanWindowForm):
+class PointerScanWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent) -> None:
         super().__init__(parent)
         self.setupUi(self)
