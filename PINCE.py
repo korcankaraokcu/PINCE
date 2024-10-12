@@ -128,7 +128,7 @@ from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
 from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
-from GUI.RestoreInstructionsWidget import Ui_Form as RestoreInstructionsWidget
+from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructionsWidget
 from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
 from GUI.Widgets.PointerScan.PointerScan import PointerScanWindow
 from GUI.Widgets.ManageScanRegions.ManageScanRegions import ManageScanRegionsDialog
@@ -167,11 +167,6 @@ if __name__ == "__main__":
     # Reload states after QApplication instance to ensure that variables are correctly initiated
     # Reloading states after translations also ensures that hotkeys are correctly translated
     importlib.reload(states)
-
-# represents the index of columns in instructions restore table
-INSTR_ADDR_COL = 0
-INSTR_AOB_COL = 1
-INSTR_NAME_COL = 2
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -679,7 +674,7 @@ class MainForm(QMainWindow, MainWindow):
             self.memory_view_window.activateWindow()
 
     def disassemble_for_address(self, address: str):
-        if address and self.memory_view_window.disassemble_expression(address.strip("P->"), append_history=True):
+        if address and self.memory_view_window.disassemble_expression(address.strip("P->")):
             self.memory_view_window.show()
             self.memory_view_window.activateWindow()
 
@@ -3138,7 +3133,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         actions = {
             edit: self.exec_hex_view_edit_dialog,
             go_to: self.exec_hex_view_go_to_dialog,
-            disassemble: lambda: self.disassemble_expression(hex(addr), append_history=True),
+            disassemble: lambda: self.disassemble_expression(hex(addr)),
             add_address: self.exec_hex_view_add_address_dialog,
             copy_selection: self.copy_hex_view_selection,
             refresh: self.refresh_hex_view,
@@ -3396,7 +3391,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     # offset can also be an address as hex str
     # returns True if the given expression is disassembled correctly, False if not
-    def disassemble_expression(self, expression, offset="+200", append_history=False):
+    def disassemble_expression(self, expression, offset="+200", append_history=True):
         if debugcore.currentpid == -1:
             return
         disas_data = debugcore.disassemble(expression, offset)
@@ -3524,7 +3519,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def refresh_disassemble_view(self):
         if debugcore.currentpid == -1:
             return
-        self.disassemble_expression(self.disassemble_currently_displayed_address)
+        self.disassemble_expression(self.disassemble_currently_displayed_address, append_history=False)
 
     # Set color of a row if a specific address is encountered(e.g $pc, a bookmarked address etc.)
     def handle_colors(self, row_color):
@@ -3569,7 +3564,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.updating_memoryview = True
         time0 = time()
         self.setWindowTitle(tr.MV_DEBUGGING.format(debugcore.get_thread_info()))
-        self.disassemble_expression("$pc")
+        self.disassemble_expression("$pc", append_history=False)
         self.update_registers()
         if self.stackedWidget_StackScreens.currentWidget() == self.StackTrace:
             self.update_stacktrace()
@@ -3750,7 +3745,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack),
                     (
                         QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
-                        lambda: self.disassemble_expression(current_address, append_history=True),
+                        lambda: self.disassemble_expression(current_address),
                     ),
                     (
                         QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H),
@@ -3803,7 +3798,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             copy_value: lambda: copy_to_clipboard(selected_row, STACK_VALUE_COL),
             copy_points_to: lambda: copy_to_clipboard(selected_row, STACK_POINTS_TO_COL),
             refresh: self.update_stack,
-            show_in_disas: lambda: self.disassemble_expression(current_address, append_history=True),
+            show_in_disas: lambda: self.disassemble_expression(current_address),
             show_in_hex: lambda: self.hex_dump_address(int(current_address, 16)),
         }
         try:
@@ -3826,7 +3821,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             if points_to_text.startswith("(str)"):
                 self.hex_dump_address(int(current_address, 16))
             else:
-                self.disassemble_expression(current_address, append_history=True)
+                self.disassemble_expression(current_address)
 
     def tableWidget_StackTrace_double_click(self, index):
         if debugcore.currentpid == -1:
@@ -3835,7 +3830,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if index.column() == STACKTRACE_RETURN_ADDRESS_COL:
             current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_RETURN_ADDRESS_COL).text()
             current_address = utils.extract_address(current_address_text)
-            self.disassemble_expression(current_address, append_history=True)
+            self.disassemble_expression(current_address)
         if index.column() == STACKTRACE_FRAME_ADDRESS_COL:
             current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_FRAME_ADDRESS_COL).text()
             current_address = utils.extract_address(current_address_text)
@@ -3881,7 +3876,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.tableWidget_Disassemble.item(current_row, DISAS_ADDR_COL).text()
             )
             new_address = debugcore.find_closest_instruction_address(current_address, "previous", last_visible_row)
-            self.disassemble_expression(new_address)
+            self.disassemble_expression(new_address, append_history=False)
         elif (where == "previous" and current_row == 0) or (where == "next" and current_row_height > height):
             self.tableWidget_Disassemble_scroll(where, instruction_count)
 
@@ -3890,7 +3885,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         current_address = self.disassemble_currently_displayed_address
         new_address = debugcore.find_closest_instruction_address(current_address, where, instruction_count)
-        self.disassemble_expression(new_address)
+        self.disassemble_expression(new_address, append_history=False)
 
     def widget_HexView_wheel_event(self, event):
         if debugcore.currentpid == -1:
@@ -3911,7 +3906,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_G), self.exec_hex_view_go_to_dialog),
                 (
                     QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
-                    lambda: self.disassemble_expression(hex(self.hex_selection_address_begin), append_history=True),
+                    lambda: self.disassemble_expression(hex(self.hex_selection_address_begin)),
                 ),
                 (
                     QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_A),
@@ -4016,14 +4011,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
         )
         if address:
-            self.disassemble_expression(address, append_history=True)
+            self.disassemble_expression(address)
 
     def disassemble_go_back(self):
         if debugcore.currentpid == -1:
             return
         if self.tableWidget_Disassemble.travel_history:
             last_location = self.tableWidget_Disassemble.travel_history[-1]
-            self.disassemble_expression(last_location)
+            self.disassemble_expression(last_location, append_history=False)
             self.tableWidget_Disassemble.travel_history.pop()
 
     def tableWidget_Disassemble_context_menu_event(self, event):
@@ -4122,7 +4117,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         except KeyError:
             pass
         if action in bookmark_actions:
-            self.disassemble_expression(utils.extract_address(action.text()), append_history=True)
+            self.disassemble_expression(utils.extract_address(action.text()))
 
     def dissect_current_region(self):
         if debugcore.currentpid == -1:
@@ -4181,7 +4176,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         go_to_dialog = InputDialogForm(self, [(tr.ENTER_EXPRESSION, current_address)])
         if go_to_dialog.exec():
             traveled_exp = go_to_dialog.get_values()
-            self.disassemble_expression(traveled_exp, append_history=True)
+            self.disassemble_expression(traveled_exp)
 
     def bookmark_address(self, int_address):
         if debugcore.currentpid == -1:
@@ -4255,7 +4250,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionRestore_Instructions_triggered(self):
         if debugcore.currentpid == -1:
             return
-        restore_instructions_widget = RestoreInstructionsWidgetForm(self)
+        restore_instructions_widget = RestoreInstructionsWidget(self)
+        restore_instructions_widget.restored.connect(self.refresh_hex_view)
+        restore_instructions_widget.restored.connect(self.refresh_disassemble_view)
+        restore_instructions_widget.double_clicked.connect(self.disassemble_expression)
         restore_instructions_widget.show()
         restore_instructions_widget.activateWindow()
 
@@ -4351,7 +4349,7 @@ class BookmarkWidgetForm(QWidget, BookmarkWidget):
         self.lineEdit_Comment.setText(self.parent().tableWidget_Disassemble.bookmarks[int(current_address, 16)])
 
     def listWidget_item_double_clicked(self, item):
-        self.parent().disassemble_expression(utils.extract_address(item.text()), append_history=True)
+        self.parent().disassemble_expression(utils.extract_address(item.text()))
 
     def exec_add_entry_dialog(self):
         entry_dialog = InputDialogForm(self, [(tr.ENTER_EXPRESSION, "")])
@@ -4475,79 +4473,6 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
             return
         frame_info = debugcore.get_stack_frame_info(index)
         self.textBrowser_Info.setText(frame_info)
-
-
-class RestoreInstructionsWidgetForm(QWidget, RestoreInstructionsWidget):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.setupUi(self)
-        self.setWindowFlags(Qt.WindowType.Window)
-
-        # Saving the original function because super() doesn't work when we override functions like this
-        self.tableWidget_Instructions.keyPressEvent_original = self.tableWidget_Instructions.keyPressEvent
-        self.tableWidget_Instructions.keyPressEvent = self.tableWidget_Instructions_key_press_event
-        self.tableWidget_Instructions.contextMenuEvent = self.tableWidget_Instructions_context_menu_event
-        self.tableWidget_Instructions.itemDoubleClicked.connect(self.tableWidget_Instructions_double_clicked)
-        self.refresh()
-        guiutils.center_to_parent(self)
-
-    def tableWidget_Instructions_context_menu_event(self, event):
-        selected_row = guiutils.get_current_row(self.tableWidget_Instructions)
-        menu = QMenu()
-        restore_instruction = menu.addAction(tr.RESTORE_INSTRUCTION)
-        if selected_row != -1:
-            selected_address_text = self.tableWidget_Instructions.item(selected_row, INSTR_ADDR_COL).text()
-            selected_address = utils.extract_address(selected_address_text)
-            selected_address_int = int(selected_address, 16)
-        else:
-            guiutils.delete_menu_entries(menu, [restore_instruction])
-            selected_address_int = None
-        menu.addSeparator()
-        refresh = menu.addAction(f"{tr.REFRESH}[R]")
-        font_size = self.tableWidget_Instructions.font().pointSize()
-        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec(event.globalPos())
-        actions = {restore_instruction: lambda: self.restore_instruction(selected_address_int), refresh: self.refresh}
-        try:
-            actions[action]()
-        except KeyError:
-            pass
-
-    def restore_instruction(self, selected_address_int):
-        debugcore.restore_instruction(selected_address_int)
-        self.refresh_all()
-
-    def refresh(self):
-        modified_instructions = debugcore.get_modified_instructions()
-        self.tableWidget_Instructions.setRowCount(len(modified_instructions))
-        for row, (address, aob) in enumerate(modified_instructions.items()):
-            self.tableWidget_Instructions.setItem(row, INSTR_ADDR_COL, QTableWidgetItem(hex(address)))
-            self.tableWidget_Instructions.setItem(row, INSTR_AOB_COL, QTableWidgetItem(aob))
-            instr_name = utils.get_opcodes(address, aob, debugcore.get_inferior_arch())
-            if not instr_name:
-                instr_name = "??"
-            self.tableWidget_Instructions.setItem(row, INSTR_NAME_COL, QTableWidgetItem(instr_name))
-        guiutils.resize_to_contents(self.tableWidget_Instructions)
-
-    def refresh_all(self):
-        self.parent().refresh_hex_view()
-        self.parent().refresh_disassemble_view()
-        self.refresh()
-
-    def tableWidget_Instructions_key_press_event(self, event):
-        actions = typedefs.KeyboardModifiersTupleDict(
-            [(QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh)]
-        )
-        try:
-            actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
-        except KeyError:
-            pass
-        self.tableWidget_Instructions.keyPressEvent_original(event)
-
-    def tableWidget_Instructions_double_clicked(self, index):
-        current_address_text = self.tableWidget_Instructions.item(index.row(), INSTR_ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
-        self.parent().disassemble_expression(current_address, append_history=True)
 
 
 class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
@@ -4694,7 +4619,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         else:
             current_breakpoint_type = self.tableWidget_BreakpointInfo.item(index.row(), BREAK_TYPE_COL).text()
             if "breakpoint" in current_breakpoint_type:
-                self.parent().disassemble_expression(current_address, append_history=True)
+                self.parent().disassemble_expression(current_address)
             else:
                 self.parent().hex_dump_address(current_address_int)
 
@@ -4763,7 +4688,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
 
     def tableWidget_Opcodes_item_double_clicked(self, index):
         self.parent().memory_view_window.disassemble_expression(
-            self.tableWidget_Opcodes.item(index.row(), TRACK_WATCHPOINT_ADDR_COL).text(), append_history=True
+            self.tableWidget_Opcodes.item(index.row(), TRACK_WATCHPOINT_ADDR_COL).text()
         )
         self.parent().memory_view_window.show()
         self.parent().memory_view_window.activateWindow()
@@ -5063,7 +4988,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             return
         address = utils.extract_address(current_item.trace_data[0])
         if address:
-            self.parent().disassemble_expression(address, append_history=True)
+            self.parent().disassemble_expression(address)
 
 
 class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
@@ -5154,7 +5079,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         address = self.tableWidget_SymbolInfo.item(index.row(), FUNCTIONS_INFO_ADDR_COL).text()
         if address == tr.DEFINED:
             return
-        self.parent().disassemble_expression(address, append_history=True)
+        self.parent().disassemble_expression(address)
 
     def pushButton_Help_clicked(self):
         InputDialogForm(
@@ -5420,7 +5345,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
     def tableWidget_Opcodes_item_double_clicked(self, index):
         row = index.row()
         address = self.tableWidget_Opcodes.item(row, SEARCH_OPCODE_ADDR_COL).text()
-        self.parent().disassemble_expression(utils.extract_address(address), append_history=True)
+        self.parent().disassemble_expression(utils.extract_address(address))
 
     def tableWidget_Opcodes_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -5715,7 +5640,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         self.parent().hex_dump_address(int(address, 16))
 
     def listWidget_Referrers_item_double_clicked(self, item):
-        self.parent().disassemble_expression(utils.extract_address(item.text()), append_history=True)
+        self.parent().disassemble_expression(utils.extract_address(item.text()))
 
     def tableWidget_References_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -5832,10 +5757,10 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
     def tableWidget_References_item_double_clicked(self, index):
         row = index.row()
         address = self.tableWidget_References.item(row, REF_CALL_ADDR_COL).text()
-        self.parent().disassemble_expression(utils.extract_address(address), append_history=True)
+        self.parent().disassemble_expression(utils.extract_address(address))
 
     def listWidget_Referrers_item_double_clicked(self, item):
-        self.parent().disassemble_expression(utils.extract_address(item.text()), append_history=True)
+        self.parent().disassemble_expression(utils.extract_address(item.text()))
 
     def tableWidget_References_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -5969,7 +5894,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         self.textBrowser_DisasInfo.ensureCursorVisible()
 
     def listWidget_Referrers_item_double_clicked(self, item):
-        self.parent().disassemble_expression(utils.extract_address(item.text()), append_history=True)
+        self.parent().disassemble_expression(utils.extract_address(item.text()))
 
     def listWidget_Referrers_context_menu_event(self, event):
         def copy_to_clipboard(row):

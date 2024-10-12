@@ -691,10 +691,10 @@ Patterns at former positions have higher priority if regex is off</source>
       <translation>函数</translation>
     </message>
     <message>
+      <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
       <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
       <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
       <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
-      <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
       <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
       <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
       <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
@@ -772,21 +772,6 @@ Patterns at former positions have higher priority if regex is off</source>
       <translation>值</translation>
     </message>
     <message>
-      <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
-      <source>Restore Instructions</source>
-      <translation>还原指令</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
-      <source>Original OpCode</source>
-      <translation>原始操作码</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
-      <source>Original Instruction</source>
-      <translation>原始指令</translation>
-    </message>
-    <message>
       <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
       <source>Search for Opcodes</source>
       <translation>搜索操作码</translation>
@@ -847,6 +832,21 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
       <source>Refresh</source>
       <translation>刷新</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
+      <source>Restore Instructions</source>
+      <translation>还原指令</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
+      <source>Original OpCode</source>
+      <translation>原始操作码</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
+      <source>Original Instruction</source>
+      <translation>原始指令</translation>
     </message>
   </context>
   <context>

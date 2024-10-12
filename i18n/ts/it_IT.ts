@@ -689,10 +689,10 @@ Patterns at former positions have higher priority if regex is off</source>
       <translation type="unfinished" />
     </message>
     <message>
+      <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
       <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
       <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
       <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
-      <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
       <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
       <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
       <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
@@ -770,21 +770,6 @@ Patterns at former positions have higher priority if regex is off</source>
       <translation type="unfinished">Valore</translation>
     </message>
     <message>
-      <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
-      <source>Restore Instructions</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
-      <source>Original OpCode</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/RestoreInstructionsWidget.ui" line="0" />
-      <source>Original Instruction</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
       <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
       <source>Search for Opcodes</source>
       <translation type="unfinished" />
@@ -844,6 +829,21 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
       <source>Refresh</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
+      <source>Restore Instructions</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
+      <source>Original OpCode</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
+      <source>Original Instruction</source>
       <translation type="unfinished" />
     </message>
   </context>
