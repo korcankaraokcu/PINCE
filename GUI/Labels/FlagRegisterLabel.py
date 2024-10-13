@@ -19,8 +19,7 @@ from PyQt6.QtWidgets import QLabel
 from PyQt6.QtGui import QCursor, QMouseEvent, QEnterEvent
 from PyQt6.QtCore import Qt
 from libpince import debugcore, typedefs
-from PINCE import InputDialogForm
-from GUI.Utils import guiutils
+from GUI.Utils import guiutils, utilwidgets
 from tr.tr import TranslationConstants as tr
 
 
@@ -52,7 +51,7 @@ class QFlagRegisterLabel(QLabel):
         current_flag = self.objectName().lower()
         label_text = tr.ENTER_FLAG_VALUE.format(self.objectName())
         parent = guiutils.search_parents_by_function(self, "set_debug_menu_shortcuts")
-        register_dialog = InputDialogForm(parent, [(label_text, ["0", "1", int(registers[current_flag])])])
+        register_dialog = utilwidgets.ComboBoxDialog(parent, label_text, ["0", "1"], int(registers[current_flag]))
         if register_dialog.exec():
             if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
                 return

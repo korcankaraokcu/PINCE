@@ -587,27 +587,6 @@ Patterns at former positions have higher priority if regex is off</source>
   <context>
     <name>Form</name>
     <message>
-      <location filename="../../GUI/BookmarkWidget.ui" line="0" />
-      <source>Bookmarks</source>
-      <translation>书签</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/BookmarkWidget.ui" line="0" />
-      <source>Bookmarked Addresses</source>
-      <translation>书签地址</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
-      <location filename="../../GUI/BookmarkWidget.ui" line="0" />
-      <source>Info</source>
-      <translation>信息</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/BookmarkWidget.ui" line="0" />
-      <source>Comment</source>
-      <translation>注解</translation>
-    </message>
-    <message>
       <location filename="../../GUI/ConsoleWidget.ui" line="0" />
       <source>GDB Console</source>
       <translation>GDB 控制台</translation>
@@ -802,6 +781,12 @@ Patterns at former positions have higher priority if regex is off</source>
       <translation>返回地址</translation>
     </message>
     <message>
+      <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
+      <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
+      <source>Info</source>
+      <translation>信息</translation>
+    </message>
+    <message>
       <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
       <source>Tracer Status</source>
       <translation type="unfinished" />
@@ -832,6 +817,21 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
       <source>Refresh</source>
       <translation>刷新</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
+      <source>Bookmarks</source>
+      <translation>书签</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
+      <source>Bookmarked Addresses</source>
+      <translation>书签地址</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
+      <source>Comment</source>
+      <translation>注解</translation>
     </message>
     <message>
       <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />

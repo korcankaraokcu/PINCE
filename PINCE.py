@@ -57,9 +57,6 @@ from PyQt6.QtWidgets import (
     QTreeWidgetItem,
     QTreeWidgetItemIterator,
     QCompleter,
-    QLabel,
-    QLineEdit,
-    QComboBox,
     QDialogButtonBox,
     QCheckBox,
     QHBoxLayout,
@@ -92,7 +89,7 @@ from libpince.debugcore import scanmem, ptrscan
 from GUI.States import states
 from GUI.Settings import settings
 from GUI.Settings.themes import get_theme, theme_list
-from GUI.Utils import guiutils, guitypedefs
+from GUI.Utils import guiutils, guitypedefs, utilwidgets
 
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
@@ -100,7 +97,6 @@ from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
 from GUI.EditTypeDialog import Ui_Dialog as EditTypeDialog
 from GUI.TrackSelectorDialog import Ui_Dialog as TrackSelectorDialog
 from GUI.LoadingDialog import Ui_Dialog as LoadingDialog
-from GUI.InputDialog import Ui_Dialog as InputDialog
 from GUI.TextEditDialog import Ui_Dialog as TextEditDialog
 from GUI.SettingsDialog import Ui_Dialog as SettingsDialog
 from GUI.HandleSignalsDialog import Ui_Dialog as HandleSignalsDialog
@@ -109,7 +105,7 @@ from GUI.AboutWidget import Ui_TabWidget as AboutWidget
 
 # If you are going to change the name "Ui_MainWindow_MemoryView", review GUI/Labels/RegisterLabel.py as well
 from GUI.MemoryViewerWindow import Ui_MainWindow_MemoryView as MemoryViewWindow
-from GUI.BookmarkWidget import Ui_Form as BookmarkWidget
+from GUI.Widgets.Bookmark.Bookmark import BookmarkWidget
 from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
 from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
 from GUI.BreakpointInfoWidget import Ui_TabWidget as BreakpointInfoWidget
@@ -345,7 +341,7 @@ class MainForm(QMainWindow, MainWindow):
         if debugcore.init_gdb(gdb_path):
             settings.apply_after_init()
         else:
-            InputDialogForm(self, [(tr.GDB_INIT_ERROR, None)], buttons=[QDialogButtonBox.StandardButton.Ok]).exec()
+            utilwidgets.InputDialog(self, tr.GDB_INIT_ERROR, cancel_button=False).exec()
         self.await_exit_thread.process_exited.connect(self.on_inferior_exit)
         self.await_exit_thread.start()
         states.status_thread.process_stopped.connect(self.on_status_stopped)
@@ -821,9 +817,9 @@ class MainForm(QMainWindow, MainWindow):
             last_item.setExpanded(True)
 
     def create_group(self):
-        dialog = InputDialogForm(self, [(tr.ENTER_DESCRIPTION, tr.GROUP)])
+        dialog = utilwidgets.InputDialog(self, [(tr.ENTER_DESCRIPTION, tr.GROUP)])
         if dialog.exec():
-            desc = dialog.get_values()
+            desc = dialog.get_values()[0]
             self.add_entry_to_addresstable(desc, "0x0")
             return True
         return False
@@ -1477,8 +1473,7 @@ class MainForm(QMainWindow, MainWindow):
     def clear_address_table(self):
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
-        confirm_dialog = InputDialogForm(self, [(tr.CLEAR_TABLE,)])
-        if confirm_dialog.exec():
+        if utilwidgets.InputDialog(self, tr.CLEAR_TABLE).exec():
             self.treeWidget_AddressTable.clear()
 
     def copy_to_address_table(self):
@@ -1688,9 +1683,12 @@ class MainForm(QMainWindow, MainWindow):
             return
         value = row.text(VALUE_COL)
         value_index = row.data(TYPE_COL, Qt.ItemDataRole.UserRole).value_index
-        dialog = InputDialogForm(self, [(tr.ENTER_VALUE, value)], 0, value_index)
+        dialog = utilwidgets.InputDialog(self, [(tr.ENTER_VALUE, value)])
         if dialog.exec():
-            new_value = dialog.get_values()
+            new_value = dialog.get_values()[0]
+            if utils.parse_string(new_value, value_index) == None:
+                QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
+                return
             for row in self.treeWidget_AddressTable.selectedItems():
                 address = row.text(ADDR_COL).strip("P->")
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
@@ -1708,9 +1706,9 @@ class MainForm(QMainWindow, MainWindow):
         if not row:
             return
         description = row.text(DESC_COL)
-        dialog = InputDialogForm(self, [(tr.ENTER_DESCRIPTION, description)])
+        dialog = utilwidgets.InputDialog(self, [(tr.ENTER_DESCRIPTION, description)])
         if dialog.exec():
-            description_text = dialog.get_values()
+            description_text = dialog.get_values()[0]
             for row in self.treeWidget_AddressTable.selectedItems():
                 row.setText(DESC_COL, description_text)
 
@@ -1850,8 +1848,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
     def pushButton_CreateProcess_clicked(self):
         file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_BINARY)
         if file_path:
-            items = [(tr.ENTER_OPTIONAL_ARGS, ""), (tr.LD_PRELOAD_OPTIONAL, "")]
-            arg_dialog = InputDialogForm(self, items)
+            arg_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_OPTIONAL_ARGS, ""), (tr.LD_PRELOAD_OPTIONAL, "")])
             if arg_dialog.exec():
                 args, ld_preload_path = arg_dialog.get_values()
             else:
@@ -2281,92 +2278,6 @@ class LoadingDialogForm(QDialog, LoadingDialog):
             return 0
 
 
-class InputDialogForm(QDialog, InputDialog):
-    # Format of item_list->[(label_str, item_data, label_alignment), ...]
-    # If label_str is None, no label will be created
-    # If item_data is None, no input field will be created. If it's str, a QLineEdit containing the str will be created
-    # If it's a list, a QComboBox with the items in the list will be created, last item of the list should be an integer
-    # that points the current index of the QComboBox, for instance: ["0", "1", 1] will create a QCombobox with the items
-    # "0" and "1" then will set current index to 1 (which is the item "1")
-    # label_alignment is optional
-    def __init__(
-        self,
-        parent,
-        item_list=None,
-        parsed_index=-1,
-        value_index=typedefs.VALUE_INDEX.INT32,
-        buttons=(QDialogButtonBox.StandardButton.Ok, QDialogButtonBox.StandardButton.Cancel),
-    ):
-        super().__init__(parent)
-        self.setupUi(self)
-        for button in buttons:
-            self.buttonBox.addButton(button)
-        self.object_list = []
-        for item in item_list:
-            if item[0] is not None:
-                label = QLabel(self)
-                try:
-                    label.setAlignment(item[2])
-                except IndexError:
-                    label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                label.setText(item[0])
-                label.setTextInteractionFlags(
-                    Qt.TextInteractionFlag.LinksAccessibleByMouse | Qt.TextInteractionFlag.TextSelectableByMouse
-                )
-                self.verticalLayout.addWidget(label)
-            try:
-                item_data = item[1]
-            except IndexError:
-                pass
-            else:
-                if item_data is not None:
-                    if type(item_data) is str:
-                        lineedit = QLineEdit(self)
-                        lineedit.setText(item_data)
-                        self.verticalLayout.addWidget(lineedit)
-                        self.object_list.append(lineedit)
-                    elif type(item_data) is list:
-                        combobox = QComboBox(self)
-                        current_index = item_data.pop()
-                        combobox.addItems(item_data)
-                        combobox.setCurrentIndex(current_index)
-                        self.verticalLayout.addWidget(combobox)
-                        self.object_list.append(combobox)
-        self.adjustSize()
-        self.verticalLayout.removeWidget(self.buttonBox)  # Pushing buttonBox to the end
-        self.verticalLayout.addWidget(self.buttonBox)
-        for widget in guiutils.get_layout_widgets(self.verticalLayout):
-            if isinstance(widget, QLabel):
-                continue
-            widget.setFocus()  # Focus to the first input field
-            break
-        self.parsed_index = parsed_index
-        self.value_index = value_index
-        guiutils.center_to_parent(self)
-
-    def get_text(self, item):
-        try:
-            string = item.text()
-        except AttributeError:
-            string = item.currentText()
-        return string
-
-    def get_values(self):
-        return (
-            self.get_text(self.object_list[0])
-            if len(self.object_list) == 1
-            else [self.get_text(item) for item in self.object_list]
-        )
-
-    def accept(self):
-        if self.parsed_index != -1:
-            item = self.object_list[self.parsed_index]
-            if utils.parse_string(self.get_text(item), self.value_index) is None:
-                QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
-                return
-        super().accept()
-
-
 class TextEditDialogForm(QDialog, TextEditDialog):
     def __init__(self, parent, text=""):
         super().__init__(parent)
@@ -2466,7 +2377,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         if not os.environ.get("APPDIR"):
             selected_gdb_path = self.lineEdit_GDBPath.text()
             if selected_gdb_path != states.gdb_path:
-                if InputDialogForm(self, [(tr.GDB_RESET,)]).exec():
+                if utilwidgets.InputDialog(self, tr.GDB_RESET).exec():
                     debugcore.init_gdb(selected_gdb_path)
             self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
@@ -2543,8 +2454,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.lineEdit_Hotkey.clear()
 
     def pushButton_ResetSettings_clicked(self):
-        confirm_dialog = InputDialogForm(self, [(tr.RESET_DEFAULT_SETTINGS,)])
-        if confirm_dialog.exec():
+        if utilwidgets.InputDialog(self, tr.RESET_DEFAULT_SETTINGS).exec():
             settings.set_default_settings()
             self.handle_signals_data = ""
             self.config_gui()
@@ -2935,9 +2845,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         # Format: [address1, address2, ...]
         self.tableWidget_Disassemble.travel_history = []
 
-        # Format: {address1:comment1,address2:comment2, ...}
-        self.tableWidget_Disassemble.bookmarks = {}
-
         # Saving the original function because super() doesn't work when we override functions like this
         self.tableWidget_Disassemble.keyPressEvent_original = self.tableWidget_Disassemble.keyPressEvent
         self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
@@ -3157,9 +3064,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def exec_hex_view_go_to_dialog(self):
         if debugcore.currentpid == -1:
             return
-        go_to_dialog = InputDialogForm(self, [(tr.ENTER_EXPRESSION, hex(self.hex_selection_address_begin))])
+        go_to_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_EXPRESSION, hex(self.hex_selection_address_begin))])
         if go_to_dialog.exec():
-            expression = go_to_dialog.get_values()
+            expression = go_to_dialog.get_values()[0]
             dest_address = debugcore.examine_expression(expression).address
             if not dest_address:
                 QMessageBox.information(self, tr.ERROR, tr.INVALID.format(expression))
@@ -3463,14 +3370,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     row_color[row].append(PC_COLOR)
                 except KeyError:
                     row_color[row] = [PC_COLOR]
-            for bookmark_item in self.tableWidget_Disassemble.bookmarks.keys():
+            for bookmark_item in states.bookmarks.keys():
                 if current_address == bookmark_item:
                     try:
                         row_color[row].append(BOOKMARK_COLOR)
                     except KeyError:
                         row_color[row] = [BOOKMARK_COLOR]
                     address_info = "(M)" + address_info
-                    comment = self.tableWidget_Disassemble.bookmarks[bookmark_item]
+                    comment = states.bookmarks[bookmark_item]
                     break
             for breakpoint in breakpoint_info:
                 int_breakpoint_address = int(breakpoint.address, 16)
@@ -3602,10 +3509,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             condition_line_edit_text = breakpoints[0].condition
         else:
             condition_line_edit_text = ""
-        items = [(tr.ENTER_BP_CONDITION, condition_line_edit_text, Qt.AlignmentFlag.AlignLeft)]
-        condition_dialog = InputDialogForm(self, items)
+        items = [(tr.ENTER_BP_CONDITION, condition_line_edit_text)]
+        condition_dialog = utilwidgets.InputDialog(self, items, Qt.AlignmentFlag.AlignLeft)
         if condition_dialog.exec():
-            condition = condition_dialog.get_values()
+            condition = condition_dialog.get_values()[0]
             for bp in breakpoints:
                 addr = bp.address
                 if not debugcore.modify_breakpoint(addr, typedefs.BREAKPOINT_MODIFY.CONDITION, condition):
@@ -3987,7 +3894,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
             current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
             current_address = int(utils.extract_address(current_address_text), 16)
-            if current_address in self.tableWidget_Disassemble.bookmarks:
+            if current_address in states.bookmarks:
                 self.change_bookmark_comment(current_address)
             else:
                 self.bookmark_address(current_address)
@@ -4053,13 +3960,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         bookmark = menu.addAction(f"{tr.BOOKMARK_ADDRESS}[Ctrl+B]")
         delete_bookmark = menu.addAction(tr.DELETE_BOOKMARK)
         change_comment = menu.addAction(tr.CHANGE_COMMENT)
-        is_bookmarked = current_address_int in self.tableWidget_Disassemble.bookmarks
+        is_bookmarked = current_address_int in states.bookmarks
         if not is_bookmarked:
             guiutils.delete_menu_entries(menu, [delete_bookmark, change_comment])
         else:
             guiutils.delete_menu_entries(menu, [bookmark])
         go_to_bookmark = menu.addMenu(tr.GO_TO_BOOKMARK_ADDRESS)
-        address_list = [hex(address) for address in self.tableWidget_Disassemble.bookmarks.keys()]
+        address_list = [hex(address) for address in states.bookmarks.keys()]
         bookmark_actions = [go_to_bookmark.addAction(item.all) for item in debugcore.examine_expressions(address_list)]
         menu.addSeparator()
         toggle_breakpoint = menu.addAction(f"{tr.TOGGLE_BREAKPOINT}[F5]")
@@ -4159,9 +4066,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_address(current_address_text)
         current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
-        register_expression_dialog = InputDialogForm(self, [(tr.ENTER_TRACK_BP_EXPRESSION, "")])
+        register_expression_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_TRACK_BP_EXPRESSION, "")])
         if register_expression_dialog.exec():
-            exp = register_expression_dialog.get_values()
+            exp = register_expression_dialog.get_values()[0]
             TrackBreakpointWidgetForm(self, current_address, current_instruction, exp)
 
     def exec_disassemble_go_to_dialog(self):
@@ -4173,46 +4080,50 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_address(current_address_text)
 
-        go_to_dialog = InputDialogForm(self, [(tr.ENTER_EXPRESSION, current_address)])
+        go_to_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_EXPRESSION, current_address)])
         if go_to_dialog.exec():
-            traveled_exp = go_to_dialog.get_values()
+            traveled_exp = go_to_dialog.get_values()[0]
             self.disassemble_expression(traveled_exp)
 
-    def bookmark_address(self, int_address):
+    def bookmark_address(self, address: int):
         if debugcore.currentpid == -1:
             return
-        if int_address in self.tableWidget_Disassemble.bookmarks:
+        if address in states.bookmarks:
             QMessageBox.information(app.focusWidget(), tr.ERROR, tr.ALREADY_BOOKMARKED)
             return
-        comment_dialog = InputDialogForm(self, [(tr.ENTER_BOOKMARK_COMMENT, "")])
+        comment_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_BOOKMARK_COMMENT, "")])
         if comment_dialog.exec():
-            comment = comment_dialog.get_values()
+            comment = comment_dialog.get_values()[0]
         else:
             return
-        self.tableWidget_Disassemble.bookmarks[int_address] = comment
+        states.bookmarks[address] = comment
         self.refresh_disassemble_view()
 
-    def change_bookmark_comment(self, int_address):
+    def change_bookmark_comment(self, address: int):
         if debugcore.currentpid == -1:
             return
-        current_comment = self.tableWidget_Disassemble.bookmarks[int_address]
-        comment_dialog = InputDialogForm(self, [(tr.ENTER_BOOKMARK_COMMENT, current_comment)])
+        current_comment = states.bookmarks[address]
+        comment_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_BOOKMARK_COMMENT, current_comment)])
         if comment_dialog.exec():
-            new_comment = comment_dialog.get_values()
+            new_comment = comment_dialog.get_values()[0]
         else:
             return
-        self.tableWidget_Disassemble.bookmarks[int_address] = new_comment
+        states.bookmarks[address] = new_comment
         self.refresh_disassemble_view()
 
-    def delete_bookmark(self, int_address):
+    def delete_bookmark(self, address: int):
         if debugcore.currentpid == -1:
             return
-        if int_address in self.tableWidget_Disassemble.bookmarks:
-            del self.tableWidget_Disassemble.bookmarks[int_address]
+        if address in states.bookmarks:
+            del states.bookmarks[address]
             self.refresh_disassemble_view()
 
     def actionBookmarks_triggered(self):
-        bookmark_widget = BookmarkWidgetForm(self)
+        bookmark_widget = BookmarkWidget(self)
+        bookmark_widget.bookmarked.connect(self.bookmark_address)
+        bookmark_widget.comment_changed.connect(self.change_bookmark_comment)
+        bookmark_widget.double_clicked.connect(self.disassemble_expression)
+        bookmark_widget.deleted.connect(self.delete_bookmark)
         bookmark_widget.show()
         bookmark_widget.activateWindow()
 
@@ -4282,9 +4193,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionCall_Function_triggered(self):
         if debugcore.currentpid == -1:
             return
-        call_dialog = InputDialogForm(self, [(tr.ENTER_CALL_EXPRESSION, "")])
+        call_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_CALL_EXPRESSION, "")])
         if call_dialog.exec():
-            result = debugcore.call_function_from_inferior(call_dialog.get_values())
+            result = debugcore.call_function_from_inferior(call_dialog.get_values()[0])
             if result[0]:
                 QMessageBox.information(self, tr.SUCCESS, result[0] + " = " + result[1])
             else:
@@ -4315,96 +4226,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         guiutils.center_to_parent(self.float_registers_widget)
         self.float_registers_widget.show()
         self.float_registers_widget.activateWindow()
-
-
-class BookmarkWidgetForm(QWidget, BookmarkWidget):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.setupUi(self)
-        self.setWindowFlags(Qt.WindowType.Window)
-        self.listWidget.contextMenuEvent = self.listWidget_context_menu_event
-        self.listWidget.currentRowChanged.connect(self.change_display)
-        self.listWidget.itemDoubleClicked.connect(self.listWidget_item_double_clicked)
-        self.shortcut_delete = QShortcut(QKeySequence("Del"), self)
-        self.shortcut_delete.activated.connect(self.delete_record)
-        self.shortcut_refresh = QShortcut(QKeySequence("R"), self)
-        self.shortcut_refresh.activated.connect(self.refresh_table)
-        self.refresh_table()
-        guiutils.center_to_parent(self)
-
-    def refresh_table(self):
-        self.listWidget.clear()
-        address_list = [hex(address) for address in self.parent().tableWidget_Disassemble.bookmarks.keys()]
-        if debugcore.currentpid == -1:
-            self.listWidget.addItems(address_list)
-        else:
-            self.listWidget.addItems([item.all for item in debugcore.examine_expressions(address_list)])
-
-    def change_display(self, row):
-        current_address = utils.extract_address(self.listWidget.item(row).text())
-        if debugcore.currentpid == -1:
-            self.lineEdit_Info.clear()
-        else:
-            self.lineEdit_Info.setText(debugcore.get_address_info(current_address))
-        self.lineEdit_Comment.setText(self.parent().tableWidget_Disassemble.bookmarks[int(current_address, 16)])
-
-    def listWidget_item_double_clicked(self, item):
-        self.parent().disassemble_expression(utils.extract_address(item.text()))
-
-    def exec_add_entry_dialog(self):
-        entry_dialog = InputDialogForm(self, [(tr.ENTER_EXPRESSION, "")])
-        if entry_dialog.exec():
-            text = entry_dialog.get_values()
-            address = debugcore.examine_expression(text).address
-            if not address:
-                QMessageBox.information(self, tr.ERROR, tr.INVALID_EXPRESSION)
-                return
-            self.parent().bookmark_address(int(address, 16))
-            self.refresh_table()
-
-    def exec_change_comment_dialog(self, current_address):
-        self.parent().change_bookmark_comment(current_address)
-        self.refresh_table()
-
-    def listWidget_context_menu_event(self, event):
-        current_item = guiutils.get_current_item(self.listWidget)
-        if current_item:
-            current_address = int(utils.extract_address(current_item.text()), 16)
-            if current_address not in self.parent().tableWidget_Disassemble.bookmarks:
-                QMessageBox.information(self, tr.ERROR, tr.INVALID_ENTRY)
-                self.refresh_table()
-                return
-        else:
-            current_address = None
-        menu = QMenu()
-        add_entry = menu.addAction(tr.ADD_ENTRY)
-        change_comment = menu.addAction(tr.CHANGE_COMMENT)
-        delete_record = menu.addAction(f"{tr.DELETE}[Del]")
-        if current_item is None:
-            guiutils.delete_menu_entries(menu, [change_comment, delete_record])
-        menu.addSeparator()
-        refresh = menu.addAction(f"{tr.REFRESH}[R]")
-        font_size = self.listWidget.font().pointSize()
-        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec(event.globalPos())
-        actions = {
-            add_entry: self.exec_add_entry_dialog,
-            change_comment: lambda: self.exec_change_comment_dialog(current_address),
-            delete_record: self.delete_record,
-            refresh: self.refresh_table,
-        }
-        try:
-            actions[action]()
-        except KeyError:
-            pass
-
-    def delete_record(self):
-        current_item = guiutils.get_current_item(self.listWidget)
-        if not current_item:
-            return
-        current_address = int(utils.extract_address(current_item.text()), 16)
-        self.parent().delete_bookmark(current_address)
-        self.refresh_table()
 
 
 class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
@@ -4443,13 +4264,13 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         current_register = current_table_widget.item(current_row, FLOAT_REGISTERS_NAME_COL).text()
         current_value = current_table_widget.item(current_row, FLOAT_REGISTERS_VALUE_COL).text()
         label_text = tr.ENTER_REGISTER_VALUE.format(current_register.upper())
-        register_dialog = InputDialogForm(self, [(label_text, current_value)])
+        register_dialog = utilwidgets.InputDialog(self, [(label_text, current_value)])
         if register_dialog.exec():
             if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
                 return
             if self.currentWidget() == self.XMM:
                 current_register += ".v4_float"
-            debugcore.set_convenience_variable(current_register, register_dialog.get_values())
+            debugcore.set_convenience_variable(current_register, register_dialog.get_values()[0])
             self.update_registers()
 
 
@@ -4536,9 +4357,9 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         self.tableWidget_BreakpointInfo.keyPressEvent_original(event)
 
     def exec_enable_count_dialog(self, current_address):
-        hit_count_dialog = InputDialogForm(self, [(tr.ENTER_HIT_COUNT.format(1), "")])
+        hit_count_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_HIT_COUNT.format(1), "")])
         if hit_count_dialog.exec():
-            count = hit_count_dialog.get_values()
+            count = hit_count_dialog.get_values()[0]
             try:
                 count = int(count)
             except ValueError:
@@ -5082,11 +4903,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         self.parent().disassemble_expression(address)
 
     def pushButton_Help_clicked(self):
-        InputDialogForm(
-            self,
-            [(tr.FUNCTIONS_INFO_HELPER, None, Qt.AlignmentFlag.AlignLeft)],
-            buttons=[QDialogButtonBox.StandardButton.Ok],
-        ).exec()
+        utilwidgets.InputDialog(self, tr.FUNCTIONS_INFO_HELPER, Qt.AlignmentFlag.AlignLeft, False).exec()
 
 
 class EditInstructionDialogForm(QDialog, EditInstructionDialog):
@@ -5147,7 +4964,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
             if new_length < old_length:
                 bytes_aob += " 90" * (old_length - new_length)  # Append NOPs if we are short on bytes
             elif new_length > old_length:
-                if not InputDialogForm(self, [(tr.NEW_OPCODE.format(new_length, old_length),)]).exec():
+                if not utilwidgets.InputDialog(self, tr.NEW_OPCODE.format(new_length, old_length)).exec():
                     return
             debugcore.modify_instruction(address, bytes_aob)
         self.parent().refresh_hex_view()
@@ -5336,11 +5153,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         self.tableWidget_Opcodes.setSortingEnabled(True)
 
     def pushButton_Help_clicked(self):
-        InputDialogForm(
-            self,
-            [(tr.SEARCH_OPCODE_HELPER, None, Qt.AlignmentFlag.AlignLeft)],
-            buttons=[QDialogButtonBox.StandardButton.Ok],
-        ).exec()
+        utilwidgets.InputDialog(self, tr.SEARCH_OPCODE_HELPER, Qt.AlignmentFlag.AlignLeft, False).exec()
 
     def tableWidget_Opcodes_item_double_clicked(self, index):
         row = index.row()
@@ -5574,8 +5387,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         jmp_dict.close()
         call_dict.close()
         if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
-            confirm_dialog = InputDialogForm(self, [(tr.DISSECT_CODE,)])
-            if confirm_dialog.exec():
+            if utilwidgets.InputDialog(self, tr.DISSECT_CODE).exec():
                 dissect_code_dialog = DissectCodeDialogForm(self)
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
                 dissect_code_dialog.exec()
@@ -5701,8 +5513,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         jmp_dict.close()
         call_dict.close()
         if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
-            confirm_dialog = InputDialogForm(self, [(tr.DISSECT_CODE,)])
-            if confirm_dialog.exec():
+            if utilwidgets.InputDialog(self, tr.DISSECT_CODE).exec():
                 dissect_code_dialog = DissectCodeDialogForm(self)
                 dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
                 dissect_code_dialog.exec()

@@ -143,7 +143,9 @@ and adjust manually. This also helps functions like `guiutils.center_to_parent` 
 
 - 13/05/2024 - Monospace font and `utils.upper_hex` function greatly improve readability if the text area includes hex data, consider using those when creating new text areas. Memory Viewer is a good example for this
 
-- 2/9/2018 - Seek methods of all file handles that read directly from the memory(/proc/pid/mem etc.) should be wrapped in a try/except block that catches both
+- 13/10/2024 - Using big integers as a `pyqtSignal` param will cause them to overflow and turn into different numbers because of the type mismatch between python and cpp. Use `object` instead of `int` as param in this case. An example for this case can be seen in [BookmarkWidget](./GUI/Widgets/Bookmark/Bookmark.py)
+
+- 02/09/2018 - Seek methods of all file handles that read directly from the memory(/proc/pid/mem etc.) should be wrapped in a try/except block that catches both
 OSError and ValueError exceptions. For instance:
 ```python
     try:

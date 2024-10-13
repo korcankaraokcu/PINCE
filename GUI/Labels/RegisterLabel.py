@@ -19,8 +19,7 @@ from PyQt6.QtWidgets import QLabel, QMenu, QApplication
 from PyQt6.QtGui import QCursor, QMouseEvent, QEnterEvent, QContextMenuEvent
 from PyQt6.QtCore import Qt
 from libpince import debugcore, typedefs
-from PINCE import InputDialogForm
-from GUI.Utils import guiutils
+from GUI.Utils import guiutils, utilwidgets
 from tr.tr import TranslationConstants as tr
 
 
@@ -52,7 +51,7 @@ class QRegisterLabel(QLabel):
         current_register = self.objectName().lower()
         items = [(tr.ENTER_REGISTER_VALUE.format(self.objectName()), registers[current_register])]
         memory_view = guiutils.search_parents_by_function(self, "set_debug_menu_shortcuts")
-        register_dialog = InputDialogForm(memory_view, items)
+        register_dialog = utilwidgets.InputDialog(memory_view, items)
         if register_dialog.exec():
             if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
                 return
@@ -77,4 +76,4 @@ class QRegisterLabel(QLabel):
             address = self.text().split("=")[-1]
             memory_view.disassemble_expression(address)
         elif action == copy:
-            QApplication.instance().clipboard().setText(self.text().split("=")[1])
+            QApplication.clipboard().setText(self.text().split("=")[1])
