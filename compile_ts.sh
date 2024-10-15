@@ -1,4 +1,6 @@
 #!/bin/bash
+. .venv/PINCE/bin/activate
+
 supported_locale_list=$(python3 -c "
 import locale
 print('\n'.join(value.split('.')[0] for value in locale.locale_alias.values()))

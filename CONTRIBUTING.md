@@ -83,16 +83,16 @@ We use Sphinx to automatically generate html files from the docs and napoleon ex
 [build_docs.yml](.github/workflows/build_docs.yml) workflow is responsible for automatic html generation, it gets triggered automatically whenever there's a new release or manually whenever necessary. The workflow generates files within the `gh-pages` branch. It's an orphaned branch so it can be deleted without affecting the history
 
 # UI Files
-You need to have [Qt6 Designer](https://pkgs.org/search/?q=designer&on=files) and [pyuic6](https://pkgs.org/search/?q=pyuic6&on=files) installed. If there are no available packages for your distro, install [pyqt6-tools](https://pypi.org/project/pyqt6-tools/) instead  
+You need to have [Qt6 Designer](https://pkgs.org/search/?q=designer&on=files) installed. If there are no available packages for your distro, install [pyqt6-tools](https://pypi.org/project/pyqt6-tools/) instead  
 
 Follow the steps below:
-- Edit or create ui files with the designer and then save them
-- After saving the files, use pyuic6 to convert them into py files: `pyuic6 SomeDialog.ui -o SomeDialog.py`
+- Edit or create ui files with the designer and save them
+- After saving ui files, run `sh ui_to_py.sh` within GUI folder to convert them into py files
 
 The py files that contains the same name with the ui files are auto-generated, please edit the ui files with designer instead of messing with the py files
 
 # Translation
-You need to have [Qt6 Linguist](https://pkgs.org/search/?q=linguist&on=files) and [pylupdate6](https://pkgs.org/search/?q=pylupdate6&on=files) installed. If there are no available packages for your distro, install [pyqt6-tools](https://pypi.org/project/pyqt6-tools/) instead  
+You need to have [Qt6 Linguist](https://pkgs.org/search/?q=linguist&on=files) installed. If there are no available packages for your distro, install [pyqt6-tools](https://pypi.org/project/pyqt6-tools/) instead  
 
 Follow the steps below:
 - To create a new translation file, use [compile_ts.sh](./compile_ts.sh) with the locale as the parameter, such as `sh compile.sh ja_JP`. This will create a ts file with the locale you entered.
