@@ -2833,5 +2833,25 @@ Proceed?</source>
       <source>Show in Disassembler</source>
       <translation>在反汇编器中显示</translation>
     </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Dark</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Light</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>System Default</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Wong (Colorblind Friendly)</source>
+      <translation type="unfinished" />
+    </message>
   </context>
 </TS>

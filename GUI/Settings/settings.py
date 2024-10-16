@@ -2,12 +2,12 @@ from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 from GUI.States import states
-from GUI.Settings.themes import get_theme
+from GUI.Settings import themes
 from tr.tr import get_locale
 from libpince import debugcore, utils, typedefs
 import json, os
 
-current_settings_version = "35"  # Increase version by one if you change settings
+current_settings_version = "36"  # Increase version by one if you change settings
 
 # Due to community feedback, these signals are disabled by default: SIGUSR1, SIGUSR2, SIGPWR, SIGXCPU, SIGXFSZ, SIGSYS
 default_signals = [
@@ -103,7 +103,7 @@ def set_default_settings():
     settings.setValue("auto_attach_regex", False)
     settings.setValue("locale", get_locale())
     settings.setValue("logo_path", "ozgurozbek/pince_small_transparent.png")
-    settings.setValue("theme", "System Default")
+    settings.setValue("theme", themes.Themes.DEFAULT.value)
     settings.endGroup()
     settings.beginGroup("Hotkeys")
     for hotkey in states.hotkeys.get_hotkeys():
@@ -144,7 +144,7 @@ def apply_settings():
     QApplication.setWindowIcon(
         QIcon(os.path.join(utils.get_logo_directory(), settings.value("General/logo_path", type=str)))
     )
-    QApplication.setPalette(get_theme(settings.value("General/theme", type=str)))
+    QApplication.setPalette(themes.get_theme(settings.value("General/theme", type=str)))
     debugcore.set_gdb_output_mode(gdb_output_mode)
     for hotkey in states.hotkeys.get_hotkeys():
         try:

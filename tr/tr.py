@@ -361,3 +361,7 @@ class TranslationConstants(QObject):
     BIG = QT_TR_NOOP("Big")
     SHOW_HEXVIEW = QT_TR_NOOP("Show in HexView")
     SHOW_DISASSEMBLER = QT_TR_NOOP("Show in Disassembler")
+    DARK = QT_TR_NOOP("Dark")
+    LIGHT = QT_TR_NOOP("Light")
+    SYSTEM_DEFAULT = QT_TR_NOOP("System Default")
+    WONG = QT_TR_NOOP("Wong (Colorblind Friendly)")

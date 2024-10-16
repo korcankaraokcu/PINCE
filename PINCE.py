@@ -87,8 +87,7 @@ from tr.tr import language_list, get_locale
 from libpince import utils, debugcore, typedefs
 from libpince.debugcore import scanmem, ptrscan
 from GUI.States import states
-from GUI.Settings import settings
-from GUI.Settings.themes import get_theme, theme_list
+from GUI.Settings import settings, themes
 from GUI.Utils import guiutils, guitypedefs, utilwidgets
 
 from GUI.MainWindow import Ui_MainWindow as MainWindow
@@ -163,6 +162,7 @@ if __name__ == "__main__":
     # Reload states after QApplication instance to ensure that variables are correctly initiated
     # Reloading states after translations also ensures that hotkeys are correctly translated
     importlib.reload(states)
+    importlib.reload(themes)  # Needed for correct translations, might not be needed after refactorization
 
 # represents the index of columns in breakpoint table
 BREAK_NUM_COL = 0
@@ -2316,7 +2316,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         self.comboBox_InterruptSignal.addItem("SIGINT")
         self.comboBox_InterruptSignal.addItems([f"SIG{x}" for x in range(signal.SIGRTMIN, signal.SIGRTMAX + 1)])
         self.comboBox_InterruptSignal.setStyleSheet("combobox-popup: 0;")  # maxVisibleItems doesn't work otherwise
-        self.comboBox_Theme.addItems(theme_list)
+        self.comboBox_Theme.addItems(themes.theme_strings.values())
         logo_directory = utils.get_logo_directory()
         logo_list = utils.search_files(logo_directory, r"\.(png|jpg|jpeg|svg)$")
         for logo in logo_list:
@@ -2363,7 +2363,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
             QMessageBox.information(self, tr.INFO, tr.LANG_RESET)
         self.settings.setValue("General/locale", new_locale)
         self.settings.setValue("General/logo_path", self.comboBox_Logo.currentText())
-        self.settings.setValue("General/theme", self.comboBox_Theme.currentText())
+        self.settings.setValue("General/theme", list(themes.Themes)[self.comboBox_Theme.currentIndex()].value)
         for hotkey in states.hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
         if self.radioButton_SimpleDLopenCall.isChecked():
@@ -2392,7 +2392,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         logo_path = self.settings.value("General/logo_path", type=str)
         app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
         theme = self.settings.value("General/theme", type=str)
-        app.setPalette(get_theme(theme))
+        app.setPalette(themes.get_theme(theme))
         super().reject()
 
     def config_gui(self):
@@ -2411,7 +2411,7 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         current_locale = self.settings.value("General/locale", type=str)
         self.comboBox_Language.setCurrentText(language_list.get(current_locale, "en_US"))
         with QSignalBlocker(self.comboBox_Theme):
-            self.comboBox_Theme.setCurrentText(self.settings.value("General/theme", type=str))
+            self.comboBox_Theme.setCurrentText(themes.theme_strings[self.settings.value("General/theme", type=str)])
         with QSignalBlocker(self.comboBox_Logo):
             self.comboBox_Logo.setCurrentText(self.settings.value("General/logo_path", type=str))
         self.hotkey_to_value.clear()
@@ -2477,8 +2477,8 @@ class SettingsDialogForm(QDialog, SettingsDialog):
         logo_path = self.comboBox_Logo.currentText()
         app.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
 
-    def comboBox_Theme_current_index_changed(self):
-        app.setPalette(get_theme(self.comboBox_Theme.currentText()))
+    def comboBox_Theme_current_index_changed(self, index: int):
+        app.setPalette(themes.get_theme(list(themes.Themes)[index].value))
 
     def pushButton_GDBPath_clicked(self):
         current_path = self.lineEdit_GDBPath.text()

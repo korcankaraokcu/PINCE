@@ -1,6 +1,26 @@
 from PyQt6.QtGui import QColor, QPalette
+from tr.tr import TranslationConstants as tr
+from enum import Enum
+from collections import OrderedDict
 
-theme_list = ["Dark", "Light", "System Default", "Wong (Colorblind Friendly)"]
+
+# For settings
+class Themes(Enum):
+    DARK = "dark"
+    LIGHT = "light"
+    DEFAULT = "default"
+    WONG = "wong"
+
+
+# For translations
+theme_strings = OrderedDict(
+    [
+        (Themes.DARK.value, tr.DARK),
+        (Themes.LIGHT.value, tr.LIGHT),
+        (Themes.DEFAULT.value, tr.SYSTEM_DEFAULT),
+        (Themes.WONG.value, tr.WONG),
+    ]
+)
 
 grp_dict = {
     "ACTIVE": QPalette.ColorGroup.Active,
@@ -36,13 +56,13 @@ def get_theme(theme_name):
     """Returns a customized theme based on the specified theme choice
 
     Args:
-        theme_name (str): Predefined theme chosen from theme_list
+        theme_name (str): Predefined theme chosen from Themes
 
     Returns:
         QPalette: Complete color palette swap for the app
     """
     match theme_name:
-        case "Dark":
+        case Themes.DARK.value:
             dup_dict = {
                 "WINDOW_TEXT": "#FFFFFF",
                 "BUTTON": "#241F31",
@@ -93,7 +113,7 @@ def get_theme(theme_name):
                 },
             }
             return apply_palette(dark_dict)
-        case "Light":
+        case Themes.LIGHT.value:
             dup_dict = {
                 "WINDOW_TEXT": "#000000",
                 "BUTTON": "#EFEFEF",
@@ -144,9 +164,9 @@ def get_theme(theme_name):
                 },
             }
             return apply_palette(light_dict)
-        case "System Default":
+        case Themes.DEFAULT.value:
             return QPalette()
-        case "Wong (Colorblind Friendly)":
+        case Themes.WONG.value:
             dup_dict = {
                 "WINDOW_TEXT": "#000000",
                 "BUTTON": "#E69F00",
