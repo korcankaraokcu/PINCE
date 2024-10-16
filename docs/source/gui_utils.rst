@@ -19,3 +19,11 @@ GUI.Utils.guitypedefs module
    :members:
    :undoc-members:
    :show-inheritance:
+
+GUI.Utils.utilwidgets module
+----------------------------
+
+.. automodule:: GUI.Utils.utilwidgets
+   :members:
+   :undoc-members:
+   :show-inheritance:
