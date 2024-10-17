@@ -1,5 +1,12 @@
 #!/bin/bash
-. .venv/PINCE/bin/activate
+venv_activator=".venv/PINCE/bin/activate"
+
+if [ -f "$venv_activator" ]; then
+	. "$venv_activator"
+else
+  echo "ERROR: Virtual environment not found, please use install.sh to install PINCE first"
+  exit
+fi
 
 supported_locale_list=$(python3 -c "
 import locale
