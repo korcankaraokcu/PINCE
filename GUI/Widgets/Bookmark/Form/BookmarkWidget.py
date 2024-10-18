@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'BookmarkWidget.ui'
+# Form implementation generated from reading ui file 'Widgets/Bookmark/Form/BookmarkWidget.ui'
 #
 # Created by: PyQt6 UI code generator 6.6.0
 #

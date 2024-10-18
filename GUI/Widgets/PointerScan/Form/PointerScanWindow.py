@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'PointerScanWindow.ui'
+# Form implementation generated from reading ui file 'Widgets/PointerScan/Form/PointerScanWindow.ui'
 #
 # Created by: PyQt6 UI code generator 6.6.0
 #

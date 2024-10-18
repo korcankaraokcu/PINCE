@@ -12,8 +12,6 @@ fi
 
 for uifile in *.ui Widgets/*/Form/*.ui
 do
-    uidir=$(dirname "$uifile")
-    uiname=$(basename "$uifile")
-    outfile="${uiname%.ui}.py"
-    (cd "$uidir" && pyuic6 "$uiname" -o "$outfile")
+    pyfile="${uifile%.ui}.py"
+    pyuic6 "$uifile" -o "$pyfile"
 done

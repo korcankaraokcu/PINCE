@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'RestoreInstructionsWidget.ui'
+# Form implementation generated from reading ui file 'Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui'
 #
 # Created by: PyQt6 UI code generator 6.6.0
 #

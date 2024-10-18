@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'ManageScanRegionsDialog.ui'
+# Form implementation generated from reading ui file 'Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.6.0
 #
