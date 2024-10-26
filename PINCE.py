@@ -42,6 +42,7 @@ from PyQt6.QtGui import (
     QCloseEvent,
     QKeyEvent,
     QMouseEvent,
+    QWheelEvent,
 )
 from PyQt6.QtWidgets import (
     QApplication,
@@ -2837,6 +2838,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.widget_Disassemble.wheelEvent = self.widget_Disassemble_wheel_event
 
         self.bDisassemblyScrolling = False  # rejects new scroll requests while scrolling
+        self.tableWidget_Disassemble_wheelEvent_original = self.tableWidget_Disassemble.wheelEvent
         self.tableWidget_Disassemble.wheelEvent = QEvent.ignore
         self.verticalScrollBar_Disassemble.wheelEvent = QEvent.ignore
         self.verticalScrollBar_Disassemble.sliderChange = self.disassemble_scrollbar_sliderchanged
@@ -3755,13 +3757,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             pass
         self.tableWidget_StackTrace.keyPressEvent_original(event)
 
-    def widget_Disassemble_wheel_event(self, event):
+    def widget_Disassemble_wheel_event(self, event: QWheelEvent):
+        steps = event.angleDelta()
+        if steps.x() != 0:
+            self.tableWidget_Disassemble_wheelEvent_original(event)
         if debugcore.currentpid == -1:
             return
-        steps = event.angleDelta()
         if steps.y() > 0:
             self.tableWidget_Disassemble_scroll("previous", states.instructions_per_scroll)
-        else:
+        elif steps.y() < 0:
             self.tableWidget_Disassemble_scroll("next", states.instructions_per_scroll)
 
     def disassemble_check_viewport(self, where, instruction_count):
