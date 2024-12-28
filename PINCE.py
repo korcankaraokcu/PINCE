@@ -754,25 +754,26 @@ class MainForm(QMainWindow, MainWindow):
         # parent_row should be a QTreeWidgetItem in treeWidget_AddressTable
         # records should be an iterable of valid output of read_address_table_recursively
         assert isinstance(parent_row, QTreeWidgetItem)
-
-        rows = []
         for rec in records:
             row = QTreeWidgetItem()
             row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
             frozen = typedefs.Frozen("", typedefs.FREEZE_TYPE.DEFAULT)
             row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
 
-            # Deserialize the address_expr & value_type param
-            if type(rec[1]) in [list, tuple]:
+            # Deserialize address_expr and value_type from rec
+            if isinstance(rec[1], (list, tuple)):
                 address_expr = typedefs.PointerChainRequest(*rec[1])
             else:
                 address_expr = rec[1]
             value_type = typedefs.ValueType(*rec[2])
             self.change_address_table_entries(row, rec[0], address_expr, value_type)
-            self.insert_records(rec[-1], row, 0)
-            rows.append(row)
 
-        parent_row.insertChildren(insert_index, rows)
+            # Insert the row at the current insert_index
+            parent_row.insertChild(insert_index, row)
+            insert_index += 1
+
+            # Recursively insert children of this row
+            self.insert_records(rec[-1], row, 0)
         parent_row.setExpanded(True)
 
     def paste_records(self, insert_inside=False):
