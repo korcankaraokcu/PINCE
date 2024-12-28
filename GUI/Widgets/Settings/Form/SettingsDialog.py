@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'SettingsDialog.ui'
+# Form implementation generated from reading ui file 'Widgets/Settings/Form/SettingsDialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.6.0
 #
