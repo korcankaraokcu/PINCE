@@ -373,6 +373,7 @@ class MainForm(QMainWindow, MainWindow):
         self.comboBox_ScanScope_init()
         self.comboBox_ValueType_init()
         guiutils.fill_endianness_combobox(self.comboBox_Endianness)
+        self.comboBox_Endianness.currentIndexChanged.connect(self.on_endianness_changed)
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.lineEdit_Scan.setValidator(guiutils.validator_map.get("int"))
@@ -1041,10 +1042,6 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NewFirstScan.setText(tr.NEW_SCAN)
             self.comboBox_ValueType.setEnabled(False)
             self.pushButton_NextScan.setEnabled(True)
-            search_scope = self.comboBox_ScanScope.currentData(Qt.ItemDataRole.UserRole)
-            endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
-            scanmem.send_command(f"option region_scan_level {search_scope}")
-            scanmem.send_command(f"option endianness {endian}")
             scanmem.reset()
             for region_id in self.deleted_regions:
                 debugcore.scanmem.send_command(f"dregion {region_id}")
@@ -1137,6 +1134,16 @@ class MainForm(QMainWindow, MainWindow):
         for scope, text in scan_scope_text:
             self.comboBox_ScanScope.addItem(text, scope)
         self.comboBox_ScanScope.setCurrentIndex(1)  # typedefs.SCAN_SCOPE.NORMAL
+        self.comboBox_ScanScope.currentIndexChanged.connect(self.on_scan_regions_changed)
+
+    def on_scan_regions_changed(self):
+        search_scope = self.comboBox_ScanScope.currentData(Qt.ItemDataRole.UserRole)
+        scanmem.send_command(f"option region_scan_level {search_scope}")
+        scanmem.reset()
+
+    def on_endianness_changed(self):
+        endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
+        scanmem.send_command(f"option endianness {endian}")
 
     def comboBox_ValueType_init(self):
         self.comboBox_ValueType.clear()
