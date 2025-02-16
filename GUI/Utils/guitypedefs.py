@@ -24,6 +24,9 @@ class ProcessSignals(QObject):
     attach = pyqtSignal()
     exit = pyqtSignal()
 
+class SessionSignals(QObject):
+    new_session = pyqtSignal()
+    changed = pyqtSignal()
 
 class Worker(QRunnable):
     def __init__(self, fn, *args, **kwargs):

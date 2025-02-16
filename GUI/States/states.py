@@ -3,6 +3,7 @@ from GUI.Utils import guitypedefs
 
 process_signals = guitypedefs.ProcessSignals()
 setting_signals = guitypedefs.SettingSignals()
+session_signals = guitypedefs.SessionSignals()
 
 status_thread = guitypedefs.CheckInferiorStatus()
 status_thread.start()
