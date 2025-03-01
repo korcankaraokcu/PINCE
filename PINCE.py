@@ -25,87 +25,100 @@ import gi
 # This line can be deleted when GTK 4.0 properly runs on all supported systems
 gi.require_version("Gtk", "3.0")
 
+import ast
+import collections
+import copy
+import importlib
+import io
+import os
+import re
+import select
+import signal
+import sys
+import traceback
+from time import sleep, time
+
+from PyQt6.QtCore import (
+    QByteArray,
+    QEvent,
+    QItemSelection,
+    QItemSelectionModel,
+    QKeyCombination,
+    QLocale,
+    QSettings,
+    QSignalBlocker,
+    QSize,
+    QStringListModel,
+    Qt,
+    QThread,
+    QTimer,
+    QTranslator,
+    pyqtSignal,
+)
 from PyQt6.QtGui import (
+    QBrush,
+    QCloseEvent,
+    QColor,
+    QColorConstants,
+    QContextMenuEvent,
+    QCursor,
     QIcon,
+    QKeyEvent,
+    QKeySequence,
+    QMouseEvent,
     QMovie,
     QPixmap,
-    QCursor,
-    QKeySequence,
-    QColor,
-    QContextMenuEvent,
-    QBrush,
-    QTextCursor,
     QShortcut,
-    QColorConstants,
-    QCloseEvent,
-    QKeyEvent,
-    QMouseEvent,
+    QTextCursor,
     QWheelEvent,
 )
 from PyQt6.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QTableWidgetItem,
-    QMessageBox,
-    QDialog,
-    QWidget,
-    QTabWidget,
-    QMenu,
-    QFileDialog,
     QAbstractItemView,
+    QApplication,
+    QCompleter,
+    QDialog,
+    QDialogButtonBox,
+    QFileDialog,
+    QMainWindow,
+    QMenu,
+    QMessageBox,
+    QTableWidgetItem,
+    QTabWidget,
     QTreeWidgetItem,
     QTreeWidgetItemIterator,
-    QCompleter,
-    QDialogButtonBox,
+    QWidget,
 )
-from PyQt6.QtCore import (
-    Qt,
-    QThread,
-    pyqtSignal,
-    QSize,
-    QByteArray,
-    QSettings,
-    QEvent,
-    QKeyCombination,
-    QTranslator,
-    QItemSelectionModel,
-    QTimer,
-    QStringListModel,
-    QLocale,
-    QSignalBlocker,
-    QItemSelection,
-)
-from time import sleep, time
-import os, sys, traceback, signal, re, copy, io, collections, ast, select, importlib
 
-from tr.tr import TranslationConstants as tr
-from tr.tr import get_locale
-
-from libpince import utils, debugcore, typedefs
-from libpince.debugcore import scanmem, ptrscan
-from GUI.States import states
-from GUI.Settings import settings, themes
-from GUI.Utils import guiutils, guitypedefs, utilwidgets
-
-from GUI.MainWindow import Ui_MainWindow as MainWindow
-from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
-from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
-from GUI.EditTypeDialog import Ui_Dialog as EditTypeDialog
-from GUI.TrackSelectorDialog import Ui_Dialog as TrackSelectorDialog
-from GUI.LoadingDialog import Ui_Dialog as LoadingDialog
-from GUI.TextEditDialog import Ui_Dialog as TextEditDialog
-from GUI.Widgets.Settings.Settings import SettingsDialog
-from GUI.ConsoleWidget import Ui_Form as ConsoleWidget
 from GUI.AboutWidget import Ui_TabWidget as AboutWidget
+from GUI.AbstractTableModels.AsciiModel import QAsciiModel
+from GUI.AbstractTableModels.HexModel import QHexModel
+from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
+from GUI.BreakpointInfoWidget import Ui_TabWidget as BreakpointInfoWidget
+from GUI.ConsoleWidget import Ui_Form as ConsoleWidget
+from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
+from GUI.EditInstructionDialog import Ui_Dialog as EditInstructionDialog
+from GUI.EditTypeDialog import Ui_Dialog as EditTypeDialog
+from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
+from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
+from GUI.FunctionsInfoWidget import Ui_Form as FunctionsInfoWidget
+from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
+from GUI.LoadingDialog import Ui_Dialog as LoadingDialog
+from GUI.LogFileWidget import Ui_Form as LogFileWidget
+from GUI.MainWindow import Ui_MainWindow as MainWindow
+from GUI.ManualAddressDialogUtils.PointerChainOffset import PointerChainOffset
+from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
 
 # If you are going to change the name "Ui_MainWindow_MemoryView", review GUI/Labels/RegisterLabel.py as well
 from GUI.MemoryViewerWindow import Ui_MainWindow_MemoryView as MemoryViewWindow
-from GUI.Widgets.Bookmark.Bookmark import BookmarkWidget
-from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
+from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
+from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
+from GUI.SearchOpcodeWidget import Ui_Form as SearchOpcodeWidget
+from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
+from GUI.Session.Session import SessionDataChanged, SessionManager
+from GUI.Settings import settings, themes
 from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
-from GUI.BreakpointInfoWidget import Ui_TabWidget as BreakpointInfoWidget
-from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
-from GUI.TrackBreakpointWidget import Ui_Form as TrackBreakpointWidget
+from GUI.States import states
+from GUI.TextEditDialog import Ui_Dialog as TextEditDialog
 from GUI.TraceInstructionsPromptDialog import Ui_Dialog as TraceInstructionsPromptDialog
 from GUI.TraceInstructionsWaitWidget import Ui_Form as TraceInstructionsWaitWidget
 from GUI.TraceInstructionsWindow import Ui_MainWindow as TraceInstructionsWindow
@@ -127,8 +140,22 @@ from GUI.Widgets.ManageScanRegions.ManageScanRegions import ManageScanRegionsDia
 
 from GUI.AbstractTableModels.HexModel import QHexModel
 from GUI.AbstractTableModels.AsciiModel import QAsciiModel
+from GUI.TrackBreakpointWidget import Ui_Form as TrackBreakpointWidget
+from GUI.TrackSelectorDialog import Ui_Dialog as TrackSelectorDialog
+from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
+from GUI.Utils import guitypedefs, guiutils, utilwidgets
 from GUI.Validators.HexValidator import QHexValidator
-from GUI.ManualAddressDialogUtils.PointerChainOffset import PointerChainOffset
+from GUI.Widgets.Bookmark.Bookmark import BookmarkWidget
+from GUI.Widgets.ManageScanRegions.ManageScanRegions import ManageScanRegionsDialog
+from GUI.Widgets.PointerScan.PointerScan import PointerScanWindow
+from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
+from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructionsWidget
+from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
+from GUI.Widgets.Settings.Settings import SettingsDialog
+from libpince import debugcore, typedefs, utils
+from libpince.debugcore import ptrscan, scanmem
+from tr.tr import TranslationConstants as tr
+from tr.tr import get_locale
 
 if __name__ == "__main__":
     app = QApplication([])
@@ -310,9 +337,13 @@ class MainForm(QMainWindow, MainWindow):
             states.hotkeys.exact_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.EXACT),
             states.hotkeys.not_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.NOT),
             states.hotkeys.increased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.INCREASED),
-            states.hotkeys.increased_by_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.INCREASED_BY),
+            states.hotkeys.increased_by_scan_hotkey: lambda: self.nextscan_hotkey_pressed(
+                typedefs.SCAN_TYPE.INCREASED_BY
+            ),
             states.hotkeys.decreased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.DECREASED),
-            states.hotkeys.decreased_by_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.DECREASED_BY),
+            states.hotkeys.decreased_by_scan_hotkey: lambda: self.nextscan_hotkey_pressed(
+                typedefs.SCAN_TYPE.DECREASED_BY
+            ),
             states.hotkeys.less_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.LESS),
             states.hotkeys.more_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.MORE),
             states.hotkeys.between_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.BETWEEN),
@@ -329,6 +360,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.tableWidget_valuesearchtable.horizontalHeader().setSortIndicatorClearable(True)
         self.memory_view_window = MemoryViewWindowForm(self)
+        self.session_notes = SessionNotesWidget(None)
         self.await_exit_thread = guitypedefs.AwaitProcessExit()
         self.auto_attach_timer = QTimer(timeout=self.auto_attach_loop)
 
@@ -354,10 +386,10 @@ class MainForm(QMainWindow, MainWindow):
         self.freeze_timer = QTimer(timeout=self.freeze_loop, singleShot=True)
         self.freeze_timer.start()
         self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
-        self.shortcut_open_file.activated.connect(self.pushButton_Open_clicked)
+        self.shortcut_open_file.activated.connect(SessionManager.load_session)
         guiutils.append_shortcut_to_tooltip(self.pushButton_Open, self.shortcut_open_file)
         self.shortcut_save_file = QShortcut(QKeySequence("Ctrl+S"), self)
-        self.shortcut_save_file.activated.connect(self.pushButton_Save_clicked)
+        self.shortcut_save_file.activated.connect(SessionManager.save_session)
         guiutils.append_shortcut_to_tooltip(self.pushButton_Save, self.shortcut_save_file)
 
         # Saving the original function because super() doesn't work when we override functions like this
@@ -369,8 +401,12 @@ class MainForm(QMainWindow, MainWindow):
         self.treeWidget_AddressTable.keyPressEvent = self.treeWidget_AddressTable_key_press_event
         self.treeWidget_AddressTable.contextMenuEvent = self.treeWidget_AddressTable_context_menu_event
         self.pushButton_AttachProcess.clicked.connect(self.pushButton_AttachProcess_clicked)
-        self.pushButton_Open.clicked.connect(self.pushButton_Open_clicked)
-        self.pushButton_Save.clicked.connect(self.pushButton_Save_clicked)
+        self.pushButton_Open.clicked.connect(SessionManager.load_session)
+        self.pushButton_Save.clicked.connect(SessionManager.save_session)
+        states.session_signals.on_save.connect(self.on_session_save)
+        states.session_signals.on_load.connect(self.on_session_loaded)
+        states.session_signals.new_session.connect(self.on_new_session)
+        self.session = SessionManager.get_session()
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_UndoScan.clicked.connect(self.pushButton_UndoScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
@@ -431,6 +467,7 @@ class MainForm(QMainWindow, MainWindow):
         self.flashAttachButtonTimer.start(100)
         self.is_scanning = False
 
+        self.pushButton_Notes.clicked.connect(self.session_notes.toggle_visibility)
         guiutils.center(self)
 
     def settings_changed(self):
@@ -785,6 +822,7 @@ class MainForm(QMainWindow, MainWindow):
             # Recursively insert children of this row
             self.insert_records(rec[-1], row, 0)
         parent_row.setExpanded(True)
+        self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
     def paste_records(self, insert_inside=False):
         try:
@@ -1396,33 +1434,23 @@ class MainForm(QMainWindow, MainWindow):
         self.processwindow = ProcessForm(self)
         self.processwindow.show()
 
-    def pushButton_Open_clicked(self):
-        file_paths, _ = QFileDialog.getOpenFileNames(self, tr.OPEN_PCT_FILE, None, tr.FILE_TYPES_PCT)
-        if not file_paths:
-            return
-        self.clear_address_table()
-        for file_path in file_paths:
-            content = utils.load_file(file_path)
-            if content is None:
-                QMessageBox.information(self, tr.ERROR, tr.FILE_LOAD_ERROR.format(file_path))
-                break
-            self.insert_records(
-                content,
-                self.treeWidget_AddressTable.invisibleRootItem(),
-                self.treeWidget_AddressTable.topLevelItemCount(),
-            )
-
-    def pushButton_Save_clicked(self):
-        file_path, _ = QFileDialog.getSaveFileName(self, tr.SAVE_PCT_FILE, None, tr.FILE_TYPES_PCT)
-        if not file_path:
-            return
+    def on_session_save(self):
         content = [
             self.read_address_table_recursively(self.treeWidget_AddressTable.topLevelItem(i))
             for i in range(self.treeWidget_AddressTable.topLevelItemCount())
         ]
-        file_path = utils.append_file_extension(file_path, "pct")
-        if not utils.save_file(content, file_path):
-            QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
+        SessionManager.get_session().pct_address_tree = content
+
+    def on_session_loaded(self):
+        self.clear_address_table()
+        self.insert_records(
+            SessionManager.get_session().pct_address_tree,
+            self.treeWidget_AddressTable.invisibleRootItem(),
+            self.treeWidget_AddressTable.topLevelItemCount(),
+        )
+
+    def on_new_session(self):
+        self.clear_address_table()
 
     # Returns: a bool value indicates whether the operation succeeded.
     def attach_to_pid(self, pid: int):
@@ -1498,6 +1526,7 @@ class MainForm(QMainWindow, MainWindow):
                 vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
                 self.add_entry_to_addresstable(tr.NO_DESCRIPTION, row.text(), vt)
         self.update_address_table()
+        self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
     def reset_scan(self):
         self.scan_mode = typedefs.SCAN_MODE.NEW
@@ -1549,7 +1578,13 @@ class MainForm(QMainWindow, MainWindow):
         self.label_InferiorStatus.setVisible(False)
 
     # closes all windows on exit
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent):
+        # you can no longer emit events at this point.
+        SessionManager.get_session().pre_exit(event)
+        if not event.isAccepted():
+            # user cancelled the exit
+            return
+
         debugcore.detach()
         app.closeAllWindows()
 
@@ -1564,6 +1599,7 @@ class MainForm(QMainWindow, MainWindow):
         self.change_address_table_entries(current_row, description, address_expr, value_type)
         self.show()  # In case of getting called from elsewhere
         self.activateWindow()
+        self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
     def treeWidget_AddressTable_item_double_clicked(self, row, column):
         action_for_column = {
@@ -1735,6 +1771,7 @@ class MainForm(QMainWindow, MainWindow):
             desc, address_expr, vt = manual_address_dialog.get_values()
             self.change_address_table_entries(row, desc, address_expr, vt)
             self.update_address_table()
+            self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
     def treeWidget_AddressTable_edit_type(self):
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
@@ -1748,6 +1785,7 @@ class MainForm(QMainWindow, MainWindow):
                 row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, vt)
                 row.setText(TYPE_COL, vt.text())
             self.update_address_table()
+            self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
     # Changes the column values of the given row
     def change_address_table_entries(self, row, description=tr.NO_DESCRIPTION, address_expr="", vt=None):
@@ -2469,6 +2507,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         states.status_thread.process_stopped.connect(self.on_process_stop)
         states.status_thread.process_running.connect(self.on_process_running)
         states.setting_signals.changed.connect(self.set_dynamic_debug_hotkeys)
+        states.session_signals.new_session.connect(self.on_new_session)
+        self.session = SessionManager.get_session()
         self.set_debug_menu_shortcuts()
         self.set_dynamic_debug_hotkeys()
         self.initialize_file_context_menu()
@@ -3108,14 +3148,15 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     row_color[row].append(PC_COLOR)
                 except KeyError:
                     row_color[row] = [PC_COLOR]
-            for bookmark_item in states.bookmarks.keys():
+
+            for bookmark_item in self.session.pct_bookmarks.keys():
                 if current_address == bookmark_item:
                     try:
                         row_color[row].append(BOOKMARK_COLOR)
                     except KeyError:
                         row_color[row] = [BOOKMARK_COLOR]
                     address_info = "(M)" + address_info
-                    comment = states.bookmarks[bookmark_item]
+                    comment = self.session.pct_bookmarks[bookmark_item]
                     break
             for breakpoint in breakpoint_info:
                 int_breakpoint_address = int(breakpoint.address, 16)
@@ -3634,7 +3675,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
             current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
             current_address = int(utils.extract_address(current_address_text), 16)
-            if current_address in states.bookmarks:
+            if current_address in self.session.pct_bookmarks:
                 self.change_bookmark_comment(current_address)
             else:
                 self.bookmark_address(current_address)
@@ -3700,13 +3741,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         bookmark = menu.addAction(f"{tr.BOOKMARK_ADDRESS}[Ctrl+B]")
         delete_bookmark = menu.addAction(tr.DELETE_BOOKMARK)
         change_comment = menu.addAction(tr.CHANGE_COMMENT)
-        is_bookmarked = current_address_int in states.bookmarks
+        is_bookmarked = current_address_int in self.session.pct_bookmarks
         if not is_bookmarked:
             guiutils.delete_menu_entries(menu, [delete_bookmark, change_comment])
         else:
             guiutils.delete_menu_entries(menu, [bookmark])
         go_to_bookmark = menu.addMenu(tr.GO_TO_BOOKMARK_ADDRESS)
-        address_list = [hex(address) for address in states.bookmarks.keys()]
+        address_list = [hex(address) for address in self.session.pct_bookmarks.keys()]
         bookmark_actions = [go_to_bookmark.addAction(item.all) for item in debugcore.examine_expressions(address_list)]
         menu.addSeparator()
         toggle_breakpoint = menu.addAction(f"{tr.TOGGLE_BREAKPOINT}[F5]")
@@ -3828,7 +3869,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def bookmark_address(self, address: int):
         if debugcore.currentpid == -1:
             return
-        if address in states.bookmarks:
+        if address in self.session.pct_bookmarks:
             QMessageBox.information(app.focusWidget(), tr.ERROR, tr.ALREADY_BOOKMARKED)
             return
         comment_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_BOOKMARK_COMMENT, "")])
@@ -3836,26 +3877,26 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             comment = comment_dialog.get_values()[0]
         else:
             return
-        states.bookmarks[address] = comment
+        self.session.pct_bookmarks[address] = comment
         self.refresh_disassemble_view()
 
     def change_bookmark_comment(self, address: int):
         if debugcore.currentpid == -1:
             return
-        current_comment = states.bookmarks[address]
+        current_comment = self.session.pct_bookmarks[address]
         comment_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_BOOKMARK_COMMENT, current_comment)])
         if comment_dialog.exec():
             new_comment = comment_dialog.get_values()[0]
         else:
             return
-        states.bookmarks[address] = new_comment
+        self.session.pct_bookmarks[address] = new_comment
         self.refresh_disassemble_view()
 
     def delete_bookmark(self, address: int):
         if debugcore.currentpid == -1:
             return
-        if address in states.bookmarks:
-            del states.bookmarks[address]
+        if address in self.session.pct_bookmarks:
+            del self.session.pct_bookmarks[address]
             self.refresh_disassemble_view()
 
     def actionBookmarks_triggered(self):
@@ -3971,6 +4012,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         guiutils.center_to_parent(self.float_registers_widget)
         self.float_registers_widget.show()
         self.float_registers_widget.activateWindow()
+
+    def on_new_session(self):
+        self.session = SessionManager.get_session()
 
 
 class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):

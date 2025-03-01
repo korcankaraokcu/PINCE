@@ -1,11 +1,13 @@
-from PyQt6.QtWidgets import QWidget, QMessageBox, QMenu, QListWidgetItem
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QShortcut, QKeySequence
+from PyQt6.QtGui import QKeySequence, QShortcut
+from PyQt6.QtWidgets import QListWidgetItem, QMenu, QMessageBox, QWidget
+
+from GUI.Session.Session import SessionDataChanged, SessionManager
 from GUI.States import states
 from GUI.Utils import guiutils, utilwidgets
 from GUI.Widgets.Bookmark.Form.BookmarkWidget import Ui_Form
-from tr.tr import TranslationConstants as tr
 from libpince import debugcore, utils
+from tr.tr import TranslationConstants as tr
 
 
 # This widget is too intertwined with MemoryViewer, it will be need to be reworked if it gets used in anywhere else
@@ -26,12 +28,14 @@ class BookmarkWidget(QWidget, Ui_Form):
         self.shortcut_delete.activated.connect(self.delete_record)
         self.shortcut_refresh = QShortcut(QKeySequence("R"), self)
         self.shortcut_refresh.activated.connect(self.refresh_table)
+        self.session = SessionManager.get_session()
         self.refresh_table()
+        states.session_signals.new_session.connect(self.on_new_session)
         guiutils.center_to_parent(self)
 
     def refresh_table(self):
         self.listWidget.clear()
-        address_list = [hex(address) for address in states.bookmarks.keys()]
+        address_list = [hex(address) for address in self.session.pct_bookmarks.keys()]
         if debugcore.currentpid == -1:
             self.listWidget.addItems(address_list)
         else:
@@ -45,7 +49,7 @@ class BookmarkWidget(QWidget, Ui_Form):
             self.lineEdit_Info.clear()
         else:
             self.lineEdit_Info.setText(debugcore.get_address_info(current_address))
-        self.lineEdit_Comment.setText(states.bookmarks[int(current_address, 16)])
+        self.lineEdit_Comment.setText(self.session.pct_bookmarks[int(current_address, 16)])
 
     def listWidget_item_double_clicked(self, item: QListWidgetItem):
         self.double_clicked.emit(utils.extract_address(item.text()))
@@ -60,16 +64,18 @@ class BookmarkWidget(QWidget, Ui_Form):
                 return
             self.bookmarked.emit(int(address, 16))
             self.refresh_table()
+            self.session.data_changed |= SessionDataChanged.BOOKMARKS
 
     def exec_change_comment_dialog(self, current_address):
         self.comment_changed.emit(current_address)
         self.refresh_table()
+        self.session.data_changed |= SessionDataChanged.BOOKMARKS
 
     def listWidget_context_menu_event(self, event):
         current_item = guiutils.get_current_item(self.listWidget)
         if current_item:
             current_address = int(utils.extract_address(current_item.text()), 16)
-            if current_address not in states.bookmarks:
+            if current_address not in self.session.pct_bookmarks:
                 QMessageBox.information(self, tr.ERROR, tr.INVALID_ENTRY)
                 self.refresh_table()
                 return
@@ -103,4 +109,9 @@ class BookmarkWidget(QWidget, Ui_Form):
             return
         current_address = int(utils.extract_address(current_item.text()), 16)
         self.deleted.emit(current_address)
+        self.refresh_table()
+        self.session.data_changed |= SessionDataChanged.BOOKMARKS
+
+    def on_new_session(self):
+        self.session = SessionManager.get_session()
         self.refresh_table()
