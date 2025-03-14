@@ -90,11 +90,16 @@ class TranslationConstants(QObject):
     MATCH_COUNT = QT_TR_NOOP("Match count: {}")
     NO_DESCRIPTION = QT_TR_NOOP("No Description")
     OPEN_PCT_FILE = QT_TR_NOOP("Open PCT file(s)")
+    OPEN_SCRIPT_FILE = QT_TR_NOOP("Open script file")
+    SAVE_SCRIPT_FILE = QT_TR_NOOP("Save script file")
+    UNTITLED = QT_TR_NOOP("(untitled)")
+    SCRIPT_FAILED = QT_TR_NOOP("Script execution failed:")
 
     # Keep file extensions such as (*.pct) while translating, it doesn't matter where it stays within the sentence
     # For instance, you can keep (*.pct) in the beginning of the sentence for right-to-left languages like arabic
     # Apply the same to similar entries below
     FILE_TYPES_PCT = QT_TR_NOOP("PINCE Cheat Table (*.pct)")
+    FILE_TYPES_SCRIPT = QT_TR_NOOP("Python Scripts (*.py)")
     SHARED_OBJECT_TYPE = QT_TR_NOOP("Shared object library (*.so)")
     FILE_TYPES_TRACE = QT_TR_NOOP("Trace File (*.trace)")
     FILE_TYPES_SCANDATA = QT_TR_NOOP("Pointer Scan Data (*.scandata)")

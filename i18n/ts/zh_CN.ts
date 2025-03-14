@@ -160,27 +160,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
       <translation>长度</translation>
     </message>
     <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <location filename="../../GUI/HandleSignalsDialog.ui" line="0" />
-      <source>Handle Signals</source>
-      <translation>处理信号</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/HandleSignalsDialog.ui" line="0" />
-      <source>Signal</source>
-      <translation>信号</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/HandleSignalsDialog.ui" line="0" />
-      <source>Stop &amp; Print</source>
-      <translation>停止和打印</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/HandleSignalsDialog.ui" line="0" />
-      <source>Pass to Program</source>
-      <translation>传递到程序</translation>
-    </message>
-    <message>
       <location filename="../../GUI/HexEditDialog.ui" line="0" />
       <source>Hex Edit</source>
       <translation>十六进制编辑</translation>
@@ -199,183 +178,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
       <location filename="../../GUI/LoadingDialog.ui" line="0" />
       <source>Cancel</source>
       <translation>取消</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Settings</source>
-      <translation>设置</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>General</source>
-      <translation>通用</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Hotkeys</source>
-      <translation>热键</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Code Injection</source>
-      <translation>代码注入</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Memory View</source>
-      <translation type="unfinished">内存查看器</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Debug</source>
-      <translation>调试</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Java</source>
-      <translation>Java</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Auto-update address table</source>
-      <translation>自动更新地址表</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Update Interval</source>
-      <translation>更新间隔</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Freeze Interval</source>
-      <translation>冻结间隔</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>GDB output:</source>
-      <translation>GDB 输出：</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Async</source>
-      <translation>异步</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Command</source>
-      <translation>命令</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Command info</source>
-      <translation>命令信息</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>On start, automatically attach to processes with name matching one of the entries
-Patterns at former positions have higher priority if regex is off</source>
-      <translation>启动时，自动附加到名称与其中一个条目匹配的进程
-如果正则表达式关闭，靠前的条目有更高的优先级</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Auto-attach to processes named</source>
-      <translation>自动附加到的进程名为</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Regex</source>
-      <translation>正则表达式</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Language</source>
-      <translation>语言</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Logo</source>
-      <translation>图标</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Theme</source>
-      <translation>主题</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Functions</source>
-      <translation>功能</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Hotkey</source>
-      <translation>热键</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Press shortcut</source>
-      <translation>按下快捷键</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Clear</source>
-      <translation>清除</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Code injection method:</source>
-      <translation>代码注入模式：</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Simp&amp;le dlopen call</source>
-      <translation>简单的 dlopen 调用[&amp;l]</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Advanced In&amp;jection</source>
-      <translation>高级注入[&amp;j]</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Bring Memory View to front when the inferior is stopped</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Instructions shown per scroll in Disassembly View</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Bytes shown per scroll in Hex View</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>GDB Path</source>
-      <translation>GDB 路径</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>GDB Logging</source>
-      <translation>GDB 日志记录</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Interruption signal</source>
-      <translation>中断信号</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Ignore SIGSEGV for Java processes (overrides signal settings if enabled)</source>
-      <translation>忽略 Java 进程的分段错误（SIGSEGV）（如果启用，将会覆盖信号设置）</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/SettingsDialog.ui" line="0" />
-      <source>Reset Settings</source>
-      <translation>重置设置</translation>
     </message>
     <message>
       <location filename="../../GUI/TextEditDialog.ui" line="0" />
@@ -446,6 +248,27 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
       <source>Pointed Address</source>
       <translation>指向的地址</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <location filename="../../GUI/Widgets/HandleSignals/Form/HandleSignalsDialog.ui" line="0" />
+      <source>Handle Signals</source>
+      <translation>处理信号</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/HandleSignals/Form/HandleSignalsDialog.ui" line="0" />
+      <source>Signal</source>
+      <translation>信号</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/HandleSignals/Form/HandleSignalsDialog.ui" line="0" />
+      <source>Stop &amp; Print</source>
+      <translation>停止和打印</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/HandleSignals/Form/HandleSignalsDialog.ui" line="0" />
+      <source>Pass to Program</source>
+      <translation>传递到程序</translation>
     </message>
     <message>
       <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
@@ -582,6 +405,183 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
       <source>Solve Circular References</source>
       <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Settings</source>
+      <translation>设置</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>General</source>
+      <translation>通用</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Hotkeys</source>
+      <translation>热键</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Code Injection</source>
+      <translation>代码注入</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Memory View</source>
+      <translation type="unfinished">内存查看器</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Debug</source>
+      <translation>调试</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Java</source>
+      <translation>Java</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Auto-update address table</source>
+      <translation>自动更新地址表</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Update Interval</source>
+      <translation>更新间隔</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Freeze Interval</source>
+      <translation>冻结间隔</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>GDB output:</source>
+      <translation>GDB 输出：</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Async</source>
+      <translation>异步</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Command</source>
+      <translation>命令</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Command info</source>
+      <translation>命令信息</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>On start, automatically attach to processes with name matching one of the entries
+Patterns at former positions have higher priority if regex is off</source>
+      <translation>启动时，自动附加到名称与其中一个条目匹配的进程
+如果正则表达式关闭，靠前的条目有更高的优先级</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Auto-attach to processes named</source>
+      <translation>自动附加到的进程名为</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Regex</source>
+      <translation>正则表达式</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Language</source>
+      <translation>语言</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Logo</source>
+      <translation>图标</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Theme</source>
+      <translation>主题</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Functions</source>
+      <translation>功能</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Hotkey</source>
+      <translation>热键</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Press shortcut</source>
+      <translation>按下快捷键</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Clear</source>
+      <translation>清除</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Code injection method:</source>
+      <translation>代码注入模式：</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Simp&amp;le dlopen call</source>
+      <translation>简单的 dlopen 调用[&amp;l]</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Advanced In&amp;jection</source>
+      <translation>高级注入[&amp;j]</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Bring Memory View to front when the inferior is stopped</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Instructions shown per scroll in Disassembly View</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Bytes shown per scroll in Hex View</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>GDB Path</source>
+      <translation>GDB 路径</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>GDB Logging</source>
+      <translation>GDB 日志记录</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Interruption signal</source>
+      <translation>中断信号</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Ignore SIGSEGV for Java processes (overrides signal settings if enabled)</source>
+      <translation>忽略 Java 进程的分段错误（SIGSEGV）（如果启用，将会覆盖信号设置）</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+      <source>Reset Settings</source>
+      <translation>重置设置</translation>
     </message>
   </context>
   <context>
@@ -1060,6 +1060,7 @@ Patterns at former positions have higher priority if regex is off</source>
       <translation>追踪器</translation>
     </message>
     <message>
+      <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
       <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
       <source>File</source>
       <translation>文件</translation>
@@ -1073,6 +1074,56 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
       <source>Save as a text file</source>
       <translation>保存为文本文件</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+      <source>Libpince Engine</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+      <source>Tab 1</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+      <source>Templates</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+      <source>Help</source>
+      <translation type="unfinished">帮助</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+      <source>Run</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+      <source>Code Injection</source>
+      <translation type="unfinished">代码注入</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+      <source>Open [Ctrl+O]</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+      <source>Save [Ctrl+S]</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+      <source>Libpince</source>
+      <translation>&amp;Libpince</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+      <source>Run current script [Ctrl+R]</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
@@ -1286,8 +1337,8 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-      <source>&amp;libpince</source>
-      <translation>&amp;libpince</translation>
+      <source>&amp;Libpince</source>
+      <translation>&amp;Libpince</translation>
     </message>
     <message>
       <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
@@ -1328,6 +1379,11 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
       <source>Restore Instructions</source>
       <translation>还原指令</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+      <source>Libpince Engine</source>
+      <translation type="unfinished" />
     </message>
   </context>
   <context>
@@ -1761,8 +1817,33 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Open script file</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Save script file</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>(untitled)</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Script execution failed:</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>PINCE Cheat Table (*.pct)</source>
       <translation>PINCE 作弊表 (*.pct)</translation>
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Python Scripts (*.py)</source>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />

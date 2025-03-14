@@ -1611,6 +1611,7 @@
     <addaction name="actionCall_Function"/>
     <addaction name="actionSearch_Opcode"/>
     <addaction name="actionDissect_Code"/>
+    <addaction name="actionLibpince_Engine"/>
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
@@ -1622,7 +1623,7 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionlibpince"/>
+    <addaction name="actionLibpince"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
@@ -1701,9 +1702,9 @@
     <string>&amp;Load Trace</string>
    </property>
   </action>
-  <action name="actionlibpince">
+  <action name="actionLibpince">
    <property name="text">
-    <string>&amp;libpince</string>
+    <string>&amp;Libpince</string>
    </property>
   </action>
   <action name="actionGDB_Log_File">
@@ -1744,6 +1745,11 @@
   <action name="actionRestore_Instructions">
    <property name="text">
     <string>Restore Instructions</string>
+   </property>
+  </action>
+  <action name="actionLibpince_Engine">
+   <property name="text">
+    <string>Libpince Engine</string>
    </property>
   </action>
  </widget>

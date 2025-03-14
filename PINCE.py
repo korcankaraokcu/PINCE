@@ -116,6 +116,7 @@ from GUI.LogFileWidget import Ui_Form as LogFileWidget
 from GUI.SearchOpcodeWidget import Ui_Form as SearchOpcodeWidget
 from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
 from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
+from GUI.Widgets.LibpinceEngine.LibpinceEngine import LibpinceEngineWindow
 from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
@@ -2526,9 +2527,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionCall_Function.triggered.connect(self.actionCall_Function_triggered)
         self.actionSearch_Opcode.triggered.connect(self.actionSearch_Opcode_triggered)
         self.actionDissect_Code.triggered.connect(self.actionDissect_Code_triggered)
+        self.actionLibpince_Engine.triggered.connect(self.actionLibpince_Engine_triggered)
 
     def initialize_help_context_menu(self):
-        self.actionlibpince.triggered.connect(self.actionlibpince_triggered)
+        self.actionLibpince.triggered.connect(self.actionLibpince_triggered)
 
     def initialize_register_view(self):
         self.pushButton_ShowFloatRegisters.clicked.connect(self.pushButton_ShowFloatRegisters_clicked)
@@ -3944,7 +3946,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         dissect_code_dialog.exec()
         self.refresh_disassemble_view()
 
-    def actionlibpince_triggered(self):
+    def actionLibpince_Engine_triggered(self):
+        libpince_engine_window = LibpinceEngineWindow(self)
+        libpince_engine_window.show()
+        libpince_engine_window.activateWindow()
+
+    def actionLibpince_triggered(self):
         utils.execute_command_as_user('python3 -m webbrowser "https://korcankaraokcu.github.io/PINCE/"')
 
     def pushButton_ShowFloatRegisters_clicked(self):
