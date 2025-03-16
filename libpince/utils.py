@@ -59,18 +59,18 @@ def get_process_name(pid: int | str) -> str:
         return f.read().splitlines()[0]
 
 
-def search_processes(process_name):
-    """Searches processes and returns a list of the ones that contain process_name
+def search_processes(name_or_pid):
+    """Searches processes and returns a list of the ones that contain given process name or pid
 
     Args:
-        process_name (str): Name of the process that'll be searched for
+        name_or_pid (str): Name or PID of the process that'll be searched for
 
     Returns:
         list: List of (pid, user, process_name) -> (str, str, str)
     """
     processlist = []
     for pid, user, name in get_process_list():
-        if process_name.lower() in name.lower():
+        if name_or_pid.lower() in name.lower() or name_or_pid in pid:
             processlist.append((pid, user, name))
     return processlist
 

@@ -27,7 +27,7 @@ ex = (
 )
 
 parser = argparse.ArgumentParser(description=desc, epilog=ex, formatter_class=argparse.RawDescriptionHelpFormatter)
-parser.add_argument("-a", metavar="process_name", type=str, help="Attaches to the process with given name")
+parser.add_argument("-a", metavar="name_or_pid", type=str, help="Attaches to the process with given name or pid")
 parser.add_argument("-c", metavar="file_path", type=str, help="Creates a new process with given path")
 parser.add_argument(
     "-o",
@@ -48,11 +48,11 @@ args = parser.parse_args()
 if args.a:
     process_list = utils.search_processes(args.a)
     if not process_list:
-        parser.error("There's no process with the name " + args.a)
+        parser.error("There's no process with the name or pid " + args.a)
     if len(process_list) > 1:
         for pid, user, name in process_list:
             print(name)
-        print("There are more than one process with the name " + args.a)
+        print("There are more than one process with the name or pid " + args.a)
         exit()
     pid = process_list[0][0]
     if not debugcore.can_attach(pid):
