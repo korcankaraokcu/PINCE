@@ -1010,8 +1010,8 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />
-      <source>Name of the Process:</source>
-      <translation>进程名称：</translation>
+      <source>Name or PID of the Process:</source>
+      <translation>进程名称或PID：</translation>
     </message>
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />

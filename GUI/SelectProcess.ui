@@ -23,7 +23,7 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>Name of the Process:</string>
+         <string>Name or PID of the Process:</string>
         </property>
        </widget>
       </item>

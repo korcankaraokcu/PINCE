@@ -85,7 +85,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Please select a Process"))
-        self.label.setText(_translate("MainWindow", "Name of the Process:"))
+        self.label.setText(_translate("MainWindow", "Name or PID of the Process:"))
         self.tableWidget_ProcessTable.setSortingEnabled(True)
         item = self.tableWidget_ProcessTable.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "PID"))

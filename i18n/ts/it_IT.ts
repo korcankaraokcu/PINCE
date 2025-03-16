@@ -1008,8 +1008,8 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />
-      <source>Name of the Process:</source>
-      <translation>Nome del Processo:</translation>
+      <source>Name or PID of the Process:</source>
+      <translation>Nome o PID del processo:</translation>
     </message>
     <message>
       <location filename="../../GUI/SelectProcess.ui" line="0" />
