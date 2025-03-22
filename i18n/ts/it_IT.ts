@@ -1601,12 +1601,42 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Next Scan - Not</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Next Scan - Increased</source>
       <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Next Scan - Increased By</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Next Scan - Decreased</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Next Scan - Decreased By</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Next Scan - Less Than</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Next Scan - More Than</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Next Scan - Between</source>
       <translation type="unfinished" />
     </message>
     <message>
