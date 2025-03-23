@@ -431,6 +431,8 @@ class MainForm(QMainWindow, MainWindow):
         self.flashAttachButtonTimer.start(100)
         guiutils.center(self)
 
+        self.is_scanning = False
+
     def settings_changed(self):
         if states.auto_attach:
             self.auto_attach_timer.start(100)
@@ -496,7 +498,7 @@ class MainForm(QMainWindow, MainWindow):
 
     @utils.ignore_exceptions
     def nextscan_hotkey_pressed(self, index):
-        if self.scan_mode == typedefs.SCAN_MODE.NEW:
+        if self.scan_mode == typedefs.SCAN_MODE.NEW or self.is_scanning:
             return
         self.comboBox_ScanType.setCurrentIndex(index)
         self.pushButton_NextScan.clicked.emit()
@@ -985,6 +987,7 @@ class MainForm(QMainWindow, MainWindow):
     def scan_values(self):
         if debugcore.currentpid == -1:
             return
+        self.is_scanning = True
         search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
         self.QWidget_Toolbox.setEnabled(False)
         self.progressBar.setValue(0)
@@ -1218,6 +1221,7 @@ class MainForm(QMainWindow, MainWindow):
             self.deleted_regions.extend(scan_regions_dialog.get_values())
 
     def scan_callback(self):
+        self.is_scanning = False
         self.progress_bar_timer.stop()
         self.progressBar.setValue(100)
         matches = scanmem.matches()
