@@ -987,7 +987,6 @@ class MainForm(QMainWindow, MainWindow):
     def scan_values(self):
         if debugcore.currentpid == -1:
             return
-        self.is_scanning = True
         search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
         self.QWidget_Toolbox.setEnabled(False)
         self.progressBar.setValue(0)
@@ -996,6 +995,7 @@ class MainForm(QMainWindow, MainWindow):
         scan_thread = guitypedefs.Worker(scanmem.send_command, search_for)
         scan_thread.signals.finished.connect(self.scan_callback)
         states.threadpool.start(scan_thread)
+        self.is_scanning = True
 
     def resize_address_table(self):
         self.treeWidget_AddressTable.resizeColumnToContents(FROZEN_COL)
