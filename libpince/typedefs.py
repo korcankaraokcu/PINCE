@@ -312,17 +312,17 @@ scan_index_to_scanmem_dict = collections.OrderedDict(
 # TODO: Same as index_to_text_dict, consider integrating into UI completely
 class SCAN_TYPE:
     EXACT = 0
-    INCREASED = 1
-    INCREASED_BY = 2
-    DECREASED = 3
-    DECREASED_BY = 4
-    LESS = 5
-    MORE = 6
-    BETWEEN = 7
-    CHANGED = 8
-    UNCHANGED = 9
-    UNKNOWN = 10
-    NOT = 11
+    NOT = 1
+    INCREASED = 2
+    INCREASED_BY = 3
+    DECREASED = 4
+    DECREASED_BY = 5
+    LESS = 6
+    MORE = 7
+    BETWEEN = 8
+    CHANGED = 9
+    UNCHANGED = 10
+    UNKNOWN = 11
 
     @staticmethod
     def get_list(scan_mode, value_type):
