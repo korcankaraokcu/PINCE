@@ -429,9 +429,9 @@ class MainForm(QMainWindow, MainWindow):
         self.flashAttachButtonTimer.timeout.connect(self.flash_attach_button)
         self.flashAttachButton_gradiantState = 0
         self.flashAttachButtonTimer.start(100)
-        guiutils.center(self)
-
         self.is_scanning = False
+
+        guiutils.center(self)
 
     def settings_changed(self):
         if states.auto_attach:
