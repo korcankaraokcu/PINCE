@@ -1465,6 +1465,7 @@ class MainForm(QMainWindow, MainWindow):
                 ptr_size = 4
             ptrscan.set_bitness(ptr_size)
             self.on_new_process()
+            SessionManager.on_process_changed()
             states.process_signals.attach.emit()
 
             # TODO: This makes PINCE call on_process_stop twice when attaching
@@ -1513,8 +1514,7 @@ class MainForm(QMainWindow, MainWindow):
     def clear_address_table(self):
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
-        if utilwidgets.InputDialog(self, tr.CLEAR_TABLE).exec():
-            self.treeWidget_AddressTable.clear()
+        self.treeWidget_AddressTable.clear()
 
     def copy_to_address_table(self):
         i = -1
@@ -1559,6 +1559,7 @@ class MainForm(QMainWindow, MainWindow):
             gdb_path = states.gdb_path
         debugcore.init_gdb(gdb_path)
         settings.apply_after_init()
+        SessionManager.on_process_changed()
         states.process_signals.exit.emit()
 
     def on_status_detached(self):

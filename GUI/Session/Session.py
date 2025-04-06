@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
 from GUI.Session.Version import is_valid_session_data, migrate_version
 from GUI.States import states
-from libpince import utils
+from libpince import utils, debugcore
 from tr.tr import TranslationConstants as tr
 
 
@@ -16,22 +16,37 @@ class SessionDataChanged(IntFlag):
     ADDRESS_TREE = auto()
     BOOKMARKS = auto()
     NOTES = auto()
+    PROCESS_NAME = auto()
 
 
-class Session(QObject):
+class Session:
     def __init__(self) -> None:
+        # Anything labled with pct should be saved to the session file
         self.pct_notes: str = ""
         self.pct_bookmarks: dict[int, str] = {}
         self.pct_version: int = 1
         self.pct_address_tree: list = []
+        self.pct_process_name: str = ""
         self.data_changed = SessionDataChanged.NONE
-        self.file_path: str = os.path.expanduser("~/.config/PINCE/PINCE_USER_FILES/CheatTables/")
+        self.file_path: str = os.path.expanduser("~/.config/PINCE/PINCE_USER_FILES/CheatTables")
+        self.last_file_name: str = ""  # process name or file name
 
     def save_session(self) -> bool:
+        """
+        Save the current session to a file.
+        If there is nothing to save, the function will return False.
+
+        Args:
+            None
+        Returns:
+            bool: True if the session was saved successfully, False otherwise.
+        """
         if self.data_changed == SessionDataChanged.NONE:
             return False
 
-        file_path, _ = QFileDialog.getSaveFileName(None, tr.SAVE_PCT_FILE, self.file_path, tr.FILE_TYPES_PCT)
+        file_path, _ = QFileDialog.getSaveFileName(
+            None, tr.SAVE_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT
+        )
         if not file_path:
             return False
 
@@ -45,6 +60,7 @@ class Session(QObject):
             "notes": self.pct_notes,
             "bookmarks": self.pct_bookmarks,
             "address_tree": self.pct_address_tree,
+            "process_name": self.pct_process_name,
         }
 
         file_path = utils.append_file_extension(file_path, "pct")
@@ -52,7 +68,8 @@ class Session(QObject):
             QMessageBox.information(None, tr.ERROR, tr.FILE_SAVE_ERROR)
             return False
 
-        self.file_path = file_path
+        self.file_path = os.path.dirname(file_path)
+        self.last_file_name = os.path.basename(file_path)
         self.data_changed = SessionDataChanged.NONE
         return True
 
@@ -69,6 +86,18 @@ class Session(QObject):
         return unsaved_changes_result
 
     def load_session(self) -> bool:
+        """
+        Load a pct session file. Will check for unsaved changes and prompt
+        the user to save them before loading a new session.
+        If the user chooses to cancel, the function will return False.
+        Will also attempt to migrate the session data to the latest version.
+
+        Args:
+            None
+        Returns:
+            bool: True if the session was loaded successfully, False otherwise.
+
+        """
 
         unsaved_changes_result = self.check_unsaved_changes()
         if unsaved_changes_result == QMessageBox.StandardButton.Cancel:
@@ -77,11 +106,14 @@ class Session(QObject):
             if not self.save_session():
                 return False
 
-        file_path, _ = QFileDialog.getOpenFileName(None, tr.OPEN_PCT_FILE, self.file_path, tr.FILE_TYPES_PCT)
+        file_path, _ = QFileDialog.getOpenFileName(
+            None, tr.OPEN_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT
+        )
         if not file_path:
             return False
 
         print(file_path)
+
         content = utils.load_file(file_path)
         if content is None:
             QMessageBox.information(None, tr.ERROR, tr.FILE_LOAD_ERROR.format(file_path))
@@ -97,14 +129,28 @@ class Session(QObject):
         # bookmarks are saved as int string keys, convert them back to int
         self.pct_bookmarks = {int(k): v for k, v in self.pct_bookmarks.items()}
         self.pct_address_tree = content["address_tree"]
-        self.file_path = file_path
+
+        self.file_path = os.path.dirname(file_path)
+        print(self.file_path)
+        self.last_file_name = os.path.basename(file_path)
+        print(self.last_file_name)
 
         states.session_signals.on_load.emit()
         self.data_changed = SessionDataChanged.NONE
         return True
 
     def pre_exit(self, close_event: QCloseEvent) -> None:
-        print("Pre-Exit event, checking for unsaved Data.")
+        """
+        Event handler for the close event of the application.
+        If there are unsaved changes, prompt the user to save them.
+        Accepts or ignores the close event based on the user's choice.
+
+        Args:
+            close_event (QCloseEvent): The close event to be handled.
+        Returns:
+            None
+        """
+
         if self.data_changed == SessionDataChanged.NONE:
             close_event.accept()
             return
@@ -124,18 +170,56 @@ class SessionManager:
     session = Session()
 
     @staticmethod
-    def get_session():
+    def get_session() -> Session:
         return SessionManager.session
 
     @staticmethod
-    def reset_session():
+    def reset_session() -> None:
+        session = SessionManager.get_session()
+        # User has one last chance to save the session before resetting
+        # result is ignored, because the session is going to be reset anyway
+        session.check_unsaved_changes()
         SessionManager.session = Session()
         states.session_signals.new_session.emit()
+        # Reset the session data changed flag
+        session.data_changed = SessionDataChanged.NONE
 
     @staticmethod
-    def save_session():
+    def save_session() -> None:
         SessionManager.get_session().save_session()
 
     @staticmethod
-    def load_session():
+    def load_session() -> None:
         SessionManager.get_session().load_session()
+
+    @staticmethod
+    def on_process_changed() -> None:
+        if debugcore.currentpid == -1:
+            return
+        process_name = utils.get_process_name(debugcore.currentpid)
+        session = SessionManager.get_session()
+
+        if session.last_file_name == utils.append_file_extension(process_name, "pct"):
+            return
+
+        if session.pct_process_name == "":
+            # silently set the process name and file name if necessary
+            session.pct_process_name = process_name
+            if session.last_file_name == "":
+                session.last_file_name = utils.append_file_extension(process_name, "pct")
+            return
+
+        if session.pct_process_name != process_name:
+            # Ask if the user wants to keep the session
+            keep_session_result = QMessageBox.question(
+                None,
+                tr.SESSION_PROCESS_CHANGED_TITLE,
+                tr.SESSION_PROCESS_CHANGED_PROMPT,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if keep_session_result == QMessageBox.StandardButton.Yes:
+                session.pct_process_name = process_name
+            else:
+                SessionManager.reset_session()
+                session.pct_process_name = process_name
+                session.last_file_name = utils.append_file_extension(process_name, "pct")

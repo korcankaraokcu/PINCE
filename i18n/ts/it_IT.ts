@@ -851,6 +851,31 @@ Patterns at former positions have higher priority if regex is off</source>
     <name>MainWindow</name>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Memory View</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Copy selected items to the address table</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Erase all the table contents</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Refresh the address table[R]</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Add Address Manually</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Freeze</source>
       <translation type="unfinished" />
     </message>
@@ -880,71 +905,6 @@ Patterns at former positions have higher priority if regex is off</source>
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Value</source>
       <translation>Valore</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Memory View</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Copy selected items to the address table</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Erase all the table contents</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Refresh the address table[R]</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Add Address Manually</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Create or attach to a process</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Open a cheat table</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Save current table to a file</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Wiki</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>About</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>No Process Selected</source>
-      <translation type="unfinished">Nessun Processo Selezionato</translation>
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Open a gdb console</source>
-      <translation type="unfinished" />
-    </message>
-    <message>
-      <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Configure options</source>
-      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
@@ -999,6 +959,56 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
       <source>Manage Scan Regions</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Open session notes</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Notes</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Create or attach to a process</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Open a cheat table</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Save current table to a file</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Wiki</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>About</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>No Process Selected</source>
+      <translation type="unfinished">Nessun Processo Selezionato</translation>
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Open a gdb console</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/MainWindow.ui" line="0" />
+      <source>Configure options</source>
       <translation type="unfinished" />
     </message>
     <message>
@@ -1474,6 +1484,19 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Yes to &amp;All</source>
+      <translation type="unfinished" />
+    </message>
+  </context>
+  <context>
+    <name>SessionNotes</name>
+    <message>
+      <location filename="../../GUI/Widgets/SessionNotes/Form/SessionNotes.ui" line="0" />
+      <source>Notes</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../GUI/Widgets/SessionNotes/Form/SessionNotes.ui" line="0" />
+      <source>Session Notes</source>
       <translation type="unfinished" />
     </message>
   </context>
@@ -2891,6 +2914,28 @@ Proceed?</source>
     <message>
       <location filename="../../tr/tr.py" line="0" />
       <source>Wong (Colorblind Friendly)</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Session - Unsaved changes</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>You have unsaved changes.
+Do you want to save the current session?</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>Session - Process changed</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
+      <source>The process name has changed.
+Do you want to keep the current session with the new process?</source>
       <translation type="unfinished" />
     </message>
   </context>
