@@ -122,30 +122,13 @@ from GUI.TextEditDialog import Ui_Dialog as TextEditDialog
 from GUI.TraceInstructionsPromptDialog import Ui_Dialog as TraceInstructionsPromptDialog
 from GUI.TraceInstructionsWaitWidget import Ui_Form as TraceInstructionsWaitWidget
 from GUI.TraceInstructionsWindow import Ui_MainWindow as TraceInstructionsWindow
-from GUI.FunctionsInfoWidget import Ui_Form as FunctionsInfoWidget
-from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
-from GUI.EditInstructionDialog import Ui_Dialog as EditInstructionDialog
-from GUI.LogFileWidget import Ui_Form as LogFileWidget
-from GUI.SearchOpcodeWidget import Ui_Form as SearchOpcodeWidget
-from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
-from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
-from GUI.Widgets.LibpinceEngine.LibpinceEngine import LibpinceEngineWindow
-from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
-from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
-from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
-from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructionsWidget
-from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
-from GUI.Widgets.PointerScan.PointerScan import PointerScanWindow
-from GUI.Widgets.ManageScanRegions.ManageScanRegions import ManageScanRegionsDialog
-
-from GUI.AbstractTableModels.HexModel import QHexModel
-from GUI.AbstractTableModels.AsciiModel import QAsciiModel
 from GUI.TrackBreakpointWidget import Ui_Form as TrackBreakpointWidget
 from GUI.TrackSelectorDialog import Ui_Dialog as TrackSelectorDialog
 from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
 from GUI.Utils import guitypedefs, guiutils, utilwidgets
 from GUI.Validators.HexValidator import QHexValidator
 from GUI.Widgets.Bookmark.Bookmark import BookmarkWidget
+from GUI.Widgets.LibpinceEngine.LibpinceEngine import LibpinceEngineWindow
 from GUI.Widgets.ManageScanRegions.ManageScanRegions import ManageScanRegionsDialog
 from GUI.Widgets.PointerScan.PointerScan import PointerScanWindow
 from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog

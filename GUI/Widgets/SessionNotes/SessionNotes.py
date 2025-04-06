@@ -3,6 +3,7 @@ from GUI.Session.Session import SessionManager, SessionDataChanged
 from PyQt6.QtWidgets import QWidget
 from GUI.States import states
 
+
 class SessionNotesWidget(QWidget, SessionNotesForm):
     def __init__(self, parent):
         super().__init__(parent)
@@ -18,7 +19,7 @@ class SessionNotesWidget(QWidget, SessionNotesForm):
 
     def on_load(self):
         self.textEdit_Notes.setText(SessionManager.session.pct_notes)
-    
+
     def on_textEdit_notes_textChanged(self):
         SessionManager.session.pct_notes = self.textEdit_Notes.toPlainText()
         SessionManager.session.data_changed |= SessionDataChanged.NOTES
