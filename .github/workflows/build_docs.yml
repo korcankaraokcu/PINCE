@@ -22,7 +22,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt install libegl1 libgirepository1.0-dev
+        sudo apt install libegl1 libgirepository1.0-dev libcairo2-dev
         python3 -m venv .venv/PINCE
         . .venv/PINCE/bin/activate
         pip3 install --upgrade pip
