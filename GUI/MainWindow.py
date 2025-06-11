@@ -371,8 +371,6 @@ class Ui_MainWindow(object):
         self.pushButton_ScanRegions.setText(_translate("MainWindow", "Manage Scan Regions"))
         self.SpeedHackLabel.setText(_translate("MainWindow", "Speedhack"))
         self.SpeedHackInput.setText(_translate("MainWindow", "1"))
-        self.SpeedHackInput.setToolTip(_translate("MainWindow", "test"))
-        self.SpeedHackSlider.setToolTip(_translate("MainWindow", "test"))
         self.treeWidget_AddressTable.setSortingEnabled(True)
         self.treeWidget_AddressTable.headerItem().setText(0, _translate("MainWindow", "Freeze"))
         self.treeWidget_AddressTable.headerItem().setToolTip(0, _translate("MainWindow", "Freeze the value"))
