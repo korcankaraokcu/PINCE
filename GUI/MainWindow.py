@@ -44,7 +44,7 @@ class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(627, 636)
+        MainWindow.resize(678, 636)
         MainWindow.setWindowTitle("PINCE")
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -330,7 +330,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.treeWidget_AddressTable, 3, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 627, 30))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 678, 30))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
 
