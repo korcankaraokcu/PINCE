@@ -48,7 +48,7 @@ PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB)
 
 # Installing and running PINCE
 ### Users:
-- No need to install. Just grab the latest AppImage over at [Releases](https://github.com/korcankaraokcu/PINCE/releases) and run the following commands in the same folder:
+- No need to install anything. Just grab the latest AppImage over at [Releases](https://github.com/korcankaraokcu/PINCE/releases) and run the following commands in the same folder as the downloaded AppImage:
 ```bash
 chmod +x PINCE-x86_64.AppImage
 sudo -E ./PINCE-x86_64.AppImage
