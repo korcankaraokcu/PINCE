@@ -27,8 +27,29 @@ if [ ! -d "${SCRIPTDIR}/.venv/PINCE" ]; then
 	exit 1
 fi
 . ${SCRIPTDIR}/.venv/PINCE/bin/activate
+PINCE_PATH="${SCRIPTDIR}/PINCE.py"
 
-# Preserve env vars to keep settings like theme preferences.
-# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
-# so we need to force PATH preservation with venv activated user's PATH.
-sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 ${SCRIPTDIR}/.venv/PINCE/bin/python3 ${SCRIPTDIR}/PINCE.py
+export PYTHONDONTWRITEBYTECODE=1
+
+run_with_pkexec() {
+	# Preserve env vars to keep settings like theme preferences.
+	# Pkexec does not support passing all of env via a flag like `-E` so we need to
+	# rebuild the env and then pass it through.
+	ENV=(env)
+	while IFS='=' read -r key value; do
+		CMD+=("$key=$value")
+	done < <(env)
+
+	pkexec env "${CMD[@]}" python3 "$PINCE_PATH"
+}
+
+run_with_sudo() {
+	# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
+	# so we need to force PATH preservation with venv activated user's PATH.
+	sudo -E --preserve-env=PATH,PYTHONDONTWRITEBYTECODE python3 "$PINCE_PATH"
+}
+
+# Prefer pkexec, fallback to sudo.
+if ! run_with_pkexec; then
+	run_with_sudo
+fi
