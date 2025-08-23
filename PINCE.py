@@ -114,7 +114,7 @@ from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 from GUI.SearchOpcodeWidget import Ui_Form as SearchOpcodeWidget
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
-from GUI.Session.Session import SessionDataChanged, SessionManager
+from GUI.Session.session import SessionDataChanged, SessionManager
 from GUI.Settings import settings, themes
 from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
 from GUI.States import states

@@ -1,5 +1,5 @@
 from GUI.Widgets.SessionNotes.Form.SessionNotes import Ui_SessionNotes as SessionNotesForm
-from GUI.Session.Session import SessionManager, SessionDataChanged
+from GUI.Session.session import SessionManager, SessionDataChanged
 from PyQt6.QtWidgets import QWidget
 from GUI.States import states
 

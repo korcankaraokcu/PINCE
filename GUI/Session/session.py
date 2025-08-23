@@ -5,7 +5,6 @@ from PyQt6.QtCore import QObject
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
-from GUI.Session.Version import is_valid_session_data, migrate_version
 from GUI.States import states
 from libpince import utils, debugcore
 from tr.tr import TranslationConstants as tr
@@ -19,6 +18,27 @@ class SessionDataChanged(IntFlag):
     PROCESS_NAME = auto()
 
 
+def migrate_version(content: any) -> dict[str, any]:
+    if not hasattr(content, "version") and type(content) == list:
+        return legacy_to_v1(content)
+
+    return content
+
+
+def is_valid_session_data(content: dict[str, any]) -> bool:
+    keys = ["version", "notes", "bookmarks", "address_tree", "process_name"]
+    for key in keys:
+        if key not in content:
+            return False
+
+    return True
+
+
+def legacy_to_v1(content: list) -> dict[str, any]:
+    print("Migrating legacy session data to version 1")
+    return {"version": 1, "notes": "", "bookmarks": {}, "address_tree": content, "process_name": ""}
+
+
 class Session:
     def __init__(self) -> None:
         # Anything labled with pct should be saved to the session file
@@ -28,21 +48,18 @@ class Session:
         self.pct_address_tree: list = []
         self.pct_process_name: str = ""
         self.data_changed = SessionDataChanged.NONE
-        self.file_path: str = os.path.expanduser("~/.config/PINCE/PINCE_USER_FILES/CheatTables")
+        self.file_path: str = os.curdir
         self.last_file_name: str = ""  # process name or file name
 
     def save_session(self) -> bool:
         """
         Save the current session to a file.
-        If there is nothing to save, the function will return False.
 
         Args:
             None
         Returns:
             bool: True if the session was saved successfully, False otherwise.
         """
-        if self.data_changed == SessionDataChanged.NONE:
-            return False
 
         file_path, _ = QFileDialog.getSaveFileName(
             None, tr.SAVE_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT
@@ -112,8 +129,6 @@ class Session:
         if not file_path:
             return False
 
-        print(file_path)
-
         content = utils.load_file(file_path)
         if content is None:
             QMessageBox.information(None, tr.ERROR, tr.FILE_LOAD_ERROR.format(file_path))
@@ -131,9 +146,7 @@ class Session:
         self.pct_address_tree = content["address_tree"]
 
         self.file_path = os.path.dirname(file_path)
-        print(self.file_path)
         self.last_file_name = os.path.basename(file_path)
-        print(self.last_file_name)
 
         states.session_signals.on_load.emit()
         self.data_changed = SessionDataChanged.NONE

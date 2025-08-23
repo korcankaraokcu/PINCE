@@ -2,7 +2,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QKeySequence, QShortcut
 from PyQt6.QtWidgets import QListWidgetItem, QMenu, QMessageBox, QWidget
 
-from GUI.Session.Session import SessionDataChanged, SessionManager
+from GUI.Session.session import SessionDataChanged, SessionManager
 from GUI.States import states
 from GUI.Utils import guiutils, utilwidgets
 from GUI.Widgets.Bookmark.Form.BookmarkWidget import Ui_Form
