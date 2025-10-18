@@ -55,7 +55,7 @@ class QRegisterLabel(QLabel):
         if register_dialog.exec():
             if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
                 return
-            debugcore.set_convenience_variable(current_register, register_dialog.get_values())
+            debugcore.set_convenience_variable(current_register, register_dialog.get_values()[0])
             self.set_value(debugcore.read_registers()[current_register])
 
     def contextMenuEvent(self, event: QContextMenuEvent):
