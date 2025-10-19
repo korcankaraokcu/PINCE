@@ -970,7 +970,7 @@ def disassemble(expression, offset_or_address):
 
 def convert_to_hex(expression):
     """Converts numeric values in the expression into their hex equivalents
-    Respects edge cases like indexed maps and keeps indexes as decimals
+    Respects edge cases like indexed maps and keeps indices as decimals
 
     Args:
         expression (str): Any gdb expression

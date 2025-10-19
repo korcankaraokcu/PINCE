@@ -40,7 +40,7 @@ gdb_command_source = lambda command_file: compile(r"&\".*source\s" + command_fil
 # This will only match hex patterns without 0x and ignore the ones below:
 # Hex patterns with 0x such as 0x5123
 # Map symbols of PINCE, such as kmines[2]
-expression_with_hex = compile(r"\b0x[0-9a-fA-F]+|[a-zA-Z_]\w*\[\d+\]|\b([0-9a-fA-F]+)\b")
+expression_with_hex = compile(r"\b0x[0-9a-fA-F]+|[a-zA-Z_]\w*(?:\.*\d*)+\[\d+\]|\b(?<!\.)([0-9a-fA-F]+)\b")
 # 0x00007fd81d4c7400 <__printf+0>:\t48 81 ec d8 00 00 00\tsub    rsp,0xd8\n
 disassemble_output = compile(
     r"""
