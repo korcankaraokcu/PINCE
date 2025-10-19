@@ -484,6 +484,7 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
         cwd=libpince_dir,
         env=os.environ,
         encoding="utf-8",
+        codec_errors="replace",
     )
     child.setecho(False)
     child.delaybeforesend = 0
