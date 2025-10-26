@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: FAQ
+    url: https://github.com/korcankaraokcu/PINCE/wiki/Frequently-Asked-Questions
+    about: Frequently Asked Questions
+  - name: Troubleshooting
+    url: https://github.com/korcankaraokcu/PINCE/wiki/Troubleshooting
+    about: Find solutions to known problems
+  - name: Discord Community
+    url: https://discord.gg/jVt3BzTSpz
+    about: Ask questions and discuss PINCE with the community

@@ -1,0 +1,47 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for PINCE
+title: "[FEATURE] "
+type: feature
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a new feature! Please fill out the information below to help us understand your request.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm the following before submitting your feature request
+      options:
+        - label: I have looked through the Wiki and asked (either in Discord or GitHub discussions) to confirm this feature doesn't already exist
+          required: true
+        - label: I have searched existing issues (both open and closed) to ensure this hasn't been requested before
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the feature you'd like to see
+      placeholder: Describe the feature
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case / Motivation
+      description: Explain why this feature would be useful and what problem it solves
+      placeholder: |
+        What problem does this solve? How would you use this feature?
+        Example: "When debugging games with dynamic memory allocation, it would be helpful to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples / References
+      description: Are there similar features in other tools (Cheat Engine, x64dbg, etc.) or examples that illustrate this feature?
+      placeholder: Link to documentation, screenshots, or describe similar implementations
