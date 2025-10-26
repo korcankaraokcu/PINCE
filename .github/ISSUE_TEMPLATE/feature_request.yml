@@ -1,7 +1,6 @@
 name: Feature Request
 description: Suggest a new feature or enhancement for PINCE
 title: "[FEATURE] "
-type: feature
 body:
   - type: markdown
     attributes:
