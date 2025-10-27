@@ -310,9 +310,13 @@ class MainForm(QMainWindow, MainWindow):
             states.hotkeys.exact_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.EXACT),
             states.hotkeys.not_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.NOT),
             states.hotkeys.increased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.INCREASED),
-            states.hotkeys.increased_by_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.INCREASED_BY),
+            states.hotkeys.increased_by_scan_hotkey: lambda: self.nextscan_hotkey_pressed(
+                typedefs.SCAN_TYPE.INCREASED_BY
+            ),
             states.hotkeys.decreased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.DECREASED),
-            states.hotkeys.decreased_by_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.DECREASED_BY),
+            states.hotkeys.decreased_by_scan_hotkey: lambda: self.nextscan_hotkey_pressed(
+                typedefs.SCAN_TYPE.DECREASED_BY
+            ),
             states.hotkeys.less_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.LESS),
             states.hotkeys.more_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.MORE),
             states.hotkeys.between_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.BETWEEN),
@@ -520,10 +524,6 @@ class MainForm(QMainWindow, MainWindow):
         show_signed = menu.addAction(tr.SHOW_SIGNED)
         toggle_record = menu.addAction(f"{tr.TOGGLE}[Space]")
         toggle_children = menu.addAction(f"{tr.TOGGLE_CHILDREN}[Ctrl+Space]")
-        freeze_menu = menu.addMenu(tr.FREEZE)
-        freeze_default = freeze_menu.addAction(tr.DEFAULT)
-        freeze_inc = freeze_menu.addAction(tr.INCREMENTAL)
-        freeze_dec = freeze_menu.addAction(tr.DECREMENTAL)
         menu.addSeparator()
         browse_region = menu.addAction(f"{tr.BROWSE_MEMORY_REGION}[Ctrl+B]")
         disassemble = menu.addAction(f"{tr.DISASSEMBLE_ADDRESS}[Ctrl+D]")
@@ -551,7 +551,6 @@ class MainForm(QMainWindow, MainWindow):
                 show_signed,
                 toggle_record,
                 toggle_children,
-                freeze_menu.menuAction(),
                 browse_region,
                 disassemble,
                 pointer_scan,
@@ -574,12 +573,8 @@ class MainForm(QMainWindow, MainWindow):
                     guiutils.delete_menu_entries(menu, [show_unsigned, show_dec])
                 elif value_type.value_repr is typedefs.VALUE_REPR.SIGNED:
                     guiutils.delete_menu_entries(menu, [show_signed, show_dec])
-                if current_row.checkState(FROZEN_COL) == Qt.CheckState.Unchecked:
-                    guiutils.delete_menu_entries(menu, [freeze_menu.menuAction()])
             else:
-                guiutils.delete_menu_entries(
-                    menu, [show_hex, show_dec, show_unsigned, show_signed, freeze_menu.menuAction()]
-                )
+                guiutils.delete_menu_entries(menu, [show_hex, show_dec, show_unsigned, show_signed])
             if current_row.childCount() == 0:
                 guiutils.delete_menu_entries(menu, [toggle_children])
             guiutils.delete_menu_entries(menu, [pointer_scanner])
@@ -606,9 +601,6 @@ class MainForm(QMainWindow, MainWindow):
             show_signed: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.SIGNED),
             toggle_record: self.toggle_records,
             toggle_children: lambda: self.toggle_records(True),
-            freeze_default: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT),
-            freeze_inc: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.INCREMENT),
-            freeze_dec: lambda: self.change_freeze_type(typedefs.FREEZE_TYPE.DECREMENT),
             browse_region: lambda: self.browse_region_for_address(current_address),
             disassemble: lambda: self.disassemble_for_address(current_address),
             pointer_scanner: self.exec_pointer_scanner,
@@ -682,7 +674,7 @@ class MainForm(QMainWindow, MainWindow):
             # No type has been specified, iterate through the freeze types
             # This usually happens if user clicks the freeze type text instead of the checkbox
             frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
-            if frozen.freeze_type == typedefs.FREEZE_TYPE.DECREMENT:
+            if frozen.freeze_type == typedefs.FREEZE_TYPE.ALLOW_DECREMENT:
                 # Decrement is the last freeze type
                 freeze_type = typedefs.FREEZE_TYPE.DEFAULT
             else:
@@ -695,10 +687,10 @@ class MainForm(QMainWindow, MainWindow):
                 if freeze_type == typedefs.FREEZE_TYPE.DEFAULT:
                     row.setText(FROZEN_COL, "")
                     row.setForeground(FROZEN_COL, QBrush())
-                elif freeze_type == typedefs.FREEZE_TYPE.INCREMENT:
+                elif freeze_type == typedefs.FREEZE_TYPE.ALLOW_INCREMENT:
                     row.setText(FROZEN_COL, "▲")
                     row.setForeground(FROZEN_COL, QBrush(QColor(0, 255, 0)))
-                elif freeze_type == typedefs.FREEZE_TYPE.DECREMENT:
+                elif freeze_type == typedefs.FREEZE_TYPE.ALLOW_DECREMENT:
                     row.setText(FROZEN_COL, "▼")
                     row.setForeground(FROZEN_COL, QBrush(QColor(255, 0, 0)))
             else:
@@ -1651,9 +1643,9 @@ class MainForm(QMainWindow, MainWindow):
                     if new_value == None:
                         continue
                     if (
-                        freeze_type == typedefs.FREEZE_TYPE.INCREMENT
+                        freeze_type == typedefs.FREEZE_TYPE.ALLOW_INCREMENT
                         and new_value > value
-                        or freeze_type == typedefs.FREEZE_TYPE.DECREMENT
+                        or freeze_type == typedefs.FREEZE_TYPE.ALLOW_DECREMENT
                         and new_value < value
                     ):
                         frozen.value = new_value

@@ -1727,16 +1727,6 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Incremental</source>
-      <translation>递增</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
-      <source>Decremental</source>
-      <translation>递减</translation>
-    </message>
-    <message>
-      <location filename="../../tr/tr.py" line="0" />
       <source>Browse this memory region</source>
       <translation>浏览此内存区域</translation>
     </message>
