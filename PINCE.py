@@ -41,6 +41,7 @@ from PyQt6.QtGui import (
     QKeyEvent,
     QMouseEvent,
     QWheelEvent,
+    QPalette,
 )
 from PyQt6.QtWidgets import (
     QApplication,
@@ -436,6 +437,14 @@ class MainForm(QMainWindow, MainWindow):
         self.is_scanning = False
 
         guiutils.center(self)
+        self.fix_palette()
+
+    def fix_palette(self):
+        fixed_palette = self.lineEdit_Scan.palette()
+        fixed_palette.setColor(
+            QPalette.ColorRole.PlaceholderText, fixed_palette.color(QPalette.ColorRole.Text)
+        )
+        self.lineEdit_Scan.setPalette(fixed_palette)
 
     def settings_changed(self):
         if states.auto_attach:
