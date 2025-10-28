@@ -2087,12 +2087,6 @@ Commands:
 phase-out: Detach from the current process               |
 phase-in: Attach back to the previously detached process |
 ---------------------------------------------------------------------------------------------------
-pince-init-so-file so_file_path: Initializes 'lib' variable                                       |
-pince-get-so-file-information: Get information about current lib                                  |
-pince-execute-from-so-file lib.func(params): Execute a function from lib                          |
-# Check https://github.com/korcankaraokcu/PINCE/wiki#extending-pince-with-so-files for an example |
-# CLI output mode doesn't work very well with .so extensions, use MI output mode instead          |
----------------------------------------------------------------------------------------------------
 You can change the output mode from bottom right
 Changing output mode only affects commands sent. Any other output coming from external sources(e.g async output) will be shown in MI format</source>
       <translation type="unfinished" />

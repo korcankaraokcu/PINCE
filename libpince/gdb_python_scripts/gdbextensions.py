@@ -365,42 +365,6 @@ class TraceInstructions(gdb.Command):
         utils.change_trace_status(pid, typedefs.TRACE_STATUS.TRACING)
 
 
-class InitSoFile(gdb.Command):
-    """Usage: pince-init-so-file so_file_path"""
-
-    def __init__(self):
-        super(InitSoFile, self).__init__("pince-init-so-file", gdb.COMMAND_USER)
-
-    def invoke(self, arg, from_tty):
-        global lib
-        lib = ctypes.CDLL(arg)
-        print("Successfully loaded so file from " + arg)
-
-
-class GetSoFileInformation(gdb.Command):
-    def __init__(self):
-        super(GetSoFileInformation, self).__init__("pince-get-so-file-information", gdb.COMMAND_USER)
-
-    def invoke(self, arg, from_tty):
-        if not lib:
-            print("so file isn't initialized, use the command pince-init-so-file")
-            return
-        print("Loaded so file:\n" + str(lib) + "\n")
-        print("Available resources:")
-        print(os.system("nm -D --defined-only " + lib._name))
-
-
-class ExecuteFromSoFile(gdb.Command):
-    """Usage: pince-execute-from-so-file lib.func(params)"""
-
-    def __init__(self):
-        super(ExecuteFromSoFile, self).__init__("pince-execute-from-so-file", gdb.COMMAND_USER)
-
-    def invoke(self, arg, from_tty):
-        global lib
-        gdb.execute("p " + str(eval(arg.strip())))
-
-
 class DissectCode(gdb.Command):
     def __init__(self):
         super(DissectCode, self).__init__("pince-dissect-code", gdb.COMMAND_USER)
@@ -594,9 +558,6 @@ GetTrackBreakpointInfo()
 PhaseOut()
 PhaseIn()
 TraceInstructions()
-InitSoFile()
-GetSoFileInformation()
-ExecuteFromSoFile()
 DissectCode()
 SearchReferencedCalls()
 ExamineExpressions()

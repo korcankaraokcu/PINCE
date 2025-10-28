@@ -2095,34 +2095,9 @@ Commands:
 phase-out: Detach from the current process               |
 phase-in: Attach back to the previously detached process |
 ---------------------------------------------------------------------------------------------------
-pince-init-so-file so_file_path: Initializes 'lib' variable                                       |
-pince-get-so-file-information: Get information about current lib                                  |
-pince-execute-from-so-file lib.func(params): Execute a function from lib                          |
-# Check https://github.com/korcankaraokcu/PINCE/wiki#extending-pince-with-so-files for an example |
-# CLI output mode doesn't work very well with .so extensions, use MI output mode instead          |
----------------------------------------------------------------------------------------------------
 You can change the output mode from bottom right
 Changing output mode only affects commands sent. Any other output coming from external sources(e.g async output) will be shown in MI format</source>
-      <translation>快捷键：
-----------------------------
-发送 = Enter
-多行模式 = Ctrl+Enter
-补全命令 = Tab
-----------------------------
-Commands:
-----------------------------
-/clear: 清空控制台
-phase-out: 分离当前进程
-phase-in: 重新附加上一个分离的进程
----------------------------------------------------------------------------------------------------
-pince-init-so-file so_file_path：初始化 'lib' 变量
-pince-get-so-file-information：获得当前 lib 的信息
-pince-execute-from-so-file lib.func(params)：运行 lib 中的一个函数
-# 查看 https://github.com/korcankaraokcu/PINCE/wiki#extending-pince-with-so-files 获取示例
-# CLI 输出模式与 .so 扩展兼容不佳, 请改用 MI 输出模式
----------------------------------------------------------------------------------------------------
-你可以在右下角切换输出模式
-更改输出模式仅影响命令的发送。来自外部源的任何其他输出（例如异步输出）将以 MI 格式显示</translation>
+      <translation type="unfinished" />
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
