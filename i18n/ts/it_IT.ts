@@ -856,7 +856,10 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Freeze the value</source>
+      <source>Freeze the value. Click arrows to cycle freeze types:
+- No arrow: Frozen at current value
+- ▲: Allow increments only
+- ▼: Allow decrements only</source>
       <translation type="unfinished" />
     </message>
     <message>

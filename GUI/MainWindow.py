@@ -267,7 +267,10 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         self.treeWidget_AddressTable.setSortingEnabled(True)
         self.treeWidget_AddressTable.headerItem().setText(0, _translate("MainWindow", "Freeze"))
-        self.treeWidget_AddressTable.headerItem().setToolTip(0, _translate("MainWindow", "Freeze the value"))
+        self.treeWidget_AddressTable.headerItem().setToolTip(0, _translate("MainWindow", "Freeze the value. Click arrows to cycle freeze types:\n"
+"- No arrow: Frozen at current value\n"
+"- ▲: Allow increments only\n"
+"- ▼: Allow decrements only"))
         self.treeWidget_AddressTable.headerItem().setText(1, _translate("MainWindow", "Description"))
         self.treeWidget_AddressTable.headerItem().setText(2, _translate("MainWindow", "Address"))
         self.treeWidget_AddressTable.headerItem().setText(3, _translate("MainWindow", "Type"))
