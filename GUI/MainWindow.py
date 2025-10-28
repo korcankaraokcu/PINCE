@@ -267,7 +267,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         self.treeWidget_AddressTable.setSortingEnabled(True)
         self.treeWidget_AddressTable.headerItem().setText(0, _translate("MainWindow", "Freeze"))
-        self.treeWidget_AddressTable.headerItem().setToolTip(0, _translate("MainWindow", "Freeze the value. Click arrows to cycle freeze types:\n"
+        self.treeWidget_AddressTable.headerItem().setToolTip(0, _translate("MainWindow", "Freeze the value. Click just to the right of checkbox to cycle between freeze types:\n"
 "- No arrow: Frozen at current value\n"
 "- ▲: Allow increments only\n"
 "- ▼: Allow decrements only"))

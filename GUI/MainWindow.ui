@@ -43,7 +43,7 @@
         <string>Freeze</string>
        </property>
        <property name="toolTip">
-        <string>Freeze the value. Click arrows to cycle freeze types:
+        <string>Freeze the value. Click just to the right of checkbox to cycle between freeze types:
 - No arrow: Frozen at current value
 - ▲: Allow increments only
 - ▼: Allow decrements only</string>

@@ -856,7 +856,7 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../GUI/MainWindow.ui" line="0" />
-      <source>Freeze the value. Click arrows to cycle freeze types:
+      <source>Freeze the value. Click just to the right of checkbox to cycle between freeze types:
 - No arrow: Frozen at current value
 - ▲: Allow increments only
 - ▼: Allow decrements only</source>
