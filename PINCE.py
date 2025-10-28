@@ -4668,7 +4668,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
         bytes_aob = self.lineEdit_Bytes.text()
         if utils.parse_string(bytes_aob, typedefs.VALUE_INDEX.AOB):
             address = int(self.lineEdit_Address.text(), 0)
-            instruction = utils.get_opcodes(address, bytes_aob, debugcore.inferior_arch)
+            instruction = utils.disassemble(bytes_aob, address, debugcore.inferior_arch)
             if instruction:
                 self.set_valid(True)
                 self.lineEdit_Instruction.setText(instruction)

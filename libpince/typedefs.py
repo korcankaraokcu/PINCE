@@ -609,3 +609,10 @@ class KeyboardModifiersTupleDict(collections.abc.Mapping):
 
     def __len__(self):
         return len(self._storage)
+
+
+class AllocatedMemory:
+    def __init__(self, address: int, size: int):
+        self.address = address
+        self.size = size
+        # TODO brkzlr: Maybe expand with starting page address and old protection to restore state after deleting allocated memory

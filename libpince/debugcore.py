@@ -105,6 +105,13 @@ mem_file = "/proc/" + str(currentpid) + "/mem"
 # A string. Determines which signal to use to interrupt the process
 interrupt_signal = "SIGINT"
 
+# Dictionary that maps an id or name to allocated memory.
+# If an user allocates memory without a name, it will be given a random ID set as string.
+allocated_memory_chunks: dict[str, typedefs.AllocatedMemory] = {}
+
+# ID generator used for the above
+allocated_memory_gen_id = 0
+
 """
 When PINCE was first launched, it used gdb 7.7.1, which is a very outdated version of gdb
 interpreter-exec mi command of gdb showed some buggy behaviour at that time
@@ -785,6 +792,45 @@ def memory_handle():
         BinaryIO: A file handle that points to the memory file of the current process
     """
     return open(mem_file, "rb")
+
+
+@execute_with_temporary_interruption
+def allocate_memory(size: int, name: str | None) -> int:
+    global allocated_memory_chunks
+    global allocated_memory_gen_id
+    if size == 0:
+        # TODO brkzlr: Maybe error log?
+        return 0
+    if name == None:
+        allocated_memory_gen_id += 1
+        name = str(allocated_memory_gen_id)
+    output = send_command(f"p (void*)malloc({size})")
+    match = regexes.hex_number.search(output)
+    if match == None:
+        # TODO brkzlr: Allocation failed, maybe log?
+        return 0
+    allocated_memory = typedefs.AllocatedMemory(int(match[0], 16), size)
+    allocated_memory_chunks[name] = allocated_memory
+    page_size = os.sysconf("SC_PAGE_SIZE")
+    page_memory_addr = allocated_memory.address & ~(page_size - 1)
+    send_command(f"p (int)mprotect({page_memory_addr}, {page_size}, 7)")  # PROT_READ | PROT_WRITE | PROT_EXEC = 7
+    return allocated_memory.address
+
+
+@execute_with_temporary_interruption
+def free_memory(name: str) -> bool:
+    global allocated_memory_chunks
+    if str == None or str == "":
+        # TODO brkzlr: Maybe error log?
+        return False
+    address = allocated_memory_chunks.get(name)
+    if address == None:
+        # TODO brkzlr: log wrong key
+        return False
+    # This shit will crash the process if you call it on invalid or already freed memory.
+    send_command(f"p (void)free({address})")
+    del allocated_memory_chunks[name]
+    return True
 
 
 def read_memory(

@@ -60,7 +60,7 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
         for row, (address, aob) in enumerate(modified_instructions.items()):
             self.tableWidget_Instructions.setItem(row, ADDR_COL, QTableWidgetItem(hex(address)))
             self.tableWidget_Instructions.setItem(row, AOB_COL, QTableWidgetItem(aob))
-            instr_name = utils.get_opcodes(address, aob, debugcore.get_inferior_arch())
+            instr_name = utils.disassemble(aob, address, debugcore.get_inferior_arch())
             if not instr_name:
                 instr_name = "??"
             self.tableWidget_Instructions.setItem(row, NAME_COL, QTableWidgetItem(instr_name))

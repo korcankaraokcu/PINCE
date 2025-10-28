@@ -658,12 +658,12 @@ def modulo_address(int_address, arch_type):
     raise Exception("arch_type must be a member of typedefs.INFERIOR_ARCH")
 
 
-def get_opcodes(address, aob, inferior_arch):
+def disassemble(aob, address, inferior_arch):
     """Returns the instructions from the given array of bytes
 
     Args:
-        address (int): The address where the opcode starts from
         aob (str): Bytes of the opcode as an array of bytes
+        address (int): The address where the opcode starts from
         inferior_arch (int): Architecture type (x86, x64). Can be a member of typedefs.INFERIOR_ARCH
 
     Returns:
@@ -691,7 +691,7 @@ def assemble(instructions, address, inferior_arch):
 
     Args:
         instructions (str): A string of instructions, multiple entries separated by ;
-        address (int): Address of the instruction
+        address (int): Starting address of the instructions
         inferior_arch (int): Can be a member of typedefs.INFERIOR_ARCH
 
     Returns:
