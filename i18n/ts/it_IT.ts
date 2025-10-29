@@ -1594,6 +1594,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
+      <source>Cancel ongoing GDB command</source>
+      <translation type="unfinished" />
+    </message>
+    <message>
+      <location filename="../../tr/tr.py" line="0" />
       <source>Toggle attach/detach</source>
       <translation type="unfinished" />
     </message>

@@ -85,7 +85,7 @@ gdb_output = ""
 gdb_async_output = typedefs.RegisterQueue()
 
 # A boolean value. Used to cancel the last gdb command sent
-# Use the function cancel_last_command to make use of this variable
+# Use the function cancel_ongoing_command to make use of this variable
 # Return value of the current send_command call will be an empty string
 cancel_send_command = False
 
@@ -144,11 +144,17 @@ def set_gdb_output_mode(output_mode_tuple):
     gdb_output_mode = output_mode_tuple
 
 
-def cancel_last_command():
-    """Cancels the last gdb command sent if it's still present"""
+def cancel_ongoing_command() -> bool:
+    """Cancels the last gdb command sent if it's still present
+
+    Returns:
+        bool: True if cancel was successful, False if nothing to cancel
+    """
     if lock_send_command.locked():
         global cancel_send_command
         cancel_send_command = True
+        return True
+    return False
 
 
 def send_command(
@@ -2156,7 +2162,7 @@ def get_dissect_code_status():
 def cancel_dissect_code():
     """Finishes the current dissect code process early on"""
     if last_gdb_command.find("pince-dissect-code") != -1:
-        cancel_last_command()
+        cancel_ongoing_command()
 
 
 def get_dissect_code_data(referenced_strings=True, referenced_jumps=True, referenced_calls=True):

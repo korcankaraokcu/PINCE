@@ -42,6 +42,7 @@ class TranslationConstants(QObject):
     PAUSE_HOTKEY = QT_TR_NOOP("Pause the process")
     BREAK_HOTKEY = QT_TR_NOOP("Break the process")
     CONTINUE_HOTKEY = QT_TR_NOOP("Continue the process")
+    CANCEL_HOTKEY = QT_TR_NOOP("Cancel ongoing GDB command")
     TOGGLE_ATTACH_HOTKEY = QT_TR_NOOP("Toggle attach/detach")
     EXACT_SCAN_HOTKEY = QT_TR_NOOP("Next Scan - Exact")
     NOT_SCAN_HOTKEY = QT_TR_NOOP("Next Scan - Not")

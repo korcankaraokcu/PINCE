@@ -264,35 +264,11 @@ def except_hook(exception_type, value, tb):
 # So, we must override sys.excepthook to avoid calling of qFatal()
 sys.excepthook = except_hook
 
-quit_prompt_active = False
-
 
 def signal_handler(signal, frame):
-    global quit_prompt_active
     with QSignalBlocker(app):
-        if debugcore.lock_send_command.locked():
-            print("\nCancelling the last GDB command")
-            debugcore.cancel_last_command()
-        else:
-            if quit_prompt_active:
-                print()  # Prints a newline so the terminal looks nicer when we quit
-                debugcore.detach()
-                quit()
-            quit_prompt_active = True
-            print("\nNo GDB command to cancel, quit PINCE? (y/n)", end="", flush=True)
-            while True:
-                # Using select() instead of input() because it causes the bug below
-                # QBackingStore::endPaint() called with active painter
-                rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
-                if rlist:
-                    user_input = sys.stdin.readline().strip().lower()
-                    break
-            if user_input.startswith("y"):
-                debugcore.detach()
-                quit()
-            else:
-                print("Quit aborted")
-            quit_prompt_active = False
+        debugcore.detach()
+        quit()
 
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -307,6 +283,7 @@ class MainForm(QMainWindow, MainWindow):
             states.hotkeys.pause_hotkey: self.pause_hotkey_pressed,
             states.hotkeys.break_hotkey: self.break_hotkey_pressed,
             states.hotkeys.continue_hotkey: self.continue_hotkey_pressed,
+            states.hotkeys.cancel_hotkey: self.cancel_hotkey_pressed,
             states.hotkeys.toggle_attach_hotkey: self.toggle_attach_hotkey_pressed,
             states.hotkeys.exact_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.EXACT),
             states.hotkeys.not_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.NOT),
@@ -488,6 +465,11 @@ class MainForm(QMainWindow, MainWindow):
             or debugcore.active_trace
         ):
             debugcore.continue_inferior()
+
+    @utils.ignore_exceptions
+    def cancel_hotkey_pressed(self):
+        if debugcore.cancel_ongoing_command():
+            print("Cancelled the ongoing GDB command")
 
     @utils.ignore_exceptions
     def toggle_attach_hotkey_pressed(self):
@@ -2252,7 +2234,7 @@ class LoadingDialogForm(QDialog, LoadingDialog):
 
     # TODO: This function only cancels the last command sent, redesign this if it's needed to cancel non-gdb functions
     def cancel_thread(self):
-        debugcore.cancel_last_command()
+        debugcore.cancel_ongoing_command()
         self.background_thread.wait()
 
     def exec(self):
