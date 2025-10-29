@@ -92,6 +92,10 @@ cancel_send_command = False
 # A boolean value. Used by state_observe_thread to check if a trace session is active
 active_trace = False
 
+# A boolean value. Set to True when a tracking breakpoint (on_hit != BREAK) was the last stop
+# This prevents the subsequent *running event from notifying the UI
+last_stop_was_tracking = False
+
 # A string. Holds the last command sent to gdb
 last_gdb_command = ""
 
@@ -254,6 +258,7 @@ def state_observe_thread():
         if len(matches) > 0:
             global stop_reason
             global inferior_status
+            global last_stop_was_tracking
             old_status = inferior_status
             for match in matches:
                 if match[0].startswith('stopped,reason="exited'):
@@ -271,13 +276,31 @@ def state_observe_thread():
                 inferior_status = typedefs.INFERIOR_STATUS.STOPPED
             else:
                 inferior_status = typedefs.INFERIOR_STATUS.RUNNING
-            bp_num = regexes.breakpoint_number.search(stop_info)
-            # Return -1 for invalid breakpoints to ignore racing conditions
-            if not (
-                old_status == inferior_status
-                or (bp_num and breakpoint_on_hit_dict.get(bp_num.group(1), -1) != typedefs.BREAKPOINT_ON_HIT.BREAK)
-                or active_trace
-            ):
+
+            # Check if the FINAL stopped event in this batch is a tracking breakpoint
+            # We need to check the last *stopped event, not just any tracking bp in the batch
+            # Because there might be multiple events arriving in same buffer
+            if inferior_status == typedefs.INFERIOR_STATUS.STOPPED:
+                # Find the LAST stopped event in matches (working backwards)
+                last_stop_was_tracking = False
+                for match in reversed(matches):
+                    if match[0]:  # This is a *stopped event
+                        bp_match = regexes.breakpoint_number.search(match[0])
+                        if bp_match:
+                            bp_num_str = bp_match.group(1)
+                            bp_on_hit = breakpoint_on_hit_dict.get(bp_num_str, -1)
+                            last_stop_was_tracking = bp_on_hit != typedefs.BREAKPOINT_ON_HIT.BREAK
+                        # Found the last stopped event, stop searching
+                        break
+            # If we ended in RUNNING state, last_stop_was_tracking persists from previous STOPPED event
+
+            # Don't notify UI if:
+            # 1. Status hasn't changed
+            # 2. Last stop was a tracking breakpoint
+            # 3. A trace is active
+            should_not_notify = old_status == inferior_status or last_stop_was_tracking or active_trace
+
+            if not should_not_notify:
                 with status_changed_condition:
                     status_changed_condition.notify_all()
 
@@ -470,6 +493,7 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     global gdb_output
     global cancel_send_command
     global last_gdb_command
+    global last_stop_was_tracking
     utils.init_user_files()
     detach()
 
@@ -482,6 +506,7 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     gdb_output = ""
     cancel_send_command = False
     last_gdb_command = ""
+    last_stop_was_tracking = False
 
     libpince_dir = utils.get_libpince_directory()
     is_appimage = os.environ.get("APPDIR")
