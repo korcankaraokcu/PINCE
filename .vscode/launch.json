@@ -14,7 +14,7 @@
             "sudo": true,
             "console": "integratedTerminal",
             "program": "${workspaceFolder}/PINCE.py",
-            "python": "${workspaceFolder}/.venv/PINCE/bin/python3"
+            "python": "${workspaceFolder}/.venv/bin/python3"
         }
     ]
 }

@@ -215,10 +215,10 @@ fi
 sudo ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES} || exit_on_error
 
 # Prepare Python virtual environment
-if [ ! -d ".venv/PINCE" ]; then
-	python3 -m venv .venv/PINCE
+if [ ! -d ".venv/bin" ]; then
+	python3 -m venv .venv
 fi
-. .venv/PINCE/bin/activate
+. .venv/bin/activate
 pip3 install --upgrade pip || exit_on_error
 
 # shellcheck disable=SC2086

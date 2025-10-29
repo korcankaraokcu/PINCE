@@ -22,13 +22,13 @@ if [ "$(id -u)" = "0" ]; then
 fi
 
 SCRIPTDIR=$(cd -- "$(dirname -- "$0")" && pwd -P)
-if [ ! -d "${SCRIPTDIR}/.venv/PINCE" ]; then
+if [ ! -d "${SCRIPTDIR}/.venv/bin" ]; then
 	echo "Please run \"sh install.sh\" first!"
 	exit 1
 fi
-. ${SCRIPTDIR}/.venv/PINCE/bin/activate
+. ${SCRIPTDIR}/.venv/bin/activate
 
 # Preserve env vars to keep settings like theme preferences.
 # Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
 # so we need to force PATH preservation with venv activated user's PATH.
-sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 ${SCRIPTDIR}/.venv/PINCE/bin/python3 ${SCRIPTDIR}/PINCE.py
+sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 ${SCRIPTDIR}/.venv/bin/python3 ${SCRIPTDIR}/PINCE.py

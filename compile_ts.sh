@@ -1,7 +1,7 @@
 #!/bin/bash
 script_dir="$(dirname "$(readlink -f "$0")")"
 cd $script_dir
-venv_activator=".venv/PINCE/bin/activate"
+venv_activator=".venv/bin/activate"
 
 if [ -f "$venv_activator" ]; then
 	. "$venv_activator"
