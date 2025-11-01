@@ -2519,7 +2519,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def initialize_register_view(self):
         self.pushButton_ShowFloatRegisters.clicked.connect(self.pushButton_ShowFloatRegisters_clicked)
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+        if guiutils.check_inferior_running(self, show_message=False):
             self.pushButton_ShowFloatRegisters.setEnabled(False)
 
     def initialize_stack_view(self):
@@ -2651,7 +2651,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             debugcore.execute_till_return()
 
     def set_address(self):
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+        if guiutils.check_inferior_running(self):
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -3282,7 +3282,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.FS.set_value(registers["fs"])
 
     def update_stacktrace(self):
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+        if guiutils.check_inferior_running(self, show_message=False):
             return
         stack_trace_info = debugcore.get_stacktrace_info()
         self.tableWidget_StackTrace.setRowCount(0)
@@ -3314,6 +3314,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if selected_row == -1:
             guiutils.delete_menu_entries(menu, [clipboard_menu.menuAction()])
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
+        if guiutils.check_inferior_running(self, show_message=False):
+            refresh.setEnabled(False)
         if debugcore.currentpid == -1:
             menu.clear()
             menu.addMenu(clipboard_menu)
@@ -3332,7 +3334,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             pass
 
     def update_stack(self):
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+        if guiutils.check_inferior_running(self, show_message=False):
             return
         stack_info: list[str] = debugcore.get_stack_info(from_base_pointer=self.stack_from_base_pointer)
         self.tableWidget_Stack.setRowCount(0)
@@ -3392,7 +3394,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         menu = QMenu()
         switch_to_stacktrace = menu.addAction(tr.STACKTRACE)
         toggle_stack_pointer = menu.addAction(tr.TOGGLE_STACK_FROM_SP_BP)
-        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+        if guiutils.check_inferior_running(self, show_message=False):
             toggle_stack_pointer.setEnabled(False)
         menu.addSeparator()
         clipboard_menu = menu.addMenu(tr.COPY_CLIPBOARD)
@@ -3400,6 +3402,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         copy_value = clipboard_menu.addAction(tr.COPY_VALUE)
         copy_points_to = clipboard_menu.addAction(tr.COPY_POINTS_TO)
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
+        if guiutils.check_inferior_running(self, show_message=False):
+            refresh.setEnabled(False)
         menu.addSeparator()
         show_in_disas = menu.addAction(f"{tr.DISASSEMBLE_VALUE_POINTER}[Ctrl+D]")
         show_in_hex = menu.addAction(f"{tr.HEXVIEW_VALUE_POINTER}[Ctrl+H]")
@@ -3940,7 +3944,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         utils.execute_command_as_user('python3 -m webbrowser "https://korcankaraokcu.github.io/PINCE/"')
 
     def pushButton_ShowFloatRegisters_clicked(self):
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+        if guiutils.check_inferior_running(self):
             return
         self.float_registers_widget.update_registers()
         guiutils.center_to_parent(self.float_registers_widget)
@@ -3972,7 +3976,7 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
             self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(value))
 
     def set_register(self, index):
-        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+        if guiutils.check_inferior_running(self):
             return
         current_row = index.row()
         if self.currentWidget() == self.FPU:
@@ -3986,7 +3990,7 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         label_text = tr.ENTER_REGISTER_VALUE.format(current_register.upper())
         register_dialog = utilwidgets.InputDialog(self, [(label_text, current_value)])
         if register_dialog.exec():
-            if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+            if guiutils.check_inferior_running(self):
                 return
             if self.currentWidget() == self.XMM:
                 current_register += ".v4_float"
@@ -4003,14 +4007,19 @@ class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
 
     def update_stacktrace(self):
         self.listWidget_ReturnAddresses.clear()
-        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+        self.textBrowser_Info.clear()
+        error_message = guiutils.check_inferior_running(self, show_message=False)
+        if error_message:
+            self.textBrowser_Info.setText(error_message)
             return
         return_addresses = debugcore.get_stack_frame_return_addresses()
         self.listWidget_ReturnAddresses.addItems(return_addresses)
 
     def update_frame_info(self, index):
-        if debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
-            self.textBrowser_Info.setText(tr.PROCESS_RUNNING)
+        self.textBrowser_Info.clear()
+        error_message = guiutils.check_inferior_running(self, show_message=False)
+        if error_message:
+            self.textBrowser_Info.setText(error_message)
             return
         frame_info = debugcore.get_stack_frame_info(index)
         self.textBrowser_Info.setText(frame_info)

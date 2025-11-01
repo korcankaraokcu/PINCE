@@ -1961,7 +1961,7 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
       <location filename="../../tr/tr.py" line="0" />
-      <source>Process is running</source>
+      <source>This requires the process to be stopped</source>
       <translation type="unfinished" />
     </message>
     <message>

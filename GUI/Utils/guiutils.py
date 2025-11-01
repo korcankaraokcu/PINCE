@@ -27,10 +27,11 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QMenu,
     QLayout,
+    QMessageBox,
 )
 from PyQt6.QtCore import QObject, QRegularExpression
 from PyQt6.QtGui import QShortcut, QRegularExpressionValidator
-from libpince import utils, typedefs, regexes
+from libpince import debugcore, utils, typedefs, regexes
 from tr.tr import TranslationConstants as tr
 from typing import overload
 
@@ -266,3 +267,25 @@ def append_shortcut_to_tooltip(qt_object: QObject, shortcut: QShortcut):
         shortcut (QShortcut): Self-explanatory
     """
     qt_object.setToolTip(qt_object.toolTip() + "[" + shortcut.key().toString() + "]")
+
+
+def check_inferior_running(widget: QWidget = None, show_message: bool = True) -> str | None:
+    """Checks if a process is selected and is running
+
+    Args:
+        widget (QWidget | None): Parent widget for the message box. If None, message box will have no parent
+        show_message (bool): If True, a message box will be shown if the inferior is running
+
+    Returns:
+        str: The error message, if the inferior is running or no process is selected
+        None: If the inferior is stopped and a process is selected
+    """
+    if debugcore.currentpid == -1:
+        if show_message:
+            QMessageBox.information(widget, tr.ERROR, tr.NO_PROCESS_SELECTED)
+        return tr.NO_PROCESS_SELECTED
+    if debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+        if show_message:
+            QMessageBox.information(widget, tr.ERROR, tr.REQUIRE_PROCESS_STOP)
+        return tr.REQUIRE_PROCESS_STOP
+    return None
