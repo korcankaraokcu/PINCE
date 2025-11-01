@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GUI.Utils.guiutils &#8212; PINCE  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for GUI.Utils.guiutils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Copyright (C) Korcan Karaokçu &lt;korcankaraokcu@gmail.com&gt;</span>
+
+<span class="sd">This program is free software: you can redistribute it and/or modify</span>
+<span class="sd">it under the terms of the GNU General Public License as published by</span>
+<span class="sd">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="sd">(at your option) any later version.</span>
+
+<span class="sd">This program is distributed in the hope that it will be useful,</span>
+<span class="sd">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="sd">GNU General Public License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU General Public License</span>
+<span class="sd">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PyQt6.QtWidgets</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">QWidget</span><span class="p">,</span>
+    <span class="n">QScrollBar</span><span class="p">,</span>
+    <span class="n">QTableWidget</span><span class="p">,</span>
+    <span class="n">QTableWidgetItem</span><span class="p">,</span>
+    <span class="n">QTreeWidget</span><span class="p">,</span>
+    <span class="n">QTreeWidgetItem</span><span class="p">,</span>
+    <span class="n">QListWidget</span><span class="p">,</span>
+    <span class="n">QListWidgetItem</span><span class="p">,</span>
+    <span class="n">QComboBox</span><span class="p">,</span>
+    <span class="n">QMenu</span><span class="p">,</span>
+    <span class="n">QLayout</span><span class="p">,</span>
+    <span class="n">QMessageBox</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PyQt6.QtCore</span><span class="w"> </span><span class="kn">import</span> <span class="n">QObject</span><span class="p">,</span> <span class="n">QRegularExpression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PyQt6.QtGui</span><span class="w"> </span><span class="kn">import</span> <span class="n">QShortcut</span><span class="p">,</span> <span class="n">QRegularExpressionValidator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">libpince</span><span class="w"> </span><span class="kn">import</span> <span class="n">debugcore</span><span class="p">,</span> <span class="n">utils</span><span class="p">,</span> <span class="n">typedefs</span><span class="p">,</span> <span class="n">regexes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tr.tr</span><span class="w"> </span><span class="kn">import</span> <span class="n">TranslationConstants</span> <span class="k">as</span> <span class="n">tr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">overload</span>
+
+<span class="n">validator_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">QRegularExpressionValidator</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;int&quot;</span><span class="p">:</span> <span class="n">QRegularExpressionValidator</span><span class="p">(</span><span class="n">QRegularExpression</span><span class="p">(</span><span class="n">regexes</span><span class="o">.</span><span class="n">decimal_number</span><span class="o">.</span><span class="n">pattern</span><span class="p">)),</span>  <span class="c1"># integers</span>
+    <span class="s2">&quot;int_hex&quot;</span><span class="p">:</span> <span class="n">QRegularExpressionValidator</span><span class="p">(</span><span class="n">QRegularExpression</span><span class="p">(</span><span class="n">regexes</span><span class="o">.</span><span class="n">hex_number_gui</span><span class="o">.</span><span class="n">pattern</span><span class="p">)),</span>  <span class="c1"># hexadecimals</span>
+    <span class="s2">&quot;float&quot;</span><span class="p">:</span> <span class="n">QRegularExpressionValidator</span><span class="p">(</span><span class="n">QRegularExpression</span><span class="p">(</span><span class="n">regexes</span><span class="o">.</span><span class="n">float_number</span><span class="o">.</span><span class="n">pattern</span><span class="p">)),</span>  <span class="c1"># floats</span>
+    <span class="s2">&quot;bytearray&quot;</span><span class="p">:</span> <span class="n">QRegularExpressionValidator</span><span class="p">(</span><span class="n">QRegularExpression</span><span class="p">(</span><span class="n">regexes</span><span class="o">.</span><span class="n">bytearray_input</span><span class="o">.</span><span class="n">pattern</span><span class="p">)),</span>  <span class="c1"># array of bytes</span>
+    <span class="s2">&quot;string&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="get_icons_directory">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.get_icons_directory">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_icons_directory</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gets the directory of the icons</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path to the icons directory</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_script_directory</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;/media/icons&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="center">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.center">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">center</span><span class="p">(</span><span class="n">window</span><span class="p">:</span> <span class="n">QWidget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Center the given window to desktop</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        window (QWidget): The window that&#39;ll be centered to desktop</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">window</span><span class="o">.</span><span class="n">frameGeometry</span><span class="p">()</span><span class="o">.</span><span class="n">moveCenter</span><span class="p">(</span><span class="n">window</span><span class="o">.</span><span class="n">screen</span><span class="p">()</span><span class="o">.</span><span class="n">availableGeometry</span><span class="p">()</span><span class="o">.</span><span class="n">center</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="center_to_parent">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.center_to_parent">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">center_to_parent</span><span class="p">(</span><span class="n">window</span><span class="p">:</span> <span class="n">QWidget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Center the given window to its parent</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        window (QWidget): The window that&#39;ll be centered to its parent</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parent</span><span class="p">:</span> <span class="n">QWidget</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span>
+    <span class="n">window</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">frameGeometry</span><span class="p">()</span><span class="o">.</span><span class="n">center</span><span class="p">()</span> <span class="o">-</span> <span class="n">window</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span><span class="o">.</span><span class="n">center</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="center_scroll_bar">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.center_scroll_bar">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">center_scroll_bar</span><span class="p">(</span><span class="n">scrollbar</span><span class="p">:</span> <span class="n">QScrollBar</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Center the given scrollbar</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        scrollbar (QScrollbar): Self-explanatory</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maximum</span> <span class="o">=</span> <span class="n">scrollbar</span><span class="o">.</span><span class="n">maximum</span><span class="p">()</span>
+    <span class="n">minimum</span> <span class="o">=</span> <span class="n">scrollbar</span><span class="o">.</span><span class="n">minimum</span><span class="p">()</span>
+    <span class="n">scrollbar</span><span class="o">.</span><span class="n">setValue</span><span class="p">((</span><span class="n">maximum</span> <span class="o">+</span> <span class="n">minimum</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="resize_to_contents">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.resize_to_contents">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resize_to_contents</span><span class="p">(</span><span class="n">tablewidget</span><span class="p">:</span> <span class="n">QTableWidget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resizes the columns of the given QTableWidget to its contents</span>
+<span class="sd">    This also fixes the stretch problem of the last column</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tablewidget (QTableWidget): Self-explanatory</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tablewidget</span><span class="o">.</span><span class="n">resizeColumnsToContents</span><span class="p">()</span>
+    <span class="n">default_size</span> <span class="o">=</span> <span class="n">tablewidget</span><span class="o">.</span><span class="n">horizontalHeader</span><span class="p">()</span><span class="o">.</span><span class="n">defaultSectionSize</span><span class="p">()</span>
+    <span class="n">tablewidget</span><span class="o">.</span><span class="n">horizontalHeader</span><span class="p">()</span><span class="o">.</span><span class="n">resizeSection</span><span class="p">(</span><span class="n">tablewidget</span><span class="o">.</span><span class="n">columnCount</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">default_size</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="fill_value_combobox">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.fill_value_combobox">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fill_value_combobox</span><span class="p">(</span><span class="n">combobox</span><span class="p">:</span> <span class="n">QComboBox</span><span class="p">,</span> <span class="n">current_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT32</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fills the given QComboBox with value_index strings</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        combobox (QComboBox): The combobox that&#39;ll be filled</span>
+<span class="sd">        current_index (int): Can be a member of typedefs.VALUE_INDEX</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">index_to_text_dict</span><span class="p">:</span>
+        <span class="n">combobox</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">typedefs</span><span class="o">.</span><span class="n">index_to_text_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+    <span class="n">combobox</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">current_index</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="fill_endianness_combobox">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.fill_endianness_combobox">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fill_endianness_combobox</span><span class="p">(</span><span class="n">combobox</span><span class="p">:</span> <span class="n">QComboBox</span><span class="p">,</span> <span class="n">current_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">ENDIANNESS</span><span class="o">.</span><span class="n">HOST</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fills the given QComboBox with endianness strings</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        combobox (QComboBox): The combobox that&#39;ll be filled</span>
+<span class="sd">        current_index (int): Can be a member of typedefs.ENDIANNESS</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">endianness_text</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">typedefs</span><span class="o">.</span><span class="n">ENDIANNESS</span><span class="o">.</span><span class="n">HOST</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">HOST</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">typedefs</span><span class="o">.</span><span class="n">ENDIANNESS</span><span class="o">.</span><span class="n">LITTLE</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">LITTLE</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">typedefs</span><span class="o">.</span><span class="n">ENDIANNESS</span><span class="o">.</span><span class="n">BIG</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">BIG</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">endian</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">endianness_text</span><span class="p">:</span>
+        <span class="n">combobox</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">endian</span><span class="p">)</span>
+    <span class="n">combobox</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">current_index</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_current_row">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.get_current_row">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_current_row</span><span class="p">(</span><span class="n">tablewidget</span><span class="p">:</span> <span class="n">QTableWidget</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the currently selected row index for the given QTableWidget</span>
+<span class="sd">    If you try to use only selectionModel().currentIndex().row() for this purpose, you&#39;ll get the last selected row even</span>
+<span class="sd">    if it was unselected afterwards. This is why this function exists, it checks the selection state before returning</span>
+<span class="sd">    the selected row</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tablewidget (QTableWidget): Self-explanatory</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int: Currently selected row. Returns -1 if nothing is selected</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This function doesn&#39;t work properly when used within signals such as currentItemChanged, currentIndexChanged,</span>
+<span class="sd">        currentChanged and currentRowChanged. Use the row, item, QModelIndex or whatever the signal provides instead.</span>
+<span class="sd">        This bug occurs because those signals only update the changed row, not the selectionModel. This causes</span>
+<span class="sd">        selectionModel().selectedRows() to return None and this function to behave improperly</span>
+
+<span class="sd">        For developers: You can use the regex \.current.*\.connect to search signals if a cleanup is needed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tablewidget</span><span class="o">.</span><span class="n">selectionModel</span><span class="p">()</span><span class="o">.</span><span class="n">selectedRows</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">tablewidget</span><span class="o">.</span><span class="n">selectionModel</span><span class="p">()</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span></div>
+
+
+
+<span class="nd">@overload</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_current_item</span><span class="p">(</span><span class="n">listwidget</span><span class="p">:</span> <span class="n">QListWidget</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QListWidgetItem</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+
+
+<span class="nd">@overload</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_current_item</span><span class="p">(</span><span class="n">tablewidget</span><span class="p">:</span> <span class="n">QTableWidget</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QTableWidgetItem</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+
+
+<span class="nd">@overload</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_current_item</span><span class="p">(</span><span class="n">treewidget</span><span class="p">:</span> <span class="n">QTreeWidget</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QTreeWidgetItem</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+
+
+<div class="viewcode-block" id="get_current_item">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.get_current_item">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_current_item</span><span class="p">(</span><span class="n">widget</span><span class="p">:</span> <span class="n">QListWidget</span> <span class="o">|</span> <span class="n">QTableWidget</span> <span class="o">|</span> <span class="n">QTreeWidget</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the currently selected item for the given widget</span>
+<span class="sd">    If you try to use only selectionModel().currentItem() for this purpose, you&#39;ll get the last selected item even</span>
+<span class="sd">    if it was unselected afterwards. This is why this function exists, it checks the selection state before returning</span>
+<span class="sd">    the selected item. Unlike get_current_row, this function can be used with QTreeWidget</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        widget (QListWidget | QTableWidget | QTreeWidget): Self-explanatory</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Any: Currently selected item. Returns None if nothing is selected</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This function doesn&#39;t work properly when used within signals such as currentItemChanged, currentIndexChanged,</span>
+<span class="sd">        currentChanged and currentRowChanged. Use the row, item, QModelIndex or whatever the signal provides instead.</span>
+<span class="sd">        This bug occurs because those signals only update the changed row, not the selectionModel. This causes</span>
+<span class="sd">        selectionModel().selectedRows() to return None and this function to behave improperly</span>
+
+<span class="sd">        For developers: You can use the regex \.current.*\.connect to search signals if a cleanup is needed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">widget</span><span class="o">.</span><span class="n">selectionModel</span><span class="p">()</span><span class="o">.</span><span class="n">selectedRows</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">widget</span><span class="o">.</span><span class="n">currentItem</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="delete_menu_entries">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.delete_menu_entries">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_menu_entries</span><span class="p">(</span><span class="n">menu</span><span class="p">:</span> <span class="n">QMenu</span><span class="p">,</span> <span class="n">QAction_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Deletes given QActions from the QMenu recursively and cleans up the remaining redundant separators and menus</span>
+<span class="sd">    Doesn&#39;t support menus that includes types other than actions, separators and menus</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        menu (QMenu): Self-explanatory</span>
+<span class="sd">        QAction_list (list): List of QActions. Leave blank if you just want to clean the redundant separators up</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_entries</span><span class="p">(</span><span class="n">menu</span><span class="p">:</span> <span class="n">QMenu</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">menu</span><span class="o">.</span><span class="n">actions</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">QAction_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">menu</span><span class="o">.</span><span class="n">removeAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">clean_entries</span><span class="p">(</span><span class="n">menu</span><span class="p">:</span> <span class="n">QMenu</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">menu</span><span class="o">.</span><span class="n">actions</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">action</span><span class="o">.</span><span class="n">isSeparator</span><span class="p">():</span>
+                <span class="n">actions</span> <span class="o">=</span> <span class="n">menu</span><span class="o">.</span><span class="n">actions</span><span class="p">()</span>
+                <span class="n">current_index</span> <span class="o">=</span> <span class="n">actions</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+                    <span class="ow">or</span> <span class="p">(</span><span class="n">current_index</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">actions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isSeparator</span><span class="p">())</span>
+                    <span class="ow">or</span> <span class="p">(</span><span class="n">current_index</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">actions</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">isSeparator</span><span class="p">())</span>
+                    <span class="ow">or</span> <span class="p">(</span><span class="n">actions</span><span class="p">[</span><span class="n">current_index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isSeparator</span><span class="p">()</span> <span class="ow">and</span> <span class="n">actions</span><span class="p">[</span><span class="n">current_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isSeparator</span><span class="p">())</span>
+                <span class="p">):</span>
+                    <span class="n">menu</span><span class="o">.</span><span class="n">removeAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+    <span class="n">remove_entries</span><span class="p">(</span><span class="n">menu</span><span class="p">)</span>
+    <span class="n">clean_entries</span><span class="p">(</span><span class="n">menu</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># TODO: This is a really bad design pattern, remove this function after moving classes to their own files</span>
+<div class="viewcode-block" id="search_parents_by_function">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.search_parents_by_function">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">search_parents_by_function</span><span class="p">(</span><span class="n">qt_object</span><span class="p">:</span> <span class="n">QObject</span><span class="p">,</span> <span class="n">func_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Search for func_name in the parents of given QObject. Once function is found, parent that possesses func_name</span>
+<span class="sd">    is returned</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        qt_object (QObject): The object that&#39;ll be searched for it&#39;s parents</span>
+<span class="sd">        func_name (str): The name of the function that&#39;ll be searched</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="n">qt_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">qt_object</span> <span class="o">=</span> <span class="n">qt_object</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">func_name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">qt_object</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">qt_object</span></div>
+
+
+
+<div class="viewcode-block" id="get_layout_widgets">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.get_layout_widgets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_layout_widgets</span><span class="p">(</span><span class="n">layout</span><span class="p">:</span> <span class="n">QLayout</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the widgets of a QLayout as a list</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        layout: Self-explanatory</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: A list that contains the widgets of the given layout</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">layout</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">count</span><span class="p">())]</span></div>
+
+
+
+<div class="viewcode-block" id="contains_reference_mark">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.contains_reference_mark">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">contains_reference_mark</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks if given string contains the reference mark</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        string (str): String that&#39;ll be checked for the reference mark</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if given string contains the reference mark, False otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">regexes</span><span class="o">.</span><span class="n">reference_mark</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">string</span><span class="p">)</span> <span class="k">else</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="append_shortcut_to_tooltip">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.append_shortcut_to_tooltip">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">append_shortcut_to_tooltip</span><span class="p">(</span><span class="n">qt_object</span><span class="p">:</span> <span class="n">QObject</span><span class="p">,</span> <span class="n">shortcut</span><span class="p">:</span> <span class="n">QShortcut</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Appends key string of the given QShortcut to the toolTip of the given QObject</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        qt_object (QObject): Self-explanatory</span>
+<span class="sd">        shortcut (QShortcut): Self-explanatory</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">qt_object</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="n">qt_object</span><span class="o">.</span><span class="n">toolTip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="n">shortcut</span><span class="o">.</span><span class="n">key</span><span class="p">()</span><span class="o">.</span><span class="n">toString</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="check_inferior_running">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guiutils.check_inferior_running">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_inferior_running</span><span class="p">(</span><span class="n">widget</span><span class="p">:</span> <span class="n">QWidget</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">show_message</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks if a process is selected and is running</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        widget (QWidget | None): Parent widget for the message box. If None, message box will have no parent</span>
+<span class="sd">        show_message (bool): If True, a message box will be shown if the inferior is running</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: The error message, if the inferior is running or no process is selected</span>
+<span class="sd">        None: If the inferior is stopped and a process is selected</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">debugcore</span><span class="o">.</span><span class="n">currentpid</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">show_message</span><span class="p">:</span>
+            <span class="n">QMessageBox</span><span class="o">.</span><span class="n">information</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">NO_PROCESS_SELECTED</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tr</span><span class="o">.</span><span class="n">NO_PROCESS_SELECTED</span>
+    <span class="k">if</span> <span class="n">debugcore</span><span class="o">.</span><span class="n">inferior_status</span> <span class="o">==</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">INFERIOR_STATUS</span><span class="o">.</span><span class="n">RUNNING</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">show_message</span><span class="p">:</span>
+            <span class="n">QMessageBox</span><span class="o">.</span><span class="n">information</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">REQUIRE_PROCESS_STOP</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tr</span><span class="o">.</span><span class="n">REQUIRE_PROCESS_STOP</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PINCE</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">libpince</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#gui-utils">GUI.Utils</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, PINCE Contributors.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
