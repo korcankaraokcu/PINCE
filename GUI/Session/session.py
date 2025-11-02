@@ -200,23 +200,14 @@ class Session:
             symbol = value["symbol"]
             address_region_details = value["address_region_details"]
             new_addr = addr
-            symbol_resolve_success = False
-            # Try to resolve the symbol
-            if symbol:
-                exam_result = debugcore.examine_expression(symbol)
-                if exam_result.address:
-                    new_addr = int(exam_result.address, 16)
-                    symbol_resolve_success = True
-
-            if not symbol_resolve_success:
-                # symbol resolution failed, trying resolve via region details
-                region_name, offset, region_index = address_region_details.values()
-                region = region_dict.get(region_name, None)
-                if region is not None:
-                    new_addr = int(region[region_index], 16) + int(offset, 16)
-                else:
-                    print("[WARN] BookmarkResolver: Could not find region with name:", region_name)
-                    continue
+            # resolve via region details
+            region_name, offset, region_index = address_region_details.values()
+            region = region_dict.get(region_name, None)
+            if region is not None:
+                new_addr = int(region[region_index], 16) + int(offset, 16)
+            else:
+                print("[WARN] BookmarkResolver: Could not find region with name:", region_name)
+                continue
 
             new_bookmarks[new_addr] = {
                 "symbol": symbol,
