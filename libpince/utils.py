@@ -142,12 +142,20 @@ def get_region_info(pid, address):
     if type(address) != int:
         address = int(address, 0)
     region_list = get_regions(pid)
-    for start, end, perms, _, _, _, path in region_list:
+    region_index = 0
+    for start, end, perms, map_offset, _, _, path in region_list:
         start = int(start, 16)
         end = int(end, 16)
         file_name = os.path.split(path)[1]
+
+        # get region index for the given address
+        if map_offset == "0":
+            region_index = 0
+        else:
+            region_index += 1
+
         if start <= address < end:
-            return typedefs.tuple_region_info(start, end, perms, file_name)
+            return typedefs.tuple_region_info(start, end, perms, file_name, region_index)
 
 
 def filter_regions(pid, attribute, regex, case_sensitive=False):

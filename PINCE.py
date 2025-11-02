@@ -1571,6 +1571,7 @@ class MainForm(QMainWindow, MainWindow):
 
         debugcore.detach()
         app.closeAllWindows()
+        print("[Info]: all PINCE windows closed")
 
     # Call update_address_table manually after this
     def add_entry_to_addresstable(self, description, address_expr, value_type=None):
@@ -2622,7 +2623,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         # Actual start and end addresses of the selection
         self.hex_selection_address_begin = 0
         self.hex_selection_address_end = 0
-        self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None)
+        self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None, None)
         self.hex_model = QHexModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
         self.ascii_model = QAsciiModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
         self.tableView_HexView_Hex.setModel(self.hex_model)
@@ -3027,7 +3028,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     tr.REGION_INFO.format(info.perms, hex(info.start), hex(info.end), info.file_name)
                 )
             else:
-                self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None)
+                self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None, None)
                 self.label_HexView_Information.setText(tr.INVALID_REGION)
         self.tableWidget_HexView_Address.setRowCount(0)
         self.tableWidget_HexView_Address.setRowCount(HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
@@ -3858,12 +3859,35 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         comment_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_BOOKMARK_COMMENT, "")])
         if comment_dialog.exec():
-            comment = comment_dialog.get_values()[0]
+            comment_data = comment_dialog.get_values()
+            comment = comment_data[0] if comment_data else ""
         else:
             return
         exam_result = debugcore.examine_expression(hex(address))
         symbol = utils.extract_symbol_name(exam_result.symbol) if exam_result.symbol else ""
-        self.session.pct_bookmarks[address] = {"symbol": symbol, "comment": comment}
+
+        region_info = utils.get_region_info(debugcore.currentpid, address)
+        process_name = utils.get_process_name(debugcore.currentpid)
+
+        if not region_info:
+            print("[WARN] Address does not belong to any mapped region, aborting")
+            return
+
+        if region_info.file_name == "[heap]" or region_info.file_name == "[stack]":
+            print("[WARN] Address belongs to the heap or stack, cannot bookmark")
+            return
+
+        address_region_details = {
+            "region_name": region_info.file_name,
+            "offset_in_region": hex(address - region_info.start),
+            "region_index": region_info.region_index,
+        }
+        self.session.pct_bookmarks[address] = {
+            "symbol": symbol,
+            "comment": comment,
+            "address_region_details": address_region_details,
+        }
+        print(self.session.pct_bookmarks)
         self.refresh_disassemble_view()
 
     def change_bookmark_comment(self, address: int):
@@ -4975,12 +4999,19 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         memory_regions = utils.get_regions(debugcore.currentpid)
         self.tableWidget_MemoryRegions.setRowCount(0)
         self.tableWidget_MemoryRegions.setRowCount(len(memory_regions))
+        region_index = 0
         for row, (start, end, perms, offset, _, _, path) in enumerate(memory_regions):
             address = start + "-" + end
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_ADDR_COL, QTableWidgetItem(address))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PERM_COL, QTableWidgetItem(perms))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_OFFSET_COL, QTableWidgetItem(offset))
-            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PATH_COL, QTableWidgetItem(path))
+            self.tableWidget_MemoryRegions.setItem(
+                row, MEMORY_REGIONS_PATH_COL, QTableWidgetItem(path + f"[{region_index}]")
+            )
+            if offset == "0":
+                region_index = 0
+            else:
+                region_index += 1
         guiutils.resize_to_contents(self.tableWidget_MemoryRegions)
 
     def tableWidget_MemoryRegions_context_menu_event(self, event):

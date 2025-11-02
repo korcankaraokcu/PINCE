@@ -43,7 +43,7 @@ class Session:
     def __init__(self) -> None:
         # Anything labled with pct should be saved to the session file
         self.pct_notes: str = ""
-        self.pct_bookmarks: dict[int, str] = {}
+        self.pct_bookmarks: dict[int, dict] = {}
         self.pct_version: int = 1
         self.pct_address_tree: list = []
         self.pct_process_name: str = ""
@@ -142,20 +142,8 @@ class Session:
         self.pct_notes = content["notes"]
 
         # Load bookmarks with symbol resolution
-        self.pct_bookmarks = {}
-        loaded_bookmarks = content["bookmarks"]
-        for addr, value in loaded_bookmarks.items():
-            comment = value["comment"]
-            symbol = value["symbol"]
-            new_addr = int(addr)
-
-            # Try to resolve the symbol
-            if symbol:
-                exam_result = debugcore.examine_expression(symbol)
-                if exam_result.address:
-                    new_addr = int(exam_result.address, 16)
-
-            self.pct_bookmarks[new_addr] = {"symbol": symbol, "comment": comment}
+        self.pct_bookmarks = content["bookmarks"]
+        self.recalculate_bookmarks()
 
         self.pct_address_tree = content["address_tree"]
 
@@ -192,6 +180,53 @@ class Session:
         else:
             close_event.accept()
 
+    def recalculate_bookmarks(self):
+        """
+        Recalculate all bookmarks to update their addresses based on their symbols or region info.
+        This is useful when the process has changed and the addresses may have shifted.
+        Will not mark session as changed.
+
+        Args:
+            None
+        Returns:
+            None
+        """
+
+        region_dict = utils.get_region_dict(debugcore.currentpid)
+
+        new_bookmarks: dict[int, dict] = {}
+        for addr, value in self.pct_bookmarks.items():
+            comment = value["comment"]
+            symbol = value["symbol"]
+            address_region_details = value["address_region_details"]
+            new_addr = addr
+            symbol_resolve_success = False
+            # Try to resolve the symbol
+            if symbol:
+                exam_result = debugcore.examine_expression(symbol)
+                print("[Debug] BookmarkResolver: exam_result:", exam_result)
+                if exam_result.address:
+                    new_addr = int(exam_result.address, 16)
+                    symbol_resolve_success = True
+
+            if not symbol_resolve_success:
+                # symbol resolution failed, trying resolve via region details
+                region_name, offset, region_index = address_region_details.values()
+                region = region_dict.get(region_name, None)
+                if region is not None:
+                    new_addr = int(region[region_index], 16) + int(offset, 16)
+                else:
+                    print("[WARN] BookmarkResolver: Could not find region with name:", region_name)
+                    continue
+
+            new_bookmarks[new_addr] = {
+                "symbol": symbol,
+                "comment": comment,
+                "address_region_details": address_region_details,
+            }
+
+        self.pct_bookmarks = new_bookmarks
+
 
 class SessionManager:
     session = Session()
@@ -223,10 +258,17 @@ class SessionManager:
     def on_process_changed() -> None:
         if debugcore.currentpid == -1:
             return
+
+        if states.exiting:
+            return
+
+        print("[debug] SessionManager: OnProcessChanged")
         process_name = utils.get_process_name(debugcore.currentpid)
         session = SessionManager.get_session()
 
-        if session.last_file_name == utils.append_file_extension(process_name, "pct"):
+        if session.pct_process_name == process_name:
+            # process is the same as last one, probably process restarted / reattached
+            session.recalculate_bookmarks()
             return
 
         if session.pct_process_name == "":
