@@ -262,7 +262,6 @@ class SessionManager:
         if states.exiting:
             return
 
-        print("[debug] SessionManager: OnProcessChanged")
         process_name = utils.get_process_name(debugcore.currentpid)
         session = SessionManager.get_session()
 
