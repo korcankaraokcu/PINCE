@@ -5001,6 +5001,10 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         self.tableWidget_MemoryRegions.setRowCount(len(memory_regions))
         region_index = 0
         for row, (start, end, perms, offset, _, _, path) in enumerate(memory_regions):
+            if int(offset, 16) == 0:
+                region_index = 0
+            else:
+                region_index += 1
             address = start + "-" + end
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_ADDR_COL, QTableWidgetItem(address))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PERM_COL, QTableWidgetItem(perms))
@@ -5008,10 +5012,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
             self.tableWidget_MemoryRegions.setItem(
                 row, MEMORY_REGIONS_PATH_COL, QTableWidgetItem(path + f"[{region_index}]")
             )
-            if offset == "0":
-                region_index = 0
-            else:
-                region_index += 1
+
         guiutils.resize_to_contents(self.tableWidget_MemoryRegions)
 
     def tableWidget_MemoryRegions_context_menu_event(self, event):

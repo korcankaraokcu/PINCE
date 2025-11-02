@@ -149,7 +149,7 @@ def get_region_info(pid, address):
         file_name = os.path.split(path)[1]
 
         # get region index for the given address
-        if map_offset == "0":
+        if int(map_offset, 16) == 0:
             region_index = 0
         else:
             region_index += 1
