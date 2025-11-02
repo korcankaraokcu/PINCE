@@ -140,9 +140,23 @@ class Session:
 
         self.pct_version = content["version"]
         self.pct_notes = content["notes"]
-        self.pct_bookmarks = content["bookmarks"]
-        # bookmarks are saved as int string keys, convert them back to int
-        self.pct_bookmarks = {int(k): v for k, v in self.pct_bookmarks.items()}
+
+        # Load bookmarks with symbol resolution
+        self.pct_bookmarks = {}
+        loaded_bookmarks = content["bookmarks"]
+        for addr, value in loaded_bookmarks.items():
+            comment = value["comment"]
+            symbol = value["symbol"]
+            new_addr = int(addr)
+
+            # Try to resolve the symbol
+            if symbol:
+                exam_result = debugcore.examine_expression(symbol)
+                if exam_result.address:
+                    new_addr = int(exam_result.address, 16)
+
+            self.pct_bookmarks[new_addr] = {"symbol": symbol, "comment": comment}
+
         self.pct_address_tree = content["address_tree"]
 
         self.file_path = os.path.dirname(file_path)

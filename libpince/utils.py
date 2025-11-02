@@ -810,6 +810,19 @@ def split_symbol(symbol_string):
     return returned_list
 
 
+def extract_symbol_name(symbol_string: str) -> str:
+    """Extract symbol name from examine_expression result
+
+    Args:
+        symbol_string (str): A string that contains a symbol in format <symbol_name>
+
+    Returns:
+        str: Symbol name without brackets or empty string if no symbol is found
+    """
+    result = regexes.symbol.search(symbol_string)
+    return result.group(1) if result else ""
+
+
 def execute_command_as_user(command):
     """Executes given command as user
 

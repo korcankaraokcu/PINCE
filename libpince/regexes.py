@@ -26,6 +26,7 @@ gdb_error = compile(r"\^error")
 hex_plain = compile(r"[0-9a-fA-F]+")
 hex_number = compile(r"0x" + hex_plain.pattern)
 hex_number_grouped = compile(r"(" + hex_number.pattern + r")")
+symbol = compile(r"<(.+?)>")
 address_with_symbol = compile(r"(" + hex_number_grouped.pattern + r"\s*(<.+>)?)")  # 0x7f3067f1174d <poll+45>\n
 thread_info = compile(r"\*\s+\d+\s+(.*)\\n")
 inferior_pid = compile(r"process\s+(\d+)")

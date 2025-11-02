@@ -49,7 +49,7 @@ class BookmarkWidget(QWidget, Ui_Form):
             self.lineEdit_Info.clear()
         else:
             self.lineEdit_Info.setText(debugcore.get_address_info(current_address))
-        self.lineEdit_Comment.setText(self.session.pct_bookmarks[int(current_address, 16)])
+        self.lineEdit_Comment.setText(self.session.pct_bookmarks[int(current_address, 16)]["comment"])
 
     def listWidget_item_double_clicked(self, item: QListWidgetItem):
         self.double_clicked.emit(utils.extract_address(item.text()))

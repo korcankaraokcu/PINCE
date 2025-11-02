@@ -3140,7 +3140,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     except KeyError:
                         row_color[row] = [BOOKMARK_COLOR]
                     address_info = "(M)" + address_info
-                    comment = self.session.pct_bookmarks[bookmark_item]
+                    comment = self.session.pct_bookmarks[bookmark_item]["comment"]
                     break
             for breakpoint in breakpoint_info:
                 int_breakpoint_address = int(breakpoint.address, 16)
@@ -3861,19 +3861,21 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             comment = comment_dialog.get_values()[0]
         else:
             return
-        self.session.pct_bookmarks[address] = comment
+        exam_result = debugcore.examine_expression(hex(address))
+        symbol = utils.extract_symbol_name(exam_result.symbol) if exam_result.symbol else ""
+        self.session.pct_bookmarks[address] = {"symbol": symbol, "comment": comment}
         self.refresh_disassemble_view()
 
     def change_bookmark_comment(self, address: int):
         if debugcore.currentpid == -1:
             return
-        current_comment = self.session.pct_bookmarks[address]
+        current_comment = self.session.pct_bookmarks[address]["comment"]
         comment_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_BOOKMARK_COMMENT, current_comment)])
         if comment_dialog.exec():
             new_comment = comment_dialog.get_values()[0]
         else:
             return
-        self.session.pct_bookmarks[address] = new_comment
+        self.session.pct_bookmarks[address]["comment"] = new_comment
         self.refresh_disassemble_view()
 
     def delete_bookmark(self, address: int):
