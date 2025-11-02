@@ -204,7 +204,6 @@ class Session:
             # Try to resolve the symbol
             if symbol:
                 exam_result = debugcore.examine_expression(symbol)
-                print("[Debug] BookmarkResolver: exam_result:", exam_result)
                 if exam_result.address:
                     new_addr = int(exam_result.address, 16)
                     symbol_resolve_success = True
