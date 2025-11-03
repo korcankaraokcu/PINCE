@@ -200,6 +200,13 @@ class Session:
             symbol = value["symbol"]
             address_region_details = value["address_region_details"]
             new_addr = addr
+
+            # We used to resolve the symbol first but parentheses in symbols causes the functions to be called
+            # For instance, main() won't be resolved to main but rather the function main() will be called
+            # Because of this behavior, we rely on resolving via regions
+            # Resolving via regions is more reliable unless the binary has been changed
+            # TODO: Resolving via symbols could be re-addressed if this behavior were fixed
+
             # resolve via region details
             region_name, offset, region_index = address_region_details.values()
             region = region_dict.get(region_name, None)
