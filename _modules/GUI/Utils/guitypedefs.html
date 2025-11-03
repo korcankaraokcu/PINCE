@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GUI.Utils.guitypedefs &#8212; PINCE  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for GUI.Utils.guitypedefs</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">PyQt6.QtCore</span><span class="w"> </span><span class="kn">import</span> <span class="n">QThread</span><span class="p">,</span> <span class="n">QRunnable</span><span class="p">,</span> <span class="n">pyqtSignal</span><span class="p">,</span> <span class="n">QObject</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">keyboard</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_hotkey</span><span class="p">,</span> <span class="n">remove_hotkey</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tr.tr</span><span class="w"> </span><span class="kn">import</span> <span class="n">TranslationConstants</span> <span class="k">as</span> <span class="n">tr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">libpince</span><span class="w"> </span><span class="kn">import</span> <span class="n">debugcore</span><span class="p">,</span> <span class="n">typedefs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">queue</span>
+
+<span class="c1"># Docstrings of pyqtSignal causes Sphinx to throw a warning about inline emphasis strings</span>
+<span class="c1"># The hack below overwrites the docstrings of pyqtSignal so we avoid the warnings</span>
+<span class="c1"># TODO: Wait for Qt to fix this issue or find a better way of handling this</span>
+
+<span class="n">pyqtSignal</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;pyqtSignal&quot;</span>
+
+
+<div class="viewcode-block" id="SettingSignals">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.SettingSignals">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SettingSignals</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+    <span class="n">changed</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="WorkerSignals">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.WorkerSignals">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">WorkerSignals</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+    <span class="n">finished</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="ProcessSignals">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.ProcessSignals">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProcessSignals</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+    <span class="n">attach</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+    <span class="n">exit</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="SessionSignals">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.SessionSignals">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SessionSignals</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+    <span class="n">new_session</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+    <span class="n">on_save</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+    <span class="n">on_load</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="Worker">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.Worker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Worker</span><span class="p">(</span><span class="n">QRunnable</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fn</span> <span class="o">=</span> <span class="n">fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signals</span> <span class="o">=</span> <span class="n">WorkerSignals</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Worker.run">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.Worker.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signals</span><span class="o">.</span><span class="n">finished</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="InterruptableWorker">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.InterruptableWorker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InterruptableWorker</span><span class="p">(</span><span class="n">QThread</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fn</span> <span class="o">=</span> <span class="n">fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signals</span> <span class="o">=</span> <span class="n">WorkerSignals</span><span class="p">()</span>
+
+<div class="viewcode-block" id="InterruptableWorker.run">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.InterruptableWorker.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signals</span><span class="o">.</span><span class="n">finished</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="InterruptableWorker.stop">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.InterruptableWorker.stop">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span></div>
+</div>
+
+
+
+<span class="c1"># Await async output from gdb</span>
+<div class="viewcode-block" id="AwaitAsyncOutput">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.AwaitAsyncOutput">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AwaitAsyncOutput</span><span class="p">(</span><span class="n">QThread</span><span class="p">):</span>
+    <span class="n">async_output_ready</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue_active</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="AwaitAsyncOutput.run">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.AwaitAsyncOutput.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">async_output_queue</span> <span class="o">=</span> <span class="n">debugcore</span><span class="o">.</span><span class="n">gdb_async_output</span><span class="o">.</span><span class="n">register_queue</span><span class="p">()</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue_active</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">async_output</span> <span class="o">=</span> <span class="n">async_output_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">async_output_ready</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">async_output</span><span class="p">)</span>
+        <span class="n">debugcore</span><span class="o">.</span><span class="n">gdb_async_output</span><span class="o">.</span><span class="n">delete_queue</span><span class="p">(</span><span class="n">async_output_queue</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AwaitAsyncOutput.stop">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.AwaitAsyncOutput.stop">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue_active</span> <span class="o">=</span> <span class="kc">False</span></div>
+</div>
+
+
+
+<span class="c1"># Checks if the inferior has been terminated</span>
+<div class="viewcode-block" id="AwaitProcessExit">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.AwaitProcessExit">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AwaitProcessExit</span><span class="p">(</span><span class="n">QThread</span><span class="p">):</span>
+    <span class="n">process_exited</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+
+<div class="viewcode-block" id="AwaitProcessExit.run">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.AwaitProcessExit.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">debugcore</span><span class="o">.</span><span class="n">process_exited_condition</span><span class="p">:</span>
+                <span class="n">debugcore</span><span class="o">.</span><span class="n">process_exited_condition</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process_exited</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
+</div>
+
+
+
+<span class="c1"># Checks if the inferior is running or stopped</span>
+<div class="viewcode-block" id="CheckInferiorStatus">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.CheckInferiorStatus">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CheckInferiorStatus</span><span class="p">(</span><span class="n">QThread</span><span class="p">):</span>
+    <span class="n">process_stopped</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+    <span class="n">process_running</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CheckInferiorStatus.run">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.CheckInferiorStatus.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">debugcore</span><span class="o">.</span><span class="n">status_changed_condition</span><span class="p">:</span>
+                <span class="n">debugcore</span><span class="o">.</span><span class="n">status_changed_condition</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">debugcore</span><span class="o">.</span><span class="n">inferior_status</span> <span class="o">==</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">INFERIOR_STATUS</span><span class="o">.</span><span class="n">STOPPED</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">process_stopped</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">debugcore</span><span class="o">.</span><span class="n">inferior_status</span> <span class="o">==</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">INFERIOR_STATUS</span><span class="o">.</span><span class="n">RUNNING</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">process_running</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Hotkey">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.Hotkey">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Hotkey</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">custom</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">handle</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">desc</span> <span class="o">=</span> <span class="n">desc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom</span> <span class="o">=</span> <span class="n">custom</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="ow">or</span> <span class="n">func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="o">=</span> <span class="n">handle</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="o">=</span> <span class="n">add_hotkey</span><span class="p">(</span><span class="n">default</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Hotkey.change_key">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.Hotkey.change_key">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">change_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">custom</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">remove_hotkey</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom</span> <span class="o">=</span> <span class="n">custom</span>
+        <span class="k">if</span> <span class="n">custom</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="o">=</span> <span class="n">add_hotkey</span><span class="p">(</span><span class="n">custom</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Hotkey.change_func">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.Hotkey.change_func">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">change_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">remove_hotkey</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="o">=</span> <span class="n">add_hotkey</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">custom</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle</span> <span class="o">=</span> <span class="n">add_hotkey</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Hotkey.get_active_key">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.Hotkey.get_active_key">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_active_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Hotkeys">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.Hotkeys">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Hotkeys</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pause_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;pause_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">PAUSE_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;F1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">break_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;break_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">BREAK_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;F2&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">continue_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;continue_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">CONTINUE_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;F3&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cancel_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;cancel_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">CANCEL_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;Ctrl+k&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toggle_attach_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;toggle_attach_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">TOGGLE_ATTACH_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;Shift+F10&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exact_scan_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;exact_scan_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">EXACT_SCAN_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">not_scan_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;not_scan_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">NOT_SCAN_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">increased_scan_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;increased_scan_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">INC_SCAN_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">increased_by_scan_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;increased_by_scan_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">INC_BY_SCAN_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decreased_scan_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;decreased_scan_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">DEC_SCAN_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decreased_by_scan_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;decreased_by_scan_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">DEC_BY_SCAN_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">less_scan_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;less_scan_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">LESS_SCAN_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">more_scan_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;more_scan_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">MORE_SCAN_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">between_scan_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;between_scan_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">BETWEEN_SCAN_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">changed_scan_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;changed_scan_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">CHANGED_SCAN_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unchanged_scan_hotkey</span> <span class="o">=</span> <span class="n">Hotkey</span><span class="p">(</span><span class="s2">&quot;unchanged_scan_hotkey&quot;</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">UNCHANGED_SCAN_HOTKEY</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Hotkeys.get_hotkeys">
+<a class="viewcode-back" href="../../../gui_utils.html#GUI.Utils.guitypedefs.Hotkeys.get_hotkeys">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_hotkeys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Hotkey</span><span class="p">]:</span>
+        <span class="n">hotkey_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Hotkey</span><span class="p">):</span>
+                <span class="n">hotkey_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hotkey_list</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PINCE</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">libpince</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#gui-utils">GUI.Utils</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, PINCE Contributors.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

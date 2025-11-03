@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>libpince &#8212; PINCE  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="libpince package" href="libpince.html" />
+    <link rel="prev" title="Welcome to PINCE’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="libpince">
+<h1>libpince<a class="headerlink" href="#libpince" title="Link to this heading">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="libpince.html">libpince package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="libpince.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libpince.html#module-libpince.debugcore">libpince.debugcore module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.Tracer"><code class="docutils literal notranslate"><span class="pre">Tracer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.debugcore.Tracer.cancel_trace"><code class="docutils literal notranslate"><span class="pre">Tracer.cancel_trace()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.debugcore.Tracer.set_breakpoint"><code class="docutils literal notranslate"><span class="pre">Tracer.set_breakpoint()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.debugcore.Tracer.tracer_loop"><code class="docutils literal notranslate"><span class="pre">Tracer.tracer_loop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.add_breakpoint"><code class="docutils literal notranslate"><span class="pre">add_breakpoint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.add_watchpoint"><code class="docutils literal notranslate"><span class="pre">add_watchpoint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.allocate_memory"><code class="docutils literal notranslate"><span class="pre">allocate_memory()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.allocated_memory_gen_id"><code class="docutils literal notranslate"><span class="pre">allocated_memory_gen_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.attach"><code class="docutils literal notranslate"><span class="pre">attach()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.call_function_from_inferior"><code class="docutils literal notranslate"><span class="pre">call_function_from_inferior()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.can_attach"><code class="docutils literal notranslate"><span class="pre">can_attach()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.cancel_dissect_code"><code class="docutils literal notranslate"><span class="pre">cancel_dissect_code()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.cancel_ongoing_command"><code class="docutils literal notranslate"><span class="pre">cancel_ongoing_command()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.complete_command"><code class="docutils literal notranslate"><span class="pre">complete_command()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.continue_inferior"><code class="docutils literal notranslate"><span class="pre">continue_inferior()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.convert_to_hex"><code class="docutils literal notranslate"><span class="pre">convert_to_hex()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.create_process"><code class="docutils literal notranslate"><span class="pre">create_process()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.delete_breakpoint"><code class="docutils literal notranslate"><span class="pre">delete_breakpoint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.detach"><code class="docutils literal notranslate"><span class="pre">detach()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.disassemble"><code class="docutils literal notranslate"><span class="pre">disassemble()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.dissect_code"><code class="docutils literal notranslate"><span class="pre">dissect_code()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.examine_expression"><code class="docutils literal notranslate"><span class="pre">examine_expression()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.examine_expressions"><code class="docutils literal notranslate"><span class="pre">examine_expressions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.execute_func_temporary_interruption"><code class="docutils literal notranslate"><span class="pre">execute_func_temporary_interruption()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.execute_till_return"><code class="docutils literal notranslate"><span class="pre">execute_till_return()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.execute_with_temporary_interruption"><code class="docutils literal notranslate"><span class="pre">execute_with_temporary_interruption()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.find_closest_instruction_address"><code class="docutils literal notranslate"><span class="pre">find_closest_instruction_address()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.find_entry_point"><code class="docutils literal notranslate"><span class="pre">find_entry_point()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.free_memory"><code class="docutils literal notranslate"><span class="pre">free_memory()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_address_info"><code class="docutils literal notranslate"><span class="pre">get_address_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_breakpoint_info"><code class="docutils literal notranslate"><span class="pre">get_breakpoint_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_breakpoints_in_range"><code class="docutils literal notranslate"><span class="pre">get_breakpoints_in_range()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_dissect_code_data"><code class="docutils literal notranslate"><span class="pre">get_dissect_code_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_dissect_code_status"><code class="docutils literal notranslate"><span class="pre">get_dissect_code_status()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_inferior_arch"><code class="docutils literal notranslate"><span class="pre">get_inferior_arch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_inferior_pid"><code class="docutils literal notranslate"><span class="pre">get_inferior_pid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_modified_instructions"><code class="docutils literal notranslate"><span class="pre">get_modified_instructions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_stack_frame_info"><code class="docutils literal notranslate"><span class="pre">get_stack_frame_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_stack_frame_return_addresses"><code class="docutils literal notranslate"><span class="pre">get_stack_frame_return_addresses()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_stack_info"><code class="docutils literal notranslate"><span class="pre">get_stack_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_stacktrace_info"><code class="docutils literal notranslate"><span class="pre">get_stacktrace_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_symbol_info"><code class="docutils literal notranslate"><span class="pre">get_symbol_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_thread_info"><code class="docutils literal notranslate"><span class="pre">get_thread_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_track_breakpoint_info"><code class="docutils literal notranslate"><span class="pre">get_track_breakpoint_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.get_track_watchpoint_info"><code class="docutils literal notranslate"><span class="pre">get_track_watchpoint_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.handle_signal"><code class="docutils literal notranslate"><span class="pre">handle_signal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.handle_signals"><code class="docutils literal notranslate"><span class="pre">handle_signals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.hardware_breakpoint_available"><code class="docutils literal notranslate"><span class="pre">hardware_breakpoint_available()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.hex_dump"><code class="docutils literal notranslate"><span class="pre">hex_dump()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.init_gdb"><code class="docutils literal notranslate"><span class="pre">init_gdb()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.init_referenced_dicts"><code class="docutils literal notranslate"><span class="pre">init_referenced_dicts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.inject_with_advanced_injection"><code class="docutils literal notranslate"><span class="pre">inject_with_advanced_injection()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.inject_with_dlopen_call"><code class="docutils literal notranslate"><span class="pre">inject_with_dlopen_call()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.interrupt_inferior"><code class="docutils literal notranslate"><span class="pre">interrupt_inferior()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.is_attached"><code class="docutils literal notranslate"><span class="pre">is_attached()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.memory_handle"><code class="docutils literal notranslate"><span class="pre">memory_handle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.modify_breakpoint"><code class="docutils literal notranslate"><span class="pre">modify_breakpoint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.modify_instruction"><code class="docutils literal notranslate"><span class="pre">modify_instruction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.nop_instruction"><code class="docutils literal notranslate"><span class="pre">nop_instruction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.parse_and_eval"><code class="docutils literal notranslate"><span class="pre">parse_and_eval()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.read_float_registers"><code class="docutils literal notranslate"><span class="pre">read_float_registers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.read_memory"><code class="docutils literal notranslate"><span class="pre">read_memory()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.read_pointer_chain"><code class="docutils literal notranslate"><span class="pre">read_pointer_chain()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.read_registers"><code class="docutils literal notranslate"><span class="pre">read_registers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.restore_instruction"><code class="docutils literal notranslate"><span class="pre">restore_instruction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.search_functions"><code class="docutils literal notranslate"><span class="pre">search_functions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.search_opcode"><code class="docutils literal notranslate"><span class="pre">search_opcode()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.search_referenced_calls"><code class="docutils literal notranslate"><span class="pre">search_referenced_calls()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.search_referenced_strings"><code class="docutils literal notranslate"><span class="pre">search_referenced_strings()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.send_command"><code class="docutils literal notranslate"><span class="pre">send_command()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.set_convenience_variable"><code class="docutils literal notranslate"><span class="pre">set_convenience_variable()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.set_gdb_output_mode"><code class="docutils literal notranslate"><span class="pre">set_gdb_output_mode()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.set_interrupt_signal"><code class="docutils literal notranslate"><span class="pre">set_interrupt_signal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.set_logging"><code class="docutils literal notranslate"><span class="pre">set_logging()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.set_pince_paths"><code class="docutils literal notranslate"><span class="pre">set_pince_paths()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.set_register_flag"><code class="docutils literal notranslate"><span class="pre">set_register_flag()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.state_observe_thread"><code class="docutils literal notranslate"><span class="pre">state_observe_thread()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.step_instruction"><code class="docutils literal notranslate"><span class="pre">step_instruction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.step_over_instruction"><code class="docutils literal notranslate"><span class="pre">step_over_instruction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.toggle_attach"><code class="docutils literal notranslate"><span class="pre">toggle_attach()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.track_breakpoint"><code class="docutils literal notranslate"><span class="pre">track_breakpoint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.track_watchpoint"><code class="docutils literal notranslate"><span class="pre">track_watchpoint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.wait_for_stop"><code class="docutils literal notranslate"><span class="pre">wait_for_stop()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.debugcore.write_memory"><code class="docutils literal notranslate"><span class="pre">write_memory()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="libpince.html#module-libpince.regexes">libpince.regexes module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.regexes.gdb_command_source"><code class="docutils literal notranslate"><span class="pre">gdb_command_source()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="libpince.html#module-libpince.typedefs">libpince.typedefs module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.ATTACH_RESULT"><code class="docutils literal notranslate"><span class="pre">ATTACH_RESULT</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.ATTACH_RESULT.ALREADY_DEBUGGING"><code class="docutils literal notranslate"><span class="pre">ATTACH_RESULT.ALREADY_DEBUGGING</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.ATTACH_RESULT.ALREADY_TRACED"><code class="docutils literal notranslate"><span class="pre">ATTACH_RESULT.ALREADY_TRACED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.ATTACH_RESULT.ATTACH_SELF"><code class="docutils literal notranslate"><span class="pre">ATTACH_RESULT.ATTACH_SELF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.ATTACH_RESULT.PERM_DENIED"><code class="docutils literal notranslate"><span class="pre">ATTACH_RESULT.PERM_DENIED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.ATTACH_RESULT.PROCESS_NOT_VALID"><code class="docutils literal notranslate"><span class="pre">ATTACH_RESULT.PROCESS_NOT_VALID</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.ATTACH_RESULT.SUCCESSFUL"><code class="docutils literal notranslate"><span class="pre">ATTACH_RESULT.SUCCESSFUL</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.AllocatedMemory"><code class="docutils literal notranslate"><span class="pre">AllocatedMemory</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_MODIFY"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_MODIFY</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_MODIFY.CONDITION"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_MODIFY.CONDITION</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_MODIFY.DISABLE"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_MODIFY.DISABLE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_MODIFY.ENABLE"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_MODIFY.ENABLE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_MODIFY.ENABLE_COUNT"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_MODIFY.ENABLE_COUNT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_MODIFY.ENABLE_DELETE"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_MODIFY.ENABLE_DELETE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_MODIFY.ENABLE_ONCE"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_MODIFY.ENABLE_ONCE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_ON_HIT"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_ON_HIT</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_ON_HIT.BREAK"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_ON_HIT.BREAK</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_ON_HIT.FIND_ADDR"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_ON_HIT.FIND_ADDR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_ON_HIT.FIND_CODE"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_ON_HIT.FIND_CODE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_ON_HIT.TRACE"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_ON_HIT.TRACE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_TYPE"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_TYPE</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_TYPE.HARDWARE"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_TYPE.HARDWARE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.BREAKPOINT_TYPE.SOFTWARE"><code class="docutils literal notranslate"><span class="pre">BREAKPOINT_TYPE.SOFTWARE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.CONST_TIME"><code class="docutils literal notranslate"><span class="pre">CONST_TIME</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.CONST_TIME.GDB_INPUT_SLEEP"><code class="docutils literal notranslate"><span class="pre">CONST_TIME.GDB_INPUT_SLEEP</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.ENDIANNESS"><code class="docutils literal notranslate"><span class="pre">ENDIANNESS</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.ENDIANNESS.BIG"><code class="docutils literal notranslate"><span class="pre">ENDIANNESS.BIG</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.ENDIANNESS.HOST"><code class="docutils literal notranslate"><span class="pre">ENDIANNESS.HOST</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.ENDIANNESS.LITTLE"><code class="docutils literal notranslate"><span class="pre">ENDIANNESS.LITTLE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.FREEZE_TYPE"><code class="docutils literal notranslate"><span class="pre">FREEZE_TYPE</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.FREEZE_TYPE.ALLOW_DECREMENT"><code class="docutils literal notranslate"><span class="pre">FREEZE_TYPE.ALLOW_DECREMENT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.FREEZE_TYPE.ALLOW_INCREMENT"><code class="docutils literal notranslate"><span class="pre">FREEZE_TYPE.ALLOW_INCREMENT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.FREEZE_TYPE.DEFAULT"><code class="docutils literal notranslate"><span class="pre">FREEZE_TYPE.DEFAULT</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.Frozen"><code class="docutils literal notranslate"><span class="pre">Frozen</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.GDBInitializeException"><code class="docutils literal notranslate"><span class="pre">GDBInitializeException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.INFERIOR_ARCH"><code class="docutils literal notranslate"><span class="pre">INFERIOR_ARCH</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.INFERIOR_ARCH.ARCH_32"><code class="docutils literal notranslate"><span class="pre">INFERIOR_ARCH.ARCH_32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.INFERIOR_ARCH.ARCH_64"><code class="docutils literal notranslate"><span class="pre">INFERIOR_ARCH.ARCH_64</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.INFERIOR_STATUS"><code class="docutils literal notranslate"><span class="pre">INFERIOR_STATUS</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.INFERIOR_STATUS.RUNNING"><code class="docutils literal notranslate"><span class="pre">INFERIOR_STATUS.RUNNING</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.INFERIOR_STATUS.STOPPED"><code class="docutils literal notranslate"><span class="pre">INFERIOR_STATUS.STOPPED</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.INJECTION_METHOD"><code class="docutils literal notranslate"><span class="pre">INJECTION_METHOD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.INJECTION_METHOD.ADVANCED"><code class="docutils literal notranslate"><span class="pre">INJECTION_METHOD.ADVANCED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.INJECTION_METHOD.DLOPEN"><code class="docutils literal notranslate"><span class="pre">INJECTION_METHOD.DLOPEN</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.KeyboardModifiersTupleDict"><code class="docutils literal notranslate"><span class="pre">KeyboardModifiersTupleDict</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.PATHS"><code class="docutils literal notranslate"><span class="pre">PATHS</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.PATHS.FROM_PINCE"><code class="docutils literal notranslate"><span class="pre">PATHS.FROM_PINCE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.PATHS.GDB"><code class="docutils literal notranslate"><span class="pre">PATHS.GDB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.PATHS.IPC"><code class="docutils literal notranslate"><span class="pre">PATHS.IPC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.PATHS.TMP"><code class="docutils literal notranslate"><span class="pre">PATHS.TMP</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.PATHS.TO_PINCE"><code class="docutils literal notranslate"><span class="pre">PATHS.TO_PINCE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.PointerChainRequest"><code class="docutils literal notranslate"><span class="pre">PointerChainRequest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.PointerChainRequest.get_base_address_as_str"><code class="docutils literal notranslate"><span class="pre">PointerChainRequest.get_base_address_as_str()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.PointerChainRequest.serialize"><code class="docutils literal notranslate"><span class="pre">PointerChainRequest.serialize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.PointerChainResult"><code class="docutils literal notranslate"><span class="pre">PointerChainResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.PointerChainResult.get_final_address"><code class="docutils literal notranslate"><span class="pre">PointerChainResult.get_final_address()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.PointerChainResult.get_final_address_as_hex"><code class="docutils literal notranslate"><span class="pre">PointerChainResult.get_final_address_as_hex()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.PointerChainResult.get_pointer_by_index"><code class="docutils literal notranslate"><span class="pre">PointerChainResult.get_pointer_by_index()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.REGISTERS"><code class="docutils literal notranslate"><span class="pre">REGISTERS</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.REGISTERS.FLAG"><code class="docutils literal notranslate"><span class="pre">REGISTERS.FLAG</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.REGISTERS.FLOAT"><code class="docutils literal notranslate"><span class="pre">REGISTERS.FLOAT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.REGISTERS.GENERAL_32"><code class="docutils literal notranslate"><span class="pre">REGISTERS.GENERAL_32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.REGISTERS.GENERAL_64"><code class="docutils literal notranslate"><span class="pre">REGISTERS.GENERAL_64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.REGISTERS.SEGMENT"><code class="docutils literal notranslate"><span class="pre">REGISTERS.SEGMENT</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.RegisterQueue"><code class="docutils literal notranslate"><span class="pre">RegisterQueue</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.RegisterQueue.broadcast_message"><code class="docutils literal notranslate"><span class="pre">RegisterQueue.broadcast_message()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.RegisterQueue.delete_queue"><code class="docutils literal notranslate"><span class="pre">RegisterQueue.delete_queue()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.RegisterQueue.register_queue"><code class="docutils literal notranslate"><span class="pre">RegisterQueue.register_queue()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_INDEX"><code class="docutils literal notranslate"><span class="pre">SCAN_INDEX</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_INDEX.ANY"><code class="docutils literal notranslate"><span class="pre">SCAN_INDEX.ANY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_INDEX.AOB"><code class="docutils literal notranslate"><span class="pre">SCAN_INDEX.AOB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_INDEX.FLOAT32"><code class="docutils literal notranslate"><span class="pre">SCAN_INDEX.FLOAT32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_INDEX.FLOAT64"><code class="docutils literal notranslate"><span class="pre">SCAN_INDEX.FLOAT64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_INDEX.FLOAT_ANY"><code class="docutils literal notranslate"><span class="pre">SCAN_INDEX.FLOAT_ANY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_INDEX.INT16"><code class="docutils literal notranslate"><span class="pre">SCAN_INDEX.INT16</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_INDEX.INT32"><code class="docutils literal notranslate"><span class="pre">SCAN_INDEX.INT32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_INDEX.INT64"><code class="docutils literal notranslate"><span class="pre">SCAN_INDEX.INT64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_INDEX.INT8"><code class="docutils literal notranslate"><span class="pre">SCAN_INDEX.INT8</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_INDEX.INT_ANY"><code class="docutils literal notranslate"><span class="pre">SCAN_INDEX.INT_ANY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_INDEX.STRING"><code class="docutils literal notranslate"><span class="pre">SCAN_INDEX.STRING</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_MODE"><code class="docutils literal notranslate"><span class="pre">SCAN_MODE</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_MODE.NEW"><code class="docutils literal notranslate"><span class="pre">SCAN_MODE.NEW</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_MODE.ONGOING"><code class="docutils literal notranslate"><span class="pre">SCAN_MODE.ONGOING</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_SCOPE"><code class="docutils literal notranslate"><span class="pre">SCAN_SCOPE</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_SCOPE.BASIC"><code class="docutils literal notranslate"><span class="pre">SCAN_SCOPE.BASIC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_SCOPE.FULL"><code class="docutils literal notranslate"><span class="pre">SCAN_SCOPE.FULL</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_SCOPE.FULL_RW"><code class="docutils literal notranslate"><span class="pre">SCAN_SCOPE.FULL_RW</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_SCOPE.NORMAL"><code class="docutils literal notranslate"><span class="pre">SCAN_SCOPE.NORMAL</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.BETWEEN"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.BETWEEN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.CHANGED"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.CHANGED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.DECREASED"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.DECREASED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.DECREASED_BY"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.DECREASED_BY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.EXACT"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.EXACT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.INCREASED"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.INCREASED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.INCREASED_BY"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.INCREASED_BY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.LESS"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.LESS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.MORE"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.MORE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.NOT"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.NOT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.UNCHANGED"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.UNCHANGED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.UNKNOWN"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.UNKNOWN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.SCAN_TYPE.get_list"><code class="docutils literal notranslate"><span class="pre">SCAN_TYPE.get_list()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.STEP_MODE"><code class="docutils literal notranslate"><span class="pre">STEP_MODE</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.STEP_MODE.SINGLE_STEP"><code class="docutils literal notranslate"><span class="pre">STEP_MODE.SINGLE_STEP</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.STEP_MODE.STEP_OVER"><code class="docutils literal notranslate"><span class="pre">STEP_MODE.STEP_OVER</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.STOP_REASON"><code class="docutils literal notranslate"><span class="pre">STOP_REASON</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.STOP_REASON.DEBUG"><code class="docutils literal notranslate"><span class="pre">STOP_REASON.DEBUG</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.STOP_REASON.PAUSE"><code class="docutils literal notranslate"><span class="pre">STOP_REASON.PAUSE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.TOGGLE_ATTACH"><code class="docutils literal notranslate"><span class="pre">TOGGLE_ATTACH</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.TOGGLE_ATTACH.ATTACHED"><code class="docutils literal notranslate"><span class="pre">TOGGLE_ATTACH.ATTACHED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.TOGGLE_ATTACH.DETACHED"><code class="docutils literal notranslate"><span class="pre">TOGGLE_ATTACH.DETACHED</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.TRACE_STATUS"><code class="docutils literal notranslate"><span class="pre">TRACE_STATUS</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.TRACE_STATUS.CANCELED"><code class="docutils literal notranslate"><span class="pre">TRACE_STATUS.CANCELED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.TRACE_STATUS.FINISHED"><code class="docutils literal notranslate"><span class="pre">TRACE_STATUS.FINISHED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.TRACE_STATUS.IDLE"><code class="docutils literal notranslate"><span class="pre">TRACE_STATUS.IDLE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.TRACE_STATUS.TRACING"><code class="docutils literal notranslate"><span class="pre">TRACE_STATUS.TRACING</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.USER_PATHS"><code class="docutils literal notranslate"><span class="pre">USER_PATHS</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.USER_PATHS.CONFIG"><code class="docutils literal notranslate"><span class="pre">USER_PATHS.CONFIG</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.USER_PATHS.GDBINIT"><code class="docutils literal notranslate"><span class="pre">USER_PATHS.GDBINIT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.USER_PATHS.GDBINIT_AA"><code class="docutils literal notranslate"><span class="pre">USER_PATHS.GDBINIT_AA</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.USER_PATHS.PINCEINIT"><code class="docutils literal notranslate"><span class="pre">USER_PATHS.PINCEINIT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.USER_PATHS.PINCEINIT_AA"><code class="docutils literal notranslate"><span class="pre">USER_PATHS.PINCEINIT_AA</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.USER_PATHS.ROOT"><code class="docutils literal notranslate"><span class="pre">USER_PATHS.ROOT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.USER_PATHS.get_init_files"><code class="docutils literal notranslate"><span class="pre">USER_PATHS.get_init_files()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.AOB"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.AOB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.FLOAT32"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.FLOAT32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.FLOAT64"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.FLOAT64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.INT16"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.INT16</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.INT32"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.INT32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.INT64"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.INT64</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.INT8"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.INT8</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.STRING_ASCII"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.STRING_ASCII</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.STRING_UTF16"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.STRING_UTF16</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.STRING_UTF32"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.STRING_UTF32</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.STRING_UTF8"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.STRING_UTF8</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.has_length"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.has_length()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.is_float"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.is_float()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.is_integer"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.is_integer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.is_number"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.is_number()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_INDEX.is_string"><code class="docutils literal notranslate"><span class="pre">VALUE_INDEX.is_string()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_REPR"><code class="docutils literal notranslate"><span class="pre">VALUE_REPR</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_REPR.HEX"><code class="docutils literal notranslate"><span class="pre">VALUE_REPR.HEX</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_REPR.SIGNED"><code class="docutils literal notranslate"><span class="pre">VALUE_REPR.SIGNED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.VALUE_REPR.UNSIGNED"><code class="docutils literal notranslate"><span class="pre">VALUE_REPR.UNSIGNED</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.ValueType"><code class="docutils literal notranslate"><span class="pre">ValueType</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.ValueType.serialize"><code class="docutils literal notranslate"><span class="pre">ValueType.serialize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.ValueType.text"><code class="docutils literal notranslate"><span class="pre">ValueType.text()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.WATCHPOINT_TYPE"><code class="docutils literal notranslate"><span class="pre">WATCHPOINT_TYPE</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.WATCHPOINT_TYPE.BOTH"><code class="docutils literal notranslate"><span class="pre">WATCHPOINT_TYPE.BOTH</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.WATCHPOINT_TYPE.READ_ONLY"><code class="docutils literal notranslate"><span class="pre">WATCHPOINT_TYPE.READ_ONLY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.WATCHPOINT_TYPE.WRITE_ONLY"><code class="docutils literal notranslate"><span class="pre">WATCHPOINT_TYPE.WRITE_ONLY</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.gdb_output_mode"><code class="docutils literal notranslate"><span class="pre">gdb_output_mode</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.gdb_output_mode.async_output"><code class="docutils literal notranslate"><span class="pre">gdb_output_mode.async_output</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.gdb_output_mode.command_info"><code class="docutils literal notranslate"><span class="pre">gdb_output_mode.command_info</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.gdb_output_mode.command_output"><code class="docutils literal notranslate"><span class="pre">gdb_output_mode.command_output</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_breakpoint_info"><code class="docutils literal notranslate"><span class="pre">tuple_breakpoint_info</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_breakpoint_info.address"><code class="docutils literal notranslate"><span class="pre">tuple_breakpoint_info.address</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_breakpoint_info.breakpoint_type"><code class="docutils literal notranslate"><span class="pre">tuple_breakpoint_info.breakpoint_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_breakpoint_info.condition"><code class="docutils literal notranslate"><span class="pre">tuple_breakpoint_info.condition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_breakpoint_info.disp"><code class="docutils literal notranslate"><span class="pre">tuple_breakpoint_info.disp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_breakpoint_info.enable_count"><code class="docutils literal notranslate"><span class="pre">tuple_breakpoint_info.enable_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_breakpoint_info.enabled"><code class="docutils literal notranslate"><span class="pre">tuple_breakpoint_info.enabled</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_breakpoint_info.hit_count"><code class="docutils literal notranslate"><span class="pre">tuple_breakpoint_info.hit_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_breakpoint_info.number"><code class="docutils literal notranslate"><span class="pre">tuple_breakpoint_info.number</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_breakpoint_info.on_hit"><code class="docutils literal notranslate"><span class="pre">tuple_breakpoint_info.on_hit</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_breakpoint_info.size"><code class="docutils literal notranslate"><span class="pre">tuple_breakpoint_info.size</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_examine_expression"><code class="docutils literal notranslate"><span class="pre">tuple_examine_expression</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_examine_expression.address"><code class="docutils literal notranslate"><span class="pre">tuple_examine_expression.address</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_examine_expression.all"><code class="docutils literal notranslate"><span class="pre">tuple_examine_expression.all</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_examine_expression.symbol"><code class="docutils literal notranslate"><span class="pre">tuple_examine_expression.symbol</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_region_info"><code class="docutils literal notranslate"><span class="pre">tuple_region_info</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_region_info.end"><code class="docutils literal notranslate"><span class="pre">tuple_region_info.end</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_region_info.file_name"><code class="docutils literal notranslate"><span class="pre">tuple_region_info.file_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_region_info.perms"><code class="docutils literal notranslate"><span class="pre">tuple_region_info.perms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_region_info.region_index"><code class="docutils literal notranslate"><span class="pre">tuple_region_info.region_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="libpince.html#libpince.typedefs.tuple_region_info.start"><code class="docutils literal notranslate"><span class="pre">tuple_region_info.start</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="libpince.html#module-libpince.utils">libpince.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.aob_to_str"><code class="docutils literal notranslate"><span class="pre">aob_to_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.append_file_extension"><code class="docutils literal notranslate"><span class="pre">append_file_extension()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.assemble"><code class="docutils literal notranslate"><span class="pre">assemble()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.change_trace_status"><code class="docutils literal notranslate"><span class="pre">change_trace_status()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.create_ipc_path"><code class="docutils literal notranslate"><span class="pre">create_ipc_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.create_tmp_path"><code class="docutils literal notranslate"><span class="pre">create_tmp_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.delete_ipc_path"><code class="docutils literal notranslate"><span class="pre">delete_ipc_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.disassemble"><code class="docutils literal notranslate"><span class="pre">disassemble()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.execute_command_as_user"><code class="docutils literal notranslate"><span class="pre">execute_command_as_user()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.execute_script"><code class="docutils literal notranslate"><span class="pre">execute_script()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.extract_address"><code class="docutils literal notranslate"><span class="pre">extract_address()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.extract_symbol_name"><code class="docutils literal notranslate"><span class="pre">extract_symbol_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.filter_regions"><code class="docutils literal notranslate"><span class="pre">filter_regions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_default_gdb_path"><code class="docutils literal notranslate"><span class="pre">get_default_gdb_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_dissect_code_status_file"><code class="docutils literal notranslate"><span class="pre">get_dissect_code_status_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_from_pince_file"><code class="docutils literal notranslate"><span class="pre">get_from_pince_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_gdb_command_file"><code class="docutils literal notranslate"><span class="pre">get_gdb_command_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_ipc_path"><code class="docutils literal notranslate"><span class="pre">get_ipc_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_libpince_directory"><code class="docutils literal notranslate"><span class="pre">get_libpince_directory()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_logging_file"><code class="docutils literal notranslate"><span class="pre">get_logging_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_logo_directory"><code class="docutils literal notranslate"><span class="pre">get_logo_directory()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_media_directory"><code class="docutils literal notranslate"><span class="pre">get_media_directory()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_module_name"><code class="docutils literal notranslate"><span class="pre">get_module_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_process_list"><code class="docutils literal notranslate"><span class="pre">get_process_list()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_process_name"><code class="docutils literal notranslate"><span class="pre">get_process_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_referenced_calls_file"><code class="docutils literal notranslate"><span class="pre">get_referenced_calls_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_referenced_jumps_file"><code class="docutils literal notranslate"><span class="pre">get_referenced_jumps_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_referenced_strings_file"><code class="docutils literal notranslate"><span class="pre">get_referenced_strings_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_region_dict"><code class="docutils literal notranslate"><span class="pre">get_region_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_region_info"><code class="docutils literal notranslate"><span class="pre">get_region_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_regions"><code class="docutils literal notranslate"><span class="pre">get_regions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_script_directory"><code class="docutils literal notranslate"><span class="pre">get_script_directory()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_tmp_path"><code class="docutils literal notranslate"><span class="pre">get_tmp_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_to_pince_file"><code class="docutils literal notranslate"><span class="pre">get_to_pince_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_trace_status_file"><code class="docutils literal notranslate"><span class="pre">get_trace_status_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_track_breakpoint_file"><code class="docutils literal notranslate"><span class="pre">get_track_breakpoint_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_track_watchpoint_file"><code class="docutils literal notranslate"><span class="pre">get_track_watchpoint_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_user_home_dir"><code class="docutils literal notranslate"><span class="pre">get_user_home_dir()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_user_ids"><code class="docutils literal notranslate"><span class="pre">get_user_ids()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.get_user_path"><code class="docutils literal notranslate"><span class="pre">get_user_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.ignore_exceptions"><code class="docutils literal notranslate"><span class="pre">ignore_exceptions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.init_user_files"><code class="docutils literal notranslate"><span class="pre">init_user_files()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.instruction_follow_address"><code class="docutils literal notranslate"><span class="pre">instruction_follow_address()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.is_process_valid"><code class="docutils literal notranslate"><span class="pre">is_process_valid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.is_traced"><code class="docutils literal notranslate"><span class="pre">is_traced()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.load_file"><code class="docutils literal notranslate"><span class="pre">load_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.modulo_address"><code class="docutils literal notranslate"><span class="pre">modulo_address()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.parse_response"><code class="docutils literal notranslate"><span class="pre">parse_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.parse_string"><code class="docutils literal notranslate"><span class="pre">parse_string()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.return_optional_int"><code class="docutils literal notranslate"><span class="pre">return_optional_int()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.save_file"><code class="docutils literal notranslate"><span class="pre">save_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.search_files"><code class="docutils literal notranslate"><span class="pre">search_files()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.search_processes"><code class="docutils literal notranslate"><span class="pre">search_processes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.split_symbol"><code class="docutils literal notranslate"><span class="pre">split_symbol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.str_to_aob"><code class="docutils literal notranslate"><span class="pre">str_to_aob()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="libpince.html#libpince.utils.upper_hex"><code class="docutils literal notranslate"><span class="pre">upper_hex()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="libpince.html#module-libpince">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="gui-utils">
+<h1>GUI.Utils<a class="headerlink" href="#gui-utils" title="Link to this heading">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="gui_utils.html">GUI.Utils package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gui_utils.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gui_utils.html#module-GUI.Utils.guiutils">GUI.Utils.guiutils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.append_shortcut_to_tooltip"><code class="docutils literal notranslate"><span class="pre">append_shortcut_to_tooltip()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.center"><code class="docutils literal notranslate"><span class="pre">center()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.center_scroll_bar"><code class="docutils literal notranslate"><span class="pre">center_scroll_bar()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.center_to_parent"><code class="docutils literal notranslate"><span class="pre">center_to_parent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.check_inferior_running"><code class="docutils literal notranslate"><span class="pre">check_inferior_running()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.contains_reference_mark"><code class="docutils literal notranslate"><span class="pre">contains_reference_mark()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.delete_menu_entries"><code class="docutils literal notranslate"><span class="pre">delete_menu_entries()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.fill_endianness_combobox"><code class="docutils literal notranslate"><span class="pre">fill_endianness_combobox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.fill_value_combobox"><code class="docutils literal notranslate"><span class="pre">fill_value_combobox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.get_current_item"><code class="docutils literal notranslate"><span class="pre">get_current_item()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.get_current_row"><code class="docutils literal notranslate"><span class="pre">get_current_row()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.get_icons_directory"><code class="docutils literal notranslate"><span class="pre">get_icons_directory()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.get_layout_widgets"><code class="docutils literal notranslate"><span class="pre">get_layout_widgets()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.resize_to_contents"><code class="docutils literal notranslate"><span class="pre">resize_to_contents()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guiutils.search_parents_by_function"><code class="docutils literal notranslate"><span class="pre">search_parents_by_function()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gui_utils.html#module-GUI.Utils.guitypedefs">GUI.Utils.guitypedefs module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.AwaitAsyncOutput"><code class="docutils literal notranslate"><span class="pre">AwaitAsyncOutput</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.AwaitAsyncOutput.async_output_ready"><code class="docutils literal notranslate"><span class="pre">AwaitAsyncOutput.async_output_ready</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.AwaitAsyncOutput.run"><code class="docutils literal notranslate"><span class="pre">AwaitAsyncOutput.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.AwaitAsyncOutput.stop"><code class="docutils literal notranslate"><span class="pre">AwaitAsyncOutput.stop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.AwaitProcessExit"><code class="docutils literal notranslate"><span class="pre">AwaitProcessExit</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.AwaitProcessExit.process_exited"><code class="docutils literal notranslate"><span class="pre">AwaitProcessExit.process_exited</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.AwaitProcessExit.run"><code class="docutils literal notranslate"><span class="pre">AwaitProcessExit.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.CheckInferiorStatus"><code class="docutils literal notranslate"><span class="pre">CheckInferiorStatus</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.CheckInferiorStatus.process_running"><code class="docutils literal notranslate"><span class="pre">CheckInferiorStatus.process_running</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.CheckInferiorStatus.process_stopped"><code class="docutils literal notranslate"><span class="pre">CheckInferiorStatus.process_stopped</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.CheckInferiorStatus.run"><code class="docutils literal notranslate"><span class="pre">CheckInferiorStatus.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.Hotkey"><code class="docutils literal notranslate"><span class="pre">Hotkey</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.Hotkey.change_func"><code class="docutils literal notranslate"><span class="pre">Hotkey.change_func()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.Hotkey.change_key"><code class="docutils literal notranslate"><span class="pre">Hotkey.change_key()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.Hotkey.get_active_key"><code class="docutils literal notranslate"><span class="pre">Hotkey.get_active_key()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.Hotkeys"><code class="docutils literal notranslate"><span class="pre">Hotkeys</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.Hotkeys.get_hotkeys"><code class="docutils literal notranslate"><span class="pre">Hotkeys.get_hotkeys()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.InterruptableWorker"><code class="docutils literal notranslate"><span class="pre">InterruptableWorker</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.InterruptableWorker.run"><code class="docutils literal notranslate"><span class="pre">InterruptableWorker.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.InterruptableWorker.stop"><code class="docutils literal notranslate"><span class="pre">InterruptableWorker.stop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.ProcessSignals"><code class="docutils literal notranslate"><span class="pre">ProcessSignals</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.ProcessSignals.attach"><code class="docutils literal notranslate"><span class="pre">ProcessSignals.attach</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.ProcessSignals.exit"><code class="docutils literal notranslate"><span class="pre">ProcessSignals.exit</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.SessionSignals"><code class="docutils literal notranslate"><span class="pre">SessionSignals</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.SessionSignals.new_session"><code class="docutils literal notranslate"><span class="pre">SessionSignals.new_session</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.SessionSignals.on_load"><code class="docutils literal notranslate"><span class="pre">SessionSignals.on_load</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.SessionSignals.on_save"><code class="docutils literal notranslate"><span class="pre">SessionSignals.on_save</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.SettingSignals"><code class="docutils literal notranslate"><span class="pre">SettingSignals</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.SettingSignals.changed"><code class="docutils literal notranslate"><span class="pre">SettingSignals.changed</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.Worker"><code class="docutils literal notranslate"><span class="pre">Worker</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.Worker.run"><code class="docutils literal notranslate"><span class="pre">Worker.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.WorkerSignals"><code class="docutils literal notranslate"><span class="pre">WorkerSignals</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.guitypedefs.WorkerSignals.finished"><code class="docutils literal notranslate"><span class="pre">WorkerSignals.finished</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gui_utils.html#module-GUI.Utils.utilwidgets">GUI.Utils.utilwidgets module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.utilwidgets.ComboBoxDialog"><code class="docutils literal notranslate"><span class="pre">ComboBoxDialog</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.utilwidgets.ComboBoxDialog.get_values"><code class="docutils literal notranslate"><span class="pre">ComboBoxDialog.get_values()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gui_utils.html#GUI.Utils.utilwidgets.InputDialog"><code class="docutils literal notranslate"><span class="pre">InputDialog</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gui_utils.html#GUI.Utils.utilwidgets.InputDialog.get_values"><code class="docutils literal notranslate"><span class="pre">InputDialog.get_values()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PINCE</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">libpince</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="libpince.html">libpince package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#gui-utils">GUI.Utils</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gui_utils.html">GUI.Utils package</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to PINCE’s documentation!</a></li>
+      <li>Next: <a href="libpince.html" title="next chapter">libpince package</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, PINCE Contributors.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/modules.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

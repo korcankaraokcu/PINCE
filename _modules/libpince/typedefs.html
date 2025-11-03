@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>libpince.typedefs &#8212; PINCE  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for libpince.typedefs</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Copyright (C) 2016-2017 Korcan Karaokçu &lt;korcankaraokcu@gmail.com&gt;</span>
+
+<span class="sd">This program is free software: you can redistribute it and/or modify</span>
+<span class="sd">it under the terms of the GNU General Public License as published by</span>
+<span class="sd">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="sd">(at your option) any later version.</span>
+
+<span class="sd">This program is distributed in the hope that it will be useful,</span>
+<span class="sd">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="sd">GNU General Public License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU General Public License</span>
+<span class="sd">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># IMPORTANT: Any constant involving only PINCE.py should be declared in PINCE.py</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">collections.abc</span><span class="o">,</span><span class="w"> </span><span class="nn">queue</span><span class="o">,</span><span class="w"> </span><span class="nn">sys</span>
+
+
+<div class="viewcode-block" id="CONST_TIME">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.CONST_TIME">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CONST_TIME</span><span class="p">:</span>
+    <span class="n">GDB_INPUT_SLEEP</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">float_info</span><span class="o">.</span><span class="n">min</span></div>
+
+
+
+<div class="viewcode-block" id="PATHS">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.PATHS">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PATHS</span><span class="p">:</span>
+    <span class="n">GDB</span> <span class="o">=</span> <span class="s2">&quot;/bin/gdb&quot;</span>  <span class="c1"># Use utils.get_default_gdb_path()</span>
+    <span class="n">TMP</span> <span class="o">=</span> <span class="s2">&quot;/tmp/PINCE/&quot;</span>  <span class="c1"># Use utils.get_tmp_path()</span>
+    <span class="n">IPC</span> <span class="o">=</span> <span class="s2">&quot;/dev/shm/PINCE_IPC/&quot;</span>  <span class="c1"># Use utils.get_ipc_path()</span>
+    <span class="n">FROM_PINCE</span> <span class="o">=</span> <span class="s2">&quot;/from_PINCE&quot;</span>  <span class="c1"># Use utils.get_from_pince_file()</span>
+    <span class="n">TO_PINCE</span> <span class="o">=</span> <span class="s2">&quot;/to_PINCE&quot;</span>  <span class="c1"># Use utils.get_to_pince_file()</span></div>
+
+
+
+<div class="viewcode-block" id="USER_PATHS">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.USER_PATHS">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">USER_PATHS</span><span class="p">:</span>
+    <span class="c1"># Use utils.get_user_path() to make use of these</span>
+    <span class="n">CONFIG</span> <span class="o">=</span> <span class="s2">&quot;.config/&quot;</span>
+    <span class="n">ROOT</span> <span class="o">=</span> <span class="n">CONFIG</span> <span class="o">+</span> <span class="s2">&quot;PINCE/&quot;</span>
+    <span class="n">GDBINIT</span> <span class="o">=</span> <span class="n">ROOT</span> <span class="o">+</span> <span class="s2">&quot;gdbinit&quot;</span>
+    <span class="n">GDBINIT_AA</span> <span class="o">=</span> <span class="n">ROOT</span> <span class="o">+</span> <span class="s2">&quot;gdbinit_after_attach&quot;</span>
+    <span class="n">PINCEINIT</span> <span class="o">=</span> <span class="n">ROOT</span> <span class="o">+</span> <span class="s2">&quot;pinceinit.py&quot;</span>
+    <span class="n">PINCEINIT_AA</span> <span class="o">=</span> <span class="n">ROOT</span> <span class="o">+</span> <span class="s2">&quot;pinceinit_after_attach.py&quot;</span>
+
+<div class="viewcode-block" id="USER_PATHS.get_init_files">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.USER_PATHS.get_init_files">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_init_files</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">USER_PATHS</span><span class="o">.</span><span class="n">GDBINIT</span><span class="p">,</span>
+            <span class="n">USER_PATHS</span><span class="o">.</span><span class="n">GDBINIT_AA</span><span class="p">,</span>
+            <span class="n">USER_PATHS</span><span class="o">.</span><span class="n">PINCEINIT</span><span class="p">,</span>
+            <span class="n">USER_PATHS</span><span class="o">.</span><span class="n">PINCEINIT_AA</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="INFERIOR_STATUS">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.INFERIOR_STATUS">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">INFERIOR_STATUS</span><span class="p">:</span>
+    <span class="n">RUNNING</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">STOPPED</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="INFERIOR_ARCH">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.INFERIOR_ARCH">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">INFERIOR_ARCH</span><span class="p">:</span>
+    <span class="n">ARCH_32</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">ARCH_64</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="INJECTION_METHOD">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.INJECTION_METHOD">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">INJECTION_METHOD</span><span class="p">:</span>
+    <span class="n">DLOPEN</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">ADVANCED</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="BREAKPOINT_TYPE">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.BREAKPOINT_TYPE">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BREAKPOINT_TYPE</span><span class="p">:</span>
+    <span class="n">HARDWARE</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">SOFTWARE</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="WATCHPOINT_TYPE">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.WATCHPOINT_TYPE">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">WATCHPOINT_TYPE</span><span class="p">:</span>
+    <span class="n">WRITE_ONLY</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">READ_ONLY</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">BOTH</span> <span class="o">=</span> <span class="mi">3</span></div>
+
+
+
+<div class="viewcode-block" id="BREAKPOINT_ON_HIT">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.BREAKPOINT_ON_HIT">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BREAKPOINT_ON_HIT</span><span class="p">:</span>
+    <span class="n">BREAK</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">FIND_CODE</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">FIND_ADDR</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">TRACE</span> <span class="o">=</span> <span class="mi">4</span></div>
+
+
+
+<div class="viewcode-block" id="BREAKPOINT_MODIFY">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.BREAKPOINT_MODIFY">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BREAKPOINT_MODIFY</span><span class="p">:</span>
+    <span class="n">CONDITION</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">ENABLE</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">DISABLE</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">ENABLE_ONCE</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">ENABLE_COUNT</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">ENABLE_DELETE</span> <span class="o">=</span> <span class="mi">6</span></div>
+
+
+
+<div class="viewcode-block" id="STEP_MODE">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.STEP_MODE">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">STEP_MODE</span><span class="p">:</span>
+    <span class="n">SINGLE_STEP</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">STEP_OVER</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="TRACE_STATUS">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.TRACE_STATUS">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TRACE_STATUS</span><span class="p">:</span>
+    <span class="n">IDLE</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">TRACING</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">CANCELED</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">FINISHED</span> <span class="o">=</span> <span class="mi">4</span></div>
+
+
+
+<div class="viewcode-block" id="STOP_REASON">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.STOP_REASON">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">STOP_REASON</span><span class="p">:</span>
+    <span class="n">PAUSE</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">DEBUG</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="ATTACH_RESULT">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.ATTACH_RESULT">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ATTACH_RESULT</span><span class="p">:</span>
+    <span class="n">ATTACH_SELF</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">SUCCESSFUL</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">PROCESS_NOT_VALID</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">ALREADY_DEBUGGING</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">ALREADY_TRACED</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">PERM_DENIED</span> <span class="o">=</span> <span class="mi">6</span></div>
+
+
+
+<div class="viewcode-block" id="TOGGLE_ATTACH">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.TOGGLE_ATTACH">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TOGGLE_ATTACH</span><span class="p">:</span>
+    <span class="n">ATTACHED</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">DETACHED</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="REGISTERS">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.REGISTERS">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">REGISTERS</span><span class="p">:</span>
+    <span class="n">GENERAL_32</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;eax&quot;</span><span class="p">,</span> <span class="s2">&quot;ebx&quot;</span><span class="p">,</span> <span class="s2">&quot;ecx&quot;</span><span class="p">,</span> <span class="s2">&quot;edx&quot;</span><span class="p">,</span> <span class="s2">&quot;esi&quot;</span><span class="p">,</span> <span class="s2">&quot;edi&quot;</span><span class="p">,</span> <span class="s2">&quot;ebp&quot;</span><span class="p">,</span> <span class="s2">&quot;esp&quot;</span><span class="p">,</span> <span class="s2">&quot;eip&quot;</span><span class="p">]</span>
+    <span class="n">GENERAL_64</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;rax&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rbx&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rcx&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rdx&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rsi&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rdi&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rbp&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rsp&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rip&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;r8&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;r9&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;r10&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;r11&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;r12&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;r13&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;r14&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;r15&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">SEGMENT</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;cs&quot;</span><span class="p">,</span> <span class="s2">&quot;ss&quot;</span><span class="p">,</span> <span class="s2">&quot;ds&quot;</span><span class="p">,</span> <span class="s2">&quot;es&quot;</span><span class="p">,</span> <span class="s2">&quot;fs&quot;</span><span class="p">,</span> <span class="s2">&quot;gs&quot;</span><span class="p">]</span>
+    <span class="n">FLAG</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;cf&quot;</span><span class="p">,</span> <span class="s2">&quot;pf&quot;</span><span class="p">,</span> <span class="s2">&quot;af&quot;</span><span class="p">,</span> <span class="s2">&quot;zf&quot;</span><span class="p">,</span> <span class="s2">&quot;sf&quot;</span><span class="p">,</span> <span class="s2">&quot;tf&quot;</span><span class="p">,</span> <span class="s2">&quot;if&quot;</span><span class="p">,</span> <span class="s2">&quot;df&quot;</span><span class="p">,</span> <span class="s2">&quot;of&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="REGISTERS.FLOAT">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.REGISTERS.FLOAT">[docs]</a>
+    <span class="k">class</span><span class="w"> </span><span class="nc">FLOAT</span><span class="p">:</span>
+        <span class="n">ST</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;st&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)]</span>
+        <span class="n">XMM_32</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;xmm&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)]</span>
+        <span class="n">XMM_64</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;xmm&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">)]</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FREEZE_TYPE">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.FREEZE_TYPE">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FREEZE_TYPE</span><span class="p">:</span>
+    <span class="n">DEFAULT</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ALLOW_INCREMENT</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">ALLOW_DECREMENT</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="VALUE_REPR">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.VALUE_REPR">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VALUE_REPR</span><span class="p">:</span>
+    <span class="n">UNSIGNED</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">SIGNED</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">HEX</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="VALUE_INDEX">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.VALUE_INDEX">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VALUE_INDEX</span><span class="p">:</span>
+    <span class="c1"># Beginning of the integer indexes, new integer indexes should be added between 0 and 3</span>
+    <span class="n">INT8</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">INT16</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">INT32</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">INT64</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="c1"># Ending of the integer indexes</span>
+
+    <span class="n">FLOAT32</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">FLOAT64</span> <span class="o">=</span> <span class="mi">5</span>
+
+    <span class="c1"># Beginning of the string indexes, new string indexes should be added between 6 and 9</span>
+    <span class="n">STRING_ASCII</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">STRING_UTF8</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">STRING_UTF16</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">STRING_UTF32</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="c1"># Ending of the string indexes</span>
+
+    <span class="n">AOB</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># Array of Bytes</span>
+
+<div class="viewcode-block" id="VALUE_INDEX.is_integer">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.VALUE_INDEX.is_integer">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_integer</span><span class="p">(</span><span class="n">value_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT8</span> <span class="o">&lt;=</span> <span class="n">value_index</span> <span class="o">&lt;=</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT64</span></div>
+
+
+<div class="viewcode-block" id="VALUE_INDEX.is_float">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.VALUE_INDEX.is_float">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_float</span><span class="p">(</span><span class="n">value_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">FLOAT32</span> <span class="o">&lt;=</span> <span class="n">value_index</span> <span class="o">&lt;=</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">FLOAT64</span></div>
+
+
+<div class="viewcode-block" id="VALUE_INDEX.is_number">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.VALUE_INDEX.is_number">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_number</span><span class="p">(</span><span class="n">value_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT8</span> <span class="o">&lt;=</span> <span class="n">value_index</span> <span class="o">&lt;=</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">FLOAT64</span></div>
+
+
+<div class="viewcode-block" id="VALUE_INDEX.is_string">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.VALUE_INDEX.is_string">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_string</span><span class="p">(</span><span class="n">value_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_ASCII</span> <span class="o">&lt;=</span> <span class="n">value_index</span> <span class="o">&lt;=</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF32</span></div>
+
+
+<div class="viewcode-block" id="VALUE_INDEX.has_length">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.VALUE_INDEX.has_length">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_length</span><span class="p">(</span><span class="n">value_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_ASCII</span> <span class="o">&lt;=</span> <span class="n">value_index</span> <span class="o">&lt;=</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">AOB</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SCAN_INDEX">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.SCAN_INDEX">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SCAN_INDEX</span><span class="p">:</span>
+    <span class="n">INT_ANY</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">INT8</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">INT16</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">INT32</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">INT64</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">FLOAT_ANY</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">FLOAT32</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">FLOAT64</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">ANY</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">STRING</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">AOB</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># Array of Bytes</span></div>
+
+
+
+<span class="c1"># GDB already provides breakpoint info in english, no need to make these translatable</span>
+<span class="n">on_hit_to_text_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">BREAKPOINT_ON_HIT</span><span class="o">.</span><span class="n">BREAK</span><span class="p">:</span> <span class="s2">&quot;Break&quot;</span><span class="p">,</span>
+    <span class="n">BREAKPOINT_ON_HIT</span><span class="o">.</span><span class="n">FIND_CODE</span><span class="p">:</span> <span class="s2">&quot;Find Code&quot;</span><span class="p">,</span>
+    <span class="n">BREAKPOINT_ON_HIT</span><span class="o">.</span><span class="n">FIND_ADDR</span><span class="p">:</span> <span class="s2">&quot;Find Address&quot;</span><span class="p">,</span>
+    <span class="n">BREAKPOINT_ON_HIT</span><span class="o">.</span><span class="n">TRACE</span><span class="p">:</span> <span class="s2">&quot;Trace&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># Represents the texts at indexes in the address table</span>
+<span class="c1"># TODO: This class is mostly an UI helper, maybe integrate it into the the UI completely in the future?</span>
+<span class="n">index_to_text_dict</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT8</span><span class="p">,</span> <span class="s2">&quot;Int8&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT16</span><span class="p">,</span> <span class="s2">&quot;Int16&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT32</span><span class="p">,</span> <span class="s2">&quot;Int32&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT64</span><span class="p">,</span> <span class="s2">&quot;Int64&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">,</span> <span class="s2">&quot;Float32&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">,</span> <span class="s2">&quot;Float64&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_ASCII</span><span class="p">,</span> <span class="s2">&quot;String_ASCII&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF8</span><span class="p">,</span> <span class="s2">&quot;String_UTF8&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF16</span><span class="p">,</span> <span class="s2">&quot;String_UTF16&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF32</span><span class="p">,</span> <span class="s2">&quot;String_UTF32&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">AOB</span><span class="p">,</span> <span class="s2">&quot;ByteArray&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">text_to_index_dict</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">index_to_text_dict</span><span class="p">:</span>
+    <span class="n">text_to_index_dict</span><span class="p">[</span><span class="n">index_to_text_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]]</span> <span class="o">=</span> <span class="n">key</span>
+
+<span class="n">scanmem_result_to_index_dict</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;I8&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT8</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;I8u&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT8</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;I8s&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT8</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;I16&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT16</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;I16u&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT16</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;I16s&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT16</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;I32&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT32</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;I32u&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT32</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;I32s&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT32</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;I64&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT64</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;I64u&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT64</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;I64s&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT64</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;F32&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;F64&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF8</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;bytearray&quot;</span><span class="p">,</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">AOB</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Represents the texts at indexes in scan combobox</span>
+<span class="c1"># TODO: Same as index_to_text_dict, consider integrating into UI completely</span>
+<span class="n">scan_index_to_text_dict</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">INT_ANY</span><span class="p">,</span> <span class="s2">&quot;Int(any)&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">INT8</span><span class="p">,</span> <span class="s2">&quot;Int8&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">INT16</span><span class="p">,</span> <span class="s2">&quot;Int16&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">INT32</span><span class="p">,</span> <span class="s2">&quot;Int32&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">INT64</span><span class="p">,</span> <span class="s2">&quot;Int64&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">FLOAT_ANY</span><span class="p">,</span> <span class="s2">&quot;Float(any)&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">,</span> <span class="s2">&quot;Float32&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">,</span> <span class="s2">&quot;Float64&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">ANY</span><span class="p">,</span> <span class="s2">&quot;Any(int, float)&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="s2">&quot;String&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">AOB</span><span class="p">,</span> <span class="s2">&quot;ByteArray&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Used in scan_data_type option of scanmem</span>
+<span class="n">scan_index_to_scanmem_dict</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">INT_ANY</span><span class="p">,</span> <span class="s2">&quot;int&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">INT8</span><span class="p">,</span> <span class="s2">&quot;int8&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">INT16</span><span class="p">,</span> <span class="s2">&quot;int16&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">INT32</span><span class="p">,</span> <span class="s2">&quot;int32&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">INT64</span><span class="p">,</span> <span class="s2">&quot;int64&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">FLOAT_ANY</span><span class="p">,</span> <span class="s2">&quot;float&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">,</span> <span class="s2">&quot;float32&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">,</span> <span class="s2">&quot;float64&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">ANY</span><span class="p">,</span> <span class="s2">&quot;number&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="s2">&quot;string&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">AOB</span><span class="p">,</span> <span class="s2">&quot;bytearray&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+
+<span class="c1"># TODO: Same as index_to_text_dict, consider integrating into UI completely</span>
+<div class="viewcode-block" id="SCAN_TYPE">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.SCAN_TYPE">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SCAN_TYPE</span><span class="p">:</span>
+    <span class="n">EXACT</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">NOT</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">INCREASED</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">INCREASED_BY</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">DECREASED</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">DECREASED_BY</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">LESS</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">MORE</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">BETWEEN</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">CHANGED</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">UNCHANGED</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">UNKNOWN</span> <span class="o">=</span> <span class="mi">11</span>
+
+<div class="viewcode-block" id="SCAN_TYPE.get_list">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.SCAN_TYPE.get_list">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_list</span><span class="p">(</span><span class="n">scan_mode</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">scan_mode</span> <span class="o">==</span> <span class="n">SCAN_MODE</span><span class="o">.</span><span class="n">NEW</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">STRING</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">AOB</span><span class="p">:</span>
+                <span class="nb">list</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">EXACT</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">UNKNOWN</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">list</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">EXACT</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">NOT</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">LESS</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">MORE</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">BETWEEN</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">UNKNOWN</span><span class="p">,</span>
+                <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">STRING</span> <span class="ow">or</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">SCAN_INDEX</span><span class="o">.</span><span class="n">AOB</span><span class="p">:</span>
+                <span class="nb">list</span> <span class="o">=</span> <span class="p">[</span><span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">EXACT</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">list</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">EXACT</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">NOT</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">INCREASED</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">INCREASED_BY</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">DECREASED</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">DECREASED_BY</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">LESS</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">MORE</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">BETWEEN</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">CHANGED</span><span class="p">,</span>
+                    <span class="n">SCAN_TYPE</span><span class="o">.</span><span class="n">UNCHANGED</span><span class="p">,</span>
+                <span class="p">]</span>
+
+        <span class="k">return</span> <span class="nb">list</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SCAN_MODE">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.SCAN_MODE">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SCAN_MODE</span><span class="p">:</span>
+    <span class="n">NEW</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ONGOING</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+
+<div class="viewcode-block" id="SCAN_SCOPE">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.SCAN_SCOPE">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SCAN_SCOPE</span><span class="p">:</span>
+    <span class="n">BASIC</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">NORMAL</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">FULL_RW</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">FULL</span> <span class="o">=</span> <span class="mi">4</span></div>
+
+
+
+<div class="viewcode-block" id="ENDIANNESS">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.ENDIANNESS">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ENDIANNESS</span><span class="p">:</span>
+    <span class="n">HOST</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">LITTLE</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">BIG</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+
+<span class="n">string_index_to_encoding_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF8</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="s2">&quot;surrogateescape&quot;</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF16</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;utf-16&quot;</span><span class="p">,</span> <span class="s2">&quot;replace&quot;</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF32</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;utf-32&quot;</span><span class="p">,</span> <span class="s2">&quot;replace&quot;</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_ASCII</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ascii&quot;</span><span class="p">,</span> <span class="s2">&quot;replace&quot;</span><span class="p">],</span>
+<span class="p">}</span>
+
+<span class="n">string_index_to_multiplier_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF8</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF16</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF32</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># first value is the length and the second one is the type</span>
+<span class="c1"># Check gdbutils for an exemplary usage</span>
+<span class="n">index_to_valuetype_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT8</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT16</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;H&quot;</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT32</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT64</span><span class="p">:</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;Q&quot;</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;f&quot;</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">:</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_ASCII</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF8</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF16</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">STRING_UTF32</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">AOB</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+<span class="p">}</span>
+
+<span class="c1"># Check gdbutils for an exemplary usage</span>
+<span class="n">index_to_struct_pack_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT8</span><span class="p">:</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT16</span><span class="p">:</span> <span class="s2">&quot;H&quot;</span><span class="p">,</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT32</span><span class="p">:</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT64</span><span class="p">:</span> <span class="s2">&quot;Q&quot;</span><span class="p">,</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">:</span> <span class="s2">&quot;f&quot;</span><span class="p">,</span>
+    <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">:</span> <span class="s2">&quot;d&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># Format: {tag:tag_description}</span>
+<span class="n">tag_to_string</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;MemoryRW&quot;</span><span class="p">,</span> <span class="s2">&quot;Memory Read/Write&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;ValueType&quot;</span><span class="p">,</span> <span class="s2">&quot;Value Type&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;Injection&quot;</span><span class="p">,</span> <span class="s2">&quot;Injection&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;Debug&quot;</span><span class="p">,</span> <span class="s2">&quot;Debugging&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;BreakWatchpoints&quot;</span><span class="p">,</span> <span class="s2">&quot;Breakpoints&amp;Watchpoints&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;Threads&quot;</span><span class="p">,</span> <span class="s2">&quot;Threads&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;Registers&quot;</span><span class="p">,</span> <span class="s2">&quot;Registers&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;Stack&quot;</span><span class="p">,</span> <span class="s2">&quot;Stack&amp;StackTrace&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;Assembly&quot;</span><span class="p">,</span> <span class="s2">&quot;Disassemble&amp;Assemble&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;GDBExpressions&quot;</span><span class="p">,</span> <span class="s2">&quot;GDB Expressions&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;GDBCommunication&quot;</span><span class="p">,</span> <span class="s2">&quot;GDB Communication&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;Tools&quot;</span><span class="p">,</span> <span class="s2">&quot;Tools&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;Utilities&quot;</span><span class="p">,</span> <span class="s2">&quot;Utilities&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;Processes&quot;</span><span class="p">,</span> <span class="s2">&quot;Processes&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;GUI&quot;</span><span class="p">,</span> <span class="s2">&quot;GUI&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;ConditionsLocks&quot;</span><span class="p">,</span> <span class="s2">&quot;Conditions&amp;Locks&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;GDBInformation&quot;</span><span class="p">,</span> <span class="s2">&quot;GDB Information&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;InferiorInformation&quot;</span><span class="p">,</span> <span class="s2">&quot;Inferior Information&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># size--&gt;int, any other field--&gt;str</span>
+<span class="n">tuple_breakpoint_info</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s2">&quot;tuple_breakpoint_info&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;number breakpoint_type disp enabled address size on_hit hit_count enable_count condition&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># start, end--&gt;int, perms--&gt;str, file_name--&gt;str</span>
+<span class="n">tuple_region_info</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;tuple_region_info&quot;</span><span class="p">,</span> <span class="s2">&quot;start end perms file_name region_index&quot;</span><span class="p">)</span>
+
+<span class="c1"># all fields--&gt;str/None</span>
+<span class="n">tuple_examine_expression</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;tuple_examine_expression&quot;</span><span class="p">,</span> <span class="s2">&quot;all address symbol&quot;</span><span class="p">)</span>
+
+<span class="c1"># all fields--&gt;bool</span>
+<span class="n">gdb_output_mode</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;gdb_output_mode&quot;</span><span class="p">,</span> <span class="s2">&quot;async_output command_output command_info&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="GDBInitializeException">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.GDBInitializeException">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GDBInitializeException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;GDB not initialized&quot;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GDBInitializeException</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Frozen">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.Frozen">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Frozen</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">freeze_type</span><span class="o">=</span><span class="n">FREEZE_TYPE</span><span class="o">.</span><span class="n">DEFAULT</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freeze_type</span> <span class="o">=</span> <span class="n">freeze_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="ValueType">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.ValueType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ValueType</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">value_index</span><span class="o">=</span><span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">INT32</span><span class="p">,</span>
+        <span class="n">length</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">zero_terminate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">value_repr</span><span class="o">=</span><span class="n">VALUE_REPR</span><span class="o">.</span><span class="n">UNSIGNED</span><span class="p">,</span>
+        <span class="n">endian</span><span class="o">=</span><span class="n">ENDIANNESS</span><span class="o">.</span><span class="n">HOST</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            value_index (int): Determines the type of data. Can be a member of VALUE_INDEX</span>
+<span class="sd">            length (int): Length of the data. Only used when the value_index is STRING or AOB</span>
+<span class="sd">            zero_terminate (bool): If False, &quot;,NZT&quot; will be appended to the text representation</span>
+<span class="sd">            Only used when value_index is STRING. Ignored otherwise. &quot;NZT&quot; stands for &quot;Non-Zero Terminate&quot;</span>
+<span class="sd">            value_repr (int): Determines how the data is represented. Can be a member of VALUE_REPR</span>
+<span class="sd">            endian (int): Determines the endianness. Can be a member of ENDIANNESS</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value_index</span> <span class="o">=</span> <span class="n">value_index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="n">length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zero_terminate</span> <span class="o">=</span> <span class="n">zero_terminate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value_repr</span> <span class="o">=</span> <span class="n">value_repr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endian</span> <span class="o">=</span> <span class="n">endian</span>
+
+<div class="viewcode-block" id="ValueType.serialize">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.ValueType.serialize">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_index</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zero_terminate</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_repr</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">endian</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ValueType.text">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.ValueType.text">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the text representation according to its members</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A str generated by given parameters</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            value_index=VALUE_INDEX.STRING_UTF16, length=15, zero_terminate=False--▼</span>
+<span class="sd">            returned str=&quot;String_UTF16[15],NZT&quot;</span>
+<span class="sd">            value_index=VALUE_INDEX.AOB, length=42--&gt;returned str=&quot;AoB[42]&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">returned_string</span> <span class="o">=</span> <span class="n">index_to_text_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">value_index</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">is_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_index</span><span class="p">):</span>
+            <span class="n">returned_string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="si">}</span><span class="s2">]&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_terminate</span><span class="p">:</span>
+                <span class="n">returned_string</span> <span class="o">+=</span> <span class="s2">&quot;,NZT&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_index</span> <span class="o">==</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">AOB</span><span class="p">:</span>
+            <span class="n">returned_string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="si">}</span><span class="s2">]&quot;</span>
+        <span class="k">if</span> <span class="n">VALUE_INDEX</span><span class="o">.</span><span class="n">is_integer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_index</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_repr</span> <span class="o">==</span> <span class="n">VALUE_REPR</span><span class="o">.</span><span class="n">SIGNED</span><span class="p">:</span>
+                <span class="n">returned_string</span> <span class="o">+=</span> <span class="s2">&quot;(s)&quot;</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_repr</span> <span class="o">==</span> <span class="n">VALUE_REPR</span><span class="o">.</span><span class="n">HEX</span><span class="p">:</span>
+                <span class="n">returned_string</span> <span class="o">+=</span> <span class="s2">&quot;(h)&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">endian</span> <span class="o">==</span> <span class="n">ENDIANNESS</span><span class="o">.</span><span class="n">LITTLE</span><span class="p">:</span>
+            <span class="n">returned_string</span> <span class="o">+=</span> <span class="s2">&quot;&lt;L&gt;&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">endian</span> <span class="o">==</span> <span class="n">ENDIANNESS</span><span class="o">.</span><span class="n">BIG</span><span class="p">:</span>
+            <span class="n">returned_string</span> <span class="o">+=</span> <span class="s2">&quot;&lt;B&gt;&quot;</span>
+        <span class="k">return</span> <span class="n">returned_string</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PointerChainResult">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.PointerChainResult">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PointerChainResult</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pointer_chain</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="PointerChainResult.get_pointer_by_index">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.PointerChainResult.get_pointer_by_index">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_pointer_by_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pointer_chain</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pointer_chain</span><span class="p">[</span><span class="n">index</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="PointerChainResult.get_final_address">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.PointerChainResult.get_final_address">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_final_address</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pointer_chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pointer_chain</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="PointerChainResult.get_final_address_as_hex">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.PointerChainResult.get_final_address_as_hex">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_final_address_as_hex</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the hex representation of this pointer chain&#39;s final/destination address</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pointer_chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pointer_chain</span> <span class="k">else</span> <span class="kc">None</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PointerChainRequest">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.PointerChainRequest">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PointerChainRequest</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_address</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">offsets_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            base_address (str, int): The base address of where this pointer chain starts from. Can be str expression or int.</span>
+<span class="sd">            offsets_list (list): List of offsets to reach the final pointed data. Can be None for no offsets.</span>
+<span class="sd">            Last offset in list won&#39;t be dereferenced to emulate CE behaviour.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_address</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">base_address</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">offsets_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">offsets_list</span> <span class="k">else</span> <span class="n">offsets_list</span>
+
+<div class="viewcode-block" id="PointerChainRequest.serialize">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.PointerChainRequest.serialize">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_address</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">offsets_list</span></div>
+
+
+<div class="viewcode-block" id="PointerChainRequest.get_base_address_as_str">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.PointerChainRequest.get_base_address_as_str">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_base_address_as_str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the text representation of this pointer&#39;s base address</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_address</span><span class="p">)</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_address</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">str</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_address</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="RegisterQueue">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.RegisterQueue">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RegisterQueue</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="RegisterQueue.register_queue">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.RegisterQueue.register_queue">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">register_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">new_queue</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_queue</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_queue</span></div>
+
+
+<div class="viewcode-block" id="RegisterQueue.broadcast_message">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.RegisterQueue.broadcast_message">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">broadcast_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue_list</span><span class="p">:</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RegisterQueue.delete_queue">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.RegisterQueue.delete_queue">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue_instance</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">queue_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">queue_instance</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="KeyboardModifiersTupleDict">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.KeyboardModifiersTupleDict">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">KeyboardModifiersTupleDict</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">OrderedDict_like_list</span><span class="p">):</span>
+        <span class="n">new_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">keycomb</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">OrderedDict_like_list</span><span class="p">:</span>
+            <span class="n">new_dict</span><span class="p">[</span><span class="n">keycomb</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="n">new_dict</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keycomb</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">keycomb</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="AllocatedMemory">
+<a class="viewcode-back" href="../../libpince.html#libpince.typedefs.AllocatedMemory">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AllocatedMemory</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">address</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span></div>
+
+        <span class="c1"># TODO brkzlr: Maybe expand with starting page address and old protection to restore state after deleting allocated memory</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PINCE</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">libpince</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#gui-utils">GUI.Utils</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, PINCE Contributors.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
