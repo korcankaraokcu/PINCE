@@ -450,7 +450,7 @@ tuple_breakpoint_info = collections.namedtuple(
 )
 
 # start, end-->int, perms-->str, file_name-->str
-tuple_region_info = collections.namedtuple("tuple_region_info", "start end perms file_name")
+tuple_region_info = collections.namedtuple("tuple_region_info", "start end perms file_name region_index")
 
 # all fields-->str/None
 tuple_examine_expression = collections.namedtuple("tuple_examine_expression", "all address symbol")

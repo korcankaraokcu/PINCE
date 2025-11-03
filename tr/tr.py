@@ -369,3 +369,9 @@ class TranslationConstants(QObject):
     LIGHT = QT_TR_NOOP("Light")
     SYSTEM_DEFAULT = QT_TR_NOOP("System Default")
     WONG = QT_TR_NOOP("Wong (Colorblind Friendly)")
+    SAVE_SESSION_QUESTION_TITLE = QT_TR_NOOP("Session - Unsaved changes")
+    SAVE_SESSION_QUESTION_PROMPT = QT_TR_NOOP("You have unsaved changes.\nDo you want to save the current session?")
+    SESSION_PROCESS_CHANGED_TITLE = QT_TR_NOOP("Session - Process changed")
+    SESSION_PROCESS_CHANGED_PROMPT = QT_TR_NOOP(
+        "The process name has changed.\n" "Do you want to keep the current session with the new process?"
+    )
