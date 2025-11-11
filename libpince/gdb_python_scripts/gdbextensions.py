@@ -278,13 +278,23 @@ class GetTrackWatchpointInfo(gdb.Command):
 
     def invoke(self, arg, from_tty):
         breakpoints = arg
-        current_pc_int = int(utils.extract_address(str(gdb.parse_and_eval("$pc"))), 16)
+        current_pc = str(gdb.parse_and_eval("$pc"))
+        current_pc_addr = utils.extract_hex_address(current_pc)
+        # Sometimes GDB will return a decimal address str instead of a hex str
+        if current_pc_addr is None:
+            result = regexes.decimal_number.search(current_pc)
+            if result:
+                current_pc_addr = result.group(0)
+            else:
+                utils.log("Failed to grab address from $pc", is_error=True)
+                return
+        current_pc_int = int(current_pc_addr, 0)
         try:
             disas_output = gdb.execute("disas $pc-30,$pc", to_string=True)
 
             # Just before the line "End of assembler dump"
             last_instruction = disas_output.splitlines()[-2]
-            previous_pc_address = utils.extract_address(last_instruction)
+            previous_pc_address = utils.extract_hex_address(last_instruction)
         except:
             previous_pc_address = hex(current_pc_int)
         global track_watchpoint_dict

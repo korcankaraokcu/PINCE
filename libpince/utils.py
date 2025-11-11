@@ -633,7 +633,7 @@ def instruction_follow_address(string):
         return result.group(2)
 
 
-def extract_address(string):
+def extract_hex_address(string):
     """Extracts hex address from the given string
 
     Args:
@@ -991,3 +991,13 @@ def upper_hex(hex_str: str):
 
 def return_optional_int(val: int) -> int | None:
     return None if val == 0 else val
+
+
+# Use this to log an info or error with automatic caller class + function name resolving.
+# Even though sys's getframe is way faster than using inspect's stack(), using this in calls with high frequency like loops is not recommended!
+def log(log_str: str, is_error: bool = False) -> None:
+    if is_error:
+        category = "ERROR"
+    else:
+        category = "INFO"
+    print(f"[{category}][{sys._getframe().f_back.f_code.co_qualname}] {log_str}")

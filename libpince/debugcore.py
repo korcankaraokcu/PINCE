@@ -1164,12 +1164,12 @@ def find_closest_instruction_address(address, instruction_location="next", instr
             disas_data = disassemble(start_address, address)
     if instruction_location == "next":
         try:
-            return utils.extract_address(disas_data[instruction_count][0])
+            return utils.extract_hex_address(disas_data[instruction_count][0])
         except IndexError:
             return hex(utils.get_region_info(currentpid, address).end)
     else:
         try:
-            return utils.extract_address(disas_data[-instruction_count][0])
+            return utils.extract_hex_address(disas_data[-instruction_count][0])
         except IndexError:
             try:
                 return start_address
@@ -1525,7 +1525,7 @@ def get_breakpoint_info() -> list[typedefs.tuple_breakpoint_info]:
             number = number.split(".")[0]
             breakpoint_type, disp, condition, hit_count = multiple_break_data[number]
         if what:
-            address = utils.extract_address(what)
+            address = utils.extract_hex_address(what)
             if not address:
                 address = examine_expression(what).address
         on_hit_dict_value = breakpoint_on_hit_dict.get(number, typedefs.BREAKPOINT_ON_HIT.BREAK)

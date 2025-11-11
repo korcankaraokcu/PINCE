@@ -2676,14 +2676,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
         debugcore.set_convenience_variable("pc", current_address)
         self.refresh_disassemble_view()
 
     def edit_instruction(self):
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
         bytes_aob = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
         EditInstructionDialogForm(self, current_address, bytes_aob).exec()
 
@@ -2692,7 +2692,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
         current_address_int = int(current_address, 16)
         array_of_bytes = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
         debugcore.nop_instruction(current_address_int, len(array_of_bytes.split()))
@@ -2703,7 +2703,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
         current_address_int = int(current_address, 16)
         if debugcore.get_breakpoints_in_range(current_address_int):
             debugcore.delete_breakpoint(current_address)
@@ -3045,9 +3045,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         breakpoint_info = debugcore.get_breakpoint_info()
 
         # TODO: Change this nonsense when the huge refactorization happens
-        current_first_address = utils.extract_address(disas_data[0][0])  # address of first list entry
+        current_first_address = utils.extract_hex_address(disas_data[0][0])  # address of first list entry
         try:
-            previous_first_address = utils.extract_address(self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text())
+            previous_first_address = utils.extract_hex_address(
+                self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text()
+            )
         except AttributeError:
             previous_first_address = current_first_address
 
@@ -3056,7 +3058,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         jmp_dict, call_dict = debugcore.get_dissect_code_data(False, True, True)
         for row, (address_info, bytes_aob, opcode) in enumerate(disas_data):
             comment = ""
-            current_address = int(utils.extract_address(address_info), 16)
+            current_address = int(utils.extract_hex_address(address_info), 16)
             current_address_str = hex(current_address)
             jmp_ref_exists = False
             call_ref_exists = False
@@ -3382,7 +3384,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             )
         else:
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
-            current_address = utils.extract_address(current_address_text)
+            current_address = utils.extract_hex_address(current_address_text)
 
             actions = typedefs.KeyboardModifiersTupleDict(
                 [
@@ -3412,7 +3414,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             current_address = None
         else:
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
-            current_address = utils.extract_address(current_address_text)
+            current_address = utils.extract_hex_address(current_address_text)
         menu = QMenu()
         switch_to_stacktrace = menu.addAction(tr.STACKTRACE)
         toggle_stack_pointer = menu.addAction(tr.TOGGLE_STACK_FROM_SP_BP)
@@ -3458,12 +3460,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if index.column() == STACK_POINTER_ADDRESS_COL:
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_POINTER_ADDRESS_COL).text()
-            current_address = utils.extract_address(current_address_text)
+            current_address = utils.extract_hex_address(current_address_text)
             self.hex_dump_address(int(current_address, 16))
         else:
             points_to_text = self.tableWidget_Stack.item(selected_row, STACK_POINTS_TO_COL).text()
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
-            current_address = utils.extract_address(current_address_text)
+            current_address = utils.extract_hex_address(current_address_text)
             if points_to_text.startswith("(str)"):
                 self.hex_dump_address(int(current_address, 16))
             else:
@@ -3475,11 +3477,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_row = guiutils.get_current_row(self.tableWidget_StackTrace)
         if index.column() == STACKTRACE_RETURN_ADDRESS_COL:
             current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_RETURN_ADDRESS_COL).text()
-            current_address = utils.extract_address(current_address_text)
+            current_address = utils.extract_hex_address(current_address_text)
             self.disassemble_expression(current_address)
         if index.column() == STACKTRACE_FRAME_ADDRESS_COL:
             current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_FRAME_ADDRESS_COL).text()
-            current_address = utils.extract_address(current_address_text)
+            current_address = utils.extract_hex_address(current_address_text)
             self.hex_dump_address(int(current_address, 16))
 
     def tableWidget_StackTrace_key_press_event(self, event):
@@ -3520,7 +3522,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 if self.tableWidget_Disassemble.rowViewportPosition(row) > height:
                     break
                 last_visible_row += 1
-            current_address = utils.extract_address(
+            current_address = utils.extract_hex_address(
                 self.tableWidget_Disassemble.item(current_row, DISAS_ADDR_COL).text()
             )
             new_address = debugcore.find_closest_instruction_address(current_address, "previous", last_visible_row)
@@ -3579,7 +3581,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if selected_row == -1:
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
         current_address_int = int(current_address, 16)
 
         actions = typedefs.KeyboardModifiersTupleDict(
@@ -3634,7 +3636,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if index.column() == DISAS_COMMENT_COL:
             selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
             current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-            current_address = int(utils.extract_address(current_address_text), 16)
+            current_address = int(utils.extract_hex_address(current_address_text), 16)
             if current_address in self.session.pct_bookmarks:
                 self.change_bookmark_comment(current_address)
             else:
@@ -3646,7 +3648,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         try:
             selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
             selected_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-            self.disassemble_last_selected_address_int = int(utils.extract_address(selected_address_text), 16)
+            self.disassemble_last_selected_address_int = int(utils.extract_hex_address(selected_address_text), 16)
         except (TypeError, ValueError, AttributeError):
             pass
 
@@ -3681,7 +3683,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
         current_address_int = int(current_address, 16)
 
         menu = QMenu()
@@ -3765,7 +3767,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         except KeyError:
             pass
         if action in bookmark_actions:
-            self.disassemble_expression(utils.extract_address(action.text()))
+            self.disassemble_expression(utils.extract_hex_address(action.text()))
 
     def dissect_current_region(self):
         if debugcore.currentpid == -1:
@@ -3774,7 +3776,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if selected_row == -1:
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
         dissect_code_dialog = DissectCodeDialogForm(self, int(current_address, 16))
         dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
         dissect_code_dialog.exec()
@@ -3785,7 +3787,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         if not guiutils.contains_reference_mark(current_address_text):
             return
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
         current_address_int = int(current_address, 16)
         examine_referrers_widget = ExamineReferrersWidgetForm(self, current_address_int)
         examine_referrers_widget.show()
@@ -3797,7 +3799,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if selected_row == -1:
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
         TraceInstructionsWindowForm(self, current_address)
 
     def exec_track_breakpoint_dialog(self):
@@ -3805,7 +3807,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
         current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
         register_expression_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_TRACK_BP_EXPRESSION, "")])
         if register_expression_dialog.exec():
@@ -3819,7 +3821,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if selected_row == -1:
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
 
         go_to_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_EXPRESSION, current_address)])
         if go_to_dialog.exec():
@@ -4116,7 +4118,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         selected_row = guiutils.get_current_row(self.tableWidget_BreakpointInfo)
         if selected_row != -1:
             current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
-            current_address = utils.extract_address(current_address_text)
+            current_address = utils.extract_hex_address(current_address_text)
         else:
             current_address = None
 
@@ -4153,7 +4155,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         selected_row = guiutils.get_current_row(self.tableWidget_BreakpointInfo)
         if selected_row != -1:
             current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
-            current_address = utils.extract_address(current_address_text)
+            current_address = utils.extract_hex_address(current_address_text)
             current_address_int = int(current_address, 16)
         else:
             current_address = None
@@ -4210,7 +4212,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
 
     def tableWidget_BreakpointInfo_double_clicked(self, index):
         current_address_text = self.tableWidget_BreakpointInfo.item(index.row(), BREAK_ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
         current_address_int = int(current_address, 16)
 
         if index.column() == BREAK_COND_COL:
@@ -4586,7 +4588,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         current_item = guiutils.get_current_item(self.treeWidget_InstructionInfo)
         if not current_item:
             return
-        address = utils.extract_address(current_item.trace_data[0])
+        address = utils.extract_hex_address(current_item.trace_data[0])
         if address:
             self.parent().disassemble_expression(address)
 
@@ -4644,7 +4646,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         if current_row < 0:
             return
         address = self.tableWidget_SymbolInfo.item(current_row, FUNCTIONS_INFO_ADDR_COL).text()
-        if utils.extract_address(address):
+        if utils.extract_hex_address(address):
             symbol = self.tableWidget_SymbolInfo.item(current_row, FUNCTIONS_INFO_SYMBOL_COL).text()
             for item in utils.split_symbol(symbol):
                 info = debugcore.get_symbol_info(item)
@@ -4937,7 +4939,7 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
     def tableWidget_Opcodes_item_double_clicked(self, index):
         row = index.row()
         address = self.tableWidget_Opcodes.item(row, SEARCH_OPCODE_ADDR_COL).text()
-        self.parent().disassemble_expression(utils.extract_address(address))
+        self.parent().disassemble_expression(utils.extract_hex_address(address))
 
     def tableWidget_Opcodes_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -5239,7 +5241,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         self.parent().hex_dump_address(int(address, 16))
 
     def listWidget_Referrers_item_double_clicked(self, item):
-        self.parent().disassemble_expression(utils.extract_address(item.text()))
+        self.parent().disassemble_expression(utils.extract_hex_address(item.text()))
 
     def tableWidget_References_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -5346,7 +5348,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         self.listWidget_Referrers.clear()
         call_dict = debugcore.get_dissect_code_data(False, False, True)[0]
         addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_CALL_ADDR_COL).text()
-        referrers = call_dict[hex(int(utils.extract_address(addr), 16))]
+        referrers = call_dict[hex(int(utils.extract_hex_address(addr), 16))]
         addrs = [hex(address) for address in referrers]
         self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)])
         self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
@@ -5355,10 +5357,10 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
     def tableWidget_References_item_double_clicked(self, index):
         row = index.row()
         address = self.tableWidget_References.item(row, REF_CALL_ADDR_COL).text()
-        self.parent().disassemble_expression(utils.extract_address(address))
+        self.parent().disassemble_expression(utils.extract_hex_address(address))
 
     def listWidget_Referrers_item_double_clicked(self, item):
-        self.parent().disassemble_expression(utils.extract_address(item.text()))
+        self.parent().disassemble_expression(utils.extract_hex_address(item.text()))
 
     def tableWidget_References_context_menu_event(self, event):
         def copy_to_clipboard(row, column):
@@ -5482,7 +5484,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
             return
         self.textBrowser_DisasInfo.clear()
         disas_data = debugcore.disassemble(
-            utils.extract_address(self.listWidget_Referrers.item(QModelIndex_current.row()).text()), "+200"
+            utils.extract_hex_address(self.listWidget_Referrers.item(QModelIndex_current.row()).text()), "+200"
         )
         for address_info, _, opcode in disas_data:
             self.textBrowser_DisasInfo.append(address_info + opcode)
@@ -5492,7 +5494,7 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         self.textBrowser_DisasInfo.ensureCursorVisible()
 
     def listWidget_Referrers_item_double_clicked(self, item):
-        self.parent().disassemble_expression(utils.extract_address(item.text()))
+        self.parent().disassemble_expression(utils.extract_hex_address(item.text()))
 
     def listWidget_Referrers_context_menu_event(self, event):
         def copy_to_clipboard(row):

@@ -44,7 +44,7 @@ class BookmarkWidget(QWidget, Ui_Form):
     def change_display(self, row):
         if row == -1:
             return
-        current_address = utils.extract_address(self.listWidget.item(row).text())
+        current_address = utils.extract_hex_address(self.listWidget.item(row).text())
         if debugcore.currentpid == -1:
             self.lineEdit_Info.clear()
         else:
@@ -52,7 +52,7 @@ class BookmarkWidget(QWidget, Ui_Form):
         self.lineEdit_Comment.setText(self.session.pct_bookmarks[int(current_address, 16)]["comment"])
 
     def listWidget_item_double_clicked(self, item: QListWidgetItem):
-        self.double_clicked.emit(utils.extract_address(item.text()))
+        self.double_clicked.emit(utils.extract_hex_address(item.text()))
 
     def exec_add_entry_dialog(self):
         entry_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_EXPRESSION, "")])
@@ -74,7 +74,7 @@ class BookmarkWidget(QWidget, Ui_Form):
     def listWidget_context_menu_event(self, event):
         current_item = guiutils.get_current_item(self.listWidget)
         if current_item:
-            current_address = int(utils.extract_address(current_item.text()), 16)
+            current_address = int(utils.extract_hex_address(current_item.text()), 16)
             if current_address not in self.session.pct_bookmarks:
                 QMessageBox.information(self, tr.ERROR, tr.INVALID_ENTRY)
                 self.refresh_table()
@@ -107,7 +107,7 @@ class BookmarkWidget(QWidget, Ui_Form):
         current_item = guiutils.get_current_item(self.listWidget)
         if not current_item:
             return
-        current_address = int(utils.extract_address(current_item.text()), 16)
+        current_address = int(utils.extract_hex_address(current_item.text()), 16)
         self.deleted.emit(current_address)
         self.refresh_table()
         self.session.data_changed |= SessionDataChanged.BOOKMARKS
