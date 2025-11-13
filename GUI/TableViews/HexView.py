@@ -61,9 +61,6 @@ class QHexView(QTableView):
             return super().keyPressEvent(event)
 
     def selectionCommand(self, index: QModelIndex, event: QKeyEvent):
-        if event is None:
-            # Handle when no event is provided
-            return super().selectionCommand(index, event)
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
             # Disable multi-selection when Ctrl key is pressed
             return QItemSelectionModel.SelectionFlag.ClearAndSelect
