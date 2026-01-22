@@ -117,7 +117,8 @@ ask_pkg_mgr() {
 	echo "2) Pacman"
 	echo "3) DNF"
 	echo "4) Zypper"
-	echo "5) None of the above"
+    echo "5) xbps"
+	echo "6) None of the above"
 
 	read -r -p "Choose: " OPTION
 	OPTION=$(echo $OPTION | tr '[:lower:]' '[:upper:]')
@@ -135,6 +136,9 @@ ask_pkg_mgr() {
 	4|*ZYPPER*)
 		OS_NAME="SUSE"
 		;;
+	5|*XBPS*)
+		OS_NAME="VOID"
+		;;
 	*)
 		return 1
 		;;
@@ -149,6 +153,7 @@ PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-dev python3-venv pkg-config qt6-l10n-to
 PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc python3-devel qt6-tools-linguist typelib-1_0-Gtk-3_0 cairo-devel gobject-introspection-devel make"
 PKG_NAMES_FEDORA="$PKG_NAMES_ALL python3-devel qt6-linguist redhat-lsb cairo-devel gobject-introspection-devel cairo-gobject-devel"
 PKG_NAMES_ARCH="python-pip qt6-tools gdb cmake lsb-release pkgconf gobject-introspection-runtime" # arch defaults to py3 nowadays
+PKG_NAMES_VOID="python3-pip python3-devel python3 qt6-tools gdb cmake make cairo gobject-introspection"
 
 INSTALL_COMMAND="install"
 
@@ -175,6 +180,12 @@ set_install_vars() {
 		PKG_NAMES="$PKG_NAMES_DEBIAN"
 		LRELEASE_CMD="/usr/lib/qt6/bin/lrelease"
 		;;
+    *VOID*)
+        PKG_MGR="xbps-install -y"
+		PKG_NAMES="$PKG_NAMES_VOID"
+        INSTALL_COMMAND=""
+		LRELEASE_CMD="/usr/lib/qt6/bin/lrelease"
+        ;;
 	*)
 		return 1
 		;;
