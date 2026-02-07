@@ -135,6 +135,7 @@ from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructi
 from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
 from GUI.Widgets.Settings.Settings import SettingsDialog
 from libpince import debugcore, typedefs, utils
+from libpince.utils import safe_str_to_int
 from libpince.debugcore import ptrscan, scanmem
 from tr.tr import TranslationConstants as tr
 from tr.tr import get_locale
@@ -3115,7 +3116,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     comment = self.session.pct_bookmarks[bookmark_item]["comment"]
                     break
             for breakpoint in breakpoint_info:
-                int_breakpoint_address = int(breakpoint.address, 16)
+                # Catchpoints won't have an address
+                if type(breakpoint.address) != str:
+                    continue
+                int_breakpoint_address = safe_str_to_int(breakpoint.address, 16)
                 if current_address == int_breakpoint_address:
                     try:
                         row_color[row].append(BREAKPOINT_COLOR)
@@ -4154,7 +4158,9 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         if selected_row != -1:
             current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
             current_address = utils.extract_hex_address(current_address_text)
-            current_address_int = int(current_address, 16)
+            # Catchpoints won't have an address
+            # TODO: Implement enable/disable for catchpoints as we rely on addresses for these operations now.
+            current_address_int = safe_str_to_int(current_address, 16) if type(current_address) == str else -1
         else:
             current_address = None
             current_address_int = None

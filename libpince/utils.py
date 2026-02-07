@@ -1001,3 +1001,29 @@ def log(log_str: str, is_error: bool = False) -> None:
     else:
         category = "INFO"
     print(f"[{category}][{sys._getframe().f_back.f_code.co_qualname}] {log_str}")
+
+
+# This is the main int() cast for strings that should be used until you're certain that the cast can never fail.
+# The reason for this is that you can catch stray errors or edge cases by safely returning a value and outputting useful log info
+# instead of failing with an exception that will propagate upwards.
+def safe_str_to_int(input: str | bytes | bytearray, base: int) -> int:
+    try:
+        return int(input, base)
+    except ValueError:
+        print(f"[ERROR][safe_str_to_int] ValueError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'")
+        return -1
+    except TypeError:
+        print(f"[ERROR][safe_str_to_int] TypeError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'")
+        return -1
+
+
+# This is the non-base version of the above.
+def safe_int_cast(input: ConvertibleToInt) -> int:
+    try:
+        return int(input)
+    except ValueError:
+        print(f"[ERROR][safe_int_cast] ValueError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'")
+        return -1
+    except TypeError:
+        print(f"[ERROR][safe_int_cast] TypeError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'")
+        return -1
