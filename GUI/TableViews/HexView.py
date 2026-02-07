@@ -29,7 +29,6 @@ class QHexView(QTableView):
         self.setWordWrap(False)
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
-        self.setStyleSheet("QTableView {background-color: transparent;}")
         self.setShowGrid(False)
         self.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)

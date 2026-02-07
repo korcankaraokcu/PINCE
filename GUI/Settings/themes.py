@@ -96,7 +96,7 @@ def get_theme(theme_name):
                     "MID_LIGHT": "#2D263D",
                     "DARK": "#120F18",
                     "MID": "#181521",
-                    "TEXT": "#120F18",
+                    "TEXT": "#44414A",
                     "BRIGHT_TEXT": "#FFFFFF",
                     "BUTTON_TEXT": "#80FFFFFF",
                     "BASE": "#241F31",

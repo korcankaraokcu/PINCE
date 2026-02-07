@@ -32,7 +32,6 @@ import importlib
 import io
 import os
 import re
-import select
 import signal
 import sys
 import traceback
@@ -71,7 +70,6 @@ from PyQt6.QtGui import (
     QShortcut,
     QTextCursor,
     QWheelEvent,
-    QPalette,
 )
 from PyQt6.QtWidgets import (
     QAbstractItemView,
@@ -320,13 +318,14 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_ADDRESS_COL, 120)
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.tableWidget_valuesearchtable.horizontalHeader().setSortIndicatorClearable(True)
-        self.memory_view_window = MemoryViewWindowForm(self)
-        self.session_notes = SessionNotesWidget(None)
         self.await_exit_thread = guitypedefs.AwaitProcessExit()
         self.auto_attach_timer = QTimer(timeout=self.auto_attach_loop)
 
         settings.init_settings()
         self.settings_changed()
+        self.memory_view_window = MemoryViewWindowForm(self)
+        self.session_notes = SessionNotesWidget(None)
+
         if os.environ.get("APPDIR"):
             gdb_path = utils.get_default_gdb_path()
         else:
@@ -2618,7 +2617,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.tableWidget_HexView_Address.wheelEvent = QEvent.ignore
         self.tableWidget_HexView_Address.setAutoScroll(False)
-        self.tableWidget_HexView_Address.setStyleSheet("QTableWidget {background-color: transparent;}")
         self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
         self.tableView_HexView_Hex.selectionModel().selectionChanged.connect(self.hex_view_selection_changed)
