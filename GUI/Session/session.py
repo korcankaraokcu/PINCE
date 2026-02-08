@@ -211,9 +211,11 @@ class Session:
             region_name, offset, region_index = address_region_details.values()
             region = region_dict.get(region_name, None)
             if region is not None:
-                new_addr = int(region[region_index], 16) + int(offset, 16)
+                new_addr = utils.safe_str_to_int(region[region_index], 16) + utils.safe_str_to_int(offset, 16)
+                if new_addr == 0:
+                    continue
             else:
-                print("[WARN] BookmarkResolver: Could not find region with name:", region_name)
+                utils.log(f"Could not find region with name: {region_name}", is_error=False)
                 continue
 
             new_bookmarks[new_addr] = {

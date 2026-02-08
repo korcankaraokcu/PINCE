@@ -74,7 +74,7 @@ class BookmarkWidget(QWidget, Ui_Form):
     def listWidget_context_menu_event(self, event):
         current_item = guiutils.get_current_item(self.listWidget)
         if current_item:
-            current_address = int(utils.extract_hex_address(current_item.text()), 16)
+            current_address = utils.safe_str_to_int(utils.extract_hex_address(current_item.text()), 16)
             if current_address not in self.session.pct_bookmarks:
                 QMessageBox.information(self, tr.ERROR, tr.INVALID_ENTRY)
                 self.refresh_table()
@@ -107,7 +107,7 @@ class BookmarkWidget(QWidget, Ui_Form):
         current_item = guiutils.get_current_item(self.listWidget)
         if not current_item:
             return
-        current_address = int(utils.extract_hex_address(current_item.text()), 16)
+        current_address = utils.safe_str_to_int(utils.extract_hex_address(current_item.text()), 16)
         self.deleted.emit(current_address)
         self.refresh_table()
         self.session.data_changed |= SessionDataChanged.BOOKMARKS

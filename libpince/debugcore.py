@@ -20,6 +20,7 @@ from time import sleep, time
 from collections import OrderedDict, defaultdict
 import pexpect, os, sys, ctypes, pickle, shelve, re, struct, io, traceback
 from . import utils, typedefs, regexes
+from .utils import safe_str_to_int, safe_int_cast
 from .libscanmem.scanmem import Scanmem
 from .libptrscan.ptrscan import PointerScan
 
@@ -380,11 +381,14 @@ def can_attach(pid):
     Returns:
         bool: True if attaching is successful, False otherwise
     """
-    result = libc.ptrace(16, int(pid), 0, 0)  # 16 is PTRACE_ATTACH, check ptrace.h for details
+    pid_int = safe_int_cast(pid)
+    if pid_int == 0:
+        return False
+    result = libc.ptrace(16, pid_int, 0, 0)  # 16 is PTRACE_ATTACH, check ptrace.h for details
     if result == -1:
         return False
-    os.waitpid(int(pid), 0)
-    libc.ptrace(17, int(pid), 0, 17)  # 17 is PTRACE_DETACH, check ptrace.h for details
+    os.waitpid(pid_int, 0)
+    libc.ptrace(17, pid_int, 0, 17)  # 17 is PTRACE_DETACH, check ptrace.h for details
     sleep(0.01)
     return True
 
@@ -830,7 +834,6 @@ def allocate_memory(size: int, name: str | None) -> int:
     global allocated_memory_chunks
     global allocated_memory_gen_id
     if size == 0:
-        # TODO brkzlr: Maybe error log?
         return 0
     if name == None:
         allocated_memory_gen_id += 1
@@ -838,9 +841,13 @@ def allocate_memory(size: int, name: str | None) -> int:
     output = send_command(f"p (void*)malloc({size})")
     match = regexes.hex_number.search(output)
     if match == None:
-        # TODO brkzlr: Allocation failed, maybe log?
+        utils.log("Memory allocation failed!", is_error=True)
         return 0
-    allocated_memory = typedefs.AllocatedMemory(int(match[0], 16), size)
+    allocated_address = safe_str_to_int(match[0], 16)
+    if allocated_address == 0:
+        utils.log(f"Couldn't find allocation address! Allocation output: {output}", is_error=True)
+        return 0
+    allocated_memory = typedefs.AllocatedMemory(allocated_address, size)
     allocated_memory_chunks[name] = allocated_memory
     page_size = os.sysconf("SC_PAGE_SIZE")
     page_memory_addr = allocated_memory.address & ~(page_size - 1)
@@ -897,33 +904,27 @@ def read_memory(
     try:
         value_index = int(value_index)
     except:
-        # print(str(value_index) + " is not a valid value index")
         return
     if not type(address) == int:
         try:
             address = int(address, 0)
         except:
-            # print(str(address) + " is not a valid address")
             return
     packed_data = typedefs.index_to_valuetype_dict.get(value_index, -1)
     if typedefs.VALUE_INDEX.is_string(value_index):
         try:
             length = int(length)
         except:
-            # print(str(length) + " is not a valid length")
             return
         if not length > 0:
-            # print("length must be greater than 0")
             return
         expected_length = length * typedefs.string_index_to_multiplier_dict.get(value_index, 1)
     elif value_index is typedefs.VALUE_INDEX.AOB:
         try:
             expected_length = int(length)
         except:
-            # print(str(length) + " is not a valid length")
             return
         if not expected_length > 0:
-            # print("length must be greater than 0")
             return
     else:
         expected_length = packed_data[0]
@@ -991,7 +992,6 @@ def write_memory(
         try:
             address = int(address, 0)
         except:
-            # print(str(address) + " is not a valid address")
             return
     if isinstance(value, str):
         write_data = utils.parse_string(value, value_index)
@@ -1559,12 +1559,14 @@ def get_breakpoints_in_range(address: str | int, length: int = 1) -> list[typede
     """
     breakpoint_list = []
     if type(address) != int:
-        address = int(address, 0)
+        address = safe_str_to_int(address, 0)
+        if address == 0:
+            return breakpoint_list
     max_address = max(address, address + length - 1)
     min_address = min(address, address + length - 1)
     breakpoint_info = get_breakpoint_info()
     for item in breakpoint_info:
-        breakpoint_address = int(item.address, 16)
+        breakpoint_address = safe_str_to_int(item.address, 16)
         if not (max_address < breakpoint_address or min_address > breakpoint_address + item.size - 1):
             breakpoint_list.append(item)
     return breakpoint_list

@@ -2066,10 +2066,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
     def get_values(self):
         description = self.lineEdit_Description.text()
         length = self.lineEdit_Length.text()
-        try:
-            length = int(length, 0)
-        except:
-            length = 0
+        length = safe_str_to_int(length, 0)
         zero_terminate = self.checkBox_ZeroTerminate.isChecked()
         value_index = self.comboBox_ValueType.currentIndex()
         if self.checkBox_Hex.isChecked():
@@ -2091,10 +2088,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         offsetsIntList = []
         for frame in self.offsetsList:
             offsetText = frame.layout().itemAt(1).widget().text()
-            try:
-                offsetValue = int(offsetText, 16)
-            except ValueError:
-                offsetValue = 0
+            offsetValue = safe_str_to_int(offsetText, 16)
             offsetsIntList.append(offsetValue)
         return offsetsIntList
 
@@ -2109,10 +2103,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def on_offset_arrow_clicked(self, offsetTextWidget, operator_func):
         offsetText = offsetTextWidget.text()
-        try:
-            offsetValue = int(offsetText, 16)
-        except ValueError:
-            offsetValue = 0
+        offsetValue = safe_str_to_int(offsetText, 16)
         sizeVal = typedefs.index_to_valuetype_dict[self.comboBox_ValueType.currentIndex()][0]
         offsetValue = operator_func(offsetValue, sizeVal)
         offsetTextWidget.setText(hex(offsetValue))
@@ -2199,10 +2190,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
     def get_values(self):
         value_index = self.comboBox_ValueType.currentIndex()
         length = self.lineEdit_Length.text()
-        try:
-            length = int(length, 0)
-        except:
-            length = 0
+        length = safe_str_to_int(length, 0)
         zero_terminate = self.checkBox_ZeroTerminate.isChecked()
         if self.checkBox_Hex.isChecked():
             value_repr = typedefs.VALUE_REPR.HEX
@@ -2692,7 +2680,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
-        current_address_int = int(current_address, 16)
+        current_address_int = safe_str_to_int(current_address, 16)
+        if current_address_int == 0:
+            return
         array_of_bytes = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
         debugcore.nop_instruction(current_address_int, len(array_of_bytes.split()))
         self.refresh_disassemble_view()
@@ -2703,7 +2693,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
-        current_address_int = int(current_address, 16)
+        current_address_int = safe_str_to_int(current_address, 16)
+        if current_address_int == 0:
+            return
         if debugcore.get_breakpoints_in_range(current_address_int):
             debugcore.delete_breakpoint(current_address)
         else:
@@ -3057,8 +3049,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         jmp_dict, call_dict = debugcore.get_dissect_code_data(False, True, True)
         for row, (address_info, bytes_aob, opcode) in enumerate(disas_data):
             comment = ""
-            current_address = int(utils.extract_hex_address(address_info), 16)
-            current_address_str = hex(current_address)
+            current_address_str = utils.extract_hex_address(address_info)
+            current_address = safe_str_to_int(current_address_str, 16)
             jmp_ref_exists = False
             call_ref_exists = False
             try:
@@ -3397,7 +3389,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     ),
                     (
                         QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H),
-                        lambda: self.hex_dump_address(int(current_address, 16)),
+                        lambda: self.hex_dump_address(safe_str_to_int(current_address, 16)),
                     ),
                 ]
             )
@@ -3449,7 +3441,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             copy_points_to: lambda: copy_to_clipboard(selected_row, STACK_POINTS_TO_COL),
             refresh: self.update_stack,
             show_in_disas: lambda: self.disassemble_expression(current_address),
-            show_in_hex: lambda: self.hex_dump_address(int(current_address, 16)),
+            show_in_hex: lambda: self.hex_dump_address(safe_str_to_int(current_address, 16)),
         }
         try:
             actions[action]()
@@ -3463,13 +3455,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if index.column() == STACK_POINTER_ADDRESS_COL:
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_POINTER_ADDRESS_COL).text()
             current_address = utils.extract_hex_address(current_address_text)
-            self.hex_dump_address(int(current_address, 16))
+            self.hex_dump_address(safe_str_to_int(current_address, 16))
         else:
             points_to_text = self.tableWidget_Stack.item(selected_row, STACK_POINTS_TO_COL).text()
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
             current_address = utils.extract_hex_address(current_address_text)
             if points_to_text.startswith("(str)"):
-                self.hex_dump_address(int(current_address, 16))
+                self.hex_dump_address(safe_str_to_int(current_address, 16))
             else:
                 self.disassemble_expression(current_address)
 
@@ -3484,7 +3476,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if index.column() == STACKTRACE_FRAME_ADDRESS_COL:
             current_address_text = self.tableWidget_StackTrace.item(selected_row, STACKTRACE_FRAME_ADDRESS_COL).text()
             current_address = utils.extract_hex_address(current_address_text)
-            self.hex_dump_address(int(current_address, 16))
+            self.hex_dump_address(safe_str_to_int(current_address, 16))
 
     def tableWidget_StackTrace_key_press_event(self, event):
         if debugcore.currentpid == -1:
@@ -3584,7 +3576,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
-        current_address_int = int(current_address, 16)
+        current_address_int = safe_str_to_int(current_address, 16)
 
         actions = typedefs.KeyboardModifiersTupleDict(
             [
@@ -3638,7 +3630,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if index.column() == DISAS_COMMENT_COL:
             selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
             current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
-            current_address = int(utils.extract_hex_address(current_address_text), 16)
+            current_address = safe_str_to_int(utils.extract_hex_address(current_address_text), 16)
             if current_address in self.session.pct_bookmarks:
                 self.change_bookmark_comment(current_address)
             else:
@@ -3686,7 +3678,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
-        current_address_int = int(current_address, 16)
+        current_address_int = safe_str_to_int(current_address, 16)
 
         menu = QMenu()
         go_to = menu.addAction(f"{tr.GO_TO_EXPRESSION}[Ctrl+G]")
@@ -3779,7 +3771,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
-        dissect_code_dialog = DissectCodeDialogForm(self, int(current_address, 16))
+        dissect_code_dialog = DissectCodeDialogForm(self, safe_str_to_int(current_address, 16))
         dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
         dissect_code_dialog.exec()
         self.refresh_disassemble_view()
@@ -3790,7 +3782,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if not guiutils.contains_reference_mark(current_address_text):
             return
         current_address = utils.extract_hex_address(current_address_text)
-        current_address_int = int(current_address, 16)
+        current_address_int = safe_str_to_int(current_address, 16)
         examine_referrers_widget = ExamineReferrersWidgetForm(self, current_address_int)
         examine_referrers_widget.show()
 
@@ -3974,7 +3966,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionSearch_Opcode_triggered(self):
         if debugcore.currentpid == -1:
             return
-        start_address = int(self.disassemble_currently_displayed_address, 16)
+        start_address = safe_str_to_int(self.disassemble_currently_displayed_address, 16)
         end_address = start_address + 0x30000
         search_opcode_widget = SearchOpcodeWidgetForm(self, hex(start_address), hex(end_address))
         search_opcode_widget.show()
@@ -4217,7 +4209,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
     def tableWidget_BreakpointInfo_double_clicked(self, index):
         current_address_text = self.tableWidget_BreakpointInfo.item(index.row(), BREAK_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
-        current_address_int = int(current_address, 16)
+        current_address_int = safe_str_to_int(current_address, 16)
 
         if index.column() == BREAK_COND_COL:
             self.parent().add_breakpoint_condition(current_address_int)
@@ -4714,7 +4706,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
     def lineEdit_Bytes_text_edited(self):
         bytes_aob = self.lineEdit_Bytes.text()
         if utils.parse_string(bytes_aob, typedefs.VALUE_INDEX.AOB):
-            address = int(self.lineEdit_Address.text(), 0)
+            address = safe_str_to_int(self.lineEdit_Address.text(), 0)
             instruction = utils.disassemble(bytes_aob, address, debugcore.inferior_arch)
             if instruction:
                 self.set_valid(True)
@@ -4725,7 +4717,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
 
     def lineEdit_Instruction_text_edited(self):
         instruction = self.lineEdit_Instruction.text()
-        address = int(self.lineEdit_Address.text(), 0)
+        address = safe_str_to_int(self.lineEdit_Address.text(), 0)
         result = utils.assemble(instruction, address, debugcore.inferior_arch)
         if result:
             byte_list = result[0]
@@ -4741,7 +4733,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
             return
 
         # No need to check for validity since address is not editable and opcode is checked in text_edited
-        address = int(self.lineEdit_Address.text(), 0)
+        address = safe_str_to_int(self.lineEdit_Address.text(), 0)
         bytes_aob = self.lineEdit_Bytes.text()
         if bytes_aob != self.orig_bytes:
             new_length = len(bytes_aob.split())
@@ -4987,7 +4979,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         self.tableWidget_MemoryRegions.setRowCount(len(memory_regions))
         region_index = 0
         for row, (start, end, perms, offset, _, _, path) in enumerate(memory_regions):
-            if int(offset, 16) == 0:
+            if safe_str_to_int(offset, 16) == 0:
                 region_index = 0
             else:
                 region_index += 1
@@ -5032,7 +5024,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
     def tableWidget_MemoryRegions_item_double_clicked(self, index):
         row = index.row()
         address = self.tableWidget_MemoryRegions.item(row, MEMORY_REGIONS_ADDR_COL).text()
-        address_int = int(address.split("-")[0], 16)
+        address_int = safe_str_to_int(address.split("-")[0], 16)
         self.parent().hex_dump_address(address_int)
 
 
@@ -5054,7 +5046,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
             for row in range(self.tableWidget_ExecutableMemoryRegions.rowCount()):
                 item = self.tableWidget_ExecutableMemoryRegions.item(row, DISSECT_CODE_ADDR_COL).text()
                 start_addr, end_addr = item.split("-")
-                if int(start_addr, 16) <= int_address <= int(end_addr, 16):
+                if safe_str_to_int(start_addr, 16) <= int_address <= safe_str_to_int(end_addr, 16):
                     self.tableWidget_ExecutableMemoryRegions.clearSelection()
                     self.tableWidget_ExecutableMemoryRegions.selectRow(row)
                     self.pushButton_StartCancel_clicked()
@@ -5233,7 +5225,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         self.listWidget_Referrers.clear()
         str_dict = debugcore.get_dissect_code_data(True, False, False)[0]
         addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_STR_ADDR_COL).text()
-        referrers = str_dict[hex(int(addr, 16))]
+        referrers = str_dict[addr]
         addrs = [hex(address) for address in referrers]
         self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)])
         self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
@@ -5242,7 +5234,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
     def tableWidget_References_item_double_clicked(self, index):
         row = index.row()
         address = self.tableWidget_References.item(row, REF_STR_ADDR_COL).text()
-        self.parent().hex_dump_address(int(address, 16))
+        self.parent().hex_dump_address(safe_str_to_int(address, 16))
 
     def listWidget_Referrers_item_double_clicked(self, item):
         self.parent().disassemble_expression(utils.extract_hex_address(item.text()))
@@ -5352,7 +5344,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         self.listWidget_Referrers.clear()
         call_dict = debugcore.get_dissect_code_data(False, False, True)[0]
         addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_CALL_ADDR_COL).text()
-        referrers = call_dict[hex(int(utils.extract_hex_address(addr), 16))]
+        referrers = call_dict[utils.extract_hex_address(addr)]
         addrs = [hex(address) for address in referrers]
         self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)])
         self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)

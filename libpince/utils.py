@@ -138,18 +138,18 @@ def get_region_info(pid, address):
         None: If the given address isn't in any valid address range
     """
     if type(pid) != int:
-        pid = int(pid)
+        pid = safe_int_cast(pid)
     if type(address) != int:
-        address = int(address, 0)
+        address = safe_str_to_int(address, 0)
     region_list = get_regions(pid)
     region_index = 0
     for start, end, perms, map_offset, _, _, path in region_list:
-        start = int(start, 16)
-        end = int(end, 16)
+        start = safe_str_to_int(start, 16)
+        end = safe_str_to_int(end, 16)
         file_name = os.path.split(path)[1]
 
         # get region index for the given address
-        if int(map_offset, 16) == 0:
+        if safe_str_to_int(map_offset, 16) == 0:
             region_index = 0
         else:
             region_index += 1
@@ -742,7 +742,7 @@ def aob_to_str(list_of_bytes, encoding="ascii", replace_unprintable=True):
             if isinstance(sByte, int):
                 byte = sByte
             else:
-                byte = int(sByte, 16)
+                byte = safe_str_to_int(sByte, 16)
             if replace_unprintable and ((byte < 32) or (byte > 126)):
                 hexString += f"{46:02x}"  # replace non-printable chars with a period (.)
             else:
@@ -1006,24 +1006,24 @@ def log(log_str: str, is_error: bool = False) -> None:
 # This is the main int() cast for strings that should be used until you're certain that the cast can never fail.
 # The reason for this is that you can catch stray errors or edge cases by safely returning a value and outputting useful log info
 # instead of failing with an exception that will propagate upwards.
-def safe_str_to_int(input: str | bytes | bytearray, base: int) -> int:
+def safe_str_to_int(input, base: int) -> int:
     try:
         return int(input, base)
     except ValueError:
         print(f"[ERROR][safe_str_to_int] ValueError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'")
-        return -1
+        return 0
     except TypeError:
         print(f"[ERROR][safe_str_to_int] TypeError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'")
-        return -1
+        return 0
 
 
 # This is the non-base version of the above.
-def safe_int_cast(input: ConvertibleToInt) -> int:
+def safe_int_cast(input) -> int:
     try:
         return int(input)
     except ValueError:
         print(f"[ERROR][safe_int_cast] ValueError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'")
-        return -1
+        return 0
     except TypeError:
         print(f"[ERROR][safe_int_cast] TypeError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'")
-        return -1
+        return 0
