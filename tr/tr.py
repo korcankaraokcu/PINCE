@@ -83,6 +83,7 @@ class TranslationConstants(QObject):
     PASTE_INSIDE = QT_TR_NOOP("Paste inside")
     POINTER_SCAN = QT_TR_NOOP("Pointer scan for this address")
     POINTER_SCANNER = QT_TR_NOOP("Open pointer scanner")
+    POINTER_SCAN_SUCCESS = QT_TR_NOOP("Pointer scan finished.\n\nDon't forget to open the scandata file (File->Open)!")
     WHAT_WRITES = QT_TR_NOOP("Find out what writes to this address")
     WHAT_READS = QT_TR_NOOP("Find out what reads this address")
     WHAT_ACCESSES = QT_TR_NOOP("Find out what accesses this address")

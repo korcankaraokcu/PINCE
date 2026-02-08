@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton
+from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton, QMessageBox
 from GUI.Widgets.PointerScanSearch.Form.PointerScanSearchDialog import Ui_Dialog
 from GUI.Utils import guiutils, guitypedefs
 from libpince import debugcore, utils
@@ -69,3 +69,4 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
 
     def ptrscan_callback(self) -> None:
         self.accept()
+        QMessageBox.information(self, tr.SUCCESS, tr.POINTER_SCAN_SUCCESS)
