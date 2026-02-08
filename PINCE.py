@@ -18,13 +18,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import gi
-
-# This fixes GTK version mismatch issues and crashes on gnome
-# See #153 and #159 for more information
-# This line can be deleted when GTK 4.0 properly runs on all supported systems
-gi.require_version("Gtk", "3.0")
-
 import ast
 import collections
 import copy
