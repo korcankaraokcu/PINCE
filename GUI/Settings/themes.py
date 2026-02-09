@@ -225,7 +225,6 @@ def get_theme(theme_name):
             }
             return apply_palette(wong_dict)
         case _:
-
             logger.error("There was an error parsing themes")
 
 

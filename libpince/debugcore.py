@@ -339,7 +339,7 @@ def state_observe_thread():
                 gdb_async_output.broadcast_message(child.before)
     except (OSError, ValueError, pexpect.EOF) as e:
         if isinstance(e, pexpect.EOF):
-            logger.exception("EOF exception caught within pexpect, here's the contents of child.before:\n" + child.before)
+            logger.exception("EOF exception caught within pexpect, here's the contents of child.before:\n%s", child.before)
         logger.exception("Exiting state_observe_thread")
 
 

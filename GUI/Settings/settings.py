@@ -87,8 +87,8 @@ def init_settings():
         set_default_settings()
     try:
         apply_settings()
-    except Exception as e:
-        logger.error("An exception occurred while loading settings, rolling back to the default configuration\n", e)
+    except Exception:
+        logger.exception("An exception occurred while loading settings, rolling back to the default configuration")
         settings.clear()
         set_default_settings()
 

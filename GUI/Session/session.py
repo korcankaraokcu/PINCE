@@ -37,7 +37,6 @@ def is_valid_session_data(content: dict[str, any]) -> bool:
 
 
 def legacy_to_v1(content: list) -> dict[str, any]:
-
     logger.info("Migrating legacy session data to version 1")
     return {"version": 1, "notes": "", "bookmarks": {}, "address_tree": content, "process_name": ""}
 
