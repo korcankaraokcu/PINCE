@@ -1953,22 +1953,25 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def update_deref_labels(self, pointer_chain_result: typedefs.PointerChainResult):
         if pointer_chain_result != None:
-            base_deref = utils.upper_hex(hex(pointer_chain_result.pointer_chain[0]))
+            base_deref = self.caps_hex_or_error_indicator(pointer_chain_result.pointer_chain[0])
             self.label_BaseAddressDeref.setText(f" → {base_deref}")
             for index, offsetFrame in enumerate(self.offsetsList):
+                if index + 1 >= len(pointer_chain_result.pointer_chain):
+                    offsetFrame.update_deref_label("<font color=red>??</font>")
+                    continue
                 previousDerefText = self.caps_hex_or_error_indicator(pointer_chain_result.pointer_chain[index])
                 currentDerefText = self.caps_hex_or_error_indicator(pointer_chain_result.pointer_chain[index + 1])
                 offsetText = utils.upper_hex(offsetFrame.offsetText.text())
                 operationalSign = "" if offsetText.startswith("-") else "+"
-                calculation = f"{previousDerefText}{operationalSign}{offsetText}"
-                if index != len(self.offsetsList) - 1:
+                calculation = f"{previousDerefText} {operationalSign} {offsetText}"
+                if index + 1 != len(pointer_chain_result.pointer_chain) - 1:
                     offsetFrame.update_deref_label(f" [{calculation}] → {currentDerefText}")
                 else:
                     offsetFrame.update_deref_label(f" {calculation} = {currentDerefText}")
         else:
             self.label_BaseAddressDeref.setText(" → <font color=red>??</font>")
             for offsetFrame in self.offsetsList:
-                offsetFrame.update_deref_label(" → <font color=red>??</font>")
+                offsetFrame.update_deref_label("<font color=red>??</font>")
 
     def caps_hex_or_error_indicator(self, address: int):
         if address == 0:
@@ -1981,7 +1984,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             pointer_chain_req = typedefs.PointerChainRequest(hex_converted_expr, self.get_offsets_int_list())
             pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
             address = None
-            if pointer_chain_result != None:
+            if pointer_chain_result != None and pointer_chain_result.get_final_address() not in {0, None}:
                 address_text = pointer_chain_result.get_final_address_as_hex()
                 address = pointer_chain_result.get_final_address()
             else:
@@ -2081,7 +2084,10 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         offsetsIntList = []
         for frame in self.offsetsList:
             offsetText = frame.layout().itemAt(1).widget().text()
-            offsetValue = safe_str_to_int(offsetText, 16)
+            try:
+                offsetValue = int(offsetText, 16)
+            except ValueError:
+                break
             offsetsIntList.append(offsetValue)
         return offsetsIntList
 
@@ -2093,13 +2099,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.addOffsetLayout(False)
             frame = self.offsetsList[-1]
             frame.layout().itemAt(1).widget().setText(hex(offset))
-
-    def on_offset_arrow_clicked(self, offsetTextWidget, operator_func):
-        offsetText = offsetTextWidget.text()
-        offsetValue = safe_str_to_int(offsetText, 16)
-        sizeVal = typedefs.index_to_valuetype_dict[self.comboBox_ValueType.currentIndex()][0]
-        offsetValue = operator_func(offsetValue, sizeVal)
-        offsetTextWidget.setText(hex(offsetValue))
 
     def get_type_size(self):
         return typedefs.index_to_valuetype_dict[self.comboBox_ValueType.currentIndex()][0]
