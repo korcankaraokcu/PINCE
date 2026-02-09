@@ -128,7 +128,7 @@ from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructi
 from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
 from GUI.Widgets.Settings.Settings import SettingsDialog
 from libpince import debugcore, typedefs, utils
-from libpince.utils import safe_str_to_int
+from libpince.utils import safe_str_to_int, safe_int_cast
 from libpince.debugcore import ptrscan, scanmem
 from tr.tr import TranslationConstants as tr
 from tr.tr import get_locale
@@ -2689,8 +2689,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_int = safe_str_to_int(current_address, 16)
         if current_address_int == 0:
             return
-        if debugcore.get_breakpoints_in_range(current_address_int):
-            debugcore.delete_breakpoint(current_address)
+        breakpoints = debugcore.get_breakpoints_in_range(current_address_int)
+        if breakpoints:
+            for breakpoint in breakpoints:
+                debugcore.delete_breakpoint(safe_int_cast(breakpoint.number))
         else:
             if not debugcore.add_breakpoint(current_address):
                 QMessageBox.information(self, tr.ERROR, tr.BREAKPOINT_FAILED.format(current_address))
@@ -2705,7 +2707,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 QMessageBox.information(self, tr.ERROR, tr.WATCHPOINT_FAILED.format(hex(address)))
         else:
             for bp in breakpoints:
-                debugcore.delete_breakpoint(bp.address)
+                debugcore.delete_breakpoint(safe_int_cast(bp.number))
         self.refresh_hex_view()
 
     def label_HexView_Information_context_menu_event(self, event):
@@ -3238,9 +3240,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if condition_dialog.exec():
             condition = condition_dialog.get_values()[0]
             for bp in breakpoints:
-                addr = bp.address
-                if not debugcore.modify_breakpoint(addr, typedefs.BREAKPOINT_MODIFY.CONDITION, condition):
-                    QMessageBox.information(app.focusWidget(), tr.ERROR, tr.BP_CONDITION_FAILED.format(addr))
+                if not debugcore.modify_breakpoint(safe_int_cast(bp.number), typedefs.BREAKPOINT_MODIFY.CONDITION, condition):
+                    QMessageBox.information(app.focusWidget(), tr.ERROR, tr.BP_CONDITION_FAILED.format(bp.address))
 
     def update_registers(self):
         if debugcore.currentpid == -1:
@@ -4096,24 +4097,23 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         self.textBrowser_BreakpointInfo.clear()
         self.textBrowser_BreakpointInfo.setText(debugcore.send_command("info break", cli_output=True))
 
-    def delete_breakpoint(self, address):
-        if address is not None:
-            debugcore.delete_breakpoint(address)
+    def delete_breakpoint(self, breakpoint_num):
+        if breakpoint_num is not None:
+            debugcore.delete_breakpoint(breakpoint_num)
             self.refresh_all()
 
     def tableWidget_BreakpointInfo_key_press_event(self, event):
         selected_row = guiutils.get_current_row(self.tableWidget_BreakpointInfo)
         if selected_row != -1:
-            current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
-            current_address = utils.extract_hex_address(current_address_text)
+            breakpoint_num = safe_int_cast(self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text())
         else:
-            current_address = None
+            breakpoint_num = None
 
         actions = typedefs.KeyboardModifiersTupleDict(
             [
                 (
                     QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete),
-                    lambda: self.delete_breakpoint(current_address),
+                    lambda: self.delete_breakpoint(breakpoint_num),
                 ),
                 (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh),
             ]
@@ -4124,7 +4124,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
             pass
         self.tableWidget_BreakpointInfo.keyPressEvent_original(event)
 
-    def exec_enable_count_dialog(self, current_address):
+    def exec_enable_count_dialog(self, breakpoint_number):
         hit_count_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_HIT_COUNT.format(1), "")])
         if hit_count_dialog.exec():
             count = hit_count_dialog.get_values()[0]
@@ -4136,18 +4136,20 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
                 if count < 1:
                     QMessageBox.information(self, tr.ERROR, tr.HIT_COUNT_ASSERT_LT.format(1))
                 else:
-                    debugcore.modify_breakpoint(current_address, typedefs.BREAKPOINT_MODIFY.ENABLE_COUNT, count=count)
+                    debugcore.modify_breakpoint(breakpoint_number, typedefs.BREAKPOINT_MODIFY.ENABLE_COUNT, count=count)
 
     def tableWidget_BreakpointInfo_context_menu_event(self, event):
         selected_row = guiutils.get_current_row(self.tableWidget_BreakpointInfo)
         if selected_row != -1:
+            bp_num = safe_int_cast(self.tableWidget_BreakpointInfo.item(selected_row, BREAK_NUM_COL).text())
             current_address_text = self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text()
             current_address = utils.extract_hex_address(current_address_text)
-            # Catchpoints won't have an address
-            # TODO: Implement enable/disable for catchpoints as we rely on addresses for these operations now.
-            current_address_int = safe_str_to_int(current_address, 16) if type(current_address) == str else -1
+            if current_address:
+                current_address_int = safe_str_to_int(current_address, 16)
+            else:
+                current_address_int = None
         else:
-            current_address = None
+            bp_num = None
             current_address_int = None
 
         menu = QMenu()
@@ -4160,7 +4162,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         menu.addSeparator()
         delete_breakpoint = menu.addAction(f"{tr.DELETE}[Del]")
         menu.addSeparator()
-        if current_address is None:
+        if bp_num is None:
             deletion_list = [
                 change_condition,
                 enable,
@@ -4171,20 +4173,25 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
                 delete_breakpoint,
             ]
             guiutils.delete_menu_entries(menu, deletion_list)
+        if current_address_int is None:
+            deletion_list = [
+                change_condition,
+            ]
+            guiutils.delete_menu_entries(menu, deletion_list)
         refresh = menu.addAction(f"{tr.REFRESH}[R]")
         font_size = self.tableWidget_BreakpointInfo.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
         actions = {
             change_condition: lambda: self.parent().add_breakpoint_condition(current_address_int),
-            enable: lambda: debugcore.modify_breakpoint(current_address, typedefs.BREAKPOINT_MODIFY.ENABLE),
-            disable: lambda: debugcore.modify_breakpoint(current_address, typedefs.BREAKPOINT_MODIFY.DISABLE),
-            enable_once: lambda: debugcore.modify_breakpoint(current_address, typedefs.BREAKPOINT_MODIFY.ENABLE_ONCE),
-            enable_count: lambda: self.exec_enable_count_dialog(current_address),
+            enable: lambda: debugcore.modify_breakpoint(bp_num, typedefs.BREAKPOINT_MODIFY.ENABLE),
+            disable: lambda: debugcore.modify_breakpoint(bp_num, typedefs.BREAKPOINT_MODIFY.DISABLE),
+            enable_once: lambda: debugcore.modify_breakpoint(bp_num, typedefs.BREAKPOINT_MODIFY.ENABLE_ONCE),
+            enable_count: lambda: self.exec_enable_count_dialog(bp_num),
             enable_delete: lambda: debugcore.modify_breakpoint(
-                current_address, typedefs.BREAKPOINT_MODIFY.ENABLE_DELETE
+                bp_num, typedefs.BREAKPOINT_MODIFY.ENABLE_DELETE
             ),
-            delete_breakpoint: lambda: debugcore.delete_breakpoint(current_address),
+            delete_breakpoint: lambda: debugcore.delete_breakpoint(bp_num),
             refresh: self.refresh,
         }
         try:
@@ -4202,6 +4209,9 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
     def tableWidget_BreakpointInfo_double_clicked(self, index):
         current_address_text = self.tableWidget_BreakpointInfo.item(index.row(), BREAK_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
+        if current_address is None:
+            # Catchpoints won't have an address, we don't need to change conditions or hex_dump
+            return
         current_address_int = safe_str_to_int(current_address, 16)
 
         if index.column() == BREAK_COND_COL:
@@ -4288,7 +4298,8 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         if self.stopped:
             self.close()
             return
-        if not debugcore.delete_breakpoint(self.address):
+        # Internal chained breakpoints check will delete the rest from self.breakpoints
+        if not debugcore.delete_breakpoint(safe_int_cast(self.breakpoints[0])):
             QMessageBox.information(self, tr.ERROR, tr.DELETE_WATCHPOINT_FAILED.format(self.address))
             return
         self.stopped = True
@@ -4298,7 +4309,8 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.update_timer.stop()
         if self.breakpoints:
             if not self.stopped:
-                debugcore.delete_breakpoint(self.address)
+                # Internal chained breakpoints check will delete the rest from self.breakpoints
+                debugcore.delete_breakpoint(safe_int_cast(self.breakpoints[0]))
             watchpoint_file = utils.get_track_watchpoint_file(debugcore.currentpid, self.breakpoints)
             if os.path.exists(watchpoint_file):
                 os.remove(watchpoint_file)
@@ -4379,7 +4391,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         if self.stopped:
             self.close()
             return
-        if not debugcore.delete_breakpoint(self.address):
+        if not debugcore.delete_breakpoint(safe_int_cast(self.breakpoint)):
             QMessageBox.information(self, tr.ERROR, tr.DELETE_BREAKPOINT_FAILED.format(self.address))
             return
         self.stopped = True
@@ -4391,7 +4403,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.update_values_timer.stop()
         if self.breakpoint:
             if not self.stopped:
-                debugcore.delete_breakpoint(self.address)
+                debugcore.delete_breakpoint(safe_int_cast(self.breakpoint))
             breakpoint_file = utils.get_track_breakpoint_file(debugcore.currentpid, self.breakpoint)
             if os.path.exists(breakpoint_file):
                 os.remove(breakpoint_file)

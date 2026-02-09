@@ -362,17 +362,17 @@ def get_track_watchpoint_file(pid, watchpoint_list):
     return get_ipc_path(pid) + "/" + str(watchpoint_list) + "_track_watchpoint.txt"
 
 
-def get_track_breakpoint_file(pid, breakpoint):
+def get_track_breakpoint_file(pid, breakpoint_number):
     """Get the path of track breakpoint file for given pid and breakpoint
 
     Args:
         pid (int,str): PID of the process
-        breakpoint (str): breakpoint number
+        breakpoint_number (int)
 
     Returns:
         str: Path of track breakpoint file
     """
-    return get_ipc_path(pid) + "/" + breakpoint + "_track_breakpoint.txt"
+    return f"{get_ipc_path(pid)}/{breakpoint_number}_track_breakpoint.txt"
 
 
 def append_file_extension(string, extension):

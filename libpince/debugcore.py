@@ -57,7 +57,7 @@ modified_instructions_dict = {}
 
 # If an action such as deletion or condition modification happens in one of the breakpoints in a list, others in the
 # same list will get affected as well
-# Format: [[[address1, size1], [address2, size2], ...], [[address1, size1], ...], ...]
+# Format: [[bp_num1, bp_num2, ...], [bp_num1, ...], ...]
 chained_breakpoints = []
 
 child = object  # this object will be used with pexpect operations
@@ -295,7 +295,10 @@ def state_observe_thread():
                         bp_match = regexes.breakpoint_number.search(match[0])
                         if bp_match:
                             bp_num_str = bp_match.group(1)
-                            bp_on_hit = breakpoint_on_hit_dict.get(bp_num_str, -1)
+                            # We'll use a default of BREAK as users might use the gdb console to place break conditions
+                            # such as catchpoints, where they won't be added to breakpoint_on_hit_dict.
+                            # Our own tracer which we must ignore will correctly use this dictionary so no worries there.
+                            bp_on_hit = breakpoint_on_hit_dict.get(bp_num_str, typedefs.BREAKPOINT_ON_HIT.BREAK)
                             last_stop_was_tracking = bp_on_hit != typedefs.BREAKPOINT_ON_HIT.BREAK
                         # Found the last stopped event, stop searching
                         break
@@ -1594,7 +1597,7 @@ def hardware_breakpoint_available() -> bool:
 
 def add_breakpoint(
     expression, breakpoint_type=typedefs.BREAKPOINT_TYPE.HARDWARE, on_hit=typedefs.BREAKPOINT_ON_HIT.BREAK
-):
+) -> int | None:
     """Adds a breakpoint at the address evaluated by the given expression. Uses a software breakpoint if all hardware
     breakpoint slots are being used
 
@@ -1604,7 +1607,7 @@ def add_breakpoint(
         on_hit (int): Can be a member of typedefs.BREAKPOINT_ON_HIT
 
     Returns:
-        str: Number of the breakpoint set
+        int: Number of the breakpoint set
         None: If setting breakpoint fails
     """
     output = ""
@@ -1627,7 +1630,7 @@ def add_breakpoint(
         global breakpoint_on_hit_dict
         number = regexes.breakpoint_number.search(output).group(1)
         breakpoint_on_hit_dict[number] = on_hit
-        return number
+        return int(number)
     else:
         return
 
@@ -1662,9 +1665,9 @@ def add_watchpoint(
         watch_command = "awatch"
     remaining_length = length
     breakpoints_set = []
+    breakpoints_nums = []
     arch = get_inferior_arch()
     str_address_int = int(str_address, 16)
-    breakpoint_addresses = []
     if arch == typedefs.INFERIOR_ARCH.ARCH_64:
         max_length = 8
     else:
@@ -1682,126 +1685,107 @@ def add_watchpoint(
             break
         cmd = f"{watch_command} * (char[{breakpoint_length}] *) {hex(str_address_int)}"
         output = execute_func_temporary_interruption(send_command, cmd)
-        if regexes.breakpoint_created.search(output):
-            breakpoint_addresses.append([str_address_int, breakpoint_length])
-        else:
+        if not regexes.breakpoint_created.search(output):
             print("Failed to create a watchpoint at address " + hex(str_address_int) + ". Bailing out...")
             break
         breakpoint_number = regexes.breakpoint_number.search(output).group(1)
         breakpoints_set.append(breakpoint_number)
+        breakpoints_nums.append(safe_int_cast(breakpoint_number))
         global breakpoint_on_hit_dict
         breakpoint_on_hit_dict[breakpoint_number] = on_hit
         remaining_length -= max_length
         str_address_int += max_length
     global chained_breakpoints
-    chained_breakpoints.append(breakpoint_addresses)
+    chained_breakpoints.append(breakpoints_nums)
     return breakpoints_set
 
 
-def modify_breakpoint(expression, modify_what, condition=None, count=None):
-    """Adds a condition to the breakpoint at the address evaluated by the given expression
+def modify_breakpoint(breakpoint_number, modify_what, condition=None, count=None) -> bool:
+    """Adds a condition to an existing breakpoint
 
     Args:
-        expression (str): Any gdb expression
-        modify_what (int): Can be a member of typedefs.BREAKPOINT_MODIFY_TYPES
-        This function modifies condition of the breakpoint if CONDITION, enables the breakpoint if ENABLE, disables the
-        breakpoint if DISABLE, enables once then disables after hit if ENABLE_ONCE, enables for specified count then
-        disables after the count is reached if ENABLE_COUNT, enables once then deletes the breakpoint if ENABLE_DELETE
-        condition (str): Any gdb condition expression. This parameter is only used if modify_what passed as CONDITION
-        count (int): Only used if modify_what passed as ENABLE_COUNT
+        breakpoint_number (int): Breakpoint number in gdb
+        modify_what (typedefs.BREAKPOINT_MODIFY): This param controls how the function modifies the breakpoint:
+        - Modifies condition of the breakpoint if CONDITION
+        - Enables the breakpoint if ENABLE
+        - Disables the breakpoint if DISABLE
+        - Enables once then disables after hit if ENABLE_ONCE
+        - Enables for specified count then disables after the count is reached if ENABLE_COUNT
+        - Enables once then deletes the breakpoint if ENABLE_DELETE
+        condition (str | None): Any gdb condition expression. This parameter is only used if modify_what passed as CONDITION
+        count (int | None): Only used if modify_what passed as ENABLE_COUNT
 
     Returns:
         bool: True if the condition has been set successfully, False otherwise
 
     Examples:
-        modify_what-->typedefs.BREAKPOINT_MODIFY_TYPES.CONDITION
+        modify_what-->typedefs.BREAKPOINT_MODIFY.CONDITION
         condition-->$eax==0x523
         condition-->$rax>0 && ($rbp<0 || $rsp==0)
         condition-->printf($r10)==3
 
-        modify_what-->typedefs.BREAKPOINT_MODIFY_TYPES.ENABLE_COUNT
+        modify_what-->typedefs.BREAKPOINT_MODIFY.ENABLE_COUNT
         count-->10
     """
-    str_address = examine_expression(expression).address
-    if not str_address:
-        print("expression for breakpoint is not valid")
-        return False
-    str_address_int = int(str_address, 16)
-    modification_list = [[str_address_int]]
-    for n, item in enumerate(chained_breakpoints):
+    modification_list = [breakpoint_number]
+    global chained_breakpoints
+    for _, item in enumerate(chained_breakpoints):
         for breakpoint in item:
-            if breakpoint[0] <= str_address_int <= breakpoint[0] + breakpoint[1] - 1:
+            if breakpoint == breakpoint_number:
                 modification_list = item
                 break
     for breakpoint in modification_list:
-        found_breakpoint = get_breakpoints_in_range(breakpoint[0])
-        if not found_breakpoint:
-            print("no such breakpoint exists for address " + str_address)
-            continue
-        else:
-            breakpoint_number = found_breakpoint[0].number
         if modify_what == typedefs.BREAKPOINT_MODIFY.CONDITION:
             if condition is None:
                 print("Please set condition first")
                 return False
-            send_command("condition " + breakpoint_number + " " + condition)
+            send_command(f"condition {breakpoint} {condition}")
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE:
-            send_command("enable " + breakpoint_number)
+            send_command(f"enable {breakpoint}")
         elif modify_what == typedefs.BREAKPOINT_MODIFY.DISABLE:
-            send_command("disable " + breakpoint_number)
+            send_command(f"disable {breakpoint}")
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE_ONCE:
-            send_command("enable once " + breakpoint_number)
+            send_command(f"enable once {breakpoint}")
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE_COUNT:
             if count is None:
-                print("Please set count first")
+                utils.log("Missing count parameter for ENABLE_COUNT breakpoint modification", is_error=True)
                 return False
             elif count < 1:
-                print("Count can't be lower than 1")
+                utils.log(f"Count parameter can't be less than 1 for ENABLE_COUNT breakpoint modification", is_error=True)
                 return False
-            send_command("enable count " + str(count) + " " + breakpoint_number)
+            send_command(f"enable count {count} {breakpoint}")
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE_DELETE:
-            send_command("enable delete " + breakpoint_number)
+            send_command(f"enable delete {breakpoint}")
         else:
             print("Parameter modify_what is not valid")
             return False
     return True
 
 
-def delete_breakpoint(expression):
-    """Deletes a breakpoint at the address evaluated by the given expression
+def delete_breakpoint(breakpoint_number: int) -> bool:
+    """Deletes a breakpoint by given number
 
     Args:
-        expression (str): Any gdb expression
+        breakpoint_number (int)
 
     Returns:
         bool: True if the breakpoint has been deleted successfully, False otherwise
     """
-    str_address = examine_expression(expression).address
-    if not str_address:
-        print("expression for breakpoint is not valid")
-        return False
-    str_address_int = int(str_address, 16)
-    deletion_list = [[str_address_int]]
+    deletion_list = [breakpoint_number]
     global chained_breakpoints
     for n, item in enumerate(chained_breakpoints):
         for breakpoint in item:
-            if breakpoint[0] <= str_address_int <= breakpoint[0] + breakpoint[1] - 1:
+            if breakpoint == breakpoint_number:
                 deletion_list = item
                 del chained_breakpoints[n]
                 break
     for breakpoint in deletion_list:
-        found_breakpoint = get_breakpoints_in_range(breakpoint[0])
-        if not found_breakpoint:
-            print("no such breakpoint exists for address " + str_address)
-            continue
-        else:
-            breakpoint_number = found_breakpoint[0].number
         global breakpoint_on_hit_dict
         try:
-            del breakpoint_on_hit_dict[breakpoint_number]
+            del breakpoint_on_hit_dict[str(breakpoint)]
         except KeyError:
             pass
-        send_command("delete " + breakpoint_number)
+        send_command(f"delete {breakpoint}")
     return True
 
 
@@ -1855,7 +1839,7 @@ def get_track_watchpoint_info(watchpoint_list):
 
 
 @execute_with_temporary_interruption
-def track_breakpoint(expression, register_expressions):
+def track_breakpoint(expression, register_expressions) -> int | None:
     """Starts tracking a value by setting a breakpoint at the address holding it
     Use get_track_breakpoint_info() to get info about the breakpoint you set
 
@@ -1866,7 +1850,7 @@ def track_breakpoint(expression, register_expressions):
         For instance, passing "$rax,$rcx+5,$rbp+$r12" will make PINCE track values rax, rcx+5 and rbp+r12
 
     Returns:
-        str: Number of the breakpoint set
+        int: Number of the breakpoint set
         None: If fails to set any breakpoint
     """
     breakpoint = add_breakpoint(expression, on_hit=typedefs.BREAKPOINT_ON_HIT.FIND_ADDR)
@@ -1874,24 +1858,15 @@ def track_breakpoint(expression, register_expressions):
         return
     # TODO (lldb): When we switch to LLDB, remove c& and only continue if there isn't an active trace
     # Apply the same for track_watchpoint
-    send_command(
-        "commands "
-        + breakpoint
-        + "\npince-get-track-breakpoint-info "
-        + register_expressions.replace(" ", "")
-        + ","
-        + breakpoint
-        + "\nc&"
-        + "\nend"
-    )
+    send_command(f"commands {breakpoint}\npince-get-track-breakpoint-info {register_expressions.replace(" ", "")},{breakpoint}\nc&\nend")
     return breakpoint
 
 
-def get_track_breakpoint_info(breakpoint):
+def get_track_breakpoint_info(breakpoint_number: int):
     """Gathers the information for the tracked breakpoint
 
     Args:
-        breakpoint (str): breakpoint number, must be returned from track_breakpoint()
+        breakpoint_number (int): breakpoint number, must be returned from track_breakpoint()
 
     Returns:
         dict: Holds the register expressions as keys and their info as values
@@ -1901,7 +1876,7 @@ def get_track_breakpoint_info(breakpoint):
         value-->(str) Value calculated by given register expression as hex str
         count-->(int) How many times this expression has been reached
     """
-    track_breakpoint_file = utils.get_track_breakpoint_file(currentpid, breakpoint)
+    track_breakpoint_file = utils.get_track_breakpoint_file(currentpid, breakpoint_number)
     try:
         output = pickle.load(open(track_breakpoint_file, "rb"))
     except:
@@ -1913,7 +1888,7 @@ class Tracer:
     def __init__(self) -> None:
         """Use set_breakpoint after init and if it succeeds, use tracer_loop within a thread
         There can be only one trace session at a time. Don't create new trace sessions before finishing the last one"""
-        self.expression = ""
+        self.bp_num = -1
         self.max_trace_count = 1000
         self.stop_condition = ""
         self.step_mode = typedefs.STEP_MODE.SINGLE_STEP
@@ -1935,7 +1910,7 @@ class Tracer:
         step_mode: typedefs.STEP_MODE = typedefs.STEP_MODE.SINGLE_STEP,
         stop_after_trace: bool = False,
         collect_registers: bool = True,
-    ) -> str:
+    ) -> int | None:
         """Sets the breakpoint for tracing instructions at the address evaluated by the given expression
 
         Args:
@@ -1948,7 +1923,7 @@ class Tracer:
             collect_registers (bool): Collect registers while stepping
 
         Returns:
-            str: Number of the breakpoint set
+            int: Number of the breakpoint set
             None: If fails to set any breakpoint or if max_trace_count is not valid
         """
         if max_trace_count < 1:
@@ -1960,16 +1935,16 @@ class Tracer:
         breakpoint = add_breakpoint(expression, on_hit=typedefs.BREAKPOINT_ON_HIT.TRACE)
         if not breakpoint:
             return
-        modify_breakpoint(expression, typedefs.BREAKPOINT_MODIFY.CONDITION, condition=trigger_condition)
+        modify_breakpoint(breakpoint, typedefs.BREAKPOINT_MODIFY.CONDITION, condition=trigger_condition)
         (
-            self.expression,
+            self.bp_num,
             self.max_trace_count,
             self.stop_condition,
             self.step_mode,
             self.stop_after_trace,
             self.collect_registers,
-        ) = (expression, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_registers)
-        send_command("commands " + breakpoint + "\npince-trace-instructions\nend")
+        ) = (breakpoint, max_trace_count, stop_condition, step_mode, stop_after_trace, collect_registers)
+        send_command(f"commands {breakpoint}\npince-trace-instructions\nend")
         return breakpoint
 
     def tracer_loop(self):
@@ -1985,7 +1960,7 @@ class Tracer:
             sleep(0.1)
         global active_trace
         active_trace = True
-        delete_breakpoint(self.expression)
+        delete_breakpoint(self.bp_num)
         self.trace_status = typedefs.TRACE_STATUS.TRACING
 
         # The reason we don't use a tree class is to make the tree json-compatible
