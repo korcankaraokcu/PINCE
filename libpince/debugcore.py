@@ -1858,7 +1858,7 @@ def track_breakpoint(expression, register_expressions) -> int | None:
         return
     # TODO (lldb): When we switch to LLDB, remove c& and only continue if there isn't an active trace
     # Apply the same for track_watchpoint
-    send_command(f"commands {breakpoint}\npince-get-track-breakpoint-info {register_expressions.replace(" ", "")},{breakpoint}\nc&\nend")
+    send_command(f"commands {breakpoint}\npince-get-track-breakpoint-info {register_expressions.replace(' ', '')},{breakpoint}\nc&\nend")
     return breakpoint
 
 
