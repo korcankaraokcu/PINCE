@@ -74,7 +74,7 @@ sh PINCE/install.sh
 Our AppImage should run on any distro that is as new or newer than Ubuntu 22.04. Anything older than this might not work and is not officially supported.
 
 ### Local dev
-Local dev installs of PINCE should technically run on any distro that comes with **Python 3.10+** and **PyQt 6.6+** installed or available in the package manager, but below is the list of distros that we officially support, as in we actively test on these and help with issues:
+Local dev installs of PINCE should technically run on any distro that comes with **Python 3.11+** and **PyQt 6.10+** installed or available in the package manager, but below is the list of distros that we officially support, as in we actively test on these and help with issues:
 - Kubuntu 22.04+
 - Arch Linux (**Not AUR**)
 
