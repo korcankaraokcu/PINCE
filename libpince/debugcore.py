@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import logging
 from threading import Lock, Thread, Condition
 from time import sleep, time
 from collections import OrderedDict, defaultdict
@@ -117,6 +118,8 @@ allocated_memory_chunks: dict[str, typedefs.AllocatedMemory] = {}
 # ID generator used for the above
 allocated_memory_gen_id = 0
 
+logger = logging.getLogger(__name__)
+
 """
 When PINCE was first launched, it used gdb 7.7.1, which is a very outdated version of gdb
 interpreter-exec mi command of gdb showed some buggy behaviour at that time
@@ -213,7 +216,7 @@ def send_command(
         command = 'interpreter-exec mi "' + command + '"' if command.startswith("-") else command
         last_gdb_command = command if not control else "Ctrl+" + command
         if gdb_output_mode.command_info:
-            print("Last command: " + last_gdb_command)
+            logger.info("Last command: " + last_gdb_command)
         if control:
             child.sendcontrol(command)
         else:
@@ -245,10 +248,7 @@ def send_command(
             output = ""
         if gdb_output_mode.command_info:
             time1 = time()
-            try:
-                print(time1 - time0)
-            except NameError:
-                pass
+            logger.info(time1 - time0)
         cancel_send_command = False
         return output
 
@@ -271,7 +271,7 @@ def state_observe_thread():
                 if match[0].startswith('stopped,reason="exited'):
                     with process_exited_condition:
                         detach()
-                        print(f"Process terminated (PID:{currentpid})")
+                        logger.info("Process terminated (PID:%d)", currentpid)
                         process_exited_condition.notify_all()
                         return
 
@@ -332,15 +332,15 @@ def state_observe_thread():
                 with gdb_waiting_for_prompt_condition:
                     gdb_waiting_for_prompt_condition.notify_all()
                 if gdb_output_mode.command_output:
-                    print(child.before)
+                    logger.info(child.before)
             else:
                 if gdb_output_mode.async_output:
-                    print(child.before)
+                    logger.info(child.before)
                 gdb_async_output.broadcast_message(child.before)
     except (OSError, ValueError, pexpect.EOF) as e:
         if isinstance(e, pexpect.EOF):
-            print("\nEOF exception caught within pexpect, here's the contents of child.before:\n" + child.before)
-        print("Exiting state_observe_thread")
+            logger.exception("EOF exception caught within pexpect, here's the contents of child.before:\n" + child.before)
+        logger.exception("Exiting state_observe_thread")
 
 
 def execute_func_temporary_interruption(func, *args, **kwargs):
@@ -509,7 +509,6 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     global last_stop_was_tracking
     utils.init_user_files()
     detach()
-
     # Temporary IPC_PATH, this little hack is needed because send_command requires a valid IPC_PATH
     utils.create_ipc_path(currentpid)
     utils.create_tmp_path(currentpid)
@@ -537,7 +536,7 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     try:
         child.expect_exact("(gdb)")
     except pexpect.EOF:
-        print("\nEOF exception caught within pexpect, here's the contents of child.before:\n" + child.before)
+        logger.exception("EOF exception caught within pexpect, here's the contents of child.before:\n%s", child.before)
         return False
     status_thread = Thread(target=state_observe_thread)
     status_thread.daemon = True
@@ -655,7 +654,7 @@ def create_process(process_path, args="", ld_preload_path="", gdb_path=utils.get
         init_gdb(gdb_path)
     output = send_command("file " + process_path)
     if regexes.gdb_error.search(output):
-        print("An error occurred while trying to create process from the file at " + process_path)
+        logger.error("An error occurred while trying to create process from the file at %s", process_path)
         detach()
         return False
     send_command("starti")
@@ -688,6 +687,7 @@ def detach():
     """See you, space cowboy"""
     global gdb_initialized
     global currentpid
+
     old_pid = currentpid
     if gdb_initialized:
         global child
@@ -698,7 +698,7 @@ def detach():
         child.close()
     if old_pid != -1:
         utils.delete_ipc_path(old_pid)
-    print("Detached from the process with PID:" + str(old_pid))
+    logger.info("Detached from the process with PID: %d", old_pid)
 
 
 def toggle_attach():
@@ -1613,16 +1613,16 @@ def add_breakpoint(
     output = ""
     str_address = examine_expression(expression).address
     if not str_address:
-        print("expression for breakpoint is not valid")
+        logger.warning("expression for breakpoint is not valid")
         return
     if get_breakpoints_in_range(str_address):
-        print("breakpoint/watchpoint for address " + str_address + " is already set")
+        logger.warning("breakpoint/watchpoint for address %s is already set", str_address)
         return
     if breakpoint_type == typedefs.BREAKPOINT_TYPE.HARDWARE:
         if hardware_breakpoint_available():
             output = send_command("hbreak *" + str_address)
         else:
-            print("All hardware breakpoint slots are being used, using a software breakpoint instead")
+            logger.warning("All hardware breakpoint slots are being used, using a software breakpoint instead")
             output = send_command("break *" + str_address)
     elif breakpoint_type == typedefs.BREAKPOINT_TYPE.SOFTWARE:
         output = send_command("break *" + str_address)
@@ -1655,7 +1655,7 @@ def add_watchpoint(
     """
     str_address = examine_expression(expression).address
     if not str_address:
-        print("expression for watchpoint is not valid")
+        logger.warning("expression for watchpoint is not valid")
         return
     if watchpoint_type == typedefs.WATCHPOINT_TYPE.WRITE_ONLY:
         watch_command = "watch"
@@ -1678,15 +1678,15 @@ def add_watchpoint(
         else:
             breakpoint_length = remaining_length
         if get_breakpoints_in_range(str_address_int, breakpoint_length):
-            print("breakpoint/watchpoint for address " + hex(str_address_int) + " is already set. Bailing out...")
+            logger.warning("breakpoint/watchpoint for address %s is already set. Bailing out...", hex(str_address_int))
             break
         if not hardware_breakpoint_available():
-            print("All hardware breakpoint slots are being used, unable to set a new watchpoint. Bailing out...")
+            logger.warning("All hardware breakpoint slots are being used, unable to set a new watchpoint. Bailing out...")
             break
         cmd = f"{watch_command} * (char[{breakpoint_length}] *) {hex(str_address_int)}"
         output = execute_func_temporary_interruption(send_command, cmd)
         if not regexes.breakpoint_created.search(output):
-            print("Failed to create a watchpoint at address " + hex(str_address_int) + ". Bailing out...")
+            logger.warning("Failed to create a watchpoint at address %s. Bailing out...", hex(str_address_int))
             break
         breakpoint_number = regexes.breakpoint_number.search(output).group(1)
         breakpoints_set.append(breakpoint_number)
@@ -1737,7 +1737,7 @@ def modify_breakpoint(breakpoint_number, modify_what, condition=None, count=None
     for breakpoint in modification_list:
         if modify_what == typedefs.BREAKPOINT_MODIFY.CONDITION:
             if condition is None:
-                print("Please set condition first")
+                logger.warning("Please set condition first")
                 return False
             send_command(f"condition {breakpoint} {condition}")
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE:
@@ -1757,7 +1757,7 @@ def modify_breakpoint(breakpoint_number, modify_what, condition=None, count=None
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE_DELETE:
             send_command(f"enable delete {breakpoint}")
         else:
-            print("Parameter modify_what is not valid")
+            logger.warning("Parameter modify_what is not valid")
             return False
     return True
 
@@ -1927,10 +1927,10 @@ class Tracer:
             None: If fails to set any breakpoint or if max_trace_count is not valid
         """
         if max_trace_count < 1:
-            print("max_trace_count must be greater than or equal to 1")
+            logger.warning("max_trace_count must be greater than or equal to 1")
             return
         if type(max_trace_count) != int:
-            print("max_trace_count must be an integer")
+            logger.warning("max_trace_count must be an integer")
             return
         breakpoint = add_breakpoint(expression, on_hit=typedefs.BREAKPOINT_ON_HIT.TRACE)
         if not breakpoint:
@@ -2078,8 +2078,8 @@ def search_opcode(searched_str, starting_address, ending_address_or_offset, case
                 regex = re.compile(searched_str)
             else:
                 regex = re.compile(searched_str, re.IGNORECASE)
-        except Exception as e:
-            print("An exception occurred while trying to compile the given regex\n", str(e))
+        except Exception:
+            logger.exception("An exception occurred while trying to compile the given regex")
             return
     returned_list = []
     disas_output = disassemble(starting_address, ending_address_or_offset)
@@ -2200,8 +2200,8 @@ def search_referenced_strings(
                 regex = re.compile(searched_str)
             else:
                 regex = re.compile(searched_str, re.IGNORECASE)
-        except Exception as e:
-            print("An exception occurred while trying to compile the given regex\n", str(e))
+        except Exception:
+            logger.exception("An exception occurred while trying to compile the given regex\n%s")
             return
     str_dict = get_dissect_code_data(True, False, False)[0]
     mem_handle = memory_handle()

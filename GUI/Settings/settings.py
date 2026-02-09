@@ -1,3 +1,5 @@
+import logging
+
 from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
@@ -68,6 +70,7 @@ default_signals = [
 for x in range(32, 128):  # Add signals SIG32-SIG127
     default_signals.append([f"SIG{x}", True, True])
 
+logger = logging.getLogger(__name__)
 
 def init_settings():
     settings = QSettings()
@@ -75,17 +78,17 @@ def init_settings():
         set_default_settings()
     try:
         settings_version = settings.value("Misc/version", type=str)
-    except Exception as e:
-        print("An exception occurred while reading settings version\n", e)
+    except Exception:
+        logger.exception("An exception occurred while reading settings version")
         settings_version = None
     if settings_version != current_settings_version:
-        print("Settings version mismatch, rolling back to the default configuration")
+        logger.warning("Settings version mismatch, rolling back to the default configuration")
         settings.clear()
         set_default_settings()
     try:
         apply_settings()
     except Exception as e:
-        print("An exception occurred while loading settings, rolling back to the default configuration\n", e)
+        logger.error("An exception occurred while loading settings, rolling back to the default configuration\n", e)
         settings.clear()
         set_default_settings()
 

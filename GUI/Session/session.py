@@ -1,3 +1,4 @@
+import logging
 import os
 from enum import IntFlag, auto
 
@@ -9,6 +10,7 @@ from GUI.States import states
 from libpince import utils, debugcore
 from tr.tr import TranslationConstants as tr
 
+logger = logging.getLogger(__name__)
 
 class SessionDataChanged(IntFlag):
     NONE = auto()
@@ -35,7 +37,8 @@ def is_valid_session_data(content: dict[str, any]) -> bool:
 
 
 def legacy_to_v1(content: list) -> dict[str, any]:
-    print("Migrating legacy session data to version 1")
+
+    logger.info("Migrating legacy session data to version 1")
     return {"version": 1, "notes": "", "bookmarks": {}, "address_tree": content, "process_name": ""}
 
 

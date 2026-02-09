@@ -15,6 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import logging
+
 import gdb, sys, traceback, functools
 from collections import OrderedDict
 
@@ -36,14 +38,15 @@ if str(gdb.parse_and_eval("$rax")) == "void":
 else:
     current_arch = typedefs.INFERIOR_ARCH.ARCH_64
 
+logger = logging.getLogger(__name__)
 
 # Use this function instead of the .gdbinit file
 # If you have to load a .gdbinit file, just load it in this function with command "source"
 def gdbinit():
     try:
         gdb.execute("source " + GDBINIT_AA_PATH)
-    except Exception as e:
-        print(e)
+    except Exception:
+        logger.exception("")
     gdb.execute("set disassembly-flavor intel")
     gdb.execute("set case-sensitive auto")
     gdb.execute("set code-cache off")
@@ -149,12 +152,12 @@ def examine_expression(expression: str, regions=None):
                     address = start_address_list[index]
                     try:
                         address = hex(eval(address + offset))
-                    except Exception as e:
-                        print(e)
+                    except Exception:
+                        logger.exception("")
                         return typedefs.tuple_examine_expression(None, None, None)
                     return typedefs.tuple_examine_expression(f"{address} {expression}", address, expression)
             return typedefs.tuple_examine_expression(None, None, None)
-        print(e)
+        logger.exception("")
         return typedefs.tuple_examine_expression(None, None, None)
     result = regexes.address_with_symbol.search(str(value))
     return typedefs.tuple_examine_expression(*result.groups())

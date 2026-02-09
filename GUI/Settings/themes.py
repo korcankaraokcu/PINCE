@@ -1,3 +1,5 @@
+import logging
+
 from PyQt6.QtGui import QColor, QPalette
 from tr.tr import TranslationConstants as tr
 from enum import Enum
@@ -51,6 +53,7 @@ role_dict = {
     "PLACEHOLDER_TEXT": QPalette.ColorRole.PlaceholderText,
 }
 
+logger = logging.getLogger(__name__)
 
 def get_theme(theme_name):
     """Returns a customized theme based on the specified theme choice
@@ -222,7 +225,8 @@ def get_theme(theme_name):
             }
             return apply_palette(wong_dict)
         case _:
-            print("There was an error parsing themes")
+
+            logger.error("There was an error parsing themes")
 
 
 def apply_palette(theme_dict):
