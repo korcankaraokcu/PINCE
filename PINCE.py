@@ -128,7 +128,7 @@ from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructi
 from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
 from GUI.Widgets.Settings.Settings import SettingsDialog
 from libpince import debugcore, typedefs, utils
-from libpince.utils import safe_str_to_int, safe_int_cast
+from libpince.utils import safe_str_to_int, safe_int_cast, logger
 from libpince.debugcore import ptrscan, scanmem
 from tr.tr import TranslationConstants as tr
 from tr.tr import get_locale
@@ -439,7 +439,7 @@ class MainForm(QMainWindow, MainWindow):
             try:
                 compiled_re = re.compile(states.auto_attach)
             except:
-                print(f"Auto-attach failed: {states.auto_attach} isn't a valid regex")
+                logger.exception(f"Auto-attach failed: {states.auto_attach} isn't a valid regex")
                 return
             for pid, _, name in utils.get_process_list():
                 if compiled_re.search(name):
@@ -478,13 +478,13 @@ class MainForm(QMainWindow, MainWindow):
     @utils.ignore_exceptions
     def cancel_hotkey_pressed(self):
         if debugcore.cancel_ongoing_command():
-            print("Cancelled the ongoing GDB command")
+            logger.info("Cancelled the ongoing GDB command")
 
     @utils.ignore_exceptions
     def toggle_attach_hotkey_pressed(self):
         result = debugcore.toggle_attach()
         if not result:
-            print("Unable to toggle attach")
+            logger.error("Unable to toggle attach")
         elif result == typedefs.TOGGLE_ATTACH.DETACHED:
             self.on_status_detached()
         else:
@@ -1535,7 +1535,7 @@ class MainForm(QMainWindow, MainWindow):
 
         debugcore.detach()
         app.closeAllWindows()
-        print("[Info]: all PINCE windows closed")
+        logger.info("All PINCE windows closed")
 
     # Call update_address_table manually after this
     def add_entry_to_addresstable(self, description, address_expr, value_type=None):
@@ -2260,7 +2260,7 @@ class LoadingDialogForm(QDialog, LoadingDialog):
             self.output_ready.emit(output)
 
         def overrided_func(self):
-            print("Override this function")
+            logger.debug("Override this function")
             return 0
 
 
@@ -3219,7 +3219,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.float_registers_widget.update_registers()
         app.processEvents()
         time1 = time()
-        print("UPDATED MEMORYVIEW IN:" + str(time1 - time0))
+        logger.debug(f"Updated memory view in: {str(time1 - time0)}")
         self.updating_memoryview = False
 
     def on_process_running(self):
@@ -3831,14 +3831,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         symbol = utils.extract_symbol_name(exam_result.symbol) if exam_result.symbol else ""
 
         region_info = utils.get_region_info(debugcore.currentpid, address)
-        process_name = utils.get_process_name(debugcore.currentpid)
 
         if not region_info:
-            print("[WARN] Address does not belong to any mapped region, aborting")
+            logger.error("Address does not belong to any mapped region, aborting")
             return
 
         if region_info.file_name == "[heap]" or region_info.file_name == "[stack]":
-            print("[WARN] Address belongs to the heap or stack, cannot bookmark")
+            logger.warning("Address belongs to the heap or stack, cannot bookmark")
             return
 
         address_region_details = {
@@ -3851,7 +3850,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             "comment": comment,
             "address_region_details": address_region_details,
         }
-        print(self.session.pct_bookmarks)
+        logger.info(self.session.pct_bookmarks)
         self.refresh_disassemble_view()
 
     def change_bookmark_comment(self, address: int):
@@ -4783,7 +4782,7 @@ class HexEditDialogForm(QDialog, HexEditDialog):
 
     def lineEdit_HexView_selection_changed(self):
         # TODO: Implement this
-        print("TODO: Implement selectionChanged signal of lineEdit_HexView")
+        logger.debug("TODO: Implement selectionChanged signal of lineEdit_HexView")
         raise NotImplementedError
 
     def lineEdit_HexView_text_edited(self):

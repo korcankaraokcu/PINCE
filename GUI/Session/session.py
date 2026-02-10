@@ -35,7 +35,7 @@ def is_valid_session_data(content: dict[str, any]) -> bool:
 
 
 def legacy_to_v1(content: list) -> dict[str, any]:
-    print("Migrating legacy session data to version 1")
+    utils.logger.info("Migrating legacy session data to version 1")
     return {"version": 1, "notes": "", "bookmarks": {}, "address_tree": content, "process_name": ""}
 
 
@@ -215,7 +215,7 @@ class Session:
                 if new_addr == 0:
                     continue
             else:
-                utils.log(f"Could not find region with name: {region_name}", is_error=False)
+                utils.logger.warning(f"Could not find region with name: {region_name}")
                 continue
 
             new_bookmarks[new_addr] = {

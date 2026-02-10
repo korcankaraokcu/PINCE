@@ -26,6 +26,7 @@ sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import 
 
 from libpince.gdb_python_scripts import gdbutils
 from libpince import utils, typedefs, regexes
+from libpince.utils import logger
 
 importlib.reload(gdbutils)
 pid = gdbutils.pid
@@ -76,7 +77,7 @@ class CLIOutput(gdb.Command):
             contents_send = gdb.execute(arg, from_tty, to_string=True)
         except Exception as e:
             contents_send = str(e)
-        print(contents_send)
+        logger.debug(contents_send)
         send_to_pince(contents_send)
 
 
@@ -101,10 +102,8 @@ class ParseAndEval(gdb.Command):
         try:
             value = gdb.parse_and_eval(expression)
             parsed_value = cast(value)
-        except Exception as e:
-            print(e)
-            print("Expression: " + expression)
-            print("Cast type: " + str(cast))
+        except Exception:
+            logger.exception(f"An exception occurred while trying to parse expression '{expression}' and cast to type '{str(cast)}'")
             parsed_value = None
         send_to_pince(parsed_value)
 
@@ -142,7 +141,7 @@ class GetStackTraceInfo(gdb.Command):
             sp_register = "esp"
         stack_pointer = gdbutils.examine_expression(f"${sp_register}").address
         if not stack_pointer:
-            print(f"Cannot get the value of ${sp_register}")
+            logger.error(f"Cannot get the value of ${sp_register}")
             send_to_pince(stacktrace_info_list)
             return
         stack_pointer = int(stack_pointer, 16)
@@ -192,7 +191,7 @@ class GetStackInfo(gdb.Command):
 
         sp_address = gdbutils.examine_expression(f"${stack_register}").address
         if not sp_address:
-            print(f"Cannot get the value of ${stack_register}")
+            logger.error(f"Cannot get the value of ${stack_register}")
             send_to_pince(stack_info_list)
             return
         sp_address = int(sp_address, 16)
@@ -200,7 +199,7 @@ class GetStackInfo(gdb.Command):
             try:
                 old_position = FILE.seek(sp_address)
             except (OSError, ValueError):
-                print(f"Cannot accesss the memory at {hex(sp_address)}")
+                logger.exception(f"Cannot accesss the memory at {hex(sp_address)}")
                 send_to_pince(stack_info_list)
                 return
             for index in range(int(4096 / chunk_size)):
@@ -212,7 +211,7 @@ class GetStackInfo(gdb.Command):
                     FILE.seek(old_position)
                     read = FILE.read(chunk_size)
                 except (OSError, ValueError):
-                    print("Can't access the stack after address " + stack_indicator)
+                    logger.exception(f"Can't access the stack after address {stack_indicator}")
                     break
                 old_position = FILE.tell()
                 int_addr = struct.unpack_from(int_format, read)[0]
@@ -267,7 +266,7 @@ class GetFrameInfo(gdb.Command):
         if 0 <= int(frame_number) <= int(max_frame):
             frame_info = gdb.execute("info frame " + frame_number, from_tty, to_string=True)
         else:
-            print("Frame " + frame_number + " doesn't exist")
+            logger.error(f"Frame {frame_number} doesn't exist")
             frame_info = None
         send_to_pince(frame_info)
 
@@ -286,7 +285,7 @@ class GetTrackWatchpointInfo(gdb.Command):
             if result:
                 current_pc_addr = result.group(0)
             else:
-                utils.log("Failed to grab address from $pc", is_error=True)
+                logger.error("Failed to grab address from $pc")
                 return
         current_pc_int = int(current_pc_addr, 0)
         try:
@@ -432,8 +431,8 @@ class DissectCode(gdb.Command):
             code = self.memory.read(buffer_size)
             try:
                 disas_data = disassembler.disasm_lite(code, start_addr)
-            except CsError as e:
-                print(e)
+            except CsError:
+                logger.exception("An exception occurred while trying to dissect code")
                 break
             for instruction_addr, _, mnemonic, operands in disas_data:
                 instruction = f"{mnemonic} {operands}" if operands != "" else mnemonic
@@ -486,8 +485,8 @@ class SearchReferencedCalls(gdb.Command):
                     regex = re.compile(searched_str)
                 else:
                     regex = re.compile(searched_str, re.IGNORECASE)
-            except Exception as e:
-                print("An exception occurred while trying to compile the given regex\n", str(e))
+            except Exception:
+                logger.exception(f"An exception occurred while trying to compile the given regex '{searched_str}'")
                 return
         str_dict = shelve.open(utils.get_referenced_calls_file(pid), "r")
         returned_list = []
@@ -539,8 +538,8 @@ class SearchFunctions(gdb.Command):
             gdb.execute("set case-sensitive off")
         try:
             output = gdb.execute("info functions " + expression, to_string=True)
-        except Exception as e:
-            print("An exception occurred while trying to search functions:\n", e)
+        except Exception:
+            logger.exception("An exception occurred while trying to search functions")
             output = ""
         gdb.execute("set case-sensitive auto")
         for line in output.splitlines():

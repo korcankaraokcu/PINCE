@@ -20,7 +20,7 @@ from time import sleep, time
 from collections import OrderedDict, defaultdict
 import pexpect, os, sys, ctypes, pickle, shelve, re, struct, io, traceback
 from . import utils, typedefs, regexes
-from .utils import safe_str_to_int, safe_int_cast
+from .utils import safe_str_to_int, safe_int_cast, logger
 from .libscanmem.scanmem import Scanmem
 from .libptrscan.ptrscan import PointerScan
 
@@ -213,7 +213,7 @@ def send_command(
         command = 'interpreter-exec mi "' + command + '"' if command.startswith("-") else command
         last_gdb_command = command if not control else "Ctrl+" + command
         if gdb_output_mode.command_info:
-            print("Last command: " + last_gdb_command)
+            logger.debug(f"Last gdb command: {last_gdb_command}")
         if control:
             child.sendcontrol(command)
         else:
@@ -246,7 +246,7 @@ def send_command(
         if gdb_output_mode.command_info:
             time1 = time()
             try:
-                print(time1 - time0)
+                logger.debug(f"Processed gdb command in: {str(time1 - time0)}")
             except NameError:
                 pass
         cancel_send_command = False
@@ -271,7 +271,7 @@ def state_observe_thread():
                 if match[0].startswith('stopped,reason="exited'):
                     with process_exited_condition:
                         detach()
-                        print(f"Process terminated (PID:{currentpid})")
+                        logger.info(f"Process terminated (PID: {currentpid})")
                         process_exited_condition.notify_all()
                         return
 
@@ -332,15 +332,15 @@ def state_observe_thread():
                 with gdb_waiting_for_prompt_condition:
                     gdb_waiting_for_prompt_condition.notify_all()
                 if gdb_output_mode.command_output:
-                    print(child.before)
+                    logger.debug(child.before)
             else:
                 if gdb_output_mode.async_output:
-                    print(child.before)
+                    logger.debug(child.before)
                 gdb_async_output.broadcast_message(child.before)
     except (OSError, ValueError, pexpect.EOF) as e:
         if isinstance(e, pexpect.EOF):
-            print("\nEOF exception caught within pexpect, here's the contents of child.before:\n" + child.before)
-        print("Exiting state_observe_thread")
+            logger.exception(f"EOF exception caught within pexpect, here's the contents of child.before:\n{child.before}")
+        logger.info("Exiting state_observe_thread")
 
 
 def execute_func_temporary_interruption(func, *args, **kwargs):
@@ -537,7 +537,7 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     try:
         child.expect_exact("(gdb)")
     except pexpect.EOF:
-        print("\nEOF exception caught within pexpect, here's the contents of child.before:\n" + child.before)
+        logger.exception(f"EOF exception caught within pexpect, here's the contents of child.before:\n{child.before}")
         return False
     status_thread = Thread(target=state_observe_thread)
     status_thread.daemon = True
@@ -655,7 +655,7 @@ def create_process(process_path, args="", ld_preload_path="", gdb_path=utils.get
         init_gdb(gdb_path)
     output = send_command("file " + process_path)
     if regexes.gdb_error.search(output):
-        print("An error occurred while trying to create process from the file at " + process_path)
+        logger.error(f"An error occurred while trying to create process from the file at {process_path}")
         detach()
         return False
     send_command("starti")
@@ -698,7 +698,7 @@ def detach():
         child.close()
     if old_pid != -1:
         utils.delete_ipc_path(old_pid)
-    print("Detached from the process with PID:" + str(old_pid))
+    logger.info(f"Detached from the process with PID: {str(old_pid)}")
 
 
 def toggle_attach():
@@ -844,11 +844,11 @@ def allocate_memory(size: int, name: str | None) -> int:
     output = send_command(f"p (void*)malloc({size})")
     match = regexes.hex_number.search(output)
     if match == None:
-        utils.log("Memory allocation failed!", is_error=True)
+        logger.error("Memory allocation failed!")
         return 0
     allocated_address = safe_str_to_int(match[0], 16)
     if allocated_address == 0:
-        utils.log(f"Couldn't find allocation address! Allocation output: {output}", is_error=True)
+        logger.error(f"Couldn't find allocation address! Allocation output: {output}")
         return 0
     allocated_memory = typedefs.AllocatedMemory(allocated_address, size)
     allocated_memory_chunks[name] = allocated_memory
@@ -1613,16 +1613,16 @@ def add_breakpoint(
     output = ""
     str_address = examine_expression(expression).address
     if not str_address:
-        print("expression for breakpoint is not valid")
+        logger.error(f"Failed to add breakpoint. Expression {expression} is not valid")
         return
     if get_breakpoints_in_range(str_address):
-        print("breakpoint/watchpoint for address " + str_address + " is already set")
+        logger.error(f"Breakpoint/Watchpoint for address {str_address} is already set")
         return
     if breakpoint_type == typedefs.BREAKPOINT_TYPE.HARDWARE:
         if hardware_breakpoint_available():
             output = send_command("hbreak *" + str_address)
         else:
-            print("All hardware breakpoint slots are being used, using a software breakpoint instead")
+            logger.warning("All hardware breakpoint slots are being used, using a software breakpoint instead")
             output = send_command("break *" + str_address)
     elif breakpoint_type == typedefs.BREAKPOINT_TYPE.SOFTWARE:
         output = send_command("break *" + str_address)
@@ -1641,7 +1641,7 @@ def add_watchpoint(
     length: int = 4,
     watchpoint_type: int = typedefs.WATCHPOINT_TYPE.BOTH,
     on_hit: int = typedefs.BREAKPOINT_ON_HIT.BREAK,
-) -> list[str]:
+) -> list[str] | None:
     """Adds a watchpoint at the address evaluated by the given expression
 
     Args:
@@ -1652,10 +1652,11 @@ def add_watchpoint(
 
     Returns:
         list: Numbers of the successfully set breakpoints as strings
+        None: If setting watchpoint fails
     """
     str_address = examine_expression(expression).address
     if not str_address:
-        print("expression for watchpoint is not valid")
+        logger.error(f"Expression '{expression}' for watchpoint is not valid")
         return
     if watchpoint_type == typedefs.WATCHPOINT_TYPE.WRITE_ONLY:
         watch_command = "watch"
@@ -1678,15 +1679,15 @@ def add_watchpoint(
         else:
             breakpoint_length = remaining_length
         if get_breakpoints_in_range(str_address_int, breakpoint_length):
-            print("breakpoint/watchpoint for address " + hex(str_address_int) + " is already set. Bailing out...")
+            logger.error(f"Breakpoint/Watchpoint for address {hex(str_address_int)} is already set. Bailing out...")
             break
         if not hardware_breakpoint_available():
-            print("All hardware breakpoint slots are being used, unable to set a new watchpoint. Bailing out...")
+            logger.error("All hardware breakpoint slots are being used, unable to set a new watchpoint. Bailing out...")
             break
         cmd = f"{watch_command} * (char[{breakpoint_length}] *) {hex(str_address_int)}"
         output = execute_func_temporary_interruption(send_command, cmd)
         if not regexes.breakpoint_created.search(output):
-            print("Failed to create a watchpoint at address " + hex(str_address_int) + ". Bailing out...")
+            logger.error(f"Failed to create a watchpoint at address {hex(str_address_int)}. Bailing out...")
             break
         breakpoint_number = regexes.breakpoint_number.search(output).group(1)
         breakpoints_set.append(breakpoint_number)
@@ -1737,7 +1738,7 @@ def modify_breakpoint(breakpoint_number, modify_what, condition=None, count=None
     for breakpoint in modification_list:
         if modify_what == typedefs.BREAKPOINT_MODIFY.CONDITION:
             if condition is None:
-                print("Please set condition first")
+                logger.error("Missing condition for breakpoint modification")
                 return False
             send_command(f"condition {breakpoint} {condition}")
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE:
@@ -1748,16 +1749,16 @@ def modify_breakpoint(breakpoint_number, modify_what, condition=None, count=None
             send_command(f"enable once {breakpoint}")
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE_COUNT:
             if count is None:
-                utils.log("Missing count parameter for ENABLE_COUNT breakpoint modification", is_error=True)
+                logger.error("Missing count parameter for ENABLE_COUNT breakpoint modification")
                 return False
             elif count < 1:
-                utils.log(f"Count parameter can't be less than 1 for ENABLE_COUNT breakpoint modification", is_error=True)
+                logger.error(f"Count parameter can't be less than 1 for ENABLE_COUNT breakpoint modification")
                 return False
             send_command(f"enable count {count} {breakpoint}")
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE_DELETE:
             send_command(f"enable delete {breakpoint}")
         else:
-            print("Parameter modify_what is not valid")
+            logger.error("Parameter modify_what is not valid")
             return False
     return True
 
@@ -1927,10 +1928,10 @@ class Tracer:
             None: If fails to set any breakpoint or if max_trace_count is not valid
         """
         if max_trace_count < 1:
-            print("max_trace_count must be greater than or equal to 1")
+            logger.error("max_trace_count must be greater than or equal to 1")
             return
         if type(max_trace_count) != int:
-            print("max_trace_count must be an integer")
+            logger.error(f"max_trace_count must be an integer. Was given type '{type(max_trace_count)}'")
             return
         breakpoint = add_breakpoint(expression, on_hit=typedefs.BREAKPOINT_ON_HIT.TRACE)
         if not breakpoint:
@@ -2078,8 +2079,8 @@ def search_opcode(searched_str, starting_address, ending_address_or_offset, case
                 regex = re.compile(searched_str)
             else:
                 regex = re.compile(searched_str, re.IGNORECASE)
-        except Exception as e:
-            print("An exception occurred while trying to compile the given regex\n", str(e))
+        except Exception:
+            logger.exception(f"An exception occurred while trying to compile the given regex '{searched_str}'")
             return
     returned_list = []
     disas_output = disassemble(starting_address, ending_address_or_offset)
@@ -2200,8 +2201,8 @@ def search_referenced_strings(
                 regex = re.compile(searched_str)
             else:
                 regex = re.compile(searched_str, re.IGNORECASE)
-        except Exception as e:
-            print("An exception occurred while trying to compile the given regex\n", str(e))
+        except Exception:
+            logger.exception(f"An exception occurred while trying to compile the given regex '{searched_str}'")
             return
     str_dict = get_dissect_code_data(True, False, False)[0]
     mem_handle = memory_handle()
