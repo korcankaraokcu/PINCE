@@ -97,7 +97,7 @@ body:
     id: logs
     attributes:
       label: Error Messages / Logs
-      description: Any error messages, stack traces, or relevant log output
+      description: Terminal output or `/var/log/pince.log` log file of the session where the error happened
       placeholder: Paste error messages or logs here
       render: shell
 
