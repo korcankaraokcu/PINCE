@@ -28,30 +28,28 @@ if [ ! -d "${SCRIPTDIR}/.venv/bin" ]; then
 fi
 
 . ${SCRIPTDIR}/.venv/PINCE/bin/activate
-PINCE_PYTHON="${SCRIPTDIR}/.venv/bin/python3"
-PINCE_PATH="${SCRIPTDIR}/PINCE.py"
+PYTHON="${SCRIPTDIR}/.venv/bin/python3"
+SCRIPT="${SCRIPTDIR}/PINCE.py"
 
 export PYTHONDONTWRITEBYTECODE=1
 
-run_with_pkexec() {
+if type pkexec &> /dev/null; then
 	# Preserve env vars to keep settings like theme preferences.
 	# Pkexec does not support passing all of env via a flag like `-E` so we need to
 	# rebuild the env and then pass it through.
-	ENV=(env)
+	ENV=()
 	while IFS='=' read -r key value; do
-		CMD+=("$key=$value")
+		[ -z "$key" ] && continue
+		value="${value//\\/\\\\}"
+		value="${value//\"/\\\"}"
+		ENV+=("$key=$value")
 	done < <(env)
 
-	pkexec env "${CMD[@]}" "$PINCE_PYTHON" "$PINCE_PATH"
-}
-
-run_with_sudo() {
+	pkexec env "${ENV[@]}" "$PYTHON" "$SCRIPT"
+elif type sudo &> /dev/null; then
 	# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
 	# so we need to force PATH preservation with venv activated user's PATH.
 	sudo -E --preserve-env=PATH,PYTHONDONTWRITEBYTECODE "$PINCE_PYTHON" "$PINCE_PATH"
-}
-
-# Prefer pkexec, fallback to sudo.
-if ! run_with_pkexec; then
-	run_with_sudo
+else
+	echo "No supported privilege escalation utility found; please rerun this script as root."
 fi
