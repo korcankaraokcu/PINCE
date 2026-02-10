@@ -17,13 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from PyQt6.QtGui import QKeyEvent, QWheelEvent
 from PyQt6.QtWidgets import QTableView, QAbstractItemView
-from PyQt6.QtCore import QItemSelectionModel, QModelIndex, Qt
+from PyQt6.QtCore import QItemSelectionModel, QModelIndex, Qt, pyqtSignal
 from GUI.ItemDelegates.HexDelegate import QHexDelegate
 from GUI.AbstractTableModels.HexModel import QHexModel
 from libpince import utils, debugcore, typedefs
 
 
 class QHexView(QTableView):
+    scroll_requested = pyqtSignal(int)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWordWrap(False)
@@ -56,6 +58,10 @@ class QHexView(QTableView):
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Return and self.state() != QAbstractItemView.State.EditingState:
             self.edit(self.currentIndex())
+        elif event.key() == Qt.Key.Key_Up and self.currentIndex().row() == 0:
+            self.scroll_requested.emit(-1)
+        elif event.key() == Qt.Key.Key_Down and self.currentIndex().row() == self.model().rowCount() - 1:
+            self.scroll_requested.emit(1)
         else:
             return super().keyPressEvent(event)
 
