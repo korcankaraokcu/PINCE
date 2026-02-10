@@ -2821,14 +2821,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def hex_view_scroll_by_row(self, direction):
         if debugcore.currentpid == -1:
             return
-        current_address = self.hex_model.current_address
-        next_address = current_address + direction * HEX_VIEW_COL_COUNT
         offset = direction * HEX_VIEW_COL_COUNT
         self.hex_selection_start += offset
         self.hex_selection_end += offset
         self.hex_selection_address_begin += offset
         self.hex_selection_address_end += offset
-        self.hex_dump_address(next_address)
+        self.hex_dump_address(self.hex_model.current_address + offset)
 
     def hex_view_scrollbar_sliderchanged(self, event):
         if self.bHexViewScrolling:
@@ -2838,9 +2836,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         minimum = self.verticalScrollBar_HexView.minimum()
         midst = (maximum + minimum) / 2
         current_value = self.verticalScrollBar_HexView.value()
-        # if midst - 10 < current_value < midst + 10:
-        #    self.bHexViewScrolling = False
-        #    return
         current_address = self.hex_model.current_address
         if current_value < midst:
             next_address = current_address - states.bytes_per_scroll
@@ -2864,9 +2859,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         minimum = self.verticalScrollBar_Disassemble.minimum()
         midst = (maximum + minimum) / 2
         current_value = self.verticalScrollBar_Disassemble.value()
-        # if midst - 10 < current_value < midst + 10:
-        #    self.bDisassemblyScrolling = False
-        #    return
         if current_value < midst:
             self.tableWidget_Disassemble_scroll("previous", states.instructions_per_scroll)
         else:
