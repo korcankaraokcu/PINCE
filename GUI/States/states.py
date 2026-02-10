@@ -3,6 +3,7 @@ from GUI.Utils import guitypedefs
 
 process_signals = guitypedefs.ProcessSignals()
 setting_signals = guitypedefs.SettingSignals()
+session_signals = guitypedefs.SessionSignals()
 
 status_thread = guitypedefs.CheckInferiorStatus()
 status_thread.start()
@@ -18,10 +19,6 @@ threadpool.setMaxThreadCount(10)
 # Pressing the refresh button in the address table or attaching to a new process will clear this cache
 # Currently only used in address_table_loop
 exp_cache: dict[str, str] = {}
-
-# Used by tableWidget_Disassemble in MemoryViewer
-# Format -> {bookmark_address:comment}
-bookmarks: dict[int, str] = {}
 
 # Set to True when app is about to exit
 exiting = False

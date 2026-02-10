@@ -157,8 +157,8 @@ class REGISTERS:
 
 class FREEZE_TYPE:
     DEFAULT = 0
-    INCREMENT = 1
-    DECREMENT = 2
+    ALLOW_INCREMENT = 1
+    ALLOW_DECREMENT = 2
 
 
 class VALUE_REPR:
@@ -450,7 +450,7 @@ tuple_breakpoint_info = collections.namedtuple(
 )
 
 # start, end-->int, perms-->str, file_name-->str
-tuple_region_info = collections.namedtuple("tuple_region_info", "start end perms file_name")
+tuple_region_info = collections.namedtuple("tuple_region_info", "start end perms file_name region_index")
 
 # all fields-->str/None
 tuple_examine_expression = collections.namedtuple("tuple_examine_expression", "all address symbol")
@@ -609,3 +609,10 @@ class KeyboardModifiersTupleDict(collections.abc.Mapping):
 
     def __len__(self):
         return len(self._storage)
+
+
+class AllocatedMemory:
+    def __init__(self, address: int, size: int):
+        self.address = address
+        self.size = size
+        # TODO brkzlr: Maybe expand with starting page address and old protection to restore state after deleting allocated memory

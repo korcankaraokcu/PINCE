@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib
+import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib, logging
 from . import typedefs, regexes
 from capstone import Cs, CsError, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
 from keystone import Ks, KsError, KS_ARCH_X86, KS_MODE_32, KS_MODE_64
@@ -31,6 +31,26 @@ cs_64 = Cs(CS_ARCH_X86, CS_MODE_64)
 ks_32 = Ks(KS_ARCH_X86, KS_MODE_32)
 ks_64 = Ks(KS_ARCH_X86, KS_MODE_64)
 
+# Initialize logging
+logger = logging.getLogger("PINCE")
+def __init_logging() -> None:
+    global logger
+    if len(logger.handlers) != 0:
+        return
+    logger.setLevel(logging.DEBUG)
+    log_format = logging.Formatter("[%(levelname)s][%(funcName)s] %(message)s")
+    # File logging
+    file_handler = logging.FileHandler("/var/log/pince.log", mode='w')  # Maybe change this to be per-process
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(log_format)
+    # Terminal logging
+    terminal_handler = logging.StreamHandler(sys.stdout)
+    terminal_handler.setLevel(logging.DEBUG)
+    terminal_handler.setFormatter(log_format)
+    ##################
+    logger.addHandler(file_handler)
+    logger.addHandler(terminal_handler)
+__init_logging()
 
 def get_process_list() -> list[str, str, str]:
     """Returns a list of processes
@@ -138,16 +158,24 @@ def get_region_info(pid, address):
         None: If the given address isn't in any valid address range
     """
     if type(pid) != int:
-        pid = int(pid)
+        pid = safe_int_cast(pid)
     if type(address) != int:
-        address = int(address, 0)
+        address = safe_str_to_int(address, 0)
     region_list = get_regions(pid)
-    for start, end, perms, _, _, _, path in region_list:
-        start = int(start, 16)
-        end = int(end, 16)
+    region_index = 0
+    for start, end, perms, map_offset, _, _, path in region_list:
+        start = safe_str_to_int(start, 16)
+        end = safe_str_to_int(end, 16)
         file_name = os.path.split(path)[1]
+
+        # get region index for the given address
+        if safe_str_to_int(map_offset, 16) == 0:
+            region_index = 0
+        else:
+            region_index += 1
+
         if start <= address < end:
-            return typedefs.tuple_region_info(start, end, perms, file_name)
+            return typedefs.tuple_region_info(start, end, perms, file_name, region_index)
 
 
 def filter_regions(pid, attribute, regex, case_sensitive=False):
@@ -354,17 +382,17 @@ def get_track_watchpoint_file(pid, watchpoint_list):
     return get_ipc_path(pid) + "/" + str(watchpoint_list) + "_track_watchpoint.txt"
 
 
-def get_track_breakpoint_file(pid, breakpoint):
+def get_track_breakpoint_file(pid, breakpoint_number):
     """Get the path of track breakpoint file for given pid and breakpoint
 
     Args:
         pid (int,str): PID of the process
-        breakpoint (str): breakpoint number
+        breakpoint_number (int)
 
     Returns:
         str: Path of track breakpoint file
     """
-    return get_ipc_path(pid) + "/" + breakpoint + "_track_breakpoint.txt"
+    return f"{get_ipc_path(pid)}/{breakpoint_number}_track_breakpoint.txt"
 
 
 def append_file_extension(string, extension):
@@ -397,19 +425,19 @@ def save_file(data, file_path, save_method="json"):
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             json.dump(data, open(file_path, "w"))
             return True
-        except Exception as e:
-            print("Encountered an exception while dumping the data\n", e)
+        except Exception:
+            logger.exception("Encountered an exception while dumping the data in JSON format\n")
             return False
     elif save_method == "pickle":
         try:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             pickle.dump(data, open(file_path, "wb"))
             return True
-        except Exception as e:
-            print("Encountered an exception while dumping the data\n", e)
+        except Exception:
+            logger.exception("Encountered an exception while pickling the data\n")
             return False
     else:
-        print("Unsupported save_method, bailing out...")
+        logger.error("Unsupported save_method, bailing out...")
         return False
 
 
@@ -428,16 +456,16 @@ def load_file(file_path, load_method="json"):
         try:
             output = json.load(open(file_path, "r"), object_pairs_hook=OrderedDict)
         except Exception as e:
-            print("Encountered an exception while loading the data\n", e)
+            logger.exception("Encountered an exception while loading the JSON data\n", e)
             return
     elif load_method == "pickle":
         try:
             output = pickle.load(open(file_path, "rb"))
         except Exception as e:
-            print("Encountered an exception while loading the data\n", e)
+            logger.exception("Encountered an exception while unpickling the data\n", e)
             return
     else:
-        print("Unsupported load_method, bailing out...")
+        logger.error("Unsupported load_method, bailing out...")
         return
     return output
 
@@ -557,12 +585,12 @@ def parse_string(string: str, value_index: int):
         returned_list=[66, 222, 173, 190, 239, 36]
     """
     if not string:
-        print("please enter a string first")
+        logger.error("Missing string parameter")
         return
     try:
         value_index = int(value_index)
     except:
-        print(str(value_index) + " can't be converted to int")
+        logger.exception(f"Value index ({value_index}) can't be converted to int")
         return
     if typedefs.VALUE_INDEX.is_string(value_index):
         return string
@@ -572,12 +600,12 @@ def parse_string(string: str, value_index: int):
             string_list = regexes.whitespaces.split(string)
             for item in string_list:
                 if len(item) > 2:
-                    print(string + " can't be parsed as array of bytes")
+                    logger.error(f"{string} can't be parsed as array of bytes")
                     return
             hex_list = [int(x, 16) for x in string_list]
             return hex_list
         except:
-            print(string + " can't be parsed as array of bytes")
+            logger.exception(f"{string} can't be parsed as array of bytes")
             return
     elif typedefs.VALUE_INDEX.is_float(value_index):
         try:
@@ -586,7 +614,7 @@ def parse_string(string: str, value_index: int):
             try:
                 string = float(int(string, 0))
             except:
-                print(string + " can't be parsed as floating point variable")
+                logger.exception(f"{string} can't be parsed as floating point variable")
                 return
         return string
     else:
@@ -596,7 +624,7 @@ def parse_string(string: str, value_index: int):
             try:
                 string = int(float(string))
             except:
-                print(string + " can't be parsed as integer or hexadecimal")
+                logger.exception(f"{string} can't be parsed as integer or hexadecimal")
                 return
         if value_index == typedefs.VALUE_INDEX.INT8:
             string = string % 0x100  # 256
@@ -625,7 +653,7 @@ def instruction_follow_address(string):
         return result.group(2)
 
 
-def extract_address(string):
+def extract_hex_address(string):
     """Extracts hex address from the given string
 
     Args:
@@ -658,12 +686,12 @@ def modulo_address(int_address, arch_type):
     raise Exception("arch_type must be a member of typedefs.INFERIOR_ARCH")
 
 
-def get_opcodes(address, aob, inferior_arch):
+def disassemble(aob, address, inferior_arch):
     """Returns the instructions from the given array of bytes
 
     Args:
-        address (int): The address where the opcode starts from
         aob (str): Bytes of the opcode as an array of bytes
+        address (int): The address where the opcode starts from
         inferior_arch (int): Architecture type (x86, x64). Can be a member of typedefs.INFERIOR_ARCH
 
     Returns:
@@ -682,8 +710,8 @@ def get_opcodes(address, aob, inferior_arch):
     try:
         disas_data = disassembler.disasm_lite(bytecode, address)
         return "; ".join([f"{data[2]} {data[3]}" if data[3] != "" else data[2] for data in disas_data])
-    except CsError as e:
-        print(e)
+    except CsError:
+        logger.exception("Failed to disassemble bytes")
 
 
 def assemble(instructions, address, inferior_arch):
@@ -691,7 +719,7 @@ def assemble(instructions, address, inferior_arch):
 
     Args:
         instructions (str): A string of instructions, multiple entries separated by ;
-        address (int): Address of the instruction
+        address (int): Starting address of the instructions
         inferior_arch (int): Can be a member of typedefs.INFERIOR_ARCH
 
     Returns:
@@ -703,8 +731,8 @@ def assemble(instructions, address, inferior_arch):
             return ks_64.asm(instructions, address)
         else:
             return ks_32.asm(instructions, address)
-    except KsError as e:
-        print(e)
+    except KsError:
+        logger.exception("Failed to assemble bytes")
 
 
 def aob_to_str(list_of_bytes, encoding="ascii", replace_unprintable=True):
@@ -734,7 +762,7 @@ def aob_to_str(list_of_bytes, encoding="ascii", replace_unprintable=True):
             if isinstance(sByte, int):
                 byte = sByte
             else:
-                byte = int(sByte, 16)
+                byte = safe_str_to_int(sByte, 16)
             if replace_unprintable and ((byte < 32) or (byte > 126)):
                 hexString += f"{46:02x}"  # replace non-printable chars with a period (.)
             else:
@@ -808,6 +836,19 @@ def split_symbol(symbol_string):
         returned_list.append(symbol_string.rsplit("@plt", maxsplit=1)[0])
     returned_list.append(symbol_string)
     return returned_list
+
+
+def extract_symbol_name(symbol_string: str) -> str:
+    """Extract symbol name from examine_expression result
+
+    Args:
+        symbol_string (str): A string that contains a symbol in format <symbol_name>
+
+    Returns:
+        str: Symbol name without brackets or empty string if no symbol is found
+    """
+    result = regexes.symbol.search(symbol_string)
+    return result.group(1) if result else ""
 
 
 def execute_command_as_user(command):
@@ -906,11 +947,11 @@ def execute_script(file_path):
     try:
         module = SourceFileLoader(file_name, file_path).load_module()
     except Exception as e:
-        print("Encountered an exception while loading the script located at " + file_path)
+        logger.error(f"Encountered an exception while loading the script located at {file_path}")
         tb = traceback.format_exception(None, e, e.__traceback__)
         tb.insert(0, "------->You can ignore the importlib part if the source file is valid<-------\n")
         tb = "".join(tb)
-        print(tb)
+        logger.error(tb)
         return None, tb
     return module, None
 
@@ -970,3 +1011,29 @@ def upper_hex(hex_str: str):
 
 def return_optional_int(val: int) -> int | None:
     return None if val == 0 else val
+
+
+# This is the main int() cast for strings that should be used until you're certain that the cast can never fail or has explicit handling.
+# The reason for this is that you can catch stray errors or edge cases by safely returning a value and outputting useful log info
+# instead of failing with an exception that will propagate upwards.
+def safe_str_to_int(input, base: int) -> int:
+    try:
+        return int(input, base)
+    except ValueError:
+        logger.error(f"ValueError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'")
+        return 0
+    except TypeError:
+        logger.error(f"TypeError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'")
+        return 0
+
+
+# This is the non-base version of the above.
+def safe_int_cast(input) -> int:
+    try:
+        return int(input)
+    except ValueError:
+        logger.error(f"ValueError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'")
+        return 0
+    except TypeError:
+        logger.error(f"TypeError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'")
+        return 0

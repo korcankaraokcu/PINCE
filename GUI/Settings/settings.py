@@ -75,17 +75,17 @@ def init_settings():
         set_default_settings()
     try:
         settings_version = settings.value("Misc/version", type=str)
-    except Exception as e:
-        print("An exception occurred while reading settings version\n", e)
+    except Exception:
+        utils.logger.exception("An exception occurred while reading settings version")
         settings_version = None
     if settings_version != current_settings_version:
-        print("Settings version mismatch, rolling back to the default configuration")
+        utils.logger.warning("Settings version mismatch, rolling back to the default configuration")
         settings.clear()
         set_default_settings()
     try:
         apply_settings()
-    except Exception as e:
-        print("An exception occurred while loading settings, rolling back to the default configuration\n", e)
+    except Exception:
+        utils.logger.exception("An exception occurred while loading settings, rolling back to the default configuration")
         settings.clear()
         set_default_settings()
 

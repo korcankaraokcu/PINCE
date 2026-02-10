@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton
+from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton, QMessageBox
 from GUI.Widgets.PointerScanSearch.Form.PointerScanSearchDialog import Ui_Dialog
 from GUI.Utils import guiutils, guitypedefs
 from libpince import debugcore, utils
@@ -39,10 +39,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.scan_button.setEnabled(False)
         self.pushButton_PathBrowse.setEnabled(False)
         params: FFIParam = FFIParam()
-        try:
-            addr_val = int(self.lineEdit_Address.text(), 16)
-        except ValueError:
-            addr_val = 0
+        addr_val = utils.safe_str_to_int(self.lineEdit_Address.text(), 16)
         params.addr(addr_val)
         params.depth(self.spinBox_Depth.value())
         params.srange(FFIRange(self.spinBox_ScanRangeStart.value(), self.spinBox_ScanRangeEnd.value()))
@@ -72,3 +69,4 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
 
     def ptrscan_callback(self) -> None:
         self.accept()
+        QMessageBox.information(self, tr.SUCCESS, tr.POINTER_SCAN_SUCCESS)

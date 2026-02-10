@@ -15,10 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from PyQt6.QtWidgets import QLabel, QMenu, QApplication
+from PyQt6.QtWidgets import QLabel, QMenu, QApplication, QMessageBox
 from PyQt6.QtGui import QCursor, QMouseEvent, QEnterEvent, QContextMenuEvent
 from PyQt6.QtCore import Qt
-from libpince import debugcore, typedefs
+from libpince import debugcore, typedefs, utils
 from GUI.Utils import guiutils, utilwidgets
 from tr.tr import TranslationConstants as tr
 
@@ -46,6 +46,8 @@ class QRegisterLabel(QLabel):
             or debugcore.currentpid == -1
             or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
         ):
+            # self.window() is needed to fix messagebox text color being red
+            QMessageBox.information(self.window(), tr.ERROR, tr.REQUIRE_PROCESS_STOP)
             return
         registers = debugcore.read_registers()
         current_register = self.objectName().lower()
@@ -53,9 +55,10 @@ class QRegisterLabel(QLabel):
         memory_view = guiutils.search_parents_by_function(self, "set_debug_menu_shortcuts")
         register_dialog = utilwidgets.InputDialog(memory_view, items)
         if register_dialog.exec():
-            if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+            # self.window() is needed to fix messagebox text color being red
+            if guiutils.check_inferior_running(self.window()):
                 return
-            debugcore.set_convenience_variable(current_register, register_dialog.get_values())
+            debugcore.set_convenience_variable(current_register, register_dialog.get_values()[0])
             self.set_value(debugcore.read_registers()[current_register])
 
     def contextMenuEvent(self, event: QContextMenuEvent):
@@ -70,7 +73,7 @@ class QRegisterLabel(QLabel):
         memory_view = guiutils.search_parents_by_function(self, "set_debug_menu_shortcuts")
         if action == show_in_hex_view:
             address = self.text().split("=")[-1]
-            address_int = int(address, 16)
+            address_int = utils.safe_str_to_int(address, 16)
             memory_view.hex_dump_address(address_int)
         elif action == show_in_disassembler:
             address = self.text().split("=")[-1]

@@ -25,6 +25,12 @@ class ProcessSignals(QObject):
     exit = pyqtSignal()
 
 
+class SessionSignals(QObject):
+    new_session = pyqtSignal()
+    on_save = pyqtSignal()
+    on_load = pyqtSignal()
+
+
 class Worker(QRunnable):
     def __init__(self, fn, *args, **kwargs):
         super().__init__()
@@ -144,6 +150,7 @@ class Hotkeys:
         self.pause_hotkey = Hotkey("pause_hotkey", tr.PAUSE_HOTKEY, "F1")
         self.break_hotkey = Hotkey("break_hotkey", tr.BREAK_HOTKEY, "F2")
         self.continue_hotkey = Hotkey("continue_hotkey", tr.CONTINUE_HOTKEY, "F3")
+        self.cancel_hotkey = Hotkey("cancel_hotkey", tr.CANCEL_HOTKEY, "Ctrl+k")
         self.toggle_attach_hotkey = Hotkey("toggle_attach_hotkey", tr.TOGGLE_ATTACH_HOTKEY, "Shift+F10")
         self.exact_scan_hotkey = Hotkey("exact_scan_hotkey", tr.EXACT_SCAN_HOTKEY, "")
         self.not_scan_hotkey = Hotkey("not_scan_hotkey", tr.NOT_SCAN_HOTKEY, "")

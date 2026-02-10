@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import QLabel, QMessageBox
 from PyQt6.QtGui import QCursor, QMouseEvent, QEnterEvent
 from PyQt6.QtCore import Qt
 from libpince import debugcore, typedefs
@@ -46,6 +46,8 @@ class QFlagRegisterLabel(QLabel):
             or debugcore.currentpid == -1
             or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
         ):
+            # self.window() is needed to fix messagebox text color being red
+            QMessageBox.information(self.window(), tr.ERROR, tr.REQUIRE_PROCESS_STOP)
             return
         registers = debugcore.read_registers()
         current_flag = self.objectName().lower()
@@ -53,7 +55,8 @@ class QFlagRegisterLabel(QLabel):
         parent = guiutils.search_parents_by_function(self, "set_debug_menu_shortcuts")
         register_dialog = utilwidgets.ComboBoxDialog(parent, label_text, ["0", "1"], int(registers[current_flag]))
         if register_dialog.exec():
-            if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+            # self.window() is needed to fix messagebox text color being red
+            if guiutils.check_inferior_running(self.window()):
                 return
             debugcore.set_register_flag(current_flag, register_dialog.get_values())
             self.set_value(debugcore.read_registers()[current_flag])

@@ -2,7 +2,7 @@ from PyQt6.QtGui import QColor, QPalette
 from tr.tr import TranslationConstants as tr
 from enum import Enum
 from collections import OrderedDict
-
+from libpince import utils
 
 # For settings
 class Themes(Enum):
@@ -96,7 +96,7 @@ def get_theme(theme_name):
                     "MID_LIGHT": "#2D263D",
                     "DARK": "#120F18",
                     "MID": "#181521",
-                    "TEXT": "#120F18",
+                    "TEXT": "#44414A",
                     "BRIGHT_TEXT": "#FFFFFF",
                     "BUTTON_TEXT": "#80FFFFFF",
                     "BASE": "#241F31",
@@ -165,7 +165,11 @@ def get_theme(theme_name):
             }
             return apply_palette(light_dict)
         case Themes.DEFAULT.value:
-            return QPalette()
+            palette_with_fix = QPalette()
+            palette_with_fix.setColor(
+                QPalette.ColorRole.PlaceholderText, palette_with_fix.color(QPalette.ColorRole.Text).darker()
+            )
+            return palette_with_fix
         case Themes.WONG.value:
             dup_dict = {
                 "WINDOW_TEXT": "#000000",
@@ -218,7 +222,7 @@ def get_theme(theme_name):
             }
             return apply_palette(wong_dict)
         case _:
-            print("There was an error parsing themes")
+            utils.logger.error("There was an error parsing themes")
 
 
 def apply_palette(theme_dict):

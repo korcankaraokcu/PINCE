@@ -42,6 +42,7 @@ class TranslationConstants(QObject):
     PAUSE_HOTKEY = QT_TR_NOOP("Pause the process")
     BREAK_HOTKEY = QT_TR_NOOP("Break the process")
     CONTINUE_HOTKEY = QT_TR_NOOP("Continue the process")
+    CANCEL_HOTKEY = QT_TR_NOOP("Cancel ongoing GDB command")
     TOGGLE_ATTACH_HOTKEY = QT_TR_NOOP("Toggle attach/detach")
     EXACT_SCAN_HOTKEY = QT_TR_NOOP("Next Scan - Exact")
     NOT_SCAN_HOTKEY = QT_TR_NOOP("Next Scan - Not")
@@ -72,8 +73,6 @@ class TranslationConstants(QObject):
     TOGGLE_CHILDREN = QT_TR_NOOP("Toggle including children")
     FREEZE = QT_TR_NOOP("Freeze")
     DEFAULT = QT_TR_NOOP("Default")
-    INCREMENTAL = QT_TR_NOOP("Incremental")
-    DECREMENTAL = QT_TR_NOOP("Decremental")
     BROWSE_MEMORY_REGION = QT_TR_NOOP("Browse this memory region")
     DISASSEMBLE_ADDRESS = QT_TR_NOOP("Disassemble this address")
     DELETE = QT_TR_NOOP("Delete")
@@ -84,6 +83,7 @@ class TranslationConstants(QObject):
     PASTE_INSIDE = QT_TR_NOOP("Paste inside")
     POINTER_SCAN = QT_TR_NOOP("Pointer scan for this address")
     POINTER_SCANNER = QT_TR_NOOP("Open pointer scanner")
+    POINTER_SCAN_SUCCESS = QT_TR_NOOP("Pointer scan finished.\n\nDon't forget to open the scandata file (File->Open)!")
     WHAT_WRITES = QT_TR_NOOP("Find out what writes to this address")
     WHAT_READS = QT_TR_NOOP("Find out what reads this address")
     WHAT_ACCESSES = QT_TR_NOOP("Find out what accesses this address")
@@ -124,7 +124,7 @@ class TranslationConstants(QObject):
     NO_PROCESS_SELECTED = QT_TR_NOOP("No Process Selected")
     STATUS_DETACHED = QT_TR_NOOP("[detached]")
     STATUS_STOPPED = QT_TR_NOOP("[stopped]")
-    PROCESS_RUNNING = QT_TR_NOOP("Process is running")
+    REQUIRE_PROCESS_STOP = QT_TR_NOOP("This requires the process to be stopped")
     ENTER_VALUE = QT_TR_NOOP("Enter the new value")
     ENTER_DESCRIPTION = QT_TR_NOOP("Enter the new description")
     EDIT_ADDRESS = QT_TR_NOOP("Edit Address")
@@ -168,12 +168,6 @@ class TranslationConstants(QObject):
         "/clear: Clear the console                                |\n"
         "phase-out: Detach from the current process               |\n"
         "phase-in: Attach back to the previously detached process |\n"
-        "---------------------------------------------------------------------------------------------------\n"
-        "pince-init-so-file so_file_path: Initializes 'lib' variable                                       |\n"
-        "pince-get-so-file-information: Get information about current lib                                  |\n"
-        "pince-execute-from-so-file lib.func(params): Execute a function from lib                          |\n"
-        "# Check https://github.com/korcankaraokcu/PINCE/wiki#extending-pince-with-so-files for an example |\n"
-        "# CLI output mode doesn't work very well with .so extensions, use MI output mode instead          |\n"
         "---------------------------------------------------------------------------------------------------\n"
         "You can change the output mode from bottom right\n"
         "Changing output mode only affects commands sent. Any other output coming from external sources"
@@ -376,3 +370,9 @@ class TranslationConstants(QObject):
     LIGHT = QT_TR_NOOP("Light")
     SYSTEM_DEFAULT = QT_TR_NOOP("System Default")
     WONG = QT_TR_NOOP("Wong (Colorblind Friendly)")
+    SAVE_SESSION_QUESTION_TITLE = QT_TR_NOOP("Session - Unsaved changes")
+    SAVE_SESSION_QUESTION_PROMPT = QT_TR_NOOP("You have unsaved changes.\nDo you want to save the current session?")
+    SESSION_PROCESS_CHANGED_TITLE = QT_TR_NOOP("Session - Process changed")
+    SESSION_PROCESS_CHANGED_PROMPT = QT_TR_NOOP(
+        "The process name has changed.\n" "Do you want to keep the current session with the new process?"
+    )

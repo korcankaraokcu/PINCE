@@ -169,6 +169,9 @@ class SettingsDialog(QDialog, Ui_Dialog):
 
     def pushButton_ClearHotkey_clicked(self):
         self.lineEdit_Hotkey.clear()
+        index = self.listWidget_Functions.currentIndex().row()
+        if index != -1:
+            self.hotkey_to_value[states.hotkeys.get_hotkeys()[index].name] = self.lineEdit_Hotkey.text()
 
     def pushButton_ResetSettings_clicked(self):
         if utilwidgets.InputDialog(self, tr.RESET_DEFAULT_SETTINGS).exec():

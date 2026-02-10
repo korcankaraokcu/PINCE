@@ -22,11 +22,13 @@ if [ "$(id -u)" = "0" ]; then
 fi
 
 SCRIPTDIR=$(cd -- "$(dirname -- "$0")" && pwd -P)
-if [ ! -d "${SCRIPTDIR}/.venv/PINCE" ]; then
+if [ ! -d "${SCRIPTDIR}/.venv/bin" ]; then
 	echo "Please run \"sh install.sh\" first!"
 	exit 1
 fi
+
 . ${SCRIPTDIR}/.venv/PINCE/bin/activate
+PINCE_PYTHON="${SCRIPTDIR}/.venv/bin/python3"
 PINCE_PATH="${SCRIPTDIR}/PINCE.py"
 
 export PYTHONDONTWRITEBYTECODE=1
@@ -40,13 +42,13 @@ run_with_pkexec() {
 		CMD+=("$key=$value")
 	done < <(env)
 
-	pkexec env "${CMD[@]}" python3 "$PINCE_PATH"
+	pkexec env "${CMD[@]}" "$PINCE_PYTHON" "$PINCE_PATH"
 }
 
 run_with_sudo() {
 	# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
 	# so we need to force PATH preservation with venv activated user's PATH.
-	sudo -E --preserve-env=PATH,PYTHONDONTWRITEBYTECODE python3 "$PINCE_PATH"
+	sudo -E --preserve-env=PATH,PYTHONDONTWRITEBYTECODE "$PINCE_PYTHON" "$PINCE_PATH"
 }
 
 # Prefer pkexec, fallback to sudo.

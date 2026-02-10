@@ -145,10 +145,10 @@ ask_pkg_mgr() {
 
 # About xcb packages -> https://github.com/cdgriffith/FastFlix/wiki/Common-questions-and-problems
 PKG_NAMES_ALL="python3-pip gdb cmake"
-PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-dev python3-venv pkg-config qt6-l10n-tools libcairo2-dev libgirepository1.0-dev libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev libxcb-cursor0"
-PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc python3-devel qt6-tools-linguist typelib-1_0-Gtk-3_0 cairo-devel gobject-introspection-devel make"
-PKG_NAMES_FEDORA="$PKG_NAMES_ALL python3-devel qt6-linguist redhat-lsb cairo-devel gobject-introspection-devel cairo-gobject-devel"
-PKG_NAMES_ARCH="python-pip qt6-tools gdb cmake lsb-release pkgconf gobject-introspection-runtime" # arch defaults to py3 nowadays
+PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-dev python3-venv pkg-config qt6-l10n-tools libcairo2-dev libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev libxcb-cursor0"
+PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc python3-devel qt6-tools-linguist cairo-devel make"
+PKG_NAMES_FEDORA="$PKG_NAMES_ALL python3-devel qt6-linguist redhat-lsb cairo-devel"
+PKG_NAMES_ARCH="python-pip qt6-tools gdb cmake lsb-release pkgconf" # arch defaults to py3 nowadays
 
 INSTALL_COMMAND="install"
 
@@ -215,10 +215,10 @@ fi
 sudo ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES} || exit_on_error
 
 # Prepare Python virtual environment
-if [ ! -d ".venv/PINCE" ]; then
-	python3 -m venv .venv/PINCE
+if [ ! -d ".venv/bin" ]; then
+	python3 -m venv .venv
 fi
-. .venv/PINCE/bin/activate
+. .venv/bin/activate
 pip3 install --upgrade pip || exit_on_error
 
 # shellcheck disable=SC2086

@@ -1,8 +1,7 @@
-PyQt6==6.6.0
-PyQt6-Qt6==6.6.0
+PyQt6==6.10.2
+PyQt6-Qt6==6.10.2
 pexpect==4.9.0
-capstone==5.0.3
+capstone==5.0.6
 keystone-engine==0.9.2
 pygdbmi==0.11.0.0
 keyboard==0.13.5
-pygobject==3.46.0

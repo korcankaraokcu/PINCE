@@ -34,7 +34,7 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
         restore_instruction = menu.addAction(tr.RESTORE_INSTRUCTION)
         if selected_row != -1:
             selected_address_text = self.tableWidget_Instructions.item(selected_row, ADDR_COL).text()
-            selected_address = int(utils.extract_address(selected_address_text), 16)
+            selected_address = int(utils.extract_hex_address(selected_address_text), 16)
         else:
             guiutils.delete_menu_entries(menu, [restore_instruction])
             selected_address = None
@@ -60,7 +60,7 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
         for row, (address, aob) in enumerate(modified_instructions.items()):
             self.tableWidget_Instructions.setItem(row, ADDR_COL, QTableWidgetItem(hex(address)))
             self.tableWidget_Instructions.setItem(row, AOB_COL, QTableWidgetItem(aob))
-            instr_name = utils.get_opcodes(address, aob, debugcore.get_inferior_arch())
+            instr_name = utils.disassemble(aob, address, debugcore.get_inferior_arch())
             if not instr_name:
                 instr_name = "??"
             self.tableWidget_Instructions.setItem(row, NAME_COL, QTableWidgetItem(instr_name))
@@ -78,5 +78,5 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
 
     def tableWidget_Instructions_double_clicked(self, index: QTableWidgetItem):
         current_address_text = self.tableWidget_Instructions.item(index.row(), ADDR_COL).text()
-        current_address = utils.extract_address(current_address_text)
+        current_address = utils.extract_hex_address(current_address_text)
         self.double_clicked.emit(current_address)

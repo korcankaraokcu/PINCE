@@ -1,0 +1,108 @@
+name: Bug Report
+description: Report a bug or issue with PINCE
+title: "[BUG] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the information below to help us diagnose and fix the issue.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm the following before submitting your bug report
+      options:
+        - label: I have searched existing issues (both open and closed) to ensure this hasn't been reported before
+          required: true
+        - label: I have looked through the Wiki and asked (either in Discord or GitHub discussions) for topics related to my issue
+          required: true
+        - label: I have tried replicating this issue on the latest AppImage and will mention the results in description
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the bug
+      placeholder: Tell us what happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the behavior
+      placeholder: |
+        1. Launch PINCE with 'sh PINCE.sh'
+        2. Attach to process '...'
+        3. Click on '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: Describe what should have happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: Describe what actually happened
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: Distribution and version
+      placeholder: "e.g., Kubuntu 22.04, Arch Linux"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation-type
+    attributes:
+      label: Installation Type
+      description: How did you install PINCE?
+      options:
+        - AppImage
+        - Local dev (install.sh)
+        - Other (not supported)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: target-application
+    attributes:
+      label: Target Application
+      description: If issue happened while attached, what type of application were you debugging?
+      options:
+        - Native (Linux x86 ELF)
+        - WINE/Proton
+        - N/A
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Messages / Logs
+      description: Terminal output or `/var/log/pince.log` log file of the session where the error happened
+      placeholder: Paste error messages or logs here
+      render: shell
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain the problem

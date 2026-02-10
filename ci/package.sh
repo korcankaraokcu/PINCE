@@ -139,7 +139,7 @@ shift
 # python3-config --ldflags lacks the python library
 # also gdb won't link on GitHub actions without libtinfow, which is not provided by the conda environment
 if [[ "$1" == "--ldflags" ]]; then
-	echo -n "-lpython3.12 -ltinfow "
+	echo -n "-lpython3.13 -ltinfow "
 fi
 exec "$CONDA_PREFIX"/bin/python3-config "$@"
 EOF
@@ -150,15 +150,15 @@ INSTALLDIR=$(pwd)/AppDir
 export CONDA_PREFIX="$(readlink -f $INSTALLDIR/usr/conda)"
 
 # Grab latest GDB at time of writing and compile it with our conda Python
-curl -L -O "https://ftp.gnu.org/gnu/gdb/gdb-14.2.tar.gz"
-tar xf gdb-14.2.tar.gz
-rm gdb-14.2.tar.gz
-cd gdb-14.2
+curl -L -O "https://ftp.gnu.org/gnu/gdb/gdb-16.3.tar.gz"
+tar xf gdb-16.3.tar.gz
+rm gdb-16.3.tar.gz
+cd gdb-16.3
 ./configure --with-python="$(readlink -f ../wrapper.sh)" --prefix=/usr || exit_on_failure
 make -j"$NUM_MAKE_JOBS" || exit_on_failure
 make install DESTDIR=$INSTALLDIR
 cd ..
-rm -rf gdb-14.2
+rm -rf gdb-16.3
 rm wrapper.sh
 
 # Create a fake but needed desktop file for AppImage
@@ -189,7 +189,7 @@ EOF
 chmod +x AppRun.sh
 
 # Patch libqxcb's runpath (not rpath) to point to our packaged libxcb-cursor to fix X11 issues
-patchelf --add-rpath "\$ORIGIN/../../../../../../" AppDir/usr/conda/lib/python3.12/site-packages/PyQt6/Qt6/plugins/platforms/libqxcb.so
+patchelf --add-rpath "\$ORIGIN/../../../../../../" AppDir/usr/conda/lib/python3.13/site-packages/PyQt6/Qt6/plugins/platforms/libqxcb.so
 
 # Package AppDir into AppImage
 export LD_LIBRARY_PATH="$(readlink -f ./AppDir/usr/conda/lib)"

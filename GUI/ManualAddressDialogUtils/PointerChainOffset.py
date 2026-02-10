@@ -3,7 +3,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from operator import add as opAdd, sub as opSub
 
 from GUI.Utils import guiutils
-
+from libpince import utils
 
 # Only intended to be used by ManualAddressForm
 class PointerChainOffset(QFrame):
@@ -39,19 +39,16 @@ class PointerChainOffset(QFrame):
         buttonLeft.clicked.connect(lambda: self.on_offset_arrow_clicked(self.offsetText, opSub))
         buttonRight.clicked.connect(lambda: self.on_offset_arrow_clicked(self.offsetText, opAdd))
 
-    def get_offset_as_int(self):
-        return int(self.offsetText.text(), 16)
-
     def on_offset_arrow_clicked(self, offsetTextWidget, operator_func):
         offsetText = offsetTextWidget.text()
         try:
             offsetValue = int(offsetText, 16)
+            # first parent is the widget_pointer, second parent is the ManualAddressDialog
+            sizeVal = self.parent().parent().get_type_size() if hasattr(self.parent().parent(), "get_type_size") else 1
+            offsetValue = operator_func(offsetValue, sizeVal)
         except ValueError:
             offsetValue = 0
-        # first parent is the widget_pointer, second parent is the ManualAddressDialog
-        sizeVal = self.parent().parent().get_type_size() if hasattr(self.parent().parent(), "get_type_size") else 1
-        offsetValue = operator_func(offsetValue, sizeVal)
-        offsetTextWidget.setText(hex(offsetValue))
+        offsetTextWidget.setText(utils.upper_hex(hex(offsetValue)))
 
     def offset_changed(self):
         self.offset_changed_signal.emit()

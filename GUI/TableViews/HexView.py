@@ -29,7 +29,6 @@ class QHexView(QTableView):
         self.setWordWrap(False)
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
-        self.setStyleSheet("QTableView {background-color: transparent;}")
         self.setShowGrid(False)
         self.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -61,7 +60,7 @@ class QHexView(QTableView):
             return super().keyPressEvent(event)
 
     def selectionCommand(self, index: QModelIndex, event: QKeyEvent):
-        if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
+        if event and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
             # Disable multi-selection when Ctrl key is pressed
             return QItemSelectionModel.SelectionFlag.ClearAndSelect
         else:

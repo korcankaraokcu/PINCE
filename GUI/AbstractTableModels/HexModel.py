@@ -71,7 +71,9 @@ class QHexModel(QAbstractTableModel):
         if breakpoint_info is None:
             breakpoint_info = debugcore.get_breakpoint_info()
         for bp in breakpoint_info:
-            breakpoint_address = int(bp.address, 16)
+            if type(bp.address) != str:
+                continue
+            breakpoint_address = utils.safe_str_to_int(bp.address, 16)
             for i in range(bp.size):
                 self.breakpoint_list.add(utils.modulo_address(breakpoint_address + i, debugcore.inferior_arch))
         self.current_address = int_address

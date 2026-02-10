@@ -23,7 +23,7 @@ PINCE_PATH = gdb.parse_and_eval("$PINCE_PATH").string()
 GDBINIT_AA_PATH = gdb.parse_and_eval("$GDBINIT_AA_PATH").string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
-from libpince import typedefs, regexes
+from libpince import typedefs, regexes, utils
 
 inferior = gdb.selected_inferior()
 pid = -1 if inferior.pid == 0 else inferior.pid
@@ -42,8 +42,8 @@ else:
 def gdbinit():
     try:
         gdb.execute("source " + GDBINIT_AA_PATH)
-    except Exception as e:
-        print(e)
+    except Exception:
+        utils.logger.exception("An exception occurred while trying to source gdbinit")
     gdb.execute("set disassembly-flavor intel")
     gdb.execute("set case-sensitive auto")
     gdb.execute("set code-cache off")
@@ -129,7 +129,7 @@ def get_float_registers():
 def examine_expression(expression: str, regions=None):
     try:
         value = gdb.parse_and_eval(expression).cast(void_ptr)
-    except Exception as e:
+    except Exception:
         if regions:  # this check comes first for optimization
             offset = regexes.offset_expression.search(expression)
             if offset:
@@ -149,12 +149,12 @@ def examine_expression(expression: str, regions=None):
                     address = start_address_list[index]
                     try:
                         address = hex(eval(address + offset))
-                    except Exception as e:
-                        print(e)
+                    except Exception:
+                        utils.logger.exception("An exception occurred while trying to extract address from region")
                         return typedefs.tuple_examine_expression(None, None, None)
                     return typedefs.tuple_examine_expression(f"{address} {expression}", address, expression)
             return typedefs.tuple_examine_expression(None, None, None)
-        print(e)
+        utils.logger.exception("An exception occurred while trying to evaluate a gdb expression")
         return typedefs.tuple_examine_expression(None, None, None)
     result = regexes.address_with_symbol.search(str(value))
     return typedefs.tuple_examine_expression(*result.groups())

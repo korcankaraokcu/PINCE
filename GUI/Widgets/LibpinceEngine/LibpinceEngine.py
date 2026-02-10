@@ -11,7 +11,7 @@ from PyQt6.QtGui import QKeySequence
 from GUI.Utils import guiutils
 from GUI.Widgets.LibpinceEngine.Form.LibpinceEngineWindow import Ui_MainWindow
 from tr.tr import TranslationConstants as tr
-from libpince import utils
+import libpince  # We import the entire libpince instead of just utils as we'll need it for exec()
 import os
 
 
@@ -180,4 +180,4 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(self, tr.ERROR, f"{tr.SCRIPT_FAILED}\n{str(e)}")
 
     def actionLibpince_triggered(self):
-        utils.execute_command_as_user('python3 -m webbrowser "https://korcankaraokcu.github.io/PINCE/"')
+        libpince.utils.execute_command_as_user('python3 -m webbrowser "https://korcankaraokcu.github.io/PINCE/"')
