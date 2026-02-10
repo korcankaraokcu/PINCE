@@ -2602,6 +2602,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
         self.tableView_HexView_Hex.selectionModel().selectionChanged.connect(self.hex_view_selection_changed)
         self.tableView_HexView_Ascii.selectionModel().selectionChanged.connect(self.hex_view_selection_changed)
+        self.tableView_HexView_Hex.scroll_requested.connect(self.hex_view_scroll_by_row)
+        self.tableView_HexView_Ascii.scroll_requested.connect(self.hex_view_scroll_by_row)
 
         self.scrollArea_Hex.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scrollArea_Hex.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -2815,6 +2817,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def hex_view_scroll_down(self):
         self.verticalScrollBar_HexView.setValue(-1)
+
+    def hex_view_scroll_by_row(self, direction):
+        if debugcore.currentpid == -1:
+            return
+        current_address = self.hex_model.current_address
+        next_address = current_address + direction * HEX_VIEW_COL_COUNT
+        self.hex_dump_address(next_address)
 
     def hex_view_scrollbar_sliderchanged(self, event):
         if self.bHexViewScrolling:
