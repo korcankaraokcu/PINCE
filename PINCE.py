@@ -2823,6 +2823,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         current_address = self.hex_model.current_address
         next_address = current_address + direction * HEX_VIEW_COL_COUNT
+        offset = direction * HEX_VIEW_COL_COUNT
+        self.hex_selection_start += offset
+        self.hex_selection_end += offset
+        self.hex_selection_address_begin += offset
+        self.hex_selection_address_end += offset
         self.hex_dump_address(next_address)
 
     def hex_view_scrollbar_sliderchanged(self, event):
