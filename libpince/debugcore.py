@@ -1124,6 +1124,33 @@ def parse_and_eval(expression, cast=str):
     )
 
 
+def is_address_static(address: str | int) -> bool:
+    """Uses gdb's 'info symbol' command to check if an address belongs to an ELF section
+    which would guarantee a static address
+
+    Args:
+        address (str | int): Address to check in either hex str or int format
+
+    Returns:
+        bool: True is address is static, False otherwise
+    """
+    if type(address) == int:
+        address_str = hex(address)
+    elif type(address) == str:
+        address_str = utils.extract_hex_address(address)
+        if not address_str:
+            logger.error(f"Invalid hex address string 'f{address}'")
+            return False
+    else:
+        logger.error(f"Passed wrong type '{type(address)}' instead of str or int")
+        return False
+    result = send_command(f"info symbol {address_str}")
+    if regexes.elf_section.search(result):
+        return True
+    else:
+        return False
+
+
 def get_thread_info():
     """Invokes "info threads" command and returns the line corresponding to the current thread
 

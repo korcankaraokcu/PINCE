@@ -1233,6 +1233,8 @@ class MainForm(QMainWindow, MainWindow):
             current_item = QTableWidgetItem(address)
             current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian))
             value = str(debugcore.read_memory(address, value_index, length, True, value_repr, endian, mem_handle))
+            if debugcore.is_address_static(address):
+                current_item.setForeground(QColor(0, 136, 85))
             self.tableWidget_valuesearchtable.insertRow(row)
             self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_ADDRESS_COL, current_item)
             self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
@@ -1741,6 +1743,10 @@ class MainForm(QMainWindow, MainWindow):
         assert isinstance(row, QTreeWidgetItem)
         row.setText(DESC_COL, description)
         row.setData(ADDR_COL, Qt.ItemDataRole.UserRole, address_expr)
+        if utils.extract_hex_address(address_expr) and debugcore.is_address_static(address_expr):
+            row.setForeground(ADDR_COL, QColor(0, 136, 85))
+        else:
+            row.setForeground(ADDR_COL, self.palette().text().color())
         row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, vt)
         row.setText(TYPE_COL, vt.text())
 

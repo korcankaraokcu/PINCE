@@ -53,6 +53,7 @@ disassemble_output = compile(
 )
 info_functions_non_debugging = compile(hex_number_grouped.pattern + r"\s+(.*)")
 max_completions_reached = compile(r"\*\*\*\s+List\s+may\s+be\s+truncated,\s+max-completions\s+reached\.\s+\*\*\*")
+elf_section = compile(r"section\s*\.(?:data|bss|text|rodata)\s")
 
 # --------------------------------------------utils------------------------------------------------------------------
 
