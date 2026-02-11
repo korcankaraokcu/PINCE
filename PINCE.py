@@ -2909,49 +2909,49 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.handle_hex_selection()
 
     def handle_hex_selection(self):
-        hex_selection_model = self.tableView_HexView_Hex.selectionModel()
-        ascii_selection_model = self.tableView_HexView_Ascii.selectionModel()
+        hex_view = self.tableView_HexView_Hex
+        ascii_view = self.tableView_HexView_Ascii
+        addr_view = self.tableWidget_HexView_Address
+        hex_enabled = hex_view.updatesEnabled()
+        ascii_enabled = ascii_view.updatesEnabled()
+        addr_enabled = addr_view.updatesEnabled()
+        hex_view.setUpdatesEnabled(False)
+        ascii_view.setUpdatesEnabled(False)
+        addr_view.setUpdatesEnabled(False)
+        hex_selection_model = hex_view.selectionModel()
+        ascii_selection_model = ascii_view.selectionModel()
         start_point = self.address_to_hex_point(self.hex_selection_address_begin)
         end_point = self.address_to_hex_point(self.hex_selection_address_end)
         with QSignalBlocker(hex_selection_model), QSignalBlocker(ascii_selection_model):
             hex_selection_model.clearSelection()
             ascii_selection_model.clearSelection()
-            self.tableWidget_HexView_Address.clearSelection()
+            addr_view.clearSelection()
             if start_point or end_point:
                 start_point, end_point = self.fix_selection_at_borders(start_point, end_point)
+                model = hex_selection_model.model()
+                selection = QItemSelection()
                 if start_point[0] == end_point[0]:
-                    start = hex_selection_model.model().index(*start_point)
-                    end = hex_selection_model.model().index(*end_point)
-                    selection = QItemSelection(start, end)
-                    hex_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
-                    ascii_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
+                    selection.select(model.index(*start_point), model.index(*end_point))
                 else:
                     # First line
-                    start = hex_selection_model.model().index(*start_point)
-                    end = hex_selection_model.model().index(start_point[0], HEX_VIEW_COL_COUNT - 1)
-                    selection = QItemSelection(start, end)
-                    hex_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
-                    ascii_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
+                    selection.select(model.index(*start_point), model.index(start_point[0], HEX_VIEW_COL_COUNT - 1))
                     # Middle
                     if end_point[0] - start_point[0] > 1:
-                        start = hex_selection_model.model().index(start_point[0] + 1, 0)
-                        end = hex_selection_model.model().index(end_point[0] - 1, HEX_VIEW_COL_COUNT - 1)
-                        selection = QItemSelection(start, end)
-                        hex_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
-                        ascii_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
+                        selection.select(
+                            model.index(start_point[0] + 1, 0),
+                            model.index(end_point[0] - 1, HEX_VIEW_COL_COUNT - 1),
+                        )
                     # Last line
-                    start = hex_selection_model.model().index(end_point[0], 0)
-                    end = hex_selection_model.model().index(*end_point)
-                    selection = QItemSelection(start, end)
-                    hex_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
-                    ascii_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
-                self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+                    selection.select(model.index(end_point[0], 0), model.index(*end_point))
+                hex_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
+                ascii_selection_model.select(selection, QItemSelectionModel.SelectionFlag.Select)
+                addr_view.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
                 for row in range(start_point[0], end_point[0] + 1):
-                    self.tableWidget_HexView_Address.selectRow(row)
-                self.tableWidget_HexView_Address.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-        self.tableView_HexView_Hex.update()
-        self.tableView_HexView_Ascii.update()
-        self.tableWidget_HexView_Address.update()
+                    addr_view.selectRow(row)
+                addr_view.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        hex_view.setUpdatesEnabled(hex_enabled)
+        ascii_view.setUpdatesEnabled(ascii_enabled)
+        addr_view.setUpdatesEnabled(addr_enabled)
 
     def hex_point_to_address(self, point):
         address = self.hex_model.current_address + point[0] * HEX_VIEW_COL_COUNT + point[1]
@@ -2987,6 +2987,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def hex_dump_address(self, int_address, offset=HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT):
         if debugcore.currentpid == -1:
             return
+        self.tableView_HexView_Hex.setUpdatesEnabled(False)
+        self.tableView_HexView_Ascii.setUpdatesEnabled(False)
+        self.tableWidget_HexView_Address.setUpdatesEnabled(False)
         int_address = utils.modulo_address(int_address, debugcore.inferior_arch)
         if not (self.hex_view_current_region.start <= int_address < self.hex_view_current_region.end):
             info = utils.get_region_info(debugcore.currentpid, int_address)
@@ -3012,6 +3015,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_model.refresh(int_address, offset, data_array, breakpoint_info)
         self.ascii_model.refresh(int_address, offset, data_array, breakpoint_info)
         self.handle_hex_selection()
+        self.tableWidget_HexView_Address.setUpdatesEnabled(True)
+        self.tableView_HexView_Ascii.setUpdatesEnabled(True)
+        self.tableView_HexView_Hex.setUpdatesEnabled(True)
 
     def refresh_hex_view(self):
         if debugcore.currentpid == -1:
@@ -3251,7 +3257,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if condition_dialog.exec():
             condition = condition_dialog.get_values()[0]
             for bp in breakpoints:
-                if not debugcore.modify_breakpoint(safe_int_cast(bp.number), typedefs.BREAKPOINT_MODIFY.CONDITION, condition):
+                if not debugcore.modify_breakpoint(
+                    safe_int_cast(bp.number), typedefs.BREAKPOINT_MODIFY.CONDITION, condition
+                ):
                     QMessageBox.information(app.focusWidget(), tr.ERROR, tr.BP_CONDITION_FAILED.format(bp.address))
 
     def update_registers(self):
@@ -4198,9 +4206,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
             disable: lambda: debugcore.modify_breakpoint(bp_num, typedefs.BREAKPOINT_MODIFY.DISABLE),
             enable_once: lambda: debugcore.modify_breakpoint(bp_num, typedefs.BREAKPOINT_MODIFY.ENABLE_ONCE),
             enable_count: lambda: self.exec_enable_count_dialog(bp_num),
-            enable_delete: lambda: debugcore.modify_breakpoint(
-                bp_num, typedefs.BREAKPOINT_MODIFY.ENABLE_DELETE
-            ),
+            enable_delete: lambda: debugcore.modify_breakpoint(bp_num, typedefs.BREAKPOINT_MODIFY.ENABLE_DELETE),
             delete_breakpoint: lambda: debugcore.delete_breakpoint(bp_num),
             refresh: self.refresh,
         }
