@@ -1162,9 +1162,20 @@ class MainForm(QMainWindow, MainWindow):
         if type_index in symbol_map:
             return symbol_map[type_index]
 
+        # Manually fix an edge case in number validators
+        if search_for == "-":
+            search_for = ""
+        if search_for2 == "-":
+            search_for2 = ""
+
         # none of these should be possible to be true at the same time
         scan_index = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         if scan_index >= typedefs.SCAN_INDEX.FLOAT_ANY and scan_index <= typedefs.SCAN_INDEX.FLOAT64:
+            # Manually fix an edge case in float_number validator
+            if len(search_for) != 0 and search_for[-1] in {"e", "E"}:
+                search_for += "0"
+            if len(search_for2) != 0 and search_for2[-1] in {"e", "E"}:
+                search_for2 += "0"
             # Adjust to locale whatever the input
             if QLocale.system().decimalPoint() == ".":
                 search_for = search_for.replace(",", ".")
