@@ -135,9 +135,10 @@ from tr.tr import get_locale
 
 if __name__ == "__main__":
     app = QApplication([])
-    app.setOrganizationName("PINCE")
-    app.setOrganizationDomain("github.com/korcankaraokcu/PINCE")
     app.setApplicationName("PINCE")
+    app.setOrganizationName("PINCE")
+    app.setOrganizationDomain("github.io")
+    app.setDesktopFileName("io.github.korcankaraokcu.PINCE")
     QSettings.setPath(
         QSettings.Format.NativeFormat, QSettings.Scope.UserScope, utils.get_user_path(typedefs.USER_PATHS.CONFIG)
     )
