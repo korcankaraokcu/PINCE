@@ -13,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install Dependencies
-        run: sudo apt install libfuse2 libmpc-dev libmpfr-dev gmpc-dev appstream qt6-l10n-tools libcairo2-dev libgirepository1.0-dev patchelf
+        run: sudo apt install libfuse2 libmpc-dev libmpfr-dev gmpc-dev appstream qt6-l10n-tools libcairo2-dev patchelf
       - name: Build
         run: |
             export ARCH=x86_64

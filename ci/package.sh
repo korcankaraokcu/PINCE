@@ -40,6 +40,7 @@ case $OS_NAME in
 	;;
 *Arch*)
 	LRELEASE_CMD="/usr/lib/qt6/bin/lrelease"
+	export NO_STRIP=1
 	;;
 *Fedora*)
 	LRELEASE_CMD="lrelease-qt6"
@@ -150,15 +151,15 @@ INSTALLDIR=$(pwd)/AppDir
 export CONDA_PREFIX="$(readlink -f $INSTALLDIR/usr/conda)"
 
 # Grab latest GDB at time of writing and compile it with our conda Python
-curl -L -O "https://ftp.gnu.org/gnu/gdb/gdb-16.3.tar.gz"
-tar xf gdb-16.3.tar.gz
-rm gdb-16.3.tar.gz
-cd gdb-16.3
+curl -L -O "https://ftp.gnu.org/gnu/gdb/gdb-17.1.tar.gz"
+tar xf gdb-17.1.tar.gz
+rm gdb-17.1.tar.gz
+cd gdb-17.1
 ./configure --with-python="$(readlink -f ../wrapper.sh)" --prefix=/usr || exit_on_failure
 make -j"$NUM_MAKE_JOBS" || exit_on_failure
 make install DESTDIR=$INSTALLDIR
 cd ..
-rm -rf gdb-16.3
+rm -rf gdb-17.1
 rm wrapper.sh
 
 # Create a fake but needed desktop file for AppImage
