@@ -522,12 +522,10 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     last_stop_was_tracking = False
 
     libpince_dir = utils.get_libpince_directory()
-    is_appimage = os.environ.get("APPDIR")
-    python_home_env = f"PYTHONHOME={os.environ.get('PYTHONHOME')}" if is_appimage else ""
     child = pexpect.spawn(
-        f"sudo -E --preserve-env=PATH LC_NUMERIC=C {python_home_env} {gdb_path} --nx --interpreter=mi",
+        f"{gdb_path} --nx --interpreter=mi",
         cwd=libpince_dir,
-        env=os.environ,
+        env=os.environ | {'LC_NUMERIC': 'C'},
         encoding="utf-8",
         codec_errors="replace",
     )
@@ -544,7 +542,7 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     status_thread.start()
     gdb_initialized = True
     set_logging(False)
-    if not is_appimage:
+    if not os.environ.get("APPDIR"):
         send_command("source ./gdbinit_venv")
     set_pince_paths()
     send_command("source " + utils.get_user_path(typedefs.USER_PATHS.GDBINIT))
