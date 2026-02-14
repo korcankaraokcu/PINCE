@@ -522,12 +522,10 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     last_stop_was_tracking = False
 
     libpince_dir = utils.get_libpince_directory()
-    is_appimage = os.environ.get("APPDIR")
-    python_home_env = f"PYTHONHOME={os.environ.get('PYTHONHOME')}" if is_appimage else ""
     child = pexpect.spawn(
-        f"sudo -E --preserve-env=PATH LC_NUMERIC=C {python_home_env} {gdb_path} --nx --interpreter=mi",
+        f"{gdb_path} --nx --interpreter=mi",
         cwd=libpince_dir,
-        env=os.environ,
+        env=os.environ | {'LC_NUMERIC': 'C'},
         encoding="utf-8",
         codec_errors="replace",
     )
@@ -544,7 +542,7 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     status_thread.start()
     gdb_initialized = True
     set_logging(False)
-    if not is_appimage:
+    if not os.environ.get("APPDIR"):
         send_command("source ./gdbinit_venv")
     set_pince_paths()
     send_command("source " + utils.get_user_path(typedefs.USER_PATHS.GDBINIT))
@@ -1122,6 +1120,33 @@ def parse_and_eval(expression, cast=str):
     return send_command(
         "pince-parse-and-eval", send_with_file=True, file_contents_send=(expression, cast), recv_with_file=True
     )
+
+
+def is_address_static(address: str | int) -> bool:
+    """Uses gdb's 'info symbol' command to check if an address belongs to an ELF section
+    which would guarantee a static address
+
+    Args:
+        address (str | int): Address to check in either hex str or int format
+
+    Returns:
+        bool: True is address is static, False otherwise
+    """
+    if type(address) == int:
+        address_str = hex(address)
+    elif type(address) == str:
+        address_str = utils.extract_hex_address(address)
+        if not address_str:
+            logger.error(f"Invalid hex address string 'f{address}'")
+            return False
+    else:
+        logger.error(f"Passed wrong type '{type(address)}' instead of str or int")
+        return False
+    result = send_command(f"info symbol {address_str}")
+    if regexes.elf_section.search(result):
+        return True
+    else:
+        return False
 
 
 def get_thread_info():

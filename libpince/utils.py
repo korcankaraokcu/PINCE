@@ -663,6 +663,8 @@ def extract_hex_address(string):
         str: Hex address
         None: If no hex address is found
     """
+    if type(string) != str:
+        return
     result = regexes.hex_number.search(string)
     if result:
         return result.group(0)

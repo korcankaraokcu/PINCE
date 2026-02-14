@@ -1,6 +1,6 @@
 name: Bug Report
 description: Report a bug or issue with PINCE
-title: "[BUG] "
+title: "[Bug] "
 body:
   - type: markdown
     attributes:
@@ -70,13 +70,13 @@ body:
       required: true
 
   - type: dropdown
-    id: installation-type
+    id: pince-build-type
     attributes:
-      label: Installation Type
-      description: How did you install PINCE?
+      label: PINCE Build Type
+      description: How did you run PINCE?
       options:
-        - AppImage
-        - Local dev (install.sh)
+        - Latest AppImage
+        - Local dev (PINCE.sh)
         - Other (not supported)
     validations:
       required: true
@@ -97,7 +97,7 @@ body:
     id: logs
     attributes:
       label: Error Messages / Logs
-      description: Terminal output or `/var/log/pince.log` log file of the session where the error happened
+      description: Terminal output or /var/log/pince.log file of the session where the error happened
       placeholder: Paste error messages or logs here
       render: shell
 

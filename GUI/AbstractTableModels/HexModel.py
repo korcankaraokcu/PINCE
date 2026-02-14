@@ -78,7 +78,7 @@ class QHexModel(QAbstractTableModel):
                 self.breakpoint_list.add(utils.modulo_address(breakpoint_address + i, debugcore.inferior_arch))
         self.current_address = int_address
         self.cell_animation = [0] * offset
-        self.layoutChanged.emit()
+        self.dataChanged.emit(self.index(0, 0), self.index(self.row_count - 1, self.column_count - 1))
 
     def update_loop(self, updated_array):
         for index, item in enumerate(self.cell_animation):
@@ -88,11 +88,12 @@ class QHexModel(QAbstractTableModel):
             if item != self.data_array[index]:
                 self.cell_animation[index] = 6
         self.data_array = updated_array
-        self.layoutChanged.emit()
+        self.dataChanged.emit(self.index(0, 0), self.index(self.row_count - 1, self.column_count - 1))
 
     def update_index(self, index: int, data: str):
         data = self.translate_data(data)
         if self.data_array[index] != data:
             self.cell_animation[index] = 6
             self.data_array[index] = data
-            self.layoutChanged.emit()
+            model_index = self.index(index // self.column_count, index % self.column_count)
+            self.dataChanged.emit(model_index, model_index)
