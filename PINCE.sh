@@ -36,10 +36,10 @@ if type pkexec &> /dev/null; then
 	# Pkexec does not support passing all of env via a flag like `-E` so we need to
 	# rebuild the env and then pass it through.
 	ENV=()
-	while IFS='=' read -r key value; do
-		[ -z "$key" ] && continue
-		ENV+=("$key=$(printf "%q" "$value")")
-	done < <(env)
+	while IFS= read -r line
+	do
+		ENV+=("$line")
+	done < <(printenv)
 
 	pkexec env "${ENV[@]}" "$PYTHON" "$PINCE_PY"
 elif type sudo &> /dev/null; then
