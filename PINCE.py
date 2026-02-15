@@ -1415,7 +1415,11 @@ class MainForm(QMainWindow, MainWindow):
 
     # Returns: a bool value indicates whether the operation succeeded.
     def attach_to_pid(self, pid: int):
-        attach_result = debugcore.attach(pid, states.gdb_path)
+        if os.environ.get("APPDIR"):
+            gdb_path = utils.get_default_gdb_path()
+        else:
+            gdb_path = states.gdb_path
+        attach_result = debugcore.attach(pid, gdb_path)
         if attach_result == typedefs.ATTACH_RESULT.SUCCESSFUL:
             settings.apply_after_init()
             scanmem.pid(pid)
