@@ -179,9 +179,29 @@ touch AppDir/usr/share/icons/hicolor/scalable/apps/PINCE.svg
 # Create main running script
 cat > AppRun.sh <<\EOF
 #!/bin/bash
+
 if [ "$(id -u)" != "0" ]; then
-	echo "Please run this AppImage using 'sudo -E'!"
-	exit 1
+	if type pkexec &> /dev/null; then
+		# Preserve env vars to keep settings like theme preferences.
+		# Pkexec does not support passing all of env via a flag like `-E` so we need to
+		# rebuild the env and then pass it through.
+		ENV=()
+		while IFS= read -r line
+		do
+			ENV+=("$line")
+		done < <(printenv)
+
+		pkexec env "${ENV[@]}" "$APPIMAGE"
+	elif type sudo &> /dev/null; then
+		# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
+		# so we need to force PATH preservation with venv activated user's PATH.
+		sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 "$APPIMAGE"
+	else
+		echo "No supported privilege escalation utility found. Please run this as root manually."
+		exit 1
+	fi
+
+	exit
 fi
 export APPDIR="$(dirname "$0")"
 export PYTHONHOME=$APPDIR/usr/conda
