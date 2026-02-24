@@ -48,11 +48,12 @@ PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB)
 
 # Installing and running PINCE
 ### Users
-- No need to install anything. Just grab the latest AppImage over at [Releases](https://github.com/korcankaraokcu/PINCE/releases) and run the following commands in a terminal in the same folder as the downloaded AppImage:
-```bash
-chmod +x PINCE-x86_64.AppImage
-sudo -E ./PINCE-x86_64.AppImage
-```
+No need to install anything. Just grab the latest AppImage over at [Releases](https://github.com/korcankaraokcu/PINCE/releases) and mark it as executable. You can then double click on the AppImage or run it through terminal, however you prefer.
+
+To mark as executable, either:
+- Run the following command in terminal in the same folder as the downloaded AppImage: `chmod +x PINCE-x86_64.AppImage`
+- Or you can right-click on the AppImage, click on Properties and tick "Allow this file to run as a program" under "Permissions"
+  - The last step might be different depending on your desktop environment, but most of them should have similar words so just make sure to edit permissions to allow running as executable.
 
 ### Developers and Contributors
 - If you want to have a local install of PINCE so you can modify code or contribute with PRs, you'll have to use our installer script in the repo to setup a venv dev environment or do it yourself.
