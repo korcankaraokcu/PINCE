@@ -17,13 +17,13 @@ PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB)
 ![pince4](https://github.com/user-attachments/assets/08d8a6fe-6960-481b-9b55-aa550f860dc7)
 
 # Features  
-- **Memory scanning:** PINCE uses a specialized fork of [libscanmem](https://github.com/brkzlr/scanmem-PINCE) to scan the memory efficiently
+- **Memory scanning:** PINCE uses a specialized fork of [libscanmem](https://github.com/brkzlr/libscanmem-PINCE) to scan the memory efficiently
 - **Pointer scanning:** PINCE uses [PointerScanner-X](https://github.com/kekeimiku/PointerSearcher-X/) to scan pointers efficiently
 - **Background Execution:** PINCE uses background execution by default, allowing users to run GDB commands while process is running
 - **Variable Inspection&Modification**
   * **CheatEngine-like value type support:** Currently supports all types of CE and scanmem along with extended strings(utf-8, utf-16, utf-32)
   * **Symbol Recognition:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/GDB-Expressions)
-  * **Automatic Variable Allocation:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/GDB-Expressions)
+  * **Automatic Variable Allocation:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/GDB-Expressions#allocation-using-expressions)
   * **Dynamic Address Table:** Supports drag&drop, recursive copy&pasting&inserting and many more
   * **Smart casting:** PINCE lets you modify multiple different-type values together as long as the input is parsable. All parsing/memory errors are directed to the terminal
   * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables
@@ -44,7 +44,6 @@ PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB)
   * **Run-time injection:** Only .so injection is supported for now. In Memory View window, click Tools->Inject .so file to select the .so file. An example for creating .so file can be found in "libpince/Injection/". PINCE will be able to inject single line instructions or code caves in near future
 - **GDB Console:** You can use the GDB Console to interact with GDB, it's on the top right in main window
 - **libpince:** PINCE provides a reusable python library. You can either read the code or check the [Github Pages](https://korcankaraokcu.github.io/PINCE/) for documentation. Currently, libpince can be used via console by following [these instructions](https://github.com/korcankaraokcu/PINCE/issues/232#issuecomment-1872906700). In the future, it'll be directly integrated into PINCE when we develop the scripting engine (IDE for PINCE)
-- **Extendable with .so files at runtime:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/Extending-PINCE-with-.so-files)
 
 # Installing and running PINCE
 ### Users
