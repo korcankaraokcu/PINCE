@@ -162,19 +162,18 @@ cd ..
 rm -rf gdb-17.1
 rm wrapper.sh
 
-# Create a fake but needed desktop file for AppImage
+# Create a desktop file for AppImage
 cat > AppDir/usr/share/applications/PINCE.desktop <<\EOF
 [Desktop Entry]
 Name=PINCE
 Exec=PINCE
 Icon=PINCE
 Type=Application
-Terminal=true
 Categories=Development;
 EOF
 
-# Placeholder icon for above desktop file
-touch AppDir/usr/share/icons/hicolor/scalable/apps/PINCE.svg
+# Copy icon for the above desktop file
+cp ../media/logo/ozgurozbek/pince_appimage.png PINCE.png
 
 # Create main running script
 cat > AppRun.sh <<\EOF
@@ -214,4 +213,4 @@ patchelf --add-rpath "\$ORIGIN/../../../../../../" AppDir/usr/conda/lib/python3.
 
 # Package AppDir into AppImage
 export LD_LIBRARY_PATH="$(readlink -f ./AppDir/usr/conda/lib)"
-$DEPLOYTOOL --appdir AppDir/ --output appimage --custom-apprun AppRun.sh || exit_on_failure
+$DEPLOYTOOL --icon-file PINCE.png --appdir AppDir/ --output appimage --custom-apprun AppRun.sh || exit_on_failure
