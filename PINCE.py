@@ -364,6 +364,7 @@ class MainForm(QMainWindow, MainWindow):
         self.session = SessionManager.get_session()
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_UndoScan.clicked.connect(self.pushButton_UndoScan_clicked)
+        self.pushButton_CancelScan.clicked.connect(self.pushButton_CancelScan_clicked)
         self.pushButton_NextScan.clicked.connect(self.pushButton_NextScan_clicked)
         self.pushButton_ScanRegions.clicked.connect(self.pushButton_ScanRegions_clicked)
         self.scan_mode = typedefs.SCAN_MODE.NEW
@@ -415,12 +416,14 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_About.setIcon(QIcon(QPixmap(icons_directory + "/information.png")))
         self.pushButton_NextScan.setEnabled(False)
         self.pushButton_UndoScan.setEnabled(False)
+        self.pushButton_CancelScan.setEnabled(False)
         self.flashAttachButton = True
         self.flashAttachButtonTimer = QTimer()
         self.flashAttachButtonTimer.timeout.connect(self.flash_attach_button)
         self.flashAttachButton_gradiantState = 0
         self.flashAttachButtonTimer.start(100)
         self.is_scanning = False
+        self.undo_scan_available = False
 
         self.pushButton_Notes.clicked.connect(self.session_notes.toggle_visibility)
         guiutils.center(self)
@@ -970,11 +973,26 @@ class MainForm(QMainWindow, MainWindow):
             value = "" if value is None else str(value)
             row.setText(VALUE_COL, value)
 
+    def update_scan_box_state(self):
+        if self.is_scanning == True:
+            self.pushButton_CancelScan.setEnabled(True)
+            self.pushButton_NewFirstScan.setEnabled(False)
+            self.pushButton_NextScan.setEnabled(False)
+            self.pushButton_UndoScan.setEnabled(False)
+            self.widget_ScanOptions.setEnabled(False)
+            self.widget_ScanFields.setEnabled(False)
+        else:
+            self.pushButton_CancelScan.setEnabled(False)
+            self.pushButton_NewFirstScan.setEnabled(True)
+            self.pushButton_NextScan.setEnabled(True)
+            self.pushButton_UndoScan.setEnabled(self.undo_scan_available)
+            self.widget_ScanOptions.setEnabled(True)
+            self.widget_ScanFields.setEnabled(True)
+
     def scan_values(self):
         if debugcore.currentpid == -1:
             return
         search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
-        self.QWidget_Toolbox.setEnabled(False)
         self.progressBar.setValue(0)
         self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
         self.progress_bar_timer.start(100)
@@ -982,6 +1000,7 @@ class MainForm(QMainWindow, MainWindow):
         scan_thread.signals.finished.connect(self.scan_callback)
         states.threadpool.start(scan_thread)
         self.is_scanning = True
+        self.update_scan_box_state()
 
     def resize_address_table(self):
         self.treeWidget_AddressTable.resizeColumnToContents(FROZEN_COL)
@@ -1073,7 +1092,14 @@ class MainForm(QMainWindow, MainWindow):
         undo_thread = guitypedefs.Worker(scanmem.undo_scan)
         undo_thread.signals.finished.connect(self.scan_callback)
         states.threadpool.start(undo_thread)
+        self.undo_scan_available = False
         self.pushButton_UndoScan.setEnabled(False)  # we can undo once so set it to false and re-enable at next scan
+
+    def pushButton_CancelScan_clicked(self):
+        if debugcore.currentpid == -1:
+            return
+        scanmem.set_stop_flag(True)
+        self.pushButton_CancelScan.setEnabled(False)
 
     def comboBox_ScanType_current_index_changed(self):
         hidden_types = [
@@ -1084,9 +1110,9 @@ class MainForm(QMainWindow, MainWindow):
             typedefs.SCAN_TYPE.UNKNOWN,
         ]
         if self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole) in hidden_types:
-            self.widget_Scan.setEnabled(False)
+            self.widget_ScanFields.setEnabled(False)
         else:
-            self.widget_Scan.setEnabled(True)
+            self.widget_ScanFields.setEnabled(True)
         if self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole) == typedefs.SCAN_TYPE.BETWEEN:
             self.label_Between.setVisible(True)
             self.lineEdit_Scan2.setVisible(True)
@@ -1210,7 +1236,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def pushButton_NextScan_clicked(self):
         self.scan_values()
-        self.pushButton_UndoScan.setEnabled(True)
+        self.undo_scan_available = True
 
     def pushButton_ScanRegions_clicked(self):
         scan_regions_dialog = ManageScanRegionsDialog(self)
@@ -1256,7 +1282,7 @@ class MainForm(QMainWindow, MainWindow):
                 break
         self.tableWidget_valuesearchtable.resizeColumnsToContents()
         self.tableWidget_valuesearchtable.setSortingEnabled(True)
-        self.QWidget_Toolbox.setEnabled(True)
+        self.update_scan_box_state()
 
     def _scan_to_length(self, type_index):
         if type_index == typedefs.SCAN_INDEX.AOB:
@@ -1467,9 +1493,10 @@ class MainForm(QMainWindow, MainWindow):
 
         # enable scan GUI
         self.lineEdit_Scan.setPlaceholderText(tr.SCAN_FOR)
-        self.QWidget_Toolbox.setEnabled(True)
+        self.widget_Scanbox.setEnabled(True)
         self.pushButton_NextScan.setEnabled(False)
         self.pushButton_UndoScan.setEnabled(False)
+        self.pushButton_CancelScan.setEnabled(False)
         self.pushButton_AddAddressManually.setEnabled(True)
         self.pushButton_MemoryView.setEnabled(True)
 
@@ -1495,6 +1522,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def reset_scan(self):
         self.scan_mode = typedefs.SCAN_MODE.NEW
+        self.undo_scan_available = False
         self.pushButton_NewFirstScan.setText(tr.FIRST_SCAN)
         scanmem.reset()
         self.deleted_regions.clear()
@@ -1504,13 +1532,14 @@ class MainForm(QMainWindow, MainWindow):
         self.comboBox_Endianness.setEnabled(True)
         self.pushButton_NextScan.setEnabled(False)
         self.pushButton_UndoScan.setEnabled(False)
+        self.pushButton_CancelScan.setEnabled(False)
         self.progressBar.setValue(0)
         self.label_MatchCount.setText(tr.MATCH_COUNT.format(0))
 
     def on_inferior_exit(self):
         self.pushButton_MemoryView.setEnabled(False)
         self.pushButton_AddAddressManually.setEnabled(False)
-        self.QWidget_Toolbox.setEnabled(False)
+        self.widget_Scanbox.setEnabled(False)
         self.lineEdit_Scan.setText("")
         self.reset_scan()
         self.on_status_running()

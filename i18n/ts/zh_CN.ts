@@ -931,6 +931,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
+        <source>Cancel Scan</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/MainWindow.ui" line="0" />
         <source>Undo Scan</source>
         <translation>撤销扫描</translation>
     </message>

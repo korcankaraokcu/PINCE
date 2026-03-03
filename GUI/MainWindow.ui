@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>678</width>
+    <width>768</width>
     <height>636</height>
    </rect>
   </property>
@@ -245,13 +245,13 @@
        </layout>
       </item>
       <item>
-       <widget class="QWidget" name="QWidget_Toolbox" native="true">
+       <widget class="QWidget" name="widget_Scanbox" native="true">
         <property name="enabled">
          <bool>false</bool>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_5">
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <layout class="QHBoxLayout" name="horizontalLayout_ScanButtons">
            <item>
             <widget class="QPushButton" name="pushButton_NewFirstScan">
              <property name="text">
@@ -280,6 +280,13 @@
             </spacer>
            </item>
            <item>
+            <widget class="QPushButton" name="pushButton_CancelScan">
+             <property name="text">
+              <string>Cancel Scan</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="pushButton_UndoScan">
              <property name="text">
               <string>Undo Scan</string>
@@ -289,7 +296,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QWidget" name="widget_Scan" native="true">
+          <widget class="QWidget" name="widget_ScanFields" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_7">
             <property name="leftMargin">
              <number>0</number>
@@ -324,14 +331,14 @@
           </widget>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <layout class="QHBoxLayout" name="horizontalLayout_ScanOptions">
            <item>
-            <widget class="QWidget" name="widget" native="true">
+            <widget class="QWidget" name="widget_ScanOptions" native="true">
              <layout class="QVBoxLayout" name="verticalLayout_4">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_2">
+               <layout class="QHBoxLayout" name="horizontalLayout_ScanType">
                 <item>
-                 <widget class="QLabel" name="label">
+                 <widget class="QLabel" name="label_ScanType">
                   <property name="text">
                    <string>Scan Type:</string>
                   </property>
@@ -343,9 +350,9 @@
                </layout>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout">
+               <layout class="QHBoxLayout" name="horizontalLayout_ValueType">
                 <item>
-                 <widget class="QLabel" name="label_2">
+                 <widget class="QLabel" name="label_ValueType">
                   <property name="text">
                    <string>Value Type:</string>
                   </property>
@@ -357,7 +364,7 @@
                </layout>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_10">
+               <layout class="QHBoxLayout" name="horizontalLayout_ScanScope">
                 <item>
                  <widget class="QLabel" name="label_ScanScope">
                   <property name="text">
@@ -371,9 +378,9 @@
                </layout>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_3">
+               <layout class="QHBoxLayout" name="horizontalLayout_Endianness">
                 <item>
-                 <widget class="QLabel" name="label_3">
+                 <widget class="QLabel" name="label_Endianness">
                   <property name="text">
                    <string>Endianness:</string>
                   </property>
@@ -392,7 +399,7 @@
                </widget>
               </item>
               <item>
-               <spacer name="verticalSpacer">
+               <spacer name="verticalSpacer_ScanOptions">
                 <property name="orientation">
                  <enum>Qt::Orientation::Vertical</enum>
                 </property>
@@ -408,7 +415,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QWidget" name="widget_2" native="true">
+            <widget class="QWidget" name="widget_VerticalSpacer" native="true">
              <layout class="QVBoxLayout" name="verticalLayout">
               <property name="spacing">
                <number>0</number>
@@ -611,8 +618,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>678</width>
-     <height>22</height>
+     <width>768</width>
+     <height>32</height>
     </rect>
    </property>
   </widget>
