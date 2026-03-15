@@ -32,7 +32,8 @@ PYTHON="${SCRIPTDIR}/.venv/bin/python3"
 PINCE_PY="${SCRIPTDIR}/PINCE.py"
 
 if [ ! -f "$PINCE_PY" ]; then
-    echo "Error: PINCE.py not found in ${SCRIPTDIR}. Please make sure you are running this script from the project root."
+    echo "Error: PINCE.py not found in ${SCRIPTDIR}."
+    echo "Make sure you are running PINCE.sh from the project root directory."
     exit 1
 fi
 
