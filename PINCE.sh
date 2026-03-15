@@ -31,6 +31,11 @@ fi
 PYTHON="${SCRIPTDIR}/.venv/bin/python3"
 PINCE_PY="${SCRIPTDIR}/PINCE.py"
 
+if [ ! -f "$PINCE_PY" ]; then
+    echo "Error: PINCE.py not found in ${SCRIPTDIR}. Please make sure you are running this script from the project root."
+    exit 1
+fi
+
 if type pkexec &> /dev/null; then
 	# Preserve env vars to keep settings like theme preferences.
 	# Pkexec does not support passing all of env via a flag like `-E` so we need to
