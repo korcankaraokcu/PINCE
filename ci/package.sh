@@ -195,6 +195,16 @@ if [ "$(id -u)" != "0" ]; then
 		# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
 		# so we need to force PATH preservation with venv activated user's PATH.
 		sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 "$APPIMAGE"
+	elif type doas &> /dev/null; then
+		# doas does have a keepenv option in doas.conf, but we should avoid modifying configs.
+		# Instead we use the same workaround as with pkexec to invoke the doas command.
+		ENV=()
+		while IFS= read -r line
+		do
+			ENV+=("$line")
+		done < <(printenv)
+
+		doas env PYTHONDONTWRITEBYTECODE=1 "${ENV[@]}" "$APPIMAGE"
 	else
 		echo "No supported privilege escalation utility found. Please run this as root manually."
 		exit 1
