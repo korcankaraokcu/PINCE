@@ -16,11 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
 
-if [ "$(id -u)" = "0" ]; then
-	echo "Please do not run this script as root!"
-	exit 1
-fi
-
 SCRIPTDIR=$(cd -- "$(dirname -- "$0")" && pwd -P)
 if [ ! -d "${SCRIPTDIR}/.venv/bin" ]; then
 	echo "Please run \"sh install.sh\" first!"
@@ -31,22 +26,27 @@ fi
 PYTHON="${SCRIPTDIR}/.venv/bin/python3"
 PINCE_PY="${SCRIPTDIR}/PINCE.py"
 
-if type pkexec &> /dev/null; then
-	# Preserve env vars to keep settings like theme preferences.
-	# Pkexec does not support passing all of env via a flag like `-E` so we need to
-	# rebuild the env and then pass it through.
-	ENV=()
-	while IFS= read -r line
-	do
-		ENV+=("$line")
-	done < <(printenv)
-
-	pkexec env "${ENV[@]}" "$PYTHON" "$PINCE_PY"
-elif type sudo &> /dev/null; then
-	# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
-	# so we need to force PATH preservation with venv activated user's PATH.
-	sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 "$PYTHON" "$PINCE_PY"
+if [ "$(id -u)" = "0" ]; then
+	"$PYTHON" "$PINCE_PY"
 else
-	echo "No supported privilege escalation utility found. Please run this as root manually."
-	exit 1
+	if type pkexec &> /dev/null; then
+		# Preserve env vars to keep settings like theme preferences.
+		# Pkexec does not support passing all of env via a flag like `-E` so we need to
+		# rebuild the env and then pass it through.
+		ENV=()
+		while IFS= read -r line
+		do
+			ENV+=("$line")
+		done < <(printenv)
+
+		pkexec env "${ENV[@]}" "$PYTHON" "$PINCE_PY"
+	elif type sudo &> /dev/null; then
+		# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
+		# so we need to force PATH preservation with venv activated user's PATH.
+		sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 "$PYTHON" "$PINCE_PY"
+	else
+		echo "No supported privilege escalation utility found. Please run this as root manually."
+		echo "Don't forget to preserve normal user environment variables for proper functionality."
+		exit 1
+	fi
 fi
