@@ -1,3 +1,4 @@
 [submodule "libmemscan"]
 	path = libmemscan
 	url = https://github.com/brkzlr/libmemscan
+	ignore = dirty
