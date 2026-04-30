@@ -32,8 +32,6 @@ exclude_patterns = []
 
 # Mock imports for compiled C extensions and modules that aren't needed for documentation
 autodoc_mock_imports = [
-    "libpince.libscanmem",
-    "libpince.libscanmem.scanmem",
     "libpince.libptrscan",
 ]
 

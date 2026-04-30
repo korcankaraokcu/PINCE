@@ -89,18 +89,21 @@ $DEPLOYTOOL --appdir AppDir -pconda || exit_on_failure
 # Create PINCE directory
 mkdir -p AppDir/opt/PINCE
 
-# Install libscanmem
-NUM_MAKE_JOBS="$(nproc --ignore=1)"
+# Install libmemscan
 cd ..
 git submodule update --init --recursive
-if [ ! -d "libpince/libscanmem" ]; then
-	mkdir libpince/libscanmem
+if [ ! -d "libpince/libmemscan" ]; then
+	mkdir libpince/libmemscan
 fi
-cd libscanmem-PINCE
-cmake -DCMAKE_BUILD_TYPE=Release . || exit_on_failure
-make -j"$NUM_MAKE_JOBS" || exit_on_failure
-cp --preserve libscanmem.so ../libpince/libscanmem
-cp --preserve wrappers/scanmem.py ../libpince/libscanmem
+cd libmemscan
+if [ ! -f "./zig" ]; then
+	curl -L -o zig.tar.xz https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz
+	tar xf zig.tar.xz --strip-components 1 --wildcards "*/lib" "*/zig"
+	rm zig.tar.xz
+fi
+./zig build -Doptimize=ReleaseFast
+cp --preserve zig-out/lib/libmemscan.so ../libpince/libmemscan/
+cp --preserve memscan.py ../libpince/libmemscan/
 cd ..
 
 # Install libptrscan
@@ -150,6 +153,7 @@ chmod +x wrapper.sh
 INSTALLDIR=$(pwd)/AppDir
 export CONDA_PREFIX="$(readlink -f $INSTALLDIR/usr/conda)"
 
+NUM_MAKE_JOBS="$(nproc --ignore=1)"
 # Grab latest GDB at time of writing and compile it with our conda Python
 curl -L -O "https://ftp.gnu.org/gnu/gdb/gdb-17.1.tar.gz"
 tar xf gdb-17.1.tar.gz

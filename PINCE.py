@@ -129,7 +129,8 @@ from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
 from GUI.Widgets.Settings.Settings import SettingsDialog
 from libpince import debugcore, typedefs, utils
 from libpince.utils import safe_str_to_int, safe_int_cast, logger
-from libpince.debugcore import ptrscan, scanmem
+from libpince.debugcore import ptrscan, memscan
+from libpince.libmemscan.memscan import MatchType, ScanLevel, DataType, MatchView, BytePattern
 from tr.tr import TranslationConstants as tr
 from tr.tr import get_locale
 
@@ -255,6 +256,40 @@ REF_STR_VAL_COL = 2
 REF_CALL_ADDR_COL = 0
 REF_CALL_COUNT_COL = 1
 
+# Used in set_data_type function of memscan
+scan_index_to_memscan_dict = collections.OrderedDict(
+    [
+        (typedefs.SCAN_INDEX.INT_ANY, DataType.ANYINTEGER),
+        (typedefs.SCAN_INDEX.INT8, DataType.INTEGER8),
+        (typedefs.SCAN_INDEX.INT16, DataType.INTEGER16),
+        (typedefs.SCAN_INDEX.INT32, DataType.INTEGER32),
+        (typedefs.SCAN_INDEX.INT64, DataType.INTEGER64),
+        (typedefs.SCAN_INDEX.FLOAT_ANY, DataType.ANYFLOAT),
+        (typedefs.SCAN_INDEX.FLOAT32, DataType.FLOAT32),
+        (typedefs.SCAN_INDEX.FLOAT64, DataType.FLOAT64),
+        (typedefs.SCAN_INDEX.ANY, DataType.ANYNUMBER),
+        (typedefs.SCAN_INDEX.STRING, DataType.STRING),
+        (typedefs.SCAN_INDEX.AOB, DataType.BYTEARRAY),
+    ]
+)
+
+scan_type_to_memscan_dict = collections.OrderedDict(
+    [
+        (typedefs.SCAN_TYPE.EXACT, MatchType.MATCHEQUALTO),
+        (typedefs.SCAN_TYPE.NOT, MatchType.MATCHNOTEQUALTO),
+        (typedefs.SCAN_TYPE.INCREASED, MatchType.MATCHINCREASED),
+        (typedefs.SCAN_TYPE.INCREASED_BY, MatchType.MATCHINCREASEDBY),
+        (typedefs.SCAN_TYPE.DECREASED, MatchType.MATCHDECREASED),
+        (typedefs.SCAN_TYPE.DECREASED_BY, MatchType.MATCHDECREASEDBY),
+        (typedefs.SCAN_TYPE.LESS, MatchType.MATCHLESSTHAN),
+        (typedefs.SCAN_TYPE.MORE, MatchType.MATCHGREATERTHAN),
+        (typedefs.SCAN_TYPE.BETWEEN, MatchType.MATCHRANGE),
+        (typedefs.SCAN_TYPE.CHANGED, MatchType.MATCHCHANGED),
+        (typedefs.SCAN_TYPE.UNCHANGED, MatchType.MATCHNOTCHANGED),
+        (typedefs.SCAN_TYPE.UNKNOWN, MatchType.MATCHANY),
+    ]
+)
+
 
 def except_hook(exception_type, value, tb):
     focused_widget = app.focusWidget()
@@ -271,6 +306,7 @@ sys.excepthook = except_hook
 def signal_handler(signal, frame):
     with QSignalBlocker(app):
         debugcore.detach()
+        memscan.close()
         quit()
 
 
@@ -989,14 +1025,69 @@ class MainForm(QMainWindow, MainWindow):
             self.widget_ScanOptions.setEnabled(True)
             self.widget_ScanFields.setEnabled(True)
 
+    # Create properly typed values for memscan
+    def validate_search_values(self, search_for: str, search_for2: str):
+        # Manually fix an edge case in number validators
+        if search_for == "-":
+            search_for = ""
+        if search_for2 == "-":
+            search_for2 = ""
+
+        if search_for == "":
+            return None, None
+
+        value_2 = None
+
+        # none of these should be possible to be true at the same time
+        scan_index = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
+        if scan_index >= typedefs.SCAN_INDEX.FLOAT_ANY and scan_index <= typedefs.SCAN_INDEX.ANY:
+            # Manually fix an edge case in float_number validator
+            if search_for[-1] in {"e", "E"}:
+                search_for += "0"
+            if len(search_for2) != 0 and search_for2[-1] in {"e", "E"}:
+                search_for2 += "0"
+            # Adjust to locale whatever the input
+            if QLocale.system().decimalPoint() == ".":
+                search_for = search_for.replace(",", ".")
+                search_for2 = search_for2.replace(",", ".")
+            else:
+                search_for = search_for.replace(".", ",")
+                search_for2 = search_for2.replace(".", ",")
+            value_1 = float(search_for)
+            value_2 = float(search_for2) if search_for2 != "" else None
+        elif scan_index == typedefs.SCAN_INDEX.STRING:
+            value_1 = search_for
+        elif scan_index == typedefs.SCAN_INDEX.AOB:
+            value_1 = BytePattern.from_string(search_for)
+        else:  # Integers
+            if self.checkBox_Hex.isChecked():
+                if not search_for.startswith(("0x", "-0x")):
+                    negative_str = "-" if search_for.startswith("-") else ""
+                    search_for = negative_str + "0x" + search_for.lstrip("-")
+                if not search_for2.startswith(("0x", "-0x")):
+                    negative_str = "-" if search_for.startswith("-") else ""
+                    search_for2 = negative_str + "0x" + search_for2.lstrip("-")
+            value_1 = int(search_for, 0)
+            # TODO: Fix the random "0x" in field 2 instead of empty.
+            value_2 = int(search_for2, 0) if search_for2 != "" and search_for2 != "0x" else None
+
+        return value_1, value_2
+
     def scan_values(self):
         if debugcore.currentpid == -1:
             return
-        search_for = self.validate_search(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
+        type_index = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
+        if type_index == typedefs.SCAN_TYPE.UNKNOWN:
+            scan_thread = guitypedefs.Worker(memscan.snapshot)
+        else:
+            value_1, value_2 = self.validate_search_values(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
+            if value_1 == None:
+                return
+            scan_type = scan_type_to_memscan_dict[type_index]
+            scan_thread = guitypedefs.Worker(memscan.scan, scan_type, value_1, value_2)
         self.progressBar.setValue(0)
         self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
         self.progress_bar_timer.start(100)
-        scan_thread = guitypedefs.Worker(scanmem.send_command, search_for)
         scan_thread.signals.finished.connect(self.scan_callback)
         states.threadpool.start(scan_thread)
         self.is_scanning = True
@@ -1052,17 +1143,13 @@ class MainForm(QMainWindow, MainWindow):
             return
         if self.scan_mode == typedefs.SCAN_MODE.ONGOING:
             self.reset_scan()
-        else:
-            self.scan_mode = typedefs.SCAN_MODE.ONGOING
-            self.pushButton_NewFirstScan.setText(tr.NEW_SCAN)
-            self.comboBox_ValueType.setEnabled(False)
-            self.pushButton_NextScan.setEnabled(True)
-            scanmem.reset()
             for region_id in self.deleted_regions:
-                debugcore.scanmem.send_command(f"dregion {region_id}")
-            self.comboBox_ScanScope.setEnabled(False)
-            self.comboBox_Endianness.setEnabled(False)
+                debugcore.memscan.remove_region_by_id(int(region_id))
+        else:
             self.scan_values()
+            if self.is_scanning == True:
+                self.scan_mode = typedefs.SCAN_MODE.ONGOING
+                self.pushButton_NewFirstScan.setText(tr.NEW_SCAN)
         self.comboBox_ScanType_init()
 
     def handle_line_edit_scan_key_press_event(self, event):
@@ -1089,7 +1176,7 @@ class MainForm(QMainWindow, MainWindow):
     def pushButton_UndoScan_clicked(self):
         if debugcore.currentpid == -1:
             return
-        undo_thread = guitypedefs.Worker(scanmem.undo_scan)
+        undo_thread = guitypedefs.Worker(memscan.undo_scan)
         undo_thread.signals.finished.connect(self.scan_callback)
         states.threadpool.start(undo_thread)
         self.undo_scan_available = False
@@ -1098,7 +1185,7 @@ class MainForm(QMainWindow, MainWindow):
     def pushButton_CancelScan_clicked(self):
         if debugcore.currentpid == -1:
             return
-        scanmem.set_stop_flag(True)
+        memscan.set_stop_flag(True)
         self.pushButton_CancelScan.setEnabled(False)
 
     def comboBox_ScanType_current_index_changed(self):
@@ -1148,24 +1235,30 @@ class MainForm(QMainWindow, MainWindow):
 
     def comboBox_ScanScope_init(self):
         scan_scope_text = [
-            (typedefs.SCAN_SCOPE.BASIC, tr.BASIC),
-            (typedefs.SCAN_SCOPE.NORMAL, tr.NORMAL),
-            (typedefs.SCAN_SCOPE.FULL_RW, tr.RW),
-            (typedefs.SCAN_SCOPE.FULL, tr.FULL),
+            (ScanLevel.HEAP_STACK_EXE, tr.BASIC),
+            (ScanLevel.HEAP_STACK_EXE_BSS, tr.NORMAL),
+            (ScanLevel.ALL_RW, tr.RW),
+            (ScanLevel.ALL, tr.FULL),
         ]
         for scope, text in scan_scope_text:
             self.comboBox_ScanScope.addItem(text, scope)
         self.comboBox_ScanScope.setCurrentIndex(1)  # typedefs.SCAN_SCOPE.NORMAL
-        self.comboBox_ScanScope.currentIndexChanged.connect(self.on_scan_regions_changed)
+        self.comboBox_ScanScope.currentIndexChanged.connect(self.on_scan_scope_changed)
 
-    def on_scan_regions_changed(self):
-        search_scope = self.comboBox_ScanScope.currentData(Qt.ItemDataRole.UserRole)
-        scanmem.send_command(f"option region_scan_level {search_scope}")
-        scanmem.reset()
+    def on_scan_scope_changed(self):
+        self.deleted_regions.clear()
+        scan_level = self.comboBox_ScanScope.currentData(Qt.ItemDataRole.UserRole)
+        memscan.set_scan_level(scan_level)
+        memscan.reset()
 
     def on_endianness_changed(self):
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
-        scanmem.send_command(f"option endianness {endian}")
+        if endian == typedefs.ENDIANNESS.HOST:
+            memscan.set_reverse_endianness(False)
+        elif endian == typedefs.ENDIANNESS.LITTLE:
+            memscan.set_reverse_endianness(sys.byteorder != "little")
+        elif endian == typedefs.ENDIANNESS.BIG:
+            memscan.set_reverse_endianness(sys.byteorder != "big")
 
     def comboBox_ValueType_init(self):
         self.comboBox_ValueType.clear()
@@ -1173,66 +1266,6 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_ValueType.addItem(value_text, value_index)
         self.comboBox_ValueType.setCurrentIndex(typedefs.SCAN_INDEX.INT32)
         self.comboBox_ValueType_current_index_changed()
-
-    # adds things like 0x when searching for etc, basically just makes the line valid for scanmem
-    # this should cover most things, more things might be added later if need be
-    def validate_search(self, search_for: str, search_for2: str):
-        type_index = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
-        symbol_map = {
-            typedefs.SCAN_TYPE.INCREASED: "+",
-            typedefs.SCAN_TYPE.DECREASED: "-",
-            typedefs.SCAN_TYPE.CHANGED: "!=",
-            typedefs.SCAN_TYPE.UNCHANGED: "=",
-            typedefs.SCAN_TYPE.UNKNOWN: "snapshot",
-        }
-        if type_index in symbol_map:
-            return symbol_map[type_index]
-
-        # Manually fix an edge case in number validators
-        if search_for == "-":
-            search_for = ""
-        if search_for2 == "-":
-            search_for2 = ""
-
-        # none of these should be possible to be true at the same time
-        scan_index = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
-        if scan_index >= typedefs.SCAN_INDEX.FLOAT_ANY and scan_index <= typedefs.SCAN_INDEX.FLOAT64:
-            # Manually fix an edge case in float_number validator
-            if len(search_for) != 0 and search_for[-1] in {"e", "E"}:
-                search_for += "0"
-            if len(search_for2) != 0 and search_for2[-1] in {"e", "E"}:
-                search_for2 += "0"
-            # Adjust to locale whatever the input
-            if QLocale.system().decimalPoint() == ".":
-                search_for = search_for.replace(",", ".")
-                search_for2 = search_for2.replace(",", ".")
-            else:
-                search_for = search_for.replace(".", ",")
-                search_for2 = search_for2.replace(".", ",")
-        elif scan_index == typedefs.SCAN_INDEX.STRING:
-            search_for = '" ' + search_for
-        elif self.checkBox_Hex.isChecked():
-            if not search_for.startswith(("0x", "-0x")):
-                negative_str = "-" if search_for.startswith("-") else ""
-                search_for = negative_str + "0x" + search_for.lstrip("-")
-            if not search_for2.startswith(("0x", "-0x")):
-                negative_str = "-" if search_for.startswith("-") else ""
-                search_for2 = negative_str + "0x" + search_for2.lstrip("-")
-
-        if type_index == typedefs.SCAN_TYPE.BETWEEN:
-            return search_for + ".." + search_for2
-        cmp_symbols = {
-            typedefs.SCAN_TYPE.INCREASED_BY: "+",
-            typedefs.SCAN_TYPE.DECREASED_BY: "-",
-            typedefs.SCAN_TYPE.LESS: "<",
-            typedefs.SCAN_TYPE.MORE: ">",
-        }
-        if type_index in cmp_symbols:
-            return cmp_symbols[type_index] + " " + search_for
-
-        if type_index == typedefs.SCAN_TYPE.NOT:
-            search_for = "!= " + search_for
-        return search_for
 
     def pushButton_NextScan_clicked(self):
         self.scan_values()
@@ -1243,33 +1276,56 @@ class MainForm(QMainWindow, MainWindow):
         if scan_regions_dialog.exec():
             self.deleted_regions.extend(scan_regions_dialog.get_values())
 
+    def get_value_index_for_match(self, match: MatchView) -> int:
+        if match.is_string_match():
+            return typedefs.VALUE_INDEX.STRING_UTF8
+        elif match.is_bytearray_match():
+            return typedefs.VALUE_INDEX.AOB
+        else:
+            if match.match_info.has_int8() or match.match_info.has_uint8():
+                return typedefs.VALUE_INDEX.INT8
+            if match.match_info.has_int16() or match.match_info.has_uint16():
+                return typedefs.VALUE_INDEX.INT16
+            if match.match_info.has_int32() or match.match_info.has_uint32():
+                return typedefs.VALUE_INDEX.INT32
+            if match.match_info.has_int64() or match.match_info.has_uint64():
+                return typedefs.VALUE_INDEX.INT64
+            if match.match_info.has_float32():
+                return typedefs.VALUE_INDEX.FLOAT32
+            if match.match_info.has_float64():
+                return typedefs.VALUE_INDEX.FLOAT64
+            logger.error("Passed invalid match to value_index retrieval! Shouldn't be possible!")
+            return -1
+
     def scan_callback(self):
         self.is_scanning = False
         self.progress_bar_timer.stop()
         self.progressBar.setValue(100)
-        matches = scanmem.matches()
+        matches = memscan.matches()
         self.update_match_count()
         self.tableWidget_valuesearchtable.setRowCount(0)
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         length = self._scan_to_length(current_type)
         mem_handle = debugcore.memory_handle()
-        row = 0  # go back to using n when unknown issue gets fixed
+        row = 0
         self.tableWidget_valuesearchtable.setSortingEnabled(False)
-        for n, address, offset, region_type, val, result_type in matches:
-            address = "0x" + address
-            result = result_type.split(" ")[0]
-            if result == "unknown":  # Ignore unknown entries for now
+        for match in matches:
+            address = hex(match.address)
+            if match.match_info.raw_bits == 0:
+                # Ignore unknown entries (no match flags), should not happen as every received match is valid
+                logger.error("Found invalid/unknown match! Skipping...")
                 continue
-            value_index = typedefs.scanmem_result_to_index_dict[result]
+            # This is technically wrong because we can have multiple possible value types through a match
+            # but we'll go with the lowest matching value type
+            value_index = self.get_value_index_for_match(match)
             if self.checkBox_Hex.isChecked():
                 value_repr = typedefs.VALUE_REPR.HEX
-            elif typedefs.VALUE_INDEX.is_integer(value_index) and result.endswith("s"):
-                value_repr = typedefs.VALUE_REPR.SIGNED
             else:
-                value_repr = typedefs.VALUE_REPR.UNSIGNED
+                value_repr = typedefs.VALUE_REPR.SIGNED if match.match_info.is_signed_integer_only() else typedefs.VALUE_REPR.UNSIGNED
             endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
             current_item = QTableWidgetItem(address)
             current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian))
+            # TODO: Change GDB reading to memscan
             value = str(debugcore.read_memory(address, value_index, length, True, value_repr, endian, mem_handle))
             if debugcore.is_address_static(address):
                 current_item.setForeground(QColor(0, 136, 85))
@@ -1292,7 +1348,7 @@ class MainForm(QMainWindow, MainWindow):
         return 0
 
     def update_match_count(self):
-        match_count = scanmem.get_match_count()
+        match_count = memscan.get_match_count()
         if match_count > 1000:
             self.label_MatchCount.setText(tr.MATCH_COUNT_LIMITED.format(match_count, 1000))
         else:
@@ -1385,17 +1441,25 @@ class MainForm(QMainWindow, MainWindow):
         for item in selected_rows:
             rows.add(item.row())
 
-        scanmem.send_command("delete {}".format(",".join([str(row) for row in rows])))
-
         # remove the rows from the table - removing in reverse sorted order to avoid index issues
         for row in sorted(rows, reverse=True):
+            address = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL).text()
+            memscan.remove_match_by_address(safe_str_to_int(address, 16))
             self.tableWidget_valuesearchtable.removeRow(row)
         self.update_match_count()
 
     def comboBox_ValueType_current_index_changed(self):
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
-        scanmem_type = typedefs.scan_index_to_scanmem_dict[current_type]
-        validator_str = scanmem_type  # used to get the correct validator
+        memscan_type = scan_index_to_memscan_dict[current_type]
+        match memscan_type:
+            case DataType.ANYINTEGER | DataType.INTEGER8 | DataType.INTEGER16 | DataType.INTEGER32 | DataType.INTEGER64:
+                validator_str = "int"
+            case DataType.ANYNUMBER | DataType.ANYFLOAT | DataType.FLOAT32 | DataType.FLOAT64:
+                validator_str = "float"
+            case DataType.STRING:
+                validator_str = "string"
+            case DataType.BYTEARRAY:
+                validator_str = "bytearray"
 
         # TODO this can probably be made to look nicer, though it doesn't really matter
         if "int" in validator_str:
@@ -1407,15 +1471,13 @@ class MainForm(QMainWindow, MainWindow):
         else:
             self.checkBox_Hex.setChecked(False)
             self.checkBox_Hex.setEnabled(False)
-        if "float" in validator_str or validator_str == "number":
-            validator_str = "float"
 
         self.comboBox_ScanType_init()
         self.lineEdit_Scan.setValidator(guiutils.validator_map[validator_str])
         self.lineEdit_Scan2.setValidator(guiutils.validator_map[validator_str])
-        scanmem.send_command("option scan_data_type {}".format(scanmem_type))
-        # according to scanmem instructions you should always do `reset` after changing type
-        scanmem.reset()
+        memscan.set_data_type(memscan_type)
+        # according to memscan instructions you should always do `reset` after changing type
+        memscan.reset()
 
     def pushButton_AttachProcess_clicked(self):
         self.processwindow = ProcessForm(self)
@@ -1448,7 +1510,7 @@ class MainForm(QMainWindow, MainWindow):
         attach_result = debugcore.attach(pid, gdb_path)
         if attach_result == typedefs.ATTACH_RESULT.SUCCESSFUL:
             settings.apply_after_init()
-            scanmem.pid(pid)
+            memscan.attach(pid)
             ptrscan.set_process(pid)
             if debugcore.get_inferior_arch() == typedefs.INFERIOR_ARCH.ARCH_64:
                 ptr_size = 8
@@ -1524,8 +1586,7 @@ class MainForm(QMainWindow, MainWindow):
         self.scan_mode = typedefs.SCAN_MODE.NEW
         self.undo_scan_available = False
         self.pushButton_NewFirstScan.setText(tr.FIRST_SCAN)
-        scanmem.reset()
-        self.deleted_regions.clear()
+        memscan.reset()
         self.tableWidget_valuesearchtable.setRowCount(0)
         self.comboBox_ValueType.setEnabled(True)
         self.comboBox_ScanScope.setEnabled(True)
@@ -1581,6 +1642,7 @@ class MainForm(QMainWindow, MainWindow):
             return
 
         debugcore.detach()
+        memscan.close()
         app.closeAllWindows()
         logger.info("All PINCE windows closed")
 
@@ -1611,7 +1673,7 @@ class MainForm(QMainWindow, MainWindow):
     # QTimer loops
 
     def update_progress_bar(self):
-        value = int(round(scanmem.get_scan_progress() * 100))
+        value = int(round(memscan.get_scan_progress() * 100))
         self.progressBar.setValue(value)
 
     # Loop restarts itself to wait for function execution, same for the functions below

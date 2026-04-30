@@ -252,27 +252,6 @@ text_to_index_dict = collections.OrderedDict()
 for key in index_to_text_dict:
     text_to_index_dict[index_to_text_dict[key]] = key
 
-scanmem_result_to_index_dict = collections.OrderedDict(
-    [
-        ("I8", VALUE_INDEX.INT8),
-        ("I8u", VALUE_INDEX.INT8),
-        ("I8s", VALUE_INDEX.INT8),
-        ("I16", VALUE_INDEX.INT16),
-        ("I16u", VALUE_INDEX.INT16),
-        ("I16s", VALUE_INDEX.INT16),
-        ("I32", VALUE_INDEX.INT32),
-        ("I32u", VALUE_INDEX.INT32),
-        ("I32s", VALUE_INDEX.INT32),
-        ("I64", VALUE_INDEX.INT64),
-        ("I64u", VALUE_INDEX.INT64),
-        ("I64s", VALUE_INDEX.INT64),
-        ("F32", VALUE_INDEX.FLOAT32),
-        ("F64", VALUE_INDEX.FLOAT64),
-        ("string", VALUE_INDEX.STRING_UTF8),
-        ("bytearray", VALUE_INDEX.AOB),
-    ]
-)
-
 # Represents the texts at indexes in scan combobox
 # TODO: Same as index_to_text_dict, consider integrating into UI completely
 scan_index_to_text_dict = collections.OrderedDict(
@@ -290,24 +269,6 @@ scan_index_to_text_dict = collections.OrderedDict(
         (VALUE_INDEX.AOB, "ByteArray"),
     ]
 )
-
-# Used in scan_data_type option of scanmem
-scan_index_to_scanmem_dict = collections.OrderedDict(
-    [
-        (SCAN_INDEX.INT_ANY, "int"),
-        (SCAN_INDEX.INT8, "int8"),
-        (SCAN_INDEX.INT16, "int16"),
-        (SCAN_INDEX.INT32, "int32"),
-        (SCAN_INDEX.INT64, "int64"),
-        (SCAN_INDEX.FLOAT_ANY, "float"),
-        (SCAN_INDEX.FLOAT32, "float32"),
-        (SCAN_INDEX.FLOAT64, "float64"),
-        (SCAN_INDEX.ANY, "number"),
-        (SCAN_INDEX.STRING, "string"),
-        (VALUE_INDEX.AOB, "bytearray"),
-    ]
-)
-
 
 # TODO: Same as index_to_text_dict, consider integrating into UI completely
 class SCAN_TYPE:
@@ -365,13 +326,6 @@ class SCAN_TYPE:
 class SCAN_MODE:
     NEW = 0
     ONGOING = 1
-
-
-class SCAN_SCOPE:
-    BASIC = 1
-    NORMAL = 2
-    FULL_RW = 3
-    FULL = 4
 
 
 class ENDIANNESS:
