@@ -53,38 +53,41 @@ exit_on_error() {
     fi
 }
 
-# assumes you're in libscanmem directory
-compile_libscanmem() {
-    cmake -DCMAKE_BUILD_TYPE=Release . || return 1
-    make -j"$NUM_MAKE_JOBS" || return 1
-    chown -R "${CURRENT_USER}":"${CURRENT_USER}" . # give permissions for normal user to change file
+# assumes you're in libmemscan submodule directory
+compile_libmemscan() {
+	echo "Compiling libmemscan..."
+	./zig build -Doptimize=ReleaseFast
     return 0
 }
 
-install_libscanmem() {
-    echo "Downloading libscanmem"
+install_libmemscan() {
+    echo "Updating libmemscan submodule"
     git submodule update --init --recursive || return 1
 
-    if [ ! -d "libpince/libscanmem" ]; then
-        mkdir libpince/libscanmem
-        chown -R "${CURRENT_USER}":"${CURRENT_USER}" libpince/libscanmem
+    if [ ! -d "libpince/libmemscan" ]; then
+        mkdir libpince/libmemscan
     fi
     (
-        echo "Entering libscanmem directory"
-        cd libscanmem-PINCE || return 1
-        if [ -f "./libscanmem.so" ]; then
-            echo "Recompile libscanmem? [y/n]"
+        echo "Entering libmemscan submodule directory"
+        cd libmemscan || return 1
+		if [ ! -f "./zig" ]; then
+			echo "Downloading Zig v0.16.0"
+			curl -L -o zig.tar.xz https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz
+			tar xf zig.tar.xz --strip-components 1 --wildcards "*/lib" "*/zig"
+			rm zig.tar.xz
+		fi
+        if [ -f "./zig-out/lib/libmemscan.so" ]; then
+            echo "Recompile libmemscan? [y/n]"
             read -r answer
             if echo "$answer" | grep -iq "^[Yy]"; then
-                make clean
-                compile_libscanmem || return 1
+                compile_libmemscan || return 1
             fi
         else
-            compile_libscanmem || return 1
+            compile_libmemscan || return 1
         fi
-        cp --preserve libscanmem.so ../libpince/libscanmem/
-        cp --preserve wrappers/scanmem.py ../libpince/libscanmem
-        echo "Exiting libscanmem directory"
+        cp --preserve zig-out/lib/libmemscan.so ../libpince/libmemscan/
+        cp --preserve memscan.py ../libpince/libmemscan/
+        echo "Exiting libmemscan submodule directory"
     ) || return 1
     return 0
 }
@@ -94,7 +97,6 @@ install_libptrscan() {
 
     if [ ! -d "libpince/libptrscan" ]; then
         mkdir libpince/libptrscan
-        chown -R "${CURRENT_USER}":"${CURRENT_USER}" libpince/libptrscan
     fi
     (
 		cd libpince/libptrscan
@@ -144,11 +146,11 @@ ask_pkg_mgr() {
 }
 
 # About xcb packages -> https://github.com/cdgriffith/FastFlix/wiki/Common-questions-and-problems
-PKG_NAMES_ALL="python3-pip gdb cmake"
+PKG_NAMES_ALL="python3-pip gdb"
 PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-dev python3-venv pkg-config qt6-l10n-tools libcairo2-dev libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev libxcb-cursor0"
-PKG_NAMES_SUSE="$PKG_NAMES_ALL gcc python3-devel qt6-tools-linguist cairo-devel make"
+PKG_NAMES_SUSE="$PKG_NAMES_ALL python3-devel qt6-tools-linguist cairo-devel"
 PKG_NAMES_FEDORA="$PKG_NAMES_ALL python3-devel qt6-linguist redhat-lsb cairo-devel"
-PKG_NAMES_ARCH="python-pip qt6-tools gdb cmake lsb-release pkgconf" # arch defaults to py3 nowadays
+PKG_NAMES_ARCH="python-pip qt6-tools gdb lsb-release pkgconf" # arch defaults to py3 nowadays
 
 INSTALL_COMMAND="install"
 
@@ -224,7 +226,7 @@ pip3 install --upgrade pip || exit_on_error
 # shellcheck disable=SC2086
 pip3 install -r requirements.txt || exit_on_error
 
-install_libscanmem || exit_on_error
+install_libmemscan || exit_on_error
 install_libptrscan || exit_on_error
 
 compile_translations || exit_on_error

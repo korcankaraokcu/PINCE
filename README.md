@@ -17,11 +17,11 @@ PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB)
 ![pince4](https://github.com/user-attachments/assets/08d8a6fe-6960-481b-9b55-aa550f860dc7)
 
 # Features  
-- **Memory scanning:** PINCE uses a specialized fork of [libscanmem](https://github.com/brkzlr/libscanmem-PINCE) to scan the memory efficiently
+- **Memory scanning:** PINCE uses [libmemscan](https://github.com/brkzlr/libmemscan) to scan the memory efficiently
 - **Pointer scanning:** PINCE uses [PointerScanner-X](https://github.com/kekeimiku/PointerSearcher-X/) to scan pointers efficiently
 - **Background Execution:** PINCE uses background execution by default, allowing users to run GDB commands while process is running
 - **Variable Inspection&Modification**
-  * **CheatEngine-like value type support:** Currently supports all types of CE and scanmem along with extended strings(utf-8, utf-16, utf-32)
+  * **CheatEngine-like value type support:** Currently supports all types of CE and memscan along with extended strings(utf-8, utf-16, utf-32)
   * **Symbol Recognition:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/GDB-Expressions)
   * **Automatic Variable Allocation:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/GDB-Expressions#allocation-using-expressions)
   * **Dynamic Address Table:** Supports drag&drop, recursive copy&pasting&inserting and many more

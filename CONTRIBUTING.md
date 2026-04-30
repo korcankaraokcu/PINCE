@@ -100,7 +100,7 @@ You can skip this step if you only want to edit already existing files
 - Edit ts files in [/i18n/ts](./i18n/ts) with the linguist and then save them. After saving the files, run the [compile_ts.sh](./compile_ts.sh) script.
 This script fixes inconsistencies between Qt6 Linguist and pylupdate6, also removes line information so the git history stays cleaner
 - To test your translations, use [install.sh](./install.sh). The last part of the installation script also compiles ts files to qm files so PINCE can process them.
-When asked to recompile libscanmem, enter no
+When asked to recompile libmemscan, enter no
 
 Make sure that you read the comments in [tr.py](./tr/tr.py). Some of the translations have caveats that might interest you
 
