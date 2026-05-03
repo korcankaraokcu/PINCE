@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 : '
 Copyright (C) 2016-2017 Korcan Karaokçu <korcankaraokcu@gmail.com>
 
@@ -21,7 +21,7 @@ if [ ! -d "${SCRIPTDIR}/.venv/bin" ]; then
 	echo "Please run \"sh install.sh\" first!"
 	exit 1
 fi
-. ${SCRIPTDIR}/.venv/bin/activate
+. "${SCRIPTDIR}/.venv/bin/activate"
 
 PYTHON="${SCRIPTDIR}/.venv/bin/python3"
 PINCE_PY="${SCRIPTDIR}/PINCE.py"
@@ -29,18 +29,20 @@ PINCE_PY="${SCRIPTDIR}/PINCE.py"
 if [ "$(id -u)" = "0" ]; then
 	"$PYTHON" "$PINCE_PY"
 else
-	if type pkexec &> /dev/null; then
+	if command -v pkexec > /dev/null 2>&1; then
 		# Preserve env vars to keep settings like theme preferences.
 		# Pkexec does not support passing all of env via a flag like `-E` so we need to
 		# rebuild the env and then pass it through.
-		ENV=()
+		set --
 		while IFS= read -r line
 		do
-			ENV+=("$line")
-		done < <(printenv)
+			set -- "$@" "$line"
+		done <<EOF
+$(printenv)
+EOF
 
-		pkexec env "${ENV[@]}" "$PYTHON" "$PINCE_PY"
-	elif type sudo &> /dev/null; then
+		pkexec env "$@" "$PYTHON" "$PINCE_PY"
+	elif command -v sudo > /dev/null 2>&1; then
 		# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
 		# so we need to force PATH preservation with venv activated user's PATH.
 		sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 "$PYTHON" "$PINCE_PY"

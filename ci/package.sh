@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 : '
 Copyright (C) 2024 brkzlr <brkozler@gmail.com>
 
@@ -129,21 +129,22 @@ cd ci
 # included conda's python environment to ensure compatibility
 # Taken from: https://github.com/pwndbg/pwndbg/pull/892
 cat > wrapper.sh <<\EOF
-#!/bin/bash
-if [[ -z "$CONDA_PREFIX" ]]; then
+#!/bin/sh
+if [ -z "$CONDA_PREFIX" ]; then
 	echo "Error: CONDA_PREFIX not set"
 	exit 2
 fi
-echo "$(date +%F) -- $@" >> /tmp/args.txt
-if [[ $1 != *"python-config.py"* ]]; then
-	exec "$CONDA_PREFIX"/bin/python3
-fi
+echo "$(date +%F) -- $*" >> /tmp/args.txt
+case $1 in
+	*python-config.py*) ;;
+	*) exec "$CONDA_PREFIX"/bin/python3 ;;
+esac
 # get rid of the first parameter, which is the path to the python-config.py script
 shift
 # python3-config --ldflags lacks the python library
 # also gdb won't link on GitHub actions without libtinfow, which is not provided by the conda environment
-if [[ "$1" == "--ldflags" ]]; then
-	echo -n "-lpython3.13 -ltinfow "
+if [ "$1" = "--ldflags" ]; then
+	printf '%s' "-lpython3.13 -ltinfow "
 fi
 exec "$CONDA_PREFIX"/bin/python3-config "$@"
 EOF
@@ -180,22 +181,24 @@ EOF
 cp ../media/logo/ozgurozbek/pince_appimage.png PINCE.png
 
 # Create main running script
-cat > AppRun.sh <<\EOF
-#!/bin/bash
+cat > AppRun.sh <<\APPRUN_EOF
+#!/bin/sh
 
 if [ "$(id -u)" != "0" ]; then
-	if type pkexec &> /dev/null; then
+	if command -v pkexec > /dev/null 2>&1; then
 		# Preserve env vars to keep settings like theme preferences.
 		# Pkexec does not support passing all of env via a flag like `-E` so we need to
 		# rebuild the env and then pass it through.
-		ENV=()
+		set --
 		while IFS= read -r line
 		do
-			ENV+=("$line")
-		done < <(printenv)
+			set -- "$@" "$line"
+		done <<EOF
+$(printenv)
+EOF
 
-		pkexec env "${ENV[@]}" "$APPIMAGE"
-	elif type sudo &> /dev/null; then
+		pkexec env "$@" "$APPIMAGE"
+	elif command -v sudo > /dev/null 2>&1; then
 		# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
 		# so we need to force PATH preservation with venv activated user's PATH.
 		sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 "$APPIMAGE"
@@ -206,10 +209,11 @@ if [ "$(id -u)" != "0" ]; then
 
 	exit
 fi
-export APPDIR="$(dirname "$0")"
+APPDIR="$(dirname "$0")"
+export APPDIR
 export PYTHONHOME=$APPDIR/usr/conda
 $APPDIR/usr/bin/python3 $APPDIR/opt/PINCE/PINCE.py
-EOF
+APPRUN_EOF
 chmod +x AppRun.sh
 
 # Patch libqxcb's runpath (not rpath) to point to our packaged libxcb-cursor to fix X11 issues
