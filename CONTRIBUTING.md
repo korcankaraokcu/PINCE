@@ -4,7 +4,6 @@
 - [install.sh](./install.sh) - Installation script
 - [compile_ts.sh](./compile_ts.sh) - Gathers translation information from various sources and compiles them into ts files
 - [fix_ts.py](./fix_ts.py) - Fixes line information issue, used within [compile_ts.sh](./compile_ts.sh)
-- [compile_gdb.sh](./compile_gdb.sh) - PINCE normally uses system GDB but in cases where system GDB is unavailable, this script is used to compile GDB locally
 - [GUI](./GUI) - Contains Qt Designer forms and their respective codes along with utility functions and custom Qt classes
 - [media](./media) - Contains media files such as logos and icons
 - [tr](./tr) - Contains translation constants
@@ -19,7 +18,6 @@
   - ### **[gdb_python_scripts](./libpince/gdb_python_scripts)**
     - [gdbextensions.py](./libpince/gdb_python_scripts/gdbextensions.py) - Contains custom GDB commands
     - [gdbutils.py](./libpince/gdb_python_scripts/gdbutils.py) - Contains utility functions for GDB commands
-    - [tests](./libpince/gdb_python_scripts/tests) - An example for .so extension, read more [here](https://github.com/korcankaraokcu/PINCE/wiki/Extending-PINCE-with-.so-files)
 
 **About GUI file structure refactoring**: PINCE.py currently holds all of the GUI logic classes and this makes PINCE.py grow larger as the project progresses. To prevent this, all GUI logic will be carried to their respective folders and the GUI folder will follow this structure:
 ```

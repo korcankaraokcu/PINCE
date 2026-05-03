@@ -1,5 +1,0 @@
-Compile C files with -g option for gdb to read their symbols.
-
-For example:
-
-"gcc -pthread -shared -g -O2 -o example.so -fPIC example.c"
