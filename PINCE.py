@@ -1023,7 +1023,7 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_NextScan.setEnabled(True)
             self.pushButton_UndoScan.setEnabled(self.undo_scan_available)
             self.widget_ScanOptions.setEnabled(True)
-            self.widget_ScanFields.setEnabled(True)
+            self.comboBox_ScanType_current_index_changed()
             is_new_scan = self.scan_mode == typedefs.SCAN_MODE.NEW
             self.comboBox_ScanScope.setEnabled(is_new_scan)
             self.comboBox_ValueType.setEnabled(is_new_scan)
