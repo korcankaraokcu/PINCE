@@ -1582,11 +1582,14 @@ class MainForm(QMainWindow, MainWindow):
         self.update_address_table()
         self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
-    def reset_scan(self):
+    def reset_scan(self, inferior_exit = False):
+        if inferior_exit:
+            memscan.detach()
+        else:
+            memscan.reset()
         self.scan_mode = typedefs.SCAN_MODE.NEW
         self.undo_scan_available = False
         self.pushButton_NewFirstScan.setText(tr.FIRST_SCAN)
-        memscan.reset()
         self.tableWidget_valuesearchtable.setRowCount(0)
         self.comboBox_ValueType.setEnabled(True)
         self.comboBox_ScanScope.setEnabled(True)
@@ -1602,7 +1605,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_AddAddressManually.setEnabled(False)
         self.widget_Scanbox.setEnabled(False)
         self.lineEdit_Scan.setText("")
-        self.reset_scan()
+        self.reset_scan(inferior_exit=True)
         self.on_status_running()
         self.flashAttachButton = True
         self.flashAttachButtonTimer.start(100)
