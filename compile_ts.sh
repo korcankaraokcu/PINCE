@@ -1,12 +1,12 @@
-#!/bin/bash
-script_dir="$(dirname "$(readlink -f "$0")")"
-cd $script_dir
-venv_activator=".venv/bin/activate"
+#!/bin/sh
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+cd "$SCRIPT_DIR" || exit
 
+venv_activator=".venv/bin/activate"
 if [ -f "$venv_activator" ]; then
 	. "$venv_activator"
 else
-    echo "ERROR: Virtual environment not found, please use install.sh to install PINCE first"
+	echo "ERROR: Virtual environment not found, please use install.sh to install PINCE first"
 	exit
 fi
 
@@ -18,7 +18,7 @@ list_ts=$(find i18n/ts -maxdepth 1 -type f -name '*.ts')
 
 # If there's a user parameter, create a new locale based on it
 if [ -n "$1" ]; then
-    list_ts="$list_ts i18n/ts/$1.ts"
+	list_ts="$list_ts i18n/ts/$1.ts"
 fi
 
 for ts in $list_ts; do

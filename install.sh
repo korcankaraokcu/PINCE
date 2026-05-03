@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 : '
 Copyright (C) 2016-2017 Korcan Karaokçu <korcankaraokcu@gmail.com>
 
@@ -22,7 +22,8 @@ if [ "$(id -u)" = "0" ]; then
 fi
 
 SCRIPTDIR=$(cd -- "$(dirname -- "$0")" && pwd -P)
-cd $SCRIPTDIR
+cd "$SCRIPTDIR" || exit
+
 if [ ! -d ".git" ]; then
 	echo "Error! Could not find \".git\" folder!"
 	echo "This can happen if you downloaded the ZIP file instead of cloning through git."
@@ -31,74 +32,61 @@ if [ ! -d ".git" ]; then
 	exit 1
 fi
 
-CURRENT_USER="$(whoami)"
-
-if [ -z "$NUM_MAKE_JOBS" ]; then
-    NUM_MAKE_JOBS=$(lscpu -p=core | uniq | awk '!/#/' | wc -l)
-    MAX_NUM_MAKE_JOBS=8
-    if [ "$NUM_MAKE_JOBS" -gt "$MAX_NUM_MAKE_JOBS" ]; then # set an upper limit to prevent Out-Of-Memory
-        NUM_MAKE_JOBS=$MAX_NUM_MAKE_JOBS
-    fi
-    if ! echo "$NUM_MAKE_JOBS" | grep -Eq '^[0-9]+$'; then # fallback
-        NUM_MAKE_JOBS=$MAX_NUM_MAKE_JOBS
-    fi
-fi
-
 exit_on_error() {
-    if [ "$?" -ne 0 ]; then
-        echo
-        echo "Error occured while installing PINCE, check the output above for more information"
-        echo "Installation failed."
-        exit 1
-    fi
+	if [ "$?" -ne 0 ]; then
+		echo
+		echo "Error occured while installing PINCE, check the output above for more information"
+		echo "Installation failed."
+		exit 1
+	fi
 }
 
 # assumes you're in libmemscan submodule directory
 compile_libmemscan() {
 	echo "Compiling libmemscan..."
 	./zig build -Doptimize=ReleaseFast
-    return 0
+	return 0
 }
 
 install_libmemscan() {
-    echo "Updating libmemscan submodule"
-    git submodule update --init --recursive || return 1
+	echo "Updating libmemscan submodule"
+	git submodule update --init --recursive || return 1
 
-    if [ ! -d "libpince/libmemscan" ]; then
-        mkdir libpince/libmemscan
-    fi
-    (
-        echo "Entering libmemscan submodule directory"
-        cd libmemscan || return 1
-		if [ ! -f "./zig" ]; then
-			echo "Downloading Zig v0.16.0"
-			curl -L -o zig.tar.xz https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz
-			tar xf zig.tar.xz --strip-components 1 --wildcards "*/lib" "*/zig"
-			rm zig.tar.xz
+	if [ ! -d "libpince/libmemscan" ]; then
+		mkdir libpince/libmemscan
+	fi
+	(
+		echo "Entering libmemscan submodule directory"
+		cd libmemscan || return 1
+	if [ ! -f "./zig" ]; then
+		echo "Downloading Zig v0.16.0"
+		curl -L -o zig.tar.xz https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz
+		tar xf zig.tar.xz --strip-components 1 --wildcards "*/lib" "*/zig"
+		rm zig.tar.xz
+	fi
+		if [ -f "./zig-out/lib/libmemscan.so" ]; then
+			echo "Recompile libmemscan? [y/n]"
+			read -r answer
+			if echo "$answer" | grep -iq "^[Yy]"; then
+				compile_libmemscan || return 1
+			fi
+		else
+			compile_libmemscan || return 1
 		fi
-        if [ -f "./zig-out/lib/libmemscan.so" ]; then
-            echo "Recompile libmemscan? [y/n]"
-            read -r answer
-            if echo "$answer" | grep -iq "^[Yy]"; then
-                compile_libmemscan || return 1
-            fi
-        else
-            compile_libmemscan || return 1
-        fi
-        cp --preserve zig-out/lib/libmemscan.so ../libpince/libmemscan/
-        cp --preserve memscan.py ../libpince/libmemscan/
-        echo "Exiting libmemscan submodule directory"
-    ) || return 1
-    return 0
+		cp --preserve zig-out/lib/libmemscan.so ../libpince/libmemscan/
+		cp --preserve memscan.py ../libpince/libmemscan/
+		echo "Exiting libmemscan submodule directory"
+	) || return 1
+	return 0
 }
 
 install_libptrscan() {
 	echo "Downloading libptrscan"
 
-    if [ ! -d "libpince/libptrscan" ]; then
-        mkdir libpince/libptrscan
-    fi
-    (
+	if [ ! -d "libpince/libptrscan" ]; then
+		mkdir libpince/libptrscan
+	fi
+	(
 		cd libpince/libptrscan
 		# Source code download as we might be forced to distribute it due to licence
 		curl -L -O https://github.com/kekeimiku/PointerSearcher-X/archive/refs/tags/v0.7.4-dylib.tar.gz || return 1
@@ -107,8 +95,8 @@ install_libptrscan() {
 		tar xf libptrscan.tar.gz --strip-components 1 || return 1
 		rm -f libptrscan.tar.gz
 		cd ../..
-    ) || return 1
-    return 0
+	) || return 1
+	return 0
 }
 
 ask_pkg_mgr() {
@@ -121,8 +109,8 @@ ask_pkg_mgr() {
 	echo "4) Zypper"
 	echo "5) None of the above"
 
-	read -r -p "Choose: " OPTION
-	OPTION=$(echo $OPTION | tr '[:lower:]' '[:upper:]')
+	printf "%s" "Choose: "; read -r OPTION
+	OPTION=$(echo "$OPTION" | tr '[:lower:]' '[:upper:]')
 
 	case $OPTION in
 	1|*APT*)
@@ -193,27 +181,25 @@ compile_translations() {
 
 LSB_RELEASE="$(command -v lsb_release)"
 if [ -n "$LSB_RELEASE" ]; then
-    OS_NAME="$(${LSB_RELEASE} -d -s)"
+	OS_NAME="$(${LSB_RELEASE} -d -s)"
 else
-    # shellcheck disable=SC1091
-    . /etc/os-release
-    OS_NAME="$NAME"
+	. /etc/os-release
+	OS_NAME="$NAME"
 fi
 
-set_install_vars $OS_NAME
+set_install_vars "$OS_NAME"
 
-if [ "$?" -ne 0  ]; then
+if ! set_install_vars "$OS_NAME"; then
 	ask_pkg_mgr
-	if [ "$?" -ne 0 ]; then
+	if ! ask_pkg_mgr; then
 		echo
 		echo "Sorry, your distro is not supported!"
 		exit 1
 	fi
 
-	set_install_vars $OS_NAME
+	set_install_vars "$OS_NAME"
 fi
 
-# shellcheck disable=SC2086
 sudo ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES} || exit_on_error
 
 # Prepare Python virtual environment
@@ -221,14 +207,12 @@ if [ ! -d ".venv/bin" ]; then
 	python3 -m venv .venv
 fi
 . .venv/bin/activate
-pip3 install --upgrade pip || exit_on_error
 
-# shellcheck disable=SC2086
+pip3 install --upgrade pip || exit_on_error
 pip3 install -r requirements.txt || exit_on_error
 
 install_libmemscan || exit_on_error
 install_libptrscan || exit_on_error
-
 compile_translations || exit_on_error
 
 echo

@@ -23,16 +23,15 @@ case $PACKAGEDIR in
 	*"PINCE/ci") ;;
 	*) echo "package.sh is not in PINCE/ci folder!"; exit 1;;
 esac
-cd $PACKAGEDIR
+cd "$PACKAGEDIR" || exit
 
 # Check what distro we use for lrelease path
 LSB_RELEASE="$(command -v lsb_release)"
 if [ -n "$LSB_RELEASE" ]; then
-    OS_NAME="$(${LSB_RELEASE} -d -s)"
+	OS_NAME="$(${LSB_RELEASE} -d -s)"
 else
-    # shellcheck disable=SC1091
-    . /etc/os-release
-    OS_NAME="$NAME"
+	. /etc/os-release
+	OS_NAME="$NAME"
 fi
 case $OS_NAME in
 *SUSE*)
@@ -64,19 +63,19 @@ chmod +x $CONDAPLUGIN
 
 # Create cleanup function to remove remaining deps/files
 cleanup () {
-	cd $PACKAGEDIR
+	cd "$PACKAGEDIR" || return
 	# Remove everything outside of package.sh and AppImage output
-	ls --hide=package.sh --hide=PINCE*.AppImage | xargs rm -rf
+	find ! -iname "package.sh" ! -iname "PINCE*.AppImage" -delete
 }
 trap cleanup EXIT
 
 # Error checking function
 exit_on_failure() {
-    if [ "$?" -ne 0 ]; then
-        echo
-        echo "Error occured while creating AppImage! Check the log above!"
-        exit 1
-    fi
+	if [ "$?" -ne 0 ]; then
+		echo
+		echo "Error occured while creating AppImage! Check the log above!"
+		exit 1
+	fi
 }
 
 # Create AppImage's AppDir with a Conda environment pre-baked
@@ -95,7 +94,7 @@ git submodule update --init --recursive
 if [ ! -d "libpince/libmemscan" ]; then
 	mkdir libpince/libmemscan
 fi
-cd libmemscan
+cd libmemscan || exit
 if [ ! -f "./zig" ]; then
 	curl -L -o zig.tar.xz https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz
 	tar xf zig.tar.xz --strip-components 1 --wildcards "*/lib" "*/zig"
@@ -110,7 +109,7 @@ cd ..
 if [ ! -d "libpince/libptrscan" ]; then
 	mkdir libpince/libptrscan
 fi
-cd libpince/libptrscan
+cd libpince/libptrscan || exit
 curl -L -o libptrscan.tar.gz https://github.com/kekeimiku/PointerSearcher-X/releases/download/v0.7.4-dylib/libptrscan_pince-x86_64-unknown-linux-gnu.tar.gz || exit_on_failure
 tar xf libptrscan.tar.gz --strip-components 1 || exit_on_failure
 rm -f libptrscan.tar.gz
@@ -123,7 +122,7 @@ mv i18n/ts/*.qm i18n/qm/
 
 # Copy necessary PINCE folders/files to inside AppDir
 cp -r GUI i18n libpince media tr AUTHORS COPYING COPYING.CC-BY PINCE.py THANKS ci/AppDir/opt/PINCE/
-cd ci
+cd ci || exit
 
 # Create a wrapper so GDB can correctly link against the
 # included conda's python environment to ensure compatibility
@@ -152,17 +151,18 @@ chmod +x wrapper.sh
 
 # Prepare some env vars for GDB compilation
 INSTALLDIR=$(pwd)/AppDir
-export CONDA_PREFIX="$(readlink -f $INSTALLDIR/usr/conda)"
+CONDA_PREFIX="$(readlink -f "$INSTALLDIR/usr/conda")"
+export CONDA_PREFIX
 
 NUM_MAKE_JOBS="$(nproc --ignore=1)"
 # Grab latest GDB at time of writing and compile it with our conda Python
 curl -L -O "https://ftp.gnu.org/gnu/gdb/gdb-17.1.tar.gz"
 tar xf gdb-17.1.tar.gz
 rm gdb-17.1.tar.gz
-cd gdb-17.1
+cd gdb-17.1 || exit
 ./configure --with-python="$(readlink -f ../wrapper.sh)" --prefix=/usr || exit_on_failure
 make -j"$NUM_MAKE_JOBS" || exit_on_failure
-make install DESTDIR=$INSTALLDIR
+make install DESTDIR="$INSTALLDIR"
 cd ..
 rm -rf gdb-17.1
 rm wrapper.sh
@@ -220,5 +220,6 @@ chmod +x AppRun.sh
 patchelf --add-rpath "\$ORIGIN/../../../../../../" AppDir/usr/conda/lib/python3.13/site-packages/PyQt6/Qt6/plugins/platforms/libqxcb.so
 
 # Package AppDir into AppImage
-export LD_LIBRARY_PATH="$(readlink -f ./AppDir/usr/conda/lib)"
+LD_LIBRARY_PATH="$(readlink -f ./AppDir/usr/conda/lib)"
+export LD_LIBRARY_PATH
 $DEPLOYTOOL --icon-file PINCE.png --appdir AppDir/ --output appimage --custom-apprun AppRun.sh || exit_on_failure
