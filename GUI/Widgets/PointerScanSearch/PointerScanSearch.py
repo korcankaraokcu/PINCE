@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton,
 from GUI.Widgets.PointerScanSearch.Form.PointerScanSearchDialog import Ui_Dialog
 from GUI.Utils import guiutils, guitypedefs
 from libpince import debugcore, utils
-from libpince.debugcore import ptrscan
+from libpince.scancore import ptrscan
 from libpince.libptrscan.ptrscan import FFIRange, FFIParam
 from tr.tr import TranslationConstants as tr
 import os

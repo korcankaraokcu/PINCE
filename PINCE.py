@@ -127,10 +127,10 @@ from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDia
 from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructionsWidget
 from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
 from GUI.Widgets.Settings.Settings import SettingsDialog
-from libpince import debugcore, typedefs, utils
+from libpince import debugcore, typedefs, utils, scancore
 from libpince.utils import safe_str_to_int, safe_int_cast, logger
-from libpince.debugcore import ptrscan, memscan
-from libpince.libmemscan.memscan import MatchType, ScanLevel, DataType, MatchView, BytePattern
+from libpince.scancore import ptrscan, memscan
+from libpince.libmemscan.memscan import ScanLevel, DataType, MatchView, BytePattern
 from tr.tr import TranslationConstants as tr
 from tr.tr import get_locale
 
@@ -255,41 +255,6 @@ REF_STR_VAL_COL = 2
 # represents the index of columns in referenced calls table
 REF_CALL_ADDR_COL = 0
 REF_CALL_COUNT_COL = 1
-
-# Used in set_data_type function of memscan
-scan_index_to_memscan_dict = collections.OrderedDict(
-    [
-        (typedefs.SCAN_INDEX.INT_ANY, DataType.ANYINTEGER),
-        (typedefs.SCAN_INDEX.INT8, DataType.INTEGER8),
-        (typedefs.SCAN_INDEX.INT16, DataType.INTEGER16),
-        (typedefs.SCAN_INDEX.INT32, DataType.INTEGER32),
-        (typedefs.SCAN_INDEX.INT64, DataType.INTEGER64),
-        (typedefs.SCAN_INDEX.FLOAT_ANY, DataType.ANYFLOAT),
-        (typedefs.SCAN_INDEX.FLOAT32, DataType.FLOAT32),
-        (typedefs.SCAN_INDEX.FLOAT64, DataType.FLOAT64),
-        (typedefs.SCAN_INDEX.ANY, DataType.ANYNUMBER),
-        (typedefs.SCAN_INDEX.STRING, DataType.STRING),
-        (typedefs.SCAN_INDEX.AOB, DataType.BYTEARRAY),
-    ]
-)
-
-scan_type_to_memscan_dict = collections.OrderedDict(
-    [
-        (typedefs.SCAN_TYPE.EXACT, MatchType.MATCHEQUALTO),
-        (typedefs.SCAN_TYPE.NOT, MatchType.MATCHNOTEQUALTO),
-        (typedefs.SCAN_TYPE.INCREASED, MatchType.MATCHINCREASED),
-        (typedefs.SCAN_TYPE.INCREASED_BY, MatchType.MATCHINCREASEDBY),
-        (typedefs.SCAN_TYPE.DECREASED, MatchType.MATCHDECREASED),
-        (typedefs.SCAN_TYPE.DECREASED_BY, MatchType.MATCHDECREASEDBY),
-        (typedefs.SCAN_TYPE.LESS, MatchType.MATCHLESSTHAN),
-        (typedefs.SCAN_TYPE.MORE, MatchType.MATCHGREATERTHAN),
-        (typedefs.SCAN_TYPE.BETWEEN, MatchType.MATCHRANGE),
-        (typedefs.SCAN_TYPE.CHANGED, MatchType.MATCHCHANGED),
-        (typedefs.SCAN_TYPE.UNCHANGED, MatchType.MATCHNOTCHANGED),
-        (typedefs.SCAN_TYPE.UNKNOWN, MatchType.MATCHANY),
-    ]
-)
-
 
 def except_hook(exception_type, value, tb):
     focused_widget = app.focusWidget()
@@ -1087,7 +1052,7 @@ class MainForm(QMainWindow, MainWindow):
             value_1, value_2 = self.validate_search_values(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
             if value_1 == None:
                 return
-            scan_type = scan_type_to_memscan_dict[type_index]
+            scan_type = scancore.scan_type_to_memscan_dict[type_index]
             scan_thread = guitypedefs.Worker(memscan.scan, scan_type, value_1, value_2)
         self.progressBar.setValue(0)
         self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
@@ -1454,7 +1419,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def comboBox_ValueType_current_index_changed(self):
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
-        memscan_type = scan_index_to_memscan_dict[current_type]
+        memscan_type = scancore.scan_index_to_memscan_dict[current_type]
         match memscan_type:
             case DataType.ANYINTEGER | DataType.INTEGER8 | DataType.INTEGER16 | DataType.INTEGER32 | DataType.INTEGER64:
                 validator_str = "int"

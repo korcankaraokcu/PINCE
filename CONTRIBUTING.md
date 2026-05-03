@@ -11,6 +11,7 @@
 - [i18n](./i18n) - Contains translation files. `ts` files are created with Qt Linguist and [compile_ts.sh](./compile_ts.sh), `qm` files are created within the last section of [install.sh](./install.sh)
 - ### **[libpince](./libpince)**
   - [debugcore.py](./libpince/debugcore.py) - Everything related to communicating with GDB and debugging
+  - [scancore.py](./libpince/scancore.py) - Everything related to the variable scanning backend
   - [utils.py](./libpince/utils.py) - Contains generic utility functions such as parsing, file creation, process querying etc
   - [typedefs.py](./libpince/typedefs.py) - Contains all constants and variable definitions
   - [regexes.py](./libpince/regexes.py) - Contains regexes for parsing GDB output and other things
@@ -34,6 +35,9 @@ GUI/
 │   |   |-- CustomClass.py (Helper class)
 ```
 A good example of the structure above can be seen in [ManageScanRegions](./GUI/Widgets/ManageScanRegions)
+
+# Code Checking
+Make good use of `python -m compileall -q .` to ensure all of the Python files do not have syntax or parsing errors before you submit a commit or PR that contains Python files changes.
 
 # Code Style
 Formatting style is [Black](https://github.com/psf/black) defaults, except line length is 120. You can use Black without parameters since we already use `pyproject.toml` for this setting.

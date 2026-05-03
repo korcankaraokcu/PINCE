@@ -21,16 +21,10 @@ from collections import OrderedDict, defaultdict
 import pexpect, os, sys, ctypes, pickle, shelve, re, struct, io, traceback
 from . import utils, typedefs, regexes
 from .utils import safe_str_to_int, safe_int_cast, logger
-from .libmemscan.memscan import Libmemscan
-from .libptrscan.ptrscan import PointerScan
 
 self_pid = os.getpid()
 libc = ctypes.CDLL("libc.so.6")
 system_endianness = typedefs.ENDIANNESS.LITTLE if sys.byteorder == "little" else typedefs.ENDIANNESS.BIG
-
-memscan = Libmemscan(os.path.join(utils.get_libpince_directory(), "libmemscan", "libmemscan.so"))
-ptrscan = PointerScan(os.path.join(utils.get_libpince_directory(), "libptrscan", "libptrscan.so"))
-ptrscan.set_pointer_offset_symbol("->")
 
 # A boolean value. True if gdb is initialized, False if not
 gdb_initialized = False
