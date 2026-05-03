@@ -1024,6 +1024,10 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_UndoScan.setEnabled(self.undo_scan_available)
             self.widget_ScanOptions.setEnabled(True)
             self.widget_ScanFields.setEnabled(True)
+            is_new_scan = self.scan_mode == typedefs.SCAN_MODE.NEW
+            self.comboBox_ScanScope.setEnabled(is_new_scan)
+            self.comboBox_ValueType.setEnabled(is_new_scan)
+            self.comboBox_Endianness.setEnabled(is_new_scan)
 
     # Create properly typed values for memscan
     def validate_search_values(self, search_for: str, search_for2: str):
@@ -1591,12 +1595,7 @@ class MainForm(QMainWindow, MainWindow):
         self.undo_scan_available = False
         self.pushButton_NewFirstScan.setText(tr.FIRST_SCAN)
         self.tableWidget_valuesearchtable.setRowCount(0)
-        self.comboBox_ValueType.setEnabled(True)
-        self.comboBox_ScanScope.setEnabled(True)
-        self.comboBox_Endianness.setEnabled(True)
-        self.pushButton_NextScan.setEnabled(False)
-        self.pushButton_UndoScan.setEnabled(False)
-        self.pushButton_CancelScan.setEnabled(False)
+        self.update_scan_box_state()
         self.progressBar.setValue(0)
         self.label_MatchCount.setText(tr.MATCH_COUNT.format(0))
 
