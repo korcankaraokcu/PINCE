@@ -190,7 +190,6 @@ fi
 set_install_vars "$OS_NAME"
 
 if ! set_install_vars "$OS_NAME"; then
-	ask_pkg_mgr
 	if ! ask_pkg_mgr; then
 		echo
 		echo "Sorry, your distro is not supported!"
