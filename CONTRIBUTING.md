@@ -36,6 +36,15 @@ GUI/
 ```
 A good example of the structure above can be seen in [ManageScanRegions](./GUI/Widgets/ManageScanRegions)
 
+# AI
+Using AI tools is permitted as long as all contributors fully understand all the code that they're submitting and claiming full responsibility/ownership of everything that was written and generated.
+
+***You must also disclose the use of AI if it has been used in any capacity and detail the extent of AI intervention***.
+
+Any discussions, whether it's to explain code, other PR interaction and/or anything else on the repository should be done by a person and not an AI agent.
+
+Failure to respect any of the rules laid above will result in an instant PR closure, no exceptions. Repeated offences will result in a repository ban.
+
 # Code Checking
 Make good use of `python -m compileall -q .` to ensure all of the Python files do not have syntax or parsing errors before you submit a commit or PR that contains Python files changes.
 
