@@ -124,7 +124,7 @@ def get_region_dict(pid: int) -> dict[str, list[str]]:
     """
     region_dict: dict[str, list[str]] = {}
 
-    if pid < 0:
+    if not is_process_valid(pid):
         return region_dict
 
     for item in get_regions(pid):
