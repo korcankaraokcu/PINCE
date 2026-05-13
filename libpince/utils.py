@@ -123,6 +123,10 @@ def get_region_dict(pid: int) -> dict[str, list[str]]:
         dict: {file_name:start_address_list}
     """
     region_dict: dict[str, list[str]] = {}
+
+    if pid < 0:
+        return region_dict
+
     for item in get_regions(pid):
         start_addr, _, _, _, _, _, path = item
         if not path:
