@@ -5615,4 +5615,8 @@ if __name__ == "__main__":
     app.aboutToQuit.connect(handle_exit)
     window = MainForm()
     window.show()
+
+    if len(sys.argv) > 1 and os.path.isfile(sys.argv[1]):
+        SessionManager.load_session(sys.argv[1])
+
     sys.exit(app.exec())
