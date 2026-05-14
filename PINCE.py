@@ -256,6 +256,7 @@ REF_STR_VAL_COL = 2
 REF_CALL_ADDR_COL = 0
 REF_CALL_COUNT_COL = 1
 
+
 def except_hook(exception_type, value, tb):
     focused_widget = app.focusWidget()
     if focused_widget and exception_type == typedefs.GDBInitializeException:
@@ -1290,7 +1291,11 @@ class MainForm(QMainWindow, MainWindow):
             if self.checkBox_Hex.isChecked():
                 value_repr = typedefs.VALUE_REPR.HEX
             else:
-                value_repr = typedefs.VALUE_REPR.SIGNED if match.match_info.is_signed_integer_only() else typedefs.VALUE_REPR.UNSIGNED
+                value_repr = (
+                    typedefs.VALUE_REPR.SIGNED
+                    if match.match_info.is_signed_integer_only()
+                    else typedefs.VALUE_REPR.UNSIGNED
+                )
             endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
             current_item = QTableWidgetItem(address)
             current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian))
@@ -1551,7 +1556,7 @@ class MainForm(QMainWindow, MainWindow):
         self.update_address_table()
         self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
-    def reset_scan(self, inferior_exit = False):
+    def reset_scan(self, inferior_exit=False):
         if inferior_exit:
             memscan.detach()
         else:
