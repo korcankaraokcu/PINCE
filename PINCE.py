@@ -5624,6 +5624,6 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1 and sys.argv[1]:
         real_path = os.path.realpath(sys.argv[1])
-        SessionManager.load_session(real_path)
+        SessionManager.get_session().load_session(real_path)
 
     sys.exit(app.exec())
