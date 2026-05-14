@@ -103,7 +103,7 @@ class Session:
         )
         return unsaved_changes_result
 
-    def load_session(self, file_path: os.PathLike[str] | str | None = None) -> bool:
+    def load_session(self, file_path: str | None = None) -> bool:
         """
         Load a pct session file from passed argument, otherwise, opens the file picker. Will check for unsaved changes and prompt
         the user to save them before loading a new session.
@@ -254,7 +254,7 @@ class SessionManager:
         SessionManager.get_session().save_session()
 
     @staticmethod
-    def load_session(file_path: os.PathLike[str] | str | None = None) -> None:
+    def load_session(file_path: str | None = None) -> None:
         SessionManager.get_session().load_session(file_path)
 
     @staticmethod
