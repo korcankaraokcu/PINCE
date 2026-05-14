@@ -18,6 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import ast
 import collections
 import copy
@@ -5621,7 +5622,9 @@ if __name__ == "__main__":
     window = MainForm()
     window.show()
 
-    if len(sys.argv) > 1 and os.path.isfile(sys.argv[1]):
-        SessionManager.load_session(sys.argv[1])
+    if len(sys.argv) > 1 and sys.argv[1]:
+        real_file = os.path.realpath(sys.argv[1])
+        if os.path.isfile(real_file):
+            SessionManager.load_session(real_file)
 
     sys.exit(app.exec())
