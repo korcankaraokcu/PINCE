@@ -5623,8 +5623,7 @@ if __name__ == "__main__":
     window.show()
 
     if len(sys.argv) > 1 and sys.argv[1]:
-        real_file = os.path.realpath(sys.argv[1])
-        if os.path.isfile(real_file):
-            SessionManager.load_session(real_file)
+        real_path = os.path.realpath(sys.argv[1])
+        SessionManager.load_session(real_path)
 
     sys.exit(app.exec())
