@@ -147,7 +147,9 @@ class Session:
 
         # Load bookmarks with symbol resolution
         self.pct_bookmarks = content["bookmarks"]
-        self.recalculate_bookmarks()
+
+        if utils.is_process_valid(debugcore.currentpid):
+            self.recalculate_bookmarks()
 
         self.pct_address_tree = content["address_tree"]
 
