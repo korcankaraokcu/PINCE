@@ -33,8 +33,6 @@ ks_64 = Ks(KS_ARCH_X86, KS_MODE_64)
 
 # Initialize logging
 logger = logging.getLogger("PINCE")
-
-
 def __init_logging() -> None:
     global logger
     if len(logger.handlers) != 0:
@@ -42,7 +40,7 @@ def __init_logging() -> None:
     logger.setLevel(logging.DEBUG)
     log_format = logging.Formatter("[%(levelname)s][%(funcName)s] %(message)s")
     # File logging
-    file_handler = logging.FileHandler("/var/log/pince.log", mode="w")  # Maybe change this to be per-process
+    file_handler = logging.FileHandler("/var/log/pince.log", mode='w')  # Maybe change this to be per-process
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(log_format)
     # Terminal logging
@@ -52,10 +50,7 @@ def __init_logging() -> None:
     ##################
     logger.addHandler(file_handler)
     logger.addHandler(terminal_handler)
-
-
 __init_logging()
-
 
 def get_process_list() -> list[str, str, str]:
     """Returns a list of processes
@@ -128,10 +123,6 @@ def get_region_dict(pid: int) -> dict[str, list[str]]:
         dict: {file_name:start_address_list}
     """
     region_dict: dict[str, list[str]] = {}
-
-    if not is_process_valid(pid):
-        return region_dict
-
     for item in get_regions(pid):
         start_addr, _, _, _, _, _, path = item
         if not path:
@@ -1031,14 +1022,10 @@ def safe_str_to_int(input, base: int) -> int:
     try:
         return int(input, base)
     except ValueError:
-        logger.error(
-            f"ValueError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'"
-        )
+        logger.error(f"ValueError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'")
         return 0
     except TypeError:
-        logger.error(
-            f"TypeError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'"
-        )
+        logger.error(f"TypeError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'")
         return 0
 
 
@@ -1047,12 +1034,8 @@ def safe_int_cast(input) -> int:
     try:
         return int(input)
     except ValueError:
-        logger.error(
-            f"ValueError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'"
-        )
+        logger.error(f"ValueError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'")
         return 0
     except TypeError:
-        logger.error(
-            f"TypeError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'"
-        )
+        logger.error(f"TypeError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'")
         return 0
