@@ -27,12 +27,8 @@ PYTHON="${SCRIPTDIR}/.venv/bin/python3"
 PINCE_PY="${SCRIPTDIR}/PINCE.py"
 
 if [ -n "$1" ]; then
-    PCT_FILE="$1"
-    case "$PCT_FILE" in
-        # already absolute
-        /*) PCT_FILE="$PCT_FILE" ;;
-        *)  PCT_FILE="$(cd -P -- "$(dirname -- "$PCT_FILE")" && pwd -P)/$(basename -- "$PCT_FILE")" ;;
-    esac
+    PCT_DIR=$(cd -P -- "$(dirname -- "$1")" && pwd -P) || exit 1
+    PCT_FILE="$PCT_DIR/$(basename -- "$1")"
 fi
 
 if [ "$(id -u)" = "0" ]; then
