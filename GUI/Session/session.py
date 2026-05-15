@@ -124,8 +124,7 @@ class Session:
             if not self.save_session():
                 return False
 
-        if file_path is None:
-
+        if file_path is None or not isinstance(file_path, str):
             file_path, _ = QFileDialog.getOpenFileName(
                 None, tr.OPEN_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT
             )
@@ -256,8 +255,8 @@ class SessionManager:
         SessionManager.get_session().save_session()
 
     @staticmethod
-    def load_session() -> None:
-        SessionManager.get_session().load_session()
+    def load_session(file_path: str | None) -> None:
+        SessionManager.get_session().load_session(file_path)
 
     @staticmethod
     def on_process_changed() -> None:
