@@ -217,7 +217,7 @@ fi
 APPDIR="$(dirname "$0")"
 export APPDIR
 export PYTHONHOME=$APPDIR/usr/conda
-$APPDIR/usr/bin/python3 $APPDIR/opt/PINCE/PINCE.py "$@"
+$APPDIR/usr/bin/python3 $APPDIR/opt/PINCE/PINCE.py "$PCT_FILE"
 APPRUN_EOF
 chmod +x AppRun.sh
 
