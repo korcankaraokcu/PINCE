@@ -1,5 +1,6 @@
 import os
 from enum import IntFlag, auto
+from typing import Any
 
 from PyQt6.QtCore import QObject
 from PyQt6.QtGui import QCloseEvent
@@ -18,14 +19,14 @@ class SessionDataChanged(IntFlag):
     PROCESS_NAME = auto()
 
 
-def migrate_version(content: any) -> dict[str, any]:
+def migrate_version(content: Any) -> dict[str, Any]:
     if not hasattr(content, "version") and type(content) == list:
         return legacy_to_v1(content)
 
     return content
 
 
-def is_valid_session_data(content: dict[str, any]) -> bool:
+def is_valid_session_data(content: dict[str, Any]) -> bool:
     keys = ["version", "notes", "bookmarks", "address_tree", "process_name"]
     for key in keys:
         if key not in content:
@@ -34,7 +35,7 @@ def is_valid_session_data(content: dict[str, any]) -> bool:
     return True
 
 
-def legacy_to_v1(content: list) -> dict[str, any]:
+def legacy_to_v1(content: list) -> dict[str, Any]:
     utils.logger.info("Migrating legacy session data to version 1")
     return {"version": 1, "notes": "", "bookmarks": {}, "address_tree": content, "process_name": ""}
 
@@ -102,15 +103,15 @@ class Session:
         )
         return unsaved_changes_result
 
-    def load_session(self) -> bool:
+    def load_session(self, file_path: str | None = None) -> bool:
         """
-        Load a pct session file. Will check for unsaved changes and prompt
+        Load a pct session file from passed argument, otherwise, opens the file picker. Will check for unsaved changes and prompt
         the user to save them before loading a new session.
         If the user chooses to cancel, the function will return False.
         Will also attempt to migrate the session data to the latest version.
 
         Args:
-            None
+            file_path: Optional absolute path to load a session file
         Returns:
             bool: True if the session was loaded successfully, False otherwise.
 
@@ -123,11 +124,13 @@ class Session:
             if not self.save_session():
                 return False
 
-        file_path, _ = QFileDialog.getOpenFileName(
-            None, tr.OPEN_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT
-        )
-        if not file_path:
-            return False
+        if file_path is None or not isinstance(file_path, str):
+            file_path, _ = QFileDialog.getOpenFileName(
+                None, tr.OPEN_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT
+            )
+
+            if not file_path:
+                return False
 
         content = utils.load_file(file_path)
         if content is None:
@@ -143,7 +146,9 @@ class Session:
 
         # Load bookmarks with symbol resolution
         self.pct_bookmarks = content["bookmarks"]
-        self.recalculate_bookmarks()
+
+        if utils.is_process_valid(debugcore.currentpid):
+            self.recalculate_bookmarks()
 
         self.pct_address_tree = content["address_tree"]
 
@@ -250,8 +255,8 @@ class SessionManager:
         SessionManager.get_session().save_session()
 
     @staticmethod
-    def load_session() -> None:
-        SessionManager.get_session().load_session()
+    def load_session(file_path: str | None) -> None:
+        SessionManager.get_session().load_session(file_path)
 
     @staticmethod
     def on_process_changed() -> None:

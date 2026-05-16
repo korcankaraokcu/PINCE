@@ -18,6 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import ast
 import collections
 import copy
@@ -255,6 +256,7 @@ REF_STR_VAL_COL = 2
 # represents the index of columns in referenced calls table
 REF_CALL_ADDR_COL = 0
 REF_CALL_COUNT_COL = 1
+
 
 def except_hook(exception_type, value, tb):
     focused_widget = app.focusWidget()
@@ -1290,7 +1292,11 @@ class MainForm(QMainWindow, MainWindow):
             if self.checkBox_Hex.isChecked():
                 value_repr = typedefs.VALUE_REPR.HEX
             else:
-                value_repr = typedefs.VALUE_REPR.SIGNED if match.match_info.is_signed_integer_only() else typedefs.VALUE_REPR.UNSIGNED
+                value_repr = (
+                    typedefs.VALUE_REPR.SIGNED
+                    if match.match_info.is_signed_integer_only()
+                    else typedefs.VALUE_REPR.UNSIGNED
+                )
             endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
             current_item = QTableWidgetItem(address)
             current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian))
@@ -1551,7 +1557,7 @@ class MainForm(QMainWindow, MainWindow):
         self.update_address_table()
         self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
-    def reset_scan(self, inferior_exit = False):
+    def reset_scan(self, inferior_exit=False):
         if inferior_exit:
             memscan.detach()
         else:
@@ -5615,4 +5621,9 @@ if __name__ == "__main__":
     app.aboutToQuit.connect(handle_exit)
     window = MainForm()
     window.show()
+
+    if len(sys.argv) > 1 and sys.argv[1]:
+        real_path = os.path.realpath(sys.argv[1])
+        SessionManager.load_session(real_path)
+
     sys.exit(app.exec())

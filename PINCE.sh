@@ -26,8 +26,13 @@ fi
 PYTHON="${SCRIPTDIR}/.venv/bin/python3"
 PINCE_PY="${SCRIPTDIR}/PINCE.py"
 
+if [ -n "$1" ]; then
+    PCT_DIR=$(cd -P -- "$(dirname -- "$1")" && pwd -P) || exit 1
+    PCT_FILE="$PCT_DIR/$(basename -- "$1")"
+fi
+
 if [ "$(id -u)" = "0" ]; then
-	"$PYTHON" "$PINCE_PY"
+	"$PYTHON" "$PINCE_PY" "$PCT_FILE"
 else
 	if command -v pkexec > /dev/null 2>&1; then
 		# Preserve env vars to keep settings like theme preferences.
@@ -41,11 +46,11 @@ else
 $(printenv)
 EOF
 
-		pkexec env "$@" "$PYTHON" "$PINCE_PY"
+		pkexec env "$@" "$PYTHON" "$PINCE_PY" "$PCT_FILE"
 	elif command -v sudo > /dev/null 2>&1; then
 		# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
 		# so we need to force PATH preservation with venv activated user's PATH.
-		sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 "$PYTHON" "$PINCE_PY"
+		sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 "$PYTHON" "$PINCE_PY" "$PCT_FILE"
 	else
 		echo "No supported privilege escalation utility found. Please run this as root manually."
 		echo "Don't forget to preserve normal user environment variables for proper functionality."

@@ -184,6 +184,11 @@ cp ../media/logo/ozgurozbek/pince_appimage.png PINCE.png
 cat > AppRun.sh <<\APPRUN_EOF
 #!/bin/sh
 
+if [ -n "$1" ]; then
+    PCT_DIR=$(cd -P -- "$(dirname -- "$1")" && pwd -P) || exit 1
+    PCT_FILE="$PCT_DIR/$(basename -- "$1")"
+fi
+
 if [ "$(id -u)" != "0" ]; then
 	if command -v pkexec > /dev/null 2>&1; then
 		# Preserve env vars to keep settings like theme preferences.
@@ -197,11 +202,11 @@ if [ "$(id -u)" != "0" ]; then
 $(printenv)
 EOF
 
-		pkexec env "$@" "$APPIMAGE"
+		pkexec env "$@" "$APPIMAGE" "$PCT_FILE"
 	elif command -v sudo > /dev/null 2>&1; then
 		# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
 		# so we need to force PATH preservation with venv activated user's PATH.
-		sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 "$APPIMAGE"
+		sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 "$APPIMAGE" "$PCT_FILE"
 	else
 		echo "No supported privilege escalation utility found. Please run this as root manually."
 		exit 1
@@ -212,7 +217,7 @@ fi
 APPDIR="$(dirname "$0")"
 export APPDIR
 export PYTHONHOME=$APPDIR/usr/conda
-$APPDIR/usr/bin/python3 $APPDIR/opt/PINCE/PINCE.py
+$APPDIR/usr/bin/python3 $APPDIR/opt/PINCE/PINCE.py "$PCT_FILE"
 APPRUN_EOF
 chmod +x AppRun.sh
 
