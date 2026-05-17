@@ -85,7 +85,9 @@ def init_settings():
     try:
         apply_settings()
     except Exception:
-        utils.logger.exception("An exception occurred while loading settings, rolling back to the default configuration")
+        utils.logger.exception(
+            "An exception occurred while loading settings, rolling back to the default configuration"
+        )
         settings.clear()
         set_default_settings()
 

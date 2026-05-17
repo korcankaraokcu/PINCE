@@ -17,7 +17,7 @@ class SettingSignals(QObject):
 
 
 class WorkerSignals(QObject):
-    finished = pyqtSignal()
+    finished = pyqtSignal(object)
 
 
 class ProcessSignals(QObject):
@@ -40,8 +40,8 @@ class Worker(QRunnable):
         self.signals = WorkerSignals()
 
     def run(self):
-        self.fn(*self.args, **self.kwargs)
-        self.signals.finished.emit()
+        result = self.fn(*self.args, **self.kwargs)
+        self.signals.finished.emit(result)
 
 
 class InterruptableWorker(QThread):
@@ -53,8 +53,8 @@ class InterruptableWorker(QThread):
         self.signals = WorkerSignals()
 
     def run(self):
-        self.fn(*self.args, **self.kwargs)
-        self.signals.finished.emit()
+        result = self.fn(*self.args, **self.kwargs)
+        self.signals.finished.emit(result)
 
     def stop(self):
         self.terminate()

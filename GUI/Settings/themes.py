@@ -4,6 +4,7 @@ from enum import Enum
 from collections import OrderedDict
 from libpince import utils
 
+
 # For settings
 class Themes(Enum):
     DARK = "dark"

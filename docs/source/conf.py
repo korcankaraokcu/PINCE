@@ -30,12 +30,6 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = []
 
-# Mock imports for compiled C extensions and modules that aren't needed for documentation
-autodoc_mock_imports = [
-    "libpince.libptrscan",
-]
-
-
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 

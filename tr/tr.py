@@ -83,7 +83,12 @@ class TranslationConstants(QObject):
     PASTE_INSIDE = QT_TR_NOOP("Paste inside")
     POINTER_SCAN = QT_TR_NOOP("Pointer scan for this address")
     POINTER_SCANNER = QT_TR_NOOP("Open pointer scanner")
-    POINTER_SCAN_SUCCESS = QT_TR_NOOP("Pointer scan finished.\n\nDon't forget to open the scandata file (File->Open)!")
+    POINTER_SCAN_SUCCESS = QT_TR_NOOP(
+        "Pointer scan finished. Found {} valid pointer paths.\n\nDon't forget to open the lmptr file (File->Open)!"
+    )
+    POINTER_FILTER_SUCCESS = QT_TR_NOOP(
+        "Pointer filtering finished. Found {} stable pointer paths.\n\nDon't forget to open the new lmptr file (File->Open)!"
+    )
     WHAT_WRITES = QT_TR_NOOP("Find out what writes to this address")
     WHAT_READS = QT_TR_NOOP("Find out what reads this address")
     WHAT_ACCESSES = QT_TR_NOOP("Find out what accesses this address")
@@ -108,7 +113,7 @@ class TranslationConstants(QObject):
     FILE_TYPES_SCRIPT = QT_TR_NOOP("Python Scripts (*.py)")
     SHARED_OBJECT_TYPE = QT_TR_NOOP("Shared object library (*.so)")
     FILE_TYPES_TRACE = QT_TR_NOOP("Trace File (*.trace)")
-    FILE_TYPES_SCANDATA = QT_TR_NOOP("Pointer Scan Data (*.scandata)")
+    FILE_TYPES_POINTER_MAP = QT_TR_NOOP("Pointer Scan Map (*.lmptr)")
     CLEAR_TABLE = QT_TR_NOOP("Clear address table?")
     FILE_LOAD_ERROR = QT_TR_NOOP("File {} is inaccessible or contains invalid content")
     SAVE_PCT_FILE = QT_TR_NOOP("Save PCT file")

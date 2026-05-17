@@ -1,9 +1,10 @@
+from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton, QMessageBox
 from GUI.Widgets.PointerScanSearch.Form.PointerScanSearchDialog import Ui_Dialog
 from GUI.Utils import guiutils, guitypedefs
 from libpince import debugcore, utils
-from libpince.scancore import ptrscan
-from libpince.libptrscan.ptrscan import FFIRange, FFIParam
+from libpince.scancore import memscan
+from libpince.libmemscan.memscan import PointerScanOptions
 from tr.tr import TranslationConstants as tr
 import os
 
@@ -14,59 +15,77 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.setupUi(self)
         guiutils.center_to_parent(self)
         self.lineEdit_Address.setText(address)
-        self.lineEdit_Path.setText(os.getcwd() + f"/{utils.get_process_name(debugcore.currentpid)}.scandata")
-        self.pushButton_PathBrowse.clicked.connect(self.pushButton_PathBrowse_clicked)
+        self.lineEdit_Path.setText(os.path.expanduser("~") + f"/{utils.get_process_name(debugcore.currentpid)}.lmptr")
+        self.pushButton_Path.clicked.connect(self.pushButton_Path_clicked)
+        self.checkBox_CheckAdvOptions.toggled.connect(self.checkBox_CheckAdvOptions_checked)
+        self.spinBox_MaxResults.setEnabled(self.checkBox_MaxResults.isChecked())
+        self.checkBox_MaxResults.toggled.connect(self.checkBox_MaxResults_checked)
         self.scan_button: QPushButton | None = self.buttonBox.addButton(tr.SCAN, QDialogButtonBox.ButtonRole.ActionRole)
         if self.scan_button:
             self.scan_button.clicked.connect(self.scan_button_clicked)
-        self.ptrscan_thread: guitypedefs.InterruptableWorker | None = None
+        self.memscan_thread: guitypedefs.InterruptableWorker | None = None
+        self.progress_bar_timer: QTimer | None = None
 
-    def pushButton_PathBrowse_clicked(self) -> None:
-        file_path, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, None, tr.FILE_TYPES_SCANDATA)
+    def checkBox_CheckAdvOptions_checked(self, checked: bool) -> None:
+        self.verticalWidget_AdvOptions.setEnabled(checked)
+
+    def checkBox_MaxResults_checked(self, checked: bool) -> None:
+        self.spinBox_MaxResults.setEnabled(checked)
+
+    def pushButton_Path_clicked(self) -> None:
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), tr.FILE_TYPES_POINTER_MAP
+        )
         if file_path != "":
-            file_path = utils.append_file_extension(file_path, "scandata")
+            file_path = utils.append_file_extension(file_path, "lmptr")
             self.lineEdit_Path.setText(file_path)
 
     def reject(self) -> None:
-        if self.ptrscan_thread:
-            self.ptrscan_thread.stop()
+        self.cleanup()
+        if self.memscan_thread:
+            self.memscan_thread.stop()
         return super().reject()
+
+    def cleanup(self) -> None:
+        if self.progress_bar_timer:
+            self.progress_bar_timer.stop()
+            self.progress_bar_timer = None
 
     def scan_button_clicked(self) -> None:
         if debugcore.currentpid == -1 or self.scan_button == None:
             return
         self.scan_button.setText(tr.SCANNING)
         self.scan_button.setEnabled(False)
-        self.pushButton_PathBrowse.setEnabled(False)
-        params: FFIParam = FFIParam()
+        self.pushButton_Path.setEnabled(False)
         addr_val = utils.safe_str_to_int(self.lineEdit_Address.text(), 16)
-        params.addr(addr_val)
-        params.depth(self.spinBox_Depth.value())
-        params.srange(FFIRange(self.spinBox_ScanRangeStart.value(), self.spinBox_ScanRangeEnd.value()))
-        lrange_start: int = self.spinBox_ScanLRangeStart.value()
-        lrange_end: int = self.spinBox_ScanLRangeEnd.value()
-        if lrange_start == 0 and lrange_end == 0:
-            lrange_val = None
-        else:
-            lrange_val = FFIRange(lrange_start, lrange_end)
-        params.lrange(lrange_val)
-        params.node(utils.return_optional_int(self.spinBox_Node.value()))
-        try:
-            last_val = int(self.lineEdit_Last.text(), 16)
-        except ValueError:
-            last_val = None
-        params.last(last_val)
-        params.max(utils.return_optional_int(self.spinBox_Max.value()))
-        params.cycle(self.checkBox_Cycle.isChecked())
-        ptrscan.set_modules(ptrscan.list_modules_pince())  # TODO: maybe cache this and let user refresh with a button
-        ptrscan.create_pointer_map()  # TODO: maybe cache this and let user refresh with a button
+        self.parent().default_scan_address = hex(addr_val)
         ptrmap_file_path = self.lineEdit_Path.text()
-        if os.path.isfile(ptrmap_file_path):
-            os.remove(ptrmap_file_path)
-        self.ptrscan_thread = guitypedefs.InterruptableWorker(ptrscan.scan_pointer_chain, params, ptrmap_file_path)
-        self.ptrscan_thread.signals.finished.connect(self.ptrscan_callback)
-        self.ptrscan_thread.start()
+        if self.checkBox_CheckAdvOptions.isChecked():
+            ptr_opts = PointerScanOptions()
+            ptr_opts.endianness = self.comboBox_Endian.currentIndex()
+            ptr_opts.pointer_width = 8 if self.comboBox_PointerSize.currentIndex() == 0 else 4
+            ptr_opts.max_depth = self.spinBox_Depth.value()
+            ptr_opts.max_positive_offset = self.spinBox_MaxOffset.value()
+            ptr_opts.max_negative_offset = self.spinBox_MinOffset.value()
+            ptr_opts.max_results = self.spinBox_MaxResults.value() if self.checkBox_MaxResults.isChecked() else None
+            ptr_opts.module_base_only = self.checkBox_Module.isChecked()
+        else:
+            ptr_opts = None
+        self.memscan_thread = guitypedefs.InterruptableWorker(
+            memscan.pointer_scan, addr_val, ptrmap_file_path, ptr_opts
+        )
+        self.memscan_thread.signals.finished.connect(self.memscan_callback)
+        self.memscan_thread.start()
+        self.progressBar.setValue(0)
+        self.progressBar.setVisible(True)
+        self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
+        self.progress_bar_timer.start(100)
 
-    def ptrscan_callback(self) -> None:
+    def update_progress_bar(self):
+        value = int(round(memscan.get_scan_progress() * 100))
+        self.progressBar.setValue(value)
+
+    def memscan_callback(self, paths_found: int) -> None:
+        self.cleanup()
         self.accept()
-        QMessageBox.information(self, tr.SUCCESS, tr.POINTER_SCAN_SUCCESS)
+        QMessageBox.information(self, tr.SUCCESS, tr.POINTER_SCAN_SUCCESS.format(paths_found))

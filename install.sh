@@ -80,25 +80,6 @@ install_libmemscan() {
 	return 0
 }
 
-install_libptrscan() {
-	echo "Downloading libptrscan"
-
-	if [ ! -d "libpince/libptrscan" ]; then
-		mkdir libpince/libptrscan
-	fi
-	(
-		cd libpince/libptrscan
-		# Source code download as we might be forced to distribute it due to licence
-		curl -L -O https://github.com/kekeimiku/PointerSearcher-X/archive/refs/tags/v0.7.4-dylib.tar.gz || return 1
-		# Actual .so and py wrapper
-		curl -L -o libptrscan.tar.gz https://github.com/kekeimiku/PointerSearcher-X/releases/download/v0.7.4-dylib/libptrscan_pince-x86_64-unknown-linux-gnu.tar.gz || return 1
-		tar xf libptrscan.tar.gz --strip-components 1 || return 1
-		rm -f libptrscan.tar.gz
-		cd ../..
-	) || return 1
-	return 0
-}
-
 ask_pkg_mgr() {
 	echo
 	echo "Your distro is not officially supported! Trying to install anyway."
@@ -211,7 +192,6 @@ pip3 install --upgrade pip || exit_on_error
 pip3 install -r requirements.txt || exit_on_error
 
 install_libmemscan || exit_on_error
-install_libptrscan || exit_on_error
 compile_translations || exit_on_error
 
 echo

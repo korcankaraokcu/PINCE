@@ -5,6 +5,7 @@ from operator import add as opAdd, sub as opSub
 from GUI.Utils import guiutils
 from libpince import utils
 
+
 # Only intended to be used by ManualAddressForm
 class PointerChainOffset(QFrame):
     offset_changed_signal = pyqtSignal(name="offsetChanged")

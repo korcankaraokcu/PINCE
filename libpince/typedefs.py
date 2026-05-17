@@ -270,6 +270,7 @@ scan_index_to_text_dict = collections.OrderedDict(
     ]
 )
 
+
 # TODO: Same as index_to_text_dict, consider integrating into UI completely
 class SCAN_TYPE:
     EXACT = 0

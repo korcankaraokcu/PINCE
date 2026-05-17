@@ -2,14 +2,15 @@ from PyQt6.QtWidgets import QDialog, QTableWidgetItem
 from PyQt6.QtCore import Qt
 from GUI.Widgets.ManageScanRegions.Form.ManageScanRegionsDialog import Ui_Dialog
 from GUI.Utils import guiutils
-from libpince import debugcore
+from libpince import scancore
+
 
 class ManageScanRegionsDialog(QDialog, Ui_Dialog):
     def __init__(self, parent) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.deleted_regions: list[int] = []
-        regions = list(debugcore.memscan.regions())
+        regions = list(scancore.memscan.regions())
         self.tableWidget_Regions.setRowCount(len(regions))
         for row, region in enumerate(regions):
             region_id, start_address, size, region_type, load_address, perms, file = region.as_text_fields()
@@ -42,5 +43,5 @@ class ManageScanRegionsDialog(QDialog, Ui_Dialog):
             if item.checkState() == Qt.CheckState.Checked:
                 region_id = int(item.text())
                 self.deleted_regions.append(region_id)
-                debugcore.memscan.remove_region_by_id(int(region_id))
+                scancore.memscan.remove_region_by_id(int(region_id))
         return super().accept()

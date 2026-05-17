@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 from threading import Lock, Thread, Condition
 from time import sleep, time
 from collections import OrderedDict, defaultdict
@@ -333,7 +334,9 @@ def state_observe_thread():
                 gdb_async_output.broadcast_message(child.before)
     except (OSError, ValueError, pexpect.EOF) as e:
         if isinstance(e, pexpect.EOF):
-            logger.exception(f"EOF exception caught within pexpect, here's the contents of child.before:\n{child.before}")
+            logger.exception(
+                f"EOF exception caught within pexpect, here's the contents of child.before:\n{child.before}"
+            )
         logger.info("Exiting state_observe_thread")
 
 
@@ -519,7 +522,7 @@ def init_gdb(gdb_path=utils.get_default_gdb_path()):
     child = pexpect.spawn(
         f"{gdb_path} --nx --interpreter=mi",
         cwd=libpince_dir,
-        env=os.environ | {'LC_NUMERIC': 'C'},
+        env=os.environ | {"LC_NUMERIC": "C"},
         encoding="utf-8",
         codec_errors="replace",
     )
@@ -1878,7 +1881,9 @@ def track_breakpoint(expression, register_expressions) -> int | None:
         return
     # TODO (lldb): When we switch to LLDB, remove c& and only continue if there isn't an active trace
     # Apply the same for track_watchpoint
-    send_command(f"commands {breakpoint}\npince-get-track-breakpoint-info {register_expressions.replace(' ', '')},{breakpoint}\nc&\nend")
+    send_command(
+        f"commands {breakpoint}\npince-get-track-breakpoint-info {register_expressions.replace(' ', '')},{breakpoint}\nc&\nend"
+    )
     return breakpoint
 
 

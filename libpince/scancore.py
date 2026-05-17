@@ -19,11 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import collections, os
 from . import utils, typedefs
 from .libmemscan.memscan import Libmemscan, MatchType, DataType
-from .libptrscan.ptrscan import PointerScan
 
 memscan = Libmemscan(os.path.join(utils.get_libpince_directory(), "libmemscan", "libmemscan.so"))
-ptrscan = PointerScan(os.path.join(utils.get_libpince_directory(), "libptrscan", "libptrscan.so"))
-ptrscan.set_pointer_offset_symbol("->")
 
 # Used in set_data_type function of memscan
 scan_index_to_memscan_dict = collections.OrderedDict(

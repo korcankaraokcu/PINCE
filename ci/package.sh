@@ -105,16 +105,6 @@ cp --preserve zig-out/lib/libmemscan.so ../libpince/libmemscan/
 cp --preserve memscan.py ../libpince/libmemscan/
 cd ..
 
-# Install libptrscan
-if [ ! -d "libpince/libptrscan" ]; then
-	mkdir libpince/libptrscan
-fi
-cd libpince/libptrscan || exit
-curl -L -o libptrscan.tar.gz https://github.com/kekeimiku/PointerSearcher-X/releases/download/v0.7.4-dylib/libptrscan_pince-x86_64-unknown-linux-gnu.tar.gz || exit_on_failure
-tar xf libptrscan.tar.gz --strip-components 1 || exit_on_failure
-rm -f libptrscan.tar.gz
-cd ../..
-
 # Compile translations
 ${LRELEASE_CMD} i18n/ts/* || exit_on_failure
 mkdir -p i18n/qm

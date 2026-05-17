@@ -130,7 +130,7 @@ from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
 from GUI.Widgets.Settings.Settings import SettingsDialog
 from libpince import debugcore, typedefs, utils, scancore
 from libpince.utils import safe_str_to_int, safe_int_cast, logger
-from libpince.scancore import ptrscan, memscan
+from libpince.scancore import memscan
 from libpince.libmemscan.memscan import ScanLevel, DataType, MatchView, BytePattern
 from tr.tr import TranslationConstants as tr
 from tr.tr import get_locale
@@ -620,7 +620,7 @@ class MainForm(QMainWindow, MainWindow):
             pass
 
     def exec_pointer_scanner(self):
-        pointer_window = PointerScanWindow(self)
+        pointer_window = PointerScanWindow(self, "0x0")
         pointer_window.show()
 
     def exec_pointer_scan(self):
@@ -628,7 +628,7 @@ class MainForm(QMainWindow, MainWindow):
         if not selected_row:
             return
         address = selected_row.text(ADDR_COL).strip("P->")
-        pointer_window = PointerScanWindow(self)
+        pointer_window = PointerScanWindow(self, address)
         pointer_window.show()
         dialog = PointerScanSearchDialog(pointer_window, address)
         dialog.exec()
@@ -1115,7 +1115,7 @@ class MainForm(QMainWindow, MainWindow):
         if self.scan_mode == typedefs.SCAN_MODE.ONGOING:
             self.reset_scan()
             for region_id in self.deleted_regions:
-                debugcore.memscan.remove_region_by_id(int(region_id))
+                scancore.memscan.remove_region_by_id(int(region_id))
         else:
             self.scan_values()
             if self.is_scanning == True:
@@ -1486,12 +1486,6 @@ class MainForm(QMainWindow, MainWindow):
         if attach_result == typedefs.ATTACH_RESULT.SUCCESSFUL:
             settings.apply_after_init()
             memscan.attach(pid)
-            ptrscan.set_process(pid)
-            if debugcore.get_inferior_arch() == typedefs.INFERIOR_ARCH.ARCH_64:
-                ptr_size = 8
-            else:
-                ptr_size = 4
-            ptrscan.set_bitness(ptr_size)
             self.on_new_process()
             SessionManager.on_process_changed()
             states.process_signals.attach.emit()

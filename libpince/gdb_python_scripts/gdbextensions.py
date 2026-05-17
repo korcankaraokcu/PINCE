@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import gdb, pickle, sys, re, struct, ctypes, os, shelve, importlib
 from capstone import Cs, CsError, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
 from collections import OrderedDict
@@ -103,7 +104,9 @@ class ParseAndEval(gdb.Command):
             value = gdb.parse_and_eval(expression)
             parsed_value = cast(value)
         except Exception:
-            logger.exception(f"An exception occurred while trying to parse expression '{expression}' and cast to type '{str(cast)}'")
+            logger.exception(
+                f"An exception occurred while trying to parse expression '{expression}' and cast to type '{str(cast)}'"
+            )
             parsed_value = None
         send_to_pince(parsed_value)
 

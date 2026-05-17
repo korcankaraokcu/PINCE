@@ -14,6 +14,7 @@
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Endianness:</source>
         <translation type="unfinished" />
@@ -316,16 +317,17 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
-        <source>Filter Pointers</source>
+        <source>Compare &amp; Filter Pointers</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
-        <source>File 1:</source>
+        <source>Previous Map:</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
         <source>Browse</source>
@@ -333,7 +335,12 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
-        <source>File 2:</source>
+        <source>Current Map:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
+        <source>New Output Map:</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -343,22 +350,61 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>Address</source>
-        <translation type="unfinished">Indirizzo</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>Depth</source>
+        <source>Target Address:</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>Scan Range</source>
+        <source>Pointer Map File Path:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <source>Advanced Options</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <source>Native</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <source>Little</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <source>Big</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <source>Pointer Size:</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <source>8 Bytes</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <source>4 Bytes</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <source>Max Depth:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <source>Max Positive Offset:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>0x</source>
@@ -366,33 +412,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>&lt;-&gt;</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>File Path:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>Optional Parameters (0 or empty will use defaults)</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>Last Offset Scan Range</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>Minimum Chain Length</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>Last Offset Value</source>
+        <source>Max Negative Offset:</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -402,7 +422,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>Solve Circular References</source>
+        <source>Module Bases Only</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1146,16 +1166,6 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
-        <source>Sort</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
-        <source>Clear</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
         <source>Fi&amp;le</source>
         <translation type="unfinished" />
     </message>
@@ -1802,9 +1812,16 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Pointer scan finished.
+        <source>Pointer scan finished. Found {} valid pointer paths.
 
-Don't forget to open the scandata file (File-&gt;Open)!</source>
+Don't forget to open the lmptr file (File-&gt;Open)!</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Pointer filtering finished. Found {} stable pointer paths.
+
+Don't forget to open the new lmptr file (File-&gt;Open)!</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1909,7 +1926,7 @@ Don't forget to open the scandata file (File-&gt;Open)!</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Pointer Scan Data (*.scandata)</source>
+        <source>Pointer Scan Map (*.lmptr)</source>
         <translation type="unfinished" />
     </message>
     <message>
