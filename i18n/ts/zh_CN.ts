@@ -986,6 +986,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
+        <source>Alignment:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/MainWindow.ui" line="0" />
         <source>Manage Scan Regions</source>
         <translation type="unfinished" />
     </message>
@@ -1763,6 +1768,11 @@ To change the current GDB path, check Settings-&gt;Debug</source>
         <location filename="../../tr/tr.py" line="0" />
         <source>Default</source>
         <translation>默认</translation>
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Auto</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />

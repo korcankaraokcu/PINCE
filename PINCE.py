@@ -375,7 +375,9 @@ class MainForm(QMainWindow, MainWindow):
         self.comboBox_ScanScope_init()
         self.comboBox_ValueType_init()
         guiutils.fill_endianness_combobox(self.comboBox_Endianness)
+        guiutils.fill_alignment_combobox(self.comboBox_Alignment)
         self.comboBox_Endianness.currentIndexChanged.connect(self.on_endianness_changed)
+        self.comboBox_Alignment.currentIndexChanged.connect(self.comboBox_Alignment_current_index_changed)
         self.checkBox_Hex.stateChanged.connect(self.checkBox_Hex_stateChanged)
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.lineEdit_Scan.setValidator(guiutils.validator_map.get("int"))
@@ -995,6 +997,7 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_ScanScope.setEnabled(is_new_scan)
             self.comboBox_ValueType.setEnabled(is_new_scan)
             self.comboBox_Endianness.setEnabled(is_new_scan)
+            self.comboBox_Alignment.setEnabled(is_new_scan)
 
     # Create properly typed values for memscan
     def validate_search_values(self, search_for: str, search_for2: str):
@@ -1221,6 +1224,10 @@ class MainForm(QMainWindow, MainWindow):
         scan_level = self.comboBox_ScanScope.currentData(Qt.ItemDataRole.UserRole)
         memscan.set_scan_level(scan_level)
         memscan.reset()
+
+    def comboBox_Alignment_current_index_changed(self):
+        alignment = self.comboBox_Alignment.currentData(Qt.ItemDataRole.UserRole)
+        memscan.set_alignment(alignment)
 
     def on_endianness_changed(self):
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)

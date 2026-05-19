@@ -73,6 +73,7 @@ class TranslationConstants(QObject):
     TOGGLE_CHILDREN = QT_TR_NOOP("Toggle including children")
     FREEZE = QT_TR_NOOP("Freeze")
     DEFAULT = QT_TR_NOOP("Default")
+    AUTO = QT_TR_NOOP("Auto")
     BROWSE_MEMORY_REGION = QT_TR_NOOP("Browse this memory region")
     DISASSEMBLE_ADDRESS = QT_TR_NOOP("Disassemble this address")
     DELETE = QT_TR_NOOP("Delete")

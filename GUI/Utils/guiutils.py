@@ -125,6 +125,25 @@ def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.
     combobox.setCurrentIndex(current_index)
 
 
+def fill_alignment_combobox(combobox: QComboBox):
+    """Fills the given QComboBox with alignment strings
+
+    Args:
+        combobox (QComboBox): The combobox that'll be filled
+    """
+    alignment_text_val = [
+        (tr.AUTO, 0),
+        ("1", 1),
+        ("2", 2),
+        ("4", 4),
+        ("8", 8),
+        ("16", 16),
+    ]
+    for text, value in alignment_text_val:
+        combobox.addItem(text, value)
+    combobox.setCurrentIndex(0)
+
+
 def get_current_row(tablewidget: QTableWidget):
     r"""Returns the currently selected row index for the given QTableWidget
     If you try to use only selectionModel().currentIndex().row() for this purpose, you'll get the last selected row even

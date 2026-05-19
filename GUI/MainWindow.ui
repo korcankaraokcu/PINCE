@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>768</width>
-    <height>636</height>
+    <height>616</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -388,6 +388,20 @@
                 </item>
                 <item>
                  <widget class="QComboBox" name="comboBox_Endianness"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_Alignment">
+                <item>
+                 <widget class="QLabel" name="label_Alignment">
+                  <property name="text">
+                   <string>Alignment:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="comboBox_Alignment"/>
                 </item>
                </layout>
               </item>
