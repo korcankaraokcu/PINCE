@@ -1055,7 +1055,7 @@ class MainForm(QMainWindow, MainWindow):
             scan_thread = guitypedefs.Worker(memscan.snapshot)
         else:
             value_1, value_2 = self.validate_search_values(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
-            if value_1 == None:
+            if self.widget_ScanFields.isEnabled() and value_1 == None:
                 return
             scan_type = scancore.scan_type_to_memscan_dict[type_index]
             scan_thread = guitypedefs.Worker(memscan.scan, scan_type, value_1, value_2)

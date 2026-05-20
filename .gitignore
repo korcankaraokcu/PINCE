@@ -4,7 +4,6 @@ __pycache__/
 !.vscode/launch.json
 !.vscode/settings.json
 libpince/libmemscan/*
-libpince/libptrscan/*
 docs/build/*
 *.directory
 *.lprof
