@@ -149,7 +149,11 @@ class GetStackTraceInfo(gdb.Command):
             return
         stack_pointer = int(stack_pointer, 16)
         result = gdb.execute("bt", from_tty, to_string=True)
-        max_frame = regexes.max_frame_count.findall(result)[-1]
+        frame_matches = regexes.max_frame_count.findall(result)
+        if not frame_matches:
+            send_to_pince(stacktrace_info_list)
+            return
+        max_frame = frame_matches[-1]
 
         # +1 because frame numbers start from 0
         for item in range(int(max_frame) + 1):
@@ -157,7 +161,10 @@ class GetStackTraceInfo(gdb.Command):
                 result = gdb.execute(f"info frame {item}", from_tty, to_string=True)
             except:
                 break
-            frame_address = regexes.frame_address.search(result).group(1)
+            frame_address = regexes.frame_address.search(result)
+            if not frame_address:
+                continue
+            frame_address = frame_address.group(1)
             difference = hex(int(frame_address, 16) - stack_pointer)
             frame_address_with_difference = frame_address + "(" + sp_register + "+" + difference + ")"
             return_address = regexes.return_address.search(result)
@@ -243,7 +250,11 @@ class GetFrameReturnAddresses(gdb.Command):
     def invoke(self, arg, from_tty):
         return_address_list = []
         result = gdb.execute("bt", from_tty, to_string=True)
-        max_frame = regexes.max_frame_count.findall(result)[-1]
+        frame_matches = regexes.max_frame_count.findall(result)
+        if not frame_matches:
+            send_to_pince(return_address_list)
+            return
+        max_frame = frame_matches[-1]
 
         # +1 because frame numbers start from 0
         for item in range(int(max_frame) + 1):
@@ -267,7 +278,11 @@ class GetFrameInfo(gdb.Command):
     def invoke(self, arg, from_tty):
         frame_number = receive_from_pince()
         result = gdb.execute("bt", from_tty, to_string=True)
-        max_frame = regexes.max_frame_count.findall(result)[-1]
+        frame_matches = regexes.max_frame_count.findall(result)
+        if not frame_matches:
+            send_to_pince(None)
+            return
+        max_frame = frame_matches[-1]
         if 0 <= int(frame_number) <= int(max_frame):
             frame_info = gdb.execute("info frame " + frame_number, from_tty, to_string=True)
         else:
