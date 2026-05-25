@@ -578,9 +578,12 @@ def init_referenced_dicts(pid):
     Args:
         pid (int,str): PID of the attached process
     """
-    shelve.open(utils.get_referenced_strings_file(pid), "c")
-    shelve.open(utils.get_referenced_jumps_file(pid), "c")
-    shelve.open(utils.get_referenced_calls_file(pid), "c")
+    with shelve.open(utils.get_referenced_strings_file(pid), "c"):
+        pass
+    with shelve.open(utils.get_referenced_jumps_file(pid), "c"):
+        pass
+    with shelve.open(utils.get_referenced_calls_file(pid), "c"):
+        pass
 
 
 def attach(pid, gdb_path=utils.get_default_gdb_path()):
