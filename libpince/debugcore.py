@@ -954,6 +954,8 @@ def read_memory(
     finally:
         if own_mem_handle and mem_handle is not None:
             mem_handle.close()
+    if len(data_read) < expected_length:
+        return
     if typedefs.VALUE_INDEX.is_string(value_index):
         encoding, option = typedefs.string_index_to_encoding_dict[value_index]
         returned_string = data_read.decode(encoding, option)
