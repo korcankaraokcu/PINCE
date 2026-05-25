@@ -919,64 +919,64 @@ class MainForm(QMainWindow, MainWindow):
         if debugcore.currentpid == -1 or self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
         it = QTreeWidgetItemIterator(self.treeWidget_AddressTable)
-        mem_handle = debugcore.memory_handle()
-        basic_math_exp = re.compile(r"^[0-9a-fA-F][/*+\-0-9a-fA-FxX]+$")
-        while True:
-            row = it.value()
-            if not row:
-                break
-            it += 1
-            address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
-            if isinstance(address_data, typedefs.PointerChainRequest):
-                expression = address_data.base_address
-            else:
-                expression = address_data
-            parent = row.parent()
-            if parent and expression.startswith(("+", "-")):
-                expression = parent.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1) + expression
-            if expression in states.exp_cache:
-                address = states.exp_cache[expression]
-            elif expression.startswith(("+", "-")):  # If parent has an empty address
-                address = expression
-            elif basic_math_exp.match(expression.replace(" ", "")):
-                try:
-                    address = hex(eval(expression))
-                except:
+        with debugcore.memory_handle() as mem_handle:
+            basic_math_exp = re.compile(r"^[0-9a-fA-F][/*+\-0-9a-fA-FxX]+$")
+            while True:
+                row = it.value()
+                if not row:
+                    break
+                it += 1
+                address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
+                if isinstance(address_data, typedefs.PointerChainRequest):
+                    expression = address_data.base_address
+                else:
+                    expression = address_data
+                parent = row.parent()
+                if parent and expression.startswith(("+", "-")):
+                    expression = parent.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1) + expression
+                if expression in states.exp_cache:
+                    address = states.exp_cache[expression]
+                elif expression.startswith(("+", "-")):  # If parent has an empty address
+                    address = expression
+                elif basic_math_exp.match(expression.replace(" ", "")):
+                    try:
+                        address = hex(eval(expression))
+                    except:
+                        address = debugcore.examine_expression(expression).address
+                        states.exp_cache[expression] = address
+                else:
                     address = debugcore.examine_expression(expression).address
                     states.exp_cache[expression] = address
-            else:
-                address = debugcore.examine_expression(expression).address
-                states.exp_cache[expression] = address
-            vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-            if isinstance(address_data, typedefs.PointerChainRequest):
-                # The original base could be a symbol so we have to save it
-                # This little hack avoids the unnecessary examine_expression call
-                # TODO: Consider implementing exp_cache inside libpince so we don't need this hack
-                pointer_chain_req = address_data
-                if address:
-                    old_base = pointer_chain_req.base_address  # save the old base
-                    pointer_chain_req.base_address = address
-                    pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
-                    if pointer_chain_result and pointer_chain_result.get_final_address():
-                        address = pointer_chain_result.get_final_address_as_hex()
-                    else:
-                        address = None
-                    address_data.base_address = old_base  # then set it back
+                vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+                if isinstance(address_data, typedefs.PointerChainRequest):
+                    # The original base could be a symbol so we have to save it
+                    # This little hack avoids the unnecessary examine_expression call
+                    # TODO: Consider implementing exp_cache inside libpince so we don't need this hack
+                    pointer_chain_req = address_data
                     if address:
-                        row.setText(ADDR_COL, f"P->{address}")
+                        old_base = pointer_chain_req.base_address  # save the old base
+                        pointer_chain_req.base_address = address
+                        pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
+                        if pointer_chain_result and pointer_chain_result.get_final_address():
+                            address = pointer_chain_result.get_final_address_as_hex()
+                        else:
+                            address = None
+                        address_data.base_address = old_base  # then set it back
+                        if address:
+                            row.setText(ADDR_COL, f"P->{address}")
+                        else:
+                            row.setText(ADDR_COL, "P->??")
                     else:
                         row.setText(ADDR_COL, "P->??")
                 else:
-                    row.setText(ADDR_COL, "P->??")
-            else:
-                row.setText(ADDR_COL, address or address_data)
-            address = "" if not address else address
-            row.setData(ADDR_COL, Qt.ItemDataRole.UserRole + 1, address)
-            value = debugcore.read_memory(
-                address, vt.value_index, vt.length, vt.zero_terminate, vt.value_repr, vt.endian, mem_handle=mem_handle
-            )
-            value = "" if value is None else str(value)
-            row.setText(VALUE_COL, value)
+                    row.setText(ADDR_COL, address or address_data)
+                address = "" if not address else address
+                row.setData(ADDR_COL, Qt.ItemDataRole.UserRole + 1, address)
+                value = debugcore.read_memory(
+                    address, vt.value_index, vt.length, vt.zero_terminate, vt.value_repr, vt.endian, mem_handle=mem_handle
+                )
+                value = "" if value is None else str(value)
+                row.setText(VALUE_COL, value)
 
     def update_scan_box_state(self):
         if self.is_scanning == True:
@@ -1288,40 +1288,40 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setRowCount(0)
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         length = self._scan_to_length(current_type)
-        mem_handle = debugcore.memory_handle()
-        row = 0
-        self.tableWidget_valuesearchtable.setSortingEnabled(False)
-        for match in matches:
-            address = hex(match.address)
-            if match.match_info.raw_bits == 0:
-                # Ignore unknown entries (no match flags), should not happen as every received match is valid
-                logger.error("Found invalid/unknown match! Skipping...")
-                continue
-            # This is technically wrong because we can have multiple possible value types through a match
-            # but we'll go with the lowest matching value type
-            value_index = self.get_value_index_for_match(match)
-            if self.checkBox_Hex.isChecked():
-                value_repr = typedefs.VALUE_REPR.HEX
-            else:
-                value_repr = (
-                    typedefs.VALUE_REPR.SIGNED
-                    if match.match_info.is_signed_integer_only()
-                    else typedefs.VALUE_REPR.UNSIGNED
-                )
-            endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
-            current_item = QTableWidgetItem(address)
-            current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian))
-            # TODO: Change GDB reading to memscan
-            value = str(debugcore.read_memory(address, value_index, length, True, value_repr, endian, mem_handle))
-            if debugcore.is_address_static(address):
-                current_item.setForeground(QColor(0, 136, 85))
-            self.tableWidget_valuesearchtable.insertRow(row)
-            self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_ADDRESS_COL, current_item)
-            self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
-            self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_PREVIOUS_COL, QTableWidgetItem(value))
-            row += 1
-            if row == 1000:
-                break
+        with debugcore.memory_handle() as mem_handle:
+            row = 0
+            self.tableWidget_valuesearchtable.setSortingEnabled(False)
+            for match in matches:
+                address = hex(match.address)
+                if match.match_info.raw_bits == 0:
+                    # Ignore unknown entries (no match flags), should not happen as every received match is valid
+                    logger.error("Found invalid/unknown match! Skipping...")
+                    continue
+                # This is technically wrong because we can have multiple possible value types through a match
+                # but we'll go with the lowest matching value type
+                value_index = self.get_value_index_for_match(match)
+                if self.checkBox_Hex.isChecked():
+                    value_repr = typedefs.VALUE_REPR.HEX
+                else:
+                    value_repr = (
+                        typedefs.VALUE_REPR.SIGNED
+                        if match.match_info.is_signed_integer_only()
+                        else typedefs.VALUE_REPR.UNSIGNED
+                    )
+                endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
+                current_item = QTableWidgetItem(address)
+                current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian))
+                # TODO: Change GDB reading to memscan
+                value = str(debugcore.read_memory(address, value_index, length, True, value_repr, endian, mem_handle))
+                if debugcore.is_address_static(address):
+                    current_item.setForeground(QColor(0, 136, 85))
+                self.tableWidget_valuesearchtable.insertRow(row)
+                self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_ADDRESS_COL, current_item)
+                self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
+                self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_PREVIOUS_COL, QTableWidgetItem(value))
+                row += 1
+                if row == 1000:
+                    break
         self.tableWidget_valuesearchtable.resizeColumnsToContents()
         self.tableWidget_valuesearchtable.setSortingEnabled(True)
         self.update_scan_box_state()
@@ -1690,21 +1690,21 @@ class MainForm(QMainWindow, MainWindow):
         row_count = self.tableWidget_valuesearchtable.rowCount()
         if row_count > 0:
             length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
-            mem_handle = debugcore.memory_handle()
-            for row_index in range(row_count):
-                address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
-                value_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_VALUE_COL)
-                previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
-                value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
-                address = address_item.text()
-                new_value = str(
-                    debugcore.read_memory(
-                        address, value_index, length, value_repr=value_repr, endian=endian, mem_handle=mem_handle
+            with debugcore.memory_handle() as mem_handle:
+                for row_index in range(row_count):
+                    address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
+                    value_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_VALUE_COL)
+                    previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
+                    value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
+                    address = address_item.text()
+                    new_value = str(
+                        debugcore.read_memory(
+                            address, value_index, length, value_repr=value_repr, endian=endian, mem_handle=mem_handle
+                        )
                     )
-                )
-                if new_value != previous_text:
-                    value_item.setForeground(QBrush(QColor(255, 0, 0)))
-                    value_item.setText(new_value)
+                    if new_value != previous_text:
+                        value_item.setForeground(QBrush(QColor(255, 0, 0)))
+                        value_item.setText(new_value)
 
     def freeze(self):
         if debugcore.currentpid == -1:
@@ -4470,13 +4470,13 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         self.update_values()
 
     def update_values(self):
-        mem_handle = debugcore.memory_handle()
-        value_type = self.comboBox_ValueType.currentIndex()
-        for row in range(self.tableWidget_TrackInfo.rowCount()):
-            address = self.tableWidget_TrackInfo.item(row, TRACK_BREAKPOINT_ADDR_COL).text()
-            value = debugcore.read_memory(address, value_type, 10, mem_handle=mem_handle)
-            value = "" if value is None else str(value)
-            self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(value))
+        with debugcore.memory_handle() as mem_handle:
+            value_type = self.comboBox_ValueType.currentIndex()
+            for row in range(self.tableWidget_TrackInfo.rowCount()):
+                address = self.tableWidget_TrackInfo.item(row, TRACK_BREAKPOINT_ADDR_COL).text()
+                value = debugcore.read_memory(address, value_type, 10, mem_handle=mem_handle)
+                value = "" if value is None else str(value)
+                self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(value))
         guiutils.resize_to_contents(self.tableWidget_TrackInfo)
         self.tableWidget_TrackInfo.selectRow(self.last_selected_row)
 

@@ -817,14 +817,17 @@ def read_pointer_chain(pointer_request: typedefs.PointerChainRequest) -> typedef
     return pointer_results
 
 
-def memory_handle():
+def memory_handle(mode="rb"):
     """
     Acquire the handle of the currently attached process
+
+    Args:
+        mode (str): string detailing the open mode, default "rb"
 
     Returns:
         BinaryIO: A file handle that points to the memory file of the current process
     """
-    return open(mem_file, "rb")
+    return open(mem_file, mode)
 
 
 @execute_with_temporary_interruption
@@ -930,9 +933,10 @@ def read_memory(
     else:
         expected_length = packed_data[0]
         data_type = packed_data[1]
+    own_mem_handle = mem_handle is None
     try:
-        if not mem_handle:
-            mem_handle = open(mem_file, "rb")
+        if own_mem_handle:
+            mem_handle = memory_handle()
         mem_handle.seek(address)
         data_read = mem_handle.read(expected_length)
         if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian:
@@ -944,6 +948,9 @@ def read_memory(
         # Maybe creating a function that toggles logging on and off? Other functions could use it too
         # print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return
+    finally:
+        if own_mem_handle and mem_handle is not None:
+            mem_handle.close()
     if typedefs.VALUE_INDEX.is_string(value_index):
         encoding, option = typedefs.string_index_to_encoding_dict[value_index]
         returned_string = data_read.decode(encoding, option)
@@ -1013,11 +1020,10 @@ def write_memory(
             write_data += b"\x00"
     if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian:
         write_data = write_data[::-1]
-    FILE = open(mem_file, "rb+")
     try:
-        FILE.seek(address)
-        FILE.write(write_data)
-        FILE.close()
+        with memory_handle("rb+") as mem_handle:
+            mem_handle.seek(address)
+            mem_handle.write(write_data)
     except (OSError, ValueError):
         # Refer to TODO (read/write error output)
         # print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + len(write_data)))
@@ -2232,26 +2238,27 @@ def search_referenced_strings(
             logger.exception(f"An exception occurred while trying to compile the given regex '{searched_str}'")
             return
     str_dict = get_dissect_code_data(True, False, False)[0]
-    mem_handle = memory_handle()
-    returned_list = []
-    for address, refs in str_dict.items():
-        value = read_memory(int(address, 16), value_index, 100, mem_handle=mem_handle)
-        value_str = "" if value is None else str(value)
-        if not value_str:
-            continue
-        if enable_regex:
-            if not regex.search(value_str):
-                continue
-        else:
-            if case_sensitive:
-                if value_str.find(searched_str) == -1:
+    try:
+        returned_list = []
+        with memory_handle() as mem_handle:
+            for address, refs in str_dict.items():
+                value = read_memory(int(address, 16), value_index, 100, mem_handle=mem_handle)
+                value_str = "" if value is None else str(value)
+                if not value_str:
                     continue
-            else:
-                if value_str.lower().find(searched_str.lower()) == -1:
-                    continue
-        returned_list.append((address, len(refs), value))
-    str_dict.close()
-    mem_handle.close()
+                if enable_regex:
+                    if not regex.search(value_str):
+                        continue
+                else:
+                    if case_sensitive:
+                        if value_str.find(searched_str) == -1:
+                            continue
+                    else:
+                        if value_str.lower().find(searched_str.lower()) == -1:
+                            continue
+                returned_list.append((address, len(refs), value))
+    finally:
+        str_dict.close()
     return returned_list
 
 
