@@ -461,14 +461,14 @@ def load_file(file_path, load_method="json"):
     if load_method == "json":
         try:
             output = json.load(open(file_path, "r"), object_pairs_hook=OrderedDict)
-        except Exception as e:
-            logger.exception("Encountered an exception while loading the JSON data\n", e)
+        except Exception:
+            logger.exception("Encountered an exception while loading the JSON data")
             return
     elif load_method == "pickle":
         try:
             output = pickle.load(open(file_path, "rb"))
-        except Exception as e:
-            logger.exception("Encountered an exception while unpickling the data\n", e)
+        except Exception:
+            logger.exception("Encountered an exception while unpickling the data")
             return
     else:
         logger.error("Unsupported load_method, bailing out...")
