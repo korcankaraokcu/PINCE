@@ -1323,31 +1323,23 @@ def set_register_flag(flag, value):
         flag (str): A member of typedefs.REGISTERS.FLAG
         value (Union[int,str]): 0 or 1
     """
-    registers = read_registers()
     value = str(value)
-    registers[flag] = value
     if value != "0" and value != "1":
         raise Exception(value + " isn't valid value. It can be only 0 or 1")
     if flag not in typedefs.REGISTERS.FLAG:
         raise Exception(flag + " isn't a valid flag, must be a member of typedefs.REGISTERS.FLAG")
-    eflags_hex_value = hex(
-        int(
-            registers["of"]
-            + registers["df"]
-            + registers["if"]
-            + registers["tf"]
-            + registers["sf"]
-            + registers["zf"]
-            + "0"
-            + registers["af"]
-            + "0"
-            + registers["pf"]
-            + "0"
-            + registers["cf"],
-            2,
-        )
-    )
-    set_convenience_variable("eflags", eflags_hex_value)
+    flag_index = typedefs.REGISTERS.FLAG.index(flag)
+    # EFLAGS has reserved gaps at bits 1, 3 and 5, which typedefs.REGISTERS.FLAG omits.
+    flag_bit = flag_index + min(flag_index, 3)
+    flag_mask = 1 << flag_bit
+    eflags = parse_and_eval("$eflags", int)
+    if eflags is None:
+        raise Exception("Couldn't read $eflags")
+    if value == "1":
+        eflags |= flag_mask
+    else:
+        eflags &= ~flag_mask
+    set_convenience_variable("eflags", hex(eflags))
 
 
 def get_stacktrace_info():
