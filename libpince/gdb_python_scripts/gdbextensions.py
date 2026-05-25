@@ -338,7 +338,8 @@ class GetTrackWatchpointInfo(gdb.Command):
             disas_info,
         ]
         track_watchpoint_file = utils.get_track_watchpoint_file(pid, breakpoints)
-        pickle.dump(track_watchpoint_dict[breakpoints], open(track_watchpoint_file, "wb"))
+        with open(track_watchpoint_file, "wb") as track_watchpoint_handle:
+            pickle.dump(track_watchpoint_dict[breakpoints], track_watchpoint_handle)
 
 
 class GetTrackBreakpointInfo(gdb.Command):
@@ -367,7 +368,8 @@ class GetTrackBreakpointInfo(gdb.Command):
                 else:
                     track_breakpoint_dict[breakpoint_number][register_expression][address] += 1
         track_breakpoint_file = utils.get_track_breakpoint_file(pid, breakpoint_number)
-        pickle.dump(track_breakpoint_dict[breakpoint_number], open(track_breakpoint_file, "wb"))
+        with open(track_breakpoint_file, "wb") as track_breakpoint_handle:
+            pickle.dump(track_breakpoint_dict[breakpoint_number], track_breakpoint_handle)
 
 
 class PhaseOut(gdb.Command):
@@ -449,7 +451,8 @@ class DissectCode(gdb.Command):
                         ref_jmp_count,
                         ref_call_count,
                     )
-                    pickle.dump(status_info, open(dissect_code_status_file, "wb"))
+                    with open(dissect_code_status_file, "wb") as dissect_code_status_handle:
+                        pickle.dump(status_info, dissect_code_status_handle)
                     try:
                         self.memory.seek(start_addr)
                     except (OSError, ValueError):

@@ -1879,7 +1879,8 @@ def get_track_watchpoint_info(watchpoint_list):
     """
     track_watchpoint_file = utils.get_track_watchpoint_file(currentpid, watchpoint_list)
     try:
-        output = pickle.load(open(track_watchpoint_file, "rb"))
+        with open(track_watchpoint_file, "rb") as track_watchpoint_handle:
+            output = pickle.load(track_watchpoint_handle)
     except:
         output = ""
     return output
@@ -1927,7 +1928,8 @@ def get_track_breakpoint_info(breakpoint_number: int):
     """
     track_breakpoint_file = utils.get_track_breakpoint_file(currentpid, breakpoint_number)
     try:
-        output = pickle.load(open(track_breakpoint_file, "rb"))
+        with open(track_breakpoint_file, "rb") as track_breakpoint_handle:
+            output = pickle.load(track_breakpoint_handle)
     except:
         output = ""
     return output
@@ -2179,7 +2181,8 @@ def get_dissect_code_status():
     """
     dissect_code_status_file = utils.get_dissect_code_status_file(currentpid)
     try:
-        output = pickle.load(open(dissect_code_status_file, "rb"))
+        with open(dissect_code_status_file, "rb") as dissect_code_status_handle:
+            output = pickle.load(dissect_code_status_handle)
     except:
         output = "", "", "", 0, 0, 0
     return output
