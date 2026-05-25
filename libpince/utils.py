@@ -197,11 +197,10 @@ def filter_regions(pid, attribute, regex, case_sensitive=False):
     Returns:
         list: List of (start_address, end_address, permissions, map_offset, device_node, inode, path) -> all str
     """
-    index = ["start_address", "end_address", "permissions", "map_offset", "device_node", "inode", "path"].index(
-        attribute
-    )
-    if index == -1:
+    attributes = ["start_address", "end_address", "permissions", "map_offset", "device_node", "inode", "path"]
+    if attribute not in attributes:
         raise Exception("Invalid attribute")
+    index = attributes.index(attribute)
     if case_sensitive:
         compiled_regex = re.compile(regex)
     else:
@@ -224,14 +223,14 @@ def is_traced(pid):
         None: if the specified process is not being traced or the process doesn't exist anymore
     """
     try:
-        status_file = open("/proc/%d/status" % pid)
+        with open(f"/proc/{pid}/status") as status_file:
+            for line in status_file:
+                if line.startswith("TracerPid:"):
+                    tracer_pid = line.split(":", 1)[1].strip()
+                    if tracer_pid != "0":
+                        return get_process_name(tracer_pid)
     except FileNotFoundError:
         return
-    for line in status_file.readlines():
-        if line.startswith("TracerPid:"):
-            tracer_pid = line.split(":", 1)[1].strip()
-            if tracer_pid != "0":
-                return get_process_name(tracer_pid)
 
 
 def is_process_valid(pid):
