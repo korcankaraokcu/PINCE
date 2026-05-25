@@ -361,10 +361,11 @@ def execute_func_temporary_interruption(func, *args, **kwargs):
     old_status = inferior_status
     if old_status == typedefs.INFERIOR_STATUS.RUNNING:
         interrupt_inferior(typedefs.STOP_REASON.PAUSE)
-    result = func(*args, **kwargs)
-    if old_status == typedefs.INFERIOR_STATUS.RUNNING:
-        continue_inferior()
-    return result
+    try:
+        return func(*args, **kwargs)
+    finally:
+        if old_status == typedefs.INFERIOR_STATUS.RUNNING:
+            continue_inferior()
 
 
 def execute_with_temporary_interruption(func):
