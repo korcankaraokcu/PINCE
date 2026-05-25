@@ -1674,7 +1674,11 @@ def add_breakpoint(
         output = send_command("break *" + str_address)
     if regexes.breakpoint_created.search(output):
         global breakpoint_on_hit_dict
-        number = regexes.breakpoint_number.search(output).group(1)
+        breakpoint_number = regexes.breakpoint_number.search(output)
+        if not breakpoint_number:
+            logger.error(f"Failed to extract breakpoint number from GDB output: {output}")
+            return
+        number = breakpoint_number.group(1)
         breakpoint_on_hit_dict[number] = on_hit
         return int(number)
     else:
@@ -1735,7 +1739,11 @@ def add_watchpoint(
         if not regexes.breakpoint_created.search(output):
             logger.error(f"Failed to create a watchpoint at address {hex(str_address_int)}. Bailing out...")
             break
-        breakpoint_number = regexes.breakpoint_number.search(output).group(1)
+        breakpoint_number_match = regexes.breakpoint_number.search(output)
+        if not breakpoint_number_match:
+            logger.error(f"Failed to extract watchpoint number from GDB output: {output}")
+            break
+        breakpoint_number = breakpoint_number_match.group(1)
         breakpoints_set.append(breakpoint_number)
         breakpoints_nums.append(safe_int_cast(breakpoint_number))
         global breakpoint_on_hit_dict

@@ -2798,7 +2798,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         breakpoints = debugcore.get_breakpoints_in_range(address, length)
         if not breakpoints:
-            if len(debugcore.add_watchpoint(hex(address), length, watchpoint_type)) < 1:
+            created_watchpoints = debugcore.add_watchpoint(hex(address), length, watchpoint_type)
+            if not created_watchpoints:
                 QMessageBox.information(self, tr.ERROR, tr.WATCHPOINT_FAILED.format(hex(address)))
         else:
             for bp in breakpoints:
@@ -3147,104 +3148,106 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         jmp_dict, call_dict = debugcore.get_dissect_code_data(False, True, True)
-        for row, (address_info, bytes_aob, opcode) in enumerate(disas_data):
-            comment = ""
-            current_address_str = utils.extract_hex_address(address_info)
-            current_address = safe_str_to_int(current_address_str, 16)
-            jmp_ref_exists = False
-            call_ref_exists = False
-            try:
-                jmp_referrers = jmp_dict[current_address_str]
-                jmp_ref_exists = True
-            except KeyError:
-                pass
-            try:
-                call_referrers = call_dict[current_address_str]
-                call_ref_exists = True
-            except KeyError:
-                pass
-            if jmp_ref_exists or call_ref_exists:
-                tooltip_text = f"{tr.REFERENCED_BY}\n"
-                ref_count = 0
-                if jmp_ref_exists:
-                    for referrer in jmp_referrers:
-                        if ref_count > 30:
-                            break
-                        tooltip_text += "\n" + hex(referrer) + "(" + jmp_referrers[referrer] + ")"
-                        ref_count += 1
-                if call_ref_exists:
-                    for referrer in call_referrers:
-                        if ref_count > 30:
-                            break
-                        tooltip_text += "\n" + hex(referrer) + "(call)"
-                        ref_count += 1
-                if ref_count > 30:
-                    tooltip_text += "\n..."
-                tooltip_text += f"\n\n{tr.SEE_REFERRERS}"
+        try:
+            for row, (address_info, bytes_aob, opcode) in enumerate(disas_data):
+                comment = ""
+                current_address_str = utils.extract_hex_address(address_info)
+                current_address = safe_str_to_int(current_address_str, 16)
+                jmp_ref_exists = False
+                call_ref_exists = False
                 try:
-                    row_color[row].append(REF_COLOR)
+                    jmp_referrers = jmp_dict[current_address_str]
+                    jmp_ref_exists = True
                 except KeyError:
-                    row_color[row] = [REF_COLOR]
-                real_ref_count = 0
-                if jmp_ref_exists:
-                    real_ref_count += len(jmp_referrers)
-                if call_ref_exists:
-                    real_ref_count += len(call_referrers)
-                address_info = "{" + str(real_ref_count) + "}" + address_info
-            if current_address == program_counter_int:
-                address_info = ">>>" + address_info
+                    pass
                 try:
-                    row_color[row].append(PC_COLOR)
+                    call_referrers = call_dict[current_address_str]
+                    call_ref_exists = True
                 except KeyError:
-                    row_color[row] = [PC_COLOR]
+                    pass
+                if jmp_ref_exists or call_ref_exists:
+                    tooltip_text = f"{tr.REFERENCED_BY}\n"
+                    ref_count = 0
+                    if jmp_ref_exists:
+                        for referrer in jmp_referrers:
+                            if ref_count > 30:
+                                break
+                            tooltip_text += "\n" + hex(referrer) + "(" + jmp_referrers[referrer] + ")"
+                            ref_count += 1
+                    if call_ref_exists:
+                        for referrer in call_referrers:
+                            if ref_count > 30:
+                                break
+                            tooltip_text += "\n" + hex(referrer) + "(call)"
+                            ref_count += 1
+                    if ref_count > 30:
+                        tooltip_text += "\n..."
+                    tooltip_text += f"\n\n{tr.SEE_REFERRERS}"
+                    try:
+                        row_color[row].append(REF_COLOR)
+                    except KeyError:
+                        row_color[row] = [REF_COLOR]
+                    real_ref_count = 0
+                    if jmp_ref_exists:
+                        real_ref_count += len(jmp_referrers)
+                    if call_ref_exists:
+                        real_ref_count += len(call_referrers)
+                    address_info = "{" + str(real_ref_count) + "}" + address_info
+                if current_address == program_counter_int:
+                    address_info = ">>>" + address_info
+                    try:
+                        row_color[row].append(PC_COLOR)
+                    except KeyError:
+                        row_color[row] = [PC_COLOR]
 
-            for bookmark_item in self.session.pct_bookmarks.keys():
-                if current_address == bookmark_item:
-                    try:
-                        row_color[row].append(BOOKMARK_COLOR)
-                    except KeyError:
-                        row_color[row] = [BOOKMARK_COLOR]
-                    address_info = "(M)" + address_info
-                    comment = self.session.pct_bookmarks[bookmark_item]["comment"]
-                    break
-            for breakpoint in breakpoint_info:
-                # Catchpoints won't have an address
-                if type(breakpoint.address) != str:
-                    continue
-                int_breakpoint_address = safe_str_to_int(breakpoint.address, 16)
-                if current_address == int_breakpoint_address:
-                    try:
-                        row_color[row].append(BREAKPOINT_COLOR)
-                    except KeyError:
-                        row_color[row] = [BREAKPOINT_COLOR]
-                    breakpoint_mark = "(B"
-                    if breakpoint.enabled == "n":
-                        breakpoint_mark += "-disabled"
-                    else:
-                        if breakpoint.disp != "keep":
-                            breakpoint_mark += "-" + breakpoint.disp
-                        if breakpoint.enable_count:
-                            breakpoint_mark += "-" + breakpoint.enable_count
-                    breakpoint_mark += ")"
-                    address_info = breakpoint_mark + address_info
-                    break
-            if current_address == self.disassemble_last_selected_address_int:
-                self.tableWidget_Disassemble.selectRow(row)
-            addr_item = QTableWidgetItem(address_info)
-            bytes_item = QTableWidgetItem(bytes_aob)
-            opcodes_item = QTableWidgetItem(opcode)
-            comment_item = QTableWidgetItem(comment)
-            if jmp_ref_exists or call_ref_exists:
-                addr_item.setToolTip(tooltip_text)
-                bytes_item.setToolTip(tooltip_text)
-                opcodes_item.setToolTip(tooltip_text)
-                comment_item.setToolTip(tooltip_text)
-            self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, addr_item)
-            self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, bytes_item)
-            self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, opcodes_item)
-            self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, comment_item)
-        jmp_dict.close()
-        call_dict.close()
+                for bookmark_item in self.session.pct_bookmarks.keys():
+                    if current_address == bookmark_item:
+                        try:
+                            row_color[row].append(BOOKMARK_COLOR)
+                        except KeyError:
+                            row_color[row] = [BOOKMARK_COLOR]
+                        address_info = "(M)" + address_info
+                        comment = self.session.pct_bookmarks[bookmark_item]["comment"]
+                        break
+                for breakpoint in breakpoint_info:
+                    # Catchpoints won't have an address
+                    if type(breakpoint.address) != str:
+                        continue
+                    int_breakpoint_address = safe_str_to_int(breakpoint.address, 16)
+                    if current_address == int_breakpoint_address:
+                        try:
+                            row_color[row].append(BREAKPOINT_COLOR)
+                        except KeyError:
+                            row_color[row] = [BREAKPOINT_COLOR]
+                        breakpoint_mark = "(B"
+                        if breakpoint.enabled == "n":
+                            breakpoint_mark += "-disabled"
+                        else:
+                            if breakpoint.disp != "keep":
+                                breakpoint_mark += "-" + breakpoint.disp
+                            if breakpoint.enable_count:
+                                breakpoint_mark += "-" + breakpoint.enable_count
+                        breakpoint_mark += ")"
+                        address_info = breakpoint_mark + address_info
+                        break
+                if current_address == self.disassemble_last_selected_address_int:
+                    self.tableWidget_Disassemble.selectRow(row)
+                addr_item = QTableWidgetItem(address_info)
+                bytes_item = QTableWidgetItem(bytes_aob)
+                opcodes_item = QTableWidgetItem(opcode)
+                comment_item = QTableWidgetItem(comment)
+                if jmp_ref_exists or call_ref_exists:
+                    addr_item.setToolTip(tooltip_text)
+                    bytes_item.setToolTip(tooltip_text)
+                    opcodes_item.setToolTip(tooltip_text)
+                    comment_item.setToolTip(tooltip_text)
+                self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, addr_item)
+                self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, bytes_item)
+                self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, opcodes_item)
+                self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, comment_item)
+        finally:
+            jmp_dict.close()
+            call_dict.close()
         self.handle_colors(row_color)
 
         # We append the old record to travel history as last action because we wouldn't like to see unnecessary
@@ -3621,6 +3624,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.tableWidget_Disassemble.item(current_row, DISAS_ADDR_COL).text()
             )
             new_address = debugcore.find_closest_instruction_address(current_address, "previous", last_visible_row)
+            if not new_address:
+                return
             self.disassemble_expression(new_address, append_history=False)
         elif (where == "previous" and current_row == 0) or (where == "next" and current_row_height > height):
             self.tableWidget_Disassemble_scroll(where, instruction_count)
@@ -3630,6 +3635,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         current_address = self.disassemble_currently_displayed_address
         new_address = debugcore.find_closest_instruction_address(current_address, where, instruction_count)
+        if not new_address:
+            return
         self.disassemble_expression(new_address, append_history=False)
 
     def widget_HexView_wheel_event(self, event):
@@ -5203,13 +5210,21 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         self.label_CallReferenceCount.setText(str(call_count))
 
     def update_dissect_results(self):
+        referenced_strings = None
+        referenced_jumps = None
+        referenced_calls = None
         try:
             referenced_strings, referenced_jumps, referenced_calls = debugcore.get_dissect_code_data()
         except:
             return
-        self.label_StringReferenceCount.setText(str(len(referenced_strings)))
-        self.label_JumpReferenceCount.setText(str(len(referenced_jumps)))
-        self.label_CallReferenceCount.setText(str(len(referenced_calls)))
+        try:
+            self.label_StringReferenceCount.setText(str(len(referenced_strings)))
+            self.label_JumpReferenceCount.setText(str(len(referenced_jumps)))
+            self.label_CallReferenceCount.setText(str(len(referenced_calls)))
+        finally:
+            for ref_dict in (referenced_strings, referenced_jumps, referenced_calls):
+                if ref_dict is not None:
+                    ref_dict.close()
 
     def show_memory_regions(self):
         executable_regions = utils.filter_regions(debugcore.currentpid, "permissions", "..x.")
@@ -5333,12 +5348,14 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
             return
         self.listWidget_Referrers.clear()
         str_dict = debugcore.get_dissect_code_data(True, False, False)[0]
-        addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_STR_ADDR_COL).text()
-        referrers = str_dict[addr]
-        addrs = [hex(address) for address in referrers]
-        self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)])
-        self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
-        str_dict.close()
+        try:
+            addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_STR_ADDR_COL).text()
+            referrers = str_dict[addr]
+            addrs = [hex(address) for address in referrers]
+            self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)])
+            self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
+        finally:
+            str_dict.close()
 
     def tableWidget_References_item_double_clicked(self, index):
         row = index.row()
@@ -5452,12 +5469,14 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
             return
         self.listWidget_Referrers.clear()
         call_dict = debugcore.get_dissect_code_data(False, False, True)[0]
-        addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_CALL_ADDR_COL).text()
-        referrers = call_dict[utils.extract_hex_address(addr)]
-        addrs = [hex(address) for address in referrers]
-        self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)])
-        self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
-        call_dict.close()
+        try:
+            addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_CALL_ADDR_COL).text()
+            referrers = call_dict[utils.extract_hex_address(addr)]
+            addrs = [hex(address) for address in referrers]
+            self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)])
+            self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
+        finally:
+            call_dict.close()
 
     def tableWidget_References_item_double_clicked(self, index):
         row = index.row()
@@ -5538,21 +5557,23 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         jmp_dict, call_dict = debugcore.get_dissect_code_data(False, True, True)
         self.referrer_data = []
         try:
-            jmp_referrers = jmp_dict[self.referenced_hex]
-        except KeyError:
-            pass
-        else:
-            jmp_referrers = [hex(item) for item in jmp_referrers]
-            self.referrer_data.extend([item.all for item in debugcore.examine_expressions(jmp_referrers)])
-        try:
-            call_referrers = call_dict[self.referenced_hex]
-        except KeyError:
-            pass
-        else:
-            call_referrers = [hex(item) for item in call_referrers]
-            self.referrer_data.extend([item.all for item in debugcore.examine_expressions(call_referrers)])
-        jmp_dict.close()
-        call_dict.close()
+            try:
+                jmp_referrers = jmp_dict[self.referenced_hex]
+            except KeyError:
+                pass
+            else:
+                jmp_referrers = [hex(item) for item in jmp_referrers]
+                self.referrer_data.extend([item.all for item in debugcore.examine_expressions(jmp_referrers)])
+            try:
+                call_referrers = call_dict[self.referenced_hex]
+            except KeyError:
+                pass
+            else:
+                call_referrers = [hex(item) for item in call_referrers]
+                self.referrer_data.extend([item.all for item in debugcore.examine_expressions(call_referrers)])
+        finally:
+            jmp_dict.close()
+            call_dict.close()
 
     def refresh_table(self):
         searched_str = self.lineEdit_Regex.text()
