@@ -856,15 +856,18 @@ def allocate_memory(size: int, name: str | None) -> int:
 @execute_with_temporary_interruption
 def free_memory(name: str) -> bool:
     global allocated_memory_chunks
-    if str == None or str == "":
-        # TODO brkzlr: Maybe error log?
+    if not isinstance(name, str):
+        logger.error(f"Passed wrong type '{type(name)}' instead of str")
         return False
-    address = allocated_memory_chunks.get(name)
-    if address == None:
-        # TODO brkzlr: log wrong key
+    if name == "":
+        logger.error(f"Passed empty str!")
+        return False
+    allocated_memory = allocated_memory_chunks.get(name)
+    if allocated_memory is None:
+        logger.error(f"Couldn't find allocated memory with name `{name}`!")
         return False
     # This shit will crash the process if you call it on invalid or already freed memory.
-    send_command(f"p (void)free({address})")
+    send_command(f"p (void)free({allocated_memory.address})")
     del allocated_memory_chunks[name]
     return True
 
