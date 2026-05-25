@@ -1038,12 +1038,16 @@ class MainForm(QMainWindow, MainWindow):
                 if not search_for.startswith(("0x", "-0x")):
                     negative_str = "-" if search_for.startswith("-") else ""
                     search_for = negative_str + "0x" + search_for.lstrip("-")
-                if not search_for2.startswith(("0x", "-0x")):
-                    negative_str = "-" if search_for.startswith("-") else ""
-                    search_for2 = negative_str + "0x" + search_for2.lstrip("-")
+                if search_for in {"0x", "-0x"}:
+                    return None, None
+                if search_for2 != "":
+                    if not search_for2.startswith(("0x", "-0x")):
+                        negative_str = "-" if search_for2.startswith("-") else ""
+                        search_for2 = negative_str + "0x" + search_for2.lstrip("-")
+                    if search_for2 in {"0x", "-0x"}:
+                        search_for2 = ""
             value_1 = int(search_for, 0)
-            # TODO: Fix the random "0x" in field 2 instead of empty.
-            value_2 = int(search_for2, 0) if search_for2 != "" and search_for2 != "0x" else None
+            value_2 = int(search_for2, 0) if search_for2 != "" else None
 
         return value_1, value_2
 
