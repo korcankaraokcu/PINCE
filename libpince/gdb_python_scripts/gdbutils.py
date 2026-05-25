@@ -158,4 +158,6 @@ def examine_expression(expression: str, regions=None):
         utils.logger.exception("An exception occurred while trying to evaluate a gdb expression")
         return typedefs.tuple_examine_expression(None, None, None)
     result = regexes.address_with_symbol.search(str(value))
+    if not result:
+        return typedefs.tuple_examine_expression(None, None, None)
     return typedefs.tuple_examine_expression(*result.groups())
