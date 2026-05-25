@@ -213,6 +213,8 @@ class GetStackInfo(gdb.Command):
                 try:
                     FILE.seek(old_position)
                     read = FILE.read(chunk_size)
+                    if len(read) < chunk_size:
+                        break
                 except (OSError, ValueError):
                     logger.exception(f"Can't access the stack after address {stack_indicator}")
                     break
