@@ -44,7 +44,7 @@ exit_on_error() {
 # assumes you're in libmemscan submodule directory
 compile_libmemscan() {
 	echo "Compiling libmemscan..."
-	./zig build -Doptimize=ReleaseFast
+	./zig build -Doptimize=ReleaseFast || return 1
 	return 0
 }
 
@@ -73,8 +73,8 @@ install_libmemscan() {
 		else
 			compile_libmemscan || return 1
 		fi
-		cp --preserve zig-out/lib/libmemscan.so ../libpince/libmemscan/
-		cp --preserve memscan.py ../libpince/libmemscan/
+		cp --preserve zig-out/lib/libmemscan.so ../libpince/libmemscan/ || return 1
+		cp --preserve memscan.py ../libpince/libmemscan/ || return 1
 		echo "Exiting libmemscan submodule directory"
 	) || return 1
 	return 0
