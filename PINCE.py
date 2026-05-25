@@ -1517,7 +1517,10 @@ class MainForm(QMainWindow, MainWindow):
     def create_new_process(self, file_path, args, ld_preload_path):
         if debugcore.create_process(file_path, args, ld_preload_path):
             settings.apply_after_init()
+            memscan.attach(debugcore.currentpid)
             self.on_new_process()
+            SessionManager.on_process_changed()
+            states.process_signals.attach.emit()
             return True
         else:
             QMessageBox.information(app.focusWidget(), tr.ERROR, tr.CREATE_PROCESS_ERROR)
