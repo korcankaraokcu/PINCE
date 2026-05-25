@@ -1418,25 +1418,24 @@ def hex_dump(address, offset):
         offset (int): The range that'll be read
 
     Returns:
-        list: List of strings read as str. If an error occurs while reading a memory cell, that cell is returned as "??"
-        An empty list is returned if an error occurs
+        list: List of byte values read as uppercase hex strings. Unreadable bytes are returned as "??".
 
     Examples:
         returned list-->["??","??","??","7f","43","67","40","??","??, ...]
     """
     hex_byte_list = []
-    with open(mem_file, "rb") as FILE:
+    with memory_handle() as mem_handle:
         try:
-            FILE.seek(address)
+            mem_handle.seek(address)
         except (OSError, ValueError):
-            pass
-        for item in range(offset):
+            return ["??"] * offset
+        for _ in range(offset):
             try:
-                current_item = " ".join(format(n, "02x") for n in FILE.read(1))
+                current_item = " ".join(format(n, "02x") for n in mem_handle.read(1))
             except OSError:
                 current_item = "??"
                 try:
-                    FILE.seek(1, io.SEEK_CUR)  # Necessary since read() failed to execute
+                    mem_handle.seek(1, io.SEEK_CUR)  # Necessary since read() failed to execute
                 except (OSError, ValueError):
                     pass
             hex_byte_list.append(utils.upper_hex(current_item))
