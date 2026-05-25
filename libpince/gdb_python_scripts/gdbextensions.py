@@ -405,75 +405,84 @@ class DissectCode(gdb.Command):
         else:
             disassembler = Cs(CS_ARCH_X86, CS_MODE_32)
         disassembler.skipdata = True
-        referenced_strings_dict = shelve.open(utils.get_referenced_strings_file(pid), writeback=True)
-        referenced_jumps_dict = shelve.open(utils.get_referenced_jumps_file(pid), writeback=True)
-        referenced_calls_dict = shelve.open(utils.get_referenced_calls_file(pid), writeback=True)
-        region_list, discard_invalid_strings = receive_from_pince()
-        dissect_code_status_file = utils.get_dissect_code_status_file(pid)
-        region_count = len(region_list)
-        self.memory = open(gdbutils.mem_file, "rb")
-        ref_str_count = len(referenced_strings_dict)
-        ref_jmp_count = len(referenced_jumps_dict)
-        ref_call_count = len(referenced_calls_dict)
-        for region_index, (start_addr, end_addr) in enumerate(region_list):
-            region_info = start_addr + "-" + end_addr, str(region_index + 1) + " / " + str(region_count)
-            start_addr = int(start_addr, 16)  # Becomes address of the last disassembled instruction later on
-            end_addr = int(end_addr, 16)
-            status_info = region_info + (
-                hex(start_addr)[2:] + "-" + hex(end_addr)[2:],
-                ref_str_count,
-                ref_jmp_count,
-                ref_call_count,
-            )
-            pickle.dump(status_info, open(dissect_code_status_file, "wb"))
-            try:
-                self.memory.seek(start_addr)
-            except (OSError, ValueError):
-                break
-            buffer_size = end_addr - start_addr
-            code = self.memory.read(buffer_size)
-            try:
-                disas_data = disassembler.disasm_lite(code, start_addr)
-            except CsError:
-                logger.exception("An exception occurred while trying to dissect code")
-                break
-            for instruction_addr, _, mnemonic, operands in disas_data:
-                instruction = f"{mnemonic} {operands}" if operands != "" else mnemonic
-                found = regexes.dissect_code_valid_address.search(instruction)
-                if not found:
-                    continue
-                if instruction.startswith("j") or instruction.startswith("loop"):
-                    referenced_address_str = regexes.hex_number.search(found.group(0)).group(0)
-                    referenced_address_int = int(referenced_address_str, 16)
-                    if self.is_memory_valid(referenced_address_int):
-                        instruction_only = regexes.alphanumerics.search(instruction).group(0).casefold()
-                        try:
-                            referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
-                        except KeyError:
-                            referenced_jumps_dict[referenced_address_str] = {}
-                            referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
-                            ref_jmp_count += 1
-                elif instruction.startswith("call"):
-                    referenced_address_str = regexes.hex_number.search(found.group(0)).group(0)
-                    referenced_address_int = int(referenced_address_str, 16)
-                    if self.is_memory_valid(referenced_address_int):
-                        try:
-                            referenced_calls_dict[referenced_address_str].add(instruction_addr)
-                        except KeyError:
-                            referenced_calls_dict[referenced_address_str] = set()
-                            referenced_calls_dict[referenced_address_str].add(instruction_addr)
-                            ref_call_count += 1
-                else:
-                    referenced_address_str = regexes.hex_number.search(found.group(0)).group(0)
-                    referenced_address_int = int(referenced_address_str, 16)
-                    if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
-                        try:
-                            referenced_strings_dict[referenced_address_str].add(instruction_addr)
-                        except KeyError:
-                            referenced_strings_dict[referenced_address_str] = set()
-                            referenced_strings_dict[referenced_address_str].add(instruction_addr)
-                            ref_str_count += 1
-        self.memory.close()
+        referenced_strings_dict = None
+        referenced_jumps_dict = None
+        referenced_calls_dict = None
+        try:
+            referenced_strings_dict = shelve.open(utils.get_referenced_strings_file(pid), writeback=True)
+            referenced_jumps_dict = shelve.open(utils.get_referenced_jumps_file(pid), writeback=True)
+            referenced_calls_dict = shelve.open(utils.get_referenced_calls_file(pid), writeback=True)
+            region_list, discard_invalid_strings = receive_from_pince()
+            dissect_code_status_file = utils.get_dissect_code_status_file(pid)
+            region_count = len(region_list)
+            with open(gdbutils.mem_file, "rb") as memory:
+                self.memory = memory
+                ref_str_count = len(referenced_strings_dict)
+                ref_jmp_count = len(referenced_jumps_dict)
+                ref_call_count = len(referenced_calls_dict)
+                for region_index, (start_addr, end_addr) in enumerate(region_list):
+                    region_info = start_addr + "-" + end_addr, str(region_index + 1) + " / " + str(region_count)
+                    start_addr = int(start_addr, 16)  # Becomes address of the last disassembled instruction later on
+                    end_addr = int(end_addr, 16)
+                    status_info = region_info + (
+                        hex(start_addr)[2:] + "-" + hex(end_addr)[2:],
+                        ref_str_count,
+                        ref_jmp_count,
+                        ref_call_count,
+                    )
+                    pickle.dump(status_info, open(dissect_code_status_file, "wb"))
+                    try:
+                        self.memory.seek(start_addr)
+                    except (OSError, ValueError):
+                        break
+                    buffer_size = end_addr - start_addr
+                    code = self.memory.read(buffer_size)
+                    try:
+                        disas_data = disassembler.disasm_lite(code, start_addr)
+                    except CsError:
+                        logger.exception("An exception occurred while trying to dissect code")
+                        break
+                    for instruction_addr, _, mnemonic, operands in disas_data:
+                        instruction = f"{mnemonic} {operands}" if operands != "" else mnemonic
+                        found = regexes.dissect_code_valid_address.search(instruction)
+                        if not found:
+                            continue
+                        if instruction.startswith("j") or instruction.startswith("loop"):
+                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0)
+                            referenced_address_int = int(referenced_address_str, 16)
+                            if self.is_memory_valid(referenced_address_int):
+                                instruction_only = regexes.alphanumerics.search(instruction).group(0).casefold()
+                                try:
+                                    referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
+                                except KeyError:
+                                    referenced_jumps_dict[referenced_address_str] = {}
+                                    referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
+                                    ref_jmp_count += 1
+                        elif instruction.startswith("call"):
+                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0)
+                            referenced_address_int = int(referenced_address_str, 16)
+                            if self.is_memory_valid(referenced_address_int):
+                                try:
+                                    referenced_calls_dict[referenced_address_str].add(instruction_addr)
+                                except KeyError:
+                                    referenced_calls_dict[referenced_address_str] = set()
+                                    referenced_calls_dict[referenced_address_str].add(instruction_addr)
+                                    ref_call_count += 1
+                        else:
+                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0)
+                            referenced_address_int = int(referenced_address_str, 16)
+                            if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
+                                try:
+                                    referenced_strings_dict[referenced_address_str].add(instruction_addr)
+                                except KeyError:
+                                    referenced_strings_dict[referenced_address_str] = set()
+                                    referenced_strings_dict[referenced_address_str].add(instruction_addr)
+                                    ref_str_count += 1
+        finally:
+            self.memory = None
+            for db in (referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict):
+                if db is not None:
+                    db.close()
 
 
 class SearchReferencedCalls(gdb.Command):
@@ -492,24 +501,30 @@ class SearchReferencedCalls(gdb.Command):
                 logger.exception(f"An exception occurred while trying to compile the given regex '{searched_str}'")
                 send_to_pince(None)
                 return
-        str_dict = shelve.open(utils.get_referenced_calls_file(pid), "r")
+        str_dict = None
         returned_list = []
-        for index, item in enumerate(str_dict):
-            symbol = gdbutils.examine_expression(item).all
-            if not symbol:
-                continue
-            if enable_regex:
-                if not regex.search(symbol):
+        try:
+            str_dict = shelve.open(utils.get_referenced_calls_file(pid), "r")
+            for item in str_dict:
+                symbol = gdbutils.examine_expression(item).all
+                if not symbol:
                     continue
-            else:
-                if case_sensitive:
-                    if symbol.find(searched_str) == -1:
+                if enable_regex:
+                    if not regex.search(symbol):
                         continue
                 else:
-                    if symbol.lower().find(searched_str.lower()) == -1:
-                        continue
-            returned_list.append((symbol, len(str_dict[item])))
-        str_dict.close()
+                    if case_sensitive:
+                        if symbol.find(searched_str) == -1:
+                            continue
+                    else:
+                        if symbol.lower().find(searched_str.lower()) == -1:
+                            continue
+                returned_list.append((symbol, len(str_dict[item])))
+        except Exception:
+            logger.exception("Caught exception while searching referenced calls!")
+        finally:
+            if str_dict is not None:
+                str_dict.close()
         send_to_pince(returned_list)
 
 
