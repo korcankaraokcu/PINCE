@@ -198,12 +198,15 @@ def send_command(
         gdb_output = ""
         if send_with_file:
             send_file = utils.get_from_pince_file(currentpid)
-            pickle.dump(file_contents_send, open(send_file, "wb"))
+            with open(send_file, "wb") as send_file_handle:
+                pickle.dump(file_contents_send, send_file_handle)
         if recv_with_file or cli_output:
             recv_file = utils.get_to_pince_file(currentpid)
 
             # Truncating the recv_file because we wouldn't like to see output of previous command in case of errors
-            open(recv_file, "w").close()
+            with open(recv_file, "w"):
+                pass
+
         command = str(command)
         command = 'interpreter-exec mi "' + command + '"' if command.startswith("-") else command
         last_gdb_command = command if not control else "Ctrl+" + command
@@ -228,7 +231,8 @@ def send_command(
                     break
             if not cancel_send_command:
                 if recv_with_file or cli_output:
-                    output = pickle.load(open(recv_file, "rb"))
+                    with open(recv_file, "rb") as recv_file_handle:
+                        output = pickle.load(recv_file_handle)
                 else:
                     output = gdb_output
             else:

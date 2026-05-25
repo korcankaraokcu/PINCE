@@ -48,11 +48,13 @@ track_breakpoint_dict = {}
 
 
 def receive_from_pince():
-    return pickle.load(open(recv_file, "rb"))
+    with open(recv_file, "rb") as recv_file_handle:
+        return pickle.load(recv_file_handle)
 
 
 def send_to_pince(contents_send):
-    pickle.dump(contents_send, open(send_file, "wb"))
+    with open(send_file, "wb") as send_file_handle:
+        pickle.dump(contents_send, send_file_handle)
 
 
 gdbutils.gdbinit()
