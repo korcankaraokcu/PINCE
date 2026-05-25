@@ -490,6 +490,7 @@ class SearchReferencedCalls(gdb.Command):
                     regex = re.compile(searched_str, re.IGNORECASE)
             except Exception:
                 logger.exception(f"An exception occurred while trying to compile the given regex '{searched_str}'")
+                send_to_pince(None)
                 return
         str_dict = shelve.open(utils.get_referenced_calls_file(pid), "r")
         returned_list = []
