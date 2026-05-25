@@ -428,7 +428,8 @@ def save_file(data, file_path, save_method="json"):
     if save_method == "json":
         try:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            json.dump(data, open(file_path, "w"))
+            with open(file_path, "w") as save_file:
+                json.dump(data, save_file)
             return True
         except Exception:
             logger.exception("Encountered an exception while dumping the data in JSON format\n")
@@ -436,7 +437,8 @@ def save_file(data, file_path, save_method="json"):
     elif save_method == "pickle":
         try:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            pickle.dump(data, open(file_path, "wb"))
+            with open(file_path, "wb") as save_file:
+                pickle.dump(data, save_file)
             return True
         except Exception:
             logger.exception("Encountered an exception while pickling the data\n")
@@ -459,20 +461,21 @@ def load_file(file_path, load_method="json"):
     """
     if load_method == "json":
         try:
-            output = json.load(open(file_path, "r"), object_pairs_hook=OrderedDict)
+            with open(file_path, "r") as load_file:
+                return json.load(load_file, object_pairs_hook=OrderedDict)
         except Exception:
             logger.exception("Encountered an exception while loading the JSON data")
             return
     elif load_method == "pickle":
         try:
-            output = pickle.load(open(file_path, "rb"))
+            with open(file_path, "rb") as load_file:
+                return pickle.load(load_file)
         except Exception:
             logger.exception("Encountered an exception while unpickling the data")
             return
     else:
         logger.error("Unsupported load_method, bailing out...")
         return
-    return output
 
 
 def get_trace_status_file(pid):
