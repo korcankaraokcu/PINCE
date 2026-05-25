@@ -1190,6 +1190,7 @@ def find_closest_instruction_address(address, instruction_location="next", instr
     Returns:
         str: The address found as hex string. If starting/ending of a valid memory range is reached, starting/ending
         address is returned instead as hex string.
+        None: If the given address is not in a valid memory region.
 
     Note:
         From gdb version 7.12 and onwards, inputting negative numbers in x command are supported(x/-3i for instance)
@@ -1198,6 +1199,9 @@ def find_closest_instruction_address(address, instruction_location="next", instr
         I'm not changing this function for now
     """
     assert instruction_location in ["next", "previous"], "invalid instruction_location"
+    region_info = utils.get_region_info(currentpid, address)
+    if region_info is None:
+        return
     if instruction_location == "next":
         offset = "+" + str(instruction_count * 30)
         disas_data = disassemble(address, address + offset)
@@ -1206,13 +1210,13 @@ def find_closest_instruction_address(address, instruction_location="next", instr
         disas_data = disassemble(address + offset, address)
     if not disas_data:
         if instruction_location != "next":
-            start_address = hex(utils.get_region_info(currentpid, address).start)
+            start_address = hex(region_info.start)
             disas_data = disassemble(start_address, address)
     if instruction_location == "next":
         try:
             return utils.extract_hex_address(disas_data[instruction_count][0])
         except IndexError:
-            return hex(utils.get_region_info(currentpid, address).end)
+            return hex(region_info.end)
     else:
         try:
             return utils.extract_hex_address(disas_data[-instruction_count][0])
@@ -1220,7 +1224,7 @@ def find_closest_instruction_address(address, instruction_location="next", instr
             try:
                 return start_address
             except UnboundLocalError:
-                return hex(utils.get_region_info(currentpid, address).start)
+                return hex(region_info.start)
 
 
 def get_address_info(expression):
