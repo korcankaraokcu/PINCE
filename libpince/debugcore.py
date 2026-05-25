@@ -648,7 +648,7 @@ def create_process(process_path, args="", ld_preload_path="", gdb_path=utils.get
     global mem_file
     if currentpid != -1 or not gdb_initialized:
         init_gdb(gdb_path)
-    output = send_command("file " + process_path)
+    output = send_command(f'file "{process_path}"')
     if regexes.gdb_error.search(output):
         logger.error(f"An error occurred while trying to create process from the file at {process_path}")
         detach()
