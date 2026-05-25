@@ -671,6 +671,10 @@ def create_process(process_path, args="", ld_preload_path="", gdb_path=utils.get
     # We have to wait till breakpoint hits
     wait_for_stop()
     pid = get_inferior_pid()
+    if pid is None:
+        logger.error("Failed to get inferior pid while creating process!")
+        detach()
+        return False
     currentpid = int(pid)
     mem_file = "/proc/" + str(currentpid) + "/mem"
     utils.create_ipc_path(pid)
@@ -1168,7 +1172,10 @@ def get_thread_info():
         None: If the output doesn't fit the regex
     """
     thread_info = send_command("info threads")
-    return re.sub(r'\\"', r'"', regexes.thread_info.search(thread_info).group(1))
+    current_thread = regexes.thread_info.search(thread_info)
+    if not current_thread:
+        return
+    return re.sub(r'\\"', r'"', current_thread.group(1))
 
 
 def find_closest_instruction_address(address, instruction_location="next", instruction_count=1):
@@ -1273,9 +1280,13 @@ def get_inferior_pid():
 
     Returns:
         str: pid
+        None: If the output doesn't fit the regex
     """
     output = send_command("info inferior")
-    return regexes.inferior_pid.search(output).group(1)
+    inferior_pid = regexes.inferior_pid.search(output)
+    if not inferior_pid:
+        return
+    return inferior_pid.group(1)
 
 
 def get_inferior_arch():
