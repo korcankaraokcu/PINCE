@@ -1123,7 +1123,17 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <source>Tab 1</source>
+        <source>(untitled)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>+</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Script output</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1143,8 +1153,8 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <source>Code Injection</source>
-        <translation type="unfinished">代码注入</translation>
+        <source>Code injection</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
@@ -1153,7 +1163,17 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Ctrl+O</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Save [Ctrl+S]</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Ctrl+S</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1164,6 +1184,41 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Run current script [Ctrl+R]</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Ctrl+R</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Run selection [Ctrl+Shift+R]</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Ctrl+Shift+R</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Clear output</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>AOB scan + NOP</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>AOB scan + patch</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Read/write address</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1915,7 +1970,27 @@ Don't forget to open the new lmptr file (File-&gt;Open)!</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Script execution failed:</source>
+        <source>Script execution failed</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Unsaved script</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Save changes to {}?</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>--- Running {} ---</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>--- Finished ---</source>
         <translation type="unfinished" />
     </message>
     <message>

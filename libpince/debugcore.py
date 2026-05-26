@@ -1044,6 +1044,63 @@ def write_memory(
         return
 
 
+def aob_scan(
+    pattern: str,
+    writable: bool | None = None,
+    executable: bool | None = None,
+    limit: int | None = 1000,
+) -> list[int]:
+    """Scan readable memory regions of the attached process for a byte pattern.
+
+    Args:
+        pattern: Whitespace-separated hex tokens. Use '?' or '??' for wildcard bytes,
+                 e.g. '48 8b 05 ?? ?? ?? ??'.
+        writable: If True/False, restrict to writable/non-writable regions. None = either.
+        executable: If True/False, restrict to executable/non-executable regions. None = either.
+        limit: Stop after this many matches. None = unlimited.
+
+    Returns:
+        List of match addresses in ascending order. Empty list if no process is attached.
+    """
+    if currentpid == -1:
+        return []
+    parts = [b"." if "?" in t else re.escape(bytes([int(t, 16)])) for t in pattern.split()]
+    if not parts:
+        return []
+    matcher = re.compile(b"".join(parts), re.DOTALL)
+    overlap = len(parts) - 1
+    results = []
+    with memory_handle() as mem:
+        for start, end, perms, *_ in utils.get_regions(currentpid):
+            if "r" not in perms:
+                continue
+            if writable is not None and ("w" in perms) != writable:
+                continue
+            if executable is not None and ("x" in perms) != executable:
+                continue
+            position = int(start, 16)
+            end_addr = int(end, 16)
+            tail = b""
+            while position < end_addr:
+                read_size = min(1 << 20, end_addr - position)
+                try:
+                    mem.seek(position)
+                    chunk = mem.read(read_size)
+                except (OSError, ValueError):
+                    position += read_size
+                    tail = b""
+                    continue
+                data = tail + chunk
+                base = position - len(tail)
+                for match in matcher.finditer(data):
+                    results.append(base + match.start())
+                    if limit is not None and len(results) >= limit:
+                        return results
+                tail = data[-overlap:] if overlap else b""
+                position += read_size
+    return results
+
+
 def disassemble(expression, offset_or_address):
     """Disassembles the address evaluated by the given expression
 

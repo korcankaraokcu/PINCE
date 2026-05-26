@@ -17,16 +17,43 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout.setObjectName("gridLayout")
-        self.tabWidget = QtWidgets.QTabWidget(parent=self.centralwidget)
+        self.splitter = QtWidgets.QSplitter(parent=self.centralwidget)
+        self.splitter.setOrientation(QtCore.Qt.Orientation.Vertical)
+        self.splitter.setChildrenCollapsible(False)
+        self.splitter.setObjectName("splitter")
+        self.tabWidget = QtWidgets.QTabWidget(parent=self.splitter)
         self.tabWidget.setTabsClosable(True)
         self.tabWidget.setObjectName("tabWidget")
-        self.tab = QtWidgets.QWidget()
-        self.tab.setObjectName("tab")
-        self.tabWidget.addTab(self.tab, "")
-        self.gridLayout.addWidget(self.tabWidget, 0, 0, 1, 1)
+        self.editorTab = QtWidgets.QWidget()
+        self.editorTab.setObjectName("editorTab")
+        self.editorLayout = QtWidgets.QVBoxLayout(self.editorTab)
+        self.editorLayout.setContentsMargins(0, 0, 0, 0)
+        self.editorLayout.setObjectName("editorLayout")
+        self.scriptEditor = ScriptEditor(parent=self.editorTab)
+        font = QtGui.QFont()
+        font.setFamily("Monospace")
+        font.setPointSize(10)
+        self.scriptEditor.setFont(font)
+        self.scriptEditor.setLineWrapMode(QtWidgets.QPlainTextEdit.LineWrapMode.NoWrap)
+        self.scriptEditor.setTabStopDistance(40.0)
+        self.scriptEditor.setObjectName("scriptEditor")
+        self.editorLayout.addWidget(self.scriptEditor)
+        self.tabWidget.addTab(self.editorTab, "")
+        self.plusTab = QtWidgets.QWidget()
+        self.plusTab.setObjectName("plusTab")
+        self.tabWidget.addTab(self.plusTab, "")
+        self.outputEdit = QtWidgets.QPlainTextEdit(parent=self.splitter)
+        font = QtGui.QFont()
+        font.setFamily("Monospace")
+        self.outputEdit.setFont(font)
+        self.outputEdit.setLineWrapMode(QtWidgets.QPlainTextEdit.LineWrapMode.NoWrap)
+        self.outputEdit.setReadOnly(True)
+        self.outputEdit.setMaximumBlockCount(5000)
+        self.outputEdit.setObjectName("outputEdit")
+        self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 898, 23))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 898, 32))
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(parent=self.menubar)
         self.menuFile.setObjectName("menuFile")
@@ -40,8 +67,40 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.actionCode_Injection = QtGui.QAction(parent=MainWindow)
-        self.actionCode_Injection.setObjectName("actionCode_Injection")
+        self.actionCode_injection = QtGui.QAction(parent=MainWindow)
+        self.actionCode_injection.setProperty("data", "# Code injection template\n"
+"target = address(\"0x0\")\n"
+"cave = alloc(0x400, \"engine_code_cave\")\n"
+"jump_to_cave = assemble(f\"jmp {cave:#x}\", target)\n"
+"# Read enough to cover the jmp patch plus one max-length x86 instruction (15B),\n"
+"# then round up to the next instruction boundary so we don\'t leave a partial\n"
+"# instruction at target after patching.\n"
+"probe = read_bytes(target, len(jump_to_cave) + 15)\n"
+"stolen_size = utils.instruction_aligned_size(probe, len(jump_to_cave), debugcore.inferior_arch)\n"
+"if stolen_size == 0:\n"
+"    raise RuntimeError(\"Could not align stolen bytes to an instruction boundary\")\n"
+"# RIP-relative instructions in the stolen bytes may need manual adjustment when relocated.\n"
+"original = probe[:stolen_size]\n"
+"return_address = target + stolen_size\n"
+"\n"
+"# Your injection code goes here. The NOPs are a placeholder.\n"
+"injected_code = assemble(\"\"\"\n"
+"nop\n"
+"nop\n"
+"\"\"\", cave)\n"
+"\n"
+"# Cave layout: hook code, then the displaced original bytes, then a jump back.\n"
+"# Re-executing the original bytes preserves the target\'s behavior. Drop `+ original` from cave_body to fully replace it.\n"
+"cave_body = injected_code + original\n"
+"jump_back = assemble(f\"jmp {return_address:#x}\", cave + len(cave_body))\n"
+"write_bytes(cave_body + jump_back, cave)\n"
+"# Pad leftover stolen_size bytes with NOPs so execution resumes on a clean\n"
+"# boundary (a partial instruction left over would corrupt decoding).\n"
+"patch(jump_to_cave + b\"\\x90\" * (stolen_size - len(jump_to_cave)), target, expected=original)\n"
+"print(f\"Injected {target:#x} -> {cave:#x}, return {return_address:#x}\")\n"
+"# Call restore(target) to undo the patch. The cave allocation persists until dealloc(\"engine_code_cave\").\n"
+"")
+        self.actionCode_injection.setObjectName("actionCode_injection")
         self.actionOpen = QtGui.QAction(parent=MainWindow)
         self.actionOpen.setObjectName("actionOpen")
         self.actionSave = QtGui.QAction(parent=MainWindow)
@@ -50,11 +109,61 @@ class Ui_MainWindow(object):
         self.actionLibpince.setObjectName("actionLibpince")
         self.actionRun_current_script = QtGui.QAction(parent=MainWindow)
         self.actionRun_current_script.setObjectName("actionRun_current_script")
+        self.actionRun_selection = QtGui.QAction(parent=MainWindow)
+        self.actionRun_selection.setObjectName("actionRun_selection")
+        self.actionClear_output = QtGui.QAction(parent=MainWindow)
+        self.actionClear_output.setObjectName("actionClear_output")
+        self.actionAOB_scan_nop = QtGui.QAction(parent=MainWindow)
+        self.actionAOB_scan_nop.setProperty("data", "# AOB scan + NOP template\n"
+"addr = aobscan_first(\"48 8B ?? ?? ?? 89\")\n"
+"if addr is None:\n"
+"    raise RuntimeError(\"Pattern not found\")\n"
+"\n"
+"nop(addr, 6)\n"
+"print(f\"NOPed {addr:#x}\")\n"
+"# Call restore(addr) to undo the nop.")
+        self.actionAOB_scan_nop.setObjectName("actionAOB_scan_nop")
+        self.actionAOB_scan_patch = QtGui.QAction(parent=MainWindow)
+        self.actionAOB_scan_patch.setProperty("data", "# AOB scan + patch template\n"
+"# Example bytes:\n"
+"# 83 00 FF     add DWORD PTR [rax], 0xffffffff (-0x1)\n"
+"# 48 8B 43 10  mov rax, QWORD PTR [rbx+0x10]\n"
+"# This changes the -1 decrement to +2 addition (eg. add ammo when shooting instead of subtracting)\n"
+"expected = \"83 00 FF 48 8B 43 10\"\n"
+"addr = aobscan_first(expected)\n"
+"if addr is None:\n"
+"    raise RuntimeError(\"Pattern not found\")\n"
+"\n"
+"replacement = assemble(f\"\"\"\n"
+"add dword ptr [rax], 0x2\n"
+"\"\"\", addr)\n"
+"\n"
+"# Ensure we won\'t corrupt the next instruction after add\n"
+"if len(replacement) != 3:\n"
+"    raise RuntimeError(\"Replacement size must match target instruction\")\n"
+"\n"
+"patch(replacement, addr, expected=\"83 00 ff\")\n"
+"print(f\"Patched instruction at {addr:#x}\")\n"
+"# Call restore(addr) to undo the patch.")
+        self.actionAOB_scan_patch.setObjectName("actionAOB_scan_patch")
+        self.actionRead_write_address = QtGui.QAction(parent=MainWindow)
+        self.actionRead_write_address.setProperty("data", "# Read/write template\n"
+"addr = address(\"0x0\")\n"
+"old_value = read_int(addr, size=4)\n"
+"write_int(old_value + 1, addr, size=4)\n"
+"print(f\"{addr:#x}: {old_value} -> {read_int(addr, size=4)}\")\n"
+"")
+        self.actionRead_write_address.setObjectName("actionRead_write_address")
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionSave)
-        self.menuTemplates.addAction(self.actionCode_Injection)
+        self.menuTemplates.addAction(self.actionCode_injection)
+        self.menuTemplates.addAction(self.actionAOB_scan_nop)
+        self.menuTemplates.addAction(self.actionAOB_scan_patch)
+        self.menuTemplates.addAction(self.actionRead_write_address)
         self.menuHelp.addAction(self.actionLibpince)
         self.menuRun.addAction(self.actionRun_current_script)
+        self.menuRun.addAction(self.actionRun_selection)
+        self.menuRun.addAction(self.actionClear_output)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuTemplates.menuAction())
         self.menubar.addAction(self.menuRun.menuAction())
@@ -66,13 +175,25 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Libpince Engine"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Tab 1"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.editorTab), _translate("MainWindow", "(untitled)"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.plusTab), _translate("MainWindow", "+"))
+        self.outputEdit.setPlaceholderText(_translate("MainWindow", "Script output"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuTemplates.setTitle(_translate("MainWindow", "Templates"))
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.menuRun.setTitle(_translate("MainWindow", "Run"))
-        self.actionCode_Injection.setText(_translate("MainWindow", "Code Injection"))
+        self.actionCode_injection.setText(_translate("MainWindow", "Code injection"))
         self.actionOpen.setText(_translate("MainWindow", "Open [Ctrl+O]"))
+        self.actionOpen.setShortcut(_translate("MainWindow", "Ctrl+O"))
         self.actionSave.setText(_translate("MainWindow", "Save [Ctrl+S]"))
+        self.actionSave.setShortcut(_translate("MainWindow", "Ctrl+S"))
         self.actionLibpince.setText(_translate("MainWindow", "Libpince"))
         self.actionRun_current_script.setText(_translate("MainWindow", "Run current script [Ctrl+R]"))
+        self.actionRun_current_script.setShortcut(_translate("MainWindow", "Ctrl+R"))
+        self.actionRun_selection.setText(_translate("MainWindow", "Run selection [Ctrl+Shift+R]"))
+        self.actionRun_selection.setShortcut(_translate("MainWindow", "Ctrl+Shift+R"))
+        self.actionClear_output.setText(_translate("MainWindow", "Clear output"))
+        self.actionAOB_scan_nop.setText(_translate("MainWindow", "AOB scan + NOP"))
+        self.actionAOB_scan_patch.setText(_translate("MainWindow", "AOB scan + patch"))
+        self.actionRead_write_address.setText(_translate("MainWindow", "Read/write address"))
+from GUI.Widgets.LibpinceEngine.ScriptEditor import ScriptEditor

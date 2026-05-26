@@ -724,6 +724,35 @@ def disassemble(aob, address, inferior_arch):
         logger.exception("Failed to disassemble bytes")
 
 
+def instruction_aligned_size(aob, minimum_bytes, inferior_arch):
+    """Walks instructions from offset 0 of `aob` until cumulative size meets
+    or exceeds `minimum_bytes`. Used by code-injection hooks where the patch
+    must end on an instruction boundary so the next instruction decodes cleanly.
+
+    Args:
+        aob (bytes): Instruction stream starting at offset 0.
+        minimum_bytes (int): Minimum number of bytes the result must cover.
+        inferior_arch (int): Member of typedefs.INFERIOR_ARCH.
+
+    Returns:
+        int: Smallest instruction-aligned size >= minimum_bytes, or 0 if the
+        bytes couldn't be decoded far enough.
+    """
+    if minimum_bytes <= 0:
+        return 0
+    disassembler = cs_64 if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 else cs_32
+    disassembler.skipdata = True
+    size = 0
+    try:
+        for _, instr_size, _, _ in disassembler.disasm_lite(bytes(aob), 0):
+            size += instr_size
+            if size >= minimum_bytes:
+                return size
+    except CsError:
+        return 0
+    return 0
+
+
 def assemble(instructions, address, inferior_arch):
     """Assembles the given instructions
 

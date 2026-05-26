@@ -16,14 +16,76 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QTabWidget" name="tabWidget">
-      <property name="tabsClosable">
-       <bool>true</bool>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Orientation::Vertical</enum>
       </property>
-      <widget class="QWidget" name="tab">
-       <attribute name="title">
-        <string>Tab 1</string>
-       </attribute>
+      <property name="childrenCollapsible">
+       <bool>false</bool>
+      </property>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="tabsClosable">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="editorTab">
+        <attribute name="title">
+         <string>(untitled)</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="editorLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="ScriptEditor" name="scriptEditor">
+           <property name="font">
+            <font>
+             <family>Monospace</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="lineWrapMode">
+            <enum>QPlainTextEdit::LineWrapMode::NoWrap</enum>
+           </property>
+           <property name="tabStopDistance">
+            <double>40.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="plusTab">
+        <attribute name="title">
+         <string>+</string>
+        </attribute>
+       </widget>
+      </widget>
+      <widget class="QPlainTextEdit" name="outputEdit">
+       <property name="font">
+        <font>
+         <family>Monospace</family>
+        </font>
+       </property>
+       <property name="lineWrapMode">
+        <enum>QPlainTextEdit::LineWrapMode::NoWrap</enum>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+       <property name="maximumBlockCount">
+        <number>5000</number>
+       </property>
+       <property name="placeholderText">
+        <string>Script output</string>
+       </property>
       </widget>
      </widget>
     </item>
@@ -35,7 +97,7 @@
      <x>0</x>
      <y>0</y>
      <width>898</width>
-     <height>23</height>
+     <height>32</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -49,7 +111,10 @@
     <property name="title">
      <string>Templates</string>
     </property>
-    <addaction name="actionCode_Injection"/>
+    <addaction name="actionCode_injection"/>
+    <addaction name="actionAOB_scan_nop"/>
+    <addaction name="actionAOB_scan_patch"/>
+    <addaction name="actionRead_write_address"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -62,6 +127,8 @@
      <string>Run</string>
     </property>
     <addaction name="actionRun_current_script"/>
+    <addaction name="actionRun_selection"/>
+    <addaction name="actionClear_output"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTemplates"/>
@@ -69,19 +136,59 @@
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionCode_Injection">
+  <action name="actionCode_injection">
    <property name="text">
-    <string>Code Injection</string>
+    <string>Code injection</string>
+   </property>
+   <property name="data" stdset="0">
+    <string notr="true"># Code injection template
+target = address(&quot;0x0&quot;)
+cave = alloc(0x400, &quot;engine_code_cave&quot;)
+jump_to_cave = assemble(f&quot;jmp {cave:#x}&quot;, target)
+# Read enough to cover the jmp patch plus one max-length x86 instruction (15B),
+# then round up to the next instruction boundary so we don't leave a partial
+# instruction at target after patching.
+probe = read_bytes(target, len(jump_to_cave) + 15)
+stolen_size = utils.instruction_aligned_size(probe, len(jump_to_cave), debugcore.inferior_arch)
+if stolen_size == 0:
+    raise RuntimeError(&quot;Could not align stolen bytes to an instruction boundary&quot;)
+# RIP-relative instructions in the stolen bytes may need manual adjustment when relocated.
+original = probe[:stolen_size]
+return_address = target + stolen_size
+
+# Your injection code goes here. The NOPs are a placeholder.
+injected_code = assemble(&quot;&quot;&quot;
+nop
+nop
+&quot;&quot;&quot;, cave)
+
+# Cave layout: hook code, then the displaced original bytes, then a jump back.
+# Re-executing the original bytes preserves the target's behavior. Drop `+ original` from cave_body to fully replace it.
+cave_body = injected_code + original
+jump_back = assemble(f&quot;jmp {return_address:#x}&quot;, cave + len(cave_body))
+write_bytes(cave_body + jump_back, cave)
+# Pad leftover stolen_size bytes with NOPs so execution resumes on a clean
+# boundary (a partial instruction left over would corrupt decoding).
+patch(jump_to_cave + b&quot;\x90&quot; * (stolen_size - len(jump_to_cave)), target, expected=original)
+print(f&quot;Injected {target:#x} -&gt; {cave:#x}, return {return_address:#x}&quot;)
+# Call restore(target) to undo the patch. The cave allocation persists until dealloc(&quot;engine_code_cave&quot;).
+</string>
    </property>
   </action>
   <action name="actionOpen">
    <property name="text">
     <string>Open [Ctrl+O]</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
   </action>
   <action name="actionSave">
    <property name="text">
     <string>Save [Ctrl+S]</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="actionLibpince">
@@ -93,8 +200,87 @@
    <property name="text">
     <string>Run current script [Ctrl+R]</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="actionRun_selection">
+   <property name="text">
+    <string>Run selection [Ctrl+Shift+R]</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+R</string>
+   </property>
+  </action>
+  <action name="actionClear_output">
+   <property name="text">
+    <string>Clear output</string>
+   </property>
+  </action>
+  <action name="actionAOB_scan_nop">
+   <property name="text">
+    <string>AOB scan + NOP</string>
+   </property>
+   <property name="data" stdset="0">
+    <string notr="true"># AOB scan + NOP template
+addr = aobscan_first(&quot;48 8B ?? ?? ?? 89&quot;)
+if addr is None:
+    raise RuntimeError(&quot;Pattern not found&quot;)
+
+nop(addr, 6)
+print(f&quot;NOPed {addr:#x}&quot;)
+# Call restore(addr) to undo the nop.</string>
+   </property>
+  </action>
+  <action name="actionAOB_scan_patch">
+   <property name="text">
+    <string>AOB scan + patch</string>
+   </property>
+   <property name="data" stdset="0">
+    <string notr="true"># AOB scan + patch template
+# Example bytes:
+# 83 00 FF     add DWORD PTR [rax], 0xffffffff (-0x1)
+# 48 8B 43 10  mov rax, QWORD PTR [rbx+0x10]
+# This changes the -1 decrement to +2 addition (eg. add ammo when shooting instead of subtracting)
+expected = &quot;83 00 FF 48 8B 43 10&quot;
+addr = aobscan_first(expected)
+if addr is None:
+    raise RuntimeError(&quot;Pattern not found&quot;)
+
+replacement = assemble(f&quot;&quot;&quot;
+add dword ptr [rax], 0x2
+&quot;&quot;&quot;, addr)
+
+# Ensure we won't corrupt the next instruction after add
+if len(replacement) != 3:
+    raise RuntimeError(&quot;Replacement size must match target instruction&quot;)
+
+patch(replacement, addr, expected=&quot;83 00 ff&quot;)
+print(f&quot;Patched instruction at {addr:#x}&quot;)
+# Call restore(addr) to undo the patch.</string>
+   </property>
+  </action>
+  <action name="actionRead_write_address">
+   <property name="text">
+    <string>Read/write address</string>
+   </property>
+   <property name="data" stdset="0">
+    <string notr="true"># Read/write template
+addr = address(&quot;0x0&quot;)
+old_value = read_int(addr, size=4)
+write_int(old_value + 1, addr, size=4)
+print(f&quot;{addr:#x}: {old_value} -&gt; {read_int(addr, size=4)}&quot;)
+</string>
+   </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ScriptEditor</class>
+   <extends>QPlainTextEdit</extends>
+   <header location="global">GUI.Widgets.LibpinceEngine.ScriptEditor</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
