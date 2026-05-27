@@ -1547,7 +1547,7 @@ def nop_instruction(start_address, length_of_instr):
     if start_address not in modified_instructions_dict:
         modified_instructions_dict[start_address] = old_aob
 
-    nop_aob = "90 " * length_of_instr
+    nop_aob = " ".join(["90"] * length_of_instr)
     write_memory(start_address, typedefs.VALUE_INDEX.AOB, nop_aob)
 
 
@@ -1887,11 +1887,10 @@ def delete_breakpoint(breakpoint_number: int) -> bool:
     deletion_list = [breakpoint_number]
     global chained_breakpoints
     for n, item in enumerate(chained_breakpoints):
-        for breakpoint in item:
-            if breakpoint == breakpoint_number:
-                deletion_list = item
-                del chained_breakpoints[n]
-                break
+        if breakpoint_number in item:
+            deletion_list = item
+            del chained_breakpoints[n]
+            break
     for breakpoint in deletion_list:
         global breakpoint_on_hit_dict
         try:
@@ -2043,11 +2042,11 @@ class Tracer:
             int: Number of the breakpoint set
             None: If fails to set any breakpoint or if max_trace_count is not valid
         """
-        if max_trace_count < 1:
-            logger.error("max_trace_count must be greater than or equal to 1")
-            return
         if type(max_trace_count) != int:
             logger.error(f"max_trace_count must be an integer. Was given type '{type(max_trace_count)}'")
+            return
+        if max_trace_count < 1:
+            logger.error("max_trace_count must be greater than or equal to 1")
             return
         breakpoint = add_breakpoint(expression, on_hit=typedefs.BREAKPOINT_ON_HIT.TRACE)
         if not breakpoint:
