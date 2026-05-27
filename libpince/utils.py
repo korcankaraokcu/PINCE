@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib, logging
+import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib, logging, subprocess, shlex
 from . import typedefs, regexes
 from capstone import Cs, CsError, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
 from keystone import Ks, KsError, KS_ARCH_X86, KS_MODE_32, KS_MODE_64
@@ -899,13 +899,16 @@ def extract_symbol_name(symbol_string: str) -> str:
 
 
 def execute_command_as_user(command):
-    """Executes given command as user
+    """Executes given command as the original user who invoked PINCE
 
     Args:
         command (str): Command that'll be invoked from the shell
     """
-    uid, gid = get_user_ids()
-    os.system("sudo -Eu '#" + uid + "' " + command)
+    uid, _ = get_user_ids()
+    if not uid.isdigit():
+        logger.error(f"Invalid uid {uid!r}, refusing to drop privileges")
+        return
+    subprocess.run(["sudo", "-Eu", f"#{uid}"] + shlex.split(command), check=False)
 
 
 def init_user_files():

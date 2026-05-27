@@ -32,10 +32,10 @@ mem_file = "/proc/" + str(pid) + "/mem"
 
 void_ptr = gdb.lookup_type("void").pointer()
 
-if str(gdb.parse_and_eval("$rax")) == "void":
-    current_arch = typedefs.INFERIOR_ARCH.ARCH_32
-else:
+if void_ptr.sizeof == 8:
     current_arch = typedefs.INFERIOR_ARCH.ARCH_64
+else:
+    current_arch = typedefs.INFERIOR_ARCH.ARCH_32
 
 
 # Use this function instead of the .gdbinit file
@@ -77,31 +77,16 @@ def get_general_registers():
 
 def get_flag_registers():
     contents_send = OrderedDict()
-    bitwise_flags = bin(int(gdb.parse_and_eval("$eflags")))[2:]
-    reversed_bitwise_flags = "".join(reversed(bitwise_flags))
-    (
-        contents_send["cf"],
-        contents_send["pf"],
-        contents_send["af"],
-        contents_send["zf"],
-        contents_send["sf"],
-        contents_send["tf"],
-        contents_send["if"],
-        contents_send["df"],
-        contents_send["of"],
-    ) = ["0"] * 9
-    try:
-        contents_send["cf"] = reversed_bitwise_flags[0]
-        contents_send["pf"] = reversed_bitwise_flags[2]
-        contents_send["af"] = reversed_bitwise_flags[4]
-        contents_send["zf"] = reversed_bitwise_flags[6]
-        contents_send["sf"] = reversed_bitwise_flags[7]
-        contents_send["tf"] = reversed_bitwise_flags[8]
-        contents_send["if"] = reversed_bitwise_flags[9]
-        contents_send["df"] = reversed_bitwise_flags[10]
-        contents_send["of"] = reversed_bitwise_flags[11]
-    except IndexError:
-        pass
+    flags = int(gdb.parse_and_eval("$eflags")) & 0xFFFFFFFF
+    contents_send["cf"] = str((flags >> 0) & 1)
+    contents_send["pf"] = str((flags >> 2) & 1)
+    contents_send["af"] = str((flags >> 4) & 1)
+    contents_send["zf"] = str((flags >> 6) & 1)
+    contents_send["sf"] = str((flags >> 7) & 1)
+    contents_send["tf"] = str((flags >> 8) & 1)
+    contents_send["if"] = str((flags >> 9) & 1)
+    contents_send["df"] = str((flags >> 10) & 1)
+    contents_send["of"] = str((flags >> 11) & 1)
     return contents_send
 
 

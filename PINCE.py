@@ -629,7 +629,7 @@ class MainForm(QMainWindow, MainWindow):
         selected_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not selected_row:
             return
-        address = selected_row.text(ADDR_COL).strip("P->")
+        address = selected_row.text(ADDR_COL).removeprefix("P->")
         pointer_window = PointerScanWindow(self, address)
         pointer_window.show()
         dialog = PointerScanSearchDialog(pointer_window, address)
@@ -639,7 +639,7 @@ class MainForm(QMainWindow, MainWindow):
         selected_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not selected_row:
             return
-        address = selected_row.text(ADDR_COL).strip("P->")  # @todo Maybe rework address grabbing logic in the future
+        address = selected_row.text(ADDR_COL).removeprefix("P->")  # @todo Maybe rework address grabbing logic in the future
         address_data = selected_row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
         if isinstance(address_data, typedefs.PointerChainRequest):
             selection_dialog = TrackSelectorDialogForm(self)
@@ -661,12 +661,12 @@ class MainForm(QMainWindow, MainWindow):
 
     def browse_region_for_address(self, address: str):
         if address:
-            self.memory_view_window.hex_dump_address(int(address.strip("P->"), 16))
+            self.memory_view_window.hex_dump_address(int(address.removeprefix("P->"), 16))
             self.memory_view_window.show()
             self.memory_view_window.activateWindow()
 
     def disassemble_for_address(self, address: str):
-        if address and self.memory_view_window.disassemble_expression(address.strip("P->")):
+        if address and self.memory_view_window.disassemble_expression(address.removeprefix("P->")):
             self.memory_view_window.show()
             self.memory_view_window.activateWindow()
 
@@ -783,19 +783,26 @@ class MainForm(QMainWindow, MainWindow):
     def paste_records(self, insert_inside=False):
         try:
             records = ast.literal_eval(app.clipboard().text())
-        except (SyntaxError, ValueError):
+        except (SyntaxError, ValueError, MemoryError, RecursionError):
+            QMessageBox.information(self, tr.ERROR, tr.INVALID_CLIPBOARD)
+            return
+        if not isinstance(records, list):
             QMessageBox.information(self, tr.ERROR, tr.INVALID_CLIPBOARD)
             return
 
         insert_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         root = self.treeWidget_AddressTable.invisibleRootItem()
-        if not insert_row:  # this is common when the treeWidget_AddressTable is empty
-            self.insert_records(records, root, self.treeWidget_AddressTable.topLevelItemCount())
-        elif insert_inside:
-            self.insert_records(records, insert_row, 0)
-        else:
-            parent = insert_row.parent() or root
-            self.insert_records(records, parent, parent.indexOfChild(insert_row) + 1)
+        try:
+            if not insert_row:  # this is common when the treeWidget_AddressTable is empty
+                self.insert_records(records, root, self.treeWidget_AddressTable.topLevelItemCount())
+            elif insert_inside:
+                self.insert_records(records, insert_row, 0)
+            else:
+                parent = insert_row.parent() or root
+                self.insert_records(records, parent, parent.indexOfChild(insert_row) + 1)
+        except (TypeError, IndexError, KeyError, AttributeError):
+            QMessageBox.information(self, tr.ERROR, tr.INVALID_CLIPBOARD)
+            return
         self.update_address_table()
 
     def group_records(self):
@@ -956,12 +963,14 @@ class MainForm(QMainWindow, MainWindow):
                     if address:
                         old_base = pointer_chain_req.base_address  # save the old base
                         pointer_chain_req.base_address = address
-                        pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
+                        try:
+                            pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
+                        finally:
+                            address_data.base_address = old_base  # then set it back
                         if pointer_chain_result and pointer_chain_result.get_final_address():
                             address = pointer_chain_result.get_final_address_as_hex()
                         else:
                             address = None
-                        address_data.base_address = old_base  # then set it back
                         if address:
                             row.setText(ADDR_COL, f"P->{address}")
                         else:
@@ -1718,7 +1727,7 @@ class MainForm(QMainWindow, MainWindow):
             it += 1
             if row.checkState(FROZEN_COL) == Qt.CheckState.Checked:
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-                address = row.text(ADDR_COL).strip("P->")
+                address = row.text(ADDR_COL).removeprefix("P->")
                 frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 value = frozen.value
                 freeze_type = frozen.freeze_type
@@ -1778,7 +1787,7 @@ class MainForm(QMainWindow, MainWindow):
                 QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
                 return
             for row in self.treeWidget_AddressTable.selectedItems():
-                address = row.text(ADDR_COL).strip("P->")
+                address = row.text(ADDR_COL).removeprefix("P->")
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 parsed_value = utils.parse_string(new_value, vt.value_index)
                 if typedefs.VALUE_INDEX.has_length(vt.value_index) and parsed_value != None:
@@ -2507,9 +2516,12 @@ class AboutWidgetForm(QTabWidget, AboutWidget):
 
         # This section has untranslated text since it's just a placeholder
         pince_dir = utils.get_script_directory()
-        license_text = open(f"{pince_dir}/COPYING").read()
-        authors_text = open(f"{pince_dir}/AUTHORS").read()
-        thanks_text = open(f"{pince_dir}/THANKS").read()
+        with open(f"{pince_dir}/COPYING", encoding="utf-8") as f:
+            license_text = f.read()
+        with open(f"{pince_dir}/AUTHORS", encoding="utf-8") as f:
+            authors_text = f.read()
+        with open(f"{pince_dir}/THANKS", encoding="utf-8") as f:
+            thanks_text = f.read()
         self.textBrowser_License.setPlainText(license_text)
         self.textBrowser_Contributors.append(
             "This is only a placeholder, this section may look different when the project finishes"
@@ -4944,6 +4956,10 @@ class HexEditDialogForm(QDialog, HexEditDialog):
             QMessageBox.information(self, tr.ERROR, tr.IS_INVALID_EXPRESSION.format(expression))
             return
         value = self.lineEdit_HexView.text()
+        parsed = utils.parse_string(value, typedefs.VALUE_INDEX.AOB)
+        if parsed is None:
+            QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
+            return
         debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, value)
         super().accept()
 
@@ -4968,7 +4984,7 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         log_status = f"<font color=blue>{tr.ON}</font>" if states.gdb_logging else f"<font color=red>{tr.OFF}</font>"
         self.label_LoggingStatus.setText(f"<b>{tr.LOG_STATUS.format(log_status)}</b>")
         try:
-            log_file = open(log_path)
+            log_file = open(log_path, encoding="utf-8", errors="replace")
         except OSError:
             self.textBrowser_LogContent.clear()
             error_message = tr.LOG_READ_ERROR.format(log_path) + "\n"
@@ -4976,13 +4992,14 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
                 error_message += tr.SETTINGS_ENABLE_LOG
             self.textBrowser_LogContent.setText(error_message)
             return
-        log_file.seek(0, io.SEEK_END)
-        end_pos = log_file.tell()
-        if end_pos > 20000:
-            log_file.seek(end_pos - 20000, io.SEEK_SET)
-        else:
-            log_file.seek(0, io.SEEK_SET)
-        contents = log_file.read().split("\n", 1)[-1]
+        with log_file:
+            log_file.seek(0, io.SEEK_END)
+            end_pos = log_file.tell()
+            if end_pos > 20000:
+                log_file.seek(end_pos - 20000, io.SEEK_SET)
+            else:
+                log_file.seek(0, io.SEEK_SET)
+            contents = log_file.read().split("\n", 1)[-1]
         if contents != self.contents:
             self.contents = contents
             self.textBrowser_LogContent.clear()
@@ -4993,7 +5010,6 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
             cursor.movePosition(QTextCursor.MoveOperation.End)
             self.textBrowser_LogContent.setTextCursor(cursor)
             self.textBrowser_LogContent.ensureCursorVisible()
-        log_file.close()
 
     def closeEvent(self, event: QCloseEvent):
         self.refresh_timer.stop()
