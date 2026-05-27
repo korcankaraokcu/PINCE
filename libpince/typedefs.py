@@ -343,7 +343,7 @@ string_index_to_encoding_dict = {
 }
 
 string_index_to_multiplier_dict = {
-    VALUE_INDEX.STRING_UTF8: 2,
+    VALUE_INDEX.STRING_UTF8: 4,
     VALUE_INDEX.STRING_UTF16: 4,
     VALUE_INDEX.STRING_UTF32: 8,
 }
