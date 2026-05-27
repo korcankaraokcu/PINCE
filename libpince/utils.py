@@ -866,11 +866,13 @@ def split_symbol(symbol_string):
             if p_count == 0:
                 returned_list.append((symbol_string[: -(index + 1)]))
                 break
-            assert p_count >= 0, (
-                symbol_string + " contains unhealthy amount of left parentheses\nGotta give him some"
-                ' right parentheses. Like Bob always says "everyone needs a friend"'
-            )
-    assert p_count == 0, symbol_string + " contains unbalanced parentheses"
+            if p_count < 0:
+                raise ValueError(
+                    symbol_string + " contains unhealthy amount of left parentheses\nGotta give him some"
+                    ' right parentheses. Like Bob always says "everyone needs a friend"'
+                )
+    if p_count != 0:
+        raise ValueError(symbol_string + " contains unbalanced parentheses")
     if "@plt" in symbol_string:
         returned_list.append(symbol_string.rsplit("@plt", maxsplit=1)[0])
     returned_list.append(symbol_string)
@@ -898,18 +900,6 @@ def execute_command_as_user(command):
     """
     uid, gid = get_user_ids()
     os.system("sudo -Eu '#" + uid + "' " + command)
-
-
-def get_module_name(module):
-    """Gets the name of the given module without the package name
-
-    Args:
-        module (module): A module
-
-    Returns:
-        str: Name of the module
-    """
-    return module.__name__.replace(module.__package__ + ".", "", 1)
 
 
 def init_user_files():
@@ -1021,7 +1011,9 @@ def search_files(directory, regex):
         list: Sorted list of the relative paths(to the given directory) of the files found
     """
     file_list = []
-    for file in pathlib.Path(directory).rglob("*.*"):
+    for file in pathlib.Path(directory).rglob("*"):
+        if not file.is_file():
+            continue
         result = re.search(regex, file.name, re.IGNORECASE)
         if result:
             file_list.append(str(file.relative_to(directory)))
