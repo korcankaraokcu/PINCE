@@ -1075,6 +1075,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>附加到选中进程</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
         <location filename="../../GUI/SelectProcess.ui" line="0" />
         <source>Open</source>
@@ -1107,6 +1108,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>文件</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
         <source>Save</source>
         <translation>保存</translation>
@@ -1158,17 +1160,7 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <source>Open [Ctrl+O]</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Ctrl+O</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <source>Save [Ctrl+S]</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1183,7 +1175,7 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <source>Run current script [Ctrl+R]</source>
+        <source>Run current script</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1193,7 +1185,7 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <source>Run selection [Ctrl+Shift+R]</source>
+        <source>Run selection</source>
         <translation type="unfinished" />
     </message>
     <message>

@@ -177,7 +177,7 @@ print(f&quot;Injected {target:#x} -&gt; {cave:#x}, return {return_address:#x}&qu
   </action>
   <action name="actionOpen">
    <property name="text">
-    <string>Open [Ctrl+O]</string>
+    <string>Open</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -185,7 +185,7 @@ print(f&quot;Injected {target:#x} -&gt; {cave:#x}, return {return_address:#x}&qu
   </action>
   <action name="actionSave">
    <property name="text">
-    <string>Save [Ctrl+S]</string>
+    <string>Save</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
@@ -198,7 +198,7 @@ print(f&quot;Injected {target:#x} -&gt; {cave:#x}, return {return_address:#x}&qu
   </action>
   <action name="actionRun_current_script">
    <property name="text">
-    <string>Run current script [Ctrl+R]</string>
+    <string>Run current script</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+R</string>
@@ -206,7 +206,7 @@ print(f&quot;Injected {target:#x} -&gt; {cave:#x}, return {return_address:#x}&qu
   </action>
   <action name="actionRun_selection">
    <property name="text">
-    <string>Run selection [Ctrl+Shift+R]</string>
+    <string>Run selection</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+R</string>
