@@ -402,7 +402,7 @@ class ScriptEditor(QPlainTextEdit):
         self.completion_model.setStringList(names[:MAX_COMPLETIONS])
         self.completer.setCompletionPrefix(prefix)
         popup = self.completer.popup()
-        popup.setCurrentIndex(self.completion_model.index(0, 0))
+        popup.setCurrentIndex(self.completer.completionModel().index(0, 0))
         rect = self.cursorRect()
         width = popup.sizeHintForColumn(0) + popup.verticalScrollBar().sizeHint().width() + 20
         rect.setWidth(min(max(width, 240), 620))
