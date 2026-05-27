@@ -2423,15 +2423,15 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
             self.reset_console_text()
             return
         self.lineEdit.clear()
-        if console_input.strip().lower() in self.quit_commands:
+        stripped = console_input.strip().lower()
+        if stripped in self.quit_commands:
             console_output = tr.QUIT_SESSION_CRASH
-        if console_input.strip().lower() in self.continue_commands:
+        elif stripped in self.continue_commands:
             console_output = tr.CONT_SESSION_CRASH
+        elif self.radioButton_CLI.isChecked():
+            console_output = debugcore.send_command(console_input, cli_output=True)
         else:
-            if self.radioButton_CLI.isChecked():
-                console_output = debugcore.send_command(console_input, cli_output=True)
-            else:
-                console_output = debugcore.send_command(console_input)
+            console_output = debugcore.send_command(console_input)
         self.textBrowser.append("-->" + console_input)
         if console_output:
             self.textBrowser.append(console_output)
@@ -2458,10 +2458,9 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.scroll_to_bottom()
 
     def scroll_backwards_history(self):
-        try:
-            new_text = self.input_history[self.current_history_index - 1]
-        except IndexError:
+        if self.current_history_index - 1 < -len(self.input_history):
             return
+        new_text = self.input_history[self.current_history_index - 1]
         self.input_history[self.current_history_index] = self.lineEdit.text()
         self.current_history_index -= 1
         self.lineEdit.setText(new_text)
