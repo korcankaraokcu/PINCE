@@ -671,7 +671,7 @@ class MainForm(QMainWindow, MainWindow):
             self.memory_view_window.activateWindow()
 
     def change_freeze_type(self, freeze_type: int | None = None, row: QTreeWidgetItem | None = None) -> None:
-        if freeze_type == None:
+        if freeze_type is None:
             # No type has been specified, iterate through the freeze types
             # This usually happens if user clicks the freeze type text instead of the checkbox
             frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
@@ -1737,7 +1737,7 @@ class MainForm(QMainWindow, MainWindow):
                 freeze_type = frozen.freeze_type
                 if typedefs.VALUE_INDEX.is_number(vt.value_index):
                     new_value = debugcore.read_memory(address, vt.value_index, endian=vt.endian)
-                    if new_value == None:
+                    if new_value is None:
                         continue
                     if (
                         freeze_type == typedefs.FREEZE_TYPE.ALLOW_INCREMENT
@@ -1787,14 +1787,14 @@ class MainForm(QMainWindow, MainWindow):
         dialog = utilwidgets.InputDialog(self, [(tr.ENTER_VALUE, value)])
         if dialog.exec():
             new_value = dialog.get_values()[0]
-            if utils.parse_string(new_value, value_index) == None:
+            if utils.parse_string(new_value, value_index) is None:
                 QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
                 return
             for row in self.treeWidget_AddressTable.selectedItems():
                 address = row.text(ADDR_COL).removeprefix("P->")
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 parsed_value = utils.parse_string(new_value, vt.value_index)
-                if typedefs.VALUE_INDEX.has_length(vt.value_index) and parsed_value != None:
+                if typedefs.VALUE_INDEX.has_length(vt.value_index) and parsed_value is not None:
                     vt.length = len(parsed_value)
                     row.setText(TYPE_COL, vt.text())
                 frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
@@ -2060,7 +2060,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.update_value()
 
     def update_deref_labels(self, pointer_chain_result: typedefs.PointerChainResult):
-        if pointer_chain_result != None:
+        if pointer_chain_result is not None:
             base_deref = self.caps_hex_or_error_indicator(pointer_chain_result.pointer_chain[0])
             self.label_BaseAddressDeref.setText(f" → {base_deref}")
             for index, offsetFrame in enumerate(self.offsetsList):
@@ -2092,7 +2092,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             pointer_chain_req = typedefs.PointerChainRequest(hex_converted_expr, self.get_offsets_int_list())
             pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
             address = None
-            if pointer_chain_result != None and pointer_chain_result.get_final_address() not in {0, None}:
+            if pointer_chain_result is not None and pointer_chain_result.get_final_address() not in {0, None}:
                 address_text = pointer_chain_result.get_final_address_as_hex()
                 address = pointer_chain_result.get_final_address()
             else:
@@ -5313,10 +5313,12 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         guiutils.center_to_parent(self)
         self.hex_len = 16 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 else 8
         str_dict, jmp_dict, call_dict = debugcore.get_dissect_code_data()
-        str_dict_len, jmp_dict_len, call_dict_len = len(str_dict), len(jmp_dict), len(call_dict)
-        str_dict.close()
-        jmp_dict.close()
-        call_dict.close()
+        try:
+            str_dict_len, jmp_dict_len, call_dict_len = len(str_dict), len(jmp_dict), len(call_dict)
+        finally:
+            str_dict.close()
+            jmp_dict.close()
+            call_dict.close()
         if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
             if utilwidgets.InputDialog(self, tr.DISSECT_CODE).exec():
                 dissect_code_dialog = DissectCodeDialogForm(self)
@@ -5441,10 +5443,12 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         guiutils.center_to_parent(self)
         self.hex_len = 16 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 else 8
         str_dict, jmp_dict, call_dict = debugcore.get_dissect_code_data()
-        str_dict_len, jmp_dict_len, call_dict_len = len(str_dict), len(jmp_dict), len(call_dict)
-        str_dict.close()
-        jmp_dict.close()
-        call_dict.close()
+        try:
+            str_dict_len, jmp_dict_len, call_dict_len = len(str_dict), len(jmp_dict), len(call_dict)
+        finally:
+            str_dict.close()
+            jmp_dict.close()
+            call_dict.close()
         if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
             if utilwidgets.InputDialog(self, tr.DISSECT_CODE).exec():
                 dissect_code_dialog = DissectCodeDialogForm(self)

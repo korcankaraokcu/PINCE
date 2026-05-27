@@ -31,7 +31,7 @@ system_endianness = typedefs.ENDIANNESS.LITTLE if sys.byteorder == "little" else
 gdb_initialized = False
 
 # An integer. Can be a member of typedefs.INFERIOR_ARCH
-inferior_arch = int
+inferior_arch = -1
 
 # An integer. Can be a member of typedefs.INFERIOR_STATUS
 inferior_status = -1
@@ -40,7 +40,7 @@ inferior_status = -1
 currentpid = -1
 
 # An integer. Can be a member of typedefs.STOP_REASON
-stop_reason = int
+stop_reason = -1
 
 # A dictionary. Holds breakpoint numbers and what to do on hit
 # Format: {bp_num1:on_hit1, bp_num2:on_hit2, ...}
@@ -219,10 +219,9 @@ def send_command(
             child.sendcontrol(command)
         else:
             command_file = utils.get_gdb_command_file(currentpid)
-            command_fd = open(command_file, "r+")
-            command_fd.truncate()
-            command_fd.write(command)
-            command_fd.close()
+            with open(command_file, "r+") as command_fd:
+                command_fd.truncate()
+                command_fd.write(command)
             if not cli_output:
                 child.sendline("source " + command_file)
             else:
@@ -1220,7 +1219,7 @@ def is_address_static(address: str | int) -> bool:
     elif type(address) == str:
         address_str = utils.extract_hex_address(address)
         if not address_str:
-            logger.error(f"Invalid hex address string 'f{address}'")
+            logger.error(f"Invalid hex address string '{address}'")
             return False
     else:
         logger.error(f"Passed wrong type '{type(address)}' instead of str or int")
@@ -1266,7 +1265,8 @@ def find_closest_instruction_address(address, instruction_location="next", instr
         the backwards compatibility. The speed gain is not much of a big deal compared to backwards compatibility, so
         I'm not changing this function for now
     """
-    assert instruction_location in ["next", "previous"], "invalid instruction_location"
+    if instruction_location not in ("next", "previous"):
+        raise ValueError(f"invalid instruction_location: {instruction_location!r}")
     region_info = utils.get_region_info(currentpid, address)
     if region_info is None:
         return

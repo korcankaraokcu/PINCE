@@ -1031,8 +1031,8 @@ def ignore_exceptions(func):
 
     def wrapper(*args, **kwargs):
         try:
-            func(*args, **kwargs)
-        except:
+            return func(*args, **kwargs)
+        except Exception:
             traceback.print_exc()
 
     return wrapper
