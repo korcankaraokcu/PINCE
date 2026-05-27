@@ -102,7 +102,7 @@ last_gdb_command = ""
 # Use the function set_gdb_output_mode to make use of this variable
 gdb_output_mode = typedefs.gdb_output_mode(True, True, True)
 
-# A string. memory file of the currently attached/created process
+# A string. Memory file of the currently attached/created process
 mem_file = "/proc/" + str(currentpid) + "/mem"
 
 # A string. Determines which signal to use to interrupt the process
@@ -114,6 +114,12 @@ allocated_memory_chunks: dict[str, typedefs.AllocatedMemory] = {}
 
 # ID generator used for the above
 allocated_memory_gen_id = 0
+
+# A string. Holds the main executable's basename. Used by is_address_static() and _refresh_main_module_info()
+_main_module_name: str | None = None
+
+# A bool. Used by is_address_static() and _refresh_main_module_info() to mark if the main executable is PIE enabled or not.
+_main_module_is_static: bool = False
 
 """
 When PINCE was first launched, it used gdb 7.7.1, which is a very outdated version of gdb
@@ -633,6 +639,7 @@ def attach(pid, gdb_path=utils.get_default_gdb_path()):
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
     utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_AA))
+    _refresh_main_module_info()
     return typedefs.ATTACH_RESULT.SUCCESSFUL
 
 
@@ -690,6 +697,7 @@ def create_process(process_path, args="", ld_preload_path="", gdb_path=utils.get
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
     utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_AA))
+    _refresh_main_module_info()
     return True
 
 
@@ -1204,31 +1212,89 @@ def parse_and_eval(expression, cast=str):
     )
 
 
+def _refresh_main_module_info():
+    """Caches main module info for static address checking. Called by attach() and create_process().
+
+    Identifies the main module and whether its address is static (no ASLR or PIE) or not:
+    - Native Linux: main module is /proc/PID/exe. Static if ET_EXEC (non-PIE).
+    - Windows PE under WINE: main module is the first .exe with executable permissions in /proc/PID/maps.
+      Static if DllCharacteristics has the IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE bit cleared.
+    """
+    global _main_module_name, _main_module_is_static
+    _main_module_name = None
+    _main_module_is_static = False
+    if currentpid == -1:
+        return
+    try:
+        exe_link = os.readlink(f"/proc/{currentpid}/exe")
+    except OSError:
+        return
+
+    if "wine" in os.path.basename(exe_link).lower():
+        # Running under WINE, find the launched .exe in maps.
+        # Note: WINE/Proton maps PE files as r--p (no x bit), so we don't filter on permissions.
+        module_path = next(
+            (path for _, _, _, _, _, _, path in utils.get_regions(currentpid) if path.lower().endswith(".exe")),
+            None,
+        )
+        if module_path is None:
+            return
+    else:
+        module_path = exe_link
+
+    try:
+        with open(module_path, "rb") as f:
+            magic = f.read(4)
+            if magic.startswith(b"\x7fELF"):
+                f.seek(0x05)  # EI_DATA
+                byteorder = {b"\x01": "little", b"\x02": "big"}.get(f.read(1))
+                if byteorder is None:
+                    return  # Invalid ELF data encoding
+                f.seek(0x10)
+                is_static = int.from_bytes(f.read(2), byteorder) == 2  # ET_EXEC
+            elif magic[:2] == b"MZ":
+                f.seek(0x3C)
+                pe_offset = int.from_bytes(f.read(4), "little")  # PE mandates little endian, regardless of sys arch.
+                f.seek(pe_offset)
+                if f.read(4) != b"PE\x00\x00":
+                    return
+                f.seek(pe_offset + 4 + 20 + 0x46)  # COFF header + DllCharacteristics offset
+                is_static = (int.from_bytes(f.read(2), "little") & 0x40) == 0  # IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE
+            else:
+                return
+            _main_module_name = os.path.basename(module_path)
+            _main_module_is_static = is_static
+    except (OSError, ValueError):
+        pass
+
+
 def is_address_static(address: str | int) -> bool:
-    """Uses gdb's 'info symbol' command to check if an address belongs to an ELF section
-    which would guarantee a static address
+    """Checks if the given address is a static address
+
+    Returns True only for addresses inside the main module when that module is loaded at a fixed base:
+    - Native Linux: non-PIE ELF (ET_EXEC)
+    - WINE/Proton Windows: PE without IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE
+    Everything else is subject to ASLR.
 
     Args:
-        address (str | int): Address to check in either hex str or int format
+        address (str | int): Address to check, in either hex str or int format
 
     Returns:
-        bool: True is address is static, False otherwise
+        bool: True if the absolute address is static across restarts, False otherwise
     """
-    if type(address) == int:
-        address_str = hex(address)
-    elif type(address) == str:
+    if not _main_module_is_static:
+        return False
+    if isinstance(address, str):
         address_str = utils.extract_hex_address(address)
         if not address_str:
             logger.error(f"Invalid hex address string '{address}'")
             return False
-    else:
+        address = int(address_str, 16)
+    elif not isinstance(address, int):
         logger.error(f"Passed wrong type '{type(address)}' instead of str or int")
         return False
-    result = send_command(f"info symbol {address_str}")
-    if regexes.elf_section.search(result):
-        return True
-    else:
-        return False
+    region_info = utils.get_region_info(currentpid, address)
+    return region_info is not None and region_info.file_name == _main_module_name
 
 
 def get_thread_info():
@@ -2232,7 +2298,9 @@ def dissect_code(region_list, discard_invalid_strings=True):
     global dissect_code_active
     dissect_code_active = True
     try:
-        send_command("pince-dissect-code", send_with_file=True, file_contents_send=(region_list, discard_invalid_strings))
+        send_command(
+            "pince-dissect-code", send_with_file=True, file_contents_send=(region_list, discard_invalid_strings)
+        )
     finally:
         dissect_code_active = False
 
