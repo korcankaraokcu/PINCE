@@ -1153,9 +1153,12 @@ def examine_expression(expression):
     """
     if currentpid == -1:
         return typedefs.tuple_examine_expression(None, None, None)
-    return send_command(
+    result = send_command(
         "pince-examine-expressions", send_with_file=True, file_contents_send=[expression], recv_with_file=True
-    )[0]
+    )
+    if not result:
+        return typedefs.tuple_examine_expression(None, None, None)
+    return result[0]
 
 
 def examine_expressions(expression_list):
@@ -2074,6 +2077,10 @@ class Tracer:
             except (ValueError, FileNotFoundError):
                 pass
             sleep(0.1)
+        if self.cancel or currentpid == -1:
+            delete_breakpoint(self.bp_num)
+            self.trace_status = typedefs.TRACE_STATUS.FINISHED
+            return
         global active_trace
         active_trace = True
         delete_breakpoint(self.bp_num)

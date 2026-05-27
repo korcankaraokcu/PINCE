@@ -1020,13 +1020,9 @@ class MainForm(QMainWindow, MainWindow):
                 search_for += "0"
             if len(search_for2) != 0 and search_for2[-1] in {"e", "E"}:
                 search_for2 += "0"
-            # Adjust to locale whatever the input
-            if QLocale.system().decimalPoint() == ".":
-                search_for = search_for.replace(",", ".")
-                search_for2 = search_for2.replace(",", ".")
-            else:
-                search_for = search_for.replace(".", ",")
-                search_for2 = search_for2.replace(".", ",")
+            # Python's float() only accepts '.' as the decimal separator, so always normalize to '.'
+            search_for = search_for.replace(",", ".")
+            search_for2 = search_for2.replace(",", ".")
             value_1 = float(search_for)
             value_2 = float(search_for2) if search_for2 != "" else None
         elif scan_index == typedefs.SCAN_INDEX.STRING:
@@ -1046,8 +1042,11 @@ class MainForm(QMainWindow, MainWindow):
                         search_for2 = negative_str + "0x" + search_for2.lstrip("-")
                     if search_for2 in {"0x", "-0x"}:
                         search_for2 = ""
-            value_1 = int(search_for, 0)
-            value_2 = int(search_for2, 0) if search_for2 != "" else None
+                value_1 = int(search_for, 16)
+                value_2 = int(search_for2, 16) if search_for2 != "" else None
+            else:
+                value_1 = int(search_for)
+                value_2 = int(search_for2) if search_for2 != "" else None
 
         return value_1, value_2
 
@@ -1507,14 +1506,17 @@ class MainForm(QMainWindow, MainWindow):
             debugcore.continue_inferior()
             return True
         else:
-            messages = {
-                typedefs.ATTACH_RESULT.ATTACH_SELF: tr.SMARTASS,  # easter egg
-                typedefs.ATTACH_RESULT.PROCESS_NOT_VALID: tr.PROCESS_NOT_VALID,
-                typedefs.ATTACH_RESULT.ALREADY_DEBUGGING: tr.ALREADY_DEBUGGING,
-                typedefs.ATTACH_RESULT.ALREADY_TRACED: tr.ALREADY_TRACED.format(utils.is_traced(pid)),
-                typedefs.ATTACH_RESULT.PERM_DENIED: tr.PERM_DENIED,
-            }
-            QMessageBox.information(app.focusWidget(), tr.ERROR, messages[attach_result])
+            if attach_result == typedefs.ATTACH_RESULT.ALREADY_TRACED:
+                message = tr.ALREADY_TRACED.format(utils.is_traced(pid))
+            else:
+                messages = {
+                    typedefs.ATTACH_RESULT.ATTACH_SELF: tr.SMARTASS,  # easter egg
+                    typedefs.ATTACH_RESULT.PROCESS_NOT_VALID: tr.PROCESS_NOT_VALID,
+                    typedefs.ATTACH_RESULT.ALREADY_DEBUGGING: tr.ALREADY_DEBUGGING,
+                    typedefs.ATTACH_RESULT.PERM_DENIED: tr.PERM_DENIED,
+                }
+                message = messages.get(attach_result, tr.ERROR)
+            QMessageBox.information(app.focusWidget(), tr.ERROR, message)
             return False
 
     # Returns: a bool value indicates whether the operation succeeded.
@@ -1554,14 +1556,13 @@ class MainForm(QMainWindow, MainWindow):
         self.treeWidget_AddressTable.clear()
 
     def copy_to_address_table(self):
-        i = -1
         length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
-        for row in self.tableWidget_valuesearchtable.selectedItems():
-            i = i + 1
-            if i % 3 == 0:
-                value_index, value_repr, endian = row.data(Qt.ItemDataRole.UserRole)
-                vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
-                self.add_entry_to_addresstable(tr.NO_DESCRIPTION, row.text(), vt)
+        selected_indexes = self.tableWidget_valuesearchtable.selectionModel().selectedRows()
+        for index in selected_indexes:
+            address_item = self.tableWidget_valuesearchtable.item(index.row(), SEARCH_TABLE_ADDRESS_COL)
+            value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
+            vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
+            self.add_entry_to_addresstable(tr.NO_DESCRIPTION, address_item.text(), vt)
         self.update_address_table()
         self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
@@ -4463,9 +4464,10 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
             return
         self.info = info
         self.tableWidget_TrackInfo.setRowCount(0)
+        row = 0
         for register_expression in info:
-            for row, address in enumerate(info[register_expression]):
-                self.tableWidget_TrackInfo.setRowCount(self.tableWidget_TrackInfo.rowCount() + 1)
+            for address in info[register_expression]:
+                self.tableWidget_TrackInfo.setRowCount(row + 1)
                 self.tableWidget_TrackInfo.setItem(
                     row, TRACK_BREAKPOINT_COUNT_COL, QTableWidgetItem(str(info[register_expression][address]))
                 )
@@ -4473,6 +4475,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
                 self.tableWidget_TrackInfo.setItem(
                     row, TRACK_BREAKPOINT_SOURCE_COL, QTableWidgetItem("[" + register_expression + "]")
                 )
+                row += 1
         self.update_values()
 
     def update_values(self):

@@ -94,9 +94,10 @@ def search_processes(name_or_pid):
     Returns:
         list: List of (pid, user, process_name) -> (str, str, str)
     """
+    needle = str(name_or_pid).lower()
     processlist = []
     for pid, user, name in get_process_list():
-        if name_or_pid.lower() in name.lower() or name_or_pid in pid:
+        if needle in name.lower() or needle == pid:
             processlist.append((pid, user, name))
     return processlist
 
@@ -223,14 +224,19 @@ def is_traced(pid):
         None: if the specified process is not being traced or the process doesn't exist anymore
     """
     try:
-        with open(f"/proc/{pid}/status") as status_file:
-            for line in status_file:
-                if line.startswith("TracerPid:"):
-                    tracer_pid = line.split(":", 1)[1].strip()
-                    if tracer_pid != "0":
-                        return get_process_name(tracer_pid)
+        status_file = open(f"/proc/{pid}/status")
     except FileNotFoundError:
         return
+    with status_file:
+        for line in status_file:
+            if line.startswith("TracerPid:"):
+                tracer_pid = line.split(":", 1)[1].strip()
+                if tracer_pid != "0":
+                    try:
+                        return get_process_name(tracer_pid)
+                    except FileNotFoundError:
+                        return "<unknown tracer>"
+                return
 
 
 def is_process_valid(pid):
@@ -909,10 +915,7 @@ def init_user_files():
         os.makedirs(root_path)
     for file in typedefs.USER_PATHS.get_init_files():
         file = get_user_path(file)
-        try:
-            open(file).close()
-        except FileNotFoundError:
-            open(file, "w").close()
+        pathlib.Path(file).touch(exist_ok=True)
 
 
 def get_user_ids():
