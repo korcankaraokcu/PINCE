@@ -88,6 +88,9 @@ cancel_send_command = False
 # A boolean value. Used by state_observe_thread to check if a trace session is active
 active_trace = False
 
+# A boolean value. Used by dissect_code() to mark an ongoing code dissection.
+dissect_code_active = False
+
 # A boolean value. Set to True when a tracking breakpoint (on_hit != BREAK) was the last stop
 # This prevents the subsequent *running event from notifying the UI
 last_stop_was_tracking = False
@@ -1507,20 +1510,14 @@ def hex_dump(address, offset):
     """
     hex_byte_list = []
     with memory_handle() as mem_handle:
-        try:
-            mem_handle.seek(address)
-        except (OSError, ValueError):
-            return ["??"] * offset
-        for _ in range(offset):
+        for i in range(offset):
             try:
-                current_item = " ".join(format(n, "02x") for n in mem_handle.read(1))
-            except OSError:
+                mem_handle.seek(address + i)
+                byte = mem_handle.read(1)
+                current_item = format(byte[0], "02X") if byte else "??"
+            except (OSError, ValueError, IndexError):
                 current_item = "??"
-                try:
-                    mem_handle.seek(1, io.SEEK_CUR)  # Necessary since read() failed to execute
-                except (OSError, ValueError):
-                    pass
-            hex_byte_list.append(utils.upper_hex(current_item))
+            hex_byte_list.append(current_item)
     return hex_byte_list
 
 
@@ -2232,7 +2229,12 @@ def dissect_code(region_list, discard_invalid_strings=True):
         Can be returned from functions like utils.filter_regions
         discard_invalid_strings (bool): Entries that can't be decoded as utf-8 won't be included in referenced strings
     """
-    send_command("pince-dissect-code", send_with_file=True, file_contents_send=(region_list, discard_invalid_strings))
+    global dissect_code_active
+    dissect_code_active = True
+    try:
+        send_command("pince-dissect-code", send_with_file=True, file_contents_send=(region_list, discard_invalid_strings))
+    finally:
+        dissect_code_active = False
 
 
 def get_dissect_code_status():
@@ -2262,7 +2264,7 @@ def get_dissect_code_status():
 
 def cancel_dissect_code():
     """Finishes the current dissect code process early on"""
-    if last_gdb_command.find("pince-dissect-code") != -1:
+    if dissect_code_active:
         cancel_ongoing_command()
 
 
@@ -2364,8 +2366,12 @@ def search_referenced_calls(searched_str, case_sensitive=True, enable_regex=Fals
         list: [[referenced_address1, found_string1], ...]
         None: If enable_regex is True and searched_str isn't a valid regex expression
     """
-    param_str = (searched_str, case_sensitive, enable_regex)
-    return send_command("pince-search-referenced-calls " + str(param_str), recv_with_file=True)
+    return send_command(
+        "pince-search-referenced-calls",
+        send_with_file=True,
+        file_contents_send=(searched_str, case_sensitive, enable_regex),
+        recv_with_file=True,
+    )
 
 
 def complete_command(gdb_command):

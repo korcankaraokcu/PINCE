@@ -1700,21 +1700,25 @@ class MainForm(QMainWindow, MainWindow):
         row_count = self.tableWidget_valuesearchtable.rowCount()
         if row_count > 0:
             length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
-            with debugcore.memory_handle() as mem_handle:
-                for row_index in range(row_count):
-                    address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
-                    value_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_VALUE_COL)
-                    previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
-                    value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
-                    address = address_item.text()
-                    new_value = str(
-                        debugcore.read_memory(
-                            address, value_index, length, value_repr=value_repr, endian=endian, mem_handle=mem_handle
+            self.tableWidget_valuesearchtable.setSortingEnabled(False)
+            try:
+                with debugcore.memory_handle() as mem_handle:
+                    for row_index in range(row_count):
+                        address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
+                        value_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_VALUE_COL)
+                        previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
+                        value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
+                        address = address_item.text()
+                        new_value = str(
+                            debugcore.read_memory(
+                                address, value_index, length, value_repr=value_repr, endian=endian, mem_handle=mem_handle
+                            )
                         )
-                    )
-                    if new_value != previous_text:
-                        value_item.setForeground(QBrush(QColor(255, 0, 0)))
-                        value_item.setText(new_value)
+                        if new_value != previous_text:
+                            value_item.setForeground(QBrush(QColor(255, 0, 0)))
+                            value_item.setText(new_value)
+            finally:
+                self.tableWidget_valuesearchtable.setSortingEnabled(True)
 
     def freeze(self):
         if debugcore.currentpid == -1:

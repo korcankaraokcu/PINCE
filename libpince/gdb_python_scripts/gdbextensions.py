@@ -470,7 +470,7 @@ class DissectCode(gdb.Command):
                         if not found:
                             continue
                         if instruction.startswith("j") or instruction.startswith("loop"):
-                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0)
+                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int):
                                 instruction_only = regexes.alphanumerics.search(instruction).group(0).casefold()
@@ -481,7 +481,7 @@ class DissectCode(gdb.Command):
                                     referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
                                     ref_jmp_count += 1
                         elif instruction.startswith("call"):
-                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0)
+                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int):
                                 try:
@@ -491,7 +491,7 @@ class DissectCode(gdb.Command):
                                     referenced_calls_dict[referenced_address_str].add(instruction_addr)
                                     ref_call_count += 1
                         else:
-                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0)
+                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
                             referenced_address_int = int(referenced_address_str, 16)
                             if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
                                 try:
@@ -512,7 +512,7 @@ class SearchReferencedCalls(gdb.Command):
         super(SearchReferencedCalls, self).__init__("pince-search-referenced-calls", gdb.COMMAND_USER)
 
     def invoke(self, arg, from_tty):
-        searched_str, case_sensitive, enable_regex = eval(arg)
+        searched_str, case_sensitive, enable_regex = receive_from_pince()
         if enable_regex:
             try:
                 if case_sensitive:
