@@ -44,6 +44,9 @@ class TranslationConstants(QObject):
     CONTINUE_HOTKEY = QT_TR_NOOP("Continue the process")
     CANCEL_HOTKEY = QT_TR_NOOP("Cancel ongoing GDB command")
     TOGGLE_ATTACH_HOTKEY = QT_TR_NOOP("Toggle attach/detach")
+    SPEEDHACK_TOGGLE_HOTKEY = QT_TR_NOOP("Toggle speedhack")
+    SPEEDHACK_SPEED_UP_HOTKEY = QT_TR_NOOP("Speedhack - Increase speed")
+    SPEEDHACK_SPEED_DOWN_HOTKEY = QT_TR_NOOP("Speedhack - Decrease speed")
     EXACT_SCAN_HOTKEY = QT_TR_NOOP("Next Scan - Exact")
     NOT_SCAN_HOTKEY = QT_TR_NOOP("Next Scan - Not")
     INC_SCAN_HOTKEY = QT_TR_NOOP("Next Scan - Increased")
@@ -58,6 +61,7 @@ class TranslationConstants(QObject):
     ERROR = QT_TR_NOOP("Error")
     SUCCESS = QT_TR_NOOP("Success")
     INFO = QT_TR_NOOP("Information")
+    DISABLED_UNDER_WINE = QT_TR_NOOP("This feature is not available while attached to a WINE/Proton process!")
     GDB_INIT = QT_TR_NOOP("GDB isn't initialized yet")
     GDB_INIT_ERROR = QT_TR_NOOP(
         "Unable to initialize GDB\n"

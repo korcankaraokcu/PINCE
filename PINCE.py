@@ -128,7 +128,7 @@ from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDia
 from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructionsWidget
 from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
 from GUI.Widgets.Settings.Settings import SettingsDialog
-from libpince import debugcore, typedefs, utils, scancore
+from libpince import debugcore, typedefs, utils, scancore, speedhack
 from libpince.utils import safe_str_to_int, safe_int_cast, logger
 from libpince.scancore import memscan
 from libpince.libmemscan.memscan import ScanLevel, DataType, MatchView, BytePattern
@@ -281,16 +281,28 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 class MainForm(QMainWindow, MainWindow):
+    # Workaround to avoid race condition with temporary interrupt execution decorator.
+    # Routes speedhack hotkeys from the keyboard thread back onto the Qt main thread.
+    # Payload is the step delta: -1 = down, 0 = toggle, +1 = up.
+    speedhack_action_requested = pyqtSignal(int)
+
     def __init__(self):
         super().__init__()
         self.setupUi(self)
         self.deleted_regions: list[int] = []
+        self.is_wine_process = False
+        self.speedhack_action_requested.connect(self.on_speedhack_hotkey_action)
+        self.checkBox_Speedhack.toggled.connect(self.apply_speedhack)
+        self.doubleSpinBox_Speedhack.valueChanged.connect(self.apply_speedhack)
         hotkey_to_func = {
             states.hotkeys.pause_hotkey: self.pause_hotkey_pressed,
             states.hotkeys.break_hotkey: self.break_hotkey_pressed,
             states.hotkeys.continue_hotkey: self.continue_hotkey_pressed,
             states.hotkeys.cancel_hotkey: self.cancel_hotkey_pressed,
             states.hotkeys.toggle_attach_hotkey: self.toggle_attach_hotkey_pressed,
+            states.hotkeys.speedhack_toggle_hotkey: self.speedhack_toggle_hotkey_pressed,
+            states.hotkeys.speedhack_speed_up_hotkey: self.speedhack_speed_up_hotkey_pressed,
+            states.hotkeys.speedhack_speed_down_hotkey: self.speedhack_speed_down_hotkey_pressed,
             states.hotkeys.exact_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.EXACT),
             states.hotkeys.not_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.NOT),
             states.hotkeys.increased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.INCREASED),
@@ -501,6 +513,58 @@ class MainForm(QMainWindow, MainWindow):
             with debugcore.status_changed_condition:
                 debugcore.status_changed_condition.notify_all()
 
+    def speedhack_toggle_hotkey_pressed(self):
+        self.speedhack_action_requested.emit(0)
+
+    def speedhack_speed_up_hotkey_pressed(self):
+        self.speedhack_action_requested.emit(1)
+
+    def speedhack_speed_down_hotkey_pressed(self):
+        self.speedhack_action_requested.emit(-1)
+
+    def cleanup_speedhack(self):
+        # Called when the inferior is being replaced or torn down.
+        # uninstall() is best-effort, it restores patched bytes and frees the cave if it can.
+        speedhack.uninstall()
+        self.reset_speedhack_widgets()
+
+    def on_speedhack_hotkey_action(self, delta: int):
+        # We drive the widgets and let their signals run apply_speedhack, so hotkeys and clicks share the same code path.
+        if delta == 0:
+            self.checkBox_Speedhack.toggle()
+        else:
+            # Up/Down also turns the hack on with the spinbox value becoming the live speed.
+            if not self.checkBox_Speedhack.isChecked():
+                self.checkBox_Speedhack.setChecked(True)
+            self.doubleSpinBox_Speedhack.setValue(self.doubleSpinBox_Speedhack.value() + delta * speedhack.STEP)
+
+    def apply_speedhack(self, *_):
+        # Both widget signals and the hotkeys (via on_speedhack_hotkey_action) funnel through here.
+        enabled = self.checkBox_Speedhack.isChecked()
+        if enabled and self.is_wine_process:
+            # TODO BRK: Remove this gate once I figure out how to properly hook WINE/Proton stuff without freezes.
+            QMessageBox.information(self, tr.INFO, tr.DISABLED_UNDER_WINE)
+            self.reset_speedhack_widgets()
+            return
+        self.doubleSpinBox_Speedhack.setEnabled(enabled)
+        # The hooks stay installed across toggles and we just change the speed, so we patch only once per session.
+        # Doing so means we avoid racing thread RIPs sitting in the prologue that we'd be overwriting on every keypress,
+        # which can cause freezes during rapid toggling.
+        if enabled:
+            speedhack.set_speed(self.doubleSpinBox_Speedhack.value())
+        # Only restore the default speed if the hooks already exist otherwise set_speed would install them.
+        elif speedhack.is_installed():
+            speedhack.set_speed(speedhack.DEFAULT_SPEED)
+
+    def reset_speedhack_widgets(self):
+        self.checkBox_Speedhack.blockSignals(True)
+        self.doubleSpinBox_Speedhack.blockSignals(True)
+        self.checkBox_Speedhack.setChecked(False)
+        self.doubleSpinBox_Speedhack.setValue(speedhack.DEFAULT_SPEED)
+        self.doubleSpinBox_Speedhack.setEnabled(False)
+        self.checkBox_Speedhack.blockSignals(False)
+        self.doubleSpinBox_Speedhack.blockSignals(False)
+
     @utils.ignore_exceptions
     def nextscan_hotkey_pressed(self, index):
         if self.scan_mode == typedefs.SCAN_MODE.NEW or self.is_scanning:
@@ -639,7 +703,9 @@ class MainForm(QMainWindow, MainWindow):
         selected_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not selected_row:
             return
-        address = selected_row.text(ADDR_COL).removeprefix("P->")  # @todo Maybe rework address grabbing logic in the future
+        address = selected_row.text(ADDR_COL).removeprefix(
+            "P->"
+        )  # @todo Maybe rework address grabbing logic in the future
         address_data = selected_row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
         if isinstance(address_data, typedefs.PointerChainRequest):
             selection_dialog = TrackSelectorDialogForm(self)
@@ -982,7 +1048,13 @@ class MainForm(QMainWindow, MainWindow):
                 address = "" if not address else address
                 row.setData(ADDR_COL, Qt.ItemDataRole.UserRole + 1, address)
                 value = debugcore.read_memory(
-                    address, vt.value_index, vt.length, vt.zero_terminate, vt.value_repr, vt.endian, mem_handle=mem_handle
+                    address,
+                    vt.value_index,
+                    vt.length,
+                    vt.zero_terminate,
+                    vt.value_repr,
+                    vt.endian,
+                    mem_handle=mem_handle,
                 )
                 value = "" if value is None else str(value)
                 row.setText(VALUE_COL, value)
@@ -1497,6 +1569,7 @@ class MainForm(QMainWindow, MainWindow):
 
     # Returns: a bool value indicates whether the operation succeeded.
     def attach_to_pid(self, pid: int):
+        self.cleanup_speedhack()
         if os.environ.get("APPDIR"):
             gdb_path = utils.get_default_gdb_path()
         else:
@@ -1530,6 +1603,7 @@ class MainForm(QMainWindow, MainWindow):
 
     # Returns: a bool value indicates whether the operation succeeded.
     def create_new_process(self, file_path, args, ld_preload_path):
+        self.cleanup_speedhack()
         if debugcore.create_process(file_path, args, ld_preload_path):
             settings.apply_after_init()
             memscan.attach(debugcore.currentpid)
@@ -1546,6 +1620,7 @@ class MainForm(QMainWindow, MainWindow):
     def on_new_process(self):
         name = utils.get_process_name(debugcore.currentpid)
         self.label_SelectedProcess.setText(str(debugcore.currentpid) + " - " + name)
+        self.is_wine_process = utils.is_wine_process(debugcore.currentpid)
 
         # enable scan GUI
         self.lineEdit_Scan.setPlaceholderText(tr.SCAN_FOR)
@@ -1589,6 +1664,10 @@ class MainForm(QMainWindow, MainWindow):
         self.label_MatchCount.setText(tr.MATCH_COUNT.format(0))
 
     def on_inferior_exit(self):
+        # Inferior is gone, so just drop speedhack state.
+        # No need for uninstall as that would only produce noise with errors.
+        speedhack.reset()
+        self.reset_speedhack_widgets()
         self.pushButton_MemoryView.setEnabled(False)
         self.pushButton_AddAddressManually.setEnabled(False)
         self.widget_Scanbox.setEnabled(False)
@@ -1632,6 +1711,7 @@ class MainForm(QMainWindow, MainWindow):
             # user cancelled the exit
             return
 
+        self.cleanup_speedhack()
         debugcore.detach()
         memscan.close()
         app.closeAllWindows()
@@ -1706,12 +1786,19 @@ class MainForm(QMainWindow, MainWindow):
                     for row_index in range(row_count):
                         address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
                         value_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_VALUE_COL)
-                        previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
+                        previous_text = self.tableWidget_valuesearchtable.item(
+                            row_index, SEARCH_TABLE_PREVIOUS_COL
+                        ).text()
                         value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
                         address = address_item.text()
                         new_value = str(
                             debugcore.read_memory(
-                                address, value_index, length, value_repr=value_repr, endian=endian, mem_handle=mem_handle
+                                address,
+                                value_index,
+                                length,
+                                value_repr=value_repr,
+                                endian=endian,
+                                mem_handle=mem_handle,
                             )
                         )
                         if new_value != previous_text:
@@ -5376,7 +5463,9 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
             addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_STR_ADDR_COL).text()
             referrers = str_dict[addr]
             addrs = [hex(address) for address in referrers]
-            self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)])
+            self.listWidget_Referrers.addItems(
+                [self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)]
+            )
             self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
         finally:
             str_dict.close()
@@ -5499,7 +5588,9 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
             addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_CALL_ADDR_COL).text()
             referrers = call_dict[utils.extract_hex_address(addr)]
             addrs = [hex(address) for address in referrers]
-            self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)])
+            self.listWidget_Referrers.addItems(
+                [self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)]
+            )
             self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
         finally:
             call_dict.close()

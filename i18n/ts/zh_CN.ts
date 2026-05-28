@@ -996,6 +996,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
+        <source>Enable Speedhack</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/MainWindow.ui" line="0" />
         <source>Open session notes</source>
         <translation type="unfinished" />
     </message>
@@ -1689,6 +1694,21 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
+        <source>Toggle speedhack</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Speedhack - Increase speed</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Speedhack - Decrease speed</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
         <source>Next Scan - Exact</source>
         <translation>再次扫描 - 精确</translation>
     </message>
@@ -1756,6 +1776,11 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../tr/tr.py" line="0" />
         <source>Information</source>
         <translation>信息</translation>
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>This feature is not available while attached to a WINE/Proton process!</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
