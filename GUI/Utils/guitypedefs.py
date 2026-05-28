@@ -153,8 +153,12 @@ class Hotkeys:
         self.cancel_hotkey = Hotkey("cancel_hotkey", tr.CANCEL_HOTKEY, "Ctrl+k")
         self.toggle_attach_hotkey = Hotkey("toggle_attach_hotkey", tr.TOGGLE_ATTACH_HOTKEY, "Shift+F10")
         self.speedhack_toggle_hotkey = Hotkey("speedhack_toggle_hotkey", tr.SPEEDHACK_TOGGLE_HOTKEY, "Ctrl+Shift+s")
-        self.speedhack_speed_down_hotkey = Hotkey("speedhack_speed_down_hotkey", tr.SPEEDHACK_SPEED_DOWN_HOTKEY, "Ctrl+Shift+Down")
-        self.speedhack_speed_up_hotkey = Hotkey("speedhack_speed_up_hotkey", tr.SPEEDHACK_SPEED_UP_HOTKEY, "Ctrl+Shift+Up")
+        self.speedhack_speed_down_hotkey = Hotkey(
+            "speedhack_speed_down_hotkey", tr.SPEEDHACK_SPEED_DOWN_HOTKEY, "Ctrl+Shift+Down"
+        )
+        self.speedhack_speed_up_hotkey = Hotkey(
+            "speedhack_speed_up_hotkey", tr.SPEEDHACK_SPEED_UP_HOTKEY, "Ctrl+Shift+Up"
+        )
         self.exact_scan_hotkey = Hotkey("exact_scan_hotkey", tr.EXACT_SCAN_HOTKEY, "")
         self.not_scan_hotkey = Hotkey("not_scan_hotkey", tr.NOT_SCAN_HOTKEY, "")
         self.increased_scan_hotkey = Hotkey("increased_scan_hotkey", tr.INC_SCAN_HOTKEY, "")

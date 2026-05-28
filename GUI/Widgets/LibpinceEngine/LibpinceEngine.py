@@ -95,7 +95,7 @@ class LibpinceScriptApi:
 
     def patch(self, data, address, expected=None):
         """Patch instruction bytes, optionally verifying the original bytes first.
-           Can be restored using restore(address).
+        Can be restored using restore(address).
         """
         data = self._bytes(data)
         address = self.address(address)
@@ -107,7 +107,7 @@ class LibpinceScriptApi:
 
     def nop(self, address, length):
         """Replace length bytes at address with NOP instructions.
-           Can be restored using restore(address).
+        Can be restored using restore(address).
         """
         debugcore.nop_instruction(self.address(address), int(length))
 
@@ -130,7 +130,9 @@ class LibpinceScriptApi:
 
     def disassemble_bytes(self, data, address=0):
         """Disassemble bytes and return a semicolon-separated instruction string."""
-        return utils.disassemble(self._bytes(data).hex(" "), self.address(address) if address else 0, debugcore.inferior_arch)
+        return utils.disassemble(
+            self._bytes(data).hex(" "), self.address(address) if address else 0, debugcore.inferior_arch
+        )
 
     def module_base(self, name):
         """Return the first mapped base address for a module by basename (e.g. 'libc.so.6')."""
@@ -138,8 +140,11 @@ class LibpinceScriptApi:
             raise RuntimeError("No process is attached!")
         needle = str(name).lower()
         return next(
-            (int(start, 16) for start, *_, path in utils.get_regions(debugcore.currentpid)
-             if path and os.path.basename(path).lower() == needle),
+            (
+                int(start, 16)
+                for start, *_, path in utils.get_regions(debugcore.currentpid)
+                if path and os.path.basename(path).lower() == needle
+            ),
             None,
         )
 
