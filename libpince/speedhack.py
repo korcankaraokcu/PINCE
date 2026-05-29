@@ -359,17 +359,19 @@ def _rebase_state(new_num: int, new_den: int) -> None:
 def _vdso_call_or_syscall(vdso_addr: int | None, syscall_nr: int, saves: tuple[str, ...]) -> str:
     # Emit asm that invokes the underlying time function.
     # If "vdso_addr" is set, we call it as a normal C function where the caller-saved regs in "saves" (rdi/rsi) are
-    # pushed across the call, and we sub 8 to keep rsp 16-byte aligned.
+    # pushed across the call.
+    # SysV ABI needs rsp % 16 == 0 before "call" so we pad with 8 only when an even number of regs are saved.
     # Otherwise we issue the raw syscall, which preserves rdi/rsi for free.
     if vdso_addr is not None:
         saves_push = "\n".join(f"push {r}" for r in saves)
         saves_pop = "\n".join(f"pop {r}" for r in reversed(saves))
+        align_pad = 8 if len(saves) % 2 == 0 else 0
         return f"""
             {saves_push}
-            sub rsp, 8
+            sub rsp, {align_pad}
             mov r11, {hex(vdso_addr)}
             call r11
-            add rsp, 8
+            add rsp, {align_pad}
             {saves_pop}
         """
     return f"""
