@@ -12,6 +12,7 @@
 - ### **[libpince](./libpince)**
   - [debugcore.py](./libpince/debugcore.py) - Everything related to communicating with GDB and debugging
   - [scancore.py](./libpince/scancore.py) - Everything related to the variable scanning backend
+  - [speedhack.py](./libpince/speedhack.py) - Everything related to speedhack functionality
   - [utils.py](./libpince/utils.py) - Contains generic utility functions such as parsing, file creation, process querying etc
   - [typedefs.py](./libpince/typedefs.py) - Contains all constants and variable definitions
   - [regexes.py](./libpince/regexes.py) - Contains regexes for parsing GDB output and other things
@@ -177,8 +178,6 @@ forcing me to use magic numbers for adjusting, which is a bit hackish
 # Roadmap
 So, after learning how to contribute, you are wondering where to start now. You can either search for `TODO` within the code or pick up any task from the roadmap below.
 These tasks are ordered by importance but feel free to pick any of them. Further details can be discussed in the PINCE discord server
-- Implement libpince engine
-- Implement multi-line code injection, this will also help with previously dropped inject_with_advanced_injection
 - Libpince support for Mono and Java (symbol recognition, calling functions, dissect obj tree etc.)
 - Move GUI classes of PINCE.py to their own files
 - Extend documentation to GUI parts. Libpince has 100% documentation coverage but GUI doesn't
@@ -186,7 +185,6 @@ These tasks are ordered by importance but feel free to pick any of them. Further
 - Arrows for jump instructions based on disassembled output
 - Flowcharts based on disassembled output
 - Consider implementing a GUI for catchpoints. This is currently done via GDB Console
-- Implement speedhack
 - Implement unrandomizer
 - Automatic function bypassing(make it return the desired value, hook specific parts etc.)
 - Implement auto-ESP&aimbot
