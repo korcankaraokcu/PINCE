@@ -25,6 +25,7 @@ from libpince import utils, debugcore, typedefs
 
 class QHexView(QTableView):
     scroll_requested = pyqtSignal(int)
+    page_scroll_requested = pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -62,6 +63,10 @@ class QHexView(QTableView):
             self.scroll_requested.emit(-1)
         elif event.key() == Qt.Key.Key_Down and self.currentIndex().row() == self.model().rowCount() - 1:
             self.scroll_requested.emit(1)
+        elif event.key() == Qt.Key.Key_PageUp:
+            self.page_scroll_requested.emit(-1)
+        elif event.key() == Qt.Key.Key_PageDown:
+            self.page_scroll_requested.emit(1)
         else:
             return super().keyPressEvent(event)
 

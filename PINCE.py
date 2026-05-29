@@ -2772,8 +2772,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_selection_address_begin = 0
         self.hex_selection_address_end = 0
         self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None, None)
-        self.hex_model = QHexModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
-        self.ascii_model = QAsciiModel(HEX_VIEW_ROW_COUNT, HEX_VIEW_COL_COUNT)
+        # Number of rows shown is recomputed from the viewport height (see adjust_hex_view_rows).
+        self.hex_row_count = HEX_VIEW_ROW_COUNT
+        self.hex_model = QHexModel(self.hex_row_count, HEX_VIEW_COL_COUNT)
+        self.ascii_model = QAsciiModel(self.hex_row_count, HEX_VIEW_COL_COUNT)
         self.tableView_HexView_Hex.setModel(self.hex_model)
         self.tableView_HexView_Ascii.setModel(self.ascii_model)
         # Adjust cell sizes after setting model to ensure correct size
@@ -2801,7 +2803,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableView_HexView_Ascii.selectionModel().selectionChanged.connect(self.hex_view_selection_changed)
         self.tableView_HexView_Hex.scroll_requested.connect(self.hex_view_scroll_by_row)
         self.tableView_HexView_Ascii.scroll_requested.connect(self.hex_view_scroll_by_row)
+        self.tableView_HexView_Hex.page_scroll_requested.connect(self.hex_view_page_scroll)
+        self.tableView_HexView_Ascii.page_scroll_requested.connect(self.hex_view_page_scroll)
 
+        self.scrollArea_Hex.viewport().installEventFilter(self)
         self.scrollArea_Hex.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scrollArea_Hex.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.tableWidget_HexView_Address.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -3011,10 +3016,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         app.clipboard().setText(display_text)
 
     def hex_view_scroll_up(self):
-        self.verticalScrollBar_HexView.setValue(1)
+        self.verticalScrollBar_HexView.setValue(self.verticalScrollBar_HexView.minimum())
 
     def hex_view_scroll_down(self):
-        self.verticalScrollBar_HexView.setValue(-1)
+        self.verticalScrollBar_HexView.setValue(self.verticalScrollBar_HexView.maximum())
+
+    def hex_view_page_scroll(self, direction):
+        if direction < 0:
+            self.hex_view_scroll_up()
+        else:
+            self.hex_view_scroll_down()
 
     def hex_view_scroll_by_row(self, direction):
         if debugcore.currentpid == -1:
@@ -3044,10 +3055,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.bHexViewScrolling = False
 
     def disassemble_scroll_up(self):
-        self.verticalScrollBar_Disassemble.setValue(1)
+        self.verticalScrollBar_Disassemble.setValue(self.verticalScrollBar_Disassemble.minimum())
 
     def disassemble_scroll_down(self):
-        self.verticalScrollBar_Disassemble.setValue(-1)
+        self.verticalScrollBar_Disassemble.setValue(self.verticalScrollBar_Disassemble.maximum())
 
     def disassemble_scrollbar_sliderchanged(self, even):
         if self.bDisassemblyScrolling:
@@ -3151,7 +3162,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def address_to_hex_point(self, address):
         diff = address - self.hex_model.current_address
-        if 0 <= diff < HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT:
+        if 0 <= diff < self.hex_row_count * HEX_VIEW_COL_COUNT:
             return diff // HEX_VIEW_COL_COUNT, diff % HEX_VIEW_COL_COUNT
 
     def get_hex_selection_length(self):
@@ -3161,11 +3172,29 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if not start_point:
             start_point = (0, 0)
         if not end_point:
-            end_point = (HEX_VIEW_ROW_COUNT - 1, HEX_VIEW_COL_COUNT - 1)
+            end_point = (self.hex_row_count - 1, HEX_VIEW_COL_COUNT - 1)
         return start_point, end_point
 
+    def eventFilter(self, obj, event):
+        if obj is self.scrollArea_Hex.viewport() and event.type() == QEvent.Type.Resize:
+            self.adjust_hex_view_rows()
+        return super().eventFilter(obj, event)
+
+    def adjust_hex_view_rows(self):
+        row_height = self.tableView_HexView_Hex.verticalHeader().defaultSectionSize()
+        if row_height <= 0:
+            return
+        available = self.scrollArea_Hex.viewport().height() - self.tableView_HexView_Hex.y()
+        new_count = max(1, available // row_height)
+        if new_count == self.hex_row_count:
+            return
+        self.hex_row_count = new_count
+        self.hex_model.set_row_count(new_count)
+        self.ascii_model.set_row_count(new_count)
+        self.hex_dump_address(self.hex_model.current_address)
+
     def hex_update_loop(self):
-        offset = HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT
+        offset = self.hex_row_count * HEX_VIEW_COL_COUNT
         if debugcore.currentpid == -1 or states.exiting:
             updated_array = ["??"] * offset
         else:
@@ -3176,9 +3205,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     # TODO: Consider merging HexView_Address, HexView_Hex and HexView_Ascii into one UI class
     # TODO: Move this function to that class if that happens
     # TODO: Also consider moving shared fields of HexView and HexModel to that class(such as HexModel.current_address)
-    def hex_dump_address(self, int_address, offset=HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT):
+    def hex_dump_address(self, int_address, offset=None):
         if debugcore.currentpid == -1:
             return
+        if offset is None:
+            offset = self.hex_row_count * HEX_VIEW_COL_COUNT
         self.tableView_HexView_Hex.setUpdatesEnabled(False)
         self.tableView_HexView_Ascii.setUpdatesEnabled(False)
         self.tableWidget_HexView_Address.setUpdatesEnabled(False)
@@ -3194,8 +3225,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None, None)
                 self.label_HexView_Information.setText(tr.INVALID_REGION)
         self.tableWidget_HexView_Address.setRowCount(0)
-        self.tableWidget_HexView_Address.setRowCount(HEX_VIEW_ROW_COUNT * HEX_VIEW_COL_COUNT)
-        for row, current_offset in enumerate(range(HEX_VIEW_ROW_COUNT)):
+        self.tableWidget_HexView_Address.setRowCount(self.hex_row_count)
+        for row, current_offset in enumerate(range(self.hex_row_count)):
             row_address = hex(utils.modulo_address(int_address + current_offset * 16, debugcore.inferior_arch))
             self.tableWidget_HexView_Address.setItem(row, 0, QTableWidgetItem(utils.upper_hex(row_address)))
         tableWidget_HexView_column_size = self.tableWidget_HexView_Address.sizeHintForColumn(0) + 5

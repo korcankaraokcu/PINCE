@@ -37,6 +37,18 @@ class QHexModel(QAbstractTableModel):
     def rowCount(self, QModelIndex_parent=None, *args, **kwargs):
         return self.row_count
 
+    def set_row_count(self, row_count: int):
+        # Resize the model to a new row count (e.g. when the hex view is resized).
+        # Caller is expected to repopulate data_array by calling refresh()/update_loop().
+        if row_count < 1 or row_count == self.row_count:
+            return
+        self.beginResetModel()
+        self.row_count = row_count
+        offset = row_count * self.column_count
+        self.data_array = ["??"] * offset
+        self.cell_animation = [0] * offset
+        self.endResetModel()
+
     def columnCount(self, QModelIndex_parent=None, *args, **kwargs):
         return self.column_count
 
