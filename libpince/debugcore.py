@@ -401,7 +401,7 @@ def can_attach(pid):
     if result == -1:
         return False
     os.waitpid(pid_int, 0)
-    libc.ptrace(17, pid_int, 0, 17)  # 17 is PTRACE_DETACH, check ptrace.h for details
+    libc.ptrace(17, pid_int, 0, 0)  # 17 is PTRACE_DETACH
     sleep(0.01)
     return True
 
