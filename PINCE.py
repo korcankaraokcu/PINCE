@@ -4321,7 +4321,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
     def tableWidget_BreakpointInfo_key_press_event(self, event):
         selected_row = guiutils.get_current_row(self.tableWidget_BreakpointInfo)
         if selected_row != -1:
-            breakpoint_num = safe_int_cast(self.tableWidget_BreakpointInfo.item(selected_row, BREAK_ADDR_COL).text())
+            breakpoint_num = safe_int_cast(self.tableWidget_BreakpointInfo.item(selected_row, BREAK_NUM_COL).text())
         else:
             breakpoint_num = None
 
