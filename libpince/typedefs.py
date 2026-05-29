@@ -342,10 +342,24 @@ string_index_to_encoding_dict = {
     VALUE_INDEX.STRING_ASCII: ["ascii", "replace"],
 }
 
+
+def resolve_string_encoding(value_index, endian, host_endianness):
+    """Return (encoding, option) for a string value_index with byte order baked in.
+
+    UTF-16/UTF-32 get an explicit little/big-endian codec.
+    Single-byte codecs (ascii/utf-8) ignore endianness.
+    """
+    encoding, option = string_index_to_encoding_dict[value_index]
+    if value_index in (VALUE_INDEX.STRING_UTF16, VALUE_INDEX.STRING_UTF32):
+        target_endian = host_endianness if endian == ENDIANNESS.HOST else endian
+        encoding += "-le" if target_endian == ENDIANNESS.LITTLE else "-be"
+    return encoding, option
+
+
 string_index_to_multiplier_dict = {
     VALUE_INDEX.STRING_UTF8: 4,
     VALUE_INDEX.STRING_UTF16: 4,
-    VALUE_INDEX.STRING_UTF32: 8,
+    VALUE_INDEX.STRING_UTF32: 4,
 }
 
 # first value is the length and the second one is the type

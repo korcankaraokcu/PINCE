@@ -961,7 +961,11 @@ def read_memory(
             mem_handle = memory_handle()
         mem_handle.seek(address)
         data_read = mem_handle.read(expected_length)
-        if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian:
+        if (
+            endian != typedefs.ENDIANNESS.HOST
+            and system_endianness != endian
+            and not typedefs.VALUE_INDEX.is_string(value_index)
+        ):
             data_read = data_read[::-1]
     except (OSError, ValueError):
         # TODO (read/write error output)
@@ -976,7 +980,7 @@ def read_memory(
     if len(data_read) < expected_length:
         return
     if typedefs.VALUE_INDEX.is_string(value_index):
-        encoding, option = typedefs.string_index_to_encoding_dict[value_index]
+        encoding, option = typedefs.resolve_string_encoding(value_index, endian, system_endianness)
         returned_string = data_read.decode(encoding, option)
         if zero_terminate:
             if returned_string.startswith("\x00"):
@@ -1031,19 +1035,20 @@ def write_memory(
             return
     else:
         write_data = value
-    encoding, option = typedefs.string_index_to_encoding_dict.get(value_index, (None, None))
-    if encoding is None:
+    if typedefs.VALUE_INDEX.is_string(value_index):
+        encoding, option = typedefs.resolve_string_encoding(value_index, endian, system_endianness)
+        write_data = write_data.encode(encoding, option)
+        if zero_terminate:
+            write_data += b"\x00"
+    else:
         if value_index is typedefs.VALUE_INDEX.AOB:
             write_data = bytearray(write_data)
         else:
             data_type = typedefs.index_to_struct_pack_dict.get(value_index, -1)
             write_data = struct.pack(data_type, write_data)
-    else:
-        write_data = write_data.encode(encoding, option)
-        if zero_terminate:
-            write_data += b"\x00"
-    if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian:
-        write_data = write_data[::-1]
+        # Byte order only applies to scalar numeric/AOB types, strings handle it via the codec above.
+        if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian:
+            write_data = write_data[::-1]
     try:
         with memory_handle("rb+") as mem_handle:
             mem_handle.seek(address)
