@@ -23,8 +23,10 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.scan_button: QPushButton | None = self.buttonBox.addButton(tr.SCAN, QDialogButtonBox.ButtonRole.ActionRole)
         if self.scan_button:
             self.scan_button.clicked.connect(self.scan_button_clicked)
+        self.cancel_button: QPushButton | None = self.buttonBox.button(QDialogButtonBox.StandardButton.Cancel)
         self.memscan_thread: guitypedefs.InterruptableWorker | None = None
         self.progress_bar_timer: QTimer | None = None
+        self.started_path_resolve = False
 
     def checkBox_CheckAdvOptions_checked(self, checked: bool) -> None:
         self.verticalWidget_AdvOptions.setEnabled(checked)
@@ -41,10 +43,13 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
             self.lineEdit_Path.setText(file_path)
 
     def reject(self) -> None:
-        self.cleanup()
-        if self.memscan_thread:
-            self.memscan_thread.stop()
-        return super().reject()
+        if self.memscan_thread is None:
+            self.cleanup()
+            return super().reject()
+        memscan.set_stop_flag(True)
+        if self.cancel_button:
+            self.cancel_button.setText(tr.STOPPING)
+            self.cancel_button.setEnabled(False)
 
     def cleanup(self) -> None:
         if self.progress_bar_timer:
@@ -57,6 +62,8 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.scan_button.setText(tr.SCANNING)
         self.scan_button.setEnabled(False)
         self.pushButton_Path.setEnabled(False)
+        if self.cancel_button:
+            self.cancel_button.setText(tr.STOP)
         addr_val = utils.safe_str_to_int(self.lineEdit_Address.text(), 16)
         self.parent().default_scan_address = hex(addr_val)
         ptrmap_file_path = self.lineEdit_Path.text()
@@ -77,13 +84,21 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.memscan_thread.signals.finished.connect(self.memscan_callback)
         self.memscan_thread.start()
         self.progressBar.setValue(0)
+        self.progressBar.setFormat(f"{tr.SCANNING_POINTERS} - %p%")
         self.progressBar.setVisible(True)
         self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
         self.progress_bar_timer.start(100)
 
     def update_progress_bar(self):
-        value = int(round(memscan.get_scan_progress() * 100))
-        self.progressBar.setValue(value)
+        if self.started_path_resolve is False:
+            scan_progress = int(round(memscan.get_scan_progress() * 100))
+            self.progressBar.setValue(scan_progress)
+            self.started_path_resolve = scan_progress == 100
+            if self.started_path_resolve:
+                self.progressBar.setFormat(f"{tr.RESOLVING_POINTERS} - %p%")
+        else:
+            resolve_progress = int(round(memscan.get_pointer_resolve_progress() * 100))
+            self.progressBar.setValue(resolve_progress)
 
     def memscan_callback(self, paths_found: int) -> None:
         self.cleanup()
