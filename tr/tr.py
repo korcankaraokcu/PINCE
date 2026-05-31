@@ -62,6 +62,7 @@ class TranslationConstants(QObject):
     SUCCESS = QT_TR_NOOP("Success")
     INFO = QT_TR_NOOP("Information")
     DISABLED_UNDER_WINE = QT_TR_NOOP("This feature is not available while attached to a WINE/Proton process!")
+    SPEEDHACK_UNAVAILABLE = QT_TR_NOOP("Speedhack couldn't be enabled for this process.")
     GDB_INIT = QT_TR_NOOP("GDB isn't initialized yet")
     GDB_INIT_ERROR = QT_TR_NOOP(
         "Unable to initialize GDB\n"

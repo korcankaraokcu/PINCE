@@ -1782,6 +1782,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
+        <source>Speedhack couldn't be enabled for this process.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
         <source>GDB isn't initialized yet</source>
         <translation type="unfinished" />
     </message>

@@ -28,7 +28,7 @@ import time
 from . import debugcore, typedefs, utils
 from .utils import logger
 
-ALLOC_NAME = "PINCE_speedhack"
+ALLOC_NAME = "PINCE_linux_speedhack"
 CAVE_SIZE = 0x400
 
 # The spinbox in MainWindow.ui owns the allowed range (0.2-10.0).
@@ -84,16 +84,17 @@ def _install(speed: float = 1.0) -> bool:
     # Internal: callers use set_speed(), which installs on first use.
     global session
     if session.enabled:
-        logger.error("Speedhack is already installed")
+        logger.error("Linux speedhack is already installed")
         return False
     if debugcore.currentpid == -1:
-        logger.error("Speedhack requires an attached process")
+        logger.error("Linux speedhack requires an attached process")
         return False
     if debugcore.inferior_arch != typedefs.INFERIOR_ARCH.ARCH_64:
-        logger.error("Speedhack currently supports only x86_64 inferiors")
+        # TODO BRK: Implement x86 support for Linux native targets.
+        logger.error("Linux speedhack currently supports only x86_64 inferiors")
         return False
     if ALLOC_NAME in debugcore.allocated_memory_chunks:
-        logger.error("Speedhack memory is already allocated")
+        logger.error("Linux speedhack memory is already allocated")
         return False
 
     ratio = _speed_to_ratio(speed)
@@ -120,12 +121,12 @@ def _install(speed: float = 1.0) -> bool:
         targets.append((symbol, address, build, original_aob, patch_size))
 
     if not targets:
-        logger.error("Speedhack couldn't locate any time functions to hook")
+        logger.error("Linux speedhack couldn't locate any time functions to hook")
         return False
 
     cave = debugcore.allocate_memory(CAVE_SIZE, ALLOC_NAME)
     if not cave:
-        logger.error("Failed to allocate speedhack memory")
+        logger.error("Failed to allocate Linux speedhack memory")
         return False
 
     installed: list[HookPatch] = []
@@ -138,7 +139,7 @@ def _install(speed: float = 1.0) -> bool:
         for symbol, address, build, original_aob, patch_size in targets:
             code = build(cave)
             if cursor + len(code) > cave + CAVE_SIZE:
-                raise RuntimeError(f"Speedhack code cave is too small for {symbol}")
+                raise RuntimeError(f"Linux speedhack code cave is too small for {symbol}")
             debugcore.write_memory(cursor, typedefs.VALUE_INDEX.AOB, list(code))
             # movabs rax, cursor; jmp rax (12 bytes), NOP-padded out to whole instructions.
             patch = b"\x48\xb8" + struct.pack("<Q", cursor) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE)
@@ -146,7 +147,7 @@ def _install(speed: float = 1.0) -> bool:
             installed.append(HookPatch(symbol, address, original_aob))
             cursor = (cursor + len(code) + 15) & ~15
     except Exception:
-        logger.exception("Failed to install speedhack")
+        logger.exception("Failed to install Linux speedhack")
         for hook in reversed(installed):
             _restore_hook(hook)
         debugcore.free_memory(ALLOC_NAME)
@@ -192,7 +193,7 @@ def _do_uninstall() -> bool:
             if not debugcore.free_memory(ALLOC_NAME):
                 success = False
         except Exception:
-            logger.exception("Failed to free speedhack memory")
+            logger.exception("Failed to free Linux speedhack memory")
             success = False
     return success
 
@@ -206,7 +207,7 @@ def uninstall() -> bool:
     try:
         success = _do_uninstall()
     except Exception:
-        logger.exception("Speedhack uninstall failed")
+        logger.exception("Linux speedhack uninstall failed")
     session = Session()
     return success
 
@@ -305,18 +306,21 @@ def _resolve_vdso_function(pid: int, symbol: str) -> int | None:
     return None
 
 
-def _read_patch_bytes(symbol: str, address: int) -> tuple[str | None, int]:
-    # Disassemble enough instructions at "address" to host a 12 bytes jump.
+def _read_patch_bytes(
+    symbol: str, address: int, disassembler=utils.cs_64, jump_size: int = JUMP_SIZE
+) -> tuple[str | None, int]:
+    # Disassemble enough whole instructions at "address" to host a jump of "jump_size" bytes.
+    # The defaults patch x86_64, wine_speedhack passes cs_32 for i386 inferiors.
     dump = debugcore.hex_dump(address, 32)
     if not dump or "??" in dump:
         logger.error("Failed to read %s instructions at 0x%x", symbol, address)
         return None, 0
     code = bytes(int(b, 16) for b in dump)
-    utils.cs_64.skipdata = False
+    disassembler.skipdata = False
     consumed = 0
-    for _, size, _, _ in utils.cs_64.disasm_lite(code, address):
+    for _, size, _, _ in disassembler.disasm_lite(code, address):
         consumed += size
-        if consumed >= JUMP_SIZE:
+        if consumed >= jump_size:
             return _bytes_to_aob(code[:consumed]), consumed
     logger.error("Failed to find enough whole instructions to patch %s", symbol)
     return None, 0

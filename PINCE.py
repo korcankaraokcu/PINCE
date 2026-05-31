@@ -128,7 +128,7 @@ from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDia
 from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructionsWidget
 from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
 from GUI.Widgets.Settings.Settings import SettingsDialog
-from libpince import debugcore, typedefs, utils, scancore, speedhack
+from libpince import debugcore, typedefs, utils, scancore, linux_speedhack, wine_speedhack
 from libpince.utils import safe_str_to_int, safe_int_cast, logger
 from libpince.scancore import memscan
 from libpince.libmemscan.memscan import ScanLevel, DataType, MatchView, BytePattern
@@ -525,42 +525,49 @@ class MainForm(QMainWindow, MainWindow):
     def cleanup_speedhack(self):
         # Called when the inferior is being replaced or torn down.
         # uninstall() is best-effort, it restores patched bytes and frees the cave if it can.
-        speedhack.uninstall()
+        self.speedhack.uninstall()
         self.reset_speedhack_widgets()
+
+    @property
+    def speedhack(self):
+        # WINE/Proton games are scaled at the Wine ntdll layer, native linux ones at the glibc layer.
+        return wine_speedhack if self.is_wine_process else linux_speedhack
 
     def on_speedhack_hotkey_action(self, delta: int):
         # We drive the widgets and let their signals run apply_speedhack, so hotkeys and clicks share the same code path.
+        if debugcore.currentpid == -1:
+            return
         if delta == 0:
             self.checkBox_Speedhack.toggle()
         else:
             # Up/Down also turns the hack on with the spinbox value becoming the live speed.
             if not self.checkBox_Speedhack.isChecked():
                 self.checkBox_Speedhack.setChecked(True)
-            self.doubleSpinBox_Speedhack.setValue(self.doubleSpinBox_Speedhack.value() + delta * speedhack.STEP)
+            self.doubleSpinBox_Speedhack.setValue(self.doubleSpinBox_Speedhack.value() + delta * self.speedhack.STEP)
 
     def apply_speedhack(self, *_):
         # Both widget signals and the hotkeys (via on_speedhack_hotkey_action) funnel through here.
-        enabled = self.checkBox_Speedhack.isChecked()
-        if enabled and self.is_wine_process:
-            # TODO BRK: Remove this gate once I figure out how to properly hook WINE/Proton stuff without freezes.
-            QMessageBox.information(self, tr.INFO, tr.DISABLED_UNDER_WINE)
-            self.reset_speedhack_widgets()
+        if debugcore.currentpid == -1:
             return
+        enabled = self.checkBox_Speedhack.isChecked()
         self.doubleSpinBox_Speedhack.setEnabled(enabled)
         # The hooks stay installed across toggles and we just change the speed, so we patch only once per session.
         # Doing so means we avoid racing thread RIPs sitting in the prologue that we'd be overwriting on every keypress,
         # which can cause freezes during rapid toggling.
         if enabled:
-            speedhack.set_speed(self.doubleSpinBox_Speedhack.value())
+            # A failure here is usually a Wine inferior whose ntdll exports couldn't be resolved.
+            if not self.speedhack.set_speed(self.doubleSpinBox_Speedhack.value()):
+                QMessageBox.information(self, tr.INFO, tr.SPEEDHACK_UNAVAILABLE)
+                self.reset_speedhack_widgets()
         # Only restore the default speed if the hooks already exist otherwise set_speed would install them.
-        elif speedhack.is_installed():
-            speedhack.set_speed(speedhack.DEFAULT_SPEED)
+        elif self.speedhack.is_installed():
+            self.speedhack.set_speed(self.speedhack.DEFAULT_SPEED)
 
     def reset_speedhack_widgets(self):
         self.checkBox_Speedhack.blockSignals(True)
         self.doubleSpinBox_Speedhack.blockSignals(True)
         self.checkBox_Speedhack.setChecked(False)
-        self.doubleSpinBox_Speedhack.setValue(speedhack.DEFAULT_SPEED)
+        self.doubleSpinBox_Speedhack.setValue(self.speedhack.DEFAULT_SPEED)
         self.doubleSpinBox_Speedhack.setEnabled(False)
         self.checkBox_Speedhack.blockSignals(False)
         self.doubleSpinBox_Speedhack.blockSignals(False)
@@ -1666,7 +1673,7 @@ class MainForm(QMainWindow, MainWindow):
     def on_inferior_exit(self):
         # Inferior is gone, so just drop speedhack state.
         # No need for uninstall as that would only produce noise with errors.
-        speedhack.reset()
+        self.speedhack.reset()
         self.reset_speedhack_widgets()
         self.pushButton_MemoryView.setEnabled(False)
         self.pushButton_AddAddressManually.setEnabled(False)
