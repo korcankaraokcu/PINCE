@@ -51,6 +51,8 @@ Failure to respect any of the rules laid above will result in an instant PR clos
 Make good use of `python -m compileall -q .` to ensure all of the Python files do not have syntax or parsing errors before you submit a commit or PR that contains Python files changes.
 
 # Code Style
+***Make sure that you add type hints to all of the functions that you add or modify in .py files.*** You can follow the rest of the codebase as an example of how they should look like.
+
 Formatting style is [Black](https://github.com/psf/black) defaults, except line length is 120. You can use Black without parameters since we already use `pyproject.toml` for this setting.
 
 ***You must format the files you changed using Black before you open a PR!*** Please do not format automatically generated files under GUI folder. Your changes will be overwritten by Qt Designer. More info at [UI Files](#ui-files)
@@ -182,7 +184,6 @@ These tasks are ordered by importance but feel free to pick any of them. Further
 - Libpince support for Mono and Java (symbol recognition, calling functions, dissect obj tree etc.)
 - Move GUI classes of PINCE.py to their own files
 - Extend documentation to GUI parts. Libpince has 100% documentation coverage but GUI doesn't
-- Finish adopting type hints and variable annotations across the codebase. All of libpince and GUI have full function type-hint coverage now, but PINCE.py still lags behind
 - Arrows for jump instructions based on disassembled output
 - Flowcharts based on disassembled output
 - Consider implementing a GUI for catchpoints(syscall, fork, exec etc.). Signal handling already has a GUI(HandleSignals widget), but the remaining catchpoint types are still done via the GDB Console
