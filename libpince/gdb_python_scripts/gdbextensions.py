@@ -299,7 +299,7 @@ class GetTrackWatchpointInfo(gdb.Command):
         super(GetTrackWatchpointInfo, self).__init__("pince-get-track-watchpoint-info", gdb.COMMAND_USER)
 
     def invoke(self, argument: str, from_tty: bool) -> None:
-        breakpoints = arg
+        breakpoints = argument
         current_pc = str(gdb.parse_and_eval("$pc"))
         current_pc_addr = utils.extract_hex_address(current_pc)
         # Sometimes GDB will return a decimal address str instead of a hex str
@@ -348,7 +348,7 @@ class GetTrackBreakpointInfo(gdb.Command):
         super(GetTrackBreakpointInfo, self).__init__("pince-get-track-breakpoint-info", gdb.COMMAND_USER)
 
     def invoke(self, argument: str, from_tty: bool) -> None:
-        arg_list = arg.split(",")
+        arg_list = argument.split(",")
         breakpoint_number = arg_list.pop()
         register_expressions = arg_list
         global track_breakpoint_dict
