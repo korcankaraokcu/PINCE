@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gdb, sys, traceback, functools
 from collections import OrderedDict
+from typing import Any, Callable
 
 # This is some retarded hack
 PINCE_PATH = gdb.parse_and_eval("$PINCE_PATH").string()
@@ -40,7 +41,7 @@ else:
 
 # Use this function instead of the .gdbinit file
 # If you have to load a .gdbinit file, just load it in this function with command "source"
-def gdbinit():
+def gdbinit() -> None:
     try:
         gdb.execute("source " + GDBINIT_AA_PATH)
     except Exception:
@@ -53,9 +54,9 @@ def gdbinit():
 
 # A decorator for printing exception information because GDB doesn't give proper information about exceptions
 # GDB also overrides sys.excepthook apparently. So this is a proper solution to the exception problem
-def print_exception(func):
+def print_exception(func: Callable) -> Callable:
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: Any, **kwargs: Any) -> None:
         try:
             func(*args, **kwargs)
         except Exception as e:
@@ -64,7 +65,7 @@ def print_exception(func):
     return wrapper
 
 
-def get_general_registers():
+def get_general_registers() -> OrderedDict[str, str | None]:
     contents_send = OrderedDict()
     if current_arch == typedefs.INFERIOR_ARCH.ARCH_64:
         general_register_list = typedefs.REGISTERS.GENERAL_64
@@ -75,7 +76,7 @@ def get_general_registers():
     return contents_send
 
 
-def get_flag_registers():
+def get_flag_registers() -> OrderedDict[str, str]:
     contents_send = OrderedDict()
     flags = int(gdb.parse_and_eval("$eflags")) & 0xFFFFFFFF
     contents_send["cf"] = str((flags >> 0) & 1)
@@ -90,14 +91,14 @@ def get_flag_registers():
     return contents_send
 
 
-def get_segment_registers():
+def get_segment_registers() -> OrderedDict[str, str | None]:
     contents_send = OrderedDict()
     for item in typedefs.REGISTERS.SEGMENT:
         contents_send[item] = examine_expression("$" + item).address
     return contents_send
 
 
-def get_float_registers():
+def get_float_registers() -> OrderedDict[str, str]:
     contents_send = OrderedDict()
     for register in typedefs.REGISTERS.FLOAT.ST:
         value = gdb.parse_and_eval("$" + register)
@@ -112,7 +113,9 @@ def get_float_registers():
     return contents_send
 
 
-def examine_expression(expression: str, regions=None):
+def examine_expression(
+    expression: str, regions: dict[str, list[str]] | None = None
+) -> typedefs.tuple_examine_expression:
     try:
         value = gdb.parse_and_eval(expression).cast(void_ptr)
     except Exception:

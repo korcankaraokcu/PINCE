@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import gdb, pickle, sys, re, struct, ctypes, os, shelve, importlib
 from capstone import Cs, CsError, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
 from collections import OrderedDict
+from typing import Any
 
 # This is some retarded hack
 gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
@@ -47,12 +48,12 @@ track_watchpoint_dict = {}
 track_breakpoint_dict = {}
 
 
-def receive_from_pince():
+def receive_from_pince() -> Any:
     with open(recv_file, "rb") as recv_file_handle:
         return pickle.load(recv_file_handle)
 
 
-def send_to_pince(contents_send):
+def send_to_pince(contents_send: Any) -> None:
     with open(send_file, "wb") as send_file_handle:
         pickle.dump(contents_send, send_file_handle)
 
@@ -61,23 +62,23 @@ gdbutils.gdbinit()
 
 
 class IgnoreErrors(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(IgnoreErrors, self).__init__("ignore-errors", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         try:
-            gdb.execute(arg, from_tty)
+            gdb.execute(argument, from_tty)
         except:
             pass
 
 
 class CLIOutput(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(CLIOutput, self).__init__("cli-output", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         try:
-            contents_send = gdb.execute(arg, from_tty, to_string=True)
+            contents_send = gdb.execute(argument, from_tty, to_string=True)
         except Exception as e:
             contents_send = str(e)
         logger.debug(contents_send)
@@ -85,10 +86,10 @@ class CLIOutput(gdb.Command):
 
 
 class HandleSignals(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("pince-handle-signals", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         signal_data = receive_from_pince()
         for signal, stop, pass_to_program in signal_data:
             stop = "stop print" if stop else "nostop noprint"
@@ -97,10 +98,10 @@ class HandleSignals(gdb.Command):
 
 
 class ParseAndEval(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(ParseAndEval, self).__init__("pince-parse-and-eval", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         expression, cast = receive_from_pince()
         try:
             value = gdb.parse_and_eval(expression)
@@ -114,10 +115,10 @@ class ParseAndEval(gdb.Command):
 
 
 class ReadRegisters(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(ReadRegisters, self).__init__("pince-read-registers", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         registers = gdbutils.get_general_registers()
         for key, value in registers.items():
             registers[key] = utils.upper_hex(value)
@@ -127,18 +128,18 @@ class ReadRegisters(gdb.Command):
 
 
 class ReadFloatRegisters(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(ReadFloatRegisters, self).__init__("pince-read-float-registers", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         send_to_pince(gdbutils.get_float_registers())
 
 
 class GetStackTraceInfo(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(GetStackTraceInfo, self).__init__("pince-get-stack-trace-info", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         stacktrace_info_list = []
         if gdbutils.current_arch == typedefs.INFERIOR_ARCH.ARCH_64:
             sp_register = "rsp"
@@ -179,10 +180,10 @@ class GetStackTraceInfo(gdb.Command):
 
 
 class GetStackInfo(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(GetStackInfo, self).__init__("pince-get-stack-info", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         stack_info_list = []
         if gdbutils.current_arch == typedefs.INFERIOR_ARCH.ARCH_64:
             chunk_size = 8
@@ -246,10 +247,10 @@ class GetStackInfo(gdb.Command):
 
 
 class GetFrameReturnAddresses(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(GetFrameReturnAddresses, self).__init__("pince-get-frame-return-addresses", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         return_address_list = []
         result = gdb.execute("bt", from_tty, to_string=True)
         frame_matches = regexes.max_frame_count.findall(result)
@@ -274,10 +275,10 @@ class GetFrameReturnAddresses(gdb.Command):
 
 
 class GetFrameInfo(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(GetFrameInfo, self).__init__("pince-get-frame-info", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         frame_number = receive_from_pince()
         result = gdb.execute("bt", from_tty, to_string=True)
         frame_matches = regexes.max_frame_count.findall(result)
@@ -294,10 +295,10 @@ class GetFrameInfo(gdb.Command):
 
 
 class GetTrackWatchpointInfo(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(GetTrackWatchpointInfo, self).__init__("pince-get-track-watchpoint-info", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         breakpoints = arg
         current_pc = str(gdb.parse_and_eval("$pc"))
         current_pc_addr = utils.extract_hex_address(current_pc)
@@ -343,10 +344,10 @@ class GetTrackWatchpointInfo(gdb.Command):
 
 
 class GetTrackBreakpointInfo(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(GetTrackBreakpointInfo, self).__init__("pince-get-track-breakpoint-info", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         arg_list = arg.split(",")
         breakpoint_number = arg_list.pop()
         register_expressions = arg_list
@@ -373,36 +374,36 @@ class GetTrackBreakpointInfo(gdb.Command):
 
 
 class PhaseOut(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(PhaseOut, self).__init__("phase-out", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         gdb.execute("detach")
         gdb.execute("echo Successfully detached from the target pid: " + str(pid))
 
 
 class PhaseIn(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(PhaseIn, self).__init__("phase-in", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         gdb.execute("attach " + str(pid))
         gdb.execute("echo Successfully attached back to the target pid: " + str(pid))
 
 
 class TraceInstructions(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(TraceInstructions, self).__init__("pince-trace-instructions", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         utils.change_trace_status(pid, typedefs.TRACE_STATUS.TRACING)
 
 
 class DissectCode(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(DissectCode, self).__init__("pince-dissect-code", gdb.COMMAND_USER)
 
-    def is_memory_valid(self, int_address, discard_invalid_strings=False):
+    def is_memory_valid(self, int_address: int, discard_invalid_strings: bool = False) -> bool:
         try:
             self.memory.seek(int_address)
         except (OSError, ValueError):
@@ -420,7 +421,7 @@ class DissectCode(gdb.Command):
             return False
         return True
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         if gdbutils.current_arch == typedefs.INFERIOR_ARCH.ARCH_64:
             disassembler = Cs(CS_ARCH_X86, CS_MODE_64)
         else:
@@ -508,10 +509,10 @@ class DissectCode(gdb.Command):
 
 
 class SearchReferencedCalls(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(SearchReferencedCalls, self).__init__("pince-search-referenced-calls", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         searched_str, case_sensitive, enable_regex = receive_from_pince()
         if enable_regex:
             try:
@@ -551,10 +552,10 @@ class SearchReferencedCalls(gdb.Command):
 
 
 class ExamineExpressions(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(ExamineExpressions, self).__init__("pince-examine-expressions", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         data_read_list = []
         contents_recv = receive_from_pince()
         # contents_recv format: [expression1, expression2, ...]
@@ -567,10 +568,10 @@ class ExamineExpressions(gdb.Command):
 
 
 class SearchFunctions(gdb.Command):
-    def __init__(self):
+    def __init__(self) -> None:
         super(SearchFunctions, self).__init__("pince-search-functions", gdb.COMMAND_USER)
 
-    def invoke(self, arg, from_tty):
+    def invoke(self, argument: str, from_tty: bool) -> None:
         expression, case_sensitive = receive_from_pince()
         function_list = []
         if case_sensitive:
