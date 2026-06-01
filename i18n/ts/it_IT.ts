@@ -1909,16 +1909,12 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Pointer scan finished. Found {} valid pointer paths.
-
-Don't forget to open the lmptr file (File-&gt;Open)!</source>
+        <source>Pointer scan finished. Found {} valid pointer paths.</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Pointer filtering finished. Found {} stable pointer paths.
-
-Don't forget to open the new lmptr file (File-&gt;Open)!</source>
+        <source>Pointer filtering finished. Found {} stable pointer paths.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1929,6 +1925,16 @@ Don't forget to open the new lmptr file (File-&gt;Open)!</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Resolving pointer paths</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Base Address</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Offset</source>
         <translation type="unfinished" />
     </message>
     <message>

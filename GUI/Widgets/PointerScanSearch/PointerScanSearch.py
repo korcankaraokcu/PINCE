@@ -27,6 +27,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.memscan_thread: guitypedefs.InterruptableWorker | None = None
         self.progress_bar_timer: QTimer | None = None
         self.started_path_resolve = False
+        self.result_map_path = ""
 
     def checkBox_CheckAdvOptions_checked(self, checked: bool) -> None:
         self.verticalWidget_AdvOptions.setEnabled(checked)
@@ -102,5 +103,6 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
 
     def memscan_callback(self, paths_found: int) -> None:
         self.cleanup()
+        self.result_map_path = self.lineEdit_Path.text()
         self.accept()
         QMessageBox.information(self, tr.SUCCESS, tr.POINTER_SCAN_SUCCESS.format(paths_found))

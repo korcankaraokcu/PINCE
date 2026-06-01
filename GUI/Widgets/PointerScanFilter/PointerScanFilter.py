@@ -18,6 +18,7 @@ class PointerScanFilterDialog(QDialog, Ui_Dialog):
         self.filter_button: QPushButton = self.buttonBox.addButton(tr.FILTER, QDialogButtonBox.ButtonRole.ActionRole)
         self.filter_button.clicked.connect(self.filter_button_clicked)
         self.filter_button.setEnabled(False)
+        self.result_map_path = ""
 
     def pointer_map_file_prompt(self, file_path_field: QLineEdit, is_open: bool) -> None:
         if is_open:
@@ -59,5 +60,6 @@ class PointerScanFilterDialog(QDialog, Ui_Dialog):
         new_paths = memscan.compare_pointer_maps(
             self.lineEdit_PrevFile.text(), self.lineEdit_CurrentFile.text(), self.lineEdit_NewFile.text()
         )
+        self.result_map_path = self.lineEdit_NewFile.text()
         self.accept()
         QMessageBox.information(self, tr.SUCCESS, tr.POINTER_FILTER_SUCCESS.format(new_paths))

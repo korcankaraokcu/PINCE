@@ -704,7 +704,8 @@ class MainForm(QMainWindow, MainWindow):
         pointer_window = PointerScanWindow(self, address)
         pointer_window.show()
         dialog = PointerScanSearchDialog(pointer_window, address)
-        dialog.exec()
+        if dialog.exec() and dialog.result_map_path:
+            pointer_window.load_map(dialog.result_map_path)
 
     def exec_track_watchpoint_widget(self, watchpoint_type):
         selected_row = guiutils.get_current_item(self.treeWidget_AddressTable)
