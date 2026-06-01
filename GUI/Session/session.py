@@ -145,7 +145,7 @@ class Session:
         self.pct_notes = content["notes"]
 
         # Load bookmarks with symbol resolution
-        self.pct_bookmarks = content["bookmarks"]
+        self.pct_bookmarks = {int(addr): value for addr, value in content["bookmarks"].items()}
 
         if utils.is_process_valid(debugcore.currentpid):
             self.recalculate_bookmarks()
