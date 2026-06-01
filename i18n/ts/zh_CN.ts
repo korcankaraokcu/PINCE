@@ -1943,6 +1943,11 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
+        <source>Pointer paths count: {}</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
         <source>Find out what writes to this address</source>
         <translation>找出是什么写入了这个地址</translation>
     </message>

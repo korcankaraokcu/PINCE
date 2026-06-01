@@ -20,24 +20,6 @@ from libpince import typedefs
 from tr.tr import TranslationConstants as tr
 
 
-def parse_pointer_map_text(text: str) -> tuple[list[tuple[str, list[int]]], int]:
-    """Parses a pointer map text dump into (rows, max_offset_count).
-
-    Each non-empty line is "<base> -> <offset1> -> <offset2> ...", where <base> is an absolute
-    (0xHEX) or module-relative (module+0xHEX) address; every row becomes a (base, offsets) pair.
-    """
-    rows = []
-    max_offsets = 0
-    for line in text.splitlines():
-        if not line.strip():
-            continue
-        base, *offsets = line.split(" -> ")
-        offsets = [int(token, 16) for token in offsets]  # base-16 int() handles the 0x prefix and a leading sign
-        rows.append((base, offsets))
-        max_offsets = max(max_offsets, len(offsets))
-    return rows, max_offsets
-
-
 def _base_sort_key(row: tuple[str, list[int]]) -> tuple[str, int]:
     base = row[0]
     try:

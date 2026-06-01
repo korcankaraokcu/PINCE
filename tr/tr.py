@@ -97,6 +97,7 @@ class TranslationConstants(QObject):
     RESOLVING_POINTERS = QT_TR_NOOP("Resolving pointer paths")
     BASE_ADDRESS = QT_TR_NOOP("Base Address")
     OFFSET = QT_TR_NOOP("Offset")
+    POINTER_PATH_COUNT = QT_TR_NOOP("Pointer paths count: {}")
     WHAT_WRITES = QT_TR_NOOP("Find out what writes to this address")
     WHAT_READS = QT_TR_NOOP("Find out what reads this address")
     WHAT_ACCESSES = QT_TR_NOOP("Find out what accesses this address")

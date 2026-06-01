@@ -1,17 +1,16 @@
 from PyQt6.QtCore import Qt, QModelIndex
 from PyQt6.QtGui import QCloseEvent, QKeySequence, QShortcut
-from PyQt6.QtWidgets import QMainWindow, QFileDialog
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QLabel
 from GUI.Widgets.PointerScan.Form.PointerScanWindow import Ui_MainWindow
 from GUI.Widgets.PointerScanFilter.PointerScanFilter import PointerScanFilterDialog
 from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
-from GUI.AbstractTableModels.PointerScanModel import QPointerScanModel, parse_pointer_map_text
+from GUI.AbstractTableModels.PointerScanModel import QPointerScanModel
 from GUI.Utils import guiutils
 from GUI.States import states
 from libpince import debugcore, typedefs, utils
 from libpince.scancore import memscan
 from tr.tr import TranslationConstants as tr
 import os
-import tempfile
 
 
 class PointerScanWindow(QMainWindow, Ui_MainWindow):
@@ -37,6 +36,9 @@ class PointerScanWindow(QMainWindow, Ui_MainWindow):
             shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
             shortcut.activated.connect(self.add_selected_to_address_table)
             self.add_selected_shortcuts.append(shortcut)
+        self.path_count_label = QLabel()
+        self.path_count_label.setContentsMargins(0, 0, 6, 0)
+        self.menubar.setCornerWidget(self.path_count_label, Qt.Corner.TopRightCorner)
         self.default_scan_address = default_scan_address
         if debugcore.currentpid == -1:
             self.actionScan.setEnabled(False)
@@ -59,19 +61,17 @@ class PointerScanWindow(QMainWindow, Ui_MainWindow):
     def load_map(self, file_path: str) -> None:
         self.model.clear()
         self.tableView.horizontalHeader().setSortIndicator(-1, Qt.SortOrder.AscendingOrder)
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            temp_path = temp_file.name
-        try:
-            memscan.dump_pointer_map_text(file_path, temp_path)
-            with open(temp_path) as file:
-                rows, offset_columns = parse_pointer_map_text(file.read())
-            self.model.set_data(rows, offset_columns)
-            self.tableView.resizeColumnsToContents()
-        finally:
-            try:
-                os.remove(temp_path)
-            except FileNotFoundError:
-                pass
+        rows = []
+        offset_columns = 0
+        for base, offsets in memscan.iter_pointer_map(file_path):
+            rows.append((base, offsets))
+            if len(offsets) > offset_columns:
+                offset_columns = len(offsets)
+        self.model.set_data(rows, offset_columns)
+        self.tableView.resizeColumnsToContents()
+        self.path_count_label.setText(tr.POINTER_PATH_COUNT.format(memscan.pointer_map_path_count(file_path)))
+        # Re-set widget to re-align it after text change.
+        self.menubar.setCornerWidget(self.path_count_label, Qt.Corner.TopRightCorner)
 
     def actionSaveAs_triggered(self) -> None:
         file_path, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), None)
