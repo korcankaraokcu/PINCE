@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from re import compile, VERBOSE, MULTILINE
+from re import compile, VERBOSE, MULTILINE, Pattern
 
 # The comments near regular expressions shows the expected gdb output, hope it helps to the future developers
 
@@ -37,8 +37,13 @@ breakpoint_created = compile(r"breakpoint-created")
 breakpoint_number = compile(r"(?:number|bkptno)=\"(\d+)\"")
 convenience_variable = compile(r'"(\$\d+)\s+=\s+(.*)"')  # "$26 = 3"
 entry_point = compile(r"Entry\s+point:\s+" + hex_number_grouped.pattern)
+
+
 # The command will always start with the word "source", check debugcore.send_command function for the cause
-gdb_command_source = lambda command_file: compile(r"&\".*source\s" + command_file + r"\\n\"")  # &"command\n"
+def gdb_command_source(command_file: str) -> Pattern[str]:
+    return compile(r"&\".*source\s" + command_file + r"\\n\"")  # &"command\n"
+
+
 # This will only match hex patterns without 0x and ignore the ones below:
 # Hex patterns with 0x such as 0x5123
 # Map symbols of PINCE, such as kmines[2]

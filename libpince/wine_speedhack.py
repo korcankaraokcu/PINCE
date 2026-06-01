@@ -45,6 +45,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import io
 import os
 import re
 import struct
@@ -54,7 +55,6 @@ from capstone import x86 as cs_x86
 
 from . import debugcore, linux_speedhack, typedefs, utils
 from .utils import logger
-
 
 ALLOC_NAME = "PINCE_wine_speedhack"
 CAVE_SIZE = 0x1000
@@ -516,7 +516,7 @@ def _resolve_ntdll_export(pid: int, symbol: str, arch64: bool = True) -> int | N
     return None
 
 
-def _parse_pe_export(mem, base: int, symbol: str, arch64: bool = True) -> int | None:
+def _parse_pe_export(mem: io.BufferedReader, base: int, symbol: str, arch64: bool = True) -> int | None:
     # Walk a loaded PE's export directory.
     # In a loaded image an RVA is just an offset from the base.
     # The data directory sits at optional-header offset 112 on PE32+ (x86_64) but 96 on PE32 (i386),

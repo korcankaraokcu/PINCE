@@ -23,6 +23,8 @@ from keystone import Ks, KsError, KS_ARCH_X86, KS_MODE_32, KS_MODE_64
 from collections import OrderedDict
 from importlib.machinery import SourceFileLoader
 from pygdbmi import gdbmiparser
+from types import ModuleType
+from typing import Any, Callable
 
 # Capstone initialization
 cs_32 = Cs(CS_ARCH_X86, CS_MODE_32)
@@ -58,7 +60,7 @@ def __init_logging() -> None:
 __init_logging()
 
 
-def get_process_list() -> list[str, str, str]:
+def get_process_list() -> list[tuple[str, str, str]]:
     """Returns a list of processes
 
     Returns:
@@ -85,7 +87,7 @@ def get_process_name(pid: int | str) -> str:
         return f.read().splitlines()[0]
 
 
-def search_processes(name_or_pid):
+def search_processes(name_or_pid: str | int) -> list[tuple[str, str, str]]:
     """Searches processes and returns a list of the ones that contain given process name or pid
 
     Args:
@@ -102,7 +104,7 @@ def search_processes(name_or_pid):
     return processlist
 
 
-def get_regions(pid):
+def get_regions(pid: int) -> list[tuple[str, ...]]:
     """Returns memory regions of a process
 
     Args:
@@ -152,7 +154,7 @@ def get_region_dict(pid: int) -> dict[str, list[str]]:
     return region_dict
 
 
-def get_region_info(pid, address):
+def get_region_info(pid: int | str, address: int | str) -> typedefs.tuple_region_info | None:
     """Finds the closest valid starting/ending address and region to given address, assuming given address is in the
     valid address range
 
@@ -185,7 +187,7 @@ def get_region_info(pid, address):
             return typedefs.tuple_region_info(start, end, perms, file_name, region_index)
 
 
-def filter_regions(pid, attribute, regex, case_sensitive=False):
+def filter_regions(pid: int, attribute: str, regex: str, case_sensitive: bool = False) -> list[tuple[str, ...]]:
     """Filters memory regions by searching for the given regex within the given attribute
 
     Args:
@@ -213,7 +215,7 @@ def filter_regions(pid, attribute, regex, case_sensitive=False):
     return filtered_regions
 
 
-def is_traced(pid):
+def is_traced(pid: int) -> str | None:
     """Check if the process corresponding to given pid traced by any other process
 
     Args:
@@ -239,7 +241,7 @@ def is_traced(pid):
                 return
 
 
-def is_process_valid(pid):
+def is_process_valid(pid: int) -> bool:
     """Check if the process corresponding to given pid is valid
 
     Args:
@@ -276,7 +278,7 @@ def is_wine_process(pid: int) -> bool:
     return False
 
 
-def get_script_directory():
+def get_script_directory() -> str:
     """Get main script directory
 
     Returns:
@@ -285,7 +287,7 @@ def get_script_directory():
     return sys.path[0]
 
 
-def get_media_directory():
+def get_media_directory() -> str:
     """Get media directory
 
     Returns:
@@ -294,7 +296,7 @@ def get_media_directory():
     return get_script_directory() + "/media"
 
 
-def get_logo_directory():
+def get_logo_directory() -> str:
     """Get logo directory
 
     Returns:
@@ -303,7 +305,7 @@ def get_logo_directory():
     return get_script_directory() + "/media/logo"
 
 
-def get_libpince_directory():
+def get_libpince_directory() -> str:
     """Get libpince directory
 
     Returns:
@@ -316,7 +318,7 @@ def get_libpince_directory():
     return os.path.dirname(os.path.realpath(__file__))
 
 
-def delete_ipc_path(pid):
+def delete_ipc_path(pid: int | str) -> None:
     """Deletes the IPC directory of given pid
 
     Args:
@@ -327,7 +329,7 @@ def delete_ipc_path(pid):
         shutil.rmtree(path)
 
 
-def create_ipc_path(pid):
+def create_ipc_path(pid: int | str) -> None:
     """Creates the IPC directory of given pid
 
     Args:
@@ -345,7 +347,7 @@ def create_ipc_path(pid):
     open(command_file, "w").close()
 
 
-def create_tmp_path(pid):
+def create_tmp_path(pid: int | str) -> None:
     """Creates the tmp directory of given pid
 
     Args:
@@ -357,7 +359,7 @@ def create_tmp_path(pid):
     os.makedirs(path)
 
 
-def get_ipc_path(pid):
+def get_ipc_path(pid: int | str) -> str:
     """Get the IPC directory of given pid
 
     Args:
@@ -369,7 +371,7 @@ def get_ipc_path(pid):
     return typedefs.PATHS.IPC + str(pid)
 
 
-def get_tmp_path(pid):
+def get_tmp_path(pid: int | str) -> str:
     """Get the tmp directory of given pid
 
     Args:
@@ -381,7 +383,7 @@ def get_tmp_path(pid):
     return typedefs.PATHS.TMP + str(pid)
 
 
-def get_logging_file(pid):
+def get_logging_file(pid: int | str) -> str:
     """Get the path of gdb logfile of given pid
 
     Args:
@@ -393,7 +395,7 @@ def get_logging_file(pid):
     return get_tmp_path(pid) + "/gdb_log.txt"
 
 
-def get_gdb_command_file(pid):
+def get_gdb_command_file(pid: int | str) -> str:
     """Get the path of gdb command file of given pid
 
     Args:
@@ -405,7 +407,7 @@ def get_gdb_command_file(pid):
     return get_ipc_path(pid) + "/gdb_command.txt"
 
 
-def get_track_watchpoint_file(pid, watchpoint_list):
+def get_track_watchpoint_file(pid: int | str, watchpoint_list: list | str) -> str:
     """Get the path of track watchpoint file for given pid and watchpoint
 
     Args:
@@ -418,7 +420,7 @@ def get_track_watchpoint_file(pid, watchpoint_list):
     return get_ipc_path(pid) + "/" + str(watchpoint_list) + "_track_watchpoint.txt"
 
 
-def get_track_breakpoint_file(pid, breakpoint_number):
+def get_track_breakpoint_file(pid: int | str, breakpoint_number: int | str) -> str:
     """Get the path of track breakpoint file for given pid and breakpoint
 
     Args:
@@ -431,7 +433,7 @@ def get_track_breakpoint_file(pid, breakpoint_number):
     return f"{get_ipc_path(pid)}/{breakpoint_number}_track_breakpoint.txt"
 
 
-def append_file_extension(string, extension):
+def append_file_extension(string: str, extension: str) -> str:
     """Appends the given extension to the given string if it doesn't end with the given extension
 
     Args:
@@ -445,7 +447,7 @@ def append_file_extension(string, extension):
     return string if string.endswith("." + extension) else string + "." + extension
 
 
-def save_file(data, file_path, save_method="json"):
+def save_file(data: Any, file_path: str, save_method: str = "json") -> bool:
     """Saves the specified data to given path
 
     Args:
@@ -479,7 +481,7 @@ def save_file(data, file_path, save_method="json"):
         return False
 
 
-def load_file(file_path, load_method="json"):
+def load_file(file_path: str, load_method: str = "json") -> Any:
     """Loads data from the given path
 
     Args:
@@ -509,7 +511,7 @@ def load_file(file_path, load_method="json"):
         return
 
 
-def get_trace_status_file(pid):
+def get_trace_status_file(pid: int | str) -> str:
     """Get the path of trace status file for given pid
 
     Args:
@@ -521,7 +523,7 @@ def get_trace_status_file(pid):
     return get_ipc_path(pid) + "/_trace_status.txt"
 
 
-def change_trace_status(pid: int | str, trace_status: int):
+def change_trace_status(pid: int | str, trace_status: int) -> None:
     """Change trace status for given pid
 
     Args:
@@ -533,7 +535,7 @@ def change_trace_status(pid: int | str, trace_status: int):
         trace_file.write(str(trace_status))
 
 
-def get_dissect_code_status_file(pid):
+def get_dissect_code_status_file(pid: int | str) -> str:
     """Get the path of dissect code status file for given pid
 
     Args:
@@ -545,7 +547,7 @@ def get_dissect_code_status_file(pid):
     return get_ipc_path(pid) + "/dissect_code_status.txt"
 
 
-def get_referenced_strings_file(pid):
+def get_referenced_strings_file(pid: int | str) -> str:
     """Get the path of referenced strings dict file for given pid
 
     Args:
@@ -557,7 +559,7 @@ def get_referenced_strings_file(pid):
     return get_tmp_path(pid) + "/referenced_strings_dict.txt"
 
 
-def get_referenced_jumps_file(pid):
+def get_referenced_jumps_file(pid: int | str) -> str:
     """Get the path of referenced jumps dict file for given pid
 
     Args:
@@ -569,7 +571,7 @@ def get_referenced_jumps_file(pid):
     return get_tmp_path(pid) + "/referenced_jumps_dict.txt"
 
 
-def get_referenced_calls_file(pid):
+def get_referenced_calls_file(pid: int | str) -> str:
     """Get the path of referenced strings dict file for given pid
 
     Args:
@@ -581,7 +583,7 @@ def get_referenced_calls_file(pid):
     return get_tmp_path(pid) + "/referenced_calls_dict.txt"
 
 
-def get_from_pince_file(pid):
+def get_from_pince_file(pid: int | str) -> str:
     """Get the path of IPC file sent to custom gdb commands from PINCE for given pid
 
     Args:
@@ -593,7 +595,7 @@ def get_from_pince_file(pid):
     return get_ipc_path(pid) + typedefs.PATHS.FROM_PINCE
 
 
-def get_to_pince_file(pid):
+def get_to_pince_file(pid: int | str) -> str:
     """Get the path of IPC file sent to PINCE from custom gdb commands for given pid
 
     Args:
@@ -605,7 +607,7 @@ def get_to_pince_file(pid):
     return get_ipc_path(pid) + typedefs.PATHS.TO_PINCE
 
 
-def parse_string(string: str, value_index: int):
+def parse_string(string: str, value_index: int) -> str | list[int] | float | int | None:
     """Parses the string according to the given value_index
 
     Args:
@@ -676,7 +678,7 @@ def parse_string(string: str, value_index: int):
         return string
 
 
-def instruction_follow_address(string):
+def instruction_follow_address(string: str) -> str | None:
     """Searches for the location changing instructions such as Jcc, CALL and LOOPcc in the given string. Returns the hex
     address the instruction jumps to
 
@@ -692,7 +694,7 @@ def instruction_follow_address(string):
         return result.group(2)
 
 
-def extract_hex_address(string):
+def extract_hex_address(string: str) -> str | None:
     """Extracts hex address from the given string
 
     Args:
@@ -709,7 +711,7 @@ def extract_hex_address(string):
         return result.group(0)
 
 
-def modulo_address(int_address, arch_type):
+def modulo_address(int_address: int, arch_type: int) -> int:
     """Calculates the modulo of the given integer based on the given architecture type to make sure that it doesn't
     exceed the borders of the given architecture type (0xffffffff->x86, 0xffffffffffffffff->x64)
 
@@ -727,7 +729,7 @@ def modulo_address(int_address, arch_type):
     raise Exception("arch_type must be a member of typedefs.INFERIOR_ARCH")
 
 
-def disassemble(aob, address, inferior_arch):
+def disassemble(aob: str, address: int, inferior_arch: int) -> str | None:
     """Returns the instructions from the given array of bytes
 
     Args:
@@ -755,7 +757,7 @@ def disassemble(aob, address, inferior_arch):
         logger.exception("Failed to disassemble bytes")
 
 
-def instruction_aligned_size(aob, minimum_bytes, inferior_arch):
+def instruction_aligned_size(aob: bytes, minimum_bytes: int, inferior_arch: int) -> int:
     """Walks instructions from offset 0 of `aob` until cumulative size meets
     or exceeds `minimum_bytes`. Used by code-injection hooks where the patch
     must end on an instruction boundary so the next instruction decodes cleanly.
@@ -784,7 +786,7 @@ def instruction_aligned_size(aob, minimum_bytes, inferior_arch):
     return 0
 
 
-def assemble(instructions, address, inferior_arch):
+def assemble(instructions: str, address: int, inferior_arch: int) -> tuple[list[int], int] | None:
     """Assembles the given instructions
 
     Args:
@@ -805,7 +807,9 @@ def assemble(instructions, address, inferior_arch):
         logger.exception("Failed to assemble bytes")
 
 
-def aob_to_str(list_of_bytes, encoding="ascii", replace_unprintable=True):
+def aob_to_str(
+    list_of_bytes: list[int | str] | int | str, encoding: str = "ascii", replace_unprintable: bool = True
+) -> str:
     """Converts given array of hex strings to str
 
     Args:
@@ -841,7 +845,7 @@ def aob_to_str(list_of_bytes, encoding="ascii", replace_unprintable=True):
     return hexBytes.decode(encoding, "surrogateescape")
 
 
-def str_to_aob(string, encoding="ascii"):
+def str_to_aob(string: str, encoding: str = "ascii") -> str:
     """Converts given string to aob string
 
     Args:
@@ -855,7 +859,7 @@ def str_to_aob(string, encoding="ascii"):
     return " ".join(s[i : i + 2] for i in range(0, len(s), 2))
 
 
-def split_symbol(symbol_string):
+def split_symbol(symbol_string: str) -> list[str]:
     """Splits symbol part of typedefs.tuple_function_info into smaller fractions
     Fraction count depends on the the symbol_string. See Examples section for demonstration
 
@@ -923,7 +927,7 @@ def extract_symbol_name(symbol_string: str) -> str:
     return result.group(1) if result else ""
 
 
-def execute_command_as_user(command):
+def execute_command_as_user(command: str) -> None:
     """Executes given command as the original user who invoked PINCE
 
     Args:
@@ -936,7 +940,7 @@ def execute_command_as_user(command):
     subprocess.run(["sudo", "-Eu", f"#{uid}"] + shlex.split(command), check=False)
 
 
-def init_user_files():
+def init_user_files() -> None:
     """Initializes user files"""
     root_path = get_user_path(typedefs.USER_PATHS.ROOT)
     if not os.path.exists(root_path):
@@ -946,7 +950,7 @@ def init_user_files():
         pathlib.Path(file).touch(exist_ok=True)
 
 
-def get_user_ids():
+def get_user_ids() -> tuple[str, str]:
     """Gets uid and gid of the current user
 
     Returns:
@@ -957,7 +961,7 @@ def get_user_ids():
     return uid, gid
 
 
-def get_user_home_dir():
+def get_user_home_dir() -> str:
     """Returns the home directory of the current user
 
     Returns:
@@ -967,7 +971,7 @@ def get_user_home_dir():
     return pwd.getpwuid(int(uid)).pw_dir
 
 
-def get_user_path(user_path):
+def get_user_path(user_path: str) -> str:
     """Returns the specified user path for the current user
 
     Args:
@@ -981,14 +985,14 @@ def get_user_path(user_path):
     return os.path.join(homedir, user_path)
 
 
-def get_default_gdb_path():
+def get_default_gdb_path() -> str:
     appdir = os.environ.get("APPDIR")
     if appdir:
         return appdir + "/usr/bin/gdb"
     return typedefs.PATHS.GDB
 
 
-def execute_script(file_path):
+def execute_script(file_path: str) -> tuple[ModuleType | None, str | None]:
     """Loads and executes the script in the given path
 
     Args:
@@ -1002,7 +1006,7 @@ def execute_script(file_path):
         Returns (None, exception) if fails to load the script
         Returns (module, None) if script gets loaded successfully
     """
-    head, tail = os.path.split(file_path)
+    _, tail = os.path.split(file_path)
     file_name = tail.split(".", maxsplit=1)[0]
     try:
         module = SourceFileLoader(file_name, file_path).load_module()
@@ -1016,7 +1020,7 @@ def execute_script(file_path):
     return module, None
 
 
-def parse_response(response, line_num=0):
+def parse_response(response: str, line_num: int = 0) -> dict:
     """Parses the given GDB/MI output. Wraps gdbmiparser.parse_response
     debugcore.send_command returns an additional "^done" output because of the "source" command
     This function is used to get rid of that output before parsing
@@ -1031,7 +1035,7 @@ def parse_response(response, line_num=0):
     return gdbmiparser.parse_response(response.splitlines()[line_num])
 
 
-def search_files(directory, regex):
+def search_files(directory: str, regex: str) -> list[str]:
     """Searches the files in given directory for given regex recursively
 
     Args:
@@ -1051,10 +1055,10 @@ def search_files(directory, regex):
     return sorted(file_list)
 
 
-def ignore_exceptions(func):
+def ignore_exceptions(func: Callable) -> Callable:
     """A decorator to ignore exceptions"""
 
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             return func(*args, **kwargs)
         except Exception:
@@ -1063,7 +1067,7 @@ def ignore_exceptions(func):
     return wrapper
 
 
-def upper_hex(hex_str: str):
+def upper_hex(hex_str: str) -> str:
     """Converts the given hex string to uppercase while keeping the 'x' character lowercase"""
     # check if the given string is a hex string, if not return the string as is
     if not regexes.hex_number_gui.match(hex_str):
@@ -1078,7 +1082,7 @@ def return_optional_int(val: int) -> int | None:
 # This is the main int() cast for strings that should be used until you're certain that the cast can never fail or has explicit handling.
 # The reason for this is that you can catch stray errors or edge cases by safely returning a value and outputting useful log info
 # instead of failing with an exception that will propagate upwards.
-def safe_str_to_int(input, base: int) -> int:
+def safe_str_to_int(input: Any, base: int) -> int:
     try:
         return int(input, base)
     except ValueError:
@@ -1094,7 +1098,7 @@ def safe_str_to_int(input, base: int) -> int:
 
 
 # This is the non-base version of the above.
-def safe_int_cast(input) -> int:
+def safe_int_cast(input: Any) -> int:
     try:
         return int(input)
     except ValueError:

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # IMPORTANT: Any constant involving only PINCE.py should be declared in PINCE.py
 
 import collections.abc, queue, sys
+from typing import Any
 
 
 class CONST_TIME:
@@ -43,7 +44,7 @@ class USER_PATHS:
     PINCEINIT_AA = ROOT + "pinceinit_after_attach.py"
 
     @staticmethod
-    def get_init_files():
+    def get_init_files() -> tuple[str, str, str, str]:
         return (
             USER_PATHS.GDBINIT,
             USER_PATHS.GDBINIT_AA,
@@ -188,23 +189,23 @@ class VALUE_INDEX:
     AOB = 10  # Array of Bytes
 
     @staticmethod
-    def is_integer(value_index: int):
+    def is_integer(value_index: int) -> bool:
         return VALUE_INDEX.INT8 <= value_index <= VALUE_INDEX.INT64
 
     @staticmethod
-    def is_float(value_index: int):
+    def is_float(value_index: int) -> bool:
         return VALUE_INDEX.FLOAT32 <= value_index <= VALUE_INDEX.FLOAT64
 
     @staticmethod
-    def is_number(value_index: int):
+    def is_number(value_index: int) -> bool:
         return VALUE_INDEX.INT8 <= value_index <= VALUE_INDEX.FLOAT64
 
     @staticmethod
-    def is_string(value_index: int):
+    def is_string(value_index: int) -> bool:
         return VALUE_INDEX.STRING_ASCII <= value_index <= VALUE_INDEX.STRING_UTF32
 
     @staticmethod
-    def has_length(value_index: int):
+    def has_length(value_index: int) -> bool:
         return VALUE_INDEX.STRING_ASCII <= value_index <= VALUE_INDEX.AOB
 
 
@@ -287,7 +288,7 @@ class SCAN_TYPE:
     UNKNOWN = 11
 
     @staticmethod
-    def get_list(scan_mode, value_type):
+    def get_list(scan_mode: int, value_type: int) -> list[int]:
         if scan_mode == SCAN_MODE.NEW:
             if value_type == SCAN_INDEX.STRING or value_type == SCAN_INDEX.AOB:
                 list = [
@@ -343,7 +344,7 @@ string_index_to_encoding_dict = {
 }
 
 
-def resolve_string_encoding(value_index, endian, host_endianness):
+def resolve_string_encoding(value_index: int, endian: int, host_endianness: int) -> tuple[str, str]:
     """Return (encoding, option) for a string value_index with byte order baked in.
 
     UTF-16/UTF-32 get an explicit little/big-endian codec.
@@ -429,12 +430,12 @@ gdb_output_mode = collections.namedtuple("gdb_output_mode", "async_output comman
 
 
 class GDBInitializeException(Exception):
-    def __init__(self, message="GDB not initialized"):
+    def __init__(self, message: str = "GDB not initialized") -> None:
         super(GDBInitializeException, self).__init__(message)
 
 
 class Frozen:
-    def __init__(self, value, freeze_type=FREEZE_TYPE.DEFAULT):
+    def __init__(self, value: Any, freeze_type: int = FREEZE_TYPE.DEFAULT) -> None:
         self.value = value
         self.freeze_type = freeze_type
         self.enabled = False
@@ -443,12 +444,12 @@ class Frozen:
 class ValueType:
     def __init__(
         self,
-        value_index=VALUE_INDEX.INT32,
-        length=10,
-        zero_terminate=True,
-        value_repr=VALUE_REPR.UNSIGNED,
-        endian=ENDIANNESS.HOST,
-    ):
+        value_index: int = VALUE_INDEX.INT32,
+        length: int = 10,
+        zero_terminate: bool = True,
+        value_repr: int = VALUE_REPR.UNSIGNED,
+        endian: int = ENDIANNESS.HOST,
+    ) -> None:
         """
         Args:
             value_index (int): Determines the type of data. Can be a member of VALUE_INDEX
@@ -464,7 +465,7 @@ class ValueType:
         self.value_repr = value_repr
         self.endian = endian
 
-    def serialize(self):
+    def serialize(self) -> tuple[int, int, bool, int, int]:
         return (
             self.value_index,
             self.length,
@@ -473,7 +474,7 @@ class ValueType:
             self.endian,
         )
 
-    def text(self):
+    def text(self) -> str:
         """Returns the text representation according to its members
 
         Returns:
@@ -504,10 +505,10 @@ class ValueType:
 
 
 class PointerChainResult:
-    def __init__(self):
+    def __init__(self) -> None:
         self.pointer_chain: list[int] = []
 
-    def get_pointer_by_index(self, index) -> int | None:
+    def get_pointer_by_index(self, index: int) -> int | None:
         if index >= len(self.pointer_chain):
             return None
         return self.pointer_chain[index]
@@ -523,7 +524,7 @@ class PointerChainResult:
 
 
 class PointerChainRequest:
-    def __init__(self, base_address: str | int, offsets_list: list[int] = None):
+    def __init__(self, base_address: str | int, offsets_list: list[int] | None = None) -> None:
         """
         Args:
             base_address (str, int): The base address of where this pointer chain starts from. Can be str expression or int.
@@ -544,19 +545,19 @@ class PointerChainRequest:
 
 
 class RegisterQueue:
-    def __init__(self):
-        self.queue_list = []
+    def __init__(self) -> None:
+        self.queue_list: list[queue.Queue] = []
 
-    def register_queue(self):
+    def register_queue(self) -> queue.Queue:
         new_queue = queue.Queue()
         self.queue_list.append(new_queue)
         return new_queue
 
-    def broadcast_message(self, message):
+    def broadcast_message(self, message: Any) -> None:
         for item in self.queue_list:
             item.put(message)
 
-    def delete_queue(self, queue_instance):
+    def delete_queue(self, queue_instance: queue.Queue) -> None:
         try:
             self.queue_list.remove(queue_instance)
         except ValueError:
@@ -564,24 +565,24 @@ class RegisterQueue:
 
 
 class KeyboardModifiersTupleDict(collections.abc.Mapping):
-    def __init__(self, OrderedDict_like_list):
+    def __init__(self, OrderedDict_like_list: collections.abc.Iterable[tuple[Any, Any]]) -> None:
         new_dict = {}
         for keycomb, value in OrderedDict_like_list:
             new_dict[keycomb] = value
         self._storage = new_dict
 
-    def __getitem__(self, keycomb):
+    def __getitem__(self, keycomb: Any) -> Any:
         return self._storage[keycomb]
 
-    def __iter__(self):
+    def __iter__(self) -> collections.abc.Iterator[Any]:
         return iter(self._storage)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._storage)
 
 
 class AllocatedMemory:
-    def __init__(self, address: int, size: int):
+    def __init__(self, address: int, size: int) -> None:
         self.address = address
         self.size = size
-        # TODO brkzlr: Maybe expand with starting page address and old protection to restore state after deleting allocated memory
+        # TODO BRK: Maybe expand with starting page address and old protection to restore state after deleting allocated memory

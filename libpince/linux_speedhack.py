@@ -21,6 +21,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import Callable
+from capstone import Cs
 import os
 import struct
 import time
@@ -307,7 +308,7 @@ def _resolve_vdso_function(pid: int, symbol: str) -> int | None:
 
 
 def _read_patch_bytes(
-    symbol: str, address: int, disassembler=utils.cs_64, jump_size: int = JUMP_SIZE
+    symbol: str, address: int, disassembler: Cs = utils.cs_64, jump_size: int = JUMP_SIZE
 ) -> tuple[str | None, int]:
     # Disassemble enough whole instructions at "address" to host a jump of "jump_size" bytes.
     # The defaults patch x86_64, wine_speedhack passes cs_32 for i386 inferiors.

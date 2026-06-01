@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import gdb, pickle, sys, re, struct, ctypes, os, shelve, importlib
+import gdb, pickle, sys, re, struct, shelve, importlib
 from capstone import Cs, CsError, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
 from collections import OrderedDict
 from typing import Any
@@ -189,7 +189,7 @@ class GetStackInfo(gdb.Command):
             chunk_size = 8
             int_format = "Q"
 
-            if arg == "from-base-pointer":
+            if argument == "from-base-pointer":
                 stack_register = "rbp"
             else:
                 stack_register = "rsp"
@@ -197,7 +197,7 @@ class GetStackInfo(gdb.Command):
             chunk_size = 4
             int_format = "I"
 
-            if arg == "from-base-pointer":
+            if argument == "from-base-pointer":
                 stack_register = "ebp"
             else:
                 stack_register = "esp"
