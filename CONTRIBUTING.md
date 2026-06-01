@@ -12,7 +12,8 @@
 - ### **[libpince](./libpince)**
   - [debugcore.py](./libpince/debugcore.py) - Everything related to communicating with GDB and debugging
   - [scancore.py](./libpince/scancore.py) - Everything related to the variable scanning backend
-  - [speedhack.py](./libpince/speedhack.py) - Everything related to speedhack functionality
+  - [linux_speedhack.py](./libpince/linux_speedhack.py) - Everything related to speedhack functionality for Linux native processes
+  - [wine_speedhack.py](./libpince/wine_speedhack.py) - Everything related to speedhack functionality for WINE/Proton processes
   - [utils.py](./libpince/utils.py) - Contains generic utility functions such as parsing, file creation, process querying etc
   - [typedefs.py](./libpince/typedefs.py) - Contains all constants and variable definitions
   - [regexes.py](./libpince/regexes.py) - Contains regexes for parsing GDB output and other things
@@ -181,10 +182,10 @@ These tasks are ordered by importance but feel free to pick any of them. Further
 - Libpince support for Mono and Java (symbol recognition, calling functions, dissect obj tree etc.)
 - Move GUI classes of PINCE.py to their own files
 - Extend documentation to GUI parts. Libpince has 100% documentation coverage but GUI doesn't
-- Use type hints(py 3.5) and variable annotations(py 3.6) when support drops for older systems
+- Finish adopting type hints and variable annotations across the codebase. The libpince root is largely typed now, but the GUI and gdb_python_scripts still lag behind
 - Arrows for jump instructions based on disassembled output
 - Flowcharts based on disassembled output
-- Consider implementing a GUI for catchpoints. This is currently done via GDB Console
+- Consider implementing a GUI for catchpoints(syscall, fork, exec etc.). Signal handling already has a GUI(HandleSignals widget), but the remaining catchpoint types are still done via the GDB Console
 - Implement unrandomizer
 - Automatic function bypassing(make it return the desired value, hook specific parts etc.)
 - Implement auto-ESP&aimbot
@@ -195,11 +196,7 @@ These tasks are ordered by importance but feel free to pick any of them. Further
   Only update the visible rows to prevent this(check ```disassemble_check_viewport``` for an example)
 - - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
 - - Consider using a class instead of primitive return types to store the raw bytes. This class should also include a method to display None type as red '??' text for Qt
-- - Provide an option to cut BOM bytes when writing to memory with the types UTF-16 and UTF-32
 - - Put a warning for users about replacement bytes for non UTF-8 types
-- - Extend string types with LE and BE variants of UTF-16 and UTF-32
-- - Change comboBox_ValueType string order to be ... String_UTF-8 String_Others if necessary
-- - Implement a custom combobox class for comboBox_ValueType and create a context menu for String_Others, if it gets implemented
 - Implement "Investigate Registers" button to gather information about the addresses registers point to
 - Add the ability to track down registers and addresses in tracer(unsure)
 - Implement CE's Ultimap-like feature for tracing data, dissect code data and raw instruction list.
