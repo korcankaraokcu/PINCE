@@ -5272,12 +5272,13 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         memory_regions = utils.get_regions(debugcore.currentpid)
         self.tableWidget_MemoryRegions.setRowCount(0)
         self.tableWidget_MemoryRegions.setRowCount(len(memory_regions))
-        region_index = 0
+        # region_index counts occurrences per file name, matching utils.get_region_info/get_region_dict
+        # so the shown [index] lines up with the index bookmarks store and resolve against.
+        tail_counts: dict[str, int] = {}
         for row, (start, end, perms, offset, _, _, path) in enumerate(memory_regions):
-            if safe_str_to_int(offset, 16) == 0:
-                region_index = 0
-            else:
-                region_index += 1
+            file_name = os.path.split(path)[1]
+            region_index = tail_counts.get(file_name, 0)
+            tail_counts[file_name] = region_index + 1
             address = start + "-" + end
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_ADDR_COL, QTableWidgetItem(address))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PERM_COL, QTableWidgetItem(perms))

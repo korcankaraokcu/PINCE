@@ -171,20 +171,15 @@ def get_region_info(pid: int | str, address: int | str) -> typedefs.tuple_region
     if type(address) != int:
         address = safe_str_to_int(address, 0)
     region_list = get_regions(pid)
-    region_index = 0
-    for start, end, perms, map_offset, _, _, path in region_list:
+    tail_counts: dict[str, int] = {}
+    for start, end, perms, _, _, _, path in region_list:
         start = safe_str_to_int(start, 16)
         end = safe_str_to_int(end, 16)
         file_name = os.path.split(path)[1]
-
-        # get region index for the given address
-        if safe_str_to_int(map_offset, 16) == 0:
-            region_index = 0
-        else:
-            region_index += 1
-
+        region_index = tail_counts.get(file_name, 0)
         if start <= address < end:
             return typedefs.tuple_region_info(start, end, perms, file_name, region_index)
+        tail_counts[file_name] = region_index + 1
 
 
 def filter_regions(pid: int, attribute: str, regex: str, case_sensitive: bool = False) -> list[tuple[str, ...]]:
