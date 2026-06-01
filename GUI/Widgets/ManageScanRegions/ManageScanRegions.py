@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QDialog, QTableWidgetItem
+from PyQt6.QtWidgets import QDialog, QTableWidgetItem, QWidget
 from PyQt6.QtCore import Qt
 from GUI.Widgets.ManageScanRegions.Form.ManageScanRegionsDialog import Ui_Dialog
 from GUI.Utils import guiutils
@@ -6,7 +6,7 @@ from libpince import scancore
 
 
 class ManageScanRegionsDialog(QDialog, Ui_Dialog):
-    def __init__(self, parent) -> None:
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.deleted_regions: list[int] = []

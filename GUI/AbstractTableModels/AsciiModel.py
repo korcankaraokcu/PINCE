@@ -15,16 +15,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from PyQt6.QtCore import QObject
 from GUI.AbstractTableModels.HexModel import QHexModel
 from libpince import utils
 
 
 class QAsciiModel(QHexModel):
-    def __init__(self, row_count, column_count, parent=None):
+    def __init__(self, row_count: int, column_count: int, parent: QObject | None = None) -> None:
         super().__init__(row_count, column_count, parent)
 
-    def display_data(self, index):
+    def display_data(self, index: int) -> str:
         return utils.aob_to_str(self.data_array[index])
 
-    def translate_data(self, data):
+    def translate_data(self, data: str) -> str:
         return utils.str_to_aob(data)

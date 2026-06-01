@@ -4,7 +4,7 @@ from collections import OrderedDict
 language_list = OrderedDict([("en_US", "English"), ("it_IT", "Italiano"), ("zh_CN", "简体中文")])
 
 
-def get_locale():
+def get_locale() -> str:
     system_locale = QLocale.system().name()
     return system_locale if system_locale in language_list else "en_US"
 
@@ -34,7 +34,7 @@ QT_TRANSLATE_NOOP("QPlatformTheme", "Yes to &All")
 
 class TranslationConstants(QObject):
     @staticmethod
-    def translate():
+    def translate() -> None:
         for key, value in vars(TranslationConstants).items():
             if not key.startswith("__") and isinstance(value, str):
                 setattr(TranslationConstants, key, TranslationConstants.tr(value))

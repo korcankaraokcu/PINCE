@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from PyQt6.QtGui import QKeyEvent, QWheelEvent
-from PyQt6.QtWidgets import QTableView, QAbstractItemView
+from PyQt6.QtWidgets import QTableView, QAbstractItemView, QWidget
 from PyQt6.QtCore import QItemSelectionModel, QModelIndex, Qt, pyqtSignal
 from GUI.ItemDelegates.HexDelegate import QHexDelegate
 from GUI.AbstractTableModels.HexModel import QHexModel
@@ -27,7 +27,7 @@ class QHexView(QTableView):
     scroll_requested = pyqtSignal(int)
     page_scroll_requested = pyqtSignal(int)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWordWrap(False)
         self.horizontalHeader().setVisible(False)
@@ -42,7 +42,7 @@ class QHexView(QTableView):
         self.delegate.closeEditor.connect(self.on_editor_close)
         self.setItemDelegate(self.delegate)
 
-    def adjust_cell_size(self, char_count: int):
+    def adjust_cell_size(self, char_count: int) -> None:
         font_metrics = self.fontMetrics()
         col_width = font_metrics.horizontalAdvance("F" * char_count) + 4 * char_count
         row_height = font_metrics.height()
@@ -53,10 +53,10 @@ class QHexView(QTableView):
         self.verticalHeader().setDefaultSectionSize(row_height)
         self.verticalHeader().setMaximumSectionSize(row_height)
 
-    def wheelEvent(self, event: QWheelEvent):
+    def wheelEvent(self, event: QWheelEvent) -> None:
         event.ignore()
 
-    def keyPressEvent(self, event: QKeyEvent):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Return and self.state() != QAbstractItemView.State.EditingState:
             self.edit(self.currentIndex())
         elif event.key() == Qt.Key.Key_Up and self.currentIndex().row() == 0:
@@ -70,19 +70,19 @@ class QHexView(QTableView):
         else:
             return super().keyPressEvent(event)
 
-    def selectionCommand(self, index: QModelIndex, event: QKeyEvent):
+    def selectionCommand(self, index: QModelIndex, event: QKeyEvent) -> QItemSelectionModel.SelectionFlag:
         if event and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
             # Disable multi-selection when Ctrl key is pressed
             return QItemSelectionModel.SelectionFlag.ClearAndSelect
         else:
             return super().selectionCommand(index, event)
 
-    def resize_to_contents(self):
+    def resize_to_contents(self) -> None:
         size = self.columnWidth(0) * self.model().columnCount()
         self.setMinimumWidth(size)
         self.setMaximumWidth(size)
 
-    def on_editor_close(self):
+    def on_editor_close(self) -> None:
         if not self.delegate.editor.isModified():
             return
         model: QHexModel = self.model()

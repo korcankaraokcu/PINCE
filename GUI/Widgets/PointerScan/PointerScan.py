@@ -1,6 +1,6 @@
 from PyQt6.QtCore import Qt, QModelIndex
 from PyQt6.QtGui import QCloseEvent, QKeySequence, QShortcut
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QLabel
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QLabel, QWidget
 from GUI.Widgets.PointerScan.Form.PointerScanWindow import Ui_MainWindow
 from GUI.Widgets.PointerScanFilter.PointerScanFilter import PointerScanFilterDialog
 from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
@@ -14,7 +14,7 @@ import os
 
 
 class PointerScanWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self, parent, default_scan_address: str) -> None:
+    def __init__(self, parent: QWidget, default_scan_address: str) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
@@ -30,7 +30,7 @@ class PointerScanWindow(QMainWindow, Ui_MainWindow):
         self.tableView.horizontalHeader().setSortIndicator(-1, Qt.SortOrder.AscendingOrder)
         self.tableView.doubleClicked.connect(self.tableView_double_clicked)
         # Enter/Return adds every selected row (a double-click collapses multi-selection, so it can't)
-        self.add_selected_shortcuts = []
+        self.add_selected_shortcuts: list[QShortcut] = []
         for key in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             shortcut = QShortcut(QKeySequence(key), self.tableView)
             shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)

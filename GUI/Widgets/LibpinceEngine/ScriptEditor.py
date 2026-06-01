@@ -1,8 +1,21 @@
 import builtins, inspect, keyword, os, re
+from typing import Any, Iterator
 
-from PyQt6.QtCore import QRect, QSize, QStringListModel, Qt
-from PyQt6.QtGui import QColor, QPainter, QTextCharFormat, QTextCursor, QTextFormat, QSyntaxHighlighter
-from PyQt6.QtWidgets import QApplication, QCompleter, QPlainTextEdit, QTextEdit, QToolTip, QWidget
+from PyQt6.QtCore import QModelIndex, QRect, QSize, QStringListModel, Qt
+from PyQt6.QtGui import (
+    QColor,
+    QKeyEvent,
+    QPainter,
+    QPaintEvent,
+    QResizeEvent,
+    QTextBlock,
+    QTextCharFormat,
+    QTextCursor,
+    QTextDocument,
+    QTextFormat,
+    QSyntaxHighlighter,
+)
+from PyQt6.QtWidgets import QApplication, QCompleter, QPlainTextEdit, QTabWidget, QTextEdit, QToolTip, QWidget
 
 from tr.tr import TranslationConstants as tr
 
@@ -10,7 +23,7 @@ INDENT = " " * 4
 MAX_COMPLETIONS = 300
 
 
-def make_format(color: str, bold=False, italic=False):
+def make_format(color: str, bold: bool = False, italic: bool = False) -> QTextCharFormat:
     fmt = QTextCharFormat()
     fmt.setForeground(QColor(color))
     if bold:
@@ -28,7 +41,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         4: ('"""', True),
     }
 
-    def __init__(self, document):
+    def __init__(self, document: QTextDocument | None) -> None:
         super().__init__(document)
         self.default_format = QTextCharFormat()
         self.string_format = make_format("#98c379")
@@ -49,7 +62,7 @@ class PythonHighlighter(QSyntaxHighlighter):
             (re.compile(r"\b(0x[0-9a-fA-F]+|\d+(\.\d+)?)\b"), make_format("#d19a66"), 0),
         ]
 
-    def highlightBlock(self, text):
+    def highlightBlock(self, text: str) -> None:
         self.setCurrentBlockState(0)
         state = self.previousBlockState()
         i = 0
@@ -97,7 +110,7 @@ class PythonHighlighter(QSyntaxHighlighter):
             i += 1
         self.apply_code_rules(text, code_start, len(text))
 
-    def apply_code_rules(self, text, start, end):
+    def apply_code_rules(self, text: str, start: int, end: int) -> None:
         if start >= end:
             return
         segment = text[start:end]
@@ -121,7 +134,7 @@ class PythonHighlighter(QSyntaxHighlighter):
                 span_start, span_end = match.span(group)
                 self.setFormat(start + span_start, span_end - span_start, fmt)
 
-    def string_at(self, text, index):
+    def string_at(self, text: str, index: int) -> tuple[int, int, str, int, bool] | None:
         match = re.match(r"(?i)([rubf]*)(['\"])", text[index:])
         if not match:
             return
@@ -133,7 +146,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         quote_len = 3 if text.startswith(quote * 3, quote_start) else 1
         return index, quote_start, quote, quote_len, "f" in prefix.lower()
 
-    def find_string_end(self, text, index, quote):
+    def find_string_end(self, text: str, index: int, quote: str) -> int:
         escape = False
         while index < len(text):
             if escape:
@@ -145,7 +158,7 @@ class PythonHighlighter(QSyntaxHighlighter):
             index += 1
         return len(text)
 
-    def format_fstring_expressions(self, text, start, end):
+    def format_fstring_expressions(self, text: str, start: int, end: int) -> None:
         i = start
         while i < end:
             if text.startswith("{{", i) or text.startswith("}}", i):
@@ -161,7 +174,7 @@ class PythonHighlighter(QSyntaxHighlighter):
                 continue
             i += 1
 
-    def find_fstring_expression_end(self, text, index, end):
+    def find_fstring_expression_end(self, text: str, index: int, end: int) -> int:
         depth = 0
         while index < end:
             if text.startswith("{{", index) or text.startswith("}}", index):
@@ -176,7 +189,7 @@ class PythonHighlighter(QSyntaxHighlighter):
             index += 1
         return -1
 
-    def fstring_code_length(self, expression):
+    def fstring_code_length(self, expression: str) -> int:
         depth = 0
         quote = None
         escape = False
@@ -201,25 +214,25 @@ class PythonHighlighter(QSyntaxHighlighter):
 
 
 class LineNumberArea(QWidget):
-    def __init__(self, editor):
+    def __init__(self, editor: "ScriptEditor") -> None:
         super().__init__(editor)
         self.editor = editor
 
-    def sizeHint(self):
+    def sizeHint(self) -> QSize:
         return QSize(self.editor.line_number_area_width(), 0)
 
-    def paintEvent(self, event):
+    def paintEvent(self, event: QPaintEvent) -> None:
         self.editor.line_number_area_paint_event(event)
 
 
 class ScriptEditor(QPlainTextEdit):
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.file_path = None
+        self.file_path: str | None = None
         self.saved_content = ""
         self.is_modified = False
-        self.tab_widget = None
-        self.namespace = {}
+        self.tab_widget: QTabWidget | None = None
+        self.namespace: dict[str, Any] = {}
 
         self.line_number_area = LineNumberArea(self)
         self.completion_model = QStringListModel(self)
@@ -239,32 +252,32 @@ class ScriptEditor(QPlainTextEdit):
         self.update_line_number_area_width()
         self.highlight_current_line()
 
-    def bind_tab_widget(self, tab_widget):
+    def bind_tab_widget(self, tab_widget: QTabWidget) -> None:
         self.tab_widget = tab_widget
 
-    def set_namespace(self, namespace):
+    def set_namespace(self, namespace: dict[str, Any]) -> None:
         self.namespace = namespace
 
-    def handle_text_changed(self):
+    def handle_text_changed(self) -> None:
         modified = self.toPlainText() != self.saved_content
         if modified != self.is_modified:
             self.is_modified = modified
             self.update_tab_title()
 
-    def update_tab_title(self):
+    def update_tab_title(self) -> None:
         if not self.tab_widget:
             return
         index = self.tab_widget.indexOf(self.parent())
         base_title = os.path.basename(self.file_path) if self.file_path else tr.UNTITLED
         self.tab_widget.setTabText(index, f"{base_title}*" if self.is_modified else base_title)
 
-    def line_number_area_width(self):
+    def line_number_area_width(self) -> int:
         return 12 + self.fontMetrics().horizontalAdvance("9") * len(str(max(1, self.blockCount())))
 
-    def update_line_number_area_width(self):
+    def update_line_number_area_width(self) -> None:
         self.setViewportMargins(self.line_number_area_width(), 0, 0, 0)
 
-    def update_line_number_area(self, rect, dy):
+    def update_line_number_area(self, rect: QRect, dy: int) -> None:
         if dy:
             self.line_number_area.scroll(0, dy)
         else:
@@ -272,12 +285,12 @@ class ScriptEditor(QPlainTextEdit):
         if rect.contains(self.viewport().rect()):
             self.update_line_number_area_width()
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         rect = self.contentsRect()
         self.line_number_area.setGeometry(QRect(rect.left(), rect.top(), self.line_number_area_width(), rect.height()))
 
-    def line_number_area_paint_event(self, event):
+    def line_number_area_paint_event(self, event: QPaintEvent) -> None:
         painter = QPainter(self.line_number_area)
         painter.fillRect(event.rect(), QColor("#252830"))
         painter.setPen(QColor("#7f848e"))
@@ -302,7 +315,7 @@ class ScriptEditor(QPlainTextEdit):
             bottom = top + round(self.blockBoundingRect(block).height())
             number += 1
 
-    def highlight_current_line(self):
+    def highlight_current_line(self) -> None:
         selection = QTextEdit.ExtraSelection()
         selection.format.setBackground(QColor("#2c313a"))
         selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
@@ -310,7 +323,7 @@ class ScriptEditor(QPlainTextEdit):
         selection.cursor.clearSelection()
         self.setExtraSelections([selection])
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         popup = self.completer.popup()
         if popup.isVisible():
             if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Tab):
@@ -352,17 +365,17 @@ class ScriptEditor(QPlainTextEdit):
         elif not text.strip():
             popup.hide()
 
-    def word_before_cursor(self):
+    def word_before_cursor(self) -> str:
         text = self.textCursor().block().text()[: self.textCursor().positionInBlock()]
         match = re.search(r"([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\.?)$", text)
         return match.group(1) if match else ""
 
-    def callable_before_cursor(self):
+    def callable_before_cursor(self) -> str:
         text = self.textCursor().block().text()[: self.textCursor().positionInBlock()].rstrip("(").rstrip()
         match = re.search(r"([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)$", text)
         return match.group(1) if match else ""
 
-    def resolve(self, name):
+    def resolve(self, name: str) -> Any:
         parts = name.split(".")
         obj = self.namespace.get(parts[0], getattr(builtins, parts[0], None))
         for item in parts[1:]:
@@ -372,7 +385,7 @@ class ScriptEditor(QPlainTextEdit):
                 return
         return obj
 
-    def complete(self, force=False):
+    def complete(self, force: bool = False) -> None:
         prefix = self.word_before_cursor()
         if not force and not prefix.endswith(".") and len(prefix) < 2:
             self.completer.popup().hide()
@@ -408,13 +421,13 @@ class ScriptEditor(QPlainTextEdit):
         rect.setWidth(min(max(width, 240), 620))
         self.completer.complete(rect)
 
-    def insert_completion(self, completion):
+    def insert_completion(self, completion: str) -> None:
         if not completion:
             return
         prefix = self.word_before_cursor()
         self.textCursor().insertText(completion[len(prefix) :] if completion.startswith(prefix) else completion)
 
-    def show_help(self, name):
+    def show_help(self, name: str | QModelIndex | None) -> None:
         if not isinstance(name, str):
             name = name.data() if name is not None else ""
         obj = self.resolve(name)
@@ -428,7 +441,7 @@ class ScriptEditor(QPlainTextEdit):
         if text:
             QToolTip.showText(self.mapToGlobal(self.cursorRect().bottomRight()), text[:1200], self)
 
-    def selected_blocks(self):
+    def selected_blocks(self) -> Iterator[QTextBlock]:
         cursor = self.textCursor()
         document = self.document()
         start = document.findBlock(cursor.selectionStart())
@@ -436,7 +449,7 @@ class ScriptEditor(QPlainTextEdit):
         last = end.blockNumber() - int(cursor.hasSelection() and end.positionInBlock() == 0)
         return map(document.findBlockByNumber, range(start.blockNumber(), max(start.blockNumber(), last) + 1))
 
-    def indent_selection(self):
+    def indent_selection(self) -> None:
         cursor = self.textCursor()
         if not cursor.hasSelection():
             cursor.insertText(INDENT)
@@ -447,7 +460,7 @@ class ScriptEditor(QPlainTextEdit):
             cursor.insertText(INDENT)
         cursor.endEditBlock()
 
-    def unindent_selection(self):
+    def unindent_selection(self) -> None:
         cursor = self.textCursor()
         cursor.beginEditBlock()
         for block in self.selected_blocks():
@@ -459,12 +472,12 @@ class ScriptEditor(QPlainTextEdit):
                 cursor.removeSelectedText()
         cursor.endEditBlock()
 
-    def insert_auto_indent(self):
+    def insert_auto_indent(self) -> None:
         text = self.textCursor().block().text()[: self.textCursor().positionInBlock()]
         indent = re.match(r"\s*", text).group(0).replace("\t", INDENT)
         self.textCursor().insertText("\n" + indent + (INDENT if text.rstrip().endswith(":") else ""))
 
-    def backspace_unindent(self):
+    def backspace_unindent(self) -> bool:
         cursor = self.textCursor()
         text = cursor.block().text()[: cursor.positionInBlock()]
         if cursor.hasSelection() or not text.isspace():

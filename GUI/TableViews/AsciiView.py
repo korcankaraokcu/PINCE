@@ -15,13 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from PyQt6.QtWidgets import QWidget
 from GUI.TableViews.HexView import QHexView
 from GUI.ItemDelegates.HexDelegate import QHexDelegate
 from libpince import typedefs
 
 
 class QAsciiView(QHexView):
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.write_type = typedefs.VALUE_INDEX.STRING_UTF8
         self.delegate = QHexDelegate(1, ".+")

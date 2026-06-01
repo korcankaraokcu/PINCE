@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from PyQt6.QtWidgets import QLabel, QMenu, QApplication, QMessageBox
+from PyQt6.QtWidgets import QLabel, QMenu, QApplication, QMessageBox, QWidget
 from PyQt6.QtGui import QCursor, QMouseEvent, QEnterEvent, QContextMenuEvent
 from PyQt6.QtCore import Qt
 from libpince import debugcore, typedefs, utils
@@ -24,10 +24,10 @@ from tr.tr import TranslationConstants as tr
 
 
 class QRegisterLabel(QLabel):
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-    def set_value(self, value):
+    def set_value(self, value: str) -> None:
         new = self.objectName() + "=" + value
         old = self.text()
         if old != new:
@@ -36,11 +36,11 @@ class QRegisterLabel(QLabel):
             self.setStyleSheet("")
         self.setText(new)
 
-    def enterEvent(self, event: QEnterEvent):
+    def enterEvent(self, event: QEnterEvent) -> None:
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         super().enterEvent(event)
 
-    def mouseDoubleClickEvent(self, event: QMouseEvent):
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         if (
             event.button() != Qt.MouseButton.LeftButton
             or debugcore.currentpid == -1
@@ -61,7 +61,7 @@ class QRegisterLabel(QLabel):
             debugcore.set_convenience_variable(current_register, register_dialog.get_values()[0])
             self.set_value(debugcore.read_registers()[current_register])
 
-    def contextMenuEvent(self, event: QContextMenuEvent):
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         menu = QMenu()
         copy = menu.addAction(tr.COPY)
         menu.addSeparator()

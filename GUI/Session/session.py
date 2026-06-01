@@ -185,7 +185,7 @@ class Session:
         else:
             close_event.accept()
 
-    def recalculate_bookmarks(self):
+    def recalculate_bookmarks(self) -> None:
         """
         Recalculate all bookmarks to update their addresses based on their symbols or region info.
         This is useful when the process has changed and the addresses may have shifted.

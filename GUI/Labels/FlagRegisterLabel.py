@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from PyQt6.QtWidgets import QLabel, QMessageBox
+from PyQt6.QtWidgets import QLabel, QMessageBox, QWidget
 from PyQt6.QtGui import QCursor, QMouseEvent, QEnterEvent
 from PyQt6.QtCore import Qt
 from libpince import debugcore, typedefs
@@ -24,10 +24,10 @@ from tr.tr import TranslationConstants as tr
 
 
 class QFlagRegisterLabel(QLabel):
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-    def set_value(self, value):
+    def set_value(self, value: str) -> None:
         new = value
         old = self.text()
         if old != new:
@@ -36,11 +36,11 @@ class QFlagRegisterLabel(QLabel):
             self.setStyleSheet("")
         self.setText(new)
 
-    def enterEvent(self, event: QEnterEvent):
+    def enterEvent(self, event: QEnterEvent) -> None:
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         super().enterEvent(event)
 
-    def mouseDoubleClickEvent(self, event: QMouseEvent):
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         if (
             event.button() != Qt.MouseButton.LeftButton
             or debugcore.currentpid == -1

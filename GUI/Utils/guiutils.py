@@ -45,7 +45,7 @@ validator_map: dict[str, QRegularExpressionValidator | None] = {
 }
 
 
-def get_icons_directory():
+def get_icons_directory() -> str:
     """Gets the directory of the icons
 
     Returns:
@@ -54,7 +54,7 @@ def get_icons_directory():
     return utils.get_script_directory() + "/media/icons"
 
 
-def center(window: QWidget):
+def center(window: QWidget) -> None:
     """Center the given window to desktop
 
     Args:
@@ -63,7 +63,7 @@ def center(window: QWidget):
     window.frameGeometry().moveCenter(window.screen().availableGeometry().center())
 
 
-def center_to_parent(window: QWidget):
+def center_to_parent(window: QWidget) -> None:
     """Center the given window to its parent
 
     Args:
@@ -73,7 +73,7 @@ def center_to_parent(window: QWidget):
     window.move(parent.frameGeometry().center() - window.rect().center())
 
 
-def center_scroll_bar(scrollbar: QScrollBar):
+def center_scroll_bar(scrollbar: QScrollBar) -> None:
     """Center the given scrollbar
 
     Args:
@@ -84,7 +84,7 @@ def center_scroll_bar(scrollbar: QScrollBar):
     scrollbar.setValue((maximum + minimum) // 2)
 
 
-def resize_to_contents(tablewidget: QTableWidget):
+def resize_to_contents(tablewidget: QTableWidget) -> None:
     """Resizes the columns of the given QTableWidget to its contents
     This also fixes the stretch problem of the last column
 
@@ -96,7 +96,7 @@ def resize_to_contents(tablewidget: QTableWidget):
     tablewidget.horizontalHeader().resizeSection(tablewidget.columnCount() - 1, default_size)
 
 
-def fill_value_combobox(combobox: QComboBox, current_index: int = typedefs.VALUE_INDEX.INT32):
+def fill_value_combobox(combobox: QComboBox, current_index: int = typedefs.VALUE_INDEX.INT32) -> None:
     """Fills the given QComboBox with value_index strings
 
     Args:
@@ -108,7 +108,7 @@ def fill_value_combobox(combobox: QComboBox, current_index: int = typedefs.VALUE
     combobox.setCurrentIndex(current_index)
 
 
-def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.ENDIANNESS.HOST):
+def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.ENDIANNESS.HOST) -> None:
     """Fills the given QComboBox with endianness strings
 
     Args:
@@ -125,7 +125,7 @@ def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.
     combobox.setCurrentIndex(current_index)
 
 
-def fill_alignment_combobox(combobox: QComboBox):
+def fill_alignment_combobox(combobox: QComboBox) -> None:
     """Fills the given QComboBox with alignment strings
 
     Args:
@@ -144,7 +144,7 @@ def fill_alignment_combobox(combobox: QComboBox):
     combobox.setCurrentIndex(0)
 
 
-def get_current_row(tablewidget: QTableWidget):
+def get_current_row(tablewidget: QTableWidget) -> int:
     r"""Returns the currently selected row index for the given QTableWidget
     If you try to use only selectionModel().currentIndex().row() for this purpose, you'll get the last selected row even
     if it was unselected afterwards. This is why this function exists, it checks the selection state before returning
@@ -181,7 +181,9 @@ def get_current_item(tablewidget: QTableWidget) -> QTableWidgetItem | None: ...
 def get_current_item(treewidget: QTreeWidget) -> QTreeWidgetItem | None: ...
 
 
-def get_current_item(widget: QListWidget | QTableWidget | QTreeWidget):
+def get_current_item(
+    widget: QListWidget | QTableWidget | QTreeWidget,
+) -> QListWidgetItem | QTableWidgetItem | QTreeWidgetItem | None:
     r"""Returns the currently selected item for the given widget
     If you try to use only selectionModel().currentItem() for this purpose, you'll get the last selected item even
     if it was unselected afterwards. This is why this function exists, it checks the selection state before returning
@@ -205,7 +207,7 @@ def get_current_item(widget: QListWidget | QTableWidget | QTreeWidget):
         return widget.currentItem()
 
 
-def delete_menu_entries(menu: QMenu, QAction_list: list):
+def delete_menu_entries(menu: QMenu, QAction_list: list) -> None:
     """Deletes given QActions from the QMenu recursively and cleans up the remaining redundant separators and menus
     Doesn't support menus that includes types other than actions, separators and menus
 
@@ -214,7 +216,7 @@ def delete_menu_entries(menu: QMenu, QAction_list: list):
         QAction_list (list): List of QActions. Leave blank if you just want to clean the redundant separators up
     """
 
-    def remove_entries(menu: QMenu):
+    def remove_entries(menu: QMenu) -> None:
         for action in menu.actions():
             try:
                 QAction_list.index(action)
@@ -223,7 +225,7 @@ def delete_menu_entries(menu: QMenu, QAction_list: list):
             else:
                 menu.removeAction(action)
 
-    def clean_entries(menu: QMenu):
+    def clean_entries(menu: QMenu) -> None:
         for action in menu.actions():
             if action.isSeparator():
                 actions = menu.actions()
@@ -241,7 +243,7 @@ def delete_menu_entries(menu: QMenu, QAction_list: list):
 
 
 # TODO: This is a really bad design pattern, remove this function after moving classes to their own files
-def search_parents_by_function(qt_object: QObject, func_name: str):
+def search_parents_by_function(qt_object: QObject, func_name: str) -> QObject | None:
     """Search for func_name in the parents of given QObject. Once function is found, parent that possesses func_name
     is returned
 
@@ -255,7 +257,7 @@ def search_parents_by_function(qt_object: QObject, func_name: str):
             return qt_object
 
 
-def get_layout_widgets(layout: QLayout):
+def get_layout_widgets(layout: QLayout) -> list[QWidget]:
     """Returns the widgets of a QLayout as a list
 
     Args:
@@ -267,7 +269,7 @@ def get_layout_widgets(layout: QLayout):
     return [layout.itemAt(x).widget() for x in range(layout.count())]
 
 
-def contains_reference_mark(string: str):
+def contains_reference_mark(string: str) -> bool:
     """Checks if given string contains the reference mark
 
     Args:
@@ -279,7 +281,7 @@ def contains_reference_mark(string: str):
     return True if regexes.reference_mark.search(string) else False
 
 
-def append_shortcut_to_tooltip(qt_object: QObject, shortcut: QShortcut):
+def append_shortcut_to_tooltip(qt_object: QObject, shortcut: QShortcut) -> None:
     """Appends key string of the given QShortcut to the toolTip of the given QObject
 
     Args:
@@ -289,7 +291,7 @@ def append_shortcut_to_tooltip(qt_object: QObject, shortcut: QShortcut):
     qt_object.setToolTip(qt_object.toolTip() + "[" + shortcut.key().toString() + "]")
 
 
-def check_inferior_running(widget: QWidget = None, show_message: bool = True) -> str | None:
+def check_inferior_running(widget: QWidget | None = None, show_message: bool = True) -> str | None:
     """Checks if a process is selected and is running
 
     Args:

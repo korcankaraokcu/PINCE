@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QWidget, QFrame, QLabel, QLineEdit, QPushButton, QHBoxLayout, QSizePolicy, QSpacerItem
 from PyQt6.QtCore import Qt, pyqtSignal
 from operator import add as opAdd, sub as opSub
+from typing import Callable
 
 from GUI.Utils import guiutils
 from libpince import utils
@@ -10,12 +11,12 @@ from libpince import utils
 class PointerChainOffset(QFrame):
     offset_changed_signal = pyqtSignal(name="offsetChanged")
 
-    def __init__(self, offset_index: int, parent: QWidget | None = None):
+    def __init__(self, offset_index: int, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.offset_index = offset_index
         self.initUI()
 
-    def initUI(self):
+    def initUI(self) -> None:
         offsetLayout = QHBoxLayout(self)
         offsetLayout.setContentsMargins(0, 3, 0, 3)
         self.setLayout(offsetLayout)
@@ -40,7 +41,7 @@ class PointerChainOffset(QFrame):
         buttonLeft.clicked.connect(lambda: self.on_offset_arrow_clicked(self.offsetText, opSub))
         buttonRight.clicked.connect(lambda: self.on_offset_arrow_clicked(self.offsetText, opAdd))
 
-    def on_offset_arrow_clicked(self, offsetTextWidget, operator_func):
+    def on_offset_arrow_clicked(self, offsetTextWidget: QLineEdit, operator_func: Callable) -> None:
         offsetText = offsetTextWidget.text()
         try:
             offsetValue = int(offsetText, 16)
@@ -51,8 +52,8 @@ class PointerChainOffset(QFrame):
             offsetValue = 0
         offsetTextWidget.setText(utils.upper_hex(hex(offsetValue)))
 
-    def offset_changed(self):
+    def offset_changed(self) -> None:
         self.offset_changed_signal.emit()
 
-    def update_deref_label(self, text: str):
+    def update_deref_label(self, text: str) -> None:
         self.derefLabel.setText(text)

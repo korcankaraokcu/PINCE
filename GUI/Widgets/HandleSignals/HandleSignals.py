@@ -6,7 +6,7 @@ import json
 
 
 class HandleSignalsDialog(QDialog, Ui_Dialog):
-    def __init__(self, parent, signal_data):
+    def __init__(self, parent: QWidget, signal_data: str) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.signal_data = json.loads(signal_data)
@@ -28,7 +28,7 @@ class HandleSignalsDialog(QDialog, Ui_Dialog):
         self.tableWidget_Signals.resizeColumnsToContents()
         guiutils.center_to_parent(self)
 
-    def create_checkbox_widget(self):
+    def create_checkbox_widget(self) -> tuple[QWidget, QCheckBox]:
         widget = QWidget()
         checkbox = QCheckBox()
         layout = QHBoxLayout(widget)
@@ -37,7 +37,7 @@ class HandleSignalsDialog(QDialog, Ui_Dialog):
         layout.setContentsMargins(0, 0, 0, 0)
         return widget, checkbox
 
-    def get_values(self):
+    def get_values(self) -> str:
         signal_data = []
         for index in range(len(self.signal_data)):
             current_signal = []

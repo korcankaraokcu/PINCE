@@ -2,12 +2,11 @@ from keyboard import key_to_scan_codes
 import re as _re
 
 # copied from keyboard.__init__.py
-_is_str = lambda x: isinstance(x, str)
 _is_number = lambda x: isinstance(x, int)
 _is_list = lambda x: isinstance(x, (list, tuple))
 
 
-def parse_hotkey(hotkey):
+def parse_hotkey(hotkey: str | int | list | tuple) -> tuple | list:
     ## function to replace keyboard.parse_hotkey() with fix for literal '+' in hotkey strings
     """
     Parses a user-provided hotkey into nested tuples representing the

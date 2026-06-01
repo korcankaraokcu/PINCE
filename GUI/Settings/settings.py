@@ -69,7 +69,7 @@ for x in range(32, 128):  # Add signals SIG32-SIG127
     default_signals.append([f"SIG{x}", True, True])
 
 
-def init_settings():
+def init_settings() -> None:
     settings = QSettings()
     if not os.path.exists(settings.fileName()):
         set_default_settings()
@@ -94,7 +94,7 @@ def init_settings():
 
 # Please refrain from using python specific objects in settings, use json-compatible ones instead
 # Using python objects causes issues when filenames change
-def set_default_settings():
+def set_default_settings() -> None:
     settings = QSettings()
     settings.beginGroup("General")
     settings.setValue("auto_update_address_table", True)
@@ -134,7 +134,7 @@ def set_default_settings():
     apply_settings()
 
 
-def apply_settings():
+def apply_settings() -> None:
     settings = QSettings()
     states.update_table = settings.value("General/auto_update_address_table", type=bool)
     states.table_update_interval = settings.value("General/address_table_update_interval", type=int)
@@ -164,7 +164,7 @@ def apply_settings():
     states.setting_signals.changed.emit()
 
 
-def apply_after_init():
+def apply_after_init() -> None:
     settings = QSettings()
     states.exp_cache.clear()
     states.gdb_logging = settings.value("Debug/gdb_logging", type=bool)

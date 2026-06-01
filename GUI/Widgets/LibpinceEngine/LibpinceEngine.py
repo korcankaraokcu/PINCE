@@ -1,4 +1,5 @@
 import builtins, contextlib, io, os, traceback
+from typing import Any
 
 from PyQt6.QtGui import QTextCursor
 from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox, QVBoxLayout, QWidget
@@ -8,6 +9,9 @@ from GUI.Widgets.LibpinceEngine.Form.LibpinceEngineWindow import Ui_MainWindow
 from GUI.Widgets.LibpinceEngine.ScriptEditor import ScriptEditor
 from libpince import debugcore, typedefs, utils
 from tr.tr import TranslationConstants as tr
+
+# Accepted input for byte-oriented helpers: a hex string, a bytes-like object, or a list of byte values
+BytesLike = bytes | bytearray | memoryview | str | list[int]
 
 
 class LibpinceScriptApi:
@@ -29,7 +33,7 @@ class LibpinceScriptApi:
         "utf-32": typedefs.VALUE_INDEX.STRING_UTF32,
     }
 
-    def address(self, expression) -> int:
+    def address(self, expression: int | str) -> int:
         """Return an integer address from an int, hex string, register, symbol, or GDB expression."""
         if isinstance(expression, int):
             return expression
@@ -52,48 +56,50 @@ class LibpinceScriptApi:
                 pass
         raise ValueError(f"Could not resolve address expression: {expression}")
 
-    def read_int(self, address, size=4, signed=False):
+    def read_int(self, address: int | str, size: int = 4, signed: bool = False) -> int | None:
         """Read an integer. size can be 1, 2, 4, or 8."""
         value_index = self.int_index_by_size[int(size)]
         value_repr = typedefs.VALUE_REPR.SIGNED if signed else typedefs.VALUE_REPR.UNSIGNED
         return debugcore.read_memory(self.address(address), value_index, value_repr=value_repr)
 
-    def write_int(self, value, address, size=4):
+    def write_int(self, value: int, address: int | str, size: int = 4) -> None:
         """Write an integer. size can be 1, 2, 4, or 8."""
         value_index = self.int_index_by_size[int(size)]
         debugcore.write_memory(self.address(address), value_index, int(value))
 
-    def read_float(self, address, double=False):
+    def read_float(self, address: int | str, double: bool = False) -> float | None:
         """Read a 32-bit float, or a 64-bit float when double=True."""
         value_index = typedefs.VALUE_INDEX.FLOAT64 if double else typedefs.VALUE_INDEX.FLOAT32
         return debugcore.read_memory(self.address(address), value_index)
 
-    def write_float(self, value, address, double=False):
+    def write_float(self, value: float, address: int | str, double: bool = False) -> None:
         """Write a 32-bit float, or a 64-bit float when double=True."""
         value_index = typedefs.VALUE_INDEX.FLOAT64 if double else typedefs.VALUE_INDEX.FLOAT32
         debugcore.write_memory(self.address(address), value_index, float(value))
 
-    def read_string(self, address, length=128, encoding="utf8", zero_terminate=True):
+    def read_string(
+        self, address: int | str, length: int = 128, encoding: str = "utf8", zero_terminate: bool = True
+    ) -> str | None:
         """Read a string using ascii, utf8, utf16, or utf32."""
         value_index = self.string_index_by_encoding[encoding.lower()]
         return debugcore.read_memory(self.address(address), value_index, int(length), zero_terminate=zero_terminate)
 
-    def write_string(self, value, address, encoding="utf8", zero_terminate=True):
+    def write_string(self, value: str, address: int | str, encoding: str = "utf8", zero_terminate: bool = True) -> None:
         """Write a string using ascii, utf8, utf16, or utf32."""
         value_index = self.string_index_by_encoding[encoding.lower()]
         debugcore.write_memory(self.address(address), value_index, str(value), zero_terminate=zero_terminate)
 
-    def read_bytes(self, address, length):
+    def read_bytes(self, address: int | str, length: int) -> bytes:
         """Read bytes from the inferior and return a bytes object."""
         aob = debugcore.read_memory(self.address(address), typedefs.VALUE_INDEX.AOB, int(length))
         return bytes.fromhex(aob) if aob else b""
 
-    def write_bytes(self, data, address):
+    def write_bytes(self, data: BytesLike, address: int | str) -> None:
         """Write bytes where data can be bytes, bytearray, list[int], or a hex string."""
         data = self._bytes(data)
         debugcore.write_memory(self.address(address), typedefs.VALUE_INDEX.AOB, data.hex(" "))
 
-    def patch(self, data, address, expected=None):
+    def patch(self, data: BytesLike, address: int | str, expected: BytesLike | None = None) -> None:
         """Patch instruction bytes, optionally verifying the original bytes first.
         Can be restored using restore(address).
         """
@@ -105,36 +111,36 @@ class LibpinceScriptApi:
                 raise RuntimeError(f"Patch mismatch at {address:#x}: expected {expected}, found {original.hex(' ')}")
         debugcore.modify_instruction(address, data.hex(" "))
 
-    def nop(self, address, length):
+    def nop(self, address: int | str, length: int) -> None:
         """Replace length bytes at address with NOP instructions.
         Can be restored using restore(address).
         """
         debugcore.nop_instruction(self.address(address), int(length))
 
-    def restore(self, address):
+    def restore(self, address: int | str) -> None:
         """Restore bytes previously changed through nop_instruction (nop) or modify_instruction (patch)."""
         debugcore.restore_instruction(self.address(address))
 
-    def alloc(self, size, name=None):
+    def alloc(self, size: int, name: str | None = None) -> int:
         """Allocate executable memory in the inferior and return its address."""
         return debugcore.allocate_memory(int(size), name)
 
-    def dealloc(self, name):
+    def dealloc(self, name: str) -> bool:
         """Free memory allocated with alloc(size, name)."""
         return debugcore.free_memory(str(name))
 
-    def assemble(self, instructions, address=0):
+    def assemble(self, instructions: str, address: int | str = 0) -> bytes:
         """Assemble instructions at address and return bytes."""
         result = utils.assemble(str(instructions), self.address(address) if address else 0, debugcore.inferior_arch)
         return bytes(result[0]) if result else b""
 
-    def disassemble_bytes(self, data, address=0):
+    def disassemble_bytes(self, data: BytesLike, address: int | str = 0) -> str | None:
         """Disassemble bytes and return a semicolon-separated instruction string."""
         return utils.disassemble(
             self._bytes(data).hex(" "), self.address(address) if address else 0, debugcore.inferior_arch
         )
 
-    def module_base(self, name):
+    def module_base(self, name: str) -> int | None:
         """Return the first mapped base address for a module by basename (e.g. 'libc.so.6')."""
         if debugcore.currentpid == -1:
             raise RuntimeError("No process is attached!")
@@ -148,36 +154,38 @@ class LibpinceScriptApi:
             None,
         )
 
-    def regs(self):
+    def regs(self) -> dict[str, str | None]:
         """Return current general-purpose registers."""
         return debugcore.read_registers()
 
-    def reg(self, name):
+    def reg(self, name: str) -> str | None:
         """Read one register from read_registers(), with or without a leading '$'."""
         registers = self.regs()
         raw = str(name)
         return registers.get(raw) or registers.get(raw.lstrip("$")) or registers.get("$" + raw.lstrip("$"))
 
-    def set_reg(self, name, value):
+    def set_reg(self, name: str, value: Any) -> Any:
         """Set a register through GDB."""
         return debugcore.send_command(f"set ${str(name).lstrip('$')} = {value}", cli_output=True)
 
-    def gdb(self, command, cli_output=True):
+    def gdb(self, command: str, cli_output: bool = True) -> Any:
         """Run a GDB command and return its output."""
         return debugcore.send_command(str(command), cli_output=cli_output)
 
-    def aobscan_first(self, pattern, writable=None, executable=None):
+    def aobscan_first(self, pattern: str, writable: bool | None = None, executable: bool | None = None) -> int | None:
         """Return the first address matching an AOB pattern, or None."""
         matches = self.aobscan(pattern, writable=writable, executable=executable, limit=1)
         return matches[0] if matches else None
 
-    def aobscan(self, pattern, writable=None, executable=None, limit=1000):
+    def aobscan(
+        self, pattern: str, writable: bool | None = None, executable: bool | None = None, limit: int = 1000
+    ) -> list[int]:
         """Scan readable maps for an AOB pattern. Wildcards can be '?' or '??'."""
         if debugcore.currentpid == -1:
             raise RuntimeError("No process is attached!")
         return debugcore.aob_scan(str(pattern), writable=writable, executable=executable, limit=limit)
 
-    def _bytes(self, data):
+    def _bytes(self, data: BytesLike) -> bytes:
         if isinstance(data, str):
             return bytes.fromhex(data.replace(" ", ""))
         if isinstance(data, (bytes, bytearray, memoryview)):
@@ -186,7 +194,7 @@ class LibpinceScriptApi:
 
 
 class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self, parent):
+    def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.configure_editor(self.scriptEditor)
@@ -213,12 +221,12 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         if parent is not None:
             guiutils.center_to_parent(self)
 
-    def configure_editor(self, editor):
+    def configure_editor(self, editor: ScriptEditor) -> None:
         editor.bind_tab_widget(self.tabWidget)
         editor.set_namespace(self.create_script_namespace())
         editor.update_line_number_area_width()
 
-    def create_script_namespace(self):
+    def create_script_namespace(self) -> dict[str, Any]:
         api = LibpinceScriptApi()
         namespace = {
             "__builtins__": builtins,
@@ -236,7 +244,7 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
                 namespace[name] = function
         return namespace
 
-    def create_new_tab(self):
+    def create_new_tab(self) -> ScriptEditor:
         new_tab = QWidget()
         layout = QVBoxLayout(new_tab)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -251,15 +259,15 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         self.tabWidget.setCurrentIndex(index)
         return text_editor
 
-    def get_current_editor(self):
+    def get_current_editor(self) -> ScriptEditor | None:
         current_tab = self.tabWidget.currentWidget()
         return current_tab.findChild(ScriptEditor) if current_tab else None
 
-    def handle_tab_click(self, index: int):
+    def handle_tab_click(self, index: int) -> None:
         if index == self.tabWidget.count() - 1:
             self.create_new_tab()
 
-    def close_tab(self, index: int):
+    def close_tab(self, index: int) -> None:
         if index == self.tabWidget.count() - 1:
             return
         editor = self.tabWidget.widget(index).findChild(ScriptEditor)
@@ -284,7 +292,7 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         if index == current_index and index > 0:
             self.tabWidget.setCurrentIndex(index - 1)
 
-    def open_file(self):
+    def open_file(self) -> None:
         file_path, _ = QFileDialog.getOpenFileName(self, tr.OPEN_SCRIPT_FILE, "", tr.FILE_TYPES_SCRIPT)
         if not file_path:
             return
@@ -300,7 +308,7 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         except Exception as e:
             QMessageBox.critical(self, tr.ERROR, str(e))
 
-    def save_file(self):
+    def save_file(self) -> None:
         editor = self.get_current_editor()
         if not editor:
             return
@@ -321,12 +329,12 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         except Exception as e:
             QMessageBox.critical(self, tr.ERROR, str(e))
 
-    def run_current_script(self):
+    def run_current_script(self) -> None:
         editor = self.get_current_editor()
         if editor:
             self.run_script(editor, editor.toPlainText())
 
-    def run_selection(self):
+    def run_selection(self) -> None:
         editor = self.get_current_editor()
         if not editor:
             return
@@ -334,7 +342,7 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         script = cursor.selectedText().replace("\u2029", "\n") if cursor.hasSelection() else editor.toPlainText()
         self.run_script(editor, script)
 
-    def run_script(self, editor, script_content):
+    def run_script(self, editor: ScriptEditor, script_content: str) -> None:
         if not script_content.strip():
             return
         filename = editor.file_path or f"<Libpince Engine: {self.tabWidget.tabText(self.tabWidget.currentIndex())}>"
@@ -360,18 +368,18 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         self.append_output(tr.SCRIPT_FINISHED)
         self.statusbar.showMessage(tr.SCRIPT_FINISHED, 3000)
 
-    def append_output(self, text):
+    def append_output(self, text: str) -> None:
         if not text:
             return
         self.outputEdit.moveCursor(QTextCursor.MoveOperation.End)
         self.outputEdit.insertPlainText(text if text.endswith("\n") else text + "\n")
         self.outputEdit.moveCursor(QTextCursor.MoveOperation.End)
 
-    def insert_template(self, template):
+    def insert_template(self, template: str) -> None:
         editor = self.get_current_editor()
         if editor:
             editor.textCursor().insertText(template)
             editor.setFocus()
 
-    def actionLibpince_triggered(self):
+    def actionLibpince_triggered(self) -> None:
         utils.execute_command_as_user('python3 -m webbrowser "https://korcankaraokcu.github.io/PINCE/"')

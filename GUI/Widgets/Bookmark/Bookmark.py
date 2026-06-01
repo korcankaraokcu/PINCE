@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QKeySequence, QShortcut
+from PyQt6.QtGui import QContextMenuEvent, QKeySequence, QShortcut
 from PyQt6.QtWidgets import QListWidgetItem, QMenu, QMessageBox, QWidget
 
 from GUI.Session.session import SessionDataChanged, SessionManager
@@ -17,7 +17,7 @@ class BookmarkWidget(QWidget, Ui_Form):
     double_clicked = pyqtSignal(str)
     deleted = pyqtSignal(object)
 
-    def __init__(self, parent):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowFlags(Qt.WindowType.Window)
@@ -33,7 +33,7 @@ class BookmarkWidget(QWidget, Ui_Form):
         states.session_signals.new_session.connect(self.on_new_session)
         guiutils.center_to_parent(self)
 
-    def refresh_table(self):
+    def refresh_table(self) -> None:
         self.listWidget.clear()
         address_list = [hex(address) for address in self.session.pct_bookmarks.keys()]
         if debugcore.currentpid == -1:
@@ -41,7 +41,7 @@ class BookmarkWidget(QWidget, Ui_Form):
         else:
             self.listWidget.addItems([item.all for item in debugcore.examine_expressions(address_list)])
 
-    def change_display(self, row):
+    def change_display(self, row: int) -> None:
         if row == -1:
             return
         current_address = utils.extract_hex_address(self.listWidget.item(row).text())
@@ -51,10 +51,10 @@ class BookmarkWidget(QWidget, Ui_Form):
             self.lineEdit_Info.setText(debugcore.get_address_info(current_address))
         self.lineEdit_Comment.setText(self.session.pct_bookmarks[int(current_address, 16)]["comment"])
 
-    def listWidget_item_double_clicked(self, item: QListWidgetItem):
+    def listWidget_item_double_clicked(self, item: QListWidgetItem) -> None:
         self.double_clicked.emit(utils.extract_hex_address(item.text()))
 
-    def exec_add_entry_dialog(self):
+    def exec_add_entry_dialog(self) -> None:
         entry_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_EXPRESSION, "")])
         if entry_dialog.exec():
             text = entry_dialog.get_values()[0]
@@ -66,12 +66,12 @@ class BookmarkWidget(QWidget, Ui_Form):
             self.refresh_table()
             self.session.data_changed |= SessionDataChanged.BOOKMARKS
 
-    def exec_change_comment_dialog(self, current_address):
+    def exec_change_comment_dialog(self, current_address: int) -> None:
         self.comment_changed.emit(current_address)
         self.refresh_table()
         self.session.data_changed |= SessionDataChanged.BOOKMARKS
 
-    def listWidget_context_menu_event(self, event):
+    def listWidget_context_menu_event(self, event: QContextMenuEvent) -> None:
         current_item = guiutils.get_current_item(self.listWidget)
         if current_item:
             current_address = utils.safe_str_to_int(utils.extract_hex_address(current_item.text()), 16)
@@ -103,7 +103,7 @@ class BookmarkWidget(QWidget, Ui_Form):
         except KeyError:
             pass
 
-    def delete_record(self):
+    def delete_record(self) -> None:
         current_item = guiutils.get_current_item(self.listWidget)
         if not current_item:
             return
@@ -112,6 +112,6 @@ class BookmarkWidget(QWidget, Ui_Form):
         self.refresh_table()
         self.session.data_changed |= SessionDataChanged.BOOKMARKS
 
-    def on_new_session(self):
+    def on_new_session(self) -> None:
         self.session = SessionManager.get_session()
         self.refresh_table()

@@ -1453,11 +1453,12 @@ def get_inferior_arch() -> int:
     return typedefs.INFERIOR_ARCH.ARCH_64
 
 
-def read_registers() -> dict:
+def read_registers() -> dict[str, str | None]:
     """Returns the current registers
 
     Returns:
-        dict: A dict that holds general, flag and segment registers. Check typedefs.REGISTERS for the full list
+        dict[str, str | None]: A dict that holds general, flag and segment registers. Check typedefs.REGISTERS for the
+        full list. Segment register values may be None when the register can't be resolved
     """
     return send_command("pince-read-registers", recv_with_file=True)
 

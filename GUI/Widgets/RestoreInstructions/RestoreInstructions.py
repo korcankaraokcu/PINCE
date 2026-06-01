@@ -15,7 +15,7 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
     restored = pyqtSignal()
     double_clicked = pyqtSignal(str)
 
-    def __init__(self, parent):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowFlags(Qt.WindowType.Window)
@@ -28,7 +28,7 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
         self.refresh()
         guiutils.center_to_parent(self)
 
-    def tableWidget_Instructions_context_menu_event(self, event: QContextMenuEvent):
+    def tableWidget_Instructions_context_menu_event(self, event: QContextMenuEvent) -> None:
         selected_row = guiutils.get_current_row(self.tableWidget_Instructions)
         menu = QMenu()
         restore_instruction = menu.addAction(tr.RESTORE_INSTRUCTION)
@@ -49,12 +49,12 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
         except KeyError:
             pass
 
-    def restore_instruction(self, selected_address: int):
+    def restore_instruction(self, selected_address: int) -> None:
         debugcore.restore_instruction(selected_address)
         self.refresh()
         self.restored.emit()
 
-    def refresh(self):
+    def refresh(self) -> None:
         modified_instructions = debugcore.get_modified_instructions()
         self.tableWidget_Instructions.setRowCount(len(modified_instructions))
         for row, (address, aob) in enumerate(modified_instructions.items()):
@@ -66,7 +66,7 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
             self.tableWidget_Instructions.setItem(row, NAME_COL, QTableWidgetItem(instr_name))
         guiutils.resize_to_contents(self.tableWidget_Instructions)
 
-    def tableWidget_Instructions_key_press_event(self, event: QKeyEvent):
+    def tableWidget_Instructions_key_press_event(self, event: QKeyEvent) -> None:
         actions = typedefs.KeyboardModifiersTupleDict(
             [(QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh)]
         )
@@ -76,7 +76,7 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
             pass
         self.tableWidget_Instructions_keyPressEvent_original(event)
 
-    def tableWidget_Instructions_double_clicked(self, index: QTableWidgetItem):
+    def tableWidget_Instructions_double_clicked(self, index: QTableWidgetItem) -> None:
         current_address_text = self.tableWidget_Instructions.item(index.row(), ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
         self.double_clicked.emit(current_address)

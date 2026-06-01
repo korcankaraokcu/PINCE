@@ -12,9 +12,9 @@ class InputDialog(QDialog):
         self,
         parent: QWidget,
         items: str | list[tuple[str, str]],
-        alignment=Qt.AlignmentFlag.AlignCenter,
-        cancel_button=True,
-    ):
+        alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignCenter,
+        cancel_button: bool = True,
+    ) -> None:
         """
         Args:
             parent (QWidget): Parent of this dialog
@@ -64,7 +64,7 @@ class InputDialog(QDialog):
 class ComboBoxDialog(QDialog):
     """A dialog that allows for one QLabel and a corresponding QComboBox"""
 
-    def __init__(self, parent: QWidget, label_text: str, items: list[str], current_index: int = 0):
+    def __init__(self, parent: QWidget, label_text: str, items: list[str], current_index: int = 0) -> None:
         """
         Args:
             parent (QWidget): Parent of this dialog
@@ -88,5 +88,5 @@ class ComboBoxDialog(QDialog):
         self.adjustSize()
         guiutils.center_to_parent(self)
 
-    def get_values(self):
+    def get_values(self) -> str:
         return self.combobox.currentText()

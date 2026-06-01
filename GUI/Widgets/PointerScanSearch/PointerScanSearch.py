@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QTimer
-from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton, QMessageBox
+from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton, QMessageBox, QWidget
 from GUI.Widgets.PointerScanSearch.Form.PointerScanSearchDialog import Ui_Dialog
 from GUI.Utils import guiutils, guitypedefs
 from libpince import debugcore, utils
@@ -10,7 +10,7 @@ import os
 
 
 class PointerScanSearchDialog(QDialog, Ui_Dialog):
-    def __init__(self, parent, address) -> None:
+    def __init__(self, parent: QWidget, address: str) -> None:
         super().__init__(parent)
         self.setupUi(self)
         guiutils.center_to_parent(self)
@@ -90,7 +90,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
         self.progress_bar_timer.start(100)
 
-    def update_progress_bar(self):
+    def update_progress_bar(self) -> None:
         if self.started_path_resolve is False:
             scan_progress = int(round(memscan.get_scan_progress() * 100))
             self.progressBar.setValue(scan_progress)

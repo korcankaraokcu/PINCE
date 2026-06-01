@@ -182,7 +182,7 @@ These tasks are ordered by importance but feel free to pick any of them. Further
 - Libpince support for Mono and Java (symbol recognition, calling functions, dissect obj tree etc.)
 - Move GUI classes of PINCE.py to their own files
 - Extend documentation to GUI parts. Libpince has 100% documentation coverage but GUI doesn't
-- Finish adopting type hints and variable annotations across the codebase. All of libpince has full function type-hint coverage now, but the GUI and PINCE.py still lags behind
+- Finish adopting type hints and variable annotations across the codebase. All of libpince and GUI have full function type-hint coverage now, but PINCE.py still lags behind
 - Arrows for jump instructions based on disassembled output
 - Flowcharts based on disassembled output
 - Consider implementing a GUI for catchpoints(syscall, fork, exec etc.). Signal handling already has a GUI(HandleSignals widget), but the remaining catchpoint types are still done via the GDB Console

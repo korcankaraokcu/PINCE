@@ -1,6 +1,6 @@
 from PyQt6.QtCore import QThread, QRunnable, pyqtSignal, QObject
 from keyboard import add_hotkey, remove_hotkey
-from typing import Callable
+from typing import Any, Callable
 from tr.tr import TranslationConstants as tr
 from libpince import debugcore, typedefs
 import queue
@@ -32,31 +32,31 @@ class SessionSignals(QObject):
 
 
 class Worker(QRunnable):
-    def __init__(self, fn, *args, **kwargs):
+    def __init__(self, fn: Callable, *args: Any, **kwargs: Any) -> None:
         super().__init__()
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
         self.signals = WorkerSignals()
 
-    def run(self):
+    def run(self) -> None:
         result = self.fn(*self.args, **self.kwargs)
         self.signals.finished.emit(result)
 
 
 class InterruptableWorker(QThread):
-    def __init__(self, fn, *args, **kwargs):
+    def __init__(self, fn: Callable, *args: Any, **kwargs: Any) -> None:
         super().__init__()
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
         self.signals = WorkerSignals()
 
-    def run(self):
+    def run(self) -> None:
         result = self.fn(*self.args, **self.kwargs)
         self.signals.finished.emit(result)
 
-    def stop(self):
+    def stop(self) -> None:
         self.terminate()
 
 
@@ -64,11 +64,11 @@ class InterruptableWorker(QThread):
 class AwaitAsyncOutput(QThread):
     async_output_ready = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.queue_active = True
 
-    def run(self):
+    def run(self) -> None:
         async_output_queue = debugcore.gdb_async_output.register_queue()
         while self.queue_active:
             try:
@@ -79,7 +79,7 @@ class AwaitAsyncOutput(QThread):
                 self.async_output_ready.emit(async_output)
         debugcore.gdb_async_output.delete_queue(async_output_queue)
 
-    def stop(self):
+    def stop(self) -> None:
         self.queue_active = False
 
 
@@ -87,7 +87,7 @@ class AwaitAsyncOutput(QThread):
 class AwaitProcessExit(QThread):
     process_exited = pyqtSignal()
 
-    def run(self):
+    def run(self) -> None:
         while True:
             with debugcore.process_exited_condition:
                 debugcore.process_exited_condition.wait()
@@ -99,7 +99,7 @@ class CheckInferiorStatus(QThread):
     process_stopped = pyqtSignal()
     process_running = pyqtSignal()
 
-    def run(self):
+    def run(self) -> None:
         while True:
             with debugcore.status_changed_condition:
                 debugcore.status_changed_condition.wait()
@@ -110,7 +110,15 @@ class CheckInferiorStatus(QThread):
 
 
 class Hotkey:
-    def __init__(self, name="", desc="", default="", func=None, custom="", handle=None) -> None:
+    def __init__(
+        self,
+        name: str = "",
+        desc: str = "",
+        default: str = "",
+        func: Callable | None = None,
+        custom: str = "",
+        handle: Any = None,
+    ) -> None:
         self.name = name
         self.desc = desc
         self.default = default

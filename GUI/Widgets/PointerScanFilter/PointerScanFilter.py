@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton, QLineEdit, QMessageBox
+from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton, QLineEdit, QMessageBox, QWidget
 from GUI.Widgets.PointerScanFilter.Form.PointerScanFilterDialog import Ui_Dialog
 from GUI.Utils import guiutils
 from tr.tr import TranslationConstants as tr
@@ -8,7 +8,7 @@ import os
 
 
 class PointerScanFilterDialog(QDialog, Ui_Dialog):
-    def __init__(self, parent) -> None:
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setupUi(self)
         guiutils.center_to_parent(self)

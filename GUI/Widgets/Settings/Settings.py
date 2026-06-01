@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QDialog, QMessageBox, QFileDialog, QApplication
+from PyQt6.QtWidgets import QDialog, QMessageBox, QFileDialog, QApplication, QWidget
 from PyQt6.QtCore import Qt, QSettings, QSignalBlocker
 from PyQt6.QtGui import QKeyEvent, QIcon, QPixmap, QStandardItemModel, QStandardItem
 from GUI.States import states
@@ -15,11 +15,11 @@ import os, signal, json, re
 
 
 class SettingsDialog(QDialog, Ui_Dialog):
-    def __init__(self, parent):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.settings = QSettings()
-        self.hotkey_to_value = {}  # Dict[str:str]-->Dict[Hotkey.name:settings_value]
+        self.hotkey_to_value: dict[str, str] = {}  # Dict[str:str]-->Dict[Hotkey.name:settings_value]
         self.handle_signals_data = ""
         icons_directory = guiutils.get_icons_directory()
         self.pushButton_GDBPath.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
@@ -55,7 +55,7 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.lineEdit_Hotkey.keyPressEvent = self.lineEdit_Hotkey_key_pressed_event
         guiutils.center_to_parent(self)
 
-    def accept(self):
+    def accept(self) -> None:
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.settings.setValue("General/address_table_update_interval", self.spinBox_UpdateInterval.value())
@@ -105,14 +105,14 @@ class SettingsDialog(QDialog, Ui_Dialog):
         settings.apply_settings()
         super().accept()
 
-    def reject(self):
+    def reject(self) -> None:
         logo_path = self.settings.value("General/logo_path", type=str)
         QApplication.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
         theme = self.settings.value("General/theme", type=str)
         QApplication.setPalette(themes.get_theme(theme))
         super().reject()
 
-    def config_gui(self):
+    def config_gui(self) -> None:
         self.checkBox_AutoUpdateAddressTable.setChecked(
             self.settings.value("General/auto_update_address_table", type=bool)
         )
@@ -158,34 +158,34 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.comboBox_InterruptSignal.setCurrentText(self.settings.value("Debug/interrupt_signal", type=str))
         self.checkBox_JavaSegfault.setChecked(self.settings.value("Java/ignore_segfault", type=bool))
 
-    def change_display(self, index):
+    def change_display(self, index: int) -> None:
         self.stackedWidget.setCurrentIndex(index)
 
-    def listWidget_Functions_current_row_changed(self, index):
+    def listWidget_Functions_current_row_changed(self, index: int) -> None:
         if index == -1:
             self.lineEdit_Hotkey.clear()
         else:
             self.lineEdit_Hotkey.setText(self.hotkey_to_value[states.hotkeys.get_hotkeys()[index].name])
 
-    def pushButton_ClearHotkey_clicked(self):
+    def pushButton_ClearHotkey_clicked(self) -> None:
         self.lineEdit_Hotkey.clear()
         index = self.listWidget_Functions.currentIndex().row()
         if index != -1:
             self.hotkey_to_value[states.hotkeys.get_hotkeys()[index].name] = self.lineEdit_Hotkey.text()
 
-    def pushButton_ResetSettings_clicked(self):
+    def pushButton_ResetSettings_clicked(self) -> None:
         if utilwidgets.InputDialog(self, tr.RESET_DEFAULT_SETTINGS).exec():
             settings.set_default_settings()
             self.handle_signals_data = ""
             self.config_gui()
 
-    def checkBox_AutoUpdateAddressTable_state_changed(self):
+    def checkBox_AutoUpdateAddressTable_state_changed(self) -> None:
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.QWidget_UpdateInterval.setEnabled(True)
         else:
             self.QWidget_UpdateInterval.setEnabled(False)
 
-    def checkBox_AutoAttachRegex_state_changed(self):
+    def checkBox_AutoAttachRegex_state_changed(self) -> None:
         if self.checkBox_AutoAttachRegex.isChecked():
             self.lineEdit_AutoAttach.setPlaceholderText(tr.MOUSE_OVER_EXAMPLES)
             self.lineEdit_AutoAttach.setToolTip(tr.AUTO_ATTACH_TOOLTIP)
@@ -193,27 +193,27 @@ class SettingsDialog(QDialog, Ui_Dialog):
             self.lineEdit_AutoAttach.setPlaceholderText(tr.SEPARATE_PROCESSES_WITH.format(";"))
             self.lineEdit_AutoAttach.setToolTip("")
 
-    def comboBox_Logo_current_index_changed(self):
+    def comboBox_Logo_current_index_changed(self) -> None:
         logo_path = self.comboBox_Logo.currentText()
         QApplication.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
 
-    def comboBox_Theme_current_index_changed(self, index: int):
+    def comboBox_Theme_current_index_changed(self, index: int) -> None:
         QApplication.setPalette(themes.get_theme(list(themes.Themes)[index].value))
 
-    def pushButton_GDBPath_clicked(self):
+    def pushButton_GDBPath_clicked(self) -> None:
         current_path = self.lineEdit_GDBPath.text()
         file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_GDB_BINARY, os.path.dirname(current_path))
         if file_path:
             self.lineEdit_GDBPath.setText(file_path)
 
-    def pushButton_HandleSignals_clicked(self):
+    def pushButton_HandleSignals_clicked(self) -> None:
         if not self.handle_signals_data:
             self.handle_signals_data = self.settings.value("Debug/handle_signals", type=str)
         signal_dialog = HandleSignalsDialog(self, self.handle_signals_data)
         if signal_dialog.exec():
             self.handle_signals_data = signal_dialog.get_values()
 
-    def lineEdit_Hotkey_key_pressed_event(self, event: QKeyEvent):
+    def lineEdit_Hotkey_key_pressed_event(self, event: QKeyEvent) -> None:
         """
         Instead of relying on the QT Event, we grab input from keyboard lib directly.
         This reduces the amount of parsing from keys necessary and catches some more edge cases.

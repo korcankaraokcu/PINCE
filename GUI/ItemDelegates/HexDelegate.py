@@ -15,18 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from PyQt6.QtWidgets import QStyledItemDelegate, QLineEdit, QWidget
+from PyQt6.QtWidgets import QStyledItemDelegate, QLineEdit, QWidget, QStyleOptionViewItem
 from PyQt6.QtGui import QRegularExpressionValidator
-from PyQt6.QtCore import QModelIndex, Qt, QRegularExpression
+from PyQt6.QtCore import QModelIndex, QObject, Qt, QRegularExpression
 
 
 class QHexDelegate(QStyledItemDelegate):
-    def __init__(self, max_length: int = 2, regexp: str = "[0-9a-fA-F]+", parent=None) -> None:
+    def __init__(self, max_length: int = 2, regexp: str = "[0-9a-fA-F]+", parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.max_length = max_length
         self.regexp = regexp
 
-    def createEditor(self, parent: QWidget, option, index: QModelIndex) -> QLineEdit:
+    def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QLineEdit:
         self.editor = QLineEdit(parent)
         self.editor.setMaxLength(self.max_length)
         hex_validator = QRegularExpressionValidator(QRegularExpression(self.regexp), self.editor)
@@ -35,7 +35,7 @@ class QHexDelegate(QStyledItemDelegate):
         self.editor.textChanged.connect(self.check_text)
         return self.editor
 
-    def setEditorData(self, editor, index) -> None:
+    def setEditorData(self, editor: QWidget, index: QModelIndex) -> None:
         # Initial text was set in createEditor, this is a trick to dodge the textChanged signal
         return
 

@@ -15,15 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from PyQt6.QtWidgets import QTreeWidget
+from PyQt6.QtGui import QDropEvent
+from PyQt6.QtWidgets import QTreeWidget, QWidget
 
 
 class QAddressTree(QTreeWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
     # TODO: If the auto-update is enabled, address table will be updated with a delay after a drop event
     # This probably happens because of the QTimers. It's not critical but a fix would be nice
-    def dropEvent(self, event):
+    def dropEvent(self, event: QDropEvent | None) -> None:
         self.parent().parent().update_address_table()
         super().dropEvent(event)
