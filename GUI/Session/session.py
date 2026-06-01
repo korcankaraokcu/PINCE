@@ -213,14 +213,21 @@ class Session:
             # TODO: Resolving via symbols could be re-addressed if this behavior were fixed
 
             # resolve via region details
-            region_name, offset, region_index = address_region_details.values()
+            region_name = address_region_details["region_name"]
+            offset = address_region_details["offset_in_region"]
+            region_index = address_region_details["region_index"]
             region = region_dict.get(region_name, None)
-            if region is not None:
-                new_addr = utils.safe_str_to_int(region[region_index], 16) + utils.safe_str_to_int(offset, 16)
-                if new_addr == 0:
-                    continue
-            else:
+            if region is None:
                 utils.logger.warning(f"Could not find region with name: {region_name}")
+                continue
+            if region_index >= len(region):
+                utils.logger.warning(
+                    f"Region '{region_name}' now has {len(region)} mapping(s). "
+                    f"Bookmark expected index {region_index}, dropping it..."
+                )
+                continue
+            new_addr = utils.safe_str_to_int(region[region_index], 16) + utils.safe_str_to_int(offset, 16)
+            if new_addr == 0:
                 continue
 
             new_bookmarks[new_addr] = {
