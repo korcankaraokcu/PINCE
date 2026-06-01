@@ -18,6 +18,8 @@ PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB)
 
 # Features  
 - **Memory and pointer scanning:** PINCE uses [libmemscan](https://github.com/brkzlr/libmemscan) to scan the memory efficiently
+- **Speedhack:** Both Linux native and WINE/Proton compatible speedhack built-in. No **`LD_PRELOAD`** or other libraries necessary
+- **Libpince Engine:** Powerful scripting engine built-in that allows you to perform advanced tasks such as code injection
 - **Background Execution:** PINCE uses background execution by default, allowing users to run GDB commands while process is running
 - **Variable Inspection&Modification**
   * **CheatEngine-like value type support:** Currently supports all types of CE and memscan along with extended strings(utf-8, utf-16, utf-32)
@@ -42,7 +44,7 @@ PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB)
 - **Code Injection**
   * **Run-time injection:** Only .so injection is supported for now. In Memory View window, click Tools->Inject .so file to select the .so file. An example for creating .so file can be found in "libpince/Injection/". PINCE will be able to inject single line instructions or code caves in near future
 - **GDB Console:** You can use the GDB Console to interact with GDB, it's on the top right in main window
-- **libpince:** PINCE provides a reusable python library. You can either read the code or check the [Github Pages](https://korcankaraokcu.github.io/PINCE/) for documentation. Currently, libpince can be used via console by following [these instructions](https://github.com/korcankaraokcu/PINCE/issues/232#issuecomment-1872906700). In the future, it'll be directly integrated into PINCE when we develop the scripting engine (IDE for PINCE)
+- **libpince library:** PINCE provides a reusable python library. You can either read the code or check the [Github Pages](https://korcankaraokcu.github.io/PINCE/) for documentation. Additionally, libpince can be used via console by following [these instructions](https://github.com/korcankaraokcu/PINCE/issues/232#issuecomment-1872906700).
 
 # Installing and running PINCE
 ### Users
