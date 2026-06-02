@@ -7,8 +7,13 @@ setting_signals = guitypedefs.SettingSignals()
 session_signals = guitypedefs.SessionSignals()
 backend_signals = guitypedefs.BackendSignals()
 
-debugcore.breakpoints_changed.connect(backend_signals.breakpoints_changed.emit)
-debugcore.instructions_changed.connect(backend_signals.instructions_changed.emit)
+debugcore.breakpoints_changed.connect(
+    lambda: backend_signals.breakpoints_changed.emit()
+)
+
+debugcore.instructions_changed.connect(
+    lambda: backend_signals.instructions_changed.emit()
+)
 
 status_thread = guitypedefs.CheckInferiorStatus()
 status_thread.start()
