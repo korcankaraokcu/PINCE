@@ -4137,6 +4137,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             "address_region_details": address_region_details,
         }
         self.session.data_changed |= SessionDataChanged.BOOKMARKS
+        states.session_signals.bookmarks_changed.emit()
         logger.info(self.session.pct_bookmarks)
         self.refresh_disassemble_view()
 
@@ -4151,6 +4152,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         self.session.pct_bookmarks[address]["comment"] = new_comment
         self.session.data_changed |= SessionDataChanged.BOOKMARKS
+        states.session_signals.bookmarks_changed.emit()
         self.refresh_disassemble_view()
 
     def delete_bookmark(self, address: int) -> None:
@@ -4159,6 +4161,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if address in self.session.pct_bookmarks:
             del self.session.pct_bookmarks[address]
             self.session.data_changed |= SessionDataChanged.BOOKMARKS
+            states.session_signals.bookmarks_changed.emit()
             self.refresh_disassemble_view()
 
     def actionBookmarks_triggered(self) -> None:

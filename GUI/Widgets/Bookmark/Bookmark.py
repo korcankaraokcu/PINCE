@@ -31,6 +31,7 @@ class BookmarkWidget(QWidget, Ui_Form):
         self.session = SessionManager.get_session()
         self.refresh_table()
         states.session_signals.new_session.connect(self.on_new_session)
+        states.session_signals.bookmarks_changed.connect(self.refresh_table)
         guiutils.center_to_parent(self)
 
     def refresh_table(self) -> None:
@@ -40,9 +41,12 @@ class BookmarkWidget(QWidget, Ui_Form):
             self.listWidget.addItems(address_list)
         else:
             self.listWidget.addItems([item.all for item in debugcore.examine_expressions(address_list)])
+        self.repaint()
 
     def change_display(self, row: int) -> None:
         if row == -1:
+            self.lineEdit_Info.clear()
+            self.lineEdit_Comment.clear()
             return
         current_address = utils.extract_hex_address(self.listWidget.item(row).text())
         if debugcore.currentpid == -1:
@@ -63,11 +67,9 @@ class BookmarkWidget(QWidget, Ui_Form):
                 QMessageBox.information(self, tr.ERROR, tr.INVALID_EXPRESSION)
                 return
             self.bookmarked.emit(int(address, 16))
-            self.refresh_table()
 
     def exec_change_comment_dialog(self, current_address: int) -> None:
         self.comment_changed.emit(current_address)
-        self.refresh_table()
 
     def listWidget_context_menu_event(self, event: QContextMenuEvent) -> None:
         current_item = guiutils.get_current_item(self.listWidget)
@@ -107,7 +109,6 @@ class BookmarkWidget(QWidget, Ui_Form):
             return
         current_address = utils.safe_str_to_int(utils.extract_hex_address(current_item.text()), 16)
         self.deleted.emit(current_address)
-        self.refresh_table()
 
     def on_new_session(self) -> None:
         self.session = SessionManager.get_session()

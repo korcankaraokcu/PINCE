@@ -29,6 +29,7 @@ class SessionSignals(QObject):
     new_session = pyqtSignal()
     on_save = pyqtSignal()
     on_load = pyqtSignal()
+    bookmarks_changed = pyqtSignal()
 
 
 class Worker(QRunnable):
