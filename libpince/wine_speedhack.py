@@ -168,7 +168,7 @@ def _install(speed: float = 1.0) -> bool:
         else:
             jump = b"\xb8" + struct.pack("<I", wrapper_addr) + b"\xff\xe0"
         patch = jump + b"\x90" * (patch_size - (JUMP_SIZE if arch64 else JUMP_SIZE_32))
-        debugcore.modify_instruction(address, linux_speedhack._bytes_to_aob(patch))
+        debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, linux_speedhack._bytes_to_aob(patch))
         installed.append(linux_speedhack.HookPatch(symbol, address, original_aob))
     except Exception:
         logger.exception("Failed to install Wine speedhack")

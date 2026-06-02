@@ -144,7 +144,7 @@ def _install(speed: float = 1.0) -> bool:
             debugcore.write_memory(cursor, typedefs.VALUE_INDEX.AOB, list(code))
             # movabs rax, cursor; jmp rax (12 bytes), NOP-padded out to whole instructions.
             patch = b"\x48\xb8" + struct.pack("<Q", cursor) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE)
-            debugcore.modify_instruction(address, _bytes_to_aob(patch))
+            debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, _bytes_to_aob(patch))
             installed.append(HookPatch(symbol, address, original_aob))
             cursor = (cursor + len(code) + 15) & ~15
     except Exception:
@@ -520,10 +520,7 @@ def _build_nanosleep_hook(state_addr: int) -> bytes:
 
 def _restore_hook(hook: HookPatch) -> bool:
     try:
-        if hook.address in debugcore.modified_instructions_dict:
-            debugcore.restore_instruction(hook.address)
-        else:
-            debugcore.write_memory(hook.address, typedefs.VALUE_INDEX.AOB, hook.original_aob)
+        debugcore.write_memory(hook.address, typedefs.VALUE_INDEX.AOB, hook.original_aob)
         return True
     except Exception:
         logger.exception("Failed to restore %s", hook.symbol)
