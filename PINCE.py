@@ -4284,6 +4284,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         start_address = safe_str_to_int(self.disassemble_currently_displayed_address, 16)
         end_address = start_address + 0x30000
+        region_info = utils.get_region_info(debugcore.currentpid, start_address)
+        if region_info:
+            start_address = region_info.start
+            end_address = region_info.end
         search_opcode_widget = SearchOpcodeWidgetForm(self, hex(start_address), hex(end_address))
         search_opcode_widget.show()
 
