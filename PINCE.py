@@ -292,12 +292,16 @@ class MainForm(QMainWindow, MainWindow):
     # Payload is the step delta: -1 = down, 0 = toggle, +1 = up.
     speedhack_action_requested = pyqtSignal(int)
 
+    # Payload is the toggle_attach() result (a typedefs.TOGGLE_ATTACH member or None on failure).
+    attach_toggled = pyqtSignal(object)
+
     def __init__(self) -> None:
         super().__init__()
         self.setupUi(self)
         self.deleted_regions: list[int] = []
         self.is_wine_process = False
         self.speedhack_action_requested.connect(self.on_speedhack_hotkey_action)
+        self.attach_toggled.connect(self.on_attach_toggled)
         self.checkBox_Speedhack.toggled.connect(self.apply_speedhack)
         self.doubleSpinBox_Speedhack.valueChanged.connect(self.apply_speedhack)
         hotkey_to_func = {
@@ -509,12 +513,17 @@ class MainForm(QMainWindow, MainWindow):
 
     @utils.ignore_exceptions
     def toggle_attach_hotkey_pressed(self) -> None:
-        result = debugcore.toggle_attach()
+        self.attach_toggled.emit(debugcore.toggle_attach())
+
+    def on_attach_toggled(self, result: int | None) -> None:
         if not result:
             logger.error("Unable to toggle attach")
         elif result == typedefs.TOGGLE_ATTACH.DETACHED:
             self.on_status_detached()
+            self.pushButton_MemoryView.setEnabled(False)
+            self.memory_view_window.close()
         else:
+            self.pushButton_MemoryView.setEnabled(True)
             # Attaching back doesn't update the status if the process is already stopped before detachment
             with debugcore.status_changed_condition:
                 debugcore.status_changed_condition.notify_all()
@@ -1680,6 +1689,8 @@ class MainForm(QMainWindow, MainWindow):
         self.label_MatchCount.setText(tr.MATCH_COUNT.format(0))
 
     def on_inferior_exit(self) -> None:
+        if debugcore.currentpid == -1:
+            self.memory_view_window.close()
         # Inferior is gone, so just drop speedhack state.
         # No need for uninstall as that would only produce noise with errors.
         self.speedhack.reset()
