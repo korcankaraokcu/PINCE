@@ -2,7 +2,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QContextMenuEvent, QKeySequence, QShortcut
 from PyQt6.QtWidgets import QListWidgetItem, QMenu, QMessageBox, QWidget
 
-from GUI.Session.session import SessionDataChanged, SessionManager
+from GUI.Session.session import SessionManager
 from GUI.States import states
 from GUI.Utils import guiutils, utilwidgets
 from GUI.Widgets.Bookmark.Form.BookmarkWidget import Ui_Form
@@ -64,12 +64,10 @@ class BookmarkWidget(QWidget, Ui_Form):
                 return
             self.bookmarked.emit(int(address, 16))
             self.refresh_table()
-            self.session.data_changed |= SessionDataChanged.BOOKMARKS
 
     def exec_change_comment_dialog(self, current_address: int) -> None:
         self.comment_changed.emit(current_address)
         self.refresh_table()
-        self.session.data_changed |= SessionDataChanged.BOOKMARKS
 
     def listWidget_context_menu_event(self, event: QContextMenuEvent) -> None:
         current_item = guiutils.get_current_item(self.listWidget)
@@ -110,7 +108,6 @@ class BookmarkWidget(QWidget, Ui_Form):
         current_address = utils.safe_str_to_int(utils.extract_hex_address(current_item.text()), 16)
         self.deleted.emit(current_address)
         self.refresh_table()
-        self.session.data_changed |= SessionDataChanged.BOOKMARKS
 
     def on_new_session(self) -> None:
         self.session = SessionManager.get_session()
