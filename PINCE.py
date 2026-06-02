@@ -4277,7 +4277,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             if result[0]:
                 QMessageBox.information(self, tr.SUCCESS, result[0] + " = " + result[1])
             else:
-                QMessageBox.information(self, tr.ERROR, tr.CALL_EXPRESSION_FAILED.format(call_dialog.get_values()))
+                QMessageBox.information(self, tr.ERROR, tr.CALL_EXPRESSION_FAILED.format(call_dialog.get_values()[0]))
 
     def actionSearch_Opcode_triggered(self) -> None:
         if debugcore.currentpid == -1:
@@ -5237,6 +5237,12 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
         regex = self.lineEdit_Regex.text()
         case_sensitive = self.checkBox_CaseSensitive.isChecked()
         enable_regex = self.checkBox_Regex.isChecked()
+        if enable_regex:
+            try:
+                re.compile(regex) if case_sensitive else re.compile(regex, re.IGNORECASE)
+            except re.error:
+                QMessageBox.information(self, tr.ERROR, tr.INVALID_REGEX)
+                return
         self.loading_dialog = LoadingDialogForm(self)
         self.background_thread = self.loading_dialog.background_thread
         self.background_thread.overrided_func = lambda: self.process_data(
@@ -5252,7 +5258,6 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
 
     def apply_data(self, disas_data: list | None) -> None:
         if disas_data is None:
-            QMessageBox.information(self, tr.ERROR, tr.INVALID_REGEX)
             return
         self.tableWidget_Opcodes.setSortingEnabled(False)
         self.tableWidget_Opcodes.setRowCount(0)
