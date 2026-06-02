@@ -2392,12 +2392,17 @@ def get_dissect_code_data(
         Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}
     """
     dict_list = []
-    if referenced_strings:
-        dict_list.append(shelve.open(utils.get_referenced_strings_file(currentpid), "r"))
-    if referenced_jumps:
-        dict_list.append(shelve.open(utils.get_referenced_jumps_file(currentpid), "r"))
-    if referenced_calls:
-        dict_list.append(shelve.open(utils.get_referenced_calls_file(currentpid), "r"))
+    try:
+        if referenced_strings:
+            dict_list.append(shelve.open(utils.get_referenced_strings_file(currentpid), "r"))
+        if referenced_jumps:
+            dict_list.append(shelve.open(utils.get_referenced_jumps_file(currentpid), "r"))
+        if referenced_calls:
+            dict_list.append(shelve.open(utils.get_referenced_calls_file(currentpid), "r"))
+    except Exception:
+        for opened_dict in dict_list:
+            opened_dict.close()
+        raise
     return dict_list
 
 
