@@ -2304,20 +2304,23 @@ def search_opcode(
         except Exception:
             logger.exception(f"An exception occurred while trying to compile the given regex '{searched_str}'")
             return
+    else:
+        searched_str = regexes.whitespaces.sub(" ", searched_str).strip()
     returned_list = []
     disas_output = disassemble(starting_address, ending_address_or_offset)
     for item in disas_output:
         address = item[0]
         opcode = item[2]
+        corrected_instruction = regexes.whitespaces.sub(" ", opcode).strip()
         if enable_regex:
-            if not regex.search(opcode):
+            if not regex.search(corrected_instruction):
                 continue
         else:
             if case_sensitive:
-                if opcode.find(searched_str) == -1:
+                if corrected_instruction.find(searched_str) == -1:
                     continue
             else:
-                if opcode.lower().find(searched_str.lower()) == -1:
+                if corrected_instruction.lower().find(searched_str.lower()) == -1:
                     continue
         returned_list.append([address, opcode])
     return returned_list
