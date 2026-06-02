@@ -726,12 +726,12 @@ def disassemble(aob: str, address: int, inferior_arch: int) -> str | None:
     """Returns the instructions from the given array of bytes
 
     Args:
-        aob (str): Bytes of the opcode as an array of bytes
-        address (int): The address where the opcode starts from
+        aob (str): Opcode bytes of the instruction as an array of bytes
+        address (int): The address where the instruction starts from
         inferior_arch (int): Architecture type (x86, x64). Can be a member of typedefs.INFERIOR_ARCH
 
     Returns:
-        str: Opcodes, multiple entries are separated with ;
+        str: Instructions, multiple entries are separated with ;
         None: If there was an error
     """
     if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64:

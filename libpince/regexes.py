@@ -54,7 +54,7 @@ disassemble_output = compile(
     r"""
     ([0-9a-fA-F]+.*)\\t                     # Address with symbol
     (.*?[0-9a-fA-F]{2})\s*\\t               # Bytes, ignore padding
-    (.+)\\n                                 # Opcode
+    (.+)\\n                                 # Instruction
 """,
     VERBOSE,
 )

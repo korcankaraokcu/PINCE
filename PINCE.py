@@ -111,7 +111,7 @@ from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
 from GUI.MemoryViewerWindow import Ui_MainWindow_MemoryView as MemoryViewWindow
 from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
-from GUI.SearchOpcodeWidget import Ui_Form as SearchOpcodeWidget
+from GUI.SearchInstructionsWidget import Ui_Form as SearchInstructionsWidget
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
 from GUI.Session.session import SessionDataChanged, SessionManager
 from GUI.Settings import settings, themes
@@ -201,8 +201,8 @@ SEARCH_TABLE_PREVIOUS_COL = 2
 
 # represents the index of columns in disassemble table
 DISAS_ADDR_COL = 0
-DISAS_BYTES_COL = 1
-DISAS_OPCODES_COL = 2
+DISAS_OPCODES_COL = 1
+DISAS_INSTR_COL = 2
 DISAS_COMMENT_COL = 3
 
 # represents the index of columns in floating point table
@@ -240,9 +240,9 @@ FUNCTIONS_INFO_SYMBOL_COL = 1
 LIBPINCE_REFERENCE_ITEM_COL = 0
 LIBPINCE_REFERENCE_VALUE_COL = 1
 
-# represents the index of columns in search opcode table
-SEARCH_OPCODE_ADDR_COL = 0
-SEARCH_OPCODE_OPCODES_COL = 1
+# represents the index of columns in search instructions table
+SEARCH_INSTR_ADDR_COL = 0
+SEARCH_INSTR_INSTR_COL = 1
 
 # represents the index of columns in memory regions table
 MEMORY_REGIONS_ADDR_COL = 0
@@ -2760,7 +2760,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def initialize_tools_context_menu(self) -> None:
         self.actionInject_so_file.triggered.connect(self.actionInject_so_file_triggered)
         self.actionCall_Function.triggered.connect(self.actionCall_Function_triggered)
-        self.actionSearch_Opcode.triggered.connect(self.actionSearch_Opcode_triggered)
+        self.actionSearch_Instructions.triggered.connect(self.actionSearch_Instructions_triggered)
         self.actionDissect_Code.triggered.connect(self.actionDissect_Code_triggered)
         self.actionLibpince_Engine.triggered.connect(self.actionLibpince_Engine_triggered)
 
@@ -2791,8 +2791,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def initialize_disassemble_view(self) -> None:
         self.tableWidget_Disassemble.setColumnWidth(DISAS_ADDR_COL, 300)
-        self.tableWidget_Disassemble.setColumnWidth(DISAS_BYTES_COL, 150)
-        self.tableWidget_Disassemble.setColumnWidth(DISAS_OPCODES_COL, 400)
+        self.tableWidget_Disassemble.setColumnWidth(DISAS_OPCODES_COL, 150)
+        self.tableWidget_Disassemble.setColumnWidth(DISAS_INSTR_COL, 400)
 
         self.disassemble_last_selected_address_int = 0
         self.disassemble_currently_displayed_address = "0"
@@ -2919,7 +2919,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
-        bytes_aob = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
+        bytes_aob = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
         EditInstructionDialogForm(self, current_address, bytes_aob).exec()
 
     def nop_instruction(self) -> None:
@@ -2931,7 +2931,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         current_address_int = safe_str_to_int(current_address, 16)
         if current_address_int == 0:
             return
-        array_of_bytes = self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text()
+        array_of_bytes = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
         debugcore.nop_instruction(current_address_int, len(array_of_bytes.split()))
         self.refresh_disassemble_view()
 
@@ -3339,7 +3339,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         jmp_dict, call_dict = debugcore.get_dissect_code_data(False, True, True)
         try:
-            for row, (address_info, bytes_aob, opcode) in enumerate(disas_data):
+            for row, (address_info, bytes_aob, instruction) in enumerate(disas_data):
                 comment = ""
                 current_address_str = utils.extract_hex_address(address_info)
                 current_address = safe_str_to_int(current_address_str, 16)
@@ -3424,16 +3424,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     self.tableWidget_Disassemble.selectRow(row)
                 addr_item = QTableWidgetItem(address_info)
                 bytes_item = QTableWidgetItem(bytes_aob)
-                opcodes_item = QTableWidgetItem(opcode)
+                instruction_item = QTableWidgetItem(instruction)
                 comment_item = QTableWidgetItem(comment)
                 if jmp_ref_exists or call_ref_exists:
                     addr_item.setToolTip(tooltip_text)
                     bytes_item.setToolTip(tooltip_text)
-                    opcodes_item.setToolTip(tooltip_text)
+                    instruction_item.setToolTip(tooltip_text)
                     comment_item.setToolTip(tooltip_text)
                 self.tableWidget_Disassemble.setItem(row, DISAS_ADDR_COL, addr_item)
-                self.tableWidget_Disassemble.setItem(row, DISAS_BYTES_COL, bytes_item)
-                self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, opcodes_item)
+                self.tableWidget_Disassemble.setItem(row, DISAS_OPCODES_COL, bytes_item)
+                self.tableWidget_Disassemble.setItem(row, DISAS_INSTR_COL, instruction_item)
                 self.tableWidget_Disassemble.setItem(row, DISAS_COMMENT_COL, comment_item)
         finally:
             jmp_dict.close()
@@ -3950,7 +3950,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         address = utils.instruction_follow_address(
-            self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
+            self.tableWidget_Disassemble.item(selected_row, DISAS_INSTR_COL).text()
         )
         if address:
             self.disassemble_expression(address)
@@ -3984,7 +3984,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         show_in_hex_view = menu.addAction(f"{tr.HEXVIEW_ADDRESS}[Ctrl+H]")
         menu.addSeparator()
         followable = utils.instruction_follow_address(
-            self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
+            self.tableWidget_Disassemble.item(selected_row, DISAS_INSTR_COL).text()
         )
         follow = menu.addAction(f"{tr.FOLLOW}[Space]")
         if not followable:
@@ -4011,7 +4011,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         menu.addSeparator()
         edit_instruction = menu.addAction(tr.EDIT_INSTRUCTION)
         nop_instruction = menu.addAction(tr.REPLACE_WITH_NOPS)
-        if self.tableWidget_Disassemble.item(selected_row, DISAS_BYTES_COL).text() == "90":
+        if self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text() == "90":
             guiutils.delete_menu_entries(menu, [nop_instruction])
         menu.addSeparator()
         track_breakpoint = menu.addAction(tr.WHAT_ACCESSES_INSTRUCTION)
@@ -4025,7 +4025,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         clipboard_menu = menu.addMenu(tr.COPY_CLIPBOARD)
         copy_address = clipboard_menu.addAction(tr.COPY_ADDRESS)
         copy_bytes = clipboard_menu.addAction(tr.COPY_BYTES)
-        copy_opcode = clipboard_menu.addAction(tr.COPY_OPCODE)
+        copy_instr = clipboard_menu.addAction(tr.COPY_INSTR)
         copy_comment = clipboard_menu.addAction(tr.COPY_COMMENT)
         copy_all = clipboard_menu.addAction(tr.COPY_ALL)
         font_size = self.tableWidget_Disassemble.font().pointSize()
@@ -4049,8 +4049,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             dissect_region: self.dissect_current_region,
             refresh: self.refresh_disassemble_view,
             copy_address: lambda: copy_to_clipboard(selected_row, DISAS_ADDR_COL),
-            copy_bytes: lambda: copy_to_clipboard(selected_row, DISAS_BYTES_COL),
-            copy_opcode: lambda: copy_to_clipboard(selected_row, DISAS_OPCODES_COL),
+            copy_bytes: lambda: copy_to_clipboard(selected_row, DISAS_OPCODES_COL),
+            copy_instr: lambda: copy_to_clipboard(selected_row, DISAS_INSTR_COL),
             copy_comment: lambda: copy_to_clipboard(selected_row, DISAS_COMMENT_COL),
             copy_all: lambda: copy_all_columns(selected_row),
         }
@@ -4100,7 +4100,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
-        current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
+        current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_INSTR_COL).text()
         register_expression_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_TRACK_BP_EXPRESSION, "")])
         if register_expression_dialog.exec():
             exp = register_expression_dialog.get_values()[0]
@@ -4279,7 +4279,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             else:
                 QMessageBox.information(self, tr.ERROR, tr.CALL_EXPRESSION_FAILED.format(call_dialog.get_values()[0]))
 
-    def actionSearch_Opcode_triggered(self) -> None:
+    def actionSearch_Instructions_triggered(self) -> None:
         if debugcore.currentpid == -1:
             return
         start_address = safe_str_to_int(self.disassemble_currently_displayed_address, 16)
@@ -4288,8 +4288,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if region_info:
             start_address = region_info.start
             end_address = region_info.end
-        search_opcode_widget = SearchOpcodeWidgetForm(self, hex(start_address), hex(end_address))
-        search_opcode_widget.show()
+        search_instr_widget = SearchInstructionsWidgetForm(self, hex(start_address), hex(end_address))
+        search_instr_widget.show()
 
     def actionDissect_Code_triggered(self) -> None:
         if debugcore.currentpid == -1:
@@ -4560,11 +4560,11 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.info = {}
         self.last_selected_row = 0
         if watchpoint_type == typedefs.WATCHPOINT_TYPE.WRITE_ONLY:
-            string = tr.OPCODE_WRITING_TO.format(address)
+            string = tr.INSTR_WRITING_TO.format(address)
         elif watchpoint_type == typedefs.WATCHPOINT_TYPE.READ_ONLY:
-            string = tr.OPCODE_READING_FROM.format(address)
+            string = tr.INSTR_READING_FROM.format(address)
         elif watchpoint_type == typedefs.WATCHPOINT_TYPE.BOTH:
-            string = tr.OPCODE_ACCESSING_TO.format(address)
+            string = tr.INSTR_ACCESSING_TO.format(address)
         else:
             raise Exception("Watchpoint type is invalid: " + str(watchpoint_type))
         self.setWindowTitle(string)
@@ -4576,8 +4576,8 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
             return
         self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
         self.pushButton_Refresh.clicked.connect(self.update_list)
-        self.tableWidget_Opcodes.itemDoubleClicked.connect(self.tableWidget_Opcodes_item_double_clicked)
-        self.tableWidget_Opcodes.selectionModel().currentChanged.connect(self.tableWidget_Opcodes_current_changed)
+        self.tableWidget_Addresses.itemDoubleClicked.connect(self.tableWidget_Addresses_item_double_clicked)
+        self.tableWidget_Addresses.selectionModel().currentChanged.connect(self.tableWidget_Addresses_current_changed)
         self.update_timer.start(100)
         self.show()
 
@@ -4586,15 +4586,15 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         if not info or self.info == info:
             return
         self.info = info
-        self.tableWidget_Opcodes.setRowCount(0)
-        self.tableWidget_Opcodes.setRowCount(len(info))
+        self.tableWidget_Addresses.setRowCount(0)
+        self.tableWidget_Addresses.setRowCount(len(info))
         for row, key in enumerate(info):
-            self.tableWidget_Opcodes.setItem(row, TRACK_WATCHPOINT_COUNT_COL, QTableWidgetItem(str(info[key][0])))
-            self.tableWidget_Opcodes.setItem(row, TRACK_WATCHPOINT_ADDR_COL, QTableWidgetItem(info[key][1]))
-        guiutils.resize_to_contents(self.tableWidget_Opcodes)
-        self.tableWidget_Opcodes.selectRow(self.last_selected_row)
+            self.tableWidget_Addresses.setItem(row, TRACK_WATCHPOINT_COUNT_COL, QTableWidgetItem(str(info[key][0])))
+            self.tableWidget_Addresses.setItem(row, TRACK_WATCHPOINT_ADDR_COL, QTableWidgetItem(info[key][1]))
+        guiutils.resize_to_contents(self.tableWidget_Addresses)
+        self.tableWidget_Addresses.selectRow(self.last_selected_row)
 
-    def tableWidget_Opcodes_current_changed(self, QModelIndex_current: QModelIndex) -> None:
+    def tableWidget_Addresses_current_changed(self, QModelIndex_current: QModelIndex) -> None:
         current_row = QModelIndex_current.row()
         if current_row >= 0:
             self.last_selected_row = current_row
@@ -4611,9 +4611,9 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.textBrowser_Info.verticalScrollBar().setValue(self.textBrowser_Info.verticalScrollBar().minimum())
         self.textBrowser_Disassemble.setPlainText(info[key][4])
 
-    def tableWidget_Opcodes_item_double_clicked(self, index: QTableWidgetItem) -> None:
+    def tableWidget_Addresses_item_double_clicked(self, index: QTableWidgetItem) -> None:
         self.parent().memory_view_window.disassemble_expression(
-            self.tableWidget_Opcodes.item(index.row(), TRACK_WATCHPOINT_ADDR_COL).text()
+            self.tableWidget_Addresses.item(index.row(), TRACK_WATCHPOINT_ADDR_COL).text()
         )
         self.parent().memory_view_window.show()
         self.parent().memory_view_window.activateWindow()
@@ -5063,7 +5063,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
         if not self.is_valid:
             return
 
-        # No need to check for validity since address is not editable and opcode is checked in text_edited
+        # No need to check for validity since address is not editable and instruction is checked in text_edited
         address = safe_str_to_int(self.lineEdit_Address.text(), 0)
         bytes_aob = self.lineEdit_Bytes.text()
         if bytes_aob != self.orig_bytes:
@@ -5072,7 +5072,7 @@ class EditInstructionDialogForm(QDialog, EditInstructionDialog):
             if new_length < old_length:
                 bytes_aob += " 90" * (old_length - new_length)  # Append NOPs if we are short on bytes
             elif new_length > old_length:
-                if not utilwidgets.InputDialog(self, tr.NEW_OPCODE.format(new_length, old_length)).exec():
+                if not utilwidgets.InputDialog(self, tr.NEW_INSTR.format(new_length, old_length)).exec():
                     return
             debugcore.modify_instruction(address, bytes_aob)
         self.parent().refresh_hex_view()
@@ -5217,22 +5217,22 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         super().closeEvent(event)
 
 
-class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
+class SearchInstructionsWidgetForm(QWidget, SearchInstructionsWidget):
     def __init__(self, parent: QWidget, start: str = "", end: str = "") -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.lineEdit_Start.setText(start)
         self.lineEdit_End.setText(end)
-        self.tableWidget_Opcodes.setColumnWidth(SEARCH_OPCODE_ADDR_COL, 250)
+        self.tableWidget_Instructions.setColumnWidth(SEARCH_INSTR_ADDR_COL, 250)
         icons_directory = guiutils.get_icons_directory()
         self.pushButton_Help.setIcon(QIcon(QPixmap(icons_directory + "/help.png")))
         self.pushButton_Help.clicked.connect(self.pushButton_Help_clicked)
         self.pushButton_Search.clicked.connect(self.refresh_table)
         self.shortcut_search = QShortcut(QKeySequence("Return"), self)
         self.shortcut_search.activated.connect(self.refresh_table)
-        self.tableWidget_Opcodes.itemDoubleClicked.connect(self.tableWidget_Opcodes_item_double_clicked)
-        self.tableWidget_Opcodes.contextMenuEvent = self.tableWidget_Opcodes_context_menu_event
+        self.tableWidget_Instructions.itemDoubleClicked.connect(self.tableWidget_Instructions_item_double_clicked)
+        self.tableWidget_Instructions.contextMenuEvent = self.tableWidget_Instructions_context_menu_event
         guiutils.center_to_parent(self)
 
     def refresh_table(self) -> None:
@@ -5258,44 +5258,44 @@ class SearchOpcodeWidgetForm(QWidget, SearchOpcodeWidget):
     def process_data(
         self, regex: str, start_address: str, end_address: str, case_sensitive: bool, enable_regex: bool
     ) -> list | None:
-        return debugcore.search_opcode(regex, start_address, end_address, case_sensitive, enable_regex)
+        return debugcore.search_instr(regex, start_address, end_address, case_sensitive, enable_regex)
 
     def apply_data(self, disas_data: list | None) -> None:
         if disas_data is None:
             return
-        self.tableWidget_Opcodes.setSortingEnabled(False)
-        self.tableWidget_Opcodes.setRowCount(0)
-        self.tableWidget_Opcodes.setRowCount(len(disas_data))
+        self.tableWidget_Instructions.setSortingEnabled(False)
+        self.tableWidget_Instructions.setRowCount(0)
+        self.tableWidget_Instructions.setRowCount(len(disas_data))
         for row, item in enumerate(disas_data):
-            self.tableWidget_Opcodes.setItem(row, SEARCH_OPCODE_ADDR_COL, QTableWidgetItem(item[0]))
-            self.tableWidget_Opcodes.setItem(row, SEARCH_OPCODE_OPCODES_COL, QTableWidgetItem(item[1]))
-        self.tableWidget_Opcodes.setSortingEnabled(True)
+            self.tableWidget_Instructions.setItem(row, SEARCH_INSTR_ADDR_COL, QTableWidgetItem(item[0]))
+            self.tableWidget_Instructions.setItem(row, SEARCH_INSTR_INSTR_COL, QTableWidgetItem(item[1]))
+        self.tableWidget_Instructions.setSortingEnabled(True)
 
     def pushButton_Help_clicked(self) -> None:
-        utilwidgets.InputDialog(self, tr.SEARCH_OPCODE_HELPER, Qt.AlignmentFlag.AlignLeft, False).exec()
+        utilwidgets.InputDialog(self, tr.SEARCH_INSTR_HELPER, Qt.AlignmentFlag.AlignLeft, False).exec()
 
-    def tableWidget_Opcodes_item_double_clicked(self, index: QTableWidgetItem) -> None:
+    def tableWidget_Instructions_item_double_clicked(self, index: QTableWidgetItem) -> None:
         row = index.row()
-        address = self.tableWidget_Opcodes.item(row, SEARCH_OPCODE_ADDR_COL).text()
+        address = self.tableWidget_Instructions.item(row, SEARCH_INSTR_ADDR_COL).text()
         self.parent().disassemble_expression(utils.extract_hex_address(address))
 
-    def tableWidget_Opcodes_context_menu_event(self, event: QContextMenuEvent) -> None:
+    def tableWidget_Instructions_context_menu_event(self, event: QContextMenuEvent) -> None:
         def copy_to_clipboard(row: int, column: int) -> None:
-            app.clipboard().setText(self.tableWidget_Opcodes.item(row, column).text())
+            app.clipboard().setText(self.tableWidget_Instructions.item(row, column).text())
 
-        selected_row = guiutils.get_current_row(self.tableWidget_Opcodes)
+        selected_row = guiutils.get_current_row(self.tableWidget_Instructions)
 
         menu = QMenu()
         copy_address = menu.addAction(tr.COPY_ADDRESS)
-        copy_opcode = menu.addAction(tr.COPY_OPCODE)
+        copy_instr = menu.addAction(tr.COPY_INSTR)
         if selected_row == -1:
-            guiutils.delete_menu_entries(menu, [copy_address, copy_opcode])
-        font_size = self.tableWidget_Opcodes.font().pointSize()
+            guiutils.delete_menu_entries(menu, [copy_address, copy_instr])
+        font_size = self.tableWidget_Instructions.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
         actions = {
-            copy_address: lambda: copy_to_clipboard(selected_row, SEARCH_OPCODE_ADDR_COL),
-            copy_opcode: lambda: copy_to_clipboard(selected_row, SEARCH_OPCODE_OPCODES_COL),
+            copy_address: lambda: copy_to_clipboard(selected_row, SEARCH_INSTR_ADDR_COL),
+            copy_instr: lambda: copy_to_clipboard(selected_row, SEARCH_INSTR_INSTR_COL),
         }
         try:
             actions[action]()
@@ -5854,8 +5854,8 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         disas_data = debugcore.disassemble(
             utils.extract_hex_address(self.listWidget_Referrers.item(QModelIndex_current.row()).text()), "+200"
         )
-        for address_info, _, opcode in disas_data:
-            self.textBrowser_DisasInfo.append(address_info + opcode)
+        for address_info, _, instr in disas_data:
+            self.textBrowser_DisasInfo.append(address_info + instr)
         cursor = self.textBrowser_DisasInfo.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.Start)
         self.textBrowser_DisasInfo.setTextCursor(cursor)

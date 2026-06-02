@@ -631,7 +631,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>检查引用来源</translation>
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -640,7 +640,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>输入字符串或 Python 正则表达式</translation>
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
@@ -649,7 +649,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>如果选中则忽略大小写</translation>
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
@@ -658,7 +658,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>大小写敏感</translation>
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -666,8 +666,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>如果选中，你的字符串将被视为正则表达式</translation>
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -675,7 +674,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>正则</translation>
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
@@ -692,7 +691,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
         <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
@@ -770,24 +769,29 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>值</translation>
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
-        <source>Search for Opcodes</source>
-        <translation>搜索操作码</translation>
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
+        <source>Search for Instructions</source>
+        <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
+        <source>Search:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <source>Start</source>
         <translation>开始</translation>
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <source>End</source>
         <translation>结束</translation>
     </message>
     <message>
-        <location filename="../../GUI/SearchOpcodeWidget.ui" line="0" />
-        <source>Opcodes</source>
-        <translation>操作码</translation>
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
+        <source>Instruction</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
@@ -859,8 +863,8 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
-        <source>Original OpCode</source>
-        <translation>原始操作码</translation>
+        <source>Original Opcodes</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
@@ -1269,13 +1273,13 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-        <source>Bytes</source>
-        <translation>字节</translation>
+        <source>Opcodes</source>
+        <translation>操作码</translation>
     </message>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-        <source>Opcodes</source>
-        <translation>操作码</translation>
+        <source>Instruction</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
@@ -1429,8 +1433,8 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-        <source>&amp;Search Opcode</source>
-        <translation>搜索操作码[&amp;S]</translation>
+        <source>&amp;Search Instructions</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
@@ -2238,11 +2242,8 @@ Proceed?</source>
         <source>asdf|qwer --&gt; search for asdf or qwer
 [as]df --&gt; search for both adf and sdf
 Use the char \ to escape special chars such as [
-\[asdf\] --&gt; search for opcodes that contain [asdf]</source>
-        <translation>asdf|qwer --&gt; 搜索 asdf 或 qwer
-[as]df --&gt; 搜索 adf 和 sdf
-使用字符 \ 转义特殊字符，如 [
-\[asdf\] --&gt; 搜索包含 [asdf] 的操作码</translation>
+</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2554,8 +2555,8 @@ Check terminal for details</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Copy Opcode</source>
-        <translation>复制操作码</translation>
+        <source>Copy Instruction</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2726,18 +2727,18 @@ $28 是分配的便利变量
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Opcodes writing to the address {}</source>
-        <translation>写入地址 {} 的操作码</translation>
+        <source>Instructions writing to the address {}</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Opcodes reading from the address {}</source>
-        <translation>读取地址 {} 的操作码</translation>
+        <source>Instructions reading from the address {}</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Opcodes accessing to the address {}</source>
-        <translation>访问地址 {} 的操作码</translation>
+        <source>Instructions accessing to the address {}</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2870,10 +2871,9 @@ func, func(param), func(param)@plt
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>New opcode is {} bytes long but old opcode is only {} bytes long
+        <source>New instruction is {} bytes long but old instruction is only {} bytes long
 This will cause an overflow, proceed?</source>
-        <translation>新的操作码长度为 {} 字节，但旧的操作码只有 {} 字节长
-这将导致溢出，是否继续？</translation>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2923,15 +2923,11 @@ This will cause an overflow, proceed?</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>	Here's some useful regex examples:
-call|rax --&gt; search for opcodes that contain call or rax
+call|rax --&gt; search for instructions that contain call or rax
 [re]cx --&gt; search for both rcx and ecx
 Use the char \ to escape special chars such as [
-\[rsp\] --&gt; search for opcodes that contain [rsp]</source>
-        <translation>	这里有一些有用的正则表达式示例：
-call|rax --&gt; 搜索包含 call 或 rax 的操作码
-[re]cx --&gt; 搜索 rcx 和 ecx
-使用字符 \ 转义特殊字符，如 [
-\[rsp\] --&gt; 搜索包含 [rsp] 的操作码</translation>
+\[rsp\] --&gt; search for instructions that contain [rsp]</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />

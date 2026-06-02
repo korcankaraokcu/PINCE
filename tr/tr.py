@@ -163,7 +163,6 @@ class TranslationConstants(QObject):
         "asdf|qwer --> search for asdf or qwer\n"
         "[as]df --> search for both adf and sdf\n"
         "Use the char \\ to escape special chars such as [\n"
-        r"\[asdf\] --> search for opcodes that contain [asdf]"
     )
     SEPARATE_PROCESSES_WITH = QT_TR_NOOP("Separate processes with {}")
     UNUSED_APPIMAGE_SETTING = QT_TR_NOOP("This setting is unused in AppImage builds")
@@ -247,7 +246,7 @@ class TranslationConstants(QObject):
     TRACE_INSTRUCTION = QT_TR_NOOP("Break and trace instructions")
     DISSECT_REGION = QT_TR_NOOP("Dissect this region")
     COPY_BYTES = QT_TR_NOOP("Copy Bytes")
-    COPY_OPCODE = QT_TR_NOOP("Copy Opcode")
+    COPY_INSTR = QT_TR_NOOP("Copy Instruction")
     COPY_COMMENT = QT_TR_NOOP("Copy Comment")
     COPY_ALL = QT_TR_NOOP("Copy All")
     ENTER_TRACK_BP_EXPRESSION = QT_TR_NOOP(
@@ -294,9 +293,9 @@ class TranslationConstants(QObject):
     DISABLE_AFTER_HIT = QT_TR_NOOP("Disable after hit")
     DISABLE_AFTER_COUNT = QT_TR_NOOP("Disable after X hits")
     DELETE_AFTER_HIT = QT_TR_NOOP("Delete after hit")
-    OPCODE_WRITING_TO = QT_TR_NOOP("Opcodes writing to the address {}")
-    OPCODE_READING_FROM = QT_TR_NOOP("Opcodes reading from the address {}")
-    OPCODE_ACCESSING_TO = QT_TR_NOOP("Opcodes accessing to the address {}")
+    INSTR_WRITING_TO = QT_TR_NOOP("Instructions writing to the address {}")
+    INSTR_READING_FROM = QT_TR_NOOP("Instructions reading from the address {}")
+    INSTR_ACCESSING_TO = QT_TR_NOOP("Instructions accessing to the address {}")
     TRACK_WATCHPOINT_FAILED = QT_TR_NOOP("Unable to track watchpoint at expression {}")
     DELETE_WATCHPOINT_FAILED = QT_TR_NOOP("Unable to delete watchpoint at expression {}")
     CLOSE = QT_TR_NOOP("Close")
@@ -332,8 +331,8 @@ class TranslationConstants(QObject):
         "There can be more than one of the same function\n"
         "It means that the function is overloaded"
     )
-    NEW_OPCODE = QT_TR_NOOP(
-        "New opcode is {} bytes long but old opcode is only {} bytes long\n" "This will cause an overflow, proceed?"
+    NEW_INSTR = QT_TR_NOOP(
+        "New instruction is {} bytes long but old instruction is only {} bytes long\n" "This will cause an overflow, proceed?"
     )
     IS_INVALID_EXPRESSION = QT_TR_NOOP("{} isn't a valid expression")
     LOG_FILE = QT_TR_NOOP("Log File of PID {}")
@@ -344,12 +343,12 @@ class TranslationConstants(QObject):
     LOG_READ_ERROR = QT_TR_NOOP("Unable to read log file at {}")
     SETTINGS_ENABLE_LOG = QT_TR_NOOP("Go to Settings->Debug to enable logging")
     INVALID_REGEX = QT_TR_NOOP("Invalid Regex")
-    SEARCH_OPCODE_HELPER = QT_TR_NOOP(
+    SEARCH_INSTR_HELPER = QT_TR_NOOP(
         "\tHere's some useful regex examples:\n"
-        "call|rax --> search for opcodes that contain call or rax\n"
+        "call|rax --> search for instructions that contain call or rax\n"
         "[re]cx --> search for both rcx and ecx\n"
         "Use the char \\ to escape special chars such as [\n"
-        r"\[rsp\] --> search for opcodes that contain [rsp]"
+        r"\[rsp\] --> search for instructions that contain [rsp]"
     )
     COPY_ADDRESSES = QT_TR_NOOP("Copy Addresses")
     COPY_OFFSET = QT_TR_NOOP("Copy Offset")

@@ -1138,7 +1138,7 @@ def disassemble(expression: str, offset_or_address: str) -> list[tuple[str, str,
         If the second parameter is an address, it always should be bigger than the first address
 
     Returns:
-        list: A list of str values in this format-->[(address1, bytes1, opcodes1), (address2, ...), ...]
+        list: A list of str values in this format-->[(address1, bytes1, instr1), (address2, ...), ...]
     """
     output = send_command("disas /r " + expression + "," + offset_or_address)
     disas_data = []
@@ -1617,28 +1617,28 @@ def get_modified_instructions() -> dict:
     return modified_instructions_dict
 
 
-def nop_instruction(start_address: int, length_of_instr: int) -> None:
-    """Replaces an instruction's opcodes with NOPs
+def nop_instruction(start_address: int, length: int) -> None:
+    """Writes length NOPs beginning at start_address
 
     Args:
         start_address (int): Self-explanatory
-        length_of_instr (int): Length of the instruction that'll be NOP'ed
+        length (int): how many NOPs
 
     Returns:
         None
     """
-    old_aob = " ".join(hex_dump(start_address, length_of_instr))
+    old_aob = " ".join(hex_dump(start_address, length))
     global modified_instructions_dict
     if start_address not in modified_instructions_dict:
         modified_instructions_dict[start_address] = old_aob
 
-    nop_aob = " ".join(["90"] * length_of_instr)
+    nop_aob = " ".join(["90"] * length)
     write_memory(start_address, typedefs.VALUE_INDEX.AOB, nop_aob)
     instructions_changed.emit()
 
 
 def modify_instruction(start_address: int, array_of_bytes: str) -> None:
-    """Replaces an instruction's opcodes with a new AOB
+    """Replaces an instruction's opcodes with new bytes
 
     Args:
         start_address (int): Self-explanatory
@@ -1658,7 +1658,7 @@ def modify_instruction(start_address: int, array_of_bytes: str) -> None:
 
 
 def restore_instruction(start_address: int) -> None:
-    """Restores a modified instruction to it's original opcodes
+    """Restores a modified instruction to its original opcodes
 
     Args:
         start_address (int): Self-explanatory
@@ -2272,7 +2272,7 @@ def find_entry_point() -> str | None:
         return filtered_result.group(1)
 
 
-def search_opcode(
+def search_instr(
     searched_str: str,
     starting_address: str,
     ending_address_or_offset: str,
@@ -2292,7 +2292,7 @@ def search_opcode(
         enable_regex (bool): If True, searched_str will be treated as a regex expression
 
     Returns:
-        list: A list of str values in this format-->[[address1,opcodes1],[address2, ...], ...]
+        list: A list of str values in this format-->[[address1, instr1],[address2, ...], ...]
         None: If enable_regex is True and given regex isn't valid
     """
     if enable_regex:
@@ -2310,8 +2310,8 @@ def search_opcode(
     disas_output = disassemble(starting_address, ending_address_or_offset)
     for item in disas_output:
         address = item[0]
-        opcode = item[2]
-        corrected_instruction = regexes.whitespaces.sub(" ", opcode).strip()
+        instr = item[2]
+        corrected_instruction = regexes.whitespaces.sub(" ", instr).strip()
         if enable_regex:
             if not regex.search(corrected_instruction):
                 continue
@@ -2322,7 +2322,7 @@ def search_opcode(
             else:
                 if corrected_instruction.lower().find(searched_str.lower()) == -1:
                     continue
-        returned_list.append([address, opcode])
+        returned_list.append([address, instr])
     return returned_list
 
 
@@ -2400,7 +2400,7 @@ def get_dissect_code_data(
 
         referenced_jumps_dict-->(shelve.DbfilenameShelf object) Holds referenced jump addresses
         Format: {referenced_address1:referenced_by_dict1, referenced_address2:referenced_by_dict2, ...}
-        Format of referenced_by_dict: {address1:opcode1, address2:opcode2, ...}
+        Format of referenced_by_dict: {address1:instr1, address2:instr2, ...}
 
         referenced_calls_dict-->(shelve.DbfilenameShelf object) Holds referenced call addresses
         Format: {referenced_address1:referrer_address_set1, referenced_address2:referrer_address_set2, ...}

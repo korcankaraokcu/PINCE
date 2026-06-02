@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Search for Opcodes</string>
+   <string>Search for Instructions</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -19,7 +19,7 @@
      <item>
       <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>Regex</string>
+        <string>Search:</string>
        </property>
       </widget>
      </item>
@@ -91,20 +91,20 @@
     </layout>
    </item>
    <item row="2" column="0">
-    <widget class="QTableWidget" name="tableWidget_Opcodes">
+    <widget class="QTableWidget" name="tableWidget_Instructions">
      <property name="font">
       <font>
        <family>Monospace</family>
       </font>
      </property>
      <property name="editTriggers">
-      <set>QAbstractItemView::NoEditTriggers</set>
+      <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
      </property>
      <property name="selectionMode">
-      <enum>QAbstractItemView::SingleSelection</enum>
+      <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
      </property>
      <property name="selectionBehavior">
-      <enum>QAbstractItemView::SelectRows</enum>
+      <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
      </property>
      <property name="sortingEnabled">
       <bool>true</bool>
@@ -131,7 +131,7 @@
      </column>
      <column>
       <property name="text">
-       <string>Opcodes</string>
+       <string>Instruction</string>
       </property>
      </column>
     </widget>

@@ -48,6 +48,6 @@ class Ui_Form(object):
         item = self.tableWidget_Instructions.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Address"))
         item = self.tableWidget_Instructions.horizontalHeaderItem(1)
-        item.setText(_translate("Form", "Original OpCode"))
+        item.setText(_translate("Form", "Original Opcodes"))
         item = self.tableWidget_Instructions.horizontalHeaderItem(2)
         item.setText(_translate("Form", "Original Instruction"))
