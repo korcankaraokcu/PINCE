@@ -1602,6 +1602,7 @@ class MainForm(QMainWindow, MainWindow):
         attach_result = debugcore.attach(pid, gdb_path)
         if attach_result == typedefs.ATTACH_RESULT.SUCCESSFUL:
             settings.apply_after_init()
+            memscan.detach()
             memscan.attach(pid)
             self.on_new_process()
             SessionManager.on_process_changed()
@@ -1631,6 +1632,7 @@ class MainForm(QMainWindow, MainWindow):
         self.cleanup_speedhack()
         if debugcore.create_process(file_path, args, ld_preload_path):
             settings.apply_after_init()
+            memscan.detach()
             memscan.attach(debugcore.currentpid)
             self.on_new_process()
             SessionManager.on_process_changed()
