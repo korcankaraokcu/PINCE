@@ -4386,6 +4386,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         self.tableWidget_BreakpointInfo.keyPressEvent = self.tableWidget_BreakpointInfo_key_press_event
         self.tableWidget_BreakpointInfo.itemDoubleClicked.connect(self.tableWidget_BreakpointInfo_double_clicked)
         self.refresh()
+        states.backend_signals.breakpoints_changed.connect(self.refresh)
         guiutils.center_to_parent(self)
 
     def refresh(self) -> None:
@@ -4405,6 +4406,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
         guiutils.resize_to_contents(self.tableWidget_BreakpointInfo)
         self.textBrowser_BreakpointInfo.clear()
         self.textBrowser_BreakpointInfo.setText(debugcore.send_command("info break", cli_output=True))
+        self.repaint()
 
     def delete_breakpoint(self, breakpoint_num: int | None) -> None:
         if breakpoint_num is not None:

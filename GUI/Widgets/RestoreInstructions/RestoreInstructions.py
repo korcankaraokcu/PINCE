@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QWidget, QTableWidgetItem, QMenu
 from PyQt6.QtCore import Qt, QKeyCombination, pyqtSignal
 from PyQt6.QtGui import QKeyEvent, QContextMenuEvent
+from GUI.States import states
 from GUI.Utils import guiutils
 from GUI.Widgets.RestoreInstructions.Form.RestoreInstructionsWidget import Ui_Form
 from tr.tr import TranslationConstants as tr
@@ -26,6 +27,7 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
         self.tableWidget_Instructions.contextMenuEvent = self.tableWidget_Instructions_context_menu_event
         self.tableWidget_Instructions.itemDoubleClicked.connect(self.tableWidget_Instructions_double_clicked)
         self.refresh()
+        states.backend_signals.instructions_changed.connect(self.refresh)
         guiutils.center_to_parent(self)
 
     def tableWidget_Instructions_context_menu_event(self, event: QContextMenuEvent) -> None:
@@ -65,6 +67,7 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
                 instr_name = "??"
             self.tableWidget_Instructions.setItem(row, NAME_COL, QTableWidgetItem(instr_name))
         guiutils.resize_to_contents(self.tableWidget_Instructions)
+        self.repaint()
 
     def tableWidget_Instructions_key_press_event(self, event: QKeyEvent) -> None:
         actions = typedefs.KeyboardModifiersTupleDict(

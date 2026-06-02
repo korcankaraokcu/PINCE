@@ -1,9 +1,14 @@
 from PyQt6.QtCore import QThreadPool
 from GUI.Utils import guitypedefs
+from libpince import debugcore
 
 process_signals = guitypedefs.ProcessSignals()
 setting_signals = guitypedefs.SettingSignals()
 session_signals = guitypedefs.SessionSignals()
+backend_signals = guitypedefs.BackendSignals()
+
+debugcore.breakpoints_changed.connect(backend_signals.breakpoints_changed.emit)
+debugcore.instructions_changed.connect(backend_signals.instructions_changed.emit)
 
 status_thread = guitypedefs.CheckInferiorStatus()
 status_thread.start()

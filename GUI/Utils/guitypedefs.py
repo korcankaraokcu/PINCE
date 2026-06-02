@@ -32,6 +32,16 @@ class SessionSignals(QObject):
     bookmarks_changed = pyqtSignal()
 
 
+# Qt mirror of debugcore's backend signals (e.g. debugcore.breakpoints_changed), bridged in states.py.
+# debugcore is GUI-agnostic and its signals fire synchronously on whatever thread emits them, which
+# can be a worker thread like the tracer.
+# Re-emitting through these Qt signals lets widgets connect with the default AutoConnection,
+# so the refresh is marshalled to the GUI thread instead of touching widgets off-thread.
+class BackendSignals(QObject):
+    breakpoints_changed = pyqtSignal()
+    instructions_changed = pyqtSignal()
+
+
 class Worker(QRunnable):
     def __init__(self, fn: Callable, *args: Any, **kwargs: Any) -> None:
         super().__init__()
