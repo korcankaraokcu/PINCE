@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # IMPORTANT: Any constant involving only PINCE.py should be declared in PINCE.py
 
 import collections.abc, queue, sys
-from typing import Any
+from typing import Any, Callable
 
 
 class CONST_TIME:
@@ -562,6 +562,25 @@ class RegisterQueue:
             self.queue_list.remove(queue_instance)
         except ValueError:
             pass
+
+
+class Signal:
+    def __init__(self) -> None:
+        self.callbacks: list[Callable] = []
+
+    def connect(self, callback: Callable) -> None:
+        if callback not in self.callbacks:
+            self.callbacks.append(callback)
+
+    def disconnect(self, callback: Callable) -> None:
+        try:
+            self.callbacks.remove(callback)
+        except ValueError:
+            pass
+
+    def emit(self, *args: Any, **kwargs: Any) -> None:
+        for callback in self.callbacks.copy():
+            callback(*args, **kwargs)
 
 
 class KeyboardModifiersTupleDict(collections.abc.Mapping):

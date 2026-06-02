@@ -56,6 +56,9 @@ modified_instructions_dict = {}
 # Format: [[bp_num1, bp_num2, ...], [bp_num1, ...], ...]
 chained_breakpoints = []
 
+breakpoints_changed = typedefs.Signal()
+instructions_changed = typedefs.Signal()
+
 child = object  # this object will be used with pexpect operations
 
 # This Lock is used by the function send_command to ensure synchronous execution
@@ -1631,6 +1634,7 @@ def nop_instruction(start_address: int, length_of_instr: int) -> None:
 
     nop_aob = " ".join(["90"] * length_of_instr)
     write_memory(start_address, typedefs.VALUE_INDEX.AOB, nop_aob)
+    instructions_changed.emit()
 
 
 def modify_instruction(start_address: int, array_of_bytes: str) -> None:
@@ -1650,6 +1654,7 @@ def modify_instruction(start_address: int, array_of_bytes: str) -> None:
     if start_address not in modified_instructions_dict:
         modified_instructions_dict[start_address] = old_aob
     write_memory(start_address, typedefs.VALUE_INDEX.AOB, array_of_bytes)
+    instructions_changed.emit()
 
 
 def restore_instruction(start_address: int) -> None:
@@ -1664,6 +1669,7 @@ def restore_instruction(start_address: int) -> None:
     global modified_instructions_dict
     array_of_bytes = modified_instructions_dict.pop(start_address)
     write_memory(start_address, typedefs.VALUE_INDEX.AOB, array_of_bytes)
+    instructions_changed.emit()
 
 
 def get_breakpoint_info() -> list[typedefs.tuple_breakpoint_info]:
@@ -1822,6 +1828,7 @@ def add_breakpoint(
             return
         number = breakpoint_number.group(1)
         breakpoint_on_hit_dict[number] = on_hit
+        breakpoints_changed.emit()
         return int(number)
     else:
         return
@@ -1894,6 +1901,8 @@ def add_watchpoint(
         str_address_int += max_length
     global chained_breakpoints
     chained_breakpoints.append(breakpoints_nums)
+    if breakpoints_set:
+        breakpoints_changed.emit()
     return breakpoints_set
 
 
@@ -1958,6 +1967,7 @@ def modify_breakpoint(
         else:
             logger.error("Parameter modify_what is not valid")
             return False
+    breakpoints_changed.emit()
     return True
 
 
@@ -1984,6 +1994,7 @@ def delete_breakpoint(breakpoint_number: int) -> bool:
         except KeyError:
             pass
         send_command(f"delete {breakpoint}")
+    breakpoints_changed.emit()
     return True
 
 
