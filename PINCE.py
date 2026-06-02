@@ -2670,6 +2670,12 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.stack_from_base_pointer = False
         self.stacktrace_info_widget = StackTraceInfoWidgetForm(self)
         self.float_registers_widget = FloatRegisterWidgetForm(self)
+        # Created lazily on first open and reused afterwards, so we don't leak on each open.
+        self.bookmark_widget = None
+        self.breakpoint_widget = None
+        self.functions_info_widget = None
+        self.memory_regions_widget = None
+        self.restore_instructions_widget = None
         states.status_thread.process_stopped.connect(self.on_process_stop)
         states.status_thread.process_running.connect(self.on_process_running)
         states.setting_signals.changed.connect(self.set_dynamic_debug_hotkeys)
@@ -4165,13 +4171,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.refresh_disassemble_view()
 
     def actionBookmarks_triggered(self) -> None:
-        bookmark_widget = BookmarkWidget(self)
-        bookmark_widget.bookmarked.connect(self.bookmark_address)
-        bookmark_widget.comment_changed.connect(self.change_bookmark_comment)
-        bookmark_widget.double_clicked.connect(self.disassemble_expression)
-        bookmark_widget.deleted.connect(self.delete_bookmark)
-        bookmark_widget.show()
-        bookmark_widget.activateWindow()
+        if self.bookmark_widget is None:
+            self.bookmark_widget = BookmarkWidget(self)
+            self.bookmark_widget.bookmarked.connect(self.bookmark_address)
+            self.bookmark_widget.comment_changed.connect(self.change_bookmark_comment)
+            self.bookmark_widget.double_clicked.connect(self.disassemble_expression)
+            self.bookmark_widget.deleted.connect(self.delete_bookmark)
+        else:
+            self.bookmark_widget.refresh_table()
+        self.bookmark_widget.show()
+        self.bookmark_widget.activateWindow()
 
     def actionStackTrace_Info_triggered(self) -> None:
         if debugcore.currentpid == -1:
@@ -4184,15 +4193,19 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionBreakpoints_triggered(self) -> None:
         if debugcore.currentpid == -1:
             return
-        breakpoint_widget = BreakpointInfoWidgetForm(self)
-        breakpoint_widget.show()
-        breakpoint_widget.activateWindow()
+        if self.breakpoint_widget is None:
+            self.breakpoint_widget = BreakpointInfoWidgetForm(self)
+        else:
+            self.breakpoint_widget.refresh()
+        self.breakpoint_widget.show()
+        self.breakpoint_widget.activateWindow()
 
     def actionFunctions_triggered(self) -> None:
         if debugcore.currentpid == -1:
             return
-        functions_info_widget = FunctionsInfoWidgetForm(self)
-        functions_info_widget.show()
+        if self.functions_info_widget is None:
+            self.functions_info_widget = FunctionsInfoWidgetForm(self)
+        self.functions_info_widget.show()
 
     def actionGDB_Log_File_triggered(self) -> None:
         log_file_widget = LogFileWidgetForm(self)
@@ -4201,18 +4214,24 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionMemory_Regions_triggered(self) -> None:
         if debugcore.currentpid == -1:
             return
-        memory_regions_widget = MemoryRegionsWidgetForm(self)
-        memory_regions_widget.show()
+        if self.memory_regions_widget is None:
+            self.memory_regions_widget = MemoryRegionsWidgetForm(self)
+        else:
+            self.memory_regions_widget.refresh_table()
+        self.memory_regions_widget.show()
 
     def actionRestore_Instructions_triggered(self) -> None:
         if debugcore.currentpid == -1:
             return
-        restore_instructions_widget = RestoreInstructionsWidget(self)
-        restore_instructions_widget.restored.connect(self.refresh_hex_view)
-        restore_instructions_widget.restored.connect(self.refresh_disassemble_view)
-        restore_instructions_widget.double_clicked.connect(self.disassemble_expression)
-        restore_instructions_widget.show()
-        restore_instructions_widget.activateWindow()
+        if self.restore_instructions_widget is None:
+            self.restore_instructions_widget = RestoreInstructionsWidget(self)
+            self.restore_instructions_widget.restored.connect(self.refresh_hex_view)
+            self.restore_instructions_widget.restored.connect(self.refresh_disassemble_view)
+            self.restore_instructions_widget.double_clicked.connect(self.disassemble_expression)
+        else:
+            self.restore_instructions_widget.refresh()
+        self.restore_instructions_widget.show()
+        self.restore_instructions_widget.activateWindow()
 
     def actionReferenced_Strings_triggered(self) -> None:
         if debugcore.currentpid == -1:
