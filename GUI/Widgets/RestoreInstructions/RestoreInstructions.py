@@ -41,11 +41,10 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
             guiutils.delete_menu_entries(menu, [restore_instruction])
             selected_address = None
         menu.addSeparator()
-        refresh = menu.addAction(f"{tr.REFRESH}[R]")
         font_size = self.tableWidget_Instructions.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
-        actions = {restore_instruction: lambda: self.restore_instruction(selected_address), refresh: self.refresh}
+        actions = {restore_instruction: lambda: self.restore_instruction(selected_address)}
         try:
             actions[action]()
         except KeyError:

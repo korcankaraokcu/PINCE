@@ -4489,7 +4489,6 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
                 change_condition,
             ]
             guiutils.delete_menu_entries(menu, deletion_list)
-        refresh = menu.addAction(f"{tr.REFRESH}[R]")
         font_size = self.tableWidget_BreakpointInfo.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -4501,7 +4500,6 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
             enable_count: lambda: self.exec_enable_count_dialog(bp_num),
             enable_delete: lambda: debugcore.modify_breakpoint(bp_num, typedefs.BREAKPOINT_MODIFY.ENABLE_DELETE),
             delete_breakpoint: lambda: debugcore.delete_breakpoint(bp_num),
-            refresh: self.refresh,
         }
         try:
             actions[action]()
