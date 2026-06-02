@@ -5270,15 +5270,18 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
 
     def refresh_table(self) -> None:
         memory_regions = utils.get_regions(debugcore.currentpid)
+        region_dict = utils.get_region_dict(debugcore.currentpid)
         self.tableWidget_MemoryRegions.setRowCount(0)
         self.tableWidget_MemoryRegions.setRowCount(len(memory_regions))
-        # region_index counts occurrences per file name, matching utils.get_region_info/get_region_dict
-        # so the shown [index] lines up with the index bookmarks store and resolve against.
-        tail_counts: dict[str, int] = {}
+        # The shown [index] is this region's position within get_region_dict's per name list, matching
+        # utils.get_region_info so it lines up with the index bookmarks store and resolve against.
         for row, (start, end, perms, offset, _, _, path) in enumerate(memory_regions):
             file_name = os.path.split(path)[1]
-            region_index = tail_counts.get(file_name, 0)
-            tail_counts[file_name] = region_index + 1
+            address_list = region_dict.get(file_name, [])
+            try:
+                region_index = address_list.index("0x" + start)
+            except ValueError:
+                region_index = 0
             address = start + "-" + end
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_ADDR_COL, QTableWidgetItem(address))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PERM_COL, QTableWidgetItem(perms))

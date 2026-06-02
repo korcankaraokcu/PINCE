@@ -138,19 +138,14 @@ def get_region_dict(pid: int) -> dict[str, list[str]]:
             continue
         _, tail = os.path.split(path)
         start_addr = "0x" + start_addr
+        # Always append, never assign: a versioned soname's unversioned alias (e.g. libEGL.so.1 -> libEGL.so)
+        # must not clobber the list of a different file that has the same basename
+        region_dict.setdefault(tail, []).append(start_addr)
         short_name = regexes.file_with_extension.search(tail)
         if short_name:
             short_name = short_name.group(0)
-            if short_name == tail:
-                short_name = None
-        if tail in region_dict:
-            region_dict[tail].append(start_addr)
-            if short_name:
-                region_dict[short_name].append(start_addr)
-        else:
-            region_dict[tail] = [start_addr]
-            if short_name:
-                region_dict[short_name] = [start_addr]
+            if short_name != tail:
+                region_dict.setdefault(short_name, []).append(start_addr)
     return region_dict
 
 
@@ -171,15 +166,18 @@ def get_region_info(pid: int | str, address: int | str) -> typedefs.tuple_region
     if type(address) != int:
         address = safe_str_to_int(address, 0)
     region_list = get_regions(pid)
-    tail_counts: dict[str, int] = {}
+    region_dict = get_region_dict(pid)
     for start, end, perms, _, _, _, path in region_list:
-        start = safe_str_to_int(start, 16)
-        end = safe_str_to_int(end, 16)
-        file_name = os.path.split(path)[1]
-        region_index = tail_counts.get(file_name, 0)
-        if start <= address < end:
-            return typedefs.tuple_region_info(start, end, perms, file_name, region_index)
-        tail_counts[file_name] = region_index + 1
+        start_int = safe_str_to_int(start, 16)
+        end_int = safe_str_to_int(end, 16)
+        if start_int <= address < end_int:
+            file_name = os.path.split(path)[1]
+            address_list = region_dict.get(file_name, [])
+            try:
+                region_index = address_list.index("0x" + start)
+            except ValueError:
+                region_index = 0
+            return typedefs.tuple_region_info(start_int, end_int, perms, file_name, region_index)
 
 
 def filter_regions(pid: int, attribute: str, regex: str, case_sensitive: bool = False) -> list[tuple[str, ...]]:
