@@ -442,65 +442,70 @@ class DissectCode(gdb.Command):
                 ref_str_count = len(referenced_strings_dict)
                 ref_jmp_count = len(referenced_jumps_dict)
                 ref_call_count = len(referenced_calls_dict)
+                # Refresh the status file every time we advance this many bytes through a region so the GUI
+                # can report live progress and reference counts instead of freezing until the region is done
+                status_update_range = 0x100000
                 for region_index, (start_addr, end_addr) in enumerate(region_list):
                     region_info = start_addr + "-" + end_addr, str(region_index + 1) + " / " + str(region_count)
-                    start_addr = int(start_addr, 16)  # Becomes address of the last disassembled instruction later on
+                    start_addr = int(start_addr, 16)
                     end_addr = int(end_addr, 16)
-                    status_info = region_info + (
-                        hex(start_addr)[2:] + "-" + hex(end_addr)[2:],
-                        ref_str_count,
-                        ref_jmp_count,
-                        ref_call_count,
-                    )
-                    with open(dissect_code_status_file, "wb") as dissect_code_status_handle:
-                        pickle.dump(status_info, dissect_code_status_handle)
                     try:
                         self.memory.seek(start_addr)
                     except (OSError, ValueError):
                         break
                     buffer_size = end_addr - start_addr
                     code = self.memory.read(buffer_size)
+                    next_status_addr = start_addr
                     try:
-                        disas_data = disassembler.disasm_lite(code, start_addr)
+                        for instruction_addr, _, mnemonic, operands in disassembler.disasm_lite(code, start_addr):
+                            if instruction_addr >= next_status_addr:
+                                status_info = region_info + (
+                                    hex(instruction_addr)[2:] + "-" + hex(end_addr)[2:],
+                                    ref_str_count,
+                                    ref_jmp_count,
+                                    ref_call_count,
+                                )
+                                with open(dissect_code_status_file, "wb") as dissect_code_status_handle:
+                                    pickle.dump(status_info, dissect_code_status_handle)
+                                next_status_addr = instruction_addr + status_update_range
+                            instruction = f"{mnemonic} {operands}" if operands != "" else mnemonic
+                            found = regexes.dissect_code_valid_address.search(instruction)
+                            if not found:
+                                continue
+                            if instruction.startswith("j") or instruction.startswith("loop"):
+                                referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
+                                referenced_address_int = int(referenced_address_str, 16)
+                                if self.is_memory_valid(referenced_address_int):
+                                    instruction_only = regexes.alphanumerics.search(instruction).group(0).casefold()
+                                    try:
+                                        referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
+                                    except KeyError:
+                                        referenced_jumps_dict[referenced_address_str] = {}
+                                        referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
+                                        ref_jmp_count += 1
+                            elif instruction.startswith("call"):
+                                referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
+                                referenced_address_int = int(referenced_address_str, 16)
+                                if self.is_memory_valid(referenced_address_int):
+                                    try:
+                                        referenced_calls_dict[referenced_address_str].add(instruction_addr)
+                                    except KeyError:
+                                        referenced_calls_dict[referenced_address_str] = set()
+                                        referenced_calls_dict[referenced_address_str].add(instruction_addr)
+                                        ref_call_count += 1
+                            else:
+                                referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
+                                referenced_address_int = int(referenced_address_str, 16)
+                                if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
+                                    try:
+                                        referenced_strings_dict[referenced_address_str].add(instruction_addr)
+                                    except KeyError:
+                                        referenced_strings_dict[referenced_address_str] = set()
+                                        referenced_strings_dict[referenced_address_str].add(instruction_addr)
+                                        ref_str_count += 1
                     except CsError:
                         logger.exception("An exception occurred while trying to dissect code")
                         break
-                    for instruction_addr, _, mnemonic, operands in disas_data:
-                        instruction = f"{mnemonic} {operands}" if operands != "" else mnemonic
-                        found = regexes.dissect_code_valid_address.search(instruction)
-                        if not found:
-                            continue
-                        if instruction.startswith("j") or instruction.startswith("loop"):
-                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
-                            referenced_address_int = int(referenced_address_str, 16)
-                            if self.is_memory_valid(referenced_address_int):
-                                instruction_only = regexes.alphanumerics.search(instruction).group(0).casefold()
-                                try:
-                                    referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
-                                except KeyError:
-                                    referenced_jumps_dict[referenced_address_str] = {}
-                                    referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
-                                    ref_jmp_count += 1
-                        elif instruction.startswith("call"):
-                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
-                            referenced_address_int = int(referenced_address_str, 16)
-                            if self.is_memory_valid(referenced_address_int):
-                                try:
-                                    referenced_calls_dict[referenced_address_str].add(instruction_addr)
-                                except KeyError:
-                                    referenced_calls_dict[referenced_address_str] = set()
-                                    referenced_calls_dict[referenced_address_str].add(instruction_addr)
-                                    ref_call_count += 1
-                        else:
-                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
-                            referenced_address_int = int(referenced_address_str, 16)
-                            if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
-                                try:
-                                    referenced_strings_dict[referenced_address_str].add(instruction_addr)
-                                except KeyError:
-                                    referenced_strings_dict[referenced_address_str] = set()
-                                    referenced_strings_dict[referenced_address_str].add(instruction_addr)
-                                    ref_str_count += 1
         finally:
             self.memory = None
             for db in (referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict):

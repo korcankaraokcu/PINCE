@@ -5496,6 +5496,10 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
     def closeEvent(self, event: QCloseEvent) -> None:
         debugcore.cancel_dissect_code()
         self.refresh_timer.stop()
+        if hasattr(self, "background_thread"):
+            self.is_canceled = True
+            self.background_thread.is_canceled = True
+            self.background_thread.wait()
         super().closeEvent(event)
 
 
