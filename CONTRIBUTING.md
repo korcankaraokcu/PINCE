@@ -17,7 +17,6 @@
   - [utils.py](./libpince/utils.py) - Contains generic utility functions such as parsing, file creation, process querying etc
   - [typedefs.py](./libpince/typedefs.py) - Contains all constants and variable definitions
   - [regexes.py](./libpince/regexes.py) - Contains regexes for parsing GDB output and other things
-  - [injection](./libpince/injection) - An example for injecting .so files
   - ### **[gdb_python_scripts](./libpince/gdb_python_scripts)**
     - [gdbextensions.py](./libpince/gdb_python_scripts/gdbextensions.py) - Contains custom GDB commands
     - [gdbutils.py](./libpince/gdb_python_scripts/gdbutils.py) - Contains utility functions for GDB commands

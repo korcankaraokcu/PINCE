@@ -7,7 +7,7 @@ from tr.tr import get_locale
 from libpince import debugcore, utils, typedefs
 import json, os
 
-current_settings_version = "36"  # Increase version by one if you change settings
+current_settings_version = "37"  # Increase version by one if you change settings
 
 # Due to community feedback, these signals are disabled by default: SIGUSR1, SIGUSR2, SIGPWR, SIGXCPU, SIGXFSZ, SIGSYS
 default_signals = [
@@ -110,9 +110,6 @@ def set_default_settings() -> None:
     settings.beginGroup("Hotkeys")
     for hotkey in states.hotkeys.get_hotkeys():
         settings.setValue(hotkey.name, hotkey.default)
-    settings.endGroup()
-    settings.beginGroup("CodeInjection")
-    settings.setValue("code_injection_method", typedefs.INJECTION_METHOD.DLOPEN)
     settings.endGroup()
     settings.beginGroup("MemoryView")
     settings.setValue("show_memory_view_on_stop", False)

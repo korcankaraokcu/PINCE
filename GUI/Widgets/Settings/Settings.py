@@ -83,11 +83,6 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.settings.setValue("General/theme", list(themes.Themes)[self.comboBox_Theme.currentIndex()].value)
         for hotkey in states.hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
-        if self.radioButton_SimpleDLopenCall.isChecked():
-            injection_method = typedefs.INJECTION_METHOD.DLOPEN
-        elif self.radioButton_AdvancedInjection.isChecked():
-            injection_method = typedefs.INJECTION_METHOD.ADVANCED
-        self.settings.setValue("CodeInjection/code_injection_method", injection_method)
         self.settings.setValue("MemoryView/show_memory_view_on_stop", self.checkBox_ShowMemoryViewOnStop.isChecked())
         self.settings.setValue("MemoryView/instructions_per_scroll", self.spinBox_InstructionsPerScroll.value())
         self.settings.setValue("MemoryView/bytes_per_scroll", self.spinBox_BytesPerScroll.value())
@@ -135,12 +130,6 @@ class SettingsDialog(QDialog, Ui_Dialog):
         for hotkey in states.hotkeys.get_hotkeys():
             self.hotkey_to_value[hotkey.name] = self.settings.value("Hotkeys/" + hotkey.name)
         self.listWidget_Functions_current_row_changed(self.listWidget_Functions.currentRow())
-        code_injection_method = self.settings.value("CodeInjection/code_injection_method", type=int)
-        if code_injection_method == typedefs.INJECTION_METHOD.DLOPEN:
-            self.radioButton_SimpleDLopenCall.setChecked(True)
-        elif code_injection_method == typedefs.INJECTION_METHOD.ADVANCED:
-            self.radioButton_AdvancedInjection.setChecked(True)
-
         self.checkBox_ShowMemoryViewOnStop.setChecked(
             self.settings.value("MemoryView/show_memory_view_on_stop", type=bool)
         )

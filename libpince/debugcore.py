@@ -758,23 +758,7 @@ def is_attached() -> bool:
     return True
 
 
-def inject_with_advanced_injection(library_path: str) -> bool:
-    """Injects the given .so file to current process
-
-    Args:
-        library_path (str): Path to the .so file that'll be injected
-
-    Returns:
-        bool: Result of the injection
-
-    Note:
-        This function was reserved for linux-inject and since linux-inject is no more(F to pay respects), I'll leave
-        this function as a template for now
-    """
-    raise NotImplementedError
-
-
-def inject_with_dlopen_call(library_path: str) -> bool:
+def inject_so(library_path: str) -> bool:
     """Injects the given .so file to the current process using dlopen.
     This function will first try to ask gdb to resolve "dlopen"/"__libc_dlopen_mode" by symbol name.
     If that fails (stripped binary or no libc symbol loaded yet), it will fallback to resolving

@@ -63,11 +63,6 @@ class INFERIOR_ARCH:
     ARCH_64 = 2
 
 
-class INJECTION_METHOD:
-    DLOPEN = 1
-    ADVANCED = 2
-
-
 class BREAKPOINT_TYPE:
     HARDWARE = 1
     SOFTWARE = 2
@@ -388,30 +383,6 @@ index_to_struct_pack_dict = {
     VALUE_INDEX.FLOAT32: "f",
     VALUE_INDEX.FLOAT64: "d",
 }
-
-# Format: {tag:tag_description}
-tag_to_string = collections.OrderedDict(
-    [
-        ("MemoryRW", "Memory Read/Write"),
-        ("ValueType", "Value Type"),
-        ("Injection", "Injection"),
-        ("Debug", "Debugging"),
-        ("BreakWatchpoints", "Breakpoints&Watchpoints"),
-        ("Threads", "Threads"),
-        ("Registers", "Registers"),
-        ("Stack", "Stack&StackTrace"),
-        ("Assembly", "Disassemble&Assemble"),
-        ("GDBExpressions", "GDB Expressions"),
-        ("GDBCommunication", "GDB Communication"),
-        ("Tools", "Tools"),
-        ("Utilities", "Utilities"),
-        ("Processes", "Processes"),
-        ("GUI", "GUI"),
-        ("ConditionsLocks", "Conditions&Locks"),
-        ("GDBInformation", "GDB Information"),
-        ("InferiorInformation", "Inferior Information"),
-    ]
-)
 
 # size-->int, any other field-->str
 tuple_breakpoint_info = collections.namedtuple(

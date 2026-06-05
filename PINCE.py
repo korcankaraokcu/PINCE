@@ -4263,7 +4263,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_SO_FILE, "", tr.SHARED_OBJECT_TYPE)
         if file_path:
-            if debugcore.inject_with_dlopen_call(file_path):
+            if debugcore.inject_so(file_path):
                 QMessageBox.information(self, tr.SUCCESS, tr.FILE_INJECTED)
             else:
                 QMessageBox.information(self, tr.ERROR, tr.FILE_INJECT_FAILED)

@@ -443,11 +443,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
-        <source>Code Injection</source>
-        <translation>代码注入</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Memory View</source>
         <translation type="unfinished">内存查看器</translation>
     </message>
@@ -547,21 +542,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Clear</source>
         <translation>清除</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
-        <source>Code injection method:</source>
-        <translation>代码注入模式：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
-        <source>Simp&amp;le dlopen call</source>
-        <translation>简单的 dlopen 调用[&amp;l]</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
-        <source>Advanced In&amp;jection</source>
-        <translation>高级注入[&amp;j]</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />

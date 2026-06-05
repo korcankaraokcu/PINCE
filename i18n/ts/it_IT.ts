@@ -442,11 +442,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
-        <source>Code Injection</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Memory View</source>
         <translation type="unfinished" />
     </message>
@@ -544,21 +539,6 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Clear</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
-        <source>Code injection method:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
-        <source>Simp&amp;le dlopen call</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
-        <source>Advanced In&amp;jection</source>
         <translation type="unfinished" />
     </message>
     <message>
