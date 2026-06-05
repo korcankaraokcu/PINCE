@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib, logging, subprocess, shlex
+import os, shutil, sys, binascii, pickle, json, traceback, re, pwd, pathlib, logging, subprocess, shlex, struct
 from . import typedefs, regexes
 from capstone import Cs, CsError, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
 from keystone import Ks, KsError, KS_ARCH_X86, KS_MODE_32, KS_MODE_64
@@ -118,6 +118,99 @@ def get_regions(pid: int) -> list[tuple[str, ...]]:
         for line in f.read().splitlines():
             regions.append(regexes.maps.match(line).groups())
         return regions
+
+
+def get_module_load_bias(pid: int, name_regex: str) -> tuple[int, str] | None:
+    """Finds the first mapped file whose basename matches name_regex and returns its load bias and absolute path.
+
+    Args:
+        pid (int): PID of the process
+        name_regex (str): Regular expression to match against the basename of mapped files
+
+    Returns:
+        tuple: (load_bias, absolute_path) where load_bias is an int and absolute_path is a str
+        None: If no matching module is found
+    """
+    compiled = re.compile(name_regex)
+    per_file: dict[str, list[tuple[int, int]]] = {}
+    for start, _, _, offset, _, _, path in get_regions(pid):
+        if not path:
+            continue
+        if compiled.search(os.path.basename(path)):
+            per_file.setdefault(path, []).append((int(start, 16), int(offset, 16)))
+    for path, mappings in per_file.items():
+        return min(start - offset for start, offset in mappings), path
+    return None
+
+
+def get_defined_dynamic_symbols(elf_path: str, symbol_names: list[str]) -> dict[str, int]:
+    """Parses the .dynsym/.dynstr of an ELF file and returns {name: st_value} for each
+    requested symbol that is defined in the file.
+    Handles ELFCLASS32/64 and both endiannesses.
+
+    Args:
+        elf_path (str): Path to the ELF file on disk
+        symbol_names (list[str]): List of symbol names to look up
+
+    Returns:
+        dict: {symbol_name: st_value} for each defined symbol found
+        Empty dict on failure or if no section headers are present
+    """
+    try:
+        with open(elf_path, "rb") as elf_file:
+            data = elf_file.read()
+    except OSError:
+        return {}
+    if data[:4] != b"\x7fELF":
+        return {}
+    is64 = data[4] == 2
+    endian = "<" if data[5] == 1 else ">"
+    if is64:
+        e_shoff = struct.unpack_from(endian + "Q", data, 0x28)[0]
+        e_shentsize, e_shnum, e_shstrndx = struct.unpack_from(endian + "HHH", data, 0x3A)
+        shdr_fmt, sym_fmt, default_sym_size = endian + "IIQQQQIIQQ", endian + "IBBHQQ", 24
+    else:
+        e_shoff = struct.unpack_from(endian + "I", data, 0x20)[0]
+        e_shentsize, e_shnum, e_shstrndx = struct.unpack_from(endian + "HHH", data, 0x2E)
+        shdr_fmt, sym_fmt, default_sym_size = endian + "IIIIIIIIII", endian + "IIIBBH", 16
+    if e_shoff == 0 or e_shnum == 0:
+        return {}
+
+    def read_shdr(i):
+        return struct.unpack_from(shdr_fmt, data, e_shoff + i * e_shentsize)
+
+    def read_cstr(base):
+        try:
+            return data[base:data.index(b"\x00", base)].decode("latin-1")
+        except (ValueError, IndexError):
+            return ""
+
+    shstr_offset = read_shdr(e_shstrndx)[4]
+    dynsym = dynstr = None
+    for i in range(e_shnum):
+        sh = read_shdr(i)
+        nm = read_cstr(shstr_offset + sh[0])
+        if nm == ".dynsym":
+            dynsym = sh
+        elif nm == ".dynstr":
+            dynstr = sh
+    if dynsym is None or dynstr is None:
+        return {}
+    dynsym_offset, dynsym_size, dynsym_entsize = dynsym[4], dynsym[5], dynsym[9]
+    dynstr_offset = dynstr[4]
+    sym_size = dynsym_entsize or default_sym_size
+    wanted, found = set(symbol_names), {}
+    for i in range(dynsym_size // sym_size):
+        f = struct.unpack_from(sym_fmt, data, dynsym_offset + i * sym_size)
+        st_name, st_value, st_shndx = (f[0], f[4], f[3]) if is64 else (f[0], f[1], f[5])
+        if st_shndx == 0 or st_value == 0:
+            continue
+        name = read_cstr(dynstr_offset + st_name)
+        if name in wanted:
+            found[name] = st_value
+            if len(found) == len(wanted):
+                break
+    return found
 
 
 def get_region_dict(pid: int) -> dict[str, list[str]]:

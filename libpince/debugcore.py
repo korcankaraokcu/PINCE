@@ -775,26 +775,50 @@ def inject_with_advanced_injection(library_path: str) -> bool:
 
 
 def inject_with_dlopen_call(library_path: str) -> bool:
-    """Injects the given .so file to current process
-    This is a variant of the function inject_with_advanced_injection
-    This function won't break the target process unlike other complex injection methods
-    The downside is it fails if the target doesn't support dlopen calls or simply doesn't have the library
+    """Injects the given .so file to the current process using dlopen.
+    This function will first try to ask gdb to resolve "dlopen"/"__libc_dlopen_mode" by symbol name.
+    If that fails (stripped binary or no libc symbol loaded yet), it will fallback to resolving
+    the address manually by using /proc/<pid>/maps + the on-disk .dynsym and then calling the function.
 
     Args:
         library_path (str): Path to the .so file that'll be injected
 
     Returns:
-        bool: Result of the injection
+        bool: True if the injection is successful, False if no dlopen found.
     """
-    # TODO: Merge injection functions and rename them to inject_so once advanced injection is implemented
-    injectionpath = '"' + library_path + '"'
-    result = call_function_from_inferior("dlopen(" + injectionpath + ", 1)")[1]
-    if result == "0" or not result:
-        new_result = call_function_from_inferior("__libc_dlopen_mode(" + injectionpath + ", 1)")[1]
-        if new_result == "0" or not new_result:
-            return False
-        return True
-    return True
+    if currentpid == -1:
+        return False
+    quoted = '"' + library_path + '"'
+    # Try using GDB to resolve the symbols.
+    for func in ("dlopen", "__libc_dlopen_mode"):
+        result = call_function_from_inferior(f"{func}({quoted}, 2)")[1]
+        if result and result != "0":
+            return True
+    # Fallback to manual address resolution if GDB failed.
+    _lib_regexes = [
+        r"^libc\.so", r"^libc-[\d.]+\.so", r"libc\.musl", r"ld-musl",
+        r"^libdl\.so", r"^libdl-[\d.]+\.so",
+    ]
+    _sym_names = ["dlopen", "__libc_dlopen_mode"]
+    for regex in _lib_regexes:
+        module = utils.get_module_load_bias(currentpid, regex)
+        if module is None:
+            continue
+        load_bias, path = module
+        symbols = utils.get_defined_dynamic_symbols(path, _sym_names)
+        for sym in _sym_names:
+            if sym not in symbols:
+                continue
+            addr = load_bias + symbols[sym]
+            cmd = f'call ((void *(*)(char *, int)) {addr})("{library_path}", 2)'
+            out = execute_func_temporary_interruption(send_command, cmd)
+            m = regexes.convenience_variable.search(out)
+            if not m:
+                continue
+            hex_m = regexes.hex_number_grouped.search(m.group(2))
+            if hex_m and int(hex_m.group(1), 16) != 0:
+                return True
+    return False
 
 
 def read_pointer_chain(pointer_request: typedefs.PointerChainRequest) -> typedefs.PointerChainResult | None:
