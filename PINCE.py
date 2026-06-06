@@ -4443,7 +4443,6 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
                     QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete),
                     lambda: self.delete_breakpoint(breakpoint_num),
                 ),
-                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh),
             ]
         )
         try:
@@ -5586,7 +5585,9 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
         str_dict = debugcore.get_dissect_code_data(True, False, False)[0]
         try:
             addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_STR_ADDR_COL).text()
-            referrers = str_dict[hex(int(addr, 16))]
+            referrers = str_dict.get(hex(int(addr, 16)))
+            if referrers is None:
+                return
             addrs = [hex(address) for address in referrers]
             self.listWidget_Referrers.addItems(
                 [self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)]
@@ -5711,7 +5712,9 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
         call_dict = debugcore.get_dissect_code_data(False, False, True)[0]
         try:
             addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_CALL_ADDR_COL).text()
-            referrers = call_dict[hex(int(utils.extract_hex_address(addr), 16))]
+            referrers = call_dict.get(hex(int(utils.extract_hex_address(addr), 16)))
+            if referrers is None:
+                return
             addrs = [hex(address) for address in referrers]
             self.listWidget_Referrers.addItems(
                 [self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)]

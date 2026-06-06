@@ -60,7 +60,9 @@ def center(window: QWidget) -> None:
     Args:
         window (QWidget): The window that'll be centered to desktop
     """
-    window.frameGeometry().moveCenter(window.screen().availableGeometry().center())
+    frame = window.frameGeometry()
+    frame.moveCenter(window.screen().availableGeometry().center())
+    window.move(frame.topLeft())
 
 
 def center_to_parent(window: QWidget) -> None:

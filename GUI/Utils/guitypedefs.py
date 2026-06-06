@@ -18,6 +18,7 @@ class SettingSignals(QObject):
 
 class WorkerSignals(QObject):
     finished = pyqtSignal(object)
+    error = pyqtSignal(Exception)
 
 
 class ProcessSignals(QObject):
@@ -51,7 +52,11 @@ class Worker(QRunnable):
         self.signals = WorkerSignals()
 
     def run(self) -> None:
-        result = self.fn(*self.args, **self.kwargs)
+        try:
+            result = self.fn(*self.args, **self.kwargs)
+        except Exception as e:
+            self.signals.error.emit(e)
+            return
         self.signals.finished.emit(result)
 
 
@@ -64,11 +69,12 @@ class InterruptableWorker(QThread):
         self.signals = WorkerSignals()
 
     def run(self) -> None:
-        result = self.fn(*self.args, **self.kwargs)
+        try:
+            result = self.fn(*self.args, **self.kwargs)
+        except Exception as e:
+            self.signals.error.emit(e)
+            return
         self.signals.finished.emit(result)
-
-    def stop(self) -> None:
-        self.terminate()
 
 
 # Await async output from gdb

@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton, QLineEdit, QMessageBox, QWidget
 from GUI.Widgets.PointerScanFilter.Form.PointerScanFilterDialog import Ui_Dialog
-from GUI.Utils import guiutils
+from GUI.Utils import guiutils, guitypedefs
 from tr.tr import TranslationConstants as tr
 from libpince import utils
 from libpince.scancore import memscan
@@ -18,6 +18,7 @@ class PointerScanFilterDialog(QDialog, Ui_Dialog):
         self.filter_button: QPushButton = self.buttonBox.addButton(tr.FILTER, QDialogButtonBox.ButtonRole.ActionRole)
         self.filter_button.clicked.connect(self.filter_button_clicked)
         self.filter_button.setEnabled(False)
+        self.filter_thread: guitypedefs.InterruptableWorker | None = None
         self.result_map_path = ""
 
     def pointer_map_file_prompt(self, file_path_field: QLineEdit, is_open: bool) -> None:
@@ -43,6 +44,13 @@ class PointerScanFilterDialog(QDialog, Ui_Dialog):
             and self.lineEdit_NewFile.text() != ""
         )
 
+    def reject(self) -> None:
+        if self.filter_thread is not None:
+            self.filter_thread.terminate()
+            self.filter_thread.wait()
+            self.filter_thread = None
+        return super().reject()
+
     def pushButton_PrevFile_clicked(self) -> None:
         self.pointer_map_file_prompt(self.lineEdit_PrevFile, True)
 
@@ -57,9 +65,26 @@ class PointerScanFilterDialog(QDialog, Ui_Dialog):
             return
         self.filter_button.setEnabled(False)
         self.filter_button.setText(tr.FILTERING)
-        new_paths = memscan.compare_pointer_maps(
-            self.lineEdit_PrevFile.text(), self.lineEdit_CurrentFile.text(), self.lineEdit_NewFile.text()
+        self.filter_thread = guitypedefs.InterruptableWorker(
+            memscan.compare_pointer_maps,
+            self.lineEdit_PrevFile.text(),
+            self.lineEdit_CurrentFile.text(),
+            self.lineEdit_NewFile.text(),
         )
+        self.filter_thread.signals.finished.connect(self.filter_finished)
+        self.filter_thread.signals.error.connect(self.filter_error)
+        self.filter_thread.start()
+
+    def filter_finished(self, new_paths: int) -> None:
+        self.filter_thread.wait()
+        self.filter_thread = None
         self.result_map_path = self.lineEdit_NewFile.text()
         self.accept()
         QMessageBox.information(self, tr.SUCCESS, tr.POINTER_FILTER_SUCCESS.format(new_paths))
+
+    def filter_error(self, error: Exception) -> None:
+        self.filter_thread.wait()
+        self.filter_thread = None
+        self.filter_button.setText(tr.FILTER)
+        self.filter_button.setEnabled(True)
+        QMessageBox.information(self, tr.ERROR, str(error))

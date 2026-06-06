@@ -1,11 +1,11 @@
 from PyQt6.QtWidgets import QWidget, QTableWidgetItem, QMenu
-from PyQt6.QtCore import Qt, QKeyCombination, pyqtSignal
-from PyQt6.QtGui import QKeyEvent, QContextMenuEvent
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QContextMenuEvent
 from GUI.States import states
 from GUI.Utils import guiutils
 from GUI.Widgets.RestoreInstructions.Form.RestoreInstructionsWidget import Ui_Form
 from tr.tr import TranslationConstants as tr
-from libpince import debugcore, utils, typedefs
+from libpince import debugcore, utils
 
 ADDR_COL = 0
 AOB_COL = 1
@@ -21,9 +21,6 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
         self.setupUi(self)
         self.setWindowFlags(Qt.WindowType.Window)
 
-        # Saving the original function because super() doesn't work when we override functions like this
-        self.tableWidget_Instructions_keyPressEvent_original = self.tableWidget_Instructions.keyPressEvent
-        self.tableWidget_Instructions.keyPressEvent = self.tableWidget_Instructions_key_press_event
         self.tableWidget_Instructions.contextMenuEvent = self.tableWidget_Instructions_context_menu_event
         self.tableWidget_Instructions.itemDoubleClicked.connect(self.tableWidget_Instructions_double_clicked)
         self.refresh()
@@ -67,16 +64,6 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
             self.tableWidget_Instructions.setItem(row, NAME_COL, QTableWidgetItem(instr_name))
         guiutils.resize_to_contents(self.tableWidget_Instructions)
         self.repaint()
-
-    def tableWidget_Instructions_key_press_event(self, event: QKeyEvent) -> None:
-        actions = typedefs.KeyboardModifiersTupleDict(
-            [(QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh)]
-        )
-        try:
-            actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
-        except KeyError:
-            pass
-        self.tableWidget_Instructions_keyPressEvent_original(event)
 
     def tableWidget_Instructions_double_clicked(self, index: QTableWidgetItem) -> None:
         current_address_text = self.tableWidget_Instructions.item(index.row(), ADDR_COL).text()

@@ -300,5 +300,6 @@ class SessionManager:
                 session.pct_process_name = process_name
             else:
                 SessionManager.reset_session()
+                session = SessionManager.get_session()
                 session.pct_process_name = process_name
                 session.last_file_name = utils.append_file_extension(process_name, "pct")

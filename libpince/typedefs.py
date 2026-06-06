@@ -18,12 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # IMPORTANT: Any constant involving only PINCE.py should be declared in PINCE.py
 
-import collections.abc, queue, sys
+import collections.abc, queue
 from typing import Any, Callable
-
-
-class CONST_TIME:
-    GDB_INPUT_SLEEP = sys.float_info.min
 
 
 class PATHS:

@@ -116,7 +116,9 @@ def get_regions(pid: int) -> list[tuple[str, ...]]:
     with open("/proc/" + str(pid) + "/maps") as f:
         regions = []
         for line in f.read().splitlines():
-            regions.append(regexes.maps.match(line).groups())
+            match = regexes.maps.match(line)
+            if match:
+                regions.append(match.groups())
         return regions
 
 

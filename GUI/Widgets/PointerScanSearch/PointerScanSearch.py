@@ -83,6 +83,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
             memscan.pointer_scan, addr_val, ptrmap_file_path, ptr_opts
         )
         self.memscan_thread.signals.finished.connect(self.memscan_callback)
+        self.memscan_thread.signals.error.connect(self.memscan_error)
         self.memscan_thread.start()
         self.progressBar.setValue(0)
         self.progressBar.setFormat(f"{tr.SCANNING_POINTERS} - %p%")
@@ -103,6 +104,21 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
 
     def memscan_callback(self, paths_found: int) -> None:
         self.cleanup()
+        self.memscan_thread.wait()
+        self.memscan_thread = None
         self.result_map_path = self.lineEdit_Path.text()
         self.accept()
         QMessageBox.information(self, tr.SUCCESS, tr.POINTER_SCAN_SUCCESS.format(paths_found))
+
+    def memscan_error(self, error: Exception) -> None:
+        self.cleanup()
+        self.memscan_thread.wait()
+        self.memscan_thread = None
+        if self.scan_button:
+            self.scan_button.setText(tr.SCAN)
+            self.scan_button.setEnabled(True)
+        self.pushButton_Path.setEnabled(True)
+        if self.cancel_button:
+            self.cancel_button.setText(tr.CANCEL)
+            self.cancel_button.setEnabled(True)
+        QMessageBox.information(self, tr.ERROR, str(error))

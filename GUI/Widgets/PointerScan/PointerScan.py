@@ -1,11 +1,11 @@
 from PyQt6.QtCore import Qt, QModelIndex
 from PyQt6.QtGui import QCloseEvent, QKeySequence, QShortcut
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QLabel, QWidget
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QLabel, QWidget, QMessageBox
 from GUI.Widgets.PointerScan.Form.PointerScanWindow import Ui_MainWindow
 from GUI.Widgets.PointerScanFilter.PointerScanFilter import PointerScanFilterDialog
 from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
 from GUI.AbstractTableModels.PointerScanModel import QPointerScanModel
-from GUI.Utils import guiutils
+from GUI.Utils import guiutils, guitypedefs
 from GUI.States import states
 from libpince import debugcore, typedefs, utils
 from libpince.scancore import memscan
@@ -40,6 +40,7 @@ class PointerScanWindow(QMainWindow, Ui_MainWindow):
         self.path_count_label.setContentsMargins(0, 0, 6, 0)
         self.menubar.setCornerWidget(self.path_count_label, Qt.Corner.TopRightCorner)
         self.default_scan_address = default_scan_address
+        self.load_thread: guitypedefs.InterruptableWorker | None = None
         if debugcore.currentpid == -1:
             self.actionScan.setEnabled(False)
         guiutils.center_to_parent(self)
@@ -48,6 +49,9 @@ class PointerScanWindow(QMainWindow, Ui_MainWindow):
         self.actionScan.setEnabled(debugcore.currentpid != -1)
 
     def closeEvent(self, event: QCloseEvent) -> None:
+        if self.load_thread is not None:
+            self.load_thread.terminate()
+            self.load_thread.wait()
         self.model.clear()
         return super().closeEvent(event)
 
@@ -59,19 +63,40 @@ class PointerScanWindow(QMainWindow, Ui_MainWindow):
             self.load_map(file_path)
 
     def load_map(self, file_path: str) -> None:
+        if self.load_thread is not None:
+            self.load_thread.terminate()
+            self.load_thread.wait()
         self.model.clear()
         self.tableView.horizontalHeader().setSortIndicator(-1, Qt.SortOrder.AscendingOrder)
+        self.load_thread = guitypedefs.InterruptableWorker(self._read_pointer_map, file_path)
+        self.load_thread.signals.finished.connect(self._on_map_loaded)
+        self.load_thread.signals.error.connect(self._on_map_error)
+        self.load_thread.start()
+
+    @staticmethod
+    def _read_pointer_map(file_path: str) -> tuple[list[tuple[str, list[int]]], int]:
         rows = []
         offset_columns = 0
         for base, offsets in memscan.iter_pointer_map(file_path):
             rows.append((base, offsets))
             if len(offsets) > offset_columns:
                 offset_columns = len(offsets)
+        return rows, offset_columns
+
+    def _on_map_loaded(self, result: tuple[list[tuple[str, list[int]]], int]) -> None:
+        self.load_thread.wait()
+        self.load_thread = None
+        rows, offset_columns = result
         self.model.set_data(rows, offset_columns)
         self.tableView.resizeColumnsToContents()
-        self.path_count_label.setText(tr.POINTER_PATH_COUNT.format(memscan.pointer_map_path_count(file_path)))
+        self.path_count_label.setText(tr.POINTER_PATH_COUNT.format(len(rows)))
         # Re-set widget to re-align it after text change.
         self.menubar.setCornerWidget(self.path_count_label, Qt.Corner.TopRightCorner)
+
+    def _on_map_error(self, error: Exception) -> None:
+        self.load_thread.wait()
+        self.load_thread = None
+        QMessageBox.information(self, tr.ERROR, str(error))
 
     def actionSaveAs_triggered(self) -> None:
         file_path, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), None)

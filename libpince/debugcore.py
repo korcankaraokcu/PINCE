@@ -242,10 +242,11 @@ def send_command(
             else:
                 child.sendline("cli-output source " + command_file)
         if not control:
-            while not gdb_output:
-                sleep(typedefs.CONST_TIME.GDB_INPUT_SLEEP)
-                if cancel_send_command:
-                    break
+            with gdb_waiting_for_prompt_condition:
+                while not gdb_output:
+                    gdb_waiting_for_prompt_condition.wait(timeout=0.01)
+                    if cancel_send_command:
+                        break
             if not cancel_send_command:
                 if recv_with_file or cli_output:
                     with open(recv_file, "rb") as recv_file_handle:
@@ -964,7 +965,7 @@ def read_memory(
         if not length > 0:
             return
         expected_length = length * typedefs.string_index_to_multiplier_dict.get(value_index, 1)
-    elif value_index is typedefs.VALUE_INDEX.AOB:
+    elif value_index == typedefs.VALUE_INDEX.AOB:
         try:
             expected_length = int(length)
         except:
@@ -1007,7 +1008,7 @@ def read_memory(
             else:
                 returned_string = returned_string.split("\x00")[0]
         return returned_string[0:length]
-    elif value_index is typedefs.VALUE_INDEX.AOB:
+    elif value_index == typedefs.VALUE_INDEX.AOB:
         return " ".join(format(n, "02x") for n in data_read)
     else:
         is_integer = typedefs.VALUE_INDEX.is_integer(value_index)
@@ -2202,7 +2203,15 @@ class Tracer:
             for x in range(self.max_trace_count):
                 if self.cancel or currentpid == -1:
                     break
-                line_info = send_command("x/i $pc", cli_output=True).splitlines()[0].split(maxsplit=1)[1]
+                output_lines = send_command("x/i $pc", cli_output=True).splitlines()
+                if not output_lines:
+                    logger.warning("empty GDB output, stopping trace")
+                    break
+                line_parts = output_lines[0].split(maxsplit=1)
+                if len(line_parts) < 2:
+                    logger.warning("unexpected GDB output format, stopping trace")
+                    break
+                line_info = line_parts[1]
                 collect_dict = OrderedDict()
                 if self.collect_registers:
                     collect_dict.update(read_registers())
