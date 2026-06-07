@@ -282,65 +282,69 @@ def _resolve_vdso_function(pid: int, symbol: str, arch64: bool = True) -> int | 
             blob = mem.read(end - base)
     except OSError:
         return None
-    expected_class = 2 if arch64 else 1  # ELFCLASS64 vs ELFCLASS32
-    if len(blob) < 64 or blob[:4] != b"\x7fELF" or blob[4] != expected_class:
+    try:
+        expected_class = 2 if arch64 else 1  # ELFCLASS64 vs ELFCLASS32
+        if len(blob) < 64 or blob[:4] != b"\x7fELF" or blob[4] != expected_class:
+            return None
+        # The vDSO is linked at vaddr 0, so dynamic-segment offsets are direct blob indices.
+        if arch64:
+            e_phoff = struct.unpack_from("<Q", blob, 32)[0]
+            e_phentsize = struct.unpack_from("<H", blob, 54)[0]
+            e_phnum = struct.unpack_from("<H", blob, 56)[0]
+            p_vaddr_off, p_filesz_off = 16, 32  # within Elf64_Phdr
+            dyn_entry_size, dyn_fmt = 16, "<qQ"  # Elf64_Dyn: d_tag(8), d_un(8)
+            sym_entry_size, st_value_off = 24, 8  # Elf64_Sym, st_value at +8
+            value_fmt = "<Q"
+        else:
+            e_phoff = struct.unpack_from("<I", blob, 28)[0]
+            e_phentsize = struct.unpack_from("<H", blob, 42)[0]
+            e_phnum = struct.unpack_from("<H", blob, 44)[0]
+            p_vaddr_off, p_filesz_off = 8, 16  # within Elf32_Phdr
+            dyn_entry_size, dyn_fmt = 8, "<iI"  # Elf32_Dyn: d_tag(4), d_un(4)
+            sym_entry_size, st_value_off = 16, 4  # Elf32_Sym, st_value at +4
+            value_fmt = "<I"
+        dyn_off = dyn_size = None
+        for i in range(e_phnum):
+            ph = e_phoff + i * e_phentsize
+            if struct.unpack_from("<I", blob, ph)[0] == 2:  # PT_DYNAMIC (p_type is <I in both classes)
+                dyn_off = struct.unpack_from(value_fmt, blob, ph + p_vaddr_off)[0]
+                dyn_size = struct.unpack_from(value_fmt, blob, ph + p_filesz_off)[0]
+                break
+        if dyn_off is None:
+            return None
+        DT_NULL, DT_HASH, DT_STRTAB, DT_SYMTAB = 0, 4, 5, 6
+        strtab = symtab = hashtab = None
+        for i in range(0, dyn_size, dyn_entry_size):
+            tag, val = struct.unpack_from(dyn_fmt, blob, dyn_off + i)
+            if tag == DT_NULL:
+                break
+            if tag == DT_HASH:
+                hashtab = val
+            elif tag == DT_STRTAB:
+                strtab = val
+            elif tag == DT_SYMTAB:
+                symtab = val
+        if None in (strtab, symtab, hashtab):
+            return None
+        nchain = struct.unpack_from("<I", blob, hashtab + 4)[0]  # hash table words are 32-bit in both classes
+        target = symbol.encode() + b"\x00"
+        for i in range(nchain):
+            sym = symtab + i * sym_entry_size
+            if sym + sym_entry_size > len(blob):
+                break
+            st_name = struct.unpack_from("<I", blob, sym)[0]
+            if st_name == 0:
+                continue
+            name_start = strtab + st_name
+            name_end = blob.find(b"\x00", name_start)
+            if name_end < 0:
+                continue
+            if blob[name_start : name_end + 1] == target:
+                return base + struct.unpack_from(value_fmt, blob, sym + st_value_off)[0]
         return None
-    # The vDSO is linked at vaddr 0, so dynamic-segment offsets are direct blob indices.
-    if arch64:
-        e_phoff = struct.unpack_from("<Q", blob, 32)[0]
-        e_phentsize = struct.unpack_from("<H", blob, 54)[0]
-        e_phnum = struct.unpack_from("<H", blob, 56)[0]
-        p_vaddr_off, p_filesz_off = 16, 32  # within Elf64_Phdr
-        dyn_entry_size, dyn_fmt = 16, "<qQ"  # Elf64_Dyn: d_tag(8), d_un(8)
-        sym_entry_size, st_value_off = 24, 8  # Elf64_Sym, st_value at +8
-        value_fmt = "<Q"
-    else:
-        e_phoff = struct.unpack_from("<I", blob, 28)[0]
-        e_phentsize = struct.unpack_from("<H", blob, 42)[0]
-        e_phnum = struct.unpack_from("<H", blob, 44)[0]
-        p_vaddr_off, p_filesz_off = 8, 16  # within Elf32_Phdr
-        dyn_entry_size, dyn_fmt = 8, "<iI"  # Elf32_Dyn: d_tag(4), d_un(4)
-        sym_entry_size, st_value_off = 16, 4  # Elf32_Sym, st_value at +4
-        value_fmt = "<I"
-    dyn_off = dyn_size = None
-    for i in range(e_phnum):
-        ph = e_phoff + i * e_phentsize
-        if struct.unpack_from("<I", blob, ph)[0] == 2:  # PT_DYNAMIC (p_type is <I in both classes)
-            dyn_off = struct.unpack_from(value_fmt, blob, ph + p_vaddr_off)[0]
-            dyn_size = struct.unpack_from(value_fmt, blob, ph + p_filesz_off)[0]
-            break
-    if dyn_off is None:
+    except (struct.error, IndexError, ValueError):
+        logger.warning("Malformed vDSO encountered while resolving %s, falling back to syscall", symbol)
         return None
-    DT_NULL, DT_HASH, DT_STRTAB, DT_SYMTAB = 0, 4, 5, 6
-    strtab = symtab = hashtab = None
-    for i in range(0, dyn_size, dyn_entry_size):
-        tag, val = struct.unpack_from(dyn_fmt, blob, dyn_off + i)
-        if tag == DT_NULL:
-            break
-        if tag == DT_HASH:
-            hashtab = val
-        elif tag == DT_STRTAB:
-            strtab = val
-        elif tag == DT_SYMTAB:
-            symtab = val
-    if None in (strtab, symtab, hashtab):
-        return None
-    nchain = struct.unpack_from("<I", blob, hashtab + 4)[0]  # hash table words are 32-bit in both classes
-    target = symbol.encode() + b"\x00"
-    for i in range(nchain):
-        sym = symtab + i * sym_entry_size
-        if sym + sym_entry_size > len(blob):
-            break
-        st_name = struct.unpack_from("<I", blob, sym)[0]
-        if st_name == 0:
-            continue
-        name_start = strtab + st_name
-        name_end = blob.find(b"\x00", name_start)
-        if name_end < 0:
-            continue
-        if blob[name_start : name_end + 1] == target:
-            return base + struct.unpack_from(value_fmt, blob, sym + st_value_off)[0]
-    return None
 
 
 def _read_patch_bytes(
