@@ -253,8 +253,11 @@ def send_command(
                         break
             if not cancel_send_command:
                 if recv_with_file or cli_output:
-                    with open(recv_file, "rb") as recv_file_handle:
-                        output = pickle.load(recv_file_handle)
+                    try:
+                        with open(recv_file, "rb") as recv_file_handle:
+                            output = pickle.load(recv_file_handle)
+                    except (EOFError, pickle.UnpicklingError, OSError):
+                        output = ""
                 else:
                     output = gdb_output
             else:
