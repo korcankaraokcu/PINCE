@@ -293,7 +293,7 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
             self.tabWidget.setCurrentIndex(index - 1)
 
     def open_file(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(self, tr.OPEN_SCRIPT_FILE, "", tr.FILE_TYPES_SCRIPT)
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.OPEN_SCRIPT_FILE, os.path.expanduser("~"), tr.FILE_TYPES_SCRIPT)
         if not file_path:
             return
         editor = self.create_new_tab()
@@ -313,7 +313,7 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         if not editor:
             return
         if not editor.file_path:
-            file_path, _ = QFileDialog.getSaveFileName(self, tr.SAVE_SCRIPT_FILE, "", tr.FILE_TYPES_SCRIPT)
+            file_path, _ = QFileDialog.getSaveFileName(self, tr.SAVE_SCRIPT_FILE, os.path.expanduser("~"), tr.FILE_TYPES_SCRIPT)
             if not file_path:
                 return
             if not file_path.lower().endswith(".py"):

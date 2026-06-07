@@ -49,7 +49,7 @@ class Session:
         self.pct_address_tree: list = []
         self.pct_process_name: str = ""
         self.data_changed = SessionDataChanged.NONE
-        self.file_path: str = os.curdir
+        self.file_path: str = os.path.expanduser("~")
         self.last_file_name: str = ""  # process name or file name
 
     def save_session(self) -> bool:

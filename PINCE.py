@@ -2080,7 +2080,7 @@ class ProcessForm(QMainWindow, ProcessWindow):
             self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
 
     def pushButton_CreateProcess_clicked(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_BINARY)
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_BINARY, os.path.expanduser("~"))
         if file_path:
             arg_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_OPTIONAL_ARGS, ""), (tr.LD_PRELOAD_OPTIONAL, "")])
             if arg_dialog.exec():
@@ -4261,7 +4261,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionInject_so_file_triggered(self) -> None:
         if debugcore.currentpid == -1:
             return
-        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_SO_FILE, "", tr.SHARED_OBJECT_TYPE)
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_SO_FILE, os.path.expanduser("~"), tr.SHARED_OBJECT_TYPE)
         if file_path:
             if debugcore.inject_so(file_path):
                 QMessageBox.information(self, tr.SUCCESS, tr.FILE_INJECTED)
@@ -4880,14 +4880,14 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.treeWidget_InstructionInfo.expandAll()
 
     def save_file(self) -> None:
-        file_path, _ = QFileDialog.getSaveFileName(self, tr.SAVE_TRACE_FILE, None, tr.FILE_TYPES_TRACE)
+        file_path, _ = QFileDialog.getSaveFileName(self, tr.SAVE_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE)
         if file_path:
             file_path = utils.append_file_extension(file_path, "trace")
             if not utils.save_file(self.tracer.trace_data, file_path):
                 QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
 
     def load_file(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(self, tr.OPEN_TRACE_FILE, None, tr.FILE_TYPES_TRACE)
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.OPEN_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE)
         if file_path:
             content = utils.load_file(file_path)
             if content is None:
