@@ -4600,6 +4600,9 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
 
         info = self.info
         key_list = list(info)
+        if not key_list:
+            return
+        self.last_selected_row = min(self.last_selected_row, len(key_list) - 1)
         key = key_list[self.last_selected_row]
         self.textBrowser_Info.clear()
         for item in info[key][2]:
