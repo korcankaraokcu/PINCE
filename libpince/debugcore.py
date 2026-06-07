@@ -368,6 +368,10 @@ def state_observe_thread() -> None:
                     logger.debug(child.before)
                 gdb_async_output.broadcast_message(child.before)
     except (OSError, ValueError, pexpect.EOF) as e:
+        global gdb_initialized
+        gdb_initialized = False
+        with gdb_waiting_for_prompt_condition:
+            gdb_waiting_for_prompt_condition.notify_all()
         if isinstance(e, pexpect.EOF):
             logger.exception(
                 f"EOF exception caught within pexpect, here's the contents of child.before:\n{child.before}"
@@ -1740,6 +1744,8 @@ def get_breakpoint_info() -> list[typedefs.tuple_breakpoint_info]:
     returned_list = []
     multiple_break_data = OrderedDict()
     raw_info = send_command("-break-list")
+    if not raw_info:
+        return returned_list
     # Temporary fix for https://sourceware.org/bugzilla/show_bug.cgi?id=9659
     # TODO:Delete this line when gdb or pygdbmi fixes the problem
     raw_info = re.sub(r"script={(.*?)}", r"script=[\g<1>]", raw_info)  # Please refer to issue #53

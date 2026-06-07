@@ -3148,6 +3148,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def hex_view_selection_changed(self, selected: QItemSelection, deselected: QItemSelection) -> None:
         sender_selection_model: QItemSelectionModel = self.sender()
         sender_selection = sorted([(idx.row(), idx.column()) for idx in sender_selection_model.selectedIndexes()])
+        if not sender_selection:
+            return
         first_selection = sender_selection[0]
         last_selection = sender_selection[-1]
         hex_start = self.address_to_hex_point(self.hex_selection_start)
@@ -3630,7 +3632,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def tableWidget_StackTrace_context_menu_event(self, event: QContextMenuEvent) -> None:
         def copy_to_clipboard(row: int, column: int) -> None:
-            app.clipboard().setText(self.tableWidget_StackTrace.item(row, column).text())
+            item = self.tableWidget_StackTrace.item(row, column)
+            if item is None:
+                return
+            app.clipboard().setText(item.text())
 
         selected_row = guiutils.get_current_row(self.tableWidget_StackTrace)
         menu = QMenu()
@@ -3711,7 +3716,10 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def tableWidget_Stack_context_menu_event(self, event: QContextMenuEvent) -> None:
         def copy_to_clipboard(row: int, column: int) -> None:
-            app.clipboard().setText(self.tableWidget_Stack.item(row, column).text())
+            item = self.tableWidget_Stack.item(row, column)
+            if item is None:
+                return
+            app.clipboard().setText(item.text())
 
         selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if selected_row == -1:
@@ -4870,6 +4878,8 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
             self.close()
 
     def display_collected_data(self, QTreeWidgetItem_current: QTreeWidgetItem) -> None:
+        if QTreeWidgetItem_current is None:
+            return
         self.textBrowser_RegisterInfo.clear()
         current_dict = QTreeWidgetItem_current.trace_data[1]
         if current_dict:
