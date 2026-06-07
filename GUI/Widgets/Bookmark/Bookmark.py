@@ -50,11 +50,19 @@ class BookmarkWidget(QWidget, Ui_Form):
             self.lineEdit_Comment.clear()
             return
         current_address = utils.extract_hex_address(self.listWidget.item(row).text())
+        if not current_address:
+            self.lineEdit_Info.clear()
+            self.lineEdit_Comment.clear()
+            return
         if debugcore.currentpid == -1:
             self.lineEdit_Info.clear()
         else:
             self.lineEdit_Info.setText(debugcore.get_address_info(current_address))
-        self.lineEdit_Comment.setText(self.session.pct_bookmarks[int(current_address, 16)]["comment"])
+        bookmark = self.session.pct_bookmarks.get(int(current_address, 16))
+        if bookmark:
+            self.lineEdit_Comment.setText(bookmark["comment"])
+        else:
+            self.lineEdit_Comment.clear()
 
     def listWidget_item_double_clicked(self, item: QListWidgetItem) -> None:
         self.double_clicked.emit(utils.extract_hex_address(item.text()))

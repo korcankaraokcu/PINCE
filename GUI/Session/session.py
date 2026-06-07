@@ -177,8 +177,10 @@ class Session:
 
         pre_exit_unsaved_changes_result = self.check_unsaved_changes()
         if pre_exit_unsaved_changes_result == QMessageBox.StandardButton.Yes:
-            self.save_session()
-            close_event.accept()
+            if self.save_session():
+                close_event.accept()
+            else:
+                close_event.ignore()
 
         elif pre_exit_unsaved_changes_result == QMessageBox.StandardButton.Cancel:
             close_event.ignore()
@@ -249,13 +251,14 @@ class SessionManager:
     @staticmethod
     def reset_session() -> None:
         session = SessionManager.get_session()
-        # User has one last chance to save the session before resetting
-        # result is ignored, because the session is going to be reset anyway
-        session.check_unsaved_changes()
+        unsaved_changes_result = session.check_unsaved_changes()
+        if unsaved_changes_result == QMessageBox.StandardButton.Cancel:
+            return
+        if unsaved_changes_result == QMessageBox.StandardButton.Yes:
+            if not session.save_session():
+                return
         SessionManager.session = Session()
         states.session_signals.new_session.emit()
-        # Reset the session data changed flag
-        session.data_changed = SessionDataChanged.NONE
 
     @staticmethod
     def save_session() -> None:
