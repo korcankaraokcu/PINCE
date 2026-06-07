@@ -713,6 +713,20 @@ def get_to_pince_file(pid: int | str) -> str:
     return get_ipc_path(pid) + typedefs.PATHS.TO_PINCE
 
 
+def wrap_integer(value: int, value_index: int) -> int:
+    """Wrap an integer into the unsigned range of the given integer value_index (two's-complement wrap).
+    Non-integer value_indexes are returned unchanged."""
+    if value_index == typedefs.VALUE_INDEX.INT8:
+        return value % 0x100
+    elif value_index == typedefs.VALUE_INDEX.INT16:
+        return value % 0x10000
+    elif value_index == typedefs.VALUE_INDEX.INT32:
+        return value % 0x100000000
+    elif value_index == typedefs.VALUE_INDEX.INT64:
+        return value % 0x10000000000000000
+    return value
+
+
 def parse_string(string: str, value_index: int) -> str | list[int] | float | int | None:
     """Parses the string according to the given value_index
 
@@ -773,15 +787,7 @@ def parse_string(string: str, value_index: int) -> str | list[int] | float | int
             except:
                 logger.exception(f"{string} can't be parsed as integer or hexadecimal")
                 return
-        if value_index == typedefs.VALUE_INDEX.INT8:
-            string = string % 0x100  # 256
-        elif value_index == typedefs.VALUE_INDEX.INT16:
-            string = string % 0x10000  # 65536
-        elif value_index == typedefs.VALUE_INDEX.INT32:
-            string = string % 0x100000000  # 4294967296
-        elif value_index == typedefs.VALUE_INDEX.INT64:
-            string = string % 0x10000000000000000  # 18446744073709551616
-        return string
+        return wrap_integer(string, value_index)
 
 
 def instruction_follow_address(string: str) -> str | None:

@@ -1085,7 +1085,13 @@ def write_memory(
             write_data = bytearray(write_data)
         else:
             data_type = typedefs.index_to_struct_pack_dict.get(value_index, -1)
-            write_data = struct.pack(data_type, write_data)
+            if typedefs.VALUE_INDEX.is_integer(value_index) and isinstance(write_data, int):
+                write_data = utils.wrap_integer(write_data, value_index)
+            try:
+                write_data = struct.pack(data_type, write_data)
+            except (struct.error, OverflowError):
+                logger.error(f"Failed to pack value {write_data!r} for value_index {value_index}")
+                return
         if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian and typedefs.VALUE_INDEX.is_number(value_index):
             write_data = write_data[::-1]
     try:
