@@ -151,6 +151,7 @@ class Session:
             self.recalculate_bookmarks()
 
         self.pct_address_tree = content["address_tree"]
+        self.pct_process_name = content["process_name"]
 
         self.file_path = os.path.dirname(file_path)
         self.last_file_name = os.path.basename(file_path)
