@@ -81,8 +81,8 @@ process_exited_condition = Condition()
 # See function send_command for an example
 gdb_waiting_for_prompt_condition = Condition()
 
-# A string. Stores the output of the last command
-gdb_output = ""
+# A string. Stores the output of the last command. None means no output has been received yet.
+gdb_output = None
 
 # An instance of typedefs.RegisterQueue. Updated whenever GDB receives an async event such as breakpoint modification
 # See AwaitAsyncOutput class for an example of usage
@@ -217,7 +217,7 @@ def send_command(
             time0 = time()
         if not gdb_initialized:
             raise typedefs.GDBInitializeException
-        gdb_output = ""
+        gdb_output = None
         if send_with_file:
             send_file = utils.get_from_pince_file(currentpid)
             with open(send_file, "wb") as send_file_handle:
@@ -247,7 +247,7 @@ def send_command(
                 child.sendline("cli-output source " + command_file)
         if not control:
             with gdb_waiting_for_prompt_condition:
-                while not gdb_output:
+                while gdb_output is None:
                     gdb_waiting_for_prompt_condition.wait(timeout=0.01)
                     if cancel_send_command:
                         break
@@ -544,7 +544,7 @@ def init_gdb(gdb_path: str = utils.get_default_gdb_path()) -> bool:
 
     breakpoint_on_hit_dict.clear()
     chained_breakpoints.clear()
-    gdb_output = ""
+    gdb_output = None
     cancel_send_command = False
     last_gdb_command = ""
     last_stop_was_tracking = False
