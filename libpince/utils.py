@@ -362,14 +362,14 @@ def is_process_valid(pid: int) -> bool:
 def is_wine_process(pid: int) -> bool:
     """Check if the inferior is running under Wine or Proton.
 
-    Scans /proc/<pid>/maps for WINE, Proton, or Steam pressure-vessel libraries.
+    Scans /proc/<pid>/maps for WINE or Proton libraries.
     Mostly used to gate features that don't yet work reliably under WINE in the GUI.
 
     Args:
         pid (int): PID of the process
 
     Returns:
-        bool: True if Wine/Proton/pressure-vessel libraries are mapped into the process
+        bool: True if Wine/Proton libraries are mapped into the process
     """
     if pid <= 0:
         return False
@@ -377,7 +377,7 @@ def is_wine_process(pid: int) -> bool:
         with open(f"/proc/{pid}/maps", "r") as maps_file:
             for line in maps_file:
                 lower = line.lower()
-                if "wine" in lower or "proton" in lower or "pressure-vessel" in lower:
+                if any(marker in lower for marker in ("wine", "proton")):
                     return True
     except OSError:
         pass
