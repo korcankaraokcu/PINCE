@@ -295,6 +295,9 @@ class MainForm(QMainWindow, MainWindow):
     # Payload is the toggle_attach() result (a typedefs.TOGGLE_ATTACH member or None on failure).
     attach_toggled = pyqtSignal(object)
 
+    # Payload is the requested SCAN_TYPE
+    nextscan_requested = pyqtSignal(int)
+
     def __init__(self) -> None:
         super().__init__()
         self.setupUi(self)
@@ -302,6 +305,7 @@ class MainForm(QMainWindow, MainWindow):
         self.is_wine_process = False
         self.speedhack_action_requested.connect(self.on_speedhack_hotkey_action)
         self.attach_toggled.connect(self.on_attach_toggled)
+        self.nextscan_requested.connect(self.on_nextscan_requested)
         self.checkBox_Speedhack.toggled.connect(self.apply_speedhack)
         self.doubleSpinBox_Speedhack.valueChanged.connect(self.apply_speedhack)
         hotkey_to_func = {
@@ -587,8 +591,10 @@ class MainForm(QMainWindow, MainWindow):
         self.checkBox_Speedhack.blockSignals(False)
         self.doubleSpinBox_Speedhack.blockSignals(False)
 
-    @utils.ignore_exceptions
     def nextscan_hotkey_pressed(self, index: int) -> None:
+        self.nextscan_requested.emit(index)
+
+    def on_nextscan_requested(self, index: int) -> None:
         if self.scan_mode == typedefs.SCAN_MODE.NEW or self.is_scanning:
             return
         self.comboBox_ScanType.setCurrentIndex(index)
