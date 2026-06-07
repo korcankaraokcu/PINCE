@@ -294,8 +294,9 @@ def state_observe_thread() -> None:
             for match in matches:
                 if match[0].startswith('stopped,reason="exited'):
                     with process_exited_condition:
+                        terminated_pid = currentpid
                         detach()
-                        logger.info(f"Process terminated (PID: {currentpid})")
+                        logger.info(f"Process terminated (PID: {terminated_pid})")
                         process_exited_condition.notify_all()
                         return
 

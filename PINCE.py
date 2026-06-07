@@ -1030,7 +1030,7 @@ class MainForm(QMainWindow, MainWindow):
                 it += 1
                 address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
                 if isinstance(address_data, typedefs.PointerChainRequest):
-                    expression = address_data.base_address
+                    expression = address_data.get_base_address_as_str()
                 else:
                     expression = address_data
                 parent = row.parent()
@@ -1861,6 +1861,8 @@ class MainForm(QMainWindow, MainWindow):
                 address = row.text(ADDR_COL).removeprefix("P->")
                 frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 value = frozen.value
+                if value is None:  # nothing valid was captured (e.g. frozen while unreadable) so we skip.
+                    continue
                 freeze_type = frozen.freeze_type
                 if typedefs.VALUE_INDEX.is_number(vt.value_index):
                     new_value = debugcore.read_memory(address, vt.value_index, endian=vt.endian)
@@ -2248,7 +2250,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         else:
             value_repr = typedefs.VALUE_REPR.UNSIGNED
         address_type = self.comboBox_ValueType.currentIndex()
-        length = self.lineEdit_Length.text()
+        length = safe_str_to_int(self.lineEdit_Length.text(), 0)
         zero_terminate = self.checkBox_ZeroTerminate.isChecked()
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         value = debugcore.read_memory(address, address_type, length, zero_terminate, value_repr, endian)

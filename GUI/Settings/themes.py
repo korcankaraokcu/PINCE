@@ -53,7 +53,7 @@ role_dict = {
 }
 
 
-def get_theme(theme_name: str) -> QPalette | None:
+def get_theme(theme_name: str) -> QPalette:
     """Returns a customized theme based on the specified theme choice
 
     Args:
@@ -224,6 +224,7 @@ def get_theme(theme_name: str) -> QPalette | None:
             return apply_palette(wong_dict)
         case _:
             utils.logger.error("There was an error parsing themes")
+            return QPalette()
 
 
 def apply_palette(theme_dict: dict[str, dict[str, str]]) -> QPalette:

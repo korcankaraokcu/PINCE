@@ -258,7 +258,7 @@ scan_index_to_text_dict = collections.OrderedDict(
         (SCAN_INDEX.FLOAT64, "Float64"),
         (SCAN_INDEX.ANY, "Any(int, float)"),
         (SCAN_INDEX.STRING, "String"),
-        (VALUE_INDEX.AOB, "ByteArray"),
+        (SCAN_INDEX.AOB, "ByteArray"),
     ]
 )
 

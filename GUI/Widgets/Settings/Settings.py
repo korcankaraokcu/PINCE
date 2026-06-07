@@ -217,7 +217,7 @@ class SettingsDialog(QDialog, Ui_Dialog):
         hotkey_string = ""
         for ev in pressed_events:
             # replacing keys with their respective base key, e.g "!" --> "1"
-            ev.name = to_name[(ev.scan_code, ())][-1]
+            ev.name = to_name.get((ev.scan_code, ()), [ev.name])[-1]
             # keyboard does recognize meta key (win key) as alt, setting manually
             if ev.scan_code == 125 or ev.scan_code == 126:
                 ev.name = "windows"

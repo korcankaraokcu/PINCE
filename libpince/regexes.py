@@ -90,7 +90,7 @@ maps = compile(
 # --------------------------------------------guiutils------------------------------------------------------------------
 
 reference_mark = compile(r"\{\d*\}")
-float_number = compile(r"-?\d+[.,]?\d*(?:[eE][-+]?\d+)?")
+float_number = compile(r"-?(?:\d+[.,]?\d*|[.,]\d+)(?:[eE][-+]?\d+)?")
 bytearray_input = compile(r"^[A-Fa-f0-9?]{2}(\s+[A-Fa-f0-9?]{2})*\s*$")
 decimal_number = compile(r"-?\d+")
 hex_number_gui = compile(r"^-?(?:0x)?[0-9a-fA-F]+$")  # contains optional 0x prefix

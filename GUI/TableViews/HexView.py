@@ -92,5 +92,9 @@ class QHexView(QTableView):
         data = self.delegate.editor.text()
         if self.write_type == typedefs.VALUE_INDEX.AOB:
             data = data.upper()
+            if len(data) == 1:  # pad a single nibble with zero so it matches hex_dump's "0A" formatting.
+                data = "0" + data
+        elif len(data.encode("utf-8")) != 1:  # an ASCII cell holds one byte so we ignore multi-byte input.
+            return
         debugcore.write_memory(address, self.write_type, data, False)
         model.update_index(index, data)
