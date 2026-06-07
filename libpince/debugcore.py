@@ -1004,7 +1004,7 @@ def read_memory(
         if (
             endian != typedefs.ENDIANNESS.HOST
             and system_endianness != endian
-            and not typedefs.VALUE_INDEX.is_string(value_index)
+            and typedefs.VALUE_INDEX.is_number(value_index)
         ):
             data_read = data_read[::-1]
     except (OSError, ValueError):
@@ -1086,8 +1086,7 @@ def write_memory(
         else:
             data_type = typedefs.index_to_struct_pack_dict.get(value_index, -1)
             write_data = struct.pack(data_type, write_data)
-        # Byte order only applies to scalar numeric/AOB types, strings handle it via the codec above.
-        if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian:
+        if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian and typedefs.VALUE_INDEX.is_number(value_index):
             write_data = write_data[::-1]
     try:
         with memory_handle("rb+") as mem_handle:
