@@ -1090,7 +1090,7 @@ def write_memory(
         if zero_terminate:
             write_data += b"\x00"
     else:
-        if value_index is typedefs.VALUE_INDEX.AOB:
+        if value_index == typedefs.VALUE_INDEX.AOB:
             write_data = bytearray(write_data)
         else:
             data_type = typedefs.index_to_struct_pack_dict.get(value_index, -1)

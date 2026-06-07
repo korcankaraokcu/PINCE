@@ -566,7 +566,9 @@ def save_file(data: Any, file_path: str, save_method: str = "json") -> bool:
     """
     if save_method == "json":
         try:
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            dir_name = os.path.dirname(file_path)
+            if dir_name:
+                os.makedirs(dir_name, exist_ok=True)
             with open(file_path, "w") as save_file:
                 json.dump(data, save_file)
             return True
@@ -575,7 +577,9 @@ def save_file(data: Any, file_path: str, save_method: str = "json") -> bool:
             return False
     elif save_method == "pickle":
         try:
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            dir_name = os.path.dirname(file_path)
+            if dir_name:
+                os.makedirs(dir_name, exist_ok=True)
             with open(file_path, "wb") as save_file:
                 pickle.dump(data, save_file)
             return True

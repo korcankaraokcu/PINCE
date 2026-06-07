@@ -4776,7 +4776,10 @@ class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
         guiutils.center_to_parent(self)
 
     def get_values(self) -> tuple[int, str, str, int, bool, bool]:
-        max_trace_count = int(self.lineEdit_MaxTraceCount.text())
+        try:
+            max_trace_count = int(self.lineEdit_MaxTraceCount.text())
+        except ValueError:
+            max_trace_count = 0
         trigger_condition = self.lineEdit_TriggerCondition.text()
         stop_condition = self.lineEdit_StopCondition.text()
         if self.checkBox_StepOver.isChecked():
@@ -4788,7 +4791,11 @@ class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
         return max_trace_count, trigger_condition, stop_condition, step_mode, stop_after_trace, collect_registers
 
     def accept(self) -> None:
-        if int(self.lineEdit_MaxTraceCount.text()) >= 1:
+        try:
+            max_trace_count = int(self.lineEdit_MaxTraceCount.text())
+        except ValueError:
+            max_trace_count = 0
+        if max_trace_count >= 1:
             super().accept()
         else:
             QMessageBox.information(self, tr.ERROR, tr.MAX_TRACE_COUNT_ASSERT_GT.format(1))

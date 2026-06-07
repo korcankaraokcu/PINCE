@@ -33,6 +33,8 @@ def is_valid_session_data(content: dict[str, Any]) -> bool:
     for key in keys:
         if key not in content:
             return False
+    if not isinstance(content["bookmarks"], dict):
+        return False
 
     return True
 

@@ -330,7 +330,10 @@ class GetTrackWatchpointInfo(gdb.Command):
         register_info.update(gdbutils.get_flag_registers())
         register_info.update(gdbutils.get_segment_registers())
         float_info = gdbutils.get_float_registers()
-        disas_info = gdb.execute("disas " + previous_pc_address + ",+40", to_string=True).replace("=>", "  ")
+        try:
+            disas_info = gdb.execute("disas " + previous_pc_address + ",+40", to_string=True).replace("=>", "  ")
+        except:
+            disas_info = ""
         track_watchpoint_dict[breakpoints][current_pc_int] = [
             count,
             previous_pc_address,
