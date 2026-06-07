@@ -3,6 +3,7 @@ from PyQt6.QtGui import QValidator
 
 
 class QHexValidator(QValidator):
+    """Validates that the input string represents an integer within a specified limit."""
     def __init__(self, max_limit: int, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.max_limit = max_limit
