@@ -249,9 +249,11 @@ def send_command(
             with gdb_waiting_for_prompt_condition:
                 while gdb_output is None:
                     gdb_waiting_for_prompt_condition.wait(timeout=0.01)
-                    if cancel_send_command:
+                    if cancel_send_command or not gdb_initialized:
                         break
-            if not cancel_send_command:
+            if not gdb_initialized:
+                output = ""
+            elif not cancel_send_command:
                 if recv_with_file or cli_output:
                     try:
                         with open(recv_file, "rb") as recv_file_handle:
@@ -266,6 +268,8 @@ def send_command(
                 with gdb_waiting_for_prompt_condition:
                     while gdb_output is None:
                         gdb_waiting_for_prompt_condition.wait(timeout=0.01)
+                        if not gdb_initialized:
+                            break
         else:
             output = ""
         if gdb_output_mode.command_info:
