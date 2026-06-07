@@ -575,6 +575,7 @@ def init_gdb(gdb_path: str = utils.get_default_gdb_path()) -> bool:
         child.expect_exact("(gdb)")
     except pexpect.EOF:
         logger.exception(f"EOF exception caught within pexpect, here's the contents of child.before:\n{child.before}")
+        child.close()
         return False
     status_thread = Thread(target=state_observe_thread)
     status_thread.daemon = True
@@ -980,18 +981,18 @@ def read_memory(
     """
     try:
         value_index = int(value_index)
-    except:
+    except Exception:
         return
     if not type(address) == int:
         try:
             address = int(address, 0)
-        except:
+        except Exception:
             return
     packed_data = typedefs.index_to_valuetype_dict.get(value_index, -1)
     if typedefs.VALUE_INDEX.is_string(value_index):
         try:
             length = int(length)
-        except:
+        except Exception:
             return
         if not length > 0:
             return
@@ -999,11 +1000,13 @@ def read_memory(
     elif value_index == typedefs.VALUE_INDEX.AOB:
         try:
             expected_length = int(length)
-        except:
+        except Exception:
             return
         if not expected_length > 0:
             return
     else:
+        if packed_data == -1:
+            return
         expected_length = packed_data[0]
         data_type = packed_data[1]
     own_mem_handle = mem_handle is None
@@ -1078,7 +1081,7 @@ def write_memory(
     if not type(address) == int:
         try:
             address = int(address, 0)
-        except:
+        except Exception:
             return
     if isinstance(value, str):
         write_data = utils.parse_string(value, value_index)
@@ -1100,7 +1103,7 @@ def write_memory(
                 write_data = utils.wrap_integer(write_data, value_index)
             try:
                 write_data = struct.pack(data_type, write_data)
-            except (struct.error, OverflowError):
+            except (struct.error, OverflowError, TypeError):
                 logger.error(f"Failed to pack value {write_data!r} for value_index {value_index}")
                 return
         if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian and typedefs.VALUE_INDEX.is_number(value_index):
@@ -1779,6 +1782,8 @@ def get_breakpoint_info() -> list[typedefs.tuple_breakpoint_info]:
             continue
         if not breakpoint_type:
             number = number.split(".")[0]
+            if number not in multiple_break_data:
+                continue
             breakpoint_type, disp, condition, hit_count = multiple_break_data[number]
         if what:
             address = utils.extract_hex_address(what)
@@ -2288,14 +2293,14 @@ class Tracer:
                     try:
                         if str(parse_and_eval(self.stop_condition)) == "1":
                             break
-                    except:
+                    except Exception:
                         pass
                 if self.step_mode == typedefs.STEP_MODE.SINGLE_STEP:
                     step_instruction()
                 elif self.step_mode == typedefs.STEP_MODE.STEP_OVER:
                     step_over_instruction()
                 wait_for_stop()
-        except:
+        except Exception:
             traceback.print_exc()
         self.trace_data = (tree, root_index)
         self.trace_status = typedefs.TRACE_STATUS.FINISHED

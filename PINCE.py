@@ -1423,7 +1423,8 @@ class MainForm(QMainWindow, MainWindow):
                 current_item = QTableWidgetItem(address)
                 current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian))
                 # TODO: Change GDB reading to memscan
-                value = str(debugcore.read_memory(address, value_index, length, True, value_repr, endian, mem_handle))
+                value = debugcore.read_memory(address, value_index, length, True, value_repr, endian, mem_handle)
+                value = "" if value is None else str(value)
                 if debugcore.is_address_static(address):
                     current_item.setForeground(QColor(0, 136, 85))
                 self.tableWidget_valuesearchtable.insertRow(row)
@@ -1834,16 +1835,15 @@ class MainForm(QMainWindow, MainWindow):
                         ).text()
                         value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
                         address = address_item.text()
-                        new_value = str(
-                            debugcore.read_memory(
-                                address,
-                                value_index,
-                                length,
-                                value_repr=value_repr,
-                                endian=endian,
-                                mem_handle=mem_handle,
-                            )
+                        new_value = debugcore.read_memory(
+                            address,
+                            value_index,
+                            length,
+                            value_repr=value_repr,
+                            endian=endian,
+                            mem_handle=mem_handle,
                         )
+                        new_value = "" if new_value is None else str(new_value)
                         if new_value != previous_text:
                             value_item.setForeground(QBrush(QColor(255, 0, 0)))
                             value_item.setText(new_value)
@@ -3998,12 +3998,17 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def tableWidget_Disassemble_context_menu_event(self, event: QContextMenuEvent) -> None:
         def copy_to_clipboard(row: int, column: int) -> None:
-            app.clipboard().setText(self.tableWidget_Disassemble.item(row, column).text())
+            item = self.tableWidget_Disassemble.item(row, column)
+            if item is None:
+                return
+            app.clipboard().setText(item.text())
 
         def copy_all_columns(row: int) -> None:
             copied_string = ""
             for column in range(self.tableWidget_Disassemble.columnCount()):
-                copied_string += self.tableWidget_Disassemble.item(row, column).text() + "\t"
+                item = self.tableWidget_Disassemble.item(row, column)
+                if item is not None:
+                    copied_string += item.text() + "\t"
             app.clipboard().setText(copied_string)
 
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
@@ -4458,7 +4463,7 @@ class BreakpointInfoWidgetForm(QTabWidget, BreakpointInfoWidget):
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_TYPE_COL, QTableWidgetItem(item.breakpoint_type))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_DISP_COL, QTableWidgetItem(item.disp))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_ENABLED_COL, QTableWidgetItem(item.enabled))
-            self.tableWidget_BreakpointInfo.setItem(row, BREAK_ADDR_COL, QTableWidgetItem(item.address))
+            self.tableWidget_BreakpointInfo.setItem(row, BREAK_ADDR_COL, QTableWidgetItem(item.address or ""))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_SIZE_COL, QTableWidgetItem(str(item.size)))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_ON_HIT_COL, QTableWidgetItem(item.on_hit))
             self.tableWidget_BreakpointInfo.setItem(row, BREAK_HIT_COUNT_COL, QTableWidgetItem(item.hit_count))

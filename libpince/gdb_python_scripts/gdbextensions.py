@@ -455,7 +455,7 @@ class DissectCode(gdb.Command):
                     try:
                         self.memory.seek(start_addr)
                     except (OSError, ValueError):
-                        break
+                        continue
                     buffer_size = end_addr - start_addr
                     code = self.memory.read(buffer_size)
                     next_status_addr = start_addr
@@ -508,7 +508,7 @@ class DissectCode(gdb.Command):
                                         ref_str_count += 1
                     except CsError:
                         logger.exception("An exception occurred while trying to dissect code")
-                        break
+                        continue
         finally:
             self.memory = None
             for db in (referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict):
