@@ -74,6 +74,24 @@ def get_process_list() -> list[tuple[str, str, str]]:
     return process_list
 
 
+def get_process_start_time(pid: int | str) -> int | None:
+    """Returns the process start time (field 22 of /proc/<pid>/stat, clock ticks since boot).
+    Combined with pid this uniquely identifies a process instance, guarding against PID reuse.
+
+    Args:
+        pid (int, str): PID of the process
+
+    Returns:
+        int: starttime field, or None on error
+    """
+    try:
+        with open(f"/proc/{pid}/stat") as stat_file:
+            stat = stat_file.read()
+        return int(stat[stat.rindex(")") + 2:].split()[19])  # field 22 == index 19 after "(comm) "
+    except (OSError, ValueError, IndexError):
+        return None
+
+
 def get_process_name(pid: int | str) -> str:
     """Returns the process name of given pid
 

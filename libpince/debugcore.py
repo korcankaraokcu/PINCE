@@ -48,8 +48,12 @@ stop_reason = -1
 breakpoint_on_hit_dict = {}
 
 # A dictionary. Holds address and aob of instructions that were nop'ed out
-# Format: {address1:orig_instruction1_aob, address2:orig_instruction2_aob, ...}
+# Format: {identity: {address1:orig_instruction1_aob, address2:orig_instruction2_aob, ...}, ...}
+# where identity = (pid, start_time) tuple
 modified_instructions_dict = {}
+
+# Identity (pid, start_time) of the current process, or None when detached
+current_process_identity: tuple[int, int | None] | None = None
 
 # If an action such as deletion or condition modification happens in one of the breakpoints in a list, others in the
 # same list will get affected as well
@@ -640,7 +644,9 @@ def attach(pid: int | str, gdb_path: str = utils.get_default_gdb_path()) -> int:
         init_gdb(gdb_path)
     global inferior_arch
     global mem_file
+    global current_process_identity
     currentpid = pid
+    current_process_identity = (currentpid, utils.get_process_start_time(currentpid))
     mem_file = "/proc/" + str(currentpid) + "/mem"
     utils.create_ipc_path(pid)
     utils.create_tmp_path(pid)
@@ -675,6 +681,7 @@ def create_process(
     global currentpid
     global inferior_arch
     global mem_file
+    global current_process_identity
     if currentpid != -1 or not gdb_initialized:
         init_gdb(gdb_path)
     output = send_command(f'file "{process_path}"')
@@ -702,6 +709,7 @@ def create_process(
         detach()
         return False
     currentpid = int(pid)
+    current_process_identity = (currentpid, utils.get_process_start_time(currentpid))
     mem_file = "/proc/" + str(currentpid) + "/mem"
     utils.create_ipc_path(pid)
     utils.create_tmp_path(pid)
@@ -717,7 +725,9 @@ def detach() -> None:
     """See you, space cowboy"""
     global gdb_initialized
     global currentpid
+    global current_process_identity
     old_pid = currentpid
+    current_process_identity = None
     if gdb_initialized:
         global child
         global inferior_status
@@ -890,7 +900,7 @@ def allocate_memory(size: int, name: str | None) -> int:
     if allocated_address == 0:
         logger.error(f"Couldn't find allocation address! Allocation output: {output}")
         return 0
-    allocated_memory = typedefs.AllocatedMemory(allocated_address, size)
+    allocated_memory = typedefs.AllocatedMemory(allocated_address, size, current_process_identity)
     allocated_memory_chunks[name] = allocated_memory
     page_size = os.sysconf("SC_PAGE_SIZE")
     page_memory_addr = allocated_memory.address & ~(page_size - 1)
@@ -910,6 +920,9 @@ def free_memory(name: str) -> bool:
     allocated_memory = allocated_memory_chunks.get(name)
     if allocated_memory is None:
         logger.error(f"Couldn't find allocated memory with name `{name}`!")
+        return False
+    if allocated_memory.identity != current_process_identity:
+        logger.error(f"Refusing to free memory '{name}' belonging to a different process")
         return False
     # This shit will crash the process if you call it on invalid or already freed memory.
     send_command(f"p (void)free({allocated_memory.address})")
@@ -1622,8 +1635,7 @@ def get_modified_instructions() -> dict:
         dict: A dictionary where the key is the start address of instruction and value is the aob before modifying
 
     """
-    global modified_instructions_dict
-    return modified_instructions_dict
+    return modified_instructions_dict.get(current_process_identity, {})
 
 
 def nop_instruction(start_address: int, length: int) -> None:
@@ -1637,9 +1649,9 @@ def nop_instruction(start_address: int, length: int) -> None:
         None
     """
     old_aob = " ".join(hex_dump(start_address, length))
-    global modified_instructions_dict
-    if start_address not in modified_instructions_dict:
-        modified_instructions_dict[start_address] = old_aob
+    table = modified_instructions_dict.setdefault(current_process_identity, {})
+    if start_address not in table:
+        table[start_address] = old_aob
 
     nop_aob = " ".join(["90"] * length)
     write_memory(start_address, typedefs.VALUE_INDEX.AOB, nop_aob)
@@ -1659,9 +1671,9 @@ def modify_instruction(start_address: int, array_of_bytes: str) -> None:
     length = len(array_of_bytes.split())
     old_aob = " ".join(hex_dump(start_address, length))
 
-    global modified_instructions_dict
-    if start_address not in modified_instructions_dict:
-        modified_instructions_dict[start_address] = old_aob
+    table = modified_instructions_dict.setdefault(current_process_identity, {})
+    if start_address not in table:
+        table[start_address] = old_aob
     write_memory(start_address, typedefs.VALUE_INDEX.AOB, array_of_bytes)
     instructions_changed.emit()
 
@@ -1675,8 +1687,10 @@ def restore_instruction(start_address: int) -> None:
     Returns:
         None
     """
-    global modified_instructions_dict
-    array_of_bytes = modified_instructions_dict.pop(start_address)
+    table = modified_instructions_dict.get(current_process_identity)
+    if not table or start_address not in table:
+        return
+    array_of_bytes = table.pop(start_address)
     write_memory(start_address, typedefs.VALUE_INDEX.AOB, array_of_bytes)
     instructions_changed.emit()
 

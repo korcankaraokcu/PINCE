@@ -568,7 +568,8 @@ class KeyboardModifiersTupleDict(collections.abc.Mapping):
 
 
 class AllocatedMemory:
-    def __init__(self, address: int, size: int) -> None:
+    def __init__(self, address: int, size: int, identity: tuple[int, int | None] | None = None) -> None:
         self.address = address
         self.size = size
+        self.identity = identity
         # TODO BRK: Maybe expand with starting page address and old protection to restore state after deleting allocated memory
