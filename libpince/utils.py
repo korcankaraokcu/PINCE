@@ -101,8 +101,11 @@ def get_process_name(pid: int | str) -> str:
     Returns:
         str: Process name
     """
-    with open(f"/proc/{pid}/comm") as f:
-        return f.read().splitlines()[0]
+    try:
+        with open(f"/proc/{pid}/comm") as f:
+            return f.read().splitlines()[0]
+    except (FileNotFoundError, IndexError):
+        return "<unknown>"
 
 
 def search_processes(name_or_pid: str | int) -> list[tuple[str, str, str]]:
@@ -131,13 +134,16 @@ def get_regions(pid: int) -> list[tuple[str, ...]]:
     Returns:
         list: List of (start_address, end_address, permissions, map_offset, device_node, inode, path) -> all str
     """
-    with open("/proc/" + str(pid) + "/maps") as f:
-        regions = []
-        for line in f.read().splitlines():
-            match = regexes.maps.match(line)
-            if match:
-                regions.append(match.groups())
-        return regions
+    try:
+        with open("/proc/" + str(pid) + "/maps") as f:
+            regions = []
+            for line in f.read().splitlines():
+                match = regexes.maps.match(line)
+                if match:
+                    regions.append(match.groups())
+            return regions
+    except FileNotFoundError:
+        return []
 
 
 def get_module_load_bias(pid: int, name_regex: str) -> tuple[int, str] | None:

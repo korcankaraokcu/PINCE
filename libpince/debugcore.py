@@ -1135,7 +1135,11 @@ def aob_scan(
     """
     if currentpid == -1:
         return []
-    parts = [b"." if "?" in t else re.escape(bytes([int(t, 16)])) for t in pattern.split()]
+    try:
+        parts = [b"." if "?" in t else re.escape(bytes([int(t, 16)])) for t in pattern.split()]
+    except ValueError:
+        logger.error(f"Invalid hex token in AOB pattern: {pattern!r}")
+        return []
     if not parts:
         return []
     matcher = re.compile(b"".join(parts), re.DOTALL)
@@ -1675,6 +1679,9 @@ def nop_instruction(start_address: int, length: int) -> None:
         None
     """
     old_aob = " ".join(hex_dump(start_address, length))
+    if "??" in old_aob:
+        logger.warning(f"Cannot NOP instruction at {hex(start_address)}: unreadable bytes in original opcodes")
+        return
     table = modified_instructions_dict.setdefault(current_process_identity, {})
     if start_address not in table:
         table[start_address] = old_aob
@@ -1696,6 +1703,9 @@ def modify_instruction(start_address: int, array_of_bytes: str) -> None:
     """
     length = len(array_of_bytes.split())
     old_aob = " ".join(hex_dump(start_address, length))
+    if "??" in old_aob:
+        logger.warning(f"Cannot modify instruction at {hex(start_address)}: unreadable bytes in original opcodes")
+        return
 
     table = modified_instructions_dict.setdefault(current_process_identity, {})
     if start_address not in table:
@@ -1951,7 +1961,8 @@ def add_watchpoint(
         remaining_length -= max_length
         str_address_int += max_length
     global chained_breakpoints
-    chained_breakpoints.append(breakpoints_nums)
+    if breakpoints_nums:
+        chained_breakpoints.append(breakpoints_nums)
     if breakpoints_set:
         breakpoints_changed.emit()
     return breakpoints_set
@@ -1989,10 +2000,9 @@ def modify_breakpoint(
     modification_list = [breakpoint_number]
     global chained_breakpoints
     for _, item in enumerate(chained_breakpoints):
-        for breakpoint in item:
-            if breakpoint == breakpoint_number:
-                modification_list = item
-                break
+        if breakpoint_number in item:
+            modification_list = item
+            break
     for breakpoint in modification_list:
         if modify_what == typedefs.BREAKPOINT_MODIFY.CONDITION:
             if condition is None:
@@ -2094,7 +2104,7 @@ def get_track_watchpoint_info(watchpoint_list: list) -> dict | str:
     try:
         with open(track_watchpoint_file, "rb") as track_watchpoint_handle:
             output = pickle.load(track_watchpoint_handle)
-    except:
+    except Exception:
         output = ""
     return output
 
@@ -2143,7 +2153,7 @@ def get_track_breakpoint_info(breakpoint_number: int) -> dict | str:
     try:
         with open(track_breakpoint_file, "rb") as track_breakpoint_handle:
             output = pickle.load(track_breakpoint_handle)
-    except:
+    except Exception:
         output = ""
     return output
 
@@ -2424,7 +2434,7 @@ def get_dissect_code_status() -> tuple:
     try:
         with open(dissect_code_status_file, "rb") as dissect_code_status_handle:
             output = pickle.load(dissect_code_status_handle)
-    except:
+    except Exception:
         output = "", "", "", 0, 0, 0
     return output
 

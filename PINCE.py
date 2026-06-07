@@ -1493,7 +1493,10 @@ class MainForm(QMainWindow, MainWindow):
         selected_indexes = self.tableWidget_valuesearchtable.selectionModel().selectedRows()
         if debugcore.currentpid == -1 or not selected_indexes:
             return
-        current_row = self.tableWidget_valuesearchtable.currentItem().row()
+        current_item = self.tableWidget_valuesearchtable.currentItem()
+        if current_item is None:
+            return
+        current_row = current_item.row()
         address = self.tableWidget_valuesearchtable.item(current_row, SEARCH_TABLE_ADDRESS_COL).text()
         menu = QMenu()
         if len(selected_indexes) > 1:
@@ -3743,7 +3746,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         menu.addSeparator()
         show_in_disas = menu.addAction(f"{tr.DISASSEMBLE_VALUE_POINTER}[Ctrl+D]")
         show_in_hex = menu.addAction(f"{tr.HEXVIEW_VALUE_POINTER}[Ctrl+H]")
-        if selected_row == -1:
+        if selected_row == -1 or current_address is None:
             guiutils.delete_menu_entries(menu, [clipboard_menu.menuAction(), show_in_disas, show_in_hex])
         if debugcore.currentpid == -1:
             menu.clear()
