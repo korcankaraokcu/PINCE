@@ -3823,6 +3823,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         current_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        if current_row == -1:
+            return
         current_row_height = self.tableWidget_Disassemble.rowViewportPosition(current_row)
         row_height = self.tableWidget_Disassemble.verticalHeader().defaultSectionSize()
         max_height = self.tableWidget_Disassemble.maximumViewportSize().height()
@@ -3892,6 +3894,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def tableWidget_Disassemble_key_press_event(self, event: QKeyEvent) -> None:
         if debugcore.currentpid == -1:
+            return
+        if not self.tableWidget_Disassemble.rowCount():
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         if selected_row == -1:
@@ -4092,6 +4096,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def dissect_current_region(self) -> None:
         if debugcore.currentpid == -1:
             return
+        if not self.tableWidget_Disassemble.rowCount():
+            return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         if selected_row == -1:
             selected_row = 0
@@ -4114,6 +4120,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def exec_trace_instructions_dialog(self) -> None:
         if debugcore.currentpid == -1:
+            return
+        if not self.tableWidget_Disassemble.rowCount():
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         if selected_row == -1:
@@ -4138,6 +4146,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def exec_disassemble_go_to_dialog(self) -> None:
         if debugcore.currentpid == -1:
+            return
+        if not self.tableWidget_Disassemble.rowCount():
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
         if selected_row == -1:
@@ -4991,6 +5001,8 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
         return debugcore.search_functions(gdb_input, case_sensitive)
 
     def apply_data(self, output: list) -> None:
+        if output is None:
+            return
         self.tableWidget_SymbolInfo.setSortingEnabled(False)
         self.tableWidget_SymbolInfo.setRowCount(0)
         self.tableWidget_SymbolInfo.setRowCount(len(output))
