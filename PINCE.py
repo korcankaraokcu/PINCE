@@ -2328,7 +2328,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             try:
                 offsetValue = int(offsetText, 16)
             except ValueError:
-                break
+                offsetValue = 0
             offsetsIntList.append(offsetValue)
         return offsetsIntList
 
