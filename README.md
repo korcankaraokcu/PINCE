@@ -3,11 +3,14 @@
 TODO: Include build status with the title when test coverage increases and Travis is maintained
 [![Build Status](https://travis-ci.org/korcankaraokcu/PINCE.svg?branch=master)](https://travis-ci.org/korcankaraokcu/PINCE)
 -->
-PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB), focused on games. However, it can be used for any reverse-engineering related stuff. PINCE is an abbreviation for "PINCE is not Cheat Engine". PINCE is in development right now, read [Features](#features) part of the project to see what is done and [Roadmap](CONTRIBUTING.md#roadmap) part to see what is currently planned. Also, please read [Wiki Page](https://github.com/korcankaraokcu/PINCE/wiki) of the project to understand how PINCE works.  
+PINCE is a front-end/reverse engineering tool for the GNU Project Debugger (GDB), focused on games. However, it can be used for any reverse-engineering related stuff.
+
+PINCE is an abbreviation for "PINCE is not Cheat Engine". R
+You can now open the new result map file which should filtered out pointer chains that are not present in both scans.ead [Features](#features) part of the project to see what is done and [Roadmap](CONTRIBUTING.md#roadmap) part to see what is currently planned. Also, please read [Wiki Page](https://github.com/korcankaraokcu/PINCE/wiki) of the project to understand how PINCE works.  
 
 ### [Feel free to join our discord server!](https://discord.gg/jVt3BzTSpz)  
 
-*Disclaimer: Do not trust to any source other than [Trusted Sources](#trusted-sources) that claims to have the source code or package for PINCE and remember to report them **immediately***
+*Disclaimer: Do not trust to any source other than this GitHub repo that claims to have the source code or package for PINCE and remember to report them **immediately***
 
 *Disclaimer: **YOU** are responsible for your actions. PINCE does **NOT** take any responsibility for the damage caused by the users*
 
@@ -94,6 +97,3 @@ Want to help? Check out [CONTRIBUTING.md](CONTRIBUTING.md)
 
 # License
 GPLv3+. See [COPYING](COPYING) file for details
-
-# Trusted Sources
-  * [Official github page](https://github.com/korcankaraokcu/PINCE)
