@@ -1892,10 +1892,9 @@ class MainForm(QMainWindow, MainWindow):
                 self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT, row)
 
     def treeWidget_AddressTable_change_repr(self, new_repr: int) -> None:
-        value_type = guiutils.get_current_item(self.treeWidget_AddressTable).data(TYPE_COL, Qt.ItemDataRole.UserRole)
-        value_type.value_repr = new_repr
         for row in self.treeWidget_AddressTable.selectedItems():
-            row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, value_type)
+            value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+            value_type.value_repr = new_repr
             row.setText(TYPE_COL, value_type.text())
         self.update_address_table()
 
@@ -1955,9 +1954,10 @@ class MainForm(QMainWindow, MainWindow):
         dialog = EditTypeDialogForm(self, vt)
         if dialog.exec():
             vt = dialog.get_values()
+            type_text = vt.text()
             for row in self.treeWidget_AddressTable.selectedItems():
-                row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, vt)
-                row.setText(TYPE_COL, vt.text())
+                row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, copy.copy(vt))
+                row.setText(TYPE_COL, type_text)
             self.update_address_table()
             self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
