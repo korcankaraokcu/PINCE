@@ -63,7 +63,7 @@ CAVE_SIZE = 0x1000
 STEP = linux_speedhack.STEP
 DEFAULT_SPEED = linux_speedhack.DEFAULT_SPEED
 JUMP_SIZE = linux_speedhack.JUMP_SIZE  # x86_64 detour: movabs rax, imm64; jmp rax (12 bytes)
-JUMP_SIZE_32 = 7  # i386 detour: mov eax, imm32; jmp eax (7 bytes)
+JUMP_SIZE_32 = linux_speedhack.JUMP_SIZE_32  # i386 detour: mov eax, imm32; jmp eax (7 bytes)
 
 # State block layout, all 8-byte little-endian. real/fake are in QPC's own units (whatever Wine returns),
 # so the Python side never needs to know that unit.
@@ -397,10 +397,7 @@ def _build_qpc_wrapper_32(state_addr: int, tramp_addr: int) -> bytes:
         pop ebp
         ret 4
     """
-    encoded = utils.assemble(asm, 0, typedefs.INFERIOR_ARCH.ARCH_32)
-    if encoded is None:
-        raise RuntimeError("Failed to assemble 32-bit wine speedhack hook")
-    return bytes(encoded[0])
+    return linux_speedhack._assemble_hook(asm, typedefs.INFERIOR_ARCH.ARCH_32)
 
 
 def _build_trampoline(address: int, raw: bytes, patch_size: int, arch64: bool, tramp_addr: int) -> bytes | None:

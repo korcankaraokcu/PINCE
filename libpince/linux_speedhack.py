@@ -51,8 +51,19 @@ STATE_SIZE = DEN_OFFSET + 8
 # Absolute jump: movabs rax, imm64; jmp rax (12 bytes).
 JUMP_SIZE = 12
 
-# Syscall number because nanosleep has no vDSO entry, so it always goes through syscall.
+# x86_64 syscall numbers. clock_gettime/gettimeofday use the syscall only as a vDSO fallback.
+# nanosleep has no vDSO entry so it always goes through the syscall.
+SYS_CLOCK_GETTIME = 228
+SYS_GETTIMEOFDAY = 96
 SYS_NANOSLEEP = 35
+
+# i386 detour: mov eax, imm32 (5 bytes); jmp eax (2 bytes).
+JUMP_SIZE_32 = 7
+
+# i386 syscall numbers (differ from x86_64). nanosleep has no vDSO entry on either arch.
+SYS_CLOCK_GETTIME_32 = 265
+SYS_GETTIMEOFDAY_32 = 78
+SYS_NANOSLEEP_32 = 162
 
 
 @dataclass
@@ -90,33 +101,40 @@ def _install(speed: float = 1.0) -> bool:
     if debugcore.currentpid == -1:
         logger.error("Linux speedhack requires an attached process")
         return False
-    if debugcore.inferior_arch != typedefs.INFERIOR_ARCH.ARCH_64:
-        # TODO BRK: Implement x86 support for Linux native targets.
-        logger.error("Linux speedhack currently supports only x86_64 inferiors")
-        return False
     if ALLOC_NAME in debugcore.allocated_memory_chunks:
         logger.error("Linux speedhack memory is already allocated")
         return False
+
+    arch64 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64
 
     ratio = _speed_to_ratio(speed)
     if ratio is None:
         return False
 
-    vdso_clock_gettime = _resolve_vdso_function(debugcore.currentpid, "__vdso_clock_gettime")
-    vdso_gettimeofday = _resolve_vdso_function(debugcore.currentpid, "__vdso_gettimeofday")
+    vdso_clock_gettime = _resolve_vdso_function(debugcore.currentpid, "__vdso_clock_gettime", arch64)
+    vdso_gettimeofday = _resolve_vdso_function(debugcore.currentpid, "__vdso_gettimeofday", arch64)
 
-    builders: tuple[tuple[str, Callable[[int], bytes]], ...] = (
-        ("clock_gettime", lambda cave: _build_clock_gettime_hook(cave, vdso_clock_gettime)),
-        ("gettimeofday", lambda cave: _build_gettimeofday_hook(cave, vdso_gettimeofday)),
-        ("nanosleep", _build_nanosleep_hook),
-    )
+    if arch64:
+        builders: tuple[tuple[str, Callable[[int], bytes]], ...] = (
+            ("clock_gettime", lambda cave: _build_clock_gettime_hook(cave, vdso_clock_gettime)),
+            ("gettimeofday", lambda cave: _build_gettimeofday_hook(cave, vdso_gettimeofday)),
+            ("nanosleep", _build_nanosleep_hook),
+        )
+    else:
+        builders = (
+            ("clock_gettime", lambda cave: _build_clock_gettime_hook_32(cave, vdso_clock_gettime)),
+            ("gettimeofday", lambda cave: _build_gettimeofday_hook_32(cave, vdso_gettimeofday)),
+            ("nanosleep", _build_nanosleep_hook_32),
+        )
+    disassembler = utils.cs_64 if arch64 else utils.cs_32
+    jump_size = JUMP_SIZE if arch64 else JUMP_SIZE_32
     targets = []
     for symbol, build in builders:
         hex_addr = utils.extract_hex_address(debugcore.get_symbol_info(symbol))
         address = utils.safe_str_to_int(hex_addr, 16) if hex_addr else 0
         if not address:
             continue
-        original_aob, patch_size = _read_patch_bytes(symbol, address)
+        original_aob, patch_size = _read_patch_bytes(symbol, address, disassembler, jump_size)
         if original_aob is None:
             continue
         targets.append((symbol, address, build, original_aob, patch_size))
@@ -142,8 +160,12 @@ def _install(speed: float = 1.0) -> bool:
             if cursor + len(code) > cave + CAVE_SIZE:
                 raise RuntimeError(f"Linux speedhack code cave is too small for {symbol}")
             debugcore.write_memory(cursor, typedefs.VALUE_INDEX.AOB, list(code))
-            # movabs rax, cursor; jmp rax (12 bytes), NOP-padded out to whole instructions.
-            patch = b"\x48\xb8" + struct.pack("<Q", cursor) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE)
+            if arch64:
+                # movabs rax, cursor; jmp rax (12 bytes), NOP-padded out to whole instructions.
+                patch = b"\x48\xb8" + struct.pack("<Q", cursor) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE)
+            else:
+                # mov eax, cursor; jmp eax (7 bytes), NOP-padded out to whole instructions.
+                patch = b"\xb8" + struct.pack("<I", cursor) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE_32)
             _write_verified(address, _bytes_to_aob(patch))
             installed.append(HookPatch(symbol, address, original_aob))
             cursor = (cursor + len(code) + 15) & ~15
@@ -234,7 +256,7 @@ def _speed_to_ratio(speed: float) -> Fraction | None:
     return ratio
 
 
-def _resolve_vdso_function(pid: int, symbol: str) -> int | None:
+def _resolve_vdso_function(pid: int, symbol: str, arch64: bool = True) -> int | None:
     # Locate "[vdso]" in the inferior, parse its ELF, and return the absolute address of "symbol".
     # Returns None if the lookup fails. The hook builder then falls back to issuing the syscall itself.
     if pid <= 0:
@@ -260,25 +282,39 @@ def _resolve_vdso_function(pid: int, symbol: str) -> int | None:
             blob = mem.read(end - base)
     except OSError:
         return None
-    if len(blob) < 64 or blob[:4] != b"\x7fELF" or blob[4] != 2:
+    expected_class = 2 if arch64 else 1  # ELFCLASS64 vs ELFCLASS32
+    if len(blob) < 64 or blob[:4] != b"\x7fELF" or blob[4] != expected_class:
         return None
     # The vDSO is linked at vaddr 0, so dynamic-segment offsets are direct blob indices.
-    e_phoff = struct.unpack_from("<Q", blob, 32)[0]
-    e_phentsize = struct.unpack_from("<H", blob, 54)[0]
-    e_phnum = struct.unpack_from("<H", blob, 56)[0]
+    if arch64:
+        e_phoff = struct.unpack_from("<Q", blob, 32)[0]
+        e_phentsize = struct.unpack_from("<H", blob, 54)[0]
+        e_phnum = struct.unpack_from("<H", blob, 56)[0]
+        p_vaddr_off, p_filesz_off = 16, 32  # within Elf64_Phdr
+        dyn_entry_size, dyn_fmt = 16, "<qQ"  # Elf64_Dyn: d_tag(8), d_un(8)
+        sym_entry_size, st_value_off = 24, 8  # Elf64_Sym, st_value at +8
+        value_fmt = "<Q"
+    else:
+        e_phoff = struct.unpack_from("<I", blob, 28)[0]
+        e_phentsize = struct.unpack_from("<H", blob, 42)[0]
+        e_phnum = struct.unpack_from("<H", blob, 44)[0]
+        p_vaddr_off, p_filesz_off = 8, 16  # within Elf32_Phdr
+        dyn_entry_size, dyn_fmt = 8, "<iI"  # Elf32_Dyn: d_tag(4), d_un(4)
+        sym_entry_size, st_value_off = 16, 4  # Elf32_Sym, st_value at +4
+        value_fmt = "<I"
     dyn_off = dyn_size = None
     for i in range(e_phnum):
         ph = e_phoff + i * e_phentsize
-        if struct.unpack_from("<I", blob, ph)[0] == 2:  # PT_DYNAMIC
-            dyn_off = struct.unpack_from("<Q", blob, ph + 16)[0]
-            dyn_size = struct.unpack_from("<Q", blob, ph + 32)[0]
+        if struct.unpack_from("<I", blob, ph)[0] == 2:  # PT_DYNAMIC (p_type is <I in both classes)
+            dyn_off = struct.unpack_from(value_fmt, blob, ph + p_vaddr_off)[0]
+            dyn_size = struct.unpack_from(value_fmt, blob, ph + p_filesz_off)[0]
             break
     if dyn_off is None:
         return None
     DT_NULL, DT_HASH, DT_STRTAB, DT_SYMTAB = 0, 4, 5, 6
     strtab = symtab = hashtab = None
-    for i in range(0, dyn_size, 16):
-        tag, val = struct.unpack_from("<qQ", blob, dyn_off + i)
+    for i in range(0, dyn_size, dyn_entry_size):
+        tag, val = struct.unpack_from(dyn_fmt, blob, dyn_off + i)
         if tag == DT_NULL:
             break
         if tag == DT_HASH:
@@ -289,11 +325,11 @@ def _resolve_vdso_function(pid: int, symbol: str) -> int | None:
             symtab = val
     if None in (strtab, symtab, hashtab):
         return None
-    nchain = struct.unpack_from("<I", blob, hashtab + 4)[0]
+    nchain = struct.unpack_from("<I", blob, hashtab + 4)[0]  # hash table words are 32-bit in both classes
     target = symbol.encode() + b"\x00"
     for i in range(nchain):
-        sym = symtab + i * 24
-        if sym + 24 > len(blob):
+        sym = symtab + i * sym_entry_size
+        if sym + sym_entry_size > len(blob):
             break
         st_name = struct.unpack_from("<I", blob, sym)[0]
         if st_name == 0:
@@ -303,7 +339,7 @@ def _resolve_vdso_function(pid: int, symbol: str) -> int | None:
         if name_end < 0:
             continue
         if blob[name_start : name_end + 1] == target:
-            return base + struct.unpack_from("<Q", blob, sym + 8)[0]
+            return base + struct.unpack_from(value_fmt, blob, sym + st_value_off)[0]
     return None
 
 
@@ -385,10 +421,74 @@ def _vdso_call_or_syscall(vdso_addr: int | None, syscall_nr: int, saves: tuple[s
     """
 
 
+def _vdso_call_or_syscall_32(
+    vdso_addr: int | None, syscall_nr: int, arg_offsets: tuple[int, ...], syscall_regs: tuple[str, ...]
+) -> str:
+    # i386 analogue of _vdso_call_or_syscall.
+    # The hooked functions are cdecl so their args sit on the caller's stack,
+    # reachable at the ebp-relative "arg_offsets" (8 and 12) once the prologue runs.
+    # If "vdso_addr" is set, we push the args right-to-left, call it as a cdecl function and clean the
+    # stack afterwards.
+    # esp must be 16-aligned before "call", and the shared hook prologue (push ebp/ebx/esi/edi; sub esp, 64)
+    # leaves esp % 16 == 12 here, so we pad by (12 - 4 * argc) % 16.
+    # Otherwise we issue the raw int 0x80, which preserves every register but eax so the frame survives.
+    if vdso_addr is not None:
+        argc = len(arg_offsets)
+        pad = (12 - 4 * argc) % 16
+        pad_in = f"sub esp, {pad}" if pad else ""
+        pushes = "\n".join(f"push dword ptr [ebp + {off}]" for off in reversed(arg_offsets))
+        return f"""
+            {pad_in}
+            {pushes}
+            mov eax, {hex(vdso_addr)}
+            call eax
+            add esp, {pad + 4 * argc}
+        """
+    loads = "\n".join(f"mov {reg}, dword ptr [ebp + {off}]" for reg, off in zip(syscall_regs, arg_offsets))
+    return f"""
+        {loads}
+        mov eax, {syscall_nr}
+        int 0x80
+    """
+
+
+def _scale64_asm(mul_off: int, div_off: int) -> str:
+    # Shared 64-bit scaling kernel for the i386 hooks, lifted from wine_speedhack._build_qpc_wrapper_32.
+    # Requires esi == state block base. Computes: OUT (64-bit) = VAL (64-bit) * dword[esi + mul_off] / dword[esi + div_off]
+    # via a 96-bit product divided word-by-word by the 32-bit divisor.
+    # The top quotient word is dropped because the scaled result fits 64 bits for any real session (num/den keep it in range).
+    # Fixed ebp-relative scratch slots, shared with the callers' surrounding asm:
+    #   VAL = [ebp-16/-20] (input), OUT = [ebp-36/-40] (result), 96-bit product = [ebp-24/-28/-32].
+    # Clobbers eax, ebx, ecx, edx. Leaves esi/edi/ebp untouched. OUT may alias VAL (VAL is fully read before OUT is written).
+    return f"""
+        mov eax, dword ptr [ebp - 16]
+        mov ebx, dword ptr [esi + {mul_off}]
+        mul ebx
+        mov dword ptr [ebp - 24], eax
+        mov ecx, edx
+        mov eax, dword ptr [ebp - 20]
+        mul ebx
+        add eax, ecx
+        mov dword ptr [ebp - 28], eax
+        adc edx, 0
+        mov dword ptr [ebp - 32], edx
+        mov ebx, dword ptr [esi + {div_off}]
+        xor edx, edx
+        mov eax, dword ptr [ebp - 32]
+        div ebx
+        mov eax, dword ptr [ebp - 28]
+        div ebx
+        mov dword ptr [ebp - 40], eax
+        mov eax, dword ptr [ebp - 24]
+        div ebx
+        mov dword ptr [ebp - 36], eax
+    """
+
+
 def _build_clock_gettime_hook(state_addr: int, vdso_addr: int | None) -> bytes:
     # rdi = clockid_t, rsi = struct timespec*.
     # endbr64 is there because libc's entry may be reached via an indirect branch on CET-enabled processes.
-    invoke = _vdso_call_or_syscall(vdso_addr, 228, ("rdi", "rsi"))
+    invoke = _vdso_call_or_syscall(vdso_addr, SYS_CLOCK_GETTIME, ("rdi", "rsi"))
     # For some stupid reason, keystone can't assemble "endbr64" so we just write the bytes directly:
     # 0xF3 0x0F 0x1E 0xFA
     asm = f"""
@@ -434,7 +534,7 @@ def _build_clock_gettime_hook(state_addr: int, vdso_addr: int | None) -> bytes:
 
 def _build_gettimeofday_hook(state_addr: int, vdso_addr: int | None) -> bytes:
     # rdi = struct timeval*, rsi = struct timezone* (unused).
-    invoke = _vdso_call_or_syscall(vdso_addr, 96, ("rdi",))
+    invoke = _vdso_call_or_syscall(vdso_addr, SYS_GETTIMEOFDAY, ("rdi",))
     asm = f"""
         .byte 0xf3, 0x0f, 0x1e, 0xfa
         {invoke}
@@ -518,6 +618,208 @@ def _build_nanosleep_hook(state_addr: int) -> bytes:
     return _assemble_hook(asm)
 
 
+def _build_clock_gettime_hook_32(state_addr: int, vdso_addr: int | None) -> bytes:
+    # i386 cdecl: [ebp+8] = clockid_t clk, [ebp+12] = struct timespec* tp (32-bit tv_sec/tv_nsec).
+    # endbr32 so the jmp-eax detour lands on a valid IBT endbranch under CET.
+    invoke = _vdso_call_or_syscall_32(vdso_addr, SYS_CLOCK_GETTIME_32, (8, 12), ("ebx", "ecx"))
+    asm = f"""
+        .byte 0xf3, 0x0f, 0x1e, 0xfb
+        push ebp
+        mov ebp, esp
+        push ebx
+        push esi
+        push edi
+        sub esp, 64
+        {invoke}
+        test eax, eax
+        jne done
+        mov ecx, dword ptr [ebp + 8]
+        cmp ecx, 7
+        ja done
+        cmp ecx, 2
+        je done
+        cmp ecx, 3
+        je done
+        cmp ecx, 5
+        je done
+        cmp ecx, 6
+        je done
+        mov esi, {hex(state_addr)}
+        mov edi, dword ptr [ebp + 12]
+        mov eax, dword ptr [edi]
+        mov ebx, 1000000000
+        mul ebx
+        add eax, dword ptr [edi + 4]
+        adc edx, 0
+        mov dword ptr [ebp - 16], eax
+        mov dword ptr [ebp - 20], edx
+        mov eax, dword ptr [ebp + 8]
+        shl eax, 4
+        add eax, esi
+        mov dword ptr [ebp - 44], eax
+        mov ecx, dword ptr [ebp - 44]
+        mov eax, dword ptr [ebp - 16]
+        sub eax, dword ptr [ecx]
+        mov dword ptr [ebp - 16], eax
+        mov eax, dword ptr [ebp - 20]
+        sbb eax, dword ptr [ecx + 4]
+        mov dword ptr [ebp - 20], eax
+        {_scale64_asm(NUM_OFFSET, DEN_OFFSET)}
+        mov ecx, dword ptr [ebp - 44]
+        mov eax, dword ptr [ebp - 36]
+        add eax, dword ptr [ecx + 8]
+        mov dword ptr [ebp - 36], eax
+        mov eax, dword ptr [ebp - 40]
+        adc eax, dword ptr [ecx + 12]
+        mov dword ptr [ebp - 40], eax
+        mov ecx, 1000000000
+        xor edx, edx
+        mov eax, dword ptr [ebp - 40]
+        div ecx
+        mov eax, dword ptr [ebp - 36]
+        div ecx
+        mov dword ptr [edi], eax
+        mov dword ptr [edi + 4], edx
+        xor eax, eax
+    done:
+        add esp, 64
+        pop edi
+        pop esi
+        pop ebx
+        pop ebp
+        ret
+    """
+    return _assemble_hook(asm, typedefs.INFERIOR_ARCH.ARCH_32)
+
+
+def _build_gettimeofday_hook_32(state_addr: int, vdso_addr: int | None) -> bytes:
+    # i386 cdecl: [ebp+8] = struct timeval* tv (32-bit tv_sec/tv_usec), [ebp+12] = struct timezone* tz (unused).
+    # Scales around the CLOCK_REALTIME base stored at state+0 (real) / state+8 (fake), like the x64 hook.
+    invoke = _vdso_call_or_syscall_32(vdso_addr, SYS_GETTIMEOFDAY_32, (8, 12), ("ebx", "ecx"))
+    asm = f"""
+        .byte 0xf3, 0x0f, 0x1e, 0xfb
+        push ebp
+        mov ebp, esp
+        push ebx
+        push esi
+        push edi
+        sub esp, 64
+        {invoke}
+        test eax, eax
+        jne done
+        mov edi, dword ptr [ebp + 8]
+        test edi, edi
+        jz done
+        mov esi, {hex(state_addr)}
+        mov eax, dword ptr [edi]
+        mov ebx, 1000000000
+        mul ebx
+        mov dword ptr [ebp - 16], eax
+        mov dword ptr [ebp - 20], edx
+        mov eax, dword ptr [edi + 4]
+        mov ebx, 1000
+        mul ebx
+        add dword ptr [ebp - 16], eax
+        adc dword ptr [ebp - 20], edx
+        mov eax, dword ptr [ebp - 16]
+        sub eax, dword ptr [esi]
+        mov dword ptr [ebp - 16], eax
+        mov eax, dword ptr [ebp - 20]
+        sbb eax, dword ptr [esi + 4]
+        mov dword ptr [ebp - 20], eax
+        {_scale64_asm(NUM_OFFSET, DEN_OFFSET)}
+        mov eax, dword ptr [ebp - 36]
+        add eax, dword ptr [esi + 8]
+        mov dword ptr [ebp - 36], eax
+        mov eax, dword ptr [ebp - 40]
+        adc eax, dword ptr [esi + 12]
+        mov dword ptr [ebp - 40], eax
+        mov ecx, 1000000000
+        xor edx, edx
+        mov eax, dword ptr [ebp - 40]
+        div ecx
+        mov eax, dword ptr [ebp - 36]
+        div ecx
+        mov dword ptr [edi], eax
+        mov eax, edx
+        xor edx, edx
+        mov ecx, 1000
+        div ecx
+        mov dword ptr [edi + 4], eax
+        xor eax, eax
+    done:
+        add esp, 64
+        pop edi
+        pop esi
+        pop ebx
+        pop ebp
+        ret
+    """
+    return _assemble_hook(asm, typedefs.INFERIOR_ARCH.ARCH_32)
+
+
+def _build_nanosleep_hook_32(state_addr: int) -> bytes:
+    # i386 cdecl: [ebp+8] = const struct timespec* req, [ebp+12] = struct timespec* rem (32-bit fields).
+    # No vDSO entry for nanosleep, so always int 0x80 (syscall 162).
+    # Scales the requested duration by den/num (inverse of the read scaling),
+    # retries on EINTR until the full real duration elapses, then zeros the caller's rem.
+    # Local kernel timespec at [ebp-48]=tv_sec / [ebp-44]=tv_nsec.
+    asm = f"""
+        .byte 0xf3, 0x0f, 0x1e, 0xfb
+        push ebp
+        mov ebp, esp
+        push ebx
+        push esi
+        push edi
+        sub esp, 64
+        mov esi, {hex(state_addr)}
+        mov edi, dword ptr [ebp + 8]
+        mov eax, dword ptr [edi]
+        mov ebx, 1000000000
+        mul ebx
+        add eax, dword ptr [edi + 4]
+        adc edx, 0
+        mov dword ptr [ebp - 16], eax
+        mov dword ptr [ebp - 20], edx
+        mov eax, dword ptr [esi + {NUM_OFFSET}]
+        test eax, eax
+        jz cleanup
+        {_scale64_asm(DEN_OFFSET, NUM_OFFSET)}
+        mov ecx, 1000000000
+        xor edx, edx
+        mov eax, dword ptr [ebp - 40]
+        div ecx
+        mov eax, dword ptr [ebp - 36]
+        div ecx
+        mov dword ptr [ebp - 48], eax
+        mov dword ptr [ebp - 44], edx
+    retry:
+        lea ebx, [ebp - 48]
+        lea ecx, [ebp - 48]
+        mov eax, {SYS_NANOSLEEP_32}
+        int 0x80
+        test eax, eax
+        jz cleanup
+        cmp eax, -4
+        je retry
+    cleanup:
+        mov edx, dword ptr [ebp + 12]
+        test edx, edx
+        jz done
+        mov dword ptr [edx], 0
+        mov dword ptr [edx + 4], 0
+    done:
+        xor eax, eax
+        add esp, 64
+        pop edi
+        pop esi
+        pop ebx
+        pop ebp
+        ret
+    """
+    return _assemble_hook(asm, typedefs.INFERIOR_ARCH.ARCH_32)
+
+
 def _write_verified(address: int, aob: str) -> None:
     """write_memory swallows OSError/ValueError, so confirm the patch actually landed.
     Raises RuntimeError on mismatch so install/restore can detect a failed write."""
@@ -537,8 +839,8 @@ def _restore_hook(hook: HookPatch) -> bool:
         return False
 
 
-def _assemble_hook(asm: str) -> bytes:
-    encoded = utils.assemble(asm, 0, typedefs.INFERIOR_ARCH.ARCH_64)
+def _assemble_hook(asm: str, arch: int = typedefs.INFERIOR_ARCH.ARCH_64) -> bytes:
+    encoded = utils.assemble(asm, 0, arch)
     if encoded is None:
         raise RuntimeError("Failed to assemble speedhack hook")
     return bytes(encoded[0])
