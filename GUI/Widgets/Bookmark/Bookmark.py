@@ -37,10 +37,11 @@ class BookmarkWidget(QWidget, Ui_Form):
     def refresh_table(self) -> None:
         self.listWidget.clear()
         address_list = [hex(address) for address in self.session.pct_bookmarks.keys()]
-        if debugcore.currentpid == -1:
-            self.listWidget.addItems(address_list)
-        else:
-            self.listWidget.addItems([item.all for item in debugcore.examine_expressions(address_list)])
+        if debugcore.currentpid != -1:
+            results = debugcore.examine_expressions(address_list)
+            if results:
+                address_list = [item.all or addr for item, addr in zip(results, address_list)]
+        self.listWidget.addItems(address_list)
         self.repaint()
 
     def change_display(self, row: int) -> None:
