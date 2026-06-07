@@ -236,7 +236,11 @@ def delete_menu_entries(menu: QMenu, QAction_list: list) -> None:
                     len(actions) == 1
                     or (current_index == 0 and actions[1].isSeparator())
                     or (current_index == len(actions) - 1 and actions[-2].isSeparator())
-                    or (actions[current_index - 1].isSeparator() and actions[current_index + 1].isSeparator())
+                    or (
+                        0 < current_index < len(actions) - 1
+                        and actions[current_index - 1].isSeparator()
+                        and actions[current_index + 1].isSeparator()
+                    )
                 ):
                     menu.removeAction(action)
 
