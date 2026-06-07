@@ -264,7 +264,8 @@ def send_command(
                 output = ""
                 child.sendcontrol("c")
                 with gdb_waiting_for_prompt_condition:
-                    gdb_waiting_for_prompt_condition.wait()
+                    while gdb_output is None:
+                        gdb_waiting_for_prompt_condition.wait(timeout=0.01)
         else:
             output = ""
         if gdb_output_mode.command_info:
