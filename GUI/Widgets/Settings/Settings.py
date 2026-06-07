@@ -121,7 +121,7 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.lineEdit_AutoAttach.setText(self.settings.value("General/auto_attach", type=str))
         self.checkBox_AutoAttachRegex.setChecked(self.settings.value("General/auto_attach_regex", type=bool))
         current_locale = self.settings.value("General/locale", type=str)
-        self.comboBox_Language.setCurrentText(language_list.get(current_locale, "en_US"))
+        self.comboBox_Language.setCurrentText(language_list.get(current_locale, language_list["en_US"]))
         with QSignalBlocker(self.comboBox_Theme):
             self.comboBox_Theme.setCurrentText(themes.theme_strings[self.settings.value("General/theme", type=str)])
         with QSignalBlocker(self.comboBox_Logo):
