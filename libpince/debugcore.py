@@ -908,7 +908,10 @@ def allocate_memory(size: int, name: str | None) -> int:
     allocated_memory_chunks[name] = allocated_memory
     page_size = os.sysconf("SC_PAGE_SIZE")
     page_memory_addr = allocated_memory.address & ~(page_size - 1)
-    send_command(f"p (int)mprotect({page_memory_addr}, {page_size * 2}, 7)")  # PROT_READ | PROT_WRITE | PROT_EXEC = 7
+    end_addr = allocated_memory.address + size
+    end_page_addr = (end_addr + page_size - 1) & ~(page_size - 1)
+    mprotect_length = end_page_addr - page_memory_addr
+    send_command(f"p (int)mprotect({page_memory_addr}, {mprotect_length}, 7)")  # PROT_READ | PROT_WRITE | PROT_EXEC = 7
     return allocated_memory.address
 
 
