@@ -1239,9 +1239,12 @@ def examine_expressions(expression_list: list[str]) -> list[typedefs.tuple_exami
         return []
     if currentpid == -1:
         return [typedefs.tuple_examine_expression(None, None, None) for _ in range(len(expression_list))]
-    return send_command(
+    result = send_command(
         "pince-examine-expressions", send_with_file=True, file_contents_send=expression_list, recv_with_file=True
     )
+    if not result:
+        return [typedefs.tuple_examine_expression(None, None, None) for _ in range(len(expression_list))]
+    return result
 
 
 def parse_and_eval(expression: str, cast: type = str) -> Any:
@@ -1502,7 +1505,7 @@ def read_registers() -> dict[str, str | None]:
         dict[str, str | None]: A dict that holds general, flag and segment registers. Check typedefs.REGISTERS for the
         full list. Segment register values may be None when the register can't be resolved
     """
-    return send_command("pince-read-registers", recv_with_file=True)
+    return send_command("pince-read-registers", recv_with_file=True) or {}
 
 
 def read_float_registers() -> OrderedDict[str, str]:
@@ -1514,7 +1517,7 @@ def read_float_registers() -> OrderedDict[str, str]:
     Note:
         Returned xmm values are based on xmm.v4_float
     """
-    return send_command("pince-read-float-registers", recv_with_file=True)
+    return send_command("pince-read-float-registers", recv_with_file=True) or OrderedDict()
 
 
 def set_convenience_variable(variable: str, value: str) -> None:

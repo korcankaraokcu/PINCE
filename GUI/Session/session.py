@@ -12,7 +12,7 @@ from tr.tr import TranslationConstants as tr
 
 
 class SessionDataChanged(IntFlag):
-    NONE = auto()
+    NONE = 0
     ADDRESS_TREE = auto()
     BOOKMARKS = auto()
     NOTES = auto()
@@ -27,6 +27,8 @@ def migrate_version(content: Any) -> dict[str, Any]:
 
 
 def is_valid_session_data(content: dict[str, Any]) -> bool:
+    if not isinstance(content, dict):
+        return False
     keys = ["version", "notes", "bookmarks", "address_tree", "process_name"]
     for key in keys:
         if key not in content:

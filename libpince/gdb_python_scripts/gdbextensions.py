@@ -316,7 +316,7 @@ class GetTrackWatchpointInfo(gdb.Command):
 
             # Just before the line "End of assembler dump"
             last_instruction = disas_output.splitlines()[-2]
-            previous_pc_address = utils.extract_hex_address(last_instruction)
+            previous_pc_address = utils.extract_hex_address(last_instruction) or hex(current_pc_int)
         except:
             previous_pc_address = hex(current_pc_int)
         global track_watchpoint_dict
