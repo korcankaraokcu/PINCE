@@ -2918,6 +2918,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if guiutils.check_inferior_running(self):
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        if selected_row == -1:
+            return
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
         debugcore.set_convenience_variable("pc", current_address)
@@ -2925,6 +2927,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def edit_instruction(self) -> None:
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        if selected_row == -1:
+            return
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
         bytes_aob = self.tableWidget_Disassemble.item(selected_row, DISAS_OPCODES_COL).text()
@@ -2934,6 +2938,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        if selected_row == -1:
+            return
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
         current_address_int = safe_str_to_int(current_address, 16)
@@ -2947,6 +2953,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        if selected_row == -1:
+            return
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
         current_address_int = safe_str_to_int(current_address, 16)
@@ -3935,6 +3943,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         if index.column() == DISAS_COMMENT_COL:
             selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+            if selected_row == -1:
+                return
             current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
             current_address = safe_str_to_int(utils.extract_hex_address(current_address_text), 16)
             if current_address in self.session.pct_bookmarks:
@@ -3982,6 +3992,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             app.clipboard().setText(copied_string)
 
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        if selected_row == -1:
+            return
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
         current_address_int = safe_str_to_int(current_address, 16)
@@ -4106,6 +4118,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        if selected_row == -1:
+            return
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
         current_instruction = self.tableWidget_Disassemble.item(selected_row, DISAS_INSTR_COL).text()
