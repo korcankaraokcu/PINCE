@@ -168,7 +168,7 @@ def _install(speed: float = 1.0) -> bool:
         else:
             jump = b"\xb8" + struct.pack("<I", wrapper_addr) + b"\xff\xe0"
         patch = jump + b"\x90" * (patch_size - (JUMP_SIZE if arch64 else JUMP_SIZE_32))
-        debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, linux_speedhack._bytes_to_aob(patch))
+        linux_speedhack._write_verified(address, linux_speedhack._bytes_to_aob(patch))
         installed.append(linux_speedhack.HookPatch(symbol, address, original_aob))
     except Exception:
         logger.exception("Failed to install Wine speedhack")
@@ -210,7 +210,7 @@ def _do_uninstall() -> bool:
         logger.error("Wine speedhack left a thread in the code cave; leaking it instead of freeing")
         debugcore.allocated_memory_chunks.pop(ALLOC_NAME, None)
         return False
-    if ALLOC_NAME in debugcore.allocated_memory_chunks:
+    if success and ALLOC_NAME in debugcore.allocated_memory_chunks:
         try:
             if not debugcore.free_memory(ALLOC_NAME):
                 success = False

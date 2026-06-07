@@ -144,7 +144,7 @@ def _install(speed: float = 1.0) -> bool:
             debugcore.write_memory(cursor, typedefs.VALUE_INDEX.AOB, list(code))
             # movabs rax, cursor; jmp rax (12 bytes), NOP-padded out to whole instructions.
             patch = b"\x48\xb8" + struct.pack("<Q", cursor) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE)
-            debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, _bytes_to_aob(patch))
+            _write_verified(address, _bytes_to_aob(patch))
             installed.append(HookPatch(symbol, address, original_aob))
             cursor = (cursor + len(code) + 15) & ~15
     except Exception:
@@ -189,7 +189,7 @@ def _do_uninstall() -> bool:
     for hook in reversed(session.hooks):
         if not _restore_hook(hook):
             success = False
-    if ALLOC_NAME in debugcore.allocated_memory_chunks:
+    if success and ALLOC_NAME in debugcore.allocated_memory_chunks:
         try:
             if not debugcore.free_memory(ALLOC_NAME):
                 success = False
@@ -518,9 +518,19 @@ def _build_nanosleep_hook(state_addr: int) -> bytes:
     return _assemble_hook(asm)
 
 
+def _write_verified(address: int, aob: str) -> None:
+    """write_memory swallows OSError/ValueError, so confirm the patch actually landed.
+    Raises RuntimeError on mismatch so install/restore can detect a failed write."""
+    debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, aob)
+    expected = aob.split()
+    readback = debugcore.hex_dump(address, len(expected))
+    if [b.lower() for b in readback] != [b.lower() for b in expected]:
+        raise RuntimeError(f"Speedhack write verification failed at {hex(address)}")
+
+
 def _restore_hook(hook: HookPatch) -> bool:
     try:
-        debugcore.write_memory(hook.address, typedefs.VALUE_INDEX.AOB, hook.original_aob)
+        _write_verified(hook.address, hook.original_aob)
         return True
     except Exception:
         logger.exception("Failed to restore %s", hook.symbol)
