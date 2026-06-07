@@ -21,7 +21,7 @@
     - [gdbextensions.py](./libpince/gdb_python_scripts/gdbextensions.py) - Contains custom GDB commands
     - [gdbutils.py](./libpince/gdb_python_scripts/gdbutils.py) - Contains utility functions for GDB commands
 
-**About GUI file structure refactoring**: PINCE.py currently holds all of the GUI logic classes and this makes PINCE.py grow larger as the project progresses. To prevent this, all GUI logic will be carried to their respective folders and the GUI folder will follow this structure:
+**About GUI file structure refactoring**: PINCE.py currently still holds some of the GUI logic classes and this makes PINCE.py larger than it needs to be. To deal with this, all GUI logic will be carried to their respective folders and the GUI folder will follow this structure:
 ```
 GUI/
 |-- Settings/
