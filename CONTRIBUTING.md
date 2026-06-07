@@ -192,11 +192,11 @@ These tasks are ordered by importance but feel free to pick any of them. Further
 - Implement thread info widget
 - Write at least one test for each function in libpince
 - Refactorize memory write/read functions
-- - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k.
+  - ReferencedStringsWidgetForm refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k.
   Only update the visible rows to prevent this(check ```disassemble_check_viewport``` for an example)
-- - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
-- - Consider using a class instead of primitive return types to store the raw bytes. This class should also include a method to display None type as red '??' text for Qt
-- - Put a warning for users about replacement bytes for non UTF-8 types
+  - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
+  - Consider using a class instead of primitive return types to store the raw bytes. This class should also include a method to display None type as red '??' text for Qt
+  - Put a warning for users about replacement bytes for non UTF-8 types
 - Implement "Investigate Registers" button to gather information about the addresses registers point to
 - Add the ability to track down registers and addresses in tracer(unsure)
 - Implement CE's Ultimap-like feature for tracing data, dissect code data and raw instruction list.
@@ -213,4 +213,4 @@ Implement a flexible input field for the execution count. For instance, 2^x only
 - Implement developer mode in settings. Developer mode will include features like dissection of GUI elements on events such as mouse-over
 - Add ability to include non-absolute calls for dissect code feature(i.e call rax). Should be considered after the first version release. Might be useful for multi-breakpoint related features
 - Provide information about absolute addresses in disassemble screen
-- All tables that hold large amount of data should only update the visible rows(check ```disassemble_check_viewport``` for an example)
+- All tables that hold large amount of data should only update the visible rows(check ```disassemble_check_viewport``` for an example
