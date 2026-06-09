@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import socket
 import struct
-import pickle
-import shelve
 from dataclasses import dataclass
 from time import sleep
 from typing import Any
@@ -35,6 +33,7 @@ _client: "MonoClient | None" = None
 
 _RUNTIME_PATTERNS = [
     ("mono", "sysv", r"libmono(sgen|bdwgc)?-2\.0\.so"),
+    ("mono", "sysv", r"^mono-sgen$|^mono-boehm$|^mono$"),
     ("mono", "win64", r"mono-2\.0-bdwgc\.dll"),
     ("il2cpp", "sysv", r"libil2cpp\.so"),
     ("il2cpp", "win64", r"GameAssembly\.dll"),
@@ -199,46 +198,3 @@ class MonoClient:
             self.sock.close()
         except OSError:
             pass
-
-
-def _write_status(pid: int, current: int, total: int) -> None:
-    try:
-        with open(utils.get_mono_status_file(pid), "wb") as handle:
-            pickle.dump((current, total), handle)
-    except OSError:
-        pass
-
-
-def get_status() -> tuple[int, int]:
-    """Returns (assemblies_done, assemblies_total) for the GUI progress bar."""
-    try:
-        with open(utils.get_mono_status_file(debugcore.currentpid), "rb") as handle:
-            return pickle.load(handle)
-    except Exception:
-        return 0, 0
-
-
-def dissect_mono() -> bool:
-    """Enumerate assemblies + their classes and persist to the shelve cache.
-
-    Fields/methods are fetched lazily by the GUI on expansion.
-    Mirrors the debugcore.dissect_code() persistence pattern.
-
-    Returns:
-        bool: True on success, False if the collector isn't ready
-    """
-    if _client is None:
-        return False
-    pid = debugcore.currentpid
-    if pid == -1:
-        return False
-
-    assemblies = _client.assemblies()
-    with shelve.open(utils.get_mono_data_file(pid)) as db:
-        db["assemblies"] = assemblies
-        total = len(assemblies)
-        for index, assembly in enumerate(assemblies):
-            _write_status(pid, index, total)
-            db[f"img:{assembly['image']}"] = _client.classes(assembly["image"])
-        _write_status(pid, total, total)
-    return True

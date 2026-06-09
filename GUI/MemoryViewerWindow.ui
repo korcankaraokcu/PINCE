@@ -1611,6 +1611,7 @@
     <addaction name="actionCall_Function"/>
     <addaction name="actionSearch_Instructions"/>
     <addaction name="actionDissect_Code"/>
+    <addaction name="actionDissect_Mono"/>
     <addaction name="actionLibpince_Engine"/>
    </widget>
    <widget class="QMenu" name="menuFile">
@@ -1725,6 +1726,11 @@
   <action name="actionDissect_Code">
    <property name="text">
     <string>&amp;Dissect Code</string>
+   </property>
+  </action>
+  <action name="actionDissect_Mono">
+   <property name="text">
+    <string>Dissect &amp;Mono/IL2CPP</string>
    </property>
   </action>
   <action name="actionReferenced_Strings">

@@ -663,30 +663,6 @@ def get_dissect_code_status_file(pid: int | str) -> str:
     return get_ipc_path(pid) + "/dissect_code_status.txt"
 
 
-def get_mono_data_file(pid: int | str) -> str:
-    """Get the path of the Mono dissection shelve db for the given pid
-
-    Args:
-        pid (int,str): PID of the process
-
-    Returns:
-        str: Path of the Mono data shelve db (without extension)
-    """
-    return get_ipc_path(pid) + "/mono_data"
-
-
-def get_mono_status_file(pid: int | str) -> str:
-    """Get the path of the Mono dissection status file for the given pid
-
-    Args:
-        pid (int,str): PID of the process
-
-    Returns:
-        str: Path of the Mono dissection status file
-    """
-    return get_ipc_path(pid) + "/mono_status.txt"
-
-
 def get_referenced_strings_file(pid: int | str) -> str:
     """Get the path of referenced strings dict file for given pid
 

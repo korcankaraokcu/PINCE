@@ -203,6 +203,8 @@ class TranslationConstants(QObject):
     READ_ONLY = QT_TR_NOOP("Read Only")
     BOTH = QT_TR_NOOP("Both")
     CHANGE_BREAKPOINT_CONDITION = QT_TR_NOOP("Add/Change condition for breakpoint")
+    SET_BREAKPOINT = QT_TR_NOOP("Set Breakpoint")
+    TOGGLE_BREAKPOINT = QT_TR_NOOP("Toggle Breakpoint")
     DELETE_BREAKPOINT = QT_TR_NOOP("Delete Breakpoint")
     ENTER_EXPRESSION = QT_TR_NOOP("Enter the expression")
     INVALID = QT_TR_NOOP("{} is invalid")
@@ -239,7 +241,6 @@ class TranslationConstants(QObject):
     DELETE_BOOKMARK = QT_TR_NOOP("Delete this bookmark")
     CHANGE_COMMENT = QT_TR_NOOP("Change comment")
     GO_TO_BOOKMARK_ADDRESS = QT_TR_NOOP("Go to bookmarked address")
-    TOGGLE_BREAKPOINT = QT_TR_NOOP("Toggle Breakpoint")
     EDIT_INSTRUCTION = QT_TR_NOOP("Edit instruction")
     REPLACE_WITH_NOPS = QT_TR_NOOP("Replace instruction with NOPs")
     WHAT_ACCESSES_INSTRUCTION = QT_TR_NOOP("Find out which addresses this instruction accesses")
@@ -332,7 +333,8 @@ class TranslationConstants(QObject):
         "It means that the function is overloaded"
     )
     NEW_INSTR = QT_TR_NOOP(
-        "New instruction is {} bytes long but old instruction is only {} bytes long\n" "This will cause an overflow, proceed?"
+        "New instruction is {} bytes long but old instruction is only {} bytes long\n"
+        "This will cause an overflow, proceed?"
     )
     IS_INVALID_EXPRESSION = QT_TR_NOOP("{} isn't a valid expression")
     LOG_FILE = QT_TR_NOOP("Log File of PID {}")
@@ -393,3 +395,10 @@ class TranslationConstants(QObject):
     SESSION_PROCESS_CHANGED_PROMPT = QT_TR_NOOP(
         "The process name has changed.\n" "Do you want to keep the current session with the new process?"
     )
+    MONO_NOT_READY = QT_TR_NOOP("Mono collector is not connected")
+    MONO_NO_RUNTIME = QT_TR_NOOP("No supported managed runtime found in this process")
+    MONO_IL2CPP_LATER = QT_TR_NOOP("IL2CPP support is not available yet")
+    MONO_WINE_LATER = QT_TR_NOOP("Wine/Proton targets are not supported yet")
+    FIELDS = QT_TR_NOOP("Fields")
+    METHODS = QT_TR_NOOP("Methods")
+    DISASSEMBLE = QT_TR_NOOP("Disassemble")

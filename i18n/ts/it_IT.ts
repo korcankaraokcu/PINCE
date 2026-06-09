@@ -316,6 +316,26 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
+        <source>Dissect Mono/IL2CPP</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
+        <source>Search</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
+        <source>Name</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
+        <source>Value</source>
+        <translation type="unfinished">Valore</translation>
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
         <source>Compare &amp; Filter Pointers</source>
         <translation type="unfinished" />
@@ -1426,6 +1446,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <source>Dissect &amp;Mono/IL2CPP</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
         <source>R&amp;eferenced Strings</source>
         <translation type="unfinished" />
     </message>
@@ -2330,6 +2355,16 @@ Changing output mode only affects commands sent. Any other output coming from ex
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
+        <source>Set Breakpoint</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Toggle Breakpoint</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
         <source>Delete Breakpoint</source>
         <translation type="unfinished" />
     </message>
@@ -2486,11 +2521,6 @@ Check terminal for details</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Go to bookmarked address</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Toggle Breakpoint</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -3072,6 +3102,41 @@ Do you want to save the current session?</source>
         <location filename="../../tr/tr.py" line="0" />
         <source>The process name has changed.
 Do you want to keep the current session with the new process?</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Mono collector is not connected</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>No supported managed runtime found in this process</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>IL2CPP support is not available yet</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Wine/Proton targets are not supported yet</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Fields</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Methods</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Disassemble</source>
         <translation type="unfinished" />
     </message>
 </context></TS>

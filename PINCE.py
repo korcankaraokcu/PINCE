@@ -134,10 +134,11 @@ from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDia
 from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructionsWidget
 from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
 from GUI.Widgets.Settings.Settings import SettingsDialog
-from libpince import debugcore, typedefs, utils, scancore, linux_speedhack, wine_speedhack
-from libpince.utils import safe_str_to_int, safe_int_cast, logger
-from libpince.scancore import memscan
+from GUI.Widgets.MonoDissect.MonoDissect import MonoDissectDialog
+from libpince import debugcore, linux_speedhack, monocore, scancore, typedefs, utils, wine_speedhack
 from libpince.libmemscan.memscan import ScanLevel, DataType, MatchView, BytePattern
+from libpince.scancore import memscan
+from libpince.utils import logger, safe_str_to_int, safe_int_cast
 from tr.tr import TranslationConstants as tr
 from tr.tr import get_locale
 
@@ -2773,6 +2774,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionCall_Function.triggered.connect(self.actionCall_Function_triggered)
         self.actionSearch_Instructions.triggered.connect(self.actionSearch_Instructions_triggered)
         self.actionDissect_Code.triggered.connect(self.actionDissect_Code_triggered)
+        self.actionDissect_Mono.triggered.connect(self.actionDissect_Mono_triggered)
         self.actionLibpince_Engine.triggered.connect(self.actionLibpince_Engine_triggered)
 
     def initialize_help_context_menu(self) -> None:
@@ -4309,7 +4311,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionInject_so_file_triggered(self) -> None:
         if debugcore.currentpid == -1:
             return
-        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_SO_FILE, os.path.expanduser("~"), tr.SHARED_OBJECT_TYPE)
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, tr.SELECT_SO_FILE, os.path.expanduser("~"), tr.SHARED_OBJECT_TYPE
+        )
         if file_path:
             if debugcore.inject_so(file_path):
                 QMessageBox.information(self, tr.SUCCESS, tr.FILE_INJECTED)
@@ -4344,6 +4348,35 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         dissect_code_dialog = DissectCodeDialogForm(self)
         dissect_code_dialog.exec()
+        self.refresh_disassemble_view()
+
+    def actionDissect_Mono_triggered(self) -> None:
+        if debugcore.currentpid == -1:
+            return
+        info = monocore.detect_runtime(debugcore.currentpid)
+        if info is None:
+            QMessageBox.information(self, tr.ERROR, tr.MONO_NO_RUNTIME)
+            return
+        if info.kind == "il2cpp":
+            QMessageBox.information(self, tr.ERROR, tr.MONO_IL2CPP_LATER)
+            return
+        if info.abi != "sysv":
+            QMessageBox.information(self, tr.ERROR, tr.MONO_WINE_LATER)
+            return
+        if not monocore.init_mono():
+            QMessageBox.information(self, tr.ERROR, tr.MONO_NOT_READY)
+            return
+        mono_dialog = MonoDissectDialog(self)
+        mono_dialog.disassemble_requested.connect(lambda address: self.disassemble_expression(hex(int(address))))
+        mono_dialog.breakpoint_requested.connect(self._mono_breakpoint)
+        mono_dialog.add_to_table_requested.connect(
+            lambda description, address: self.parent().add_entry_to_addresstable(description, hex(int(address)))
+        )
+        mono_dialog.show()
+
+    def _mono_breakpoint(self, address: object) -> None:
+        if not debugcore.add_breakpoint(hex(int(address))):
+            QMessageBox.information(self, tr.ERROR, tr.BREAKPOINT_FAILED.format(hex(int(address))))
         self.refresh_disassemble_view()
 
     def actionLibpince_Engine_triggered(self) -> None:
@@ -4937,14 +4970,18 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.treeWidget_InstructionInfo.expandAll()
 
     def save_file(self) -> None:
-        file_path, _ = QFileDialog.getSaveFileName(self, tr.SAVE_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE)
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, tr.SAVE_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE
+        )
         if file_path:
             file_path = utils.append_file_extension(file_path, "trace")
             if not utils.save_file(self.tracer.trace_data, file_path):
                 QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
 
     def load_file(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(self, tr.OPEN_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE)
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, tr.OPEN_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE
+        )
         if file_path:
             content = utils.load_file(file_path)
             if content is None:
