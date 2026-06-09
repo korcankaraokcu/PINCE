@@ -4370,7 +4370,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         mono_dialog.disassemble_requested.connect(lambda address: self.disassemble_expression(hex(int(address))))
         mono_dialog.breakpoint_requested.connect(self._mono_breakpoint)
         mono_dialog.add_to_table_requested.connect(
-            lambda description, address: self.parent().add_entry_to_addresstable(description, hex(int(address)))
+            lambda description, address: self.parent().add_entry_to_addresstable(description, address)
         )
         mono_dialog.show()
 

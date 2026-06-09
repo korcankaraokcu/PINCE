@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QDialog, QTreeWidgetItem, QMenu, QApplication, QWidg
 
 from GUI.Widgets.MonoDissect.Form.MonoDissectDialog import Ui_Dialog
 from GUI.Utils import guiutils
-from libpince import monocore, utils
+from libpince import monocore, utils, typedefs
 from tr.tr import TranslationConstants as tr
 
 ROLE_KIND = Qt.ItemDataRole.UserRole  # "image" | "class" | "fields" | "methods" | "field" | "method"
@@ -14,7 +14,7 @@ ROLE_LOADED = Qt.ItemDataRole.UserRole + 2  # bool, children populated
 class MonoDissectDialog(QDialog, Ui_Dialog):
     disassemble_requested = pyqtSignal(object)  # native address (int)
     breakpoint_requested = pyqtSignal(object)  # native address (int)
-    add_to_table_requested = pyqtSignal(str, object)  # description, address (int)
+    add_to_table_requested = pyqtSignal(str, object)  # description, address-expr (str | PointerChainRequest)
 
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
@@ -143,12 +143,34 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
                     return
                 address = client.static_field_address(klass, fld["field"])
                 if chosen == action_table:
-                    self.add_to_table_requested.emit(fld["name"], address)
+                    self.add_to_table_requested.emit(fld["name"], hex(address))
                 elif chosen == action_copy:
                     QApplication.clipboard().setText(utils.upper_hex(hex(address)))
             else:
-                # Instance field: only the offset is meaningful.
+                # Instance field: lives at <object pointer> + offset, so it has no absolute address.
+                # If the class exposes a self-referential static (the singleton / Instance pattern),
+                # we'll use a pointer chain so the field resolves to a live object automatically.
+                root = self._singleton_root(client, payload["class"])
+                action_table = menu.addAction(tr.ADD_TO_ADDRESS_LIST) if root is not None else None
                 action_copy = menu.addAction(tr.COPY_OFFSET)
                 chosen = menu.exec(self.treeWidget_Mono.viewport().mapToGlobal(position))
-                if chosen == action_copy:
+                if chosen is None:
+                    return
+                if action_table is not None and chosen == action_table:
+                    base = client.static_field_address(klass, root["field"])
+                    pointer = typedefs.PointerChainRequest(base, [fld["offset"]])
+                    self.add_to_table_requested.emit(f"{payload['class']['name']}.{fld['name']}", pointer)
+                elif chosen == action_copy:
                     QApplication.clipboard().setText(utils.upper_hex(hex(fld["offset"])))
+
+    def _singleton_root(self, client: monocore.MonoClient, klass_info: dict) -> dict | None:
+        """Return the class' self-referential static field (singleton / Instance pattern), if any.
+
+        Such a field (e.g. Player.Current : Player) holds a pointer to a live instance, so it can
+        root a pointer chain that resolves the class's instance fields to that object automatically.
+        """
+        full_name = f"{klass_info['namespace']}.{klass_info['name']}" if klass_info["namespace"] else klass_info["name"]
+        for candidate in client.fields(klass_info["klass"]):
+            if candidate["is_static"] and candidate["type"] == full_name:
+                return candidate
+        return None
