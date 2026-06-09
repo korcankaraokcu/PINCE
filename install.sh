@@ -80,6 +80,20 @@ install_libmemscan() {
 	return 0
 }
 
+build_mono_collector() {
+	echo "Building Mono collector..."
+	ZIG="$SCRIPTDIR/libmemscan/zig"
+	mkdir -p libpince/libmono_collector
+	(
+		cd mono_collector || return 1
+		"$ZIG" build -Doptimize=ReleaseFast -Dtarget=x86_64-linux-gnu || return 1
+		cp --preserve zig-out/lib/libmono_collector.so ../libpince/libmono_collector/mono_collector_x64.so || return 1
+		"$ZIG" build -Doptimize=ReleaseFast -Dtarget=x86-linux-gnu || return 1
+		cp --preserve zig-out/lib/libmono_collector.so ../libpince/libmono_collector/mono_collector_x86.so || return 1
+	) || return 1
+	return 0
+}
+
 ask_pkg_mgr() {
 	echo
 	echo "Your distro is not officially supported! Trying to install anyway."
@@ -192,6 +206,7 @@ pip3 install --upgrade pip || exit_on_error
 pip3 install -r requirements.txt || exit_on_error
 
 install_libmemscan || exit_on_error
+build_mono_collector || exit_on_error
 compile_translations || exit_on_error
 
 echo
