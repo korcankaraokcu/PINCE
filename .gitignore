@@ -4,6 +4,9 @@ __pycache__/
 !.vscode/launch.json
 !.vscode/settings.json
 libpince/libmemscan/*
+libpince/libmono_collector/*
+mono_collector/*
+!mono_collector/*.zig
 docs/build/*
 *.directory
 *.lprof
