@@ -100,7 +100,7 @@ if [ ! -f "./zig" ]; then
 	tar xf zig.tar.xz --strip-components 1 --wildcards "*/lib" "*/zig"
 	rm zig.tar.xz
 fi
-./zig build -Doptimize=ReleaseFast || exit_on_failure
+./zig build -Doptimize=ReleaseFast -Dcpu=x86_64_v2 || exit_on_failure
 cp --preserve zig-out/lib/libmemscan.so ../libpince/libmemscan/ || exit_on_failure
 cp --preserve memscan.py ../libpince/libmemscan/ || exit_on_failure
 cd ..
