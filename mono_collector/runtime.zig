@@ -21,6 +21,12 @@ const Encoder = @import("msgpack.zig").Encoder;
 
 pub const RuntimeKind = enum { mono, il2cpp };
 
+/// One marshalled argument for "invoke".
+/// "tag" is the wire type tag ("i4","r4","str",…).
+/// Value types carry their raw bit pattern in "bits".
+/// Strings carry UTF-8 in "str".
+pub const Arg = struct { tag: []const u8, bits: u64 = 0, str: []const u8 = "" };
+
 pub const Backend = struct {
     ctx: *anyopaque,
     kind: RuntimeKind,
@@ -33,7 +39,8 @@ pub const Backend = struct {
     compileFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
     staticAddrFn: *const fn (*anyopaque, u64, u64, *Encoder) anyerror!void,
     findClassFn: *const fn (*anyopaque, u64, []const u8, []const u8, *Encoder) anyerror!void,
-    invokeFn: *const fn (*anyopaque, u64, u64, []const u64, *Encoder) anyerror!void,
+    invokeFn: *const fn (*anyopaque, u64, u64, []const Arg, *Encoder) anyerror!void,
+    signatureFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
 
     pub fn hello(self: *const Backend, e: *Encoder) !void {
         return self.helloFn(self.ctx, e);
@@ -59,8 +66,11 @@ pub const Backend = struct {
     pub fn findClass(self: *const Backend, image: u64, ns: []const u8, name: []const u8, e: *Encoder) !void {
         return self.findClassFn(self.ctx, image, ns, name, e);
     }
-    pub fn invoke(self: *const Backend, method: u64, obj: u64, params: []const u64, e: *Encoder) !void {
-        return self.invokeFn(self.ctx, method, obj, params, e);
+    pub fn invoke(self: *const Backend, method: u64, obj: u64, args: []const Arg, e: *Encoder) !void {
+        return self.invokeFn(self.ctx, method, obj, args, e);
+    }
+    pub fn signature(self: *const Backend, method: u64, e: *Encoder) !void {
+        return self.signatureFn(self.ctx, method, e);
     }
 };
 

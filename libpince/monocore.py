@@ -142,6 +142,52 @@ def get_client() -> "MonoClient | None":
     return _client
 
 
+# Invoke argument marshalling.
+# Value type args/returns travel as a type tag + raw bit pattern (a uint) but the collector
+# writes/reads the native bytes.
+# Mirrors the tags emitted by the collector's signature op (see mono_api.zig typeTag).
+_INT_WIDTH = {"i1": 1, "u1": 1, "i2": 2, "u2": 2, "char": 2, "i4": 4, "u4": 4, "i8": 8, "u8": 8}
+
+
+def _arg_to_bits(tag: str, value: Any) -> int:
+    """Encode a Python value into the raw bit pattern the collector expects for tag."""
+    if tag == "nil":
+        return 0
+    if tag == "object":
+        return int(value) & 0xFFFFFFFFFFFFFFFF
+    if tag == "bool":
+        return 1 if value else 0
+    if tag == "r4":
+        return struct.unpack("<I", struct.pack("<f", float(value)))[0]
+    if tag == "r8":
+        return struct.unpack("<Q", struct.pack("<d", float(value)))[0]
+    if tag == "char" and isinstance(value, str):
+        value = ord(value[0]) if value else 0
+    width = _INT_WIDTH.get(tag)
+    if width is None:
+        raise MonoError(f"unsupported argument type {tag}")
+    return int(value) & ((1 << (8 * width)) - 1)
+
+
+def _bits_to_value(tag: str, bits: int) -> Any:
+    """Reinterpret a raw bit pattern from the collector back into a Python value."""
+    if tag == "r4":
+        return struct.unpack("<f", struct.pack("<I", bits & 0xFFFFFFFF))[0]
+    if tag == "r8":
+        return struct.unpack("<d", struct.pack("<Q", bits & 0xFFFFFFFFFFFFFFFF))[0]
+    if tag == "bool":
+        return bool(bits & 1)
+    if tag == "char":
+        return chr(bits & 0xFFFF)
+    width = _INT_WIDTH.get(tag)
+    if width is None:
+        return bits  # object / native pointer
+    value = bits & ((1 << (8 * width)) - 1)
+    if tag.startswith("i") and value >= (1 << (8 * width - 1)):
+        value -= 1 << (8 * width)
+    return value
+
+
 class MonoClient:
     """Msgpack request/response client to the collector agent."""
 
@@ -193,8 +239,23 @@ class MonoClient:
     def find_class(self, image: int, namespace: str, name: str) -> int:
         return self.request("find_class", image=image, namespace=namespace, name=name)["klass"]
 
-    def invoke(self, method: int, obj: int = 0, params: list[int] | None = None) -> dict:
-        return self.request("invoke", method=method, obj=obj, params=params or [])
+    def signature(self, method: int) -> dict:
+        """Return {ret:{tag,name}, params:[{name,tag,type}]} for a method handle."""
+        return self.request("signature", method=method)
+
+    def invoke(self, method: int, obj: int = 0, args: list[tuple[str, Any]] | None = None) -> dict:
+        """Invoke a managed method. args is a list of (type_tag, value) pairs.
+
+        Returns {"result": <decoded value or None>, "tag": <type tag or None>, "exception": <ptr>}.
+        """
+        wire_args = [[tag, value if tag == "str" else _arg_to_bits(tag, value)] for tag, value in (args or [])]
+        response = self.request("invoke", method=method, obj=obj, args=wire_args)
+        result = response.get("result")
+        decoded, tag = None, None
+        if result is not None:
+            tag = result.get("tag")
+            decoded = result.get("val") if tag == "str" else _bits_to_value(tag, result.get("bits", 0))
+        return {"result": decoded, "tag": tag, "exception": response.get("exception", 0)}
 
     def close(self) -> None:
         try:

@@ -48,6 +48,9 @@ const FnClassInit = *const fn (?*anyopaque) callconv(CC) void;
 const FnFromName = *const fn (?*anyopaque, CStr, CStr) callconv(CC) ?*anyopaque;
 const FnFree = *const fn (?*anyopaque) callconv(CC) void;
 const FnInvoke = *const fn (?*anyopaque, ?*anyopaque, ?[*]?*anyopaque, *?*anyopaque) callconv(CC) ?*anyopaque;
+const FnTypeType = *const fn (?*anyopaque) callconv(CC) c_int;
+const FnStringNew = *const fn (?*anyopaque, CStr) callconv(CC) ?*anyopaque;
+const FnParamNames = *const fn (?*anyopaque, [*]?CStr) callconv(CC) void;
 
 const MonoApi = struct {
     allocator: std.mem.Allocator,
@@ -78,6 +81,14 @@ const MonoApi = struct {
     method_full_name: FnFullName,
     method_signature: FnP_P,
     signature_get_param_count: FnParamCount,
+    signature_get_params: FnIter,
+    signature_get_return_type: FnP_P,
+    signature_is_instance: ?FnTypeType,
+    type_get_type: FnTypeType,
+    method_get_param_names: ?FnParamNames,
+    string_new: ?FnStringNew,
+    string_to_utf8: ?FnP_CStr,
+    object_unbox: ?FnP_P,
     compile_method: FnP_P,
     class_vtable: FnVtable,
     vtable_get_static_field_data: FnStaticData,
@@ -149,6 +160,14 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .method_full_name = try req(FnFullName, h, "mono_method_full_name"),
         .method_signature = try req(FnP_P, h, "mono_method_signature"),
         .signature_get_param_count = try req(FnParamCount, h, "mono_signature_get_param_count"),
+        .signature_get_params = try req(FnIter, h, "mono_signature_get_params"),
+        .signature_get_return_type = try req(FnP_P, h, "mono_signature_get_return_type"),
+        .signature_is_instance = opt(FnTypeType, h, "mono_signature_is_instance"),
+        .type_get_type = try req(FnTypeType, h, "mono_type_get_type"),
+        .method_get_param_names = opt(FnParamNames, h, "mono_method_get_param_names"),
+        .string_new = opt(FnStringNew, h, "mono_string_new"),
+        .string_to_utf8 = opt(FnP_CStr, h, "mono_string_to_utf8"),
+        .object_unbox = opt(FnP_P, h, "mono_object_unbox"),
         .compile_method = try req(FnP_P, h, "mono_compile_method"),
         .class_vtable = try req(FnVtable, h, "mono_class_vtable"),
         .vtable_get_static_field_data = try req(FnStaticData, h, "mono_vtable_get_static_field_data"),
@@ -174,6 +193,7 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .staticAddrFn = monoStaticAddr,
         .findClassFn = monoFindClass,
         .invokeFn = monoInvoke,
+        .signatureFn = monoSignature,
     };
 }
 
@@ -378,23 +398,169 @@ fn monoFindClass(ctx: *anyopaque, image_u: u64, ns: []const u8, name: []const u8
     try e.uint(@intFromPtr(klass));
 }
 
-fn monoInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, params: []const u64, e: *Encoder) !void {
+inline fn eql(a: []const u8, b: []const u8) bool {
+    return std.mem.eql(u8, a, b);
+}
+
+// MONO_TYPE_* enum -> our wire type tag. "unsupported" = a type we can't marshal yet.
+fn typeTag(t: c_int) []const u8 {
+    return switch (t) {
+        0x01 => "void",
+        0x02 => "bool",
+        0x03 => "char",
+        0x04 => "i1",
+        0x05 => "u1",
+        0x06 => "i2",
+        0x07 => "u2",
+        0x08 => "i4",
+        0x09 => "u4",
+        0x0a => "i8",
+        0x0b => "u8",
+        0x0c => "r4",
+        0x0d => "r8",
+        0x0e => "str",
+        0x0f, 0x18, 0x19 => if (@sizeOf(usize) == 8) "u8" else "u4", // PTR, I (IntPtr), U (UIntPtr)
+        0x12, 0x14, 0x1c, 0x1d => "object", // CLASS, ARRAY, OBJECT, SZARRAY
+        else => "unsupported",
+    };
+}
+
+fn typeWidth(tag: []const u8) usize {
+    if (eql(tag, "i1") or eql(tag, "u1") or eql(tag, "bool")) return 1;
+    if (eql(tag, "i2") or eql(tag, "u2") or eql(tag, "char")) return 2;
+    if (eql(tag, "i4") or eql(tag, "u4") or eql(tag, "r4")) return 4;
+    return 8;
+}
+
+inline fn encodeTypeRef(m: *MonoApi, e: *Encoder, t: ?*anyopaque) !void {
+    const tname = m.type_get_name(t);
+    try e.mapHeader(2);
+    try e.str("tag");
+    try e.str(typeTag(m.type_get_type(t)));
+    try e.str("name");
+    try e.str(cspan(tname));
+    if (m.free) |fr| if (tname) |p| fr(@ptrCast(@constCast(p)));
+}
+
+fn monoSignature(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
+    const m = self(ctx);
+    const meth: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(method_u)));
+    const sig = m.method_signature(meth);
+    if (sig == null) return error.NoSignature;
+    const pc = m.signature_get_param_count(sig);
+
+    var name_buf: [64]?CStr = undefined;
+    var have_names = false;
+    if (m.method_get_param_names) |gpn| {
+        if (pc <= name_buf.len) {
+            @memset(name_buf[0..pc], null);
+            gpn(meth, &name_buf);
+            have_names = true;
+        }
+    }
+
+    const is_instance = if (m.signature_is_instance) |f| f(sig) != 0 else true;
+    try e.mapHeader(3);
+    try e.str("static");
+    try e.boolean(!is_instance);
+    try e.str("ret");
+    try encodeTypeRef(m, e, m.signature_get_return_type(sig));
+    try e.str("params");
+    try e.arrayHeader(pc);
+    var iter: ?*anyopaque = null;
+    var idx: usize = 0;
+    while (m.signature_get_params(sig, &iter)) |ptype| : (idx += 1) {
+        const tname = m.type_get_name(ptype);
+        try e.mapHeader(3);
+        try e.str("name");
+        if (have_names and idx < pc and name_buf[idx] != null) {
+            try e.str(cspan(name_buf[idx]));
+        } else {
+            var nb: [16]u8 = undefined;
+            try e.str(std.fmt.bufPrint(&nb, "arg{d}", .{idx}) catch "arg");
+        }
+        try e.str("tag");
+        try e.str(typeTag(m.type_get_type(ptype)));
+        try e.str("type");
+        try e.str(cspan(tname));
+        if (m.free) |fr| if (tname) |p| fr(@ptrCast(@constCast(p)));
+    }
+}
+
+inline fn emitBits(e: *Encoder, tag: []const u8, bits: u64) !void {
+    try e.mapHeader(2);
+    try e.str("tag");
+    try e.str(tag);
+    try e.str("bits");
+    try e.uint(bits);
+}
+
+fn monoInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg, e: *Encoder) !void {
     const m = self(ctx);
     const invoke = m.runtime_invoke orelse return error.Unsupported;
     const meth: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(method_u)));
     const obj: ?*anyopaque = if (obj_u == 0) null else @ptrFromInt(@as(usize, @intCast(obj_u)));
 
-    var argv: std.ArrayList(?*anyopaque) = .empty;
-    defer argv.deinit(m.allocator);
-    for (params) |p| try argv.append(m.allocator, @ptrFromInt(@as(usize, @intCast(p))));
-    const argv_ptr: ?[*]?*anyopaque = if (argv.items.len == 0) null else argv.items.ptr;
+    const slots = try m.allocator.alloc(u64, args.len);
+    defer m.allocator.free(slots);
+    const argv = try m.allocator.alloc(?*anyopaque, args.len);
+    defer m.allocator.free(argv);
+
+    for (args, 0..) |a, i| {
+        if (eql(a.tag, "str")) {
+            const sn = m.string_new orelse return error.Unsupported;
+            var sbuf: [1024]u8 = undefined;
+            if (a.str.len >= sbuf.len) return error.NameTooLong;
+            @memcpy(sbuf[0..a.str.len], a.str);
+            sbuf[a.str.len] = 0;
+            argv[i] = sn(m.root_domain, @ptrCast(&sbuf)); // reference type: object pointer
+        } else if (eql(a.tag, "object")) {
+            argv[i] = @ptrFromInt(@as(usize, @intCast(a.bits)));
+        } else if (eql(a.tag, "nil")) {
+            argv[i] = null;
+        } else {
+            slots[i] = a.bits; // little-endian native, low N bytes are the value
+            argv[i] = &slots[i]; // value type: pointer to the value
+        }
+    }
+    const argv_ptr: ?[*]?*anyopaque = if (args.len == 0) null else argv.ptr;
 
     var exc: ?*anyopaque = null;
     const ret = invoke(meth, obj, argv_ptr, &exc);
 
     try e.mapHeader(2);
     try e.str("result");
-    try e.uint(@intFromPtr(ret));
+    if (exc != null) {
+        try e.nil();
+    } else {
+        const sig = m.method_signature(meth);
+        const rtype = if (sig != null) m.signature_get_return_type(sig) else null;
+        const renum: c_int = if (rtype != null) m.type_get_type(rtype) else 0x01;
+        const rtag = typeTag(renum);
+        if (renum == 0x01 or ret == null) { // void / null
+            try e.nil();
+        } else if (eql(rtag, "str") and m.string_to_utf8 != null) {
+            const c = m.string_to_utf8.?(ret);
+            try e.mapHeader(2);
+            try e.str("tag");
+            try e.str("str");
+            try e.str("val");
+            try e.str(cspan(c));
+            if (m.free) |fr| if (c) |p| fr(@ptrCast(@constCast(p)));
+        } else if (eql(rtag, "object") or eql(rtag, "str")) {
+            try emitBits(e, "object", @intFromPtr(ret)); // object handle / unconvertible string
+        } else { // value type: unbox and read its raw bytes
+            const ub = m.object_unbox orelse return error.Unsupported;
+            const vp = ub(ret);
+            var bits: u64 = 0;
+            if (vp) |p| {
+                const w = typeWidth(rtag);
+                const src: [*]const u8 = @ptrCast(p);
+                @memcpy(std.mem.asBytes(&bits)[0..w], src[0..w]);
+            }
+            try emitBits(e, rtag, bits);
+        }
+    }
     try e.str("exception");
     try e.uint(@intFromPtr(exc));
 }

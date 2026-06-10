@@ -337,6 +337,16 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation type="unfinished">值</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/MonoInvoke/Form/MonoInvokeDialog.ui" line="0" />
+        <source>Invoke</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MonoInvoke/Form/MonoInvokeDialog.ui" line="0" />
+        <source>Call</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
         <source>Compare &amp; Filter Pointers</source>
         <translation type="unfinished" />
@@ -3170,6 +3180,46 @@ Do you want to keep the current session with the new process?</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
+        <source>Invoke...</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Instance (this)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Result: {}</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Returned (void)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Exception thrown (object @ {})</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Could not parse the argument values</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Invalid instance pointer</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>This method has a parameter type that can't be marshalled yet</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
         <source>Fields</source>
         <translation type="unfinished" />
     </message>
@@ -3181,11 +3231,6 @@ Do you want to keep the current session with the new process?</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Disassemble</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Invoke (no args)</source>
         <translation type="unfinished" />
     </message>
 </context></TS>

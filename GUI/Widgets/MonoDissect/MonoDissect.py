@@ -2,8 +2,9 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QDialog, QTreeWidgetItem, QMenu, QApplication, QWidget
 
 from GUI.Widgets.MonoDissect.Form.MonoDissectDialog import Ui_Dialog
+from GUI.Widgets.MonoInvoke.MonoInvoke import MonoInvokeDialog
 from GUI.Utils import guiutils
-from libpince import monocore, utils, typedefs
+from libpince import debugcore, monocore, utils, typedefs
 from tr.tr import TranslationConstants as tr
 
 ROLE_KIND = Qt.ItemDataRole.UserRole  # "image" | "class" | "fields" | "methods" | "field" | "method"
@@ -22,6 +23,7 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
         self.treeWidget_Mono.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.lineEdit_Search.textChanged.connect(self.search_text_changed)
         self.treeWidget_Mono.itemExpanded.connect(self.tree_item_expanded)
+        self.treeWidget_Mono.itemExpanded.connect(self.resize_columns)
         self.treeWidget_Mono.customContextMenuRequested.connect(self.tree_context_menu)
         guiutils.center_to_parent(self)
         self.populate_assemblies()
@@ -39,6 +41,11 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             item.setData(0, ROLE_LOADED, False)
             item.addChild(QTreeWidgetItem(["", ""]))  # placeholder for the expand arrow
             self.treeWidget_Mono.addTopLevelItem(item)
+        self.resize_columns()
+
+    def resize_columns(self) -> None:
+        for column in range(self.treeWidget_Mono.columnCount()):
+            self.treeWidget_Mono.resizeColumnToContents(column)
 
     def tree_item_expanded(self, item: QTreeWidgetItem) -> None:
         if item.data(0, ROLE_LOADED):
@@ -120,21 +127,20 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             action_disas = menu.addAction(tr.DISASSEMBLE)
             action_break = menu.addAction(tr.SET_BREAKPOINT)
             action_copy = menu.addAction(tr.COPY_ADDRESS)
-            action_invoke = menu.addAction(tr.INVOKE_NO_ARGS)
+            action_invoke = menu.addAction(tr.MONO_INVOKE)
             chosen = menu.exec(self.treeWidget_Mono.viewport().mapToGlobal(position))
             if chosen is None:
                 return
             if chosen == action_invoke:
-                result = monocore.get_client().invoke(method)
-                QApplication.clipboard().setText(utils.upper_hex(hex(result.get("result", 0))))
-            else:
-                address = client.compile_method(method)
-                if chosen == action_disas:
-                    self.disassemble_requested.emit(address)
-                elif chosen == action_break:
-                    self.breakpoint_requested.emit(address)
-                elif chosen == action_copy:
-                    QApplication.clipboard().setText(utils.upper_hex(hex(address)))
+                self.open_invoke_dialog(client, item)
+                return
+            address = client.compile_method(method)
+            if chosen == action_disas:
+                self.disassemble_requested.emit(address)
+            elif chosen == action_break:
+                self.breakpoint_requested.emit(address)
+            elif chosen == action_copy:
+                QApplication.clipboard().setText(utils.upper_hex(hex(address)))
         elif kind == "field":
             payload = item.data(0, ROLE_DATA)
             fld = payload["field"]
@@ -167,6 +173,25 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
                     self.add_to_table_requested.emit(f"{payload['class']['name']}.{fld['name']}", pointer)
                 elif chosen == action_copy:
                     QApplication.clipboard().setText(utils.upper_hex(hex(fld["offset"])))
+
+    def open_invoke_dialog(self, client: monocore.MonoClient, item: QTreeWidgetItem) -> None:
+        method_info = item.data(0, ROLE_DATA)
+        signature = client.signature(method_info["method"])
+        instance_ptr = None
+        if not signature.get("static", True):
+            # Instance method: try to resolve a live "this" from the class' singleton static.
+            methods_node = item.parent()
+            class_info = methods_node.data(0, ROLE_DATA) if methods_node is not None else None
+            root = self._singleton_root(client, class_info) if class_info is not None else None
+            if root is not None:
+                slot = client.static_field_address(class_info["klass"], root["field"])
+                value_index = (
+                    typedefs.VALUE_INDEX.INT32
+                    if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
+                    else typedefs.VALUE_INDEX.INT64
+                )
+                instance_ptr = debugcore.read_memory(slot, value_index)
+        MonoInvokeDialog(self, method_info, signature, instance_ptr).show()
 
     def _singleton_root(self, client: monocore.MonoClient, klass_info: dict) -> dict | None:
         """Return the class' self-referential static field (singleton / Instance pattern), if any.

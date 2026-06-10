@@ -97,8 +97,8 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
     var field: u64 = 0;
     var method: u64 = 0;
     var obj: u64 = 0;
-    var params_buf: [32]u64 = undefined;
-    var params_buf_len: usize = 0;
+    var args_buf: [32]rt.Arg = undefined;
+    var args_len: usize = 0;
     var ns: []const u8 = "";
     var name: []const u8 = "";
     var i: usize = 0;
@@ -121,14 +121,22 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
             ns = dec.str() catch return writeErr(out, "bad ns");
         } else if (eql(key, "name")) {
             name = dec.str() catch return writeErr(out, "bad name");
-        } else if (eql(key, "params")) {
-            const count = dec.arrayLen() catch return writeErr(out, "bad params");
-            params_buf_len = 0;
+        } else if (eql(key, "args")) {
+            const count = dec.arrayLen() catch return writeErr(out, "bad args");
+            args_len = 0;
             var p: usize = 0;
             while (p < count) : (p += 1) {
-                if (params_buf_len >= params_buf.len) return writeErr(out, "too many params");
-                params_buf[params_buf_len] = dec.uint() catch return writeErr(out, "bad param");
-                params_buf_len += 1;
+                if (args_len >= args_buf.len) return writeErr(out, "too many args");
+                if ((dec.arrayLen() catch return writeErr(out, "bad arg")) != 2) return writeErr(out, "bad arg");
+                const tag = dec.str() catch return writeErr(out, "bad arg tag");
+                var a = rt.Arg{ .tag = tag };
+                if (eql(tag, "str")) {
+                    a.str = dec.str() catch return writeErr(out, "bad arg str");
+                } else {
+                    a.bits = dec.uint() catch return writeErr(out, "bad arg val");
+                }
+                args_buf[args_len] = a;
+                args_len += 1;
             }
         } else {
             return writeErr(out, "unknown key"); // PINCE should only send known keys
@@ -157,7 +165,9 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
     else if (eql(op, "find_class"))
         backend.findClass(image, ns, name, &tenc)
     else if (eql(op, "invoke"))
-        backend.invoke(method, obj, params_buf[0..params_buf_len], &tenc)
+        backend.invoke(method, obj, args_buf[0..args_len], &tenc)
+    else if (eql(op, "signature"))
+        backend.signature(method, &tenc)
     else
         error.UnknownOp;
 
