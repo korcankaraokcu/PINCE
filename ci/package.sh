@@ -1,6 +1,6 @@
 #!/bin/sh
 : '
-Copyright (C) 2024 brkzlr <brkozler@gmail.com>
+Copyright (C) 2024 brkzlr <brksys@icloud.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,42 +25,6 @@ case $PACKAGEDIR in
 esac
 cd "$PACKAGEDIR" || exit
 
-# Check what distro we use for lrelease path
-LSB_RELEASE="$(command -v lsb_release)"
-if [ -n "$LSB_RELEASE" ]; then
-	OS_NAME="$(${LSB_RELEASE} -d -s)"
-else
-	. /etc/os-release
-	OS_NAME="$NAME"
-fi
-case $OS_NAME in
-*SUSE*)
-	LRELEASE_CMD="lrelease6"
-	;;
-*Arch*)
-	LRELEASE_CMD="/usr/lib/qt6/bin/lrelease"
-	export NO_STRIP=1
-	;;
-*Fedora*)
-	LRELEASE_CMD="lrelease-qt6"
-	;;
-*Debian*|*Ubuntu*)
-	LRELEASE_CMD="/usr/lib/qt6/bin/lrelease"
-	;;
-*)
-	LRELEASE_CMD="$(which lrelease6)" # Placeholder
-	;;
-esac
-
-# Download necessary tools
-curl -L -O https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-DEPLOYTOOL=./linuxdeploy-x86_64.AppImage
-chmod +x $DEPLOYTOOL
-
-curl -L -O https://raw.githubusercontent.com/TheAssassin/linuxdeploy-plugin-conda/master/linuxdeploy-plugin-conda.sh
-CONDAPLUGIN=./linuxdeploy-plugin-conda.sh
-chmod +x $CONDAPLUGIN
-
 # Create cleanup function to remove remaining deps/files
 cleanup () {
 	cd "$PACKAGEDIR" || return
@@ -71,12 +35,30 @@ trap cleanup EXIT
 
 # Error checking function
 exit_on_failure() {
-	if [ "$?" -ne 0 ]; then
-		echo
-		echo "Error occured while creating AppImage! Check the log above!"
-		exit 1
-	fi
+	echo
+	echo "Error occured while creating AppImage! Check the log above!"
+	exit 1
 }
+
+# Reuse install.sh's functions
+PINCE_LIB_ONLY=1
+. ../install.sh
+
+if [ -r /etc/os-release ]; then
+	. /etc/os-release
+	OS_NAME="$ID $ID_LIKE"
+fi
+set_install_vars "$OS_NAME" || LRELEASE_CMD="$(command -v lrelease6)" # fallback for unsupported distros
+case $OS_NAME in *arch*) export NO_STRIP=1 ;; esac # skip strip on Arch for linuxdeploy
+
+# Download necessary tools
+curl -L -O https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+DEPLOYTOOL=./linuxdeploy-x86_64.AppImage
+chmod +x $DEPLOYTOOL
+
+curl -L -O https://raw.githubusercontent.com/TheAssassin/linuxdeploy-plugin-conda/master/linuxdeploy-plugin-conda.sh
+CONDAPLUGIN=./linuxdeploy-plugin-conda.sh
+chmod +x $CONDAPLUGIN
 
 # Create AppImage's AppDir with a Conda environment pre-baked
 # containing our required pip packages
@@ -88,27 +70,14 @@ $DEPLOYTOOL --appdir AppDir -pconda || exit_on_failure
 # Create PINCE directory
 mkdir -p AppDir/opt/PINCE
 
-# Install libmemscan
+# Set LIBMEMSCAN_CPU so libmemscan builds with SSE4.2 and not AVX512 (which is the default on our GitHub runner).
+# This way users with CPUs older than 2016 (but not older than 2009) can use our AppImage.
 cd ..
-git submodule update --init --recursive
-if [ ! -d "libpince/libmemscan" ]; then
-	mkdir libpince/libmemscan
-fi
-cd libmemscan || exit
-if [ ! -f "./zig" ]; then
-	curl -L -o zig.tar.xz https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz
-	tar xf zig.tar.xz --strip-components 1 --wildcards "*/lib" "*/zig"
-	rm zig.tar.xz
-fi
-./zig build -Doptimize=ReleaseFast -Dcpu=x86_64_v2 || exit_on_failure
-cp --preserve zig-out/lib/libmemscan.so ../libpince/libmemscan/ || exit_on_failure
-cp --preserve memscan.py ../libpince/libmemscan/ || exit_on_failure
-cd ..
-
-# Compile translations
-${LRELEASE_CMD} i18n/ts/* || exit_on_failure
-mkdir -p i18n/qm
-mv i18n/ts/*.qm i18n/qm/
+SCRIPTDIR="$PWD"
+LIBMEMSCAN_CPU="-Dcpu=x86_64_v2"
+build_libmemscan || exit_on_failure
+build_mono_collector || exit_on_failure
+compile_translations || exit_on_failure
 
 # Copy necessary PINCE folders/files to inside AppDir
 cp -r GUI i18n libpince media tr AUTHORS COPYING COPYING.CC-BY PINCE.py THANKS ci/AppDir/opt/PINCE/
@@ -123,7 +92,6 @@ if [ -z "$CONDA_PREFIX" ]; then
 	echo "Error: CONDA_PREFIX not set"
 	exit 2
 fi
-echo "$(date +%F) -- $*" >> /tmp/args.txt
 case $1 in
 	*python-config.py*) ;;
 	*) exec "$CONDA_PREFIX"/bin/python3 ;;
@@ -143,18 +111,21 @@ chmod +x wrapper.sh
 INSTALLDIR=$(pwd)/AppDir
 CONDA_PREFIX="$(readlink -f "$INSTALLDIR/usr/conda")"
 export CONDA_PREFIX
+export CPPFLAGS="-I${CONDA_PREFIX}/include ${CPPFLAGS}"
+export LDFLAGS="-L${CONDA_PREFIX}/lib ${LDFLAGS}"
+export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 NUM_MAKE_JOBS="$(nproc --ignore=1)"
 # Grab latest GDB at time of writing and compile it with our conda Python
-curl -L -O "https://ftp.gnu.org/gnu/gdb/gdb-17.1.tar.gz"
-tar xf gdb-17.1.tar.gz
-rm gdb-17.1.tar.gz
-cd gdb-17.1 || exit
+curl -L -O "https://ftp.gnu.org/gnu/gdb/gdb-17.2.tar.gz"
+tar xf gdb-17.2.tar.gz
+rm gdb-17.2.tar.gz
+cd gdb-17.2 || exit
 ./configure --with-python="$(readlink -f ../wrapper.sh)" --prefix=/usr || exit_on_failure
 make -j"$NUM_MAKE_JOBS" || exit_on_failure
 make install DESTDIR="$INSTALLDIR"
 cd ..
-rm -rf gdb-17.1
+rm -rf gdb-17.2
 rm wrapper.sh
 
 # Create a desktop file for AppImage
