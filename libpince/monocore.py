@@ -71,11 +71,27 @@ def detect_runtime(pid: int) -> RuntimeInfo | None:
 
 
 def _collector_path() -> str:
-    """Returns the collector .so path for the current inferior's arch."""
+    """Returns the collector .so path for the current inferior's arch.
+
+    If AppImage, the .so is inside a FUSE mount that the target process cannot access.
+    In that case, we'll copy it to /tmp first.
+    """
     base = os.path.join(os.path.dirname(__file__), "libmono_collector")
     if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32:
-        return os.path.join(base, "mono_collector_x86.so")
-    return os.path.join(base, "mono_collector_x64.so")
+        src = os.path.join(base, "mono_collector_x86.so")
+    else:
+        src = os.path.join(base, "mono_collector_x64.so")
+
+    appdir = os.environ.get("APPDIR")
+    if appdir and os.path.commonpath([src, appdir]) == appdir:
+        import shutil
+        import tempfile
+        dst = os.path.join(tempfile.gettempdir(), os.path.basename(src))
+        if not os.path.exists(dst) or os.path.getmtime(src) > os.path.getmtime(dst):
+            shutil.copy2(src, dst)
+            os.chmod(dst, 0o755)
+        return dst
+    return src
 
 
 def _abstract_address(pid: int) -> bytes:
