@@ -402,3 +402,4 @@ class TranslationConstants(QObject):
     FIELDS = QT_TR_NOOP("Fields")
     METHODS = QT_TR_NOOP("Methods")
     DISASSEMBLE = QT_TR_NOOP("Disassemble")
+    INVOKE_NO_ARGS = QT_TR_NOOP("Invoke (no args)")

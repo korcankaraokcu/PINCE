@@ -193,6 +193,9 @@ class MonoClient:
     def find_class(self, image: int, namespace: str, name: str) -> int:
         return self.request("find_class", image=image, namespace=namespace, name=name)["klass"]
 
+    def invoke(self, method: int, obj: int = 0, params: list[int] | None = None) -> dict:
+        return self.request("invoke", method=method, obj=obj, params=params or [])
+
     def close(self) -> None:
         try:
             self.sock.close()

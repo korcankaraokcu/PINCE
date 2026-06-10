@@ -3183,4 +3183,9 @@ Do you want to keep the current session with the new process?</source>
         <source>Disassemble</source>
         <translation type="unfinished" />
     </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Invoke (no args)</source>
+        <translation type="unfinished" />
+    </message>
 </context></TS>

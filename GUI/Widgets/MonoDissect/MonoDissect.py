@@ -120,16 +120,21 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             action_disas = menu.addAction(tr.DISASSEMBLE)
             action_break = menu.addAction(tr.SET_BREAKPOINT)
             action_copy = menu.addAction(tr.COPY_ADDRESS)
+            action_invoke = menu.addAction(tr.INVOKE_NO_ARGS)
             chosen = menu.exec(self.treeWidget_Mono.viewport().mapToGlobal(position))
             if chosen is None:
                 return
-            address = client.compile_method(method)
-            if chosen == action_disas:
-                self.disassemble_requested.emit(address)
-            elif chosen == action_break:
-                self.breakpoint_requested.emit(address)
-            elif chosen == action_copy:
-                QApplication.clipboard().setText(utils.upper_hex(hex(address)))
+            if chosen == action_invoke:
+                result = monocore.get_client().invoke(method)
+                QApplication.clipboard().setText(utils.upper_hex(hex(result.get("result", 0))))
+            else:
+                address = client.compile_method(method)
+                if chosen == action_disas:
+                    self.disassemble_requested.emit(address)
+                elif chosen == action_break:
+                    self.breakpoint_requested.emit(address)
+                elif chosen == action_copy:
+                    QApplication.clipboard().setText(utils.upper_hex(hex(address)))
         elif kind == "field":
             payload = item.data(0, ROLE_DATA)
             fld = payload["field"]

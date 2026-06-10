@@ -96,6 +96,9 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
     var klass: u64 = 0;
     var field: u64 = 0;
     var method: u64 = 0;
+    var obj: u64 = 0;
+    var params_buf: [32]u64 = undefined;
+    var params_buf_len: usize = 0;
     var ns: []const u8 = "";
     var name: []const u8 = "";
     var i: usize = 0;
@@ -112,10 +115,21 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
             field = dec.uint() catch return writeErr(out, "bad field");
         } else if (eql(key, "method")) {
             method = dec.uint() catch return writeErr(out, "bad method");
+        } else if (eql(key, "obj")) {
+            obj = dec.uint() catch return writeErr(out, "bad obj");
         } else if (eql(key, "namespace")) {
             ns = dec.str() catch return writeErr(out, "bad ns");
         } else if (eql(key, "name")) {
             name = dec.str() catch return writeErr(out, "bad name");
+        } else if (eql(key, "params")) {
+            const count = dec.arrayLen() catch return writeErr(out, "bad params");
+            params_buf_len = 0;
+            var p: usize = 0;
+            while (p < count) : (p += 1) {
+                if (params_buf_len >= params_buf.len) return writeErr(out, "too many params");
+                params_buf[params_buf_len] = dec.uint() catch return writeErr(out, "bad param");
+                params_buf_len += 1;
+            }
         } else {
             return writeErr(out, "unknown key"); // PINCE should only send known keys
         }
@@ -142,6 +156,8 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
         backend.staticAddr(klass, field, &tenc)
     else if (eql(op, "find_class"))
         backend.findClass(image, ns, name, &tenc)
+    else if (eql(op, "invoke"))
+        backend.invoke(method, obj, params_buf[0..params_buf_len], &tenc)
     else
         error.UnknownOp;
 

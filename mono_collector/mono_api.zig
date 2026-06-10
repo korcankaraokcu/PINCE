@@ -84,7 +84,7 @@ const MonoApi = struct {
     runtime_class_init: ?FnClassInit,
     class_from_name: FnFromName,
     free: ?FnFree,
-    runtime_invoke: ?FnInvoke = null, // TODO BRK: change this when invoke is implemented
+    runtime_invoke: ?FnInvoke = null,
 };
 
 // Cast a dlsym result to a typed fn pointer.
@@ -173,7 +173,7 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .compileFn = monoCompile,
         .staticAddrFn = monoStaticAddr,
         .findClassFn = monoFindClass,
-        // TODO BRK: wire in .invokeFn in the invoke commit.
+        .invokeFn = monoInvoke,
     };
 }
 
@@ -376,4 +376,25 @@ fn monoFindClass(ctx: *anyopaque, image_u: u64, ns: []const u8, name: []const u8
     try e.mapHeader(1);
     try e.str("klass");
     try e.uint(@intFromPtr(klass));
+}
+
+fn monoInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, params: []const u64, e: *Encoder) !void {
+    const m = self(ctx);
+    const invoke = m.runtime_invoke orelse return error.Unsupported;
+    const meth: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(method_u)));
+    const obj: ?*anyopaque = if (obj_u == 0) null else @ptrFromInt(@as(usize, @intCast(obj_u)));
+
+    var argv: std.ArrayList(?*anyopaque) = .empty;
+    defer argv.deinit(m.allocator);
+    for (params) |p| try argv.append(m.allocator, @ptrFromInt(@as(usize, @intCast(p))));
+    const argv_ptr: ?[*]?*anyopaque = if (argv.items.len == 0) null else argv.items.ptr;
+
+    var exc: ?*anyopaque = null;
+    const ret = invoke(meth, obj, argv_ptr, &exc);
+
+    try e.mapHeader(2);
+    try e.str("result");
+    try e.uint(@intFromPtr(ret));
+    try e.str("exception");
+    try e.uint(@intFromPtr(exc));
 }

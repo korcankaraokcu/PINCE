@@ -33,8 +33,7 @@ pub const Backend = struct {
     compileFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
     staticAddrFn: *const fn (*anyopaque, u64, u64, *Encoder) anyerror!void,
     findClassFn: *const fn (*anyopaque, u64, []const u8, []const u8, *Encoder) anyerror!void,
-    // Made intentionally null for the TODO further down.
-    invokeFn: ?*const fn (*anyopaque, u64, u64, []const u64, *Encoder) anyerror!void = null,
+    invokeFn: *const fn (*anyopaque, u64, u64, []const u64, *Encoder) anyerror!void,
 
     pub fn hello(self: *const Backend, e: *Encoder) !void {
         return self.helloFn(self.ctx, e);
@@ -61,9 +60,7 @@ pub const Backend = struct {
         return self.findClassFn(self.ctx, image, ns, name, e);
     }
     pub fn invoke(self: *const Backend, method: u64, obj: u64, params: []const u64, e: *Encoder) !void {
-        // TODO BRK: Implement the invoke logic once we have functional reading.
-        const f = self.invokeFn orelse return error.Unsupported;
-        return f(self.ctx, method, obj, params, e);
+        return self.invokeFn(self.ctx, method, obj, params, e);
     }
 };
 
