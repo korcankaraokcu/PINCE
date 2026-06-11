@@ -286,6 +286,32 @@ fn il2cppFields(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
     }
 }
 
+inline fn appendName(buf: []u8, off: *usize, s: []const u8) void {
+    const n = @min(s.len, buf.len - off.*);
+    @memcpy(buf[off.* .. off.* + n], s[0..n]);
+    off.* += n;
+}
+
+fn formatFullName(m: *Il2CppApi, meth: ?*anyopaque, buf: []u8) []const u8 {
+    var off: usize = 0;
+    const rname = m.type_get_name(m.method_get_return_type(meth));
+    appendName(buf, &off, cspan(rname));
+    if (m.free) |fr| if (rname) |p| fr(@ptrCast(@constCast(p)));
+    appendName(buf, &off, " ");
+    appendName(buf, &off, cspan(m.method_get_name(meth)));
+    appendName(buf, &off, "(");
+    const pc = m.method_get_param_count(meth);
+    var i: u32 = 0;
+    while (i < pc) : (i += 1) {
+        if (i != 0) appendName(buf, &off, ", ");
+        const pname = m.type_get_name(m.method_get_param(meth, i));
+        appendName(buf, &off, cspan(pname));
+        if (m.free) |fr| if (pname) |p| fr(@ptrCast(@constCast(p)));
+    }
+    appendName(buf, &off, ")");
+    return buf[0..off];
+}
+
 fn il2cppMethods(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
     const m = self(ctx);
     const klass: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(klass_u)));
@@ -307,8 +333,9 @@ fn il2cppMethods(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
         try e.uint(mu);
         try e.str("name");
         try e.str(nm);
+        var fnbuf: [512]u8 = undefined;
         try e.str("full_name");
-        try e.str(nm); // IL2CPP exposes no full-signature API so we'll reuse the name (which is less rich than Mono's mono_method_full_name)
+        try e.str(formatFullName(m, meth, &fnbuf));
         try e.str("param_count");
         try e.uint(pc);
     }
