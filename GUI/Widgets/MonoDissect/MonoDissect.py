@@ -1,4 +1,5 @@
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import QApplication, QDialog, QMenu, QMessageBox, QTreeWidgetItem, QWidget
 
 from GUI.Widgets.MonoDissect.Form.MonoDissectDialog import Ui_Dialog
@@ -10,6 +11,9 @@ from tr.tr import TranslationConstants as tr
 ROLE_KIND = Qt.ItemDataRole.UserRole  # "image" | "class" | "fields" | "methods" | "field" | "method"
 ROLE_DATA = Qt.ItemDataRole.UserRole + 1  # the dict from monocore
 ROLE_LOADED = Qt.ItemDataRole.UserRole + 2  # bool, children populated
+
+_INHERITED_BRUSH = QBrush(QColor(140, 140, 140))
+_MAX_INHERIT_DEPTH = 32
 
 
 class MonoDissectDialog(QDialog, Ui_Dialog):
@@ -25,6 +29,7 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
         self.treeWidget_Mono.itemExpanded.connect(self.tree_item_expanded)
         self.treeWidget_Mono.itemExpanded.connect(self.resize_columns)
         self.treeWidget_Mono.customContextMenuRequested.connect(self.tree_context_menu)
+        self.checkBox_ShowInherited.toggled.connect(self._on_inherited_toggled)
         guiutils.center_to_parent(self)
         self.populate_assemblies()
 
@@ -42,6 +47,53 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             item.addChild(QTreeWidgetItem(["", ""]))  # placeholder for the expand arrow
             self.treeWidget_Mono.addTopLevelItem(item)
         self.resize_columns()
+
+    def _on_inherited_toggled(self, checked: bool) -> None:
+        self.populate_assemblies()
+
+    def _add_inherited_fields(self, client: monocore.MonoClient, parent_item: QTreeWidgetItem, class_data: dict) -> None:
+        ptr = class_data.get("parent", 0)
+        depth = 0
+        while ptr != 0 and depth < _MAX_INHERIT_DEPTH:
+            try:
+                info = client.class_info(ptr)
+            except monocore.MonoError:
+                break
+            owner_label = f"({info['name']})"
+            for fld in client.fields(ptr):
+                if fld["flags"] & 0x40:
+                    value = f"const {fld['type']}"
+                else:
+                    marker = "static " if fld["is_static"] else ""
+                    value = f"{marker}{fld['type']} @ {utils.upper_hex(hex(fld['offset']))}"
+                child = QTreeWidgetItem([fld["name"], f"{value} {owner_label}"])
+                child.setData(0, ROLE_KIND, "field")
+                child.setData(0, ROLE_DATA, {"field": fld, "class": {"klass": ptr, "name": info["name"], "namespace": info["namespace"]}})
+                for col in range(parent_item.columnCount()):
+                    child.setForeground(col, _INHERITED_BRUSH)
+                parent_item.addChild(child)
+            ptr = info.get("parent", 0)
+            depth += 1
+
+    def _add_inherited_methods(self, client: monocore.MonoClient, parent_item: QTreeWidgetItem, class_data: dict) -> None:
+        ptr = class_data.get("parent", 0)
+        depth = 0
+        while ptr != 0 and depth < _MAX_INHERIT_DEPTH:
+            try:
+                info = client.class_info(ptr)
+            except monocore.MonoError:
+                break
+            owner_label = f"({info['name']})"
+            for meth in client.methods(ptr):
+                label = f"{meth['full_name'] or meth['name']} {owner_label}"
+                child = QTreeWidgetItem([label, ""])
+                child.setData(0, ROLE_KIND, "method")
+                child.setData(0, ROLE_DATA, meth)
+                for col in range(parent_item.columnCount()):
+                    child.setForeground(col, _INHERITED_BRUSH)
+                parent_item.addChild(child)
+            ptr = info.get("parent", 0)
+            depth += 1
 
     def resize_columns(self) -> None:
         for column in range(self.treeWidget_Mono.columnCount()):
@@ -81,7 +133,8 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             item.addChild(fields_node)
             item.addChild(methods_node)
         elif kind == "fields":
-            klass = item.data(0, ROLE_DATA)["klass"]
+            class_data = item.data(0, ROLE_DATA)
+            klass = class_data["klass"]
             for fld in client.fields(klass):
                 if fld["flags"] & 0x40:  # FIELD_ATTRIBUTE_LITERAL which means const so no runtime address
                     value = f"const {fld['type']}"
@@ -90,15 +143,20 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
                     value = f"{marker}{fld['type']} @ {utils.upper_hex(hex(fld['offset']))}"
                 child = QTreeWidgetItem([fld["name"], value])
                 child.setData(0, ROLE_KIND, "field")
-                child.setData(0, ROLE_DATA, {"field": fld, "class": item.data(0, ROLE_DATA)})
+                child.setData(0, ROLE_DATA, {"field": fld, "class": class_data})
                 item.addChild(child)
+            if self.checkBox_ShowInherited.isChecked():
+                self._add_inherited_fields(client, item, class_data)
         elif kind == "methods":
-            klass = item.data(0, ROLE_DATA)["klass"]
+            class_data = item.data(0, ROLE_DATA)
+            klass = class_data["klass"]
             for meth in client.methods(klass):
                 child = QTreeWidgetItem([meth["full_name"] or meth["name"], ""])
                 child.setData(0, ROLE_KIND, "method")
                 child.setData(0, ROLE_DATA, meth)
                 item.addChild(child)
+            if self.checkBox_ShowInherited.isChecked():
+                self._add_inherited_methods(client, item, class_data)
         item.setData(0, ROLE_LOADED, True)
 
     def search_text_changed(self, text: str) -> None:

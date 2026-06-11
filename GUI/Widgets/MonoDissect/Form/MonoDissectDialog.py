@@ -18,6 +18,9 @@ class Ui_Dialog(object):
         self.lineEdit_Search = QtWidgets.QLineEdit(parent=Dialog)
         self.lineEdit_Search.setObjectName("lineEdit_Search")
         self.verticalLayout.addWidget(self.lineEdit_Search)
+        self.checkBox_ShowInherited = QtWidgets.QCheckBox(parent=Dialog)
+        self.checkBox_ShowInherited.setObjectName("checkBox_ShowInherited")
+        self.verticalLayout.addWidget(self.checkBox_ShowInherited)
         self.treeWidget_Mono = QtWidgets.QTreeWidget(parent=Dialog)
         font = QtGui.QFont()
         font.setFamily("Monospace")
@@ -39,5 +42,6 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dissect Mono/IL2CPP"))
         self.lineEdit_Search.setPlaceholderText(_translate("Dialog", "Search"))
+        self.checkBox_ShowInherited.setText(_translate("Dialog", "Show inherited members"))
         self.treeWidget_Mono.headerItem().setText(0, _translate("Dialog", "Name"))
         self.treeWidget_Mono.headerItem().setText(1, _translate("Dialog", "Value"))

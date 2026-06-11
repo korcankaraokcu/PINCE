@@ -327,6 +327,11 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
         <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
+        <source>Show inherited members</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
         <source>Name</source>
         <translation type="unfinished" />
     </message>

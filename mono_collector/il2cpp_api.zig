@@ -175,6 +175,7 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .findClassFn = il2cppFindClass,
         .invokeFn = il2cppInvoke,
         .signatureFn = il2cppSignature,
+        .classInfoFn = il2cppClassInfo,
     };
 }
 
@@ -436,6 +437,18 @@ fn il2cppFindClass(ctx: *anyopaque, image_u: u64, ns: []const u8, name: []const 
     try e.mapHeader(1);
     try e.str("klass");
     try e.uint(@intFromPtr(klass));
+}
+
+fn il2cppClassInfo(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
+    const m = self(ctx);
+    const klass: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(klass_u)));
+    try e.mapHeader(3);
+    try e.str("namespace");
+    try e.str(cspan(m.class_get_namespace(klass)));
+    try e.str("name");
+    try e.str(cspan(m.class_get_name(klass)));
+    try e.str("parent");
+    try e.uint(@intFromPtr(m.class_get_parent(klass)));
 }
 
 inline fn encodeTypeRef(m: *Il2CppApi, e: *Encoder, t: ?*anyopaque) !void {

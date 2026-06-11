@@ -260,6 +260,10 @@ class MonoClient:
     def find_class(self, image: int, namespace: str, name: str) -> int:
         return self.request("find_class", image=image, namespace=namespace, name=name)["klass"]
 
+    def class_info(self, klass: int) -> dict:
+        """Return {namespace, name, parent} for a class handle."""
+        return self.request("class_info", klass=klass)
+
     def signature(self, method: int) -> dict:
         """Return {ret:{tag,name}, params:[{name,tag,type}]} for a method handle."""
         return self.request("signature", method=method)

@@ -157,6 +157,8 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
         backend.compile(method, &tenc)
     else if (eql(op, "static_addr"))
         backend.staticAddr(klass, field, &tenc)
+    else if (eql(op, "class_info"))
+        backend.classInfo(klass, &tenc)
     else if (eql(op, "find_class"))
         backend.findClass(image, ns, name, &tenc)
     else if (eql(op, "invoke"))
