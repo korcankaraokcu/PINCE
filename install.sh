@@ -52,7 +52,7 @@ build_libmemscan() {
 build_mono_collector() {
 	ZIG="$SCRIPTDIR/libmemscan/zig"
 	mkdir -p libpince/libmono_collector
-	if [ -f "libpince/libmono_collector/mono_collector_x64.so" ] && [ -f "libpince/libmono_collector/mono_collector_x86.so" ] && [ -z "$PINCE_LIB_ONLY" ]; then
+	if [ -f "libpince/libmono_collector/mono_collector_x64.so" ] && [ -f "libpince/libmono_collector/mono_collector_x86.so" ] && [ -f "libpince/libmono_collector/mono_collector_wine_x64.so" ] && [ -f "libpince/libmono_collector/mono_collector_wine_x86.so" ] && [ -z "$PINCE_LIB_ONLY" ]; then
 		echo "Recompile Mono collector? [y/n]"
 		read -r answer
 		if ! echo "$answer" | grep -iq "^[Yy]"; then
@@ -66,6 +66,10 @@ build_mono_collector() {
 		cp --preserve zig-out/lib/libmono_collector.so ../libpince/libmono_collector/mono_collector_x64.so || return 1
 		"$ZIG" build -Doptimize=ReleaseFast -Dtarget=x86-linux-gnu || return 1
 		cp --preserve zig-out/lib/libmono_collector.so ../libpince/libmono_collector/mono_collector_x86.so || return 1
+		"$ZIG" build -Doptimize=ReleaseFast -Dtarget=x86_64-linux-gnu -Dwine=true || return 1
+		cp --preserve zig-out/lib/libmono_collector.so ../libpince/libmono_collector/mono_collector_wine_x64.so || return 1
+		"$ZIG" build -Doptimize=ReleaseFast -Dtarget=x86-linux-gnu -Dwine=true || return 1
+		cp --preserve zig-out/lib/libmono_collector.so ../libpince/libmono_collector/mono_collector_wine_x86.so || return 1
 	) || return 1
 	return 0
 }

@@ -25,8 +25,10 @@
 const std = @import("std");
 const rt = @import("runtime.zig");
 const Encoder = @import("msgpack.zig").Encoder;
+const resolver = @import("resolver.zig");
 
-const CC: std.builtin.CallingConvention = .c; // Note for later: .x86_64_win for Wine
+// x86 WINE also uses cdecl.
+const CC: std.builtin.CallingConvention = if (resolver.win64_abi) .winapi else .c;
 const CStr = [*:0]const u8;
 
 inline fn cspan(p: ?CStr) []const u8 {
@@ -96,114 +98,66 @@ const Il2CppApi = struct {
     runtime_invoke: ?FnInvoke = null,
 };
 
-// Cast a dlsym result to a typed fn pointer.
-fn req(comptime T: type, handle: ?*anyopaque, name: [*:0]const u8) !T {
-    const p = std.c.dlsym(handle, name) orelse return error.SymbolMissing;
+// Resolve a symbol through the bound module (dlsym natively, PE export under WINE).
+fn req(comptime T: type, mod: resolver.Module, name: [*:0]const u8) !T {
+    const p = mod.lookup(name) orelse return error.SymbolMissing;
     return @ptrCast(p);
 }
-fn opt(comptime T: type, handle: ?*anyopaque, name: [*:0]const u8) ?T {
-    const p = std.c.dlsym(handle, name) orelse return null;
+fn opt(comptime T: type, mod: resolver.Module, name: [*:0]const u8) ?T {
+    const p = mod.lookup(name) orelse return null;
     return @ptrCast(p);
-}
-
-// Find the path of the mapped IL2CPP runtime in our own maps, NUL-terminated in "buf".
-fn findRuntimeModule(allocator: std.mem.Allocator, buf: []u8) ?[:0]const u8 {
-    const io = std.Io.Threaded.global_single_threaded.io();
-    const f = std.Io.Dir.openFileAbsolute(io, "/proc/self/maps", .{}) catch return null;
-    defer f.close(io);
-
-    var contents: std.ArrayList(u8) = .empty;
-    defer contents.deinit(allocator);
-    var chunk: [1 << 16]u8 = undefined;
-    var offset: u64 = 0;
-    while (true) {
-        const n = f.readPositionalAll(io, &chunk, offset) catch return null;
-        if (n == 0) break;
-        contents.appendSlice(allocator, chunk[0..n]) catch return null;
-        offset += n;
-        if (n < chunk.len) break; // short read -> EOF
-    }
-
-    var it = std.mem.splitScalar(u8, contents.items, '\n');
-    while (it.next()) |line| {
-        if (std.mem.indexOf(u8, line, "GameAssembly") == null) continue;
-        // The pathname is the final maps column but can contain spaces (e.g. ".../Total Reload Demo/GameAssembly.so")
-        // so we can't take the last space delimited token.
-        // This means that for a file backed mapping the path is absolute -> take from the first "/".
-        const start = std.mem.indexOfScalar(u8, line, '/') orelse continue;
-        const path = line[start..];
-        if (path.len == 0 or path.len >= buf.len) return null;
-        @memcpy(buf[0..path.len], path);
-        buf[path.len] = 0;
-        return buf[0..path.len :0];
-    }
-    return null;
 }
 
 pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
-    // Resolve a handle through which the il2cpp_* exports are visible.
-    // First try dlopen(NULL) which sees the global scope, which is enough for a runtime linked
-    // into the executable or loaded thru RTLD_GLOBAL.
-    // Most of the time Unity games dlopen GameAssembly.so with RTLD_LOCAL though, which results
-    // in the il2cpp_* symbols to not be in the global scope.
-    // In that case we'll dlopen the already mapped module by path, where RTLD_NOLOAD attaches to the copy
-    // and doesn't load a new one, to get a proper handle.
-    var h = std.c.dlopen(null, std.c.RTLD{ .NOW = true });
-    if (std.c.dlsym(h, "il2cpp_domain_get") == null) {
-        var path_buf: [4096]u8 = undefined;
-        const path = findRuntimeModule(allocator, &path_buf) orelse return null;
-        h = std.c.dlopen(path.ptr, std.c.RTLD{ .NOW = true, .NOLOAD = true });
-        // Not an IL2CPP process or the runtime's symbols are genuinely absent. RIP...
-        if (h == null or std.c.dlsym(h, "il2cpp_domain_get") == null) return null;
-    }
+    // Bind the runtime module using the resolver.
+    // ELF -> dlopen/dlsym, PE -> export parsing.
+    const substr = if (resolver.is_wine) "GameAssembly.dll" else "GameAssembly";
+    var path_buf: [256]u8 = undefined;
+    var path_len: usize = 0;
+    const mod = resolver.open(allocator, "il2cpp_domain_get", substr, &path_buf, &path_len) orelse return null;
 
     const api = try allocator.create(Il2CppApi);
     api.* = .{
         .allocator = allocator,
-        .domain_get = try req(FnDomain, h, "il2cpp_domain_get"),
-        .thread_attach = try req(FnThreadAttach, h, "il2cpp_thread_attach"),
-        .domain_get_assemblies = try req(FnGetAssemblies, h, "il2cpp_domain_get_assemblies"),
-        .assembly_get_image = try req(FnP_P, h, "il2cpp_assembly_get_image"),
-        .image_get_name = try req(FnP_CStr, h, "il2cpp_image_get_name"),
-        .image_get_filename = opt(FnP_CStr, h, "il2cpp_image_get_filename"),
-        .image_get_class_count = try req(FnImgCount, h, "il2cpp_image_get_class_count"),
-        .image_get_class = try req(FnImgClass, h, "il2cpp_image_get_class"),
-        .class_get_name = try req(FnP_CStr, h, "il2cpp_class_get_name"),
-        .class_get_namespace = try req(FnP_CStr, h, "il2cpp_class_get_namespace"),
-        .class_get_parent = try req(FnP_P, h, "il2cpp_class_get_parent"),
-        .class_get_fields = try req(FnIter, h, "il2cpp_class_get_fields"),
-        .field_get_name = try req(FnP_CStr, h, "il2cpp_field_get_name"),
-        .field_get_type = try req(FnP_P, h, "il2cpp_field_get_type"),
-        .type_get_name = try req(FnTypeName, h, "il2cpp_type_get_name"),
-        .field_get_offset = try req(FnFieldOffset, h, "il2cpp_field_get_offset"),
-        .field_get_flags = try req(FnFieldFlags, h, "il2cpp_field_get_flags"),
-        .class_get_methods = try req(FnIter, h, "il2cpp_class_get_methods"),
-        .method_get_name = try req(FnP_CStr, h, "il2cpp_method_get_name"),
-        .method_get_param_count = try req(FnParamCount, h, "il2cpp_method_get_param_count"),
-        .method_get_param = try req(FnMethodParam, h, "il2cpp_method_get_param"),
-        .method_get_param_name = opt(FnMethodParamName, h, "il2cpp_method_get_param_name"),
-        .method_get_return_type = try req(FnP_P, h, "il2cpp_method_get_return_type"),
-        .method_get_flags = opt(FnMethodFlags, h, "il2cpp_method_get_flags"),
-        .type_get_type = try req(FnTypeType, h, "il2cpp_type_get_type"),
-        .string_new = opt(FnStringNew, h, "il2cpp_string_new"),
-        .string_to_utf8 = opt(FnP_CStr, h, "il2cpp_string_to_utf8"),
-        .object_unbox = opt(FnP_P, h, "il2cpp_object_unbox"),
-        .runtime_class_init = opt(FnClassInit, h, "il2cpp_runtime_class_init"),
-        .class_from_name = try req(FnFromName, h, "il2cpp_class_from_name"),
-        .free = opt(FnFree, h, "il2cpp_free"),
-        .runtime_invoke = opt(FnInvoke, h, "il2cpp_runtime_invoke"),
+        .domain_get = try req(FnDomain, mod, "il2cpp_domain_get"),
+        .thread_attach = try req(FnThreadAttach, mod, "il2cpp_thread_attach"),
+        .domain_get_assemblies = try req(FnGetAssemblies, mod, "il2cpp_domain_get_assemblies"),
+        .assembly_get_image = try req(FnP_P, mod, "il2cpp_assembly_get_image"),
+        .image_get_name = try req(FnP_CStr, mod, "il2cpp_image_get_name"),
+        .image_get_filename = opt(FnP_CStr, mod, "il2cpp_image_get_filename"),
+        .image_get_class_count = try req(FnImgCount, mod, "il2cpp_image_get_class_count"),
+        .image_get_class = try req(FnImgClass, mod, "il2cpp_image_get_class"),
+        .class_get_name = try req(FnP_CStr, mod, "il2cpp_class_get_name"),
+        .class_get_namespace = try req(FnP_CStr, mod, "il2cpp_class_get_namespace"),
+        .class_get_parent = try req(FnP_P, mod, "il2cpp_class_get_parent"),
+        .class_get_fields = try req(FnIter, mod, "il2cpp_class_get_fields"),
+        .field_get_name = try req(FnP_CStr, mod, "il2cpp_field_get_name"),
+        .field_get_type = try req(FnP_P, mod, "il2cpp_field_get_type"),
+        .type_get_name = try req(FnTypeName, mod, "il2cpp_type_get_name"),
+        .field_get_offset = try req(FnFieldOffset, mod, "il2cpp_field_get_offset"),
+        .field_get_flags = try req(FnFieldFlags, mod, "il2cpp_field_get_flags"),
+        .class_get_methods = try req(FnIter, mod, "il2cpp_class_get_methods"),
+        .method_get_name = try req(FnP_CStr, mod, "il2cpp_method_get_name"),
+        .method_get_param_count = try req(FnParamCount, mod, "il2cpp_method_get_param_count"),
+        .method_get_param = try req(FnMethodParam, mod, "il2cpp_method_get_param"),
+        .method_get_param_name = opt(FnMethodParamName, mod, "il2cpp_method_get_param_name"),
+        .method_get_return_type = try req(FnP_P, mod, "il2cpp_method_get_return_type"),
+        .method_get_flags = opt(FnMethodFlags, mod, "il2cpp_method_get_flags"),
+        .type_get_type = try req(FnTypeType, mod, "il2cpp_type_get_type"),
+        .string_new = opt(FnStringNew, mod, "il2cpp_string_new"),
+        .string_to_utf8 = opt(FnP_CStr, mod, "il2cpp_string_to_utf8"),
+        .object_unbox = opt(FnP_P, mod, "il2cpp_object_unbox"),
+        .runtime_class_init = opt(FnClassInit, mod, "il2cpp_runtime_class_init"),
+        .class_from_name = try req(FnFromName, mod, "il2cpp_class_from_name"),
+        .free = opt(FnFree, mod, "il2cpp_free"),
+        .runtime_invoke = opt(FnInvoke, mod, "il2cpp_runtime_invoke"),
     };
 
     api.root_domain = api.domain_get();
     _ = api.thread_attach(api.root_domain);
 
-    // Record the runtime module path for hello's "module" field.
-    var module_buf: [4096]u8 = undefined;
-    if (findRuntimeModule(allocator, &module_buf)) |path| {
-        const len = @min(path.len, api.module_buf.len);
-        @memcpy(api.module_buf[0..len], path[0..len]);
-        api.module_len = len;
-    }
+    @memcpy(api.module_buf[0..path_len], path_buf[0..path_len]);
+    api.module_len = path_len;
 
     return rt.Backend{
         .ctx = api,

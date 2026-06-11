@@ -19,12 +19,17 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const wine = b.option(bool, "wine", "Build the WINE/Proton variant (PE exports + Win64 ABI)") orelse false;
+    const options = b.addOptions();
+    options.addOption(bool, "wine", wine);
+
     const mod = b.createModule(.{
         .root_source_file = b.path("main.zig"),
         .target = target,
         .optimize = optimize,
         .link_libc = true, // we need dlopen/dlsym/pthread from the target's libc
     });
+    mod.addOptions("build_options", options);
 
     const lib = b.addLibrary(.{
         .name = "mono_collector",

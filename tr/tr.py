@@ -397,7 +397,6 @@ class TranslationConstants(QObject):
     )
     MONO_NOT_READY = QT_TR_NOOP("Mono collector is not connected")
     MONO_NO_RUNTIME = QT_TR_NOOP("No supported managed runtime found in this process")
-    MONO_WINE_LATER = QT_TR_NOOP("Wine/Proton targets are not supported yet")
     MONO_INVOKE = QT_TR_NOOP("Invoke...")
     MONO_INVOKE_INSTANCE = QT_TR_NOOP("Instance (this)")
     MONO_INVOKE_RESULT = QT_TR_NOOP("Result: {}")

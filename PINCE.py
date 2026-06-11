@@ -4357,9 +4357,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if info is None:
             QMessageBox.information(self, tr.ERROR, tr.MONO_NO_RUNTIME)
             return
-        if info.abi != "sysv":
-            QMessageBox.information(self, tr.ERROR, tr.MONO_WINE_LATER)
-            return
         if not monocore.init_mono():
             QMessageBox.information(self, tr.ERROR, tr.MONO_NOT_READY)
             return

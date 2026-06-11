@@ -70,14 +70,18 @@ def detect_runtime(pid: int) -> RuntimeInfo | None:
     return None
 
 
-def _collector_path() -> str:
-    """Returns the collector .so path for the current inferior's arch.
+def _collector_path(wine: bool = False) -> str:
+    """Returns the collector .so path for the current inferior's arch / ABI.
 
-    If AppImage, the .so is inside a FUSE mount that the target process cannot access.
-    In that case, we'll copy it to /tmp first.
+    Four variants: native Linux and WINE/Proton, both x64 and x86.
+    If AppImage, the .so is inside a FUSE mount that the target process cannot access,
+    so we copy it to /tmp first.
     """
     base = os.path.join(os.path.dirname(__file__), "libmono_collector")
-    if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32:
+    arch32 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
+    if wine:
+        src = os.path.join(base, "mono_collector_wine_x86.so" if arch32 else "mono_collector_wine_x64.so")
+    elif arch32:
         src = os.path.join(base, "mono_collector_x86.so")
     else:
         src = os.path.join(base, "mono_collector_x64.so")
@@ -118,7 +122,7 @@ def init_mono() -> bool:
     """Ensure a collector agent is injected and connected for the current process
 
     Reuses an existing connection/agent if present.
-    Only acts on native Linux Mono and IL2CPP targets for now
+    Acts on native Linux Mono/IL2CPP (sysv) and Wine/Proton (win64) targets, both x64 and x86.
 
     Returns:
         bool: True if a connected MonoClient is ready, False otherwise
@@ -132,9 +136,9 @@ def init_mono() -> bool:
     client = _try_connect(pid, retries=1)
     if client is None:
         info = detect_runtime(pid)
-        if info is None or info.kind not in ("mono", "il2cpp") or info.abi != "sysv":
+        if info is None or info.kind not in ("mono", "il2cpp") or info.abi not in ("sysv", "win64"):
             return False  # GUI decides the message
-        so_path = _collector_path()
+        so_path = _collector_path(info.abi == "win64")
         if not os.path.exists(so_path):
             logger.error(f"Mono collector not built: {so_path}")
             return False
