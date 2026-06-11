@@ -19,14 +19,17 @@ const std = @import("std");
 const rt = @import("runtime.zig");
 const Encoder = @import("msgpack.zig").Encoder;
 const resolver = @import("resolver.zig");
+const common = @import("common.zig");
 
-// x86 WINE also uses cdecl.
-const CC: std.builtin.CallingConvention = if (resolver.win64_abi) .winapi else .c;
-const CStr = [*:0]const u8;
-
-inline fn cspan(p: ?CStr) []const u8 {
-    return if (p) |s| std.mem.span(s) else "";
-}
+const CC = common.CC;
+const CStr = common.CStr;
+const cspan = common.cspan;
+const eql = common.eql;
+const typeTag = common.typeTag;
+const typeWidth = common.typeWidth;
+const emitBits = common.emitBits;
+const req = common.req;
+const opt = common.opt;
 
 // mono_* function pointer types
 const FnDomain = *const fn () callconv(CC) ?*anyopaque;
@@ -98,16 +101,6 @@ const MonoApi = struct {
     free: ?FnFree,
     runtime_invoke: ?FnInvoke = null,
 };
-
-// Resolve a symbol through the bound module (dlsym natively, PE export under WINE).
-fn req(comptime T: type, mod: resolver.Module, name: [*:0]const u8) !T {
-    const p = mod.lookup(name) orelse return error.SymbolMissing;
-    return @ptrCast(p);
-}
-fn opt(comptime T: type, mod: resolver.Module, name: [*:0]const u8) ?T {
-    const p = mod.lookup(name) orelse return null;
-    return @ptrCast(p);
-}
 
 pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
     // Bind the runtime module using the resolver.
@@ -383,40 +376,6 @@ fn monoFindClass(ctx: *anyopaque, image_u: u64, ns: []const u8, name: []const u8
     try e.uint(@intFromPtr(klass));
 }
 
-inline fn eql(a: []const u8, b: []const u8) bool {
-    return std.mem.eql(u8, a, b);
-}
-
-// MONO_TYPE_* enum -> our wire type tag. "unsupported" = a type we can't marshal yet.
-fn typeTag(t: c_int) []const u8 {
-    return switch (t) {
-        0x01 => "void",
-        0x02 => "bool",
-        0x03 => "char",
-        0x04 => "i1",
-        0x05 => "u1",
-        0x06 => "i2",
-        0x07 => "u2",
-        0x08 => "i4",
-        0x09 => "u4",
-        0x0a => "i8",
-        0x0b => "u8",
-        0x0c => "r4",
-        0x0d => "r8",
-        0x0e => "str",
-        0x0f, 0x18, 0x19 => if (@sizeOf(usize) == 8) "u8" else "u4", // PTR, I (IntPtr), U (UIntPtr)
-        0x12, 0x14, 0x1c, 0x1d => "object", // CLASS, ARRAY, OBJECT, SZARRAY
-        else => "unsupported",
-    };
-}
-
-fn typeWidth(tag: []const u8) usize {
-    if (eql(tag, "i1") or eql(tag, "u1") or eql(tag, "bool")) return 1;
-    if (eql(tag, "i2") or eql(tag, "u2") or eql(tag, "char")) return 2;
-    if (eql(tag, "i4") or eql(tag, "u4") or eql(tag, "r4")) return 4;
-    return 8;
-}
-
 inline fn encodeTypeRef(m: *MonoApi, e: *Encoder, t: ?*anyopaque) !void {
     const tname = m.type_get_name(t);
     try e.mapHeader(2);
@@ -470,14 +429,6 @@ fn monoSignature(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
         try e.str(cspan(tname));
         if (m.free) |fr| if (tname) |p| fr(@ptrCast(@constCast(p)));
     }
-}
-
-inline fn emitBits(e: *Encoder, tag: []const u8, bits: u64) !void {
-    try e.mapHeader(2);
-    try e.str("tag");
-    try e.str(tag);
-    try e.str("bits");
-    try e.uint(bits);
 }
 
 fn monoInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg, e: *Encoder) !void {

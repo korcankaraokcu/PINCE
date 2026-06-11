@@ -26,14 +26,16 @@ const std = @import("std");
 const rt = @import("runtime.zig");
 const Encoder = @import("msgpack.zig").Encoder;
 const resolver = @import("resolver.zig");
+const common = @import("common.zig");
 
-// x86 WINE also uses cdecl.
-const CC: std.builtin.CallingConvention = if (resolver.win64_abi) .winapi else .c;
-const CStr = [*:0]const u8;
-
-inline fn cspan(p: ?CStr) []const u8 {
-    return if (p) |s| std.mem.span(s) else "";
-}
+const CC = common.CC;
+const CStr = common.CStr;
+const cspan = common.cspan;
+const eql = common.eql;
+const typeTag = common.typeTag;
+const typeWidth = common.typeWidth;
+const req = common.req;
+const opt = common.opt;
 
 // il2cpp_* function pointer types (taken from il2cpp-api-functions.h)
 const FnDomain = *const fn () callconv(CC) ?*anyopaque;
@@ -104,16 +106,6 @@ const Il2CppApi = struct {
     class_get_field_from_name: ?FnFieldFromName,
     field_static_get_value: ?FnFieldStaticGet,
 };
-
-// Resolve a symbol through the bound module (dlsym natively, PE export under WINE).
-fn req(comptime T: type, mod: resolver.Module, name: [*:0]const u8) !T {
-    const p = mod.lookup(name) orelse return error.SymbolMissing;
-    return @ptrCast(p);
-}
-fn opt(comptime T: type, mod: resolver.Module, name: [*:0]const u8) ?T {
-    const p = mod.lookup(name) orelse return null;
-    return @ptrCast(p);
-}
 
 pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
     // Bind the runtime module using the resolver.
@@ -444,41 +436,6 @@ fn il2cppFindClass(ctx: *anyopaque, image_u: u64, ns: []const u8, name: []const 
     try e.mapHeader(1);
     try e.str("klass");
     try e.uint(@intFromPtr(klass));
-}
-
-inline fn eql(a: []const u8, b: []const u8) bool {
-    return std.mem.eql(u8, a, b);
-}
-
-// Il2CppTypeEnum -> our wire tag.
-// IL2CPP reuses the MONO_TYPE_* values, so this mirrors mono_api.zig typeTag exactly.
-fn typeTag(t: c_int) []const u8 {
-    return switch (t) {
-        0x01 => "void",
-        0x02 => "bool",
-        0x03 => "char",
-        0x04 => "i1",
-        0x05 => "u1",
-        0x06 => "i2",
-        0x07 => "u2",
-        0x08 => "i4",
-        0x09 => "u4",
-        0x0a => "i8",
-        0x0b => "u8",
-        0x0c => "r4",
-        0x0d => "r8",
-        0x0e => "str",
-        0x0f, 0x18, 0x19 => if (@sizeOf(usize) == 8) "u8" else "u4", // PTR, I (IntPtr), U (UIntPtr)
-        0x12, 0x14, 0x1c, 0x1d => "object", // CLASS, ARRAY, OBJECT, SZARRAY
-        else => "unsupported",
-    };
-}
-
-fn typeWidth(tag: []const u8) usize {
-    if (eql(tag, "i1") or eql(tag, "u1") or eql(tag, "bool")) return 1;
-    if (eql(tag, "i2") or eql(tag, "u2") or eql(tag, "char")) return 2;
-    if (eql(tag, "i4") or eql(tag, "u4") or eql(tag, "r4")) return 4;
-    return 8;
 }
 
 inline fn encodeTypeRef(m: *Il2CppApi, e: *Encoder, t: ?*anyopaque) !void {
