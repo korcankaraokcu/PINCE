@@ -405,6 +405,7 @@ class TranslationConstants(QObject):
     MONO_INVOKE_BAD_ARG = QT_TR_NOOP("Could not parse the argument values")
     MONO_INVOKE_BAD_INSTANCE = QT_TR_NOOP("Invalid instance pointer")
     MONO_INVOKE_UNSUPPORTED = QT_TR_NOOP("This method has a parameter type that can't be marshalled yet")
+    MONO_STATIC_UNAVAILABLE = QT_TR_NOOP("Static field address is unavailable for this runtime")
     FIELDS = QT_TR_NOOP("Fields")
     METHODS = QT_TR_NOOP("Methods")
     DISASSEMBLE = QT_TR_NOOP("Disassemble")

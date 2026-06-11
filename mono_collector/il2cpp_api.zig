@@ -20,7 +20,7 @@
 //!   - assemblies arrive as an array (il2cpp_domain_get_assemblies), not via a foreach callback.
 //!   - classes are enumerated by index (il2cpp_image_get_class), not by metadata token.
 //!   - there is NO JIT: the native code pointer is read from MethodInfo.methodPointer (offset 0) which is version-sensitive, see il2cppCompile.
-//!   - IL2CPP exposes no public static field base getter, so static_addr is Unsupported here, see il2cppStaticAddr.
+//!   - IL2CPP exposes no static field base getter so il2cppStaticAddr auto-calibrates the Il2CppClass.static_fields offset once at load (calibrateStaticFields), returning Unsupported when calibration is ambiguous.
 //!   - signature enumerates params by index (il2cpp_method_get_param) with staticness from the method flags.
 const std = @import("std");
 const rt = @import("runtime.zig");
@@ -57,12 +57,16 @@ const FnMethodParam = *const fn (?*anyopaque, u32) callconv(CC) ?*anyopaque;
 const FnMethodParamName = *const fn (?*anyopaque, u32) callconv(CC) ?CStr;
 const FnStringNew = *const fn (CStr) callconv(CC) ?*anyopaque; // no domain arg, unlike mono_string_new
 const FnMethodFlags = *const fn (?*anyopaque, *u32) callconv(CC) u32;
+const FnGetCorlib = *const fn () callconv(CC) ?*anyopaque;
+const FnFieldFromName = *const fn (?*anyopaque, CStr) callconv(CC) ?*anyopaque;
+const FnFieldStaticGet = *const fn (?*anyopaque, *anyopaque) callconv(CC) void;
 
 const Il2CppApi = struct {
     allocator: std.mem.Allocator,
     root_domain: ?*anyopaque = null,
     module_buf: [256]u8 = undefined,
     module_len: usize = 0,
+    static_fields_offset: ?usize = null,
 
     domain_get: FnDomain,
     thread_attach: FnThreadAttach,
@@ -96,6 +100,9 @@ const Il2CppApi = struct {
     class_from_name: FnFromName,
     free: ?FnFree,
     runtime_invoke: ?FnInvoke = null,
+    get_corlib: ?FnGetCorlib,
+    class_get_field_from_name: ?FnFieldFromName,
+    field_static_get_value: ?FnFieldStaticGet,
 };
 
 // Resolve a symbol through the bound module (dlsym natively, PE export under WINE).
@@ -151,10 +158,14 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .class_from_name = try req(FnFromName, mod, "il2cpp_class_from_name"),
         .free = opt(FnFree, mod, "il2cpp_free"),
         .runtime_invoke = opt(FnInvoke, mod, "il2cpp_runtime_invoke"),
+        .get_corlib = opt(FnGetCorlib, mod, "il2cpp_get_corlib"),
+        .class_get_field_from_name = opt(FnFieldFromName, mod, "il2cpp_class_get_field_from_name"),
+        .field_static_get_value = opt(FnFieldStaticGet, mod, "il2cpp_field_static_get_value"),
     };
 
     api.root_domain = api.domain_get();
     _ = api.thread_attach(api.root_domain);
+    api.static_fields_offset = calibrateStaticFields(api);
 
     @memcpy(api.module_buf[0..path_len], path_buf[0..path_len]);
     api.module_len = path_len;
@@ -319,14 +330,73 @@ fn il2cppCompile(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
     try e.uint(addr);
 }
 
+inline fn classWord(klass: ?*anyopaque, off: usize) usize {
+    const p: [*]const u8 = @ptrCast(klass);
+    return @as(*align(1) const usize, @ptrCast(p + off)).*;
+}
+
+// Fault-safe word read via /proc/self/mem so an unmapped address errors instead of faulting.
+inline fn calibReadWord(mem: anytype, io: anytype, addr: usize) ?usize {
+    var out: usize = 0;
+    const n = mem.readPositionalAll(io, std.mem.asBytes(&out), addr) catch return null;
+    if (n != @sizeOf(usize)) return null;
+    return out;
+}
+
+const SF_SCAN_WINDOW: usize = 0x280;
+fn calibrateStaticFields(m: *Il2CppApi) ?usize {
+    const get_corlib = m.get_corlib orelse return null;
+    const get_field = m.class_get_field_from_name orelse return null;
+    const static_get = m.field_static_get_value orelse return null;
+    const class_init = m.runtime_class_init orelse return null;
+
+    const corlib = get_corlib() orelse return null;
+    const str_klass = m.class_from_name(corlib, "System", "String") orelse return null;
+    class_init(str_klass);
+    const empty = get_field(str_klass, "Empty") orelse return null;
+    var empty_val: usize = 0;
+    static_get(empty, @ptrCast(&empty_val));
+    if (empty_val == 0) return null;
+    const empty_off: usize = @intCast(m.field_get_offset(empty));
+    const obj_klass = m.class_from_name(corlib, "System", "Object") orelse return null;
+
+    const io = std.Io.Threaded.global_single_threaded.io();
+    const mem = std.Io.Dir.openFileAbsolute(io, "/proc/self/mem", .{}) catch return null;
+    defer mem.close(io);
+
+    // static_fields offset in Il2CppClass varies by Unity version so we find it at load.
+    // No unique match -> leave it null so static_addr never returns a wrong address.
+    const str_addr = @intFromPtr(str_klass);
+    const obj_addr = @intFromPtr(obj_klass);
+    var found: ?usize = null;
+    var k: usize = 0;
+    while (k <= SF_SCAN_WINDOW) : (k += @sizeOf(usize)) {
+        const cand = calibReadWord(mem, io, str_addr + k) orelse break; // ran off the struct
+        if (cand == 0) continue;
+        const got = calibReadWord(mem, io, cand + empty_off) orelse continue;
+        if (got != empty_val) continue;
+        const ow = calibReadWord(mem, io, obj_addr + k) orelse continue;
+        if (ow != 0) continue;
+        if (found != null) return null; // ambiguous
+        found = k;
+    }
+    return found;
+}
+
 fn il2cppStaticAddr(ctx: *anyopaque, klass_u: u64, field_u: u64, e: *Encoder) !void {
-    _ = ctx;
-    _ = klass_u;
-    _ = field_u;
-    _ = e;
-    // IL2CPP exposes no public getter for a static field's absolute address.
-    // The base lives in Il2CppClass.static_fields, reachable only by reading the (heavily version dependent) class struct raw.
-    return error.Unsupported;
+    const m = self(ctx);
+    const sf_off = m.static_fields_offset orelse return error.Unsupported;
+    const klass: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(klass_u)));
+    const fld: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(field_u)));
+
+    if (m.runtime_class_init) |ci| ci(klass);
+    const base: u64 = classWord(klass, sf_off);
+    if (base == 0) return error.Unsupported;
+
+    const addr: u64 = base +% @as(u64, @intCast(m.field_get_offset(fld)));
+    try e.mapHeader(1);
+    try e.str("address");
+    try e.uint(addr);
 }
 
 fn il2cppFindClass(ctx: *anyopaque, image_u: u64, ns: []const u8, name: []const u8, e: *Encoder) !void {

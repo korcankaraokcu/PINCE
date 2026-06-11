@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QDialog, QTreeWidgetItem, QMenu, QApplication, QWidget
+from PyQt6.QtWidgets import QApplication, QDialog, QMenu, QMessageBox, QTreeWidgetItem, QWidget
 
 from GUI.Widgets.MonoDissect.Form.MonoDissectDialog import Ui_Dialog
 from GUI.Widgets.MonoInvoke.MonoInvoke import MonoInvokeDialog
@@ -83,8 +83,11 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
         elif kind == "fields":
             klass = item.data(0, ROLE_DATA)["klass"]
             for fld in client.fields(klass):
-                marker = "static " if fld["is_static"] else ""
-                value = f"{marker}{fld['type']} @ {utils.upper_hex(hex(fld['offset']))}"
+                if fld["flags"] & 0x40:  # FIELD_ATTRIBUTE_LITERAL which means const so no runtime address
+                    value = f"const {fld['type']}"
+                else:
+                    marker = "static " if fld["is_static"] else ""
+                    value = f"{marker}{fld['type']} @ {utils.upper_hex(hex(fld['offset']))}"
                 child = QTreeWidgetItem([fld["name"], value])
                 child.setData(0, ROLE_KIND, "field")
                 child.setData(0, ROLE_DATA, {"field": fld, "class": item.data(0, ROLE_DATA)})
@@ -146,13 +149,19 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             fld = payload["field"]
             klass = payload["class"]["klass"]
             if fld["is_static"]:
+                if fld["flags"] & 0x40:  # compile-time literal, no runtime address
+                    return
                 # Static field: resolve to an absolute address.
                 action_table = menu.addAction(tr.ADD_TO_ADDRESS_LIST)
                 action_copy = menu.addAction(tr.COPY_ADDRESS)
                 chosen = menu.exec(self.treeWidget_Mono.viewport().mapToGlobal(position))
                 if chosen is None:
                     return
-                address = client.static_field_address(klass, fld["field"])
+                try:
+                    address = client.static_field_address(klass, fld["field"])
+                except monocore.MonoError:
+                    QMessageBox.information(self, tr.ERROR, tr.MONO_STATIC_UNAVAILABLE)
+                    return
                 if chosen == action_table:
                     self.add_to_table_requested.emit(fld["name"], hex(address))
                 elif chosen == action_copy:
@@ -168,7 +177,11 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
                 if chosen is None:
                     return
                 if action_table is not None and chosen == action_table:
-                    base = client.static_field_address(klass, root["field"])
+                    try:
+                        base = client.static_field_address(klass, root["field"])
+                    except monocore.MonoError:
+                        QMessageBox.information(self, tr.ERROR, tr.MONO_STATIC_UNAVAILABLE)
+                        return
                     pointer = typedefs.PointerChainRequest(base, [fld["offset"]])
                     self.add_to_table_requested.emit(f"{payload['class']['name']}.{fld['name']}", pointer)
                 elif chosen == action_copy:
@@ -184,13 +197,16 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             class_info = methods_node.data(0, ROLE_DATA) if methods_node is not None else None
             root = self._singleton_root(client, class_info) if class_info is not None else None
             if root is not None:
-                slot = client.static_field_address(class_info["klass"], root["field"])
-                value_index = (
-                    typedefs.VALUE_INDEX.INT32
-                    if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
-                    else typedefs.VALUE_INDEX.INT64
-                )
-                instance_ptr = debugcore.read_memory(slot, value_index)
+                try:
+                    slot = client.static_field_address(class_info["klass"], root["field"])
+                    value_index = (
+                        typedefs.VALUE_INDEX.INT32
+                        if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
+                        else typedefs.VALUE_INDEX.INT64
+                    )
+                    instance_ptr = debugcore.read_memory(slot, value_index)
+                except monocore.MonoError:
+                    instance_ptr = None
         MonoInvokeDialog(self, method_info, signature, instance_ptr).show()
 
     def _singleton_root(self, client: monocore.MonoClient, klass_info: dict) -> dict | None:
