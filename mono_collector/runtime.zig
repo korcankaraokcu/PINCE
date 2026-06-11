@@ -74,7 +74,10 @@ pub const Backend = struct {
     }
 };
 
-/// TODO BRK: Use detected kind and branch off once we have functional il2cpp impl.
+/// We don't need fancy checking and switching because we can just try to import each backend
+/// and see which is the first one that's valid.
 pub fn detectAndLoad(allocator: std.mem.Allocator) !?Backend {
-    return @import("mono_api.zig").load(allocator);
+    if (try @import("mono_api.zig").load(allocator)) |b| return b;
+    if (try @import("il2cpp_api.zig").load(allocator)) |b| return b;
+    return null;
 }

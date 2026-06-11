@@ -13,8 +13,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//! Mono embedding API backend.
-//! Resolves mono_* via dlsym from the already loaded runtime, attaches the worker thread and implements the runtime.Backend vtable.
+//! IL2CPP embedding API backend.
+//! Resolves il2cpp_* via dlsym from the already loaded runtime, attaches the worker thread and implements the runtime.Backend vtable.
+//! Unity's IL2CPP exports a C API deliberately modeled on Mono's embedding API.
+//! Differences handled here vs mono_api.zig:
+//!   - assemblies arrive as an array (il2cpp_domain_get_assemblies), not via a foreach callback.
+//!   - classes are enumerated by index (il2cpp_image_get_class), not by metadata token.
+//!   - there is NO JIT: the native code pointer is read from MethodInfo.methodPointer (offset 0) which is version-sensitive, see il2cppCompile.
+//!   - IL2CPP exposes no public static field base getter, so static_addr is Unsupported here, see il2cppStaticAddr.
+//!   - signature enumerates params by index (il2cpp_method_get_param) with staticness from the method flags.
 const std = @import("std");
 const rt = @import("runtime.zig");
 const Encoder = @import("msgpack.zig").Encoder;
@@ -26,46 +33,43 @@ inline fn cspan(p: ?CStr) []const u8 {
     return if (p) |s| std.mem.span(s) else "";
 }
 
-// mono_* function pointer types
+// il2cpp_* function pointer types (taken from il2cpp-api-functions.h)
 const FnDomain = *const fn () callconv(CC) ?*anyopaque;
+const FnThreadAttach = *const fn (?*anyopaque) callconv(CC) ?*anyopaque;
+const FnGetAssemblies = *const fn (?*anyopaque, *usize) callconv(CC) ?[*]const ?*anyopaque;
 const FnP_P = *const fn (?*anyopaque) callconv(CC) ?*anyopaque;
-const ForeachCb = *const fn (?*anyopaque, ?*anyopaque) callconv(CC) void;
-const FnForeach = *const fn (ForeachCb, ?*anyopaque) callconv(CC) void;
 const FnP_CStr = *const fn (?*anyopaque) callconv(CC) ?CStr;
-const FnImgTable = *const fn (?*anyopaque, c_int) callconv(CC) ?*anyopaque;
-const FnRows = *const fn (?*anyopaque) callconv(CC) c_int;
-const FnClassGet = *const fn (?*anyopaque, u32) callconv(CC) ?*anyopaque;
+const FnImgCount = *const fn (?*anyopaque) callconv(CC) usize;
+const FnImgClass = *const fn (?*anyopaque, usize) callconv(CC) ?*anyopaque;
 const FnIter = *const fn (?*anyopaque, *?*anyopaque) callconv(CC) ?*anyopaque;
-const FnFieldOffset = *const fn (?*anyopaque) callconv(CC) c_int;
-const FnFieldFlags = *const fn (?*anyopaque) callconv(CC) u32;
+const FnFieldOffset = *const fn (?*anyopaque) callconv(CC) usize;
+const FnFieldFlags = *const fn (?*anyopaque) callconv(CC) c_int;
 const FnTypeName = *const fn (?*anyopaque) callconv(CC) ?CStr;
-const FnFullName = *const fn (?*anyopaque, c_int) callconv(CC) ?CStr;
 const FnParamCount = *const fn (?*anyopaque) callconv(CC) u32;
-const FnVtable = *const fn (?*anyopaque, ?*anyopaque) callconv(CC) ?*anyopaque;
-const FnStaticData = *const fn (?*anyopaque) callconv(CC) ?*anyopaque;
 const FnClassInit = *const fn (?*anyopaque) callconv(CC) void;
 const FnFromName = *const fn (?*anyopaque, CStr, CStr) callconv(CC) ?*anyopaque;
 const FnFree = *const fn (?*anyopaque) callconv(CC) void;
 const FnInvoke = *const fn (?*anyopaque, ?*anyopaque, ?[*]?*anyopaque, *?*anyopaque) callconv(CC) ?*anyopaque;
 const FnTypeType = *const fn (?*anyopaque) callconv(CC) c_int;
-const FnStringNew = *const fn (?*anyopaque, CStr) callconv(CC) ?*anyopaque;
-const FnParamNames = *const fn (?*anyopaque, [*]?CStr) callconv(CC) void;
+const FnMethodParam = *const fn (?*anyopaque, u32) callconv(CC) ?*anyopaque;
+const FnMethodParamName = *const fn (?*anyopaque, u32) callconv(CC) ?CStr;
+const FnStringNew = *const fn (CStr) callconv(CC) ?*anyopaque; // no domain arg, unlike mono_string_new
+const FnMethodFlags = *const fn (?*anyopaque, *u32) callconv(CC) u32;
 
-const MonoApi = struct {
+const Il2CppApi = struct {
     allocator: std.mem.Allocator,
     root_domain: ?*anyopaque = null,
     module_buf: [256]u8 = undefined,
     module_len: usize = 0,
 
-    get_root_domain: FnDomain,
-    thread_attach: FnP_P,
-    assembly_foreach: FnForeach,
+    domain_get: FnDomain,
+    thread_attach: FnThreadAttach,
+    domain_get_assemblies: FnGetAssemblies,
     assembly_get_image: FnP_P,
     image_get_name: FnP_CStr,
-    image_get_filename: FnP_CStr,
-    image_get_table_info: FnImgTable,
-    table_info_get_rows: FnRows,
-    class_get: FnClassGet,
+    image_get_filename: ?FnP_CStr, // optional because IL2CPP export sets vary by Unity version
+    image_get_class_count: FnImgCount,
+    image_get_class: FnImgClass,
     class_get_name: FnP_CStr,
     class_get_namespace: FnP_CStr,
     class_get_parent: FnP_P,
@@ -77,20 +81,15 @@ const MonoApi = struct {
     field_get_flags: FnFieldFlags,
     class_get_methods: FnIter,
     method_get_name: FnP_CStr,
-    method_full_name: FnFullName,
-    method_signature: FnP_P,
-    signature_get_param_count: FnParamCount,
-    signature_get_params: FnIter,
-    signature_get_return_type: FnP_P,
-    signature_is_instance: ?FnTypeType,
+    method_get_param_count: FnParamCount,
+    method_get_param: FnMethodParam,
+    method_get_param_name: ?FnMethodParamName,
+    method_get_return_type: FnP_P,
+    method_get_flags: ?FnMethodFlags,
     type_get_type: FnTypeType,
-    method_get_param_names: ?FnParamNames,
     string_new: ?FnStringNew,
     string_to_utf8: ?FnP_CStr,
     object_unbox: ?FnP_P,
-    compile_method: FnP_P,
-    class_vtable: FnVtable,
-    vtable_get_static_field_data: FnStaticData,
     runtime_class_init: ?FnClassInit,
     class_from_name: FnFromName,
     free: ?FnFree,
@@ -107,7 +106,7 @@ fn opt(comptime T: type, handle: ?*anyopaque, name: [*:0]const u8) ?T {
     return @ptrCast(p);
 }
 
-// Find the path of the mapped Mono runtime in our own maps, NUL-terminated in "buf".
+// Find the path of the mapped IL2CPP runtime in our own maps, NUL-terminated in "buf".
 fn findRuntimeModule(allocator: std.mem.Allocator, buf: []u8) ?[:0]const u8 {
     const io = std.Io.Threaded.global_single_threaded.io();
     const f = std.Io.Dir.openFileAbsolute(io, "/proc/self/maps", .{}) catch return null;
@@ -127,7 +126,10 @@ fn findRuntimeModule(allocator: std.mem.Allocator, buf: []u8) ?[:0]const u8 {
 
     var it = std.mem.splitScalar(u8, contents.items, '\n');
     while (it.next()) |line| {
-        if (std.mem.indexOf(u8, line, "libmono") == null) continue;
+        if (std.mem.indexOf(u8, line, "GameAssembly") == null) continue;
+        // The pathname is the final maps column but can contain spaces (e.g. ".../Total Reload Demo/GameAssembly.so")
+        // so we can't take the last space delimited token.
+        // This means that for a file backed mapping the path is absolute -> take from the first "/".
         const start = std.mem.indexOfScalar(u8, line, '/') orelse continue;
         const path = line[start..];
         if (path.len == 0 or path.len >= buf.len) return null;
@@ -139,66 +141,60 @@ fn findRuntimeModule(allocator: std.mem.Allocator, buf: []u8) ?[:0]const u8 {
 }
 
 pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
-    // Resolve a handle through which the mono_* exports are visible.
+    // Resolve a handle through which the il2cpp_* exports are visible.
     // First try dlopen(NULL) which sees the global scope, which is enough for a runtime linked
     // into the executable or loaded thru RTLD_GLOBAL.
-    // Most of the time Unity games dlopen libmono*.so with RTLD_LOCAL though, which results
-    // in the mono_* symbols to not be in the global scope.
+    // Most of the time Unity games dlopen GameAssembly.so with RTLD_LOCAL though, which results
+    // in the il2cpp_* symbols to not be in the global scope.
     // In that case we'll dlopen the already mapped module by path, where RTLD_NOLOAD attaches to the copy
     // and doesn't load a new one, to get a proper handle.
     var h = std.c.dlopen(null, std.c.RTLD{ .NOW = true });
-    if (std.c.dlsym(h, "mono_get_root_domain") == null) {
+    if (std.c.dlsym(h, "il2cpp_domain_get") == null) {
         var path_buf: [4096]u8 = undefined;
         const path = findRuntimeModule(allocator, &path_buf) orelse return null;
         h = std.c.dlopen(path.ptr, std.c.RTLD{ .NOW = true, .NOLOAD = true });
-        // Not a Mono process, or the runtime's symbols are genuinely absent — decline.
-        if (h == null or std.c.dlsym(h, "mono_get_root_domain") == null) return null;
+        // Not an IL2CPP process or the runtime's symbols are genuinely absent. RIP...
+        if (h == null or std.c.dlsym(h, "il2cpp_domain_get") == null) return null;
     }
 
-    const api = try allocator.create(MonoApi);
+    const api = try allocator.create(Il2CppApi);
     api.* = .{
         .allocator = allocator,
-        .get_root_domain = try req(FnDomain, h, "mono_get_root_domain"),
-        .thread_attach = try req(FnP_P, h, "mono_thread_attach"),
-        .assembly_foreach = try req(FnForeach, h, "mono_assembly_foreach"),
-        .assembly_get_image = try req(FnP_P, h, "mono_assembly_get_image"),
-        .image_get_name = try req(FnP_CStr, h, "mono_image_get_name"),
-        .image_get_filename = try req(FnP_CStr, h, "mono_image_get_filename"),
-        .image_get_table_info = try req(FnImgTable, h, "mono_image_get_table_info"),
-        .table_info_get_rows = try req(FnRows, h, "mono_table_info_get_rows"),
-        .class_get = try req(FnClassGet, h, "mono_class_get"),
-        .class_get_name = try req(FnP_CStr, h, "mono_class_get_name"),
-        .class_get_namespace = try req(FnP_CStr, h, "mono_class_get_namespace"),
-        .class_get_parent = try req(FnP_P, h, "mono_class_get_parent"),
-        .class_get_fields = try req(FnIter, h, "mono_class_get_fields"),
-        .field_get_name = try req(FnP_CStr, h, "mono_field_get_name"),
-        .field_get_type = try req(FnP_P, h, "mono_field_get_type"),
-        .type_get_name = try req(FnTypeName, h, "mono_type_get_name"),
-        .field_get_offset = try req(FnFieldOffset, h, "mono_field_get_offset"),
-        .field_get_flags = try req(FnFieldFlags, h, "mono_field_get_flags"),
-        .class_get_methods = try req(FnIter, h, "mono_class_get_methods"),
-        .method_get_name = try req(FnP_CStr, h, "mono_method_get_name"),
-        .method_full_name = try req(FnFullName, h, "mono_method_full_name"),
-        .method_signature = try req(FnP_P, h, "mono_method_signature"),
-        .signature_get_param_count = try req(FnParamCount, h, "mono_signature_get_param_count"),
-        .signature_get_params = try req(FnIter, h, "mono_signature_get_params"),
-        .signature_get_return_type = try req(FnP_P, h, "mono_signature_get_return_type"),
-        .signature_is_instance = opt(FnTypeType, h, "mono_signature_is_instance"),
-        .type_get_type = try req(FnTypeType, h, "mono_type_get_type"),
-        .method_get_param_names = opt(FnParamNames, h, "mono_method_get_param_names"),
-        .string_new = opt(FnStringNew, h, "mono_string_new"),
-        .string_to_utf8 = opt(FnP_CStr, h, "mono_string_to_utf8"),
-        .object_unbox = opt(FnP_P, h, "mono_object_unbox"),
-        .compile_method = try req(FnP_P, h, "mono_compile_method"),
-        .class_vtable = try req(FnVtable, h, "mono_class_vtable"),
-        .vtable_get_static_field_data = try req(FnStaticData, h, "mono_vtable_get_static_field_data"),
-        .runtime_class_init = opt(FnClassInit, h, "mono_runtime_class_init"),
-        .class_from_name = try req(FnFromName, h, "mono_class_from_name"),
-        .free = opt(FnFree, h, "mono_free"),
-        .runtime_invoke = opt(FnInvoke, h, "mono_runtime_invoke"),
+        .domain_get = try req(FnDomain, h, "il2cpp_domain_get"),
+        .thread_attach = try req(FnThreadAttach, h, "il2cpp_thread_attach"),
+        .domain_get_assemblies = try req(FnGetAssemblies, h, "il2cpp_domain_get_assemblies"),
+        .assembly_get_image = try req(FnP_P, h, "il2cpp_assembly_get_image"),
+        .image_get_name = try req(FnP_CStr, h, "il2cpp_image_get_name"),
+        .image_get_filename = opt(FnP_CStr, h, "il2cpp_image_get_filename"),
+        .image_get_class_count = try req(FnImgCount, h, "il2cpp_image_get_class_count"),
+        .image_get_class = try req(FnImgClass, h, "il2cpp_image_get_class"),
+        .class_get_name = try req(FnP_CStr, h, "il2cpp_class_get_name"),
+        .class_get_namespace = try req(FnP_CStr, h, "il2cpp_class_get_namespace"),
+        .class_get_parent = try req(FnP_P, h, "il2cpp_class_get_parent"),
+        .class_get_fields = try req(FnIter, h, "il2cpp_class_get_fields"),
+        .field_get_name = try req(FnP_CStr, h, "il2cpp_field_get_name"),
+        .field_get_type = try req(FnP_P, h, "il2cpp_field_get_type"),
+        .type_get_name = try req(FnTypeName, h, "il2cpp_type_get_name"),
+        .field_get_offset = try req(FnFieldOffset, h, "il2cpp_field_get_offset"),
+        .field_get_flags = try req(FnFieldFlags, h, "il2cpp_field_get_flags"),
+        .class_get_methods = try req(FnIter, h, "il2cpp_class_get_methods"),
+        .method_get_name = try req(FnP_CStr, h, "il2cpp_method_get_name"),
+        .method_get_param_count = try req(FnParamCount, h, "il2cpp_method_get_param_count"),
+        .method_get_param = try req(FnMethodParam, h, "il2cpp_method_get_param"),
+        .method_get_param_name = opt(FnMethodParamName, h, "il2cpp_method_get_param_name"),
+        .method_get_return_type = try req(FnP_P, h, "il2cpp_method_get_return_type"),
+        .method_get_flags = opt(FnMethodFlags, h, "il2cpp_method_get_flags"),
+        .type_get_type = try req(FnTypeType, h, "il2cpp_type_get_type"),
+        .string_new = opt(FnStringNew, h, "il2cpp_string_new"),
+        .string_to_utf8 = opt(FnP_CStr, h, "il2cpp_string_to_utf8"),
+        .object_unbox = opt(FnP_P, h, "il2cpp_object_unbox"),
+        .runtime_class_init = opt(FnClassInit, h, "il2cpp_runtime_class_init"),
+        .class_from_name = try req(FnFromName, h, "il2cpp_class_from_name"),
+        .free = opt(FnFree, h, "il2cpp_free"),
+        .runtime_invoke = opt(FnInvoke, h, "il2cpp_runtime_invoke"),
     };
 
-    api.root_domain = api.get_root_domain();
+    api.root_domain = api.domain_get();
     _ = api.thread_attach(api.root_domain);
 
     // Record the runtime module path for hello's "module" field.
@@ -211,25 +207,25 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
 
     return rt.Backend{
         .ctx = api,
-        .kind = .mono,
-        .helloFn = monoHello,
-        .assembliesFn = monoAssemblies,
-        .classesFn = monoClasses,
-        .fieldsFn = monoFields,
-        .methodsFn = monoMethods,
-        .compileFn = monoCompile,
-        .staticAddrFn = monoStaticAddr,
-        .findClassFn = monoFindClass,
-        .invokeFn = monoInvoke,
-        .signatureFn = monoSignature,
+        .kind = .il2cpp,
+        .helloFn = il2cppHello,
+        .assembliesFn = il2cppAssemblies,
+        .classesFn = il2cppClasses,
+        .fieldsFn = il2cppFields,
+        .methodsFn = il2cppMethods,
+        .compileFn = il2cppCompile,
+        .staticAddrFn = il2cppStaticAddr,
+        .findClassFn = il2cppFindClass,
+        .invokeFn = il2cppInvoke,
+        .signatureFn = il2cppSignature,
     };
 }
 
-inline fn self(ctx: *anyopaque) *MonoApi {
+inline fn self(ctx: *anyopaque) *Il2CppApi {
     return @ptrCast(@alignCast(ctx));
 }
 
-fn monoHello(ctx: *anyopaque, e: *Encoder) !void {
+fn il2cppHello(ctx: *anyopaque, e: *Encoder) !void {
     const m = self(ctx);
     try e.mapHeader(6);
     try e.str("version");
@@ -237,7 +233,7 @@ fn monoHello(ctx: *anyopaque, e: *Encoder) !void {
     try e.str("arch");
     try e.str(if (@sizeOf(usize) == 8) "x64" else "x86");
     try e.str("runtime");
-    try e.str("mono");
+    try e.str("il2cpp");
     try e.str("abi");
     try e.str("sysv");
     try e.str("module");
@@ -246,64 +242,41 @@ fn monoHello(ctx: *anyopaque, e: *Encoder) !void {
     try e.uint(@intFromPtr(m.root_domain));
 }
 
-const CollectCtx = struct { list: *std.ArrayList(u64), allocator: std.mem.Allocator, oom: bool };
-fn collectAssembly(asm_ptr: ?*anyopaque, user: ?*anyopaque) callconv(CC) void {
-    const c: *CollectCtx = @ptrCast(@alignCast(user.?));
-    c.list.append(c.allocator, @intFromPtr(asm_ptr)) catch {
-        c.oom = true;
-    };
-}
-
-fn monoAssemblies(ctx: *anyopaque, e: *Encoder) !void {
+fn il2cppAssemblies(ctx: *anyopaque, e: *Encoder) !void {
     const m = self(ctx);
-    var list: std.ArrayList(u64) = .empty;
-    defer list.deinit(m.allocator);
-
-    var cc = CollectCtx{ .list = &list, .allocator = m.allocator, .oom = false };
-    m.assembly_foreach(collectAssembly, &cc);
-    if (cc.oom) return error.OutOfMemory;
-
-    try e.arrayHeader(list.items.len);
-    for (list.items) |au| {
-        const asm_ptr: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(au)));
-        const img = m.assembly_get_image(asm_ptr);
-        try e.mapHeader(4);
-        try e.str("assembly");
-        try e.uint(au);
-        try e.str("image");
-        try e.uint(@intFromPtr(img));
-        try e.str("name");
-        try e.str(cspan(m.image_get_name(img)));
-        try e.str("filename");
-        try e.str(cspan(m.image_get_filename(img)));
+    var count: usize = 0;
+    const arr = m.domain_get_assemblies(m.root_domain, &count);
+    try e.arrayHeader(if (arr == null) 0 else count);
+    if (arr) |list| {
+        var i: usize = 0;
+        while (i < count) : (i += 1) {
+            const asm_ptr = list[i];
+            const img = m.assembly_get_image(asm_ptr);
+            try e.mapHeader(4);
+            try e.str("assembly");
+            try e.uint(@intFromPtr(asm_ptr));
+            try e.str("image");
+            try e.uint(@intFromPtr(img));
+            try e.str("name");
+            try e.str(cspan(m.image_get_name(img)));
+            try e.str("filename");
+            try e.str(if (m.image_get_filename) |f| cspan(f(img)) else "");
+        }
     }
 }
 
-const MONO_TABLE_TYPEDEF: c_int = 2;
-const MONO_TOKEN_TYPE_DEF: u32 = 0x02000000;
-fn monoClasses(ctx: *anyopaque, image_u: u64, e: *Encoder) !void {
+fn il2cppClasses(ctx: *anyopaque, image_u: u64, e: *Encoder) !void {
     const m = self(ctx);
     const image: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(image_u)));
-    const tinfo = m.image_get_table_info(image, MONO_TABLE_TYPEDEF);
-    const rows: usize = @intCast(@max(@as(c_int, 0), m.table_info_get_rows(tinfo)));
+    const count = m.image_get_class_count(image);
+    try e.arrayHeader(count);
 
-    var list: std.ArrayList(u64) = .empty;
-    defer list.deinit(m.allocator);
     var i: usize = 0;
-    while (i < rows) : (i += 1) {
-        const token = MONO_TOKEN_TYPE_DEF | @as(u32, @intCast(i + 1));
-        const klass = m.class_get(image, token);
-        if (klass != null) try list.append(m.allocator, @intFromPtr(klass));
-    }
-    try e.arrayHeader(list.items.len);
-
-    var idx: usize = 0;
-    for (list.items) |ku| {
-        idx += 1;
-        const klass: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(ku)));
+    while (i < count) : (i += 1) {
+        const klass = m.image_get_class(image, i);
         try e.mapHeader(5);
         try e.str("klass");
-        try e.uint(ku);
+        try e.uint(@intFromPtr(klass));
         try e.str("namespace");
         try e.str(cspan(m.class_get_namespace(klass)));
         try e.str("name");
@@ -311,12 +284,12 @@ fn monoClasses(ctx: *anyopaque, image_u: u64, e: *Encoder) !void {
         try e.str("parent");
         try e.uint(@intFromPtr(m.class_get_parent(klass)));
         try e.str("token");
-        try e.uint(MONO_TOKEN_TYPE_DEF | @as(u32, @intCast(idx)));
+        try e.uint(@as(u64, i + 1)); // IL2CPP has no metadata token here (unlike mono) so we'll create a 1-based index for parity
     }
 }
 
 const FIELD_ATTRIBUTE_STATIC: u32 = 0x10;
-fn monoFields(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
+fn il2cppFields(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
     const m = self(ctx);
     const klass: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(klass_u)));
 
@@ -330,7 +303,7 @@ fn monoFields(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
         const fld: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(fu)));
         const ftype = m.field_get_type(fld);
         const tname = m.type_get_name(ftype);
-        const flags = m.field_get_flags(fld);
+        const flags: u32 = @bitCast(m.field_get_flags(fld));
         try e.mapHeader(6);
         try e.str("field");
         try e.uint(fu);
@@ -339,7 +312,7 @@ fn monoFields(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
         try e.str("type");
         try e.str(cspan(tname));
         try e.str("offset");
-        try e.int(m.field_get_offset(fld));
+        try e.uint(@intCast(m.field_get_offset(fld)));
         try e.str("flags");
         try e.uint(flags);
         try e.str("is_static");
@@ -348,7 +321,7 @@ fn monoFields(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
     }
 }
 
-fn monoMethods(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
+fn il2cppMethods(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
     const m = self(ctx);
     const klass: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(klass_u)));
 
@@ -359,58 +332,54 @@ fn monoMethods(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
     try e.arrayHeader(list.items.len);
 
     for (list.items) |mu| {
-        // No, not the drug...
+        // Still not the drug...
         const meth: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(mu)));
-        const sig = m.method_signature(meth);
-        const pc: u64 = if (sig != null) m.signature_get_param_count(sig) else 0;
-        const fnm = m.method_full_name(meth, 1);
+        const nm = cspan(m.method_get_name(meth));
+        const pc: u64 = m.method_get_param_count(meth);
 
         try e.mapHeader(4);
         try e.str("method");
         try e.uint(mu);
         try e.str("name");
-        try e.str(cspan(m.method_get_name(meth)));
+        try e.str(nm);
         try e.str("full_name");
-        try e.str(cspan(fnm));
+        try e.str(nm); // IL2CPP exposes no full-signature API so we'll reuse the name (which is less rich than Mono's mono_method_full_name)
         try e.str("param_count");
         try e.uint(pc);
-        if (m.free) |fr| if (fnm) |p| fr(@ptrCast(@constCast(p)));
     }
 }
 
-fn monoCompile(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
-    const m = self(ctx);
-    const meth: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(method_u)));
-    const addr = m.compile_method(meth);
+fn il2cppCompile(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
+    _ = ctx;
+    // IL2CPP is AOT (ahead of time) compilation so there is no JIT/compile step.
+    // MethodInfo.methodPointer is the first struct field (offset 0) across known IL2CPP versions,
+    // so the native code address is the pointer sized value stored at the MethodInfo handle.
+    var addr: u64 = 0;
+    if (method_u != 0) {
+        const mi: *const usize = @ptrFromInt(@as(usize, @intCast(method_u)));
+        addr = mi.*;
+    }
 
     try e.mapHeader(1);
     try e.str("native_addr");
-    try e.uint(@intFromPtr(addr));
-}
-
-fn monoStaticAddr(ctx: *anyopaque, klass_u: u64, field_u: u64, e: *Encoder) !void {
-    const m = self(ctx);
-    const klass: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(klass_u)));
-    const fld: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(field_u)));
-    const vt = m.class_vtable(m.root_domain, klass);
-
-    if (vt == null) return error.NoVtable;
-    if (m.runtime_class_init) |ci| ci(vt);
-
-    const base = m.vtable_get_static_field_data(vt);
-    const off = m.field_get_offset(fld);
-    const addr = @intFromPtr(base) +% @as(u64, @intCast(off));
-
-    try e.mapHeader(1);
-    try e.str("address");
     try e.uint(addr);
 }
 
-fn monoFindClass(ctx: *anyopaque, image_u: u64, ns: []const u8, name: []const u8, e: *Encoder) !void {
+fn il2cppStaticAddr(ctx: *anyopaque, klass_u: u64, field_u: u64, e: *Encoder) !void {
+    _ = ctx;
+    _ = klass_u;
+    _ = field_u;
+    _ = e;
+    // IL2CPP exposes no public getter for a static field's absolute address.
+    // The base lives in Il2CppClass.static_fields, reachable only by reading the (heavily version dependent) class struct raw.
+    return error.Unsupported;
+}
+
+fn il2cppFindClass(ctx: *anyopaque, image_u: u64, ns: []const u8, name: []const u8, e: *Encoder) !void {
     const m = self(ctx);
     const image: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(image_u)));
 
-    // mono_class_from_name needs NUL-terminated C strings.
+    // il2cpp_class_from_name needs NUL-terminated C strings.
     var ns_buf: [512]u8 = undefined;
     var nm_buf: [512]u8 = undefined;
     if (ns.len >= ns_buf.len or name.len >= nm_buf.len) return error.NameTooLong;
@@ -430,7 +399,8 @@ inline fn eql(a: []const u8, b: []const u8) bool {
     return std.mem.eql(u8, a, b);
 }
 
-// MONO_TYPE_* enum -> our wire type tag. "unsupported" = a type we can't marshal yet.
+// Il2CppTypeEnum -> our wire tag.
+// IL2CPP reuses the MONO_TYPE_* values, so this mirrors mono_api.zig typeTag exactly.
 fn typeTag(t: c_int) []const u8 {
     return switch (t) {
         0x01 => "void",
@@ -460,7 +430,7 @@ fn typeWidth(tag: []const u8) usize {
     return 8;
 }
 
-inline fn encodeTypeRef(m: *MonoApi, e: *Encoder, t: ?*anyopaque) !void {
+inline fn encodeTypeRef(m: *Il2CppApi, e: *Encoder, t: ?*anyopaque) !void {
     const tname = m.type_get_name(t);
     try e.mapHeader(2);
     try e.str("tag");
@@ -470,42 +440,39 @@ inline fn encodeTypeRef(m: *MonoApi, e: *Encoder, t: ?*anyopaque) !void {
     if (m.free) |fr| if (tname) |p| fr(@ptrCast(@constCast(p)));
 }
 
-fn monoSignature(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
+// Same wire shape as monoSignature, but IL2CPP enumerates params by index and not an iterator.
+// Static-ness is carried in the method flags (no signature object).
+fn il2cppSignature(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
     const m = self(ctx);
     const meth: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(method_u)));
-    const sig = m.method_signature(meth);
-    if (sig == null) return error.NoSignature;
-    const pc = m.signature_get_param_count(sig);
+    const pc = m.method_get_param_count(meth);
 
-    var name_buf: [64]?CStr = undefined;
-    var have_names = false;
-    if (m.method_get_param_names) |gpn| {
-        if (pc <= name_buf.len) {
-            @memset(name_buf[0..pc], null);
-            gpn(meth, &name_buf);
-            have_names = true;
-        }
+    var is_static = false;
+    if (m.method_get_flags) |gf| {
+        var iflags: u32 = 0;
+        const flags = gf(meth, &iflags);
+        is_static = (flags & 0x10) != 0; // METHOD_ATTRIBUTE_STATIC
     }
 
-    const is_instance = if (m.signature_is_instance) |f| f(sig) != 0 else true;
     try e.mapHeader(3);
     try e.str("static");
-    try e.boolean(!is_instance);
+    try e.boolean(is_static);
     try e.str("ret");
-    try encodeTypeRef(m, e, m.signature_get_return_type(sig));
+    try encodeTypeRef(m, e, m.method_get_return_type(meth));
     try e.str("params");
     try e.arrayHeader(pc);
-    var iter: ?*anyopaque = null;
-    var idx: usize = 0;
-    while (m.signature_get_params(sig, &iter)) |ptype| : (idx += 1) {
+    var i: u32 = 0;
+    while (i < pc) : (i += 1) {
+        const ptype = m.method_get_param(meth, i);
         const tname = m.type_get_name(ptype);
         try e.mapHeader(3);
         try e.str("name");
-        if (have_names and idx < pc and name_buf[idx] != null) {
-            try e.str(cspan(name_buf[idx]));
+        const pname = if (m.method_get_param_name) |gpn| gpn(meth, i) else null;
+        if (pname != null) {
+            try e.str(cspan(pname));
         } else {
             var nb: [16]u8 = undefined;
-            try e.str(std.fmt.bufPrint(&nb, "arg{d}", .{idx}) catch "arg");
+            try e.str(std.fmt.bufPrint(&nb, "arg{d}", .{i}) catch "arg");
         }
         try e.str("tag");
         try e.str(typeTag(m.type_get_type(ptype)));
@@ -515,15 +482,7 @@ fn monoSignature(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
     }
 }
 
-inline fn emitBits(e: *Encoder, tag: []const u8, bits: u64) !void {
-    try e.mapHeader(2);
-    try e.str("tag");
-    try e.str(tag);
-    try e.str("bits");
-    try e.uint(bits);
-}
-
-fn monoInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg, e: *Encoder) !void {
+fn il2cppInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg, e: *Encoder) !void {
     const m = self(ctx);
     const invoke = m.runtime_invoke orelse return error.Unsupported;
     const meth: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(method_u)));
@@ -541,7 +500,7 @@ fn monoInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg, 
             if (a.str.len >= sbuf.len) return error.NameTooLong;
             @memcpy(sbuf[0..a.str.len], a.str);
             sbuf[a.str.len] = 0;
-            argv[i] = sn(m.root_domain, @ptrCast(&sbuf)); // reference type: object pointer
+            argv[i] = sn(@ptrCast(&sbuf)); // il2cpp_string_new takes no domain (unlike mono)
         } else if (eql(a.tag, "object")) {
             argv[i] = @ptrFromInt(@as(usize, @intCast(a.bits)));
         } else if (eql(a.tag, "nil")) {
@@ -561,32 +520,47 @@ fn monoInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg, 
     if (exc != null) {
         try e.nil();
     } else {
-        const sig = m.method_signature(meth);
-        const rtype = if (sig != null) m.signature_get_return_type(sig) else null;
-        const renum: c_int = if (rtype != null) m.type_get_type(rtype) else 0x01;
+        const rtype = m.method_get_return_type(meth);
+        const renum: c_int = if (rtype != null) m.type_get_type(rtype) else 0x01; // void if no return type
         const rtag = typeTag(renum);
         if (renum == 0x01 or ret == null) { // void / null
             try e.nil();
-        } else if (eql(rtag, "str") and m.string_to_utf8 != null) {
-            const c = m.string_to_utf8.?(ret);
+        } else if (eql(rtag, "str")) {
+            if (m.string_to_utf8) |conv| {
+                const c = conv(ret);
+                try e.mapHeader(2);
+                try e.str("tag");
+                try e.str("str");
+                try e.str("val");
+                try e.str(cspan(c));
+                if (m.free) |fr| if (c) |p| fr(@ptrCast(@constCast(p)));
+            } else {
+                try e.mapHeader(2);
+                try e.str("tag");
+                try e.str("object");
+                try e.str("bits");
+                try e.uint(@intFromPtr(ret));
+            }
+        } else if (eql(rtag, "object")) {
             try e.mapHeader(2);
             try e.str("tag");
-            try e.str("str");
-            try e.str("val");
-            try e.str(cspan(c));
-            if (m.free) |fr| if (c) |p| fr(@ptrCast(@constCast(p)));
-        } else if (eql(rtag, "object") or eql(rtag, "str")) {
-            try emitBits(e, "object", @intFromPtr(ret)); // object handle / unconvertible string
-        } else { // value type: unbox and read its raw bytes
+            try e.str("object");
+            try e.str("bits");
+            try e.uint(@intFromPtr(ret));
+        } else { // value type: unbox and read its bytes
             const ub = m.object_unbox orelse return error.Unsupported;
             const vp = ub(ret);
             var bits: u64 = 0;
+            const w = typeWidth(rtag);
             if (vp) |p| {
-                const w = typeWidth(rtag);
                 const src: [*]const u8 = @ptrCast(p);
                 @memcpy(std.mem.asBytes(&bits)[0..w], src[0..w]);
             }
-            try emitBits(e, rtag, bits);
+            try e.mapHeader(2);
+            try e.str("tag");
+            try e.str(rtag);
+            try e.str("bits");
+            try e.uint(bits);
         }
     }
     try e.str("exception");

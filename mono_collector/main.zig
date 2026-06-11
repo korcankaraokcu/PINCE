@@ -33,11 +33,6 @@ fn startWorker() void {
     t.detach();
 }
 
-// Just in case our constructor auto-attach fails.
-export fn pince_mono_init() callconv(.c) void {
-    startWorker();
-}
-
 fn ctor() callconv(.c) void {
     startWorker();
 }

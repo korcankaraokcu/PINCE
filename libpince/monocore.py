@@ -35,7 +35,7 @@ _RUNTIME_PATTERNS = [
     ("mono", "sysv", r"libmono(sgen|bdwgc)?-2\.0\.so"),
     ("mono", "sysv", r"^mono-sgen$|^mono-boehm$|^mono$"),
     ("mono", "win64", r"mono-2\.0-bdwgc\.dll"),
-    ("il2cpp", "sysv", r"libil2cpp\.so"),
+    ("il2cpp", "sysv", r"GameAssembly\.so"),
     ("il2cpp", "win64", r"GameAssembly\.dll"),
 ]
 
@@ -86,6 +86,7 @@ def _collector_path() -> str:
     if appdir and os.path.commonpath([src, appdir]) == appdir:
         import shutil
         import tempfile
+
         dst = os.path.join(tempfile.gettempdir(), os.path.basename(src))
         if not os.path.exists(dst) or os.path.getmtime(src) > os.path.getmtime(dst):
             shutil.copy2(src, dst)
@@ -117,7 +118,7 @@ def init_mono() -> bool:
     """Ensure a collector agent is injected and connected for the current process
 
     Reuses an existing connection/agent if present.
-    Only acts on native Linux Mono targets for now
+    Only acts on native Linux Mono and IL2CPP targets for now
 
     Returns:
         bool: True if a connected MonoClient is ready, False otherwise
@@ -131,20 +132,20 @@ def init_mono() -> bool:
     client = _try_connect(pid, retries=1)
     if client is None:
         info = detect_runtime(pid)
-        if info is None or info.kind != "mono" or info.abi != "sysv":
+        if info is None or info.kind not in ("mono", "il2cpp") or info.abi != "sysv":
             return False  # GUI decides the message
         so_path = _collector_path()
         if not os.path.exists(so_path):
             logger.error(f"Mono collector not built: {so_path}")
             return False
-        if not debugcore.inject_so(so_path):
-            logger.error("Failed to inject Mono collector!")
+        try:
+            if not debugcore.inject_so(so_path):
+                logger.error("Failed to inject Mono collector!")
+                return False
+            client = _try_connect(pid, retries=80, delay=0.05)
+        except typedefs.GDBInitializeException:
+            logger.error("GDB became unavailable while injecting the Mono collector")
             return False
-        client = _try_connect(pid, retries=40, delay=0.05)
-        if client is None:
-            # Fallback: explicitly invoke the exported init in case the ctor didn't fire.
-            debugcore.call_function_from_inferior("pince_mono_init()")
-            client = _try_connect(pid, retries=40, delay=0.05)
         if client is None:
             logger.error("Mono collector did not come up!")
             return False

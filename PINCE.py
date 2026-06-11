@@ -4357,9 +4357,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if info is None:
             QMessageBox.information(self, tr.ERROR, tr.MONO_NO_RUNTIME)
             return
-        if info.kind == "il2cpp":
-            QMessageBox.information(self, tr.ERROR, tr.MONO_IL2CPP_LATER)
-            return
         if info.abi != "sysv":
             QMessageBox.information(self, tr.ERROR, tr.MONO_WINE_LATER)
             return

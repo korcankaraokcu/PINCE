@@ -3170,11 +3170,6 @@ Do you want to keep the current session with the new process?</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>IL2CPP support is not available yet</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
         <source>Wine/Proton targets are not supported yet</source>
         <translation type="unfinished" />
     </message>
