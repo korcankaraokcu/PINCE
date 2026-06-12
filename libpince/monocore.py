@@ -264,6 +264,10 @@ class MonoClient:
         """Return {namespace, name, parent} for a class handle."""
         return self.request("class_info", klass=klass)
 
+    def type_klass(self, field: int) -> int:
+        """Return the klass handle of a field's declared type or 0 if unresolvable."""
+        return self.request("type_klass", field=field)["klass"]
+
     def signature(self, method: int) -> dict:
         """Return {ret:{tag,name}, params:[{name,tag,type}]} for a method handle."""
         return self.request("signature", method=method)

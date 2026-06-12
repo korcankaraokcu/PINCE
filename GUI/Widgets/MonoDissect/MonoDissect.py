@@ -8,12 +8,13 @@ from GUI.Utils import guiutils
 from libpince import debugcore, monocore, utils, typedefs
 from tr.tr import TranslationConstants as tr
 
-ROLE_KIND = Qt.ItemDataRole.UserRole  # "image" | "class" | "fields" | "methods" | "field" | "method"
+ROLE_KIND = Qt.ItemDataRole.UserRole  # "image" | "class" | "fields" | "methods" | "field" | "method" | "ref_field"
 ROLE_DATA = Qt.ItemDataRole.UserRole + 1  # the dict from monocore
 ROLE_LOADED = Qt.ItemDataRole.UserRole + 2  # bool, children populated
 
 _INHERITED_BRUSH = QBrush(QColor(140, 140, 140))
 _MAX_INHERIT_DEPTH = 32
+_MAX_DRILL_DEPTH = 16
 
 
 class MonoDissectDialog(QDialog, Ui_Dialog):
@@ -50,6 +51,29 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
 
     def _on_inherited_toggled(self, checked: bool) -> None:
         self.populate_assemblies()
+
+    def _add_field_node(
+        self,
+        parent: QTreeWidgetItem,
+        fld: dict,
+        class_data: dict,
+        offsets: list[int],
+        root_class: dict,
+        suffix: str = "",
+    ) -> None:
+        if fld["flags"] & 0x40:  # FIELD_ATTRIBUTE_LITERAL: const, no runtime address
+            value = f"const {fld['type']}"
+        else:
+            marker = "static " if fld["is_static"] else ""
+            value = f"{marker}{fld['type']} @ {utils.upper_hex(hex(fld['offset']))}"
+        is_ref = not fld["is_static"] and fld.get("tag") == "object"
+        child = QTreeWidgetItem([fld["name"], value + suffix])
+        child.setData(0, ROLE_KIND, "ref_field" if is_ref else "field")
+        child.setData(0, ROLE_DATA, {"field": fld, "class": class_data, "offsets": offsets, "root_class": root_class})
+        if is_ref:  # drillable: lazily expand into the referenced type's fields
+            child.setData(0, ROLE_LOADED, False)
+            child.addChild(QTreeWidgetItem(["", ""]))
+        parent.addChild(child)
 
     def _add_inherited_fields(self, client: monocore.MonoClient, parent_item: QTreeWidgetItem, class_data: dict) -> None:
         ptr = class_data.get("parent", 0)
@@ -95,6 +119,15 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             ptr = info.get("parent", 0)
             depth += 1
 
+    def _drill_depth(self, item: QTreeWidgetItem) -> int:
+        depth = 0
+        node = item
+        while node is not None:
+            if node.data(0, ROLE_KIND) == "ref_field":
+                depth += 1
+            node = node.parent()
+        return depth
+
     def resize_columns(self) -> None:
         for column in range(self.treeWidget_Mono.columnCount()):
             self.treeWidget_Mono.resizeColumnToContents(column)
@@ -136,15 +169,7 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             class_data = item.data(0, ROLE_DATA)
             klass = class_data["klass"]
             for fld in client.fields(klass):
-                if fld["flags"] & 0x40:  # FIELD_ATTRIBUTE_LITERAL which means const so no runtime address
-                    value = f"const {fld['type']}"
-                else:
-                    marker = "static " if fld["is_static"] else ""
-                    value = f"{marker}{fld['type']} @ {utils.upper_hex(hex(fld['offset']))}"
-                child = QTreeWidgetItem([fld["name"], value])
-                child.setData(0, ROLE_KIND, "field")
-                child.setData(0, ROLE_DATA, {"field": fld, "class": class_data})
-                item.addChild(child)
+                self._add_field_node(item, fld, class_data, [fld["offset"]], class_data)
             if self.checkBox_ShowInherited.isChecked():
                 self._add_inherited_fields(client, item, class_data)
         elif kind == "methods":
@@ -157,6 +182,32 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
                 item.addChild(child)
             if self.checkBox_ShowInherited.isChecked():
                 self._add_inherited_methods(client, item, class_data)
+        elif kind == "ref_field":
+            payload = item.data(0, ROLE_DATA)
+            fld = payload["field"]
+            parent_offsets = payload.get("offsets", [])
+            root_class = payload.get("root_class", payload["class"])
+            if self._drill_depth(item) >= _MAX_DRILL_DEPTH:
+                item.addChild(QTreeWidgetItem([tr.MONO_DRILL_MAX_DEPTH, ""]))
+                item.setData(0, ROLE_LOADED, True)
+                return
+            try:
+                ref_klass = client.type_klass(fld["field"])
+            except monocore.MonoError:
+                ref_klass = 0
+            if ref_klass == 0:
+                item.addChild(QTreeWidgetItem([tr.MONO_DRILL_UNRESOLVABLE, ""]))
+            else:
+                try:
+                    ref_info = client.class_info(ref_klass)
+                except monocore.MonoError:
+                    ref_info = {"name": "?", "namespace": ""}
+                ns = ref_info.get("namespace")
+                type_label = f"{ns}.{ref_info['name']}" if ns else ref_info.get("name", "?")
+                ref_class = {**ref_info, "klass": ref_klass}
+                for sub_fld in client.fields(ref_klass):
+                    offsets = parent_offsets + [sub_fld["offset"]]
+                    self._add_field_node(item, sub_fld, ref_class, offsets, root_class, f"  [{type_label}]")
         item.setData(0, ROLE_LOADED, True)
 
     def search_text_changed(self, text: str) -> None:
@@ -202,12 +253,11 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
                 self.breakpoint_requested.emit(address)
             elif chosen == action_copy:
                 QApplication.clipboard().setText(utils.upper_hex(hex(address)))
-        elif kind == "field":
+        elif kind in ("field", "ref_field"):
             payload = item.data(0, ROLE_DATA)
             fld = payload["field"]
-            klass = payload["class"]["klass"]
             if fld["is_static"]:
-                if fld["flags"] & 0x40:  # compile-time literal, no runtime address
+                if fld["flags"] & 0x40:  # FIELD_ATTRIBUTE_LITERAL: const, no runtime address
                     return
                 # Static field: resolve to an absolute address.
                 action_table = menu.addAction(tr.ADD_TO_ADDRESS_LIST)
@@ -216,7 +266,7 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
                 if chosen is None:
                     return
                 try:
-                    address = client.static_field_address(klass, fld["field"])
+                    address = client.static_field_address(payload["class"]["klass"], fld["field"])
                 except monocore.MonoError:
                     QMessageBox.information(self, tr.ERROR, tr.MONO_STATIC_UNAVAILABLE)
                     return
@@ -225,10 +275,13 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
                 elif chosen == action_copy:
                     QApplication.clipboard().setText(utils.upper_hex(hex(address)))
             else:
-                # Instance field: lives at <object pointer> + offset, so it has no absolute address.
-                # If the class exposes a self-referential static (the singleton / Instance pattern),
-                # we'll use a pointer chain so the field resolves to a live object automatically.
-                root = self._singleton_root(client, payload["class"])
+                # Instance field -> no absolute address.
+                # If the dissect root has a self-referential static (the singleton / Instance pattern),
+                # resolve via a pointer chain whose offsets are the full drilled path,
+                # so deep leaves still hit the live object.
+                offsets = payload.get("offsets", [fld["offset"]])
+                root_class = payload.get("root_class", payload["class"])
+                root = self._singleton_root(client, root_class)
                 action_table = menu.addAction(tr.ADD_TO_ADDRESS_LIST) if root is not None else None
                 action_copy = menu.addAction(tr.COPY_OFFSET)
                 chosen = menu.exec(self.treeWidget_Mono.viewport().mapToGlobal(position))
@@ -236,12 +289,12 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
                     return
                 if action_table is not None and chosen == action_table:
                     try:
-                        base = client.static_field_address(klass, root["field"])
+                        base = client.static_field_address(root_class["klass"], root["field"])
                     except monocore.MonoError:
                         QMessageBox.information(self, tr.ERROR, tr.MONO_STATIC_UNAVAILABLE)
                         return
-                    pointer = typedefs.PointerChainRequest(base, [fld["offset"]])
-                    self.add_to_table_requested.emit(f"{payload['class']['name']}.{fld['name']}", pointer)
+                    pointer = typedefs.PointerChainRequest(base, offsets)
+                    self.add_to_table_requested.emit(f"{root_class.get('name', '?')}.{fld['name']}", pointer)
                 elif chosen == action_copy:
                     QApplication.clipboard().setText(utils.upper_hex(hex(fld["offset"])))
 

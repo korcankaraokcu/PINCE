@@ -98,6 +98,7 @@ const MonoApi = struct {
     vtable_get_static_field_data: FnStaticData,
     runtime_class_init: ?FnClassInit,
     class_from_name: FnFromName,
+    class_from_mono_type: ?FnP_P,
     free: ?FnFree,
     runtime_invoke: ?FnInvoke = null,
 };
@@ -149,6 +150,7 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .vtable_get_static_field_data = try req(FnStaticData, mod, "mono_vtable_get_static_field_data"),
         .runtime_class_init = opt(FnClassInit, mod, "mono_runtime_class_init"),
         .class_from_name = try req(FnFromName, mod, "mono_class_from_name"),
+        .class_from_mono_type = opt(FnP_P, mod, "mono_class_from_mono_type"),
         .free = opt(FnFree, mod, "mono_free"),
         .runtime_invoke = opt(FnInvoke, mod, "mono_runtime_invoke"),
     };
@@ -173,6 +175,7 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .invokeFn = monoInvoke,
         .signatureFn = monoSignature,
         .classInfoFn = monoClassInfo,
+        .typeKlassFn = monoTypeKlass,
     };
 }
 
@@ -282,13 +285,15 @@ fn monoFields(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
         const ftype = m.field_get_type(fld);
         const tname = m.type_get_name(ftype);
         const flags = m.field_get_flags(fld);
-        try e.mapHeader(6);
+        try e.mapHeader(7);
         try e.str("field");
         try e.uint(fu);
         try e.str("name");
         try e.str(cspan(m.field_get_name(fld)));
         try e.str("type");
         try e.str(cspan(tname));
+        try e.str("tag");
+        try e.str(typeTag(m.type_get_type(ftype)));
         try e.str("offset");
         try e.int(m.field_get_offset(fld));
         try e.str("flags");
@@ -387,6 +392,18 @@ fn monoClassInfo(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
     try e.str(cspan(m.class_get_name(klass)));
     try e.str("parent");
     try e.uint(@intFromPtr(m.class_get_parent(klass)));
+}
+
+fn monoTypeKlass(ctx: *anyopaque, field_u: u64, e: *Encoder) !void {
+    const m = self(ctx);
+    const fld: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(field_u)));
+    var kptr: ?*anyopaque = null;
+    if (m.class_from_mono_type) |cft| {
+        if (m.field_get_type(fld)) |t| kptr = cft(t);
+    }
+    try e.mapHeader(1);
+    try e.str("klass");
+    try e.uint(@intFromPtr(kptr));
 }
 
 inline fn encodeTypeRef(m: *MonoApi, e: *Encoder, t: ?*anyopaque) !void {

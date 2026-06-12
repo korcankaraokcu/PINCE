@@ -100,6 +100,7 @@ const Il2CppApi = struct {
     object_unbox: ?FnP_P,
     runtime_class_init: ?FnClassInit,
     class_from_name: FnFromName,
+    class_from_type: ?FnP_P,
     free: ?FnFree,
     runtime_invoke: ?FnInvoke = null,
     get_corlib: ?FnGetCorlib,
@@ -148,6 +149,7 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .object_unbox = opt(FnP_P, mod, "il2cpp_object_unbox"),
         .runtime_class_init = opt(FnClassInit, mod, "il2cpp_runtime_class_init"),
         .class_from_name = try req(FnFromName, mod, "il2cpp_class_from_name"),
+        .class_from_type = opt(FnP_P, mod, "il2cpp_class_from_type"),
         .free = opt(FnFree, mod, "il2cpp_free"),
         .runtime_invoke = opt(FnInvoke, mod, "il2cpp_runtime_invoke"),
         .get_corlib = opt(FnGetCorlib, mod, "il2cpp_get_corlib"),
@@ -176,6 +178,7 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .invokeFn = il2cppInvoke,
         .signatureFn = il2cppSignature,
         .classInfoFn = il2cppClassInfo,
+        .typeKlassFn = il2cppTypeKlass,
     };
 }
 
@@ -262,13 +265,15 @@ fn il2cppFields(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
         const ftype = m.field_get_type(fld);
         const tname = m.type_get_name(ftype);
         const flags: u32 = @bitCast(m.field_get_flags(fld));
-        try e.mapHeader(6);
+        try e.mapHeader(7);
         try e.str("field");
         try e.uint(fu);
         try e.str("name");
         try e.str(cspan(m.field_get_name(fld)));
         try e.str("type");
         try e.str(cspan(tname));
+        try e.str("tag");
+        try e.str(typeTag(m.type_get_type(ftype)));
         try e.str("offset");
         try e.uint(@intCast(m.field_get_offset(fld)));
         try e.str("flags");
@@ -449,6 +454,18 @@ fn il2cppClassInfo(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
     try e.str(cspan(m.class_get_name(klass)));
     try e.str("parent");
     try e.uint(@intFromPtr(m.class_get_parent(klass)));
+}
+
+fn il2cppTypeKlass(ctx: *anyopaque, field_u: u64, e: *Encoder) !void {
+    const m = self(ctx);
+    const fld: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(field_u)));
+    var kptr: ?*anyopaque = null;
+    if (m.class_from_type) |cft| {
+        if (m.field_get_type(fld)) |t| kptr = cft(t);
+    }
+    try e.mapHeader(1);
+    try e.str("klass");
+    try e.uint(@intFromPtr(kptr));
 }
 
 inline fn encodeTypeRef(m: *Il2CppApi, e: *Encoder, t: ?*anyopaque) !void {

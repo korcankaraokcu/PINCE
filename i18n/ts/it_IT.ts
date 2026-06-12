@@ -3176,6 +3176,16 @@ Do you want to keep the current session with the new process?</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
+        <source>(type could not be resolved)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>(maximum drill depth reached)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
         <source>Fields</source>
         <translation type="unfinished" />
     </message>
