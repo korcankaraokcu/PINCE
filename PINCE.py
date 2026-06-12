@@ -873,7 +873,6 @@ class MainForm(QMainWindow, MainWindow):
 
             # Recursively insert children of this row
             self.insert_records(rec[-1], row, 0)
-        parent_row.setExpanded(True)
         self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
     def paste_records(self, insert_inside: bool = False) -> None:
