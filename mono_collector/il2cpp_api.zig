@@ -179,6 +179,7 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .signatureFn = il2cppSignature,
         .classInfoFn = il2cppClassInfo,
         .typeKlassFn = il2cppTypeKlass,
+        .instanceMarkerFn = il2cppInstanceMarker,
     };
 }
 
@@ -422,6 +423,14 @@ fn il2cppStaticAddr(ctx: *anyopaque, klass_u: u64, field_u: u64, e: *Encoder) !v
     try e.mapHeader(1);
     try e.str("address");
     try e.uint(addr);
+}
+
+// An IL2CPP object's first word is its Il2CppClass* (the klass handle), so the marker is just that handle.
+fn il2cppInstanceMarker(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
+    _ = ctx;
+    try e.mapHeader(1);
+    try e.str("marker");
+    try e.uint(klass_u);
 }
 
 fn il2cppFindClass(ctx: *anyopaque, image_u: u64, ns: []const u8, name: []const u8, e: *Encoder) !void {

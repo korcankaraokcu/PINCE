@@ -43,6 +43,7 @@ pub const Backend = struct {
     signatureFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
     classInfoFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
     typeKlassFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
+    instanceMarkerFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
 
     pub fn hello(self: *const Backend, e: *Encoder) !void {
         return self.helloFn(self.ctx, e);
@@ -79,6 +80,9 @@ pub const Backend = struct {
     }
     pub fn typeKlass(self: *const Backend, field: u64, e: *Encoder) !void {
         return self.typeKlassFn(self.ctx, field, e);
+    }
+    pub fn instanceMarker(self: *const Backend, klass: u64, e: *Encoder) !void {
+        return self.instanceMarkerFn(self.ctx, klass, e);
     }
 };
 

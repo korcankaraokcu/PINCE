@@ -161,6 +161,8 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
         backend.classInfo(klass, &tenc)
     else if (eql(op, "type_klass"))
         backend.typeKlass(field, &tenc)
+    else if (eql(op, "instance_marker"))
+        backend.instanceMarker(klass, &tenc)
     else if (eql(op, "find_class"))
         backend.findClass(image, ns, name, &tenc)
     else if (eql(op, "invoke"))

@@ -176,6 +176,7 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .signatureFn = monoSignature,
         .classInfoFn = monoClassInfo,
         .typeKlassFn = monoTypeKlass,
+        .instanceMarkerFn = monoInstanceMarker,
     };
 }
 
@@ -360,6 +361,19 @@ fn monoStaticAddr(ctx: *anyopaque, klass_u: u64, field_u: u64, e: *Encoder) !voi
     try e.mapHeader(1);
     try e.str("address");
     try e.uint(addr);
+}
+
+// A Mono object's first word is its MonoVTable*, so that's the marker we scan for.
+// No class init needed as the vtable is the same whether the .ctor ran or not.
+fn monoInstanceMarker(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
+    const m = self(ctx);
+    const klass: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(klass_u)));
+    const vt = m.class_vtable(m.root_domain, klass);
+    if (vt == null) return error.NoVtable;
+
+    try e.mapHeader(1);
+    try e.str("marker");
+    try e.uint(@intFromPtr(vt));
 }
 
 fn monoFindClass(ctx: *anyopaque, image_u: u64, ns: []const u8, name: []const u8, e: *Encoder) !void {

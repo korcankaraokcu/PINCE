@@ -331,14 +331,21 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/MonoFindInstances/Form/MonoFindInstancesDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
         <source>Name</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/MonoFindInstances/Form/MonoFindInstancesDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
         <source>Value</source>
         <translation type="unfinished">Valore</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MonoFindInstances/Form/MonoFindInstancesDialog.ui" line="0" />
+        <source>Find Instances</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/Widgets/MonoInvoke/Form/MonoInvokeDialog.ui" line="0" />
@@ -3182,6 +3189,36 @@ Do you want to keep the current session with the new process?</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>(maximum drill depth reached)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Find Instances</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Find Instances - {}</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>{} instance(s) found</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>(showing first {})</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>No live instances found</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Could not resolve an instance marker for this class</source>
         <translation type="unfinished" />
     </message>
     <message>
