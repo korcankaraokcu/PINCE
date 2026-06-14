@@ -3222,6 +3222,11 @@ Do you want to keep the current session with the new process?</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
+        <source>{} raw bytes (hex)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
         <source>Static field address is unavailable for this runtime</source>
         <translation type="unfinished" />
     </message>

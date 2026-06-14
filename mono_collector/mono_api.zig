@@ -28,6 +28,9 @@ const eql = common.eql;
 const typeTag = common.typeTag;
 const typeWidth = common.typeWidth;
 const emitBits = common.emitBits;
+const StructInfo = common.StructInfo;
+const structInfo = common.structInfo;
+const encodeTypeRef = common.encodeTypeRef;
 const req = common.req;
 const opt = common.opt;
 
@@ -48,6 +51,7 @@ const FnFullName = *const fn (?*anyopaque, c_int) callconv(CC) ?CStr;
 const FnParamCount = *const fn (?*anyopaque) callconv(CC) u32;
 const FnVtable = *const fn (?*anyopaque, ?*anyopaque) callconv(CC) ?*anyopaque;
 const FnStaticData = *const fn (?*anyopaque) callconv(CC) ?*anyopaque;
+const FnValueSize = *const fn (?*anyopaque, ?*u32) callconv(CC) c_int;
 const FnClassInit = *const fn (?*anyopaque) callconv(CC) void;
 const FnFromName = *const fn (?*anyopaque, CStr, CStr) callconv(CC) ?*anyopaque;
 const FnFree = *const fn (?*anyopaque) callconv(CC) void;
@@ -96,9 +100,10 @@ const MonoApi = struct {
     compile_method: FnP_P,
     class_vtable: FnVtable,
     vtable_get_static_field_data: FnStaticData,
+    class_value_size: ?FnValueSize,
     runtime_class_init: ?FnClassInit,
     class_from_name: FnFromName,
-    class_from_mono_type: ?FnP_P,
+    class_from_type: ?FnP_P,
     free: ?FnFree,
     runtime_invoke: ?FnInvoke = null,
 };
@@ -148,9 +153,10 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .compile_method = try req(FnP_P, mod, "mono_compile_method"),
         .class_vtable = try req(FnVtable, mod, "mono_class_vtable"),
         .vtable_get_static_field_data = try req(FnStaticData, mod, "mono_vtable_get_static_field_data"),
+        .class_value_size = opt(FnValueSize, mod, "mono_class_value_size"),
         .runtime_class_init = opt(FnClassInit, mod, "mono_runtime_class_init"),
         .class_from_name = try req(FnFromName, mod, "mono_class_from_name"),
-        .class_from_mono_type = opt(FnP_P, mod, "mono_class_from_mono_type"),
+        .class_from_type = opt(FnP_P, mod, "mono_class_from_mono_type"),
         .free = opt(FnFree, mod, "mono_free"),
         .runtime_invoke = opt(FnInvoke, mod, "mono_runtime_invoke"),
     };
@@ -412,22 +418,12 @@ fn monoTypeKlass(ctx: *anyopaque, field_u: u64, e: *Encoder) !void {
     const m = self(ctx);
     const fld: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(field_u)));
     var kptr: ?*anyopaque = null;
-    if (m.class_from_mono_type) |cft| {
+    if (m.class_from_type) |cft| {
         if (m.field_get_type(fld)) |t| kptr = cft(t);
     }
     try e.mapHeader(1);
     try e.str("klass");
     try e.uint(@intFromPtr(kptr));
-}
-
-inline fn encodeTypeRef(m: *MonoApi, e: *Encoder, t: ?*anyopaque) !void {
-    const tname = m.type_get_name(t);
-    try e.mapHeader(2);
-    try e.str("tag");
-    try e.str(typeTag(m.type_get_type(t)));
-    try e.str("name");
-    try e.str(cspan(tname));
-    if (m.free) |fr| if (tname) |p| fr(@ptrCast(@constCast(p)));
 }
 
 fn monoSignature(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
@@ -459,7 +455,10 @@ fn monoSignature(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
     var idx: usize = 0;
     while (m.signature_get_params(sig, &iter)) |ptype| : (idx += 1) {
         const tname = m.type_get_name(ptype);
-        try e.mapHeader(3);
+        const tag = typeTag(m.type_get_type(ptype));
+        const is_struct = eql(tag, "struct");
+        const si = if (is_struct) structInfo(m, ptype) else StructInfo{ .klass = null, .size = 0 };
+        try e.mapHeader(if (is_struct) 5 else 3);
         try e.str("name");
         if (have_names and idx < pc and name_buf[idx] != null) {
             try e.str(cspan(name_buf[idx]));
@@ -468,9 +467,15 @@ fn monoSignature(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
             try e.str(std.fmt.bufPrint(&nb, "arg{d}", .{idx}) catch "arg");
         }
         try e.str("tag");
-        try e.str(typeTag(m.type_get_type(ptype)));
+        try e.str(tag);
         try e.str("type");
         try e.str(cspan(tname));
+        if (is_struct) {
+            try e.str("klass");
+            try e.uint(@intFromPtr(si.klass));
+            try e.str("size");
+            try e.uint(si.size);
+        }
         if (m.free) |fr| if (tname) |p| fr(@ptrCast(@constCast(p)));
     }
 }
@@ -498,6 +503,8 @@ fn monoInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg, 
             argv[i] = @ptrFromInt(@as(usize, @intCast(a.bits)));
         } else if (eql(a.tag, "nil")) {
             argv[i] = null;
+        } else if (eql(a.tag, "struct")) {
+            argv[i] = @constCast(a.str.ptr); // value type: raw bytes live in the request frame for the call
         } else {
             slots[i] = a.bits; // little-endian native, low N bytes are the value
             argv[i] = &slots[i]; // value type: pointer to the value
@@ -529,7 +536,21 @@ fn monoInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg, 
             if (m.free) |fr| if (c) |p| fr(@ptrCast(@constCast(p)));
         } else if (eql(rtag, "object") or eql(rtag, "str")) {
             try emitBits(e, "object", @intFromPtr(ret)); // object handle / unconvertible string
-        } else { // value type: unbox and read its raw bytes
+        } else if (eql(rtag, "struct")) { // value type by value: unbox and ship its raw bytes
+            const ub = m.object_unbox orelse return error.Unsupported;
+            const si = structInfo(m, rtype);
+            const vp = ub(ret);
+            if (vp == null or si.size == 0) {
+                try e.nil();
+            } else {
+                try e.mapHeader(2);
+                try e.str("tag");
+                try e.str("struct");
+                try e.str("bytes");
+                const src: [*]const u8 = @ptrCast(vp);
+                try e.bin(src[0..@intCast(si.size)]);
+            }
+        } else { // primitive value type: unbox and read its raw bytes
             const ub = m.object_unbox orelse return error.Unsupported;
             const vp = ub(ret);
             var bits: u64 = 0;

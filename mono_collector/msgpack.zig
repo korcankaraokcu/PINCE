@@ -103,6 +103,20 @@ pub const Encoder = struct {
             try self.beN(u32, @intCast(n));
         }
     }
+    pub fn bin(self: *Encoder, bytes: []const u8) !void {
+        const n = bytes.len;
+        if (n <= 0xff) {
+            try self.byte(0xc4);
+            try self.byte(@intCast(n));
+        } else if (n <= 0xffff) {
+            try self.byte(0xc5);
+            try self.beN(u16, @intCast(n));
+        } else {
+            try self.byte(0xc6);
+            try self.beN(u32, @intCast(n));
+        }
+        try self.list.appendSlice(self.allocator, bytes);
+    }
     pub fn raw(self: *Encoder, bytes: []const u8) !void {
         try self.list.appendSlice(self.allocator, bytes);
     }

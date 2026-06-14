@@ -59,6 +59,7 @@ pub inline fn typeTag(t: c_int) []const u8 {
         0x0d => "r8",
         0x0e => "str",
         0x0f, 0x18, 0x19 => if (@sizeOf(usize) == 8) "u8" else "u4", // PTR, I, U
+        0x11 => "struct", // VALUETYPE: marshalled by value (raw bytes)
         0x12, 0x14, 0x1c, 0x1d => "object", // CLASS, ARRAY, OBJECT, SZARRAY
         else => "unsupported",
     };
@@ -77,4 +78,39 @@ pub inline fn emitBits(e: *Encoder, tag: []const u8, bits: u64) !void {
     try e.str(tag);
     try e.str("bits");
     try e.uint(bits);
+}
+
+// klass handle + unboxed size for a value-type (struct) or null if we can't resolve them.
+pub const StructInfo = struct { klass: ?*anyopaque, size: u64 };
+pub fn structInfo(m: anytype, t: ?*anyopaque) StructInfo {
+    const cft = m.class_from_type orelse return .{ .klass = null, .size = 0 };
+    const vs = m.class_value_size orelse return .{ .klass = null, .size = 0 };
+    const klass = cft(t) orelse return .{ .klass = null, .size = 0 };
+    const sz = vs(klass, null);
+    return .{ .klass = klass, .size = if (sz > 0) @intCast(sz) else 0 };
+}
+
+// Encode a type ref: normally {tag, name}, plus {klass, size} when it's a struct (for marshalling).
+pub fn encodeTypeRef(m: anytype, e: *Encoder, t: ?*anyopaque) !void {
+    const tname = m.type_get_name(t);
+    const tag = typeTag(m.type_get_type(t));
+    if (eql(tag, "struct")) {
+        const si = structInfo(m, t);
+        try e.mapHeader(4);
+        try e.str("tag");
+        try e.str(tag);
+        try e.str("name");
+        try e.str(cspan(tname));
+        try e.str("klass");
+        try e.uint(@intFromPtr(si.klass));
+        try e.str("size");
+        try e.uint(si.size);
+    } else {
+        try e.mapHeader(2);
+        try e.str("tag");
+        try e.str(tag);
+        try e.str("name");
+        try e.str(cspan(tname));
+    }
+    if (m.free) |fr| if (tname) |p| fr(@ptrCast(@constCast(p)));
 }

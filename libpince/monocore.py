@@ -209,6 +209,40 @@ def _bits_to_value(tag: str, bits: int) -> Any:
     return value
 
 
+# Struct (value type) marshalling: a struct travels as the raw bytes of its unboxed value.
+_PACKABLE_TAGS = set(_INT_WIDTH) | {"r4", "r8", "bool"}
+
+
+def _value_width(tag: str) -> int:
+    if tag == "r4":
+        return 4
+    if tag == "r8":
+        return 8
+    if tag == "bool":
+        return 1
+    width = _INT_WIDTH.get(tag)
+    if width is None:
+        raise MonoError(f"cannot size value of type {tag}")
+    return width
+
+
+def pack_value(tag: str, value: Any) -> bytes:
+    """Little-endian bytes for a primitive value (assembling a struct argument)."""
+    return _arg_to_bits(tag, value).to_bytes(_value_width(tag), "little")
+
+
+def unpack_value(tag: str, raw: bytes) -> Any:
+    """A primitive value read back from its little-endian bytes (a struct field)."""
+    return _bits_to_value(tag, int.from_bytes(raw, "little"))
+
+
+def object_header_size() -> int:
+    """Bytes of the object header (vtable/klass + sync word) prefixing a boxed value type.
+    Value type field offsets from the fields op include it, so subtract it for the unboxed value."""
+    ptr = 4 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 8
+    return 2 * ptr
+
+
 class MonoClient:
     """Msgpack request/response client to the collector agent."""
 
@@ -273,21 +307,53 @@ class MonoClient:
         return self.request("instance_marker", klass=klass)["marker"]
 
     def signature(self, method: int) -> dict:
-        """Return {ret:{tag,name}, params:[{name,tag,type}]} for a method handle."""
+        """Return {ret:{tag,name}, params:[{name,tag,type}]} for a method handle.
+        struct (value-type) params/ret also carry {klass, size} for marshalling.
+        """
         return self.request("signature", method=method)
+
+    def struct_fields(self, klass: int) -> list[dict] | None:
+        """Instance fields of a value type, offsets relative to the unboxed value.
+        None if any field isn't a packable primitive (caller falls back to raw bytes).
+        """
+        header = object_header_size()
+        layout = []
+        for fld in self.fields(klass):
+            if fld["is_static"]:
+                continue
+            if fld["tag"] not in _PACKABLE_TAGS:
+                return None
+            layout.append(
+                {
+                    "name": fld["name"],
+                    "tag": fld["tag"],
+                    "type": fld["type"],
+                    "offset": fld["offset"] - header,
+                    "width": _value_width(fld["tag"]),
+                }
+            )
+        return layout
 
     def invoke(self, method: int, obj: int = 0, args: list[tuple[str, Any]] | None = None) -> dict:
         """Invoke a managed method. args is a list of (type_tag, value) pairs.
+        A "struct" arg's value is the raw bytes of its unboxed value.
 
-        Returns {"result": <decoded value or None>, "tag": <type tag or None>, "exception": <ptr>}.
+        Returns {"result": <decoded value, bytes for a struct, or None>, "tag": <tag or None>, "exception": <ptr>}.
         """
-        wire_args = [[tag, value if tag == "str" else _arg_to_bits(tag, value)] for tag, value in (args or [])]
+        wire_args = [
+            [tag, value if tag in ("str", "struct") else _arg_to_bits(tag, value)] for tag, value in (args or [])
+        ]
         response = self.request("invoke", method=method, obj=obj, args=wire_args)
         result = response.get("result")
         decoded, tag = None, None
         if result is not None:
             tag = result.get("tag")
-            decoded = result.get("val") if tag == "str" else _bits_to_value(tag, result.get("bits", 0))
+            if tag == "str":
+                decoded = result.get("val")
+            elif tag == "struct":
+                decoded = result.get("bytes", b"")
+            else:
+                decoded = _bits_to_value(tag, result.get("bits", 0))
         return {"result": decoded, "tag": tag, "exception": response.get("exception", 0)}
 
     def close(self) -> None:

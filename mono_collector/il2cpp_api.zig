@@ -34,6 +34,9 @@ const cspan = common.cspan;
 const eql = common.eql;
 const typeTag = common.typeTag;
 const typeWidth = common.typeWidth;
+const StructInfo = common.StructInfo;
+const structInfo = common.structInfo;
+const encodeTypeRef = common.encodeTypeRef;
 const req = common.req;
 const opt = common.opt;
 
@@ -62,6 +65,7 @@ const FnMethodFlags = *const fn (?*anyopaque, *u32) callconv(CC) u32;
 const FnGetCorlib = *const fn () callconv(CC) ?*anyopaque;
 const FnFieldFromName = *const fn (?*anyopaque, CStr) callconv(CC) ?*anyopaque;
 const FnFieldStaticGet = *const fn (?*anyopaque, *anyopaque) callconv(CC) void;
+const FnValueSize = *const fn (?*anyopaque, ?*u32) callconv(CC) c_int;
 
 const Il2CppApi = struct {
     allocator: std.mem.Allocator,
@@ -101,6 +105,7 @@ const Il2CppApi = struct {
     runtime_class_init: ?FnClassInit,
     class_from_name: FnFromName,
     class_from_type: ?FnP_P,
+    class_value_size: ?FnValueSize,
     free: ?FnFree,
     runtime_invoke: ?FnInvoke = null,
     get_corlib: ?FnGetCorlib,
@@ -150,6 +155,7 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .runtime_class_init = opt(FnClassInit, mod, "il2cpp_runtime_class_init"),
         .class_from_name = try req(FnFromName, mod, "il2cpp_class_from_name"),
         .class_from_type = opt(FnP_P, mod, "il2cpp_class_from_type"),
+        .class_value_size = opt(FnValueSize, mod, "il2cpp_class_value_size"),
         .free = opt(FnFree, mod, "il2cpp_free"),
         .runtime_invoke = opt(FnInvoke, mod, "il2cpp_runtime_invoke"),
         .get_corlib = opt(FnGetCorlib, mod, "il2cpp_get_corlib"),
@@ -477,16 +483,6 @@ fn il2cppTypeKlass(ctx: *anyopaque, field_u: u64, e: *Encoder) !void {
     try e.uint(@intFromPtr(kptr));
 }
 
-inline fn encodeTypeRef(m: *Il2CppApi, e: *Encoder, t: ?*anyopaque) !void {
-    const tname = m.type_get_name(t);
-    try e.mapHeader(2);
-    try e.str("tag");
-    try e.str(typeTag(m.type_get_type(t)));
-    try e.str("name");
-    try e.str(cspan(tname));
-    if (m.free) |fr| if (tname) |p| fr(@ptrCast(@constCast(p)));
-}
-
 // Same wire shape as monoSignature, but IL2CPP enumerates params by index and not an iterator.
 // Static-ness is carried in the method flags (no signature object).
 fn il2cppSignature(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
@@ -512,7 +508,10 @@ fn il2cppSignature(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
     while (i < pc) : (i += 1) {
         const ptype = m.method_get_param(meth, i);
         const tname = m.type_get_name(ptype);
-        try e.mapHeader(3);
+        const tag = typeTag(m.type_get_type(ptype));
+        const is_struct = eql(tag, "struct");
+        const si = if (is_struct) structInfo(m, ptype) else StructInfo{ .klass = null, .size = 0 };
+        try e.mapHeader(if (is_struct) 5 else 3);
         try e.str("name");
         const pname = if (m.method_get_param_name) |gpn| gpn(meth, i) else null;
         if (pname != null) {
@@ -522,9 +521,15 @@ fn il2cppSignature(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
             try e.str(std.fmt.bufPrint(&nb, "arg{d}", .{i}) catch "arg");
         }
         try e.str("tag");
-        try e.str(typeTag(m.type_get_type(ptype)));
+        try e.str(tag);
         try e.str("type");
         try e.str(cspan(tname));
+        if (is_struct) {
+            try e.str("klass");
+            try e.uint(@intFromPtr(si.klass));
+            try e.str("size");
+            try e.uint(si.size);
+        }
         if (m.free) |fr| if (tname) |p| fr(@ptrCast(@constCast(p)));
     }
 }
@@ -552,6 +557,8 @@ fn il2cppInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg
             argv[i] = @ptrFromInt(@as(usize, @intCast(a.bits)));
         } else if (eql(a.tag, "nil")) {
             argv[i] = null;
+        } else if (eql(a.tag, "struct")) {
+            argv[i] = @constCast(a.str.ptr); // value type: raw bytes live in the request frame for the call
         } else {
             slots[i] = a.bits; // little-endian native, low N bytes are the value
             argv[i] = &slots[i]; // value type: pointer to the value
@@ -594,7 +601,21 @@ fn il2cppInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg
             try e.str("object");
             try e.str("bits");
             try e.uint(@intFromPtr(ret));
-        } else { // value type: unbox and read its bytes
+        } else if (eql(rtag, "struct")) { // value type by value: unbox and ship its raw bytes
+            const ub = m.object_unbox orelse return error.Unsupported;
+            const si = structInfo(m, rtype);
+            const vp = ub(ret);
+            if (vp == null or si.size == 0) {
+                try e.nil();
+            } else {
+                try e.mapHeader(2);
+                try e.str("tag");
+                try e.str("struct");
+                try e.str("bytes");
+                const src: [*]const u8 = @ptrCast(vp);
+                try e.bin(src[0..@intCast(si.size)]);
+            }
+        } else { // primitive value type: unbox and read its bytes
             const ub = m.object_unbox orelse return error.Unsupported;
             const vp = ub(ret);
             var bits: u64 = 0;

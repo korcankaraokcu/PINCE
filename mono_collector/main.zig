@@ -125,8 +125,8 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
                 if ((dec.arrayLen() catch return writeErr(out, "bad arg")) != 2) return writeErr(out, "bad arg");
                 const tag = dec.str() catch return writeErr(out, "bad arg tag");
                 var a = rt.Arg{ .tag = tag };
-                if (eql(tag, "str")) {
-                    a.str = dec.str() catch return writeErr(out, "bad arg str");
+                if (eql(tag, "str") or eql(tag, "struct")) {
+                    a.str = dec.str() catch return writeErr(out, "bad arg str"); // struct: raw value bytes
                 } else {
                     a.bits = dec.uint() catch return writeErr(out, "bad arg val");
                 }
