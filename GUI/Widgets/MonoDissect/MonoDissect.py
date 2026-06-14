@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QApplication, QDialog, QMenu, QMessageBox, QTreeWidg
 
 from GUI.Widgets.MonoDissect.Form.MonoDissectDialog import Ui_Dialog
 from GUI.Widgets.MonoInvoke.MonoInvoke import MonoInvokeDialog
-from GUI.Widgets.MonoFindInstances.MonoFindInstances import MonoFindInstancesDialog, scan_instances
+from GUI.Widgets.MonoFindInstances.MonoFindInstances import MonoFindInstancesDialog
 from GUI.Utils import guiutils
 from libpince import debugcore, monocore, utils, typedefs
 from tr.tr import TranslationConstants as tr
@@ -88,7 +88,9 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             child.addChild(QTreeWidgetItem(["", ""]))
         parent.addChild(child)
 
-    def _add_inherited_fields(self, client: monocore.MonoClient, parent_item: QTreeWidgetItem, class_data: dict) -> None:
+    def _add_inherited_fields(
+        self, client: monocore.MonoClient, parent_item: QTreeWidgetItem, class_data: dict
+    ) -> None:
         ptr = class_data.get("parent", 0)
         depth = 0
         while ptr != 0 and depth < _MAX_INHERIT_DEPTH:
@@ -105,14 +107,20 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
                     value = f"{marker}{fld['type']} @ {utils.upper_hex(hex(fld['offset']))}"
                 child = QTreeWidgetItem([fld["name"], f"{value} {owner_label}"])
                 child.setData(0, ROLE_KIND, "field")
-                child.setData(0, ROLE_DATA, {"field": fld, "class": {"klass": ptr, "name": info["name"], "namespace": info["namespace"]}})
+                child.setData(
+                    0,
+                    ROLE_DATA,
+                    {"field": fld, "class": {"klass": ptr, "name": info["name"], "namespace": info["namespace"]}},
+                )
                 for col in range(parent_item.columnCount()):
                     child.setForeground(col, _INHERITED_BRUSH)
                 parent_item.addChild(child)
             ptr = info.get("parent", 0)
             depth += 1
 
-    def _add_inherited_methods(self, client: monocore.MonoClient, parent_item: QTreeWidgetItem, class_data: dict) -> None:
+    def _add_inherited_methods(
+        self, client: monocore.MonoClient, parent_item: QTreeWidgetItem, class_data: dict
+    ) -> None:
         ptr = class_data.get("parent", 0)
         depth = 0
         while ptr != 0 and depth < _MAX_INHERIT_DEPTH:
@@ -275,7 +283,9 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
         if chosen is None:
             return
         if chosen == action_invoke:
-            self.open_invoke_dialog(client, item)
+            methods_node = item.parent()
+            class_info = methods_node.data(0, ROLE_DATA) if methods_node is not None else None
+            self.open_invoke_for_method(client, item.data(0, ROLE_DATA), class_info)
             return
         address = client.compile_method(method)
         if chosen == action_disas:
@@ -289,7 +299,7 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
         menu = QMenu(self)
         action_find = menu.addAction(tr.MONO_FIND_INSTANCES)
         if menu.exec(global_pos) == action_find:
-            self._find_instances(client, item.data(0, ROLE_DATA))
+            self._find_instances(item.data(0, ROLE_DATA))
 
     def _field_context_menu(self, client: monocore.MonoClient, item: QTreeWidgetItem, global_pos) -> None:
         """Build the field/ref_field context menu. Shared with the Find Instances tree."""
@@ -361,19 +371,17 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
         # hex base keeps read_pointer_chain on its fast path (an int base forces a GDB lookup)
         return typedefs.PointerChainRequest(hex(instance_base + offsets[0]), offsets[1:])
 
-    def _find_instances(self, client: monocore.MonoClient, class_data: dict) -> None:
-        try:
-            marker = client.instance_marker(class_data["klass"])
-        except monocore.MonoError:
-            marker = 0
-        if marker == 0:
-            QMessageBox.information(self, tr.ERROR, tr.MONO_INSTANCE_MARKER_UNAVAILABLE)
-            return
+    def _find_instances(self, class_data: dict) -> None:
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
-            addresses = scan_instances(marker)
+            addresses = monocore.find_instances(class_data["klass"])
+        except monocore.MonoError:
+            addresses = None  # marker unavailable
         finally:
             QApplication.restoreOverrideCursor()
+        if addresses is None:
+            QMessageBox.information(self, tr.ERROR, tr.MONO_INSTANCE_MARKER_UNAVAILABLE)
+            return
         if not addresses:
             QMessageBox.information(self, tr.MONO_FIND_INSTANCES, tr.MONO_NO_INSTANCES)
             return
@@ -381,18 +389,18 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
         type_label = f"{ns}.{class_data['name']}" if ns else class_data.get("name", "?")
         MonoFindInstancesDialog(self, class_data, type_label, addresses).show()
 
-    def open_invoke_dialog(self, client: monocore.MonoClient, item: QTreeWidgetItem) -> None:
-        method_info = item.data(0, ROLE_DATA)
+    def open_invoke_for_method(
+        self, client: monocore.MonoClient, method_info: dict, class_info: dict | None, instance_ptr: int | None = None
+    ) -> None:
+        """Open the Invoke dialog for a method."""
         signature = client.signature(method_info["method"])
-        instance_ptr = None
-        if not signature.get("static", True):
-            # Instance method: try to resolve a live "this" from the class' singleton static.
-            methods_node = item.parent()
-            class_info = methods_node.data(0, ROLE_DATA) if methods_node is not None else None
-            root = self._singleton_root(client, class_info) if class_info is not None else None
+        klass = class_info["klass"] if class_info else 0
+        if instance_ptr is None and not signature.get("static", True) and class_info is not None:
+            # No concrete instance given: try the class' self-referential static (singleton pattern).
+            root = self._singleton_root(client, class_info)
             if root is not None:
                 try:
-                    slot = client.static_field_address(class_info["klass"], root["field"])
+                    slot = client.static_field_address(klass, root["field"])
                     value_index = (
                         typedefs.VALUE_INDEX.INT32
                         if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
@@ -401,7 +409,7 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
                     instance_ptr = debugcore.read_memory(slot, value_index)
                 except monocore.MonoError:
                     instance_ptr = None
-        MonoInvokeDialog(self, method_info, signature, instance_ptr).show()
+        MonoInvokeDialog(self, method_info, signature, instance_ptr=instance_ptr, klass=klass).show()
 
     def _singleton_root(self, client: monocore.MonoClient, klass_info: dict) -> dict | None:
         """Return the class' self-referential static field (singleton / Instance pattern), if any.

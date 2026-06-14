@@ -1,4 +1,3 @@
-import os
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import Qt
@@ -6,8 +5,7 @@ from PyQt6.QtWidgets import QApplication, QDialog, QMenu, QTreeWidgetItem
 
 from GUI.Widgets.MonoFindInstances.Form.MonoFindInstancesDialog import Ui_Dialog
 from GUI.Utils import guiutils
-from libpince import debugcore, monocore, utils, typedefs
-from libpince.libmemscan.memscan import Libmemscan, DataType, MatchType, ScanLevel
+from libpince import monocore, utils
 from tr.tr import TranslationConstants as tr
 
 if TYPE_CHECKING:
@@ -19,28 +17,6 @@ ROLE_DATA = Qt.ItemDataRole.UserRole + 1
 ROLE_LOADED = Qt.ItemDataRole.UserRole + 2
 
 _MAX_INSTANCES = 2000  # cap the results tree so a huge heap can't build an unwieldy list
-
-
-def scan_instances(marker: int) -> list[int]:
-    """Addresses whose pointer sized word equals marker, via a private Libmemscan so the
-    main-window scan is left intact.
-    Aligned to pointer width (object headers are).
-    """
-    if debugcore.currentpid == -1:
-        return []
-    arch32 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
-    so_path = os.path.join(utils.get_libpince_directory(), "libmemscan", "libmemscan.so")
-    scanner = Libmemscan(so_path)
-    try:
-        scanner.attach(debugcore.currentpid)
-        scanner.set_data_type(DataType.INTEGER32 if arch32 else DataType.INTEGER64)
-        scanner.set_scan_level(ScanLevel.ALL_RW)
-        scanner.set_alignment(4 if arch32 else 8)
-        scanner.reset()
-        scanner.scan(MatchType.MATCHEQUALTO, marker)
-        return [match.address for match in scanner.matches()]
-    finally:
-        scanner.close()
 
 
 class MonoFindInstancesDialog(QDialog, Ui_Dialog):
@@ -108,6 +84,13 @@ class MonoFindInstancesDialog(QDialog, Ui_Dialog):
             menu = QMenu(self)
             action_table = menu.addAction(tr.ADD_TO_ADDRESS_LIST)
             action_copy = menu.addAction(tr.COPY_ADDRESS)
+            invoke_menu = menu.addMenu(tr.MONO_INVOKE)
+            try:
+                methods = client.methods(payload["class"]["klass"])
+            except monocore.MonoError:
+                methods = []
+            method_actions = {invoke_menu.addAction(m["full_name"] or m["name"]): m for m in methods}
+            invoke_menu.setEnabled(bool(method_actions))
             chosen = menu.exec(global_pos)
             if chosen == action_table:
                 self.owner.add_to_table_requested.emit(
@@ -115,3 +98,7 @@ class MonoFindInstancesDialog(QDialog, Ui_Dialog):
                 )
             elif chosen == action_copy:
                 QApplication.clipboard().setText(utils.upper_hex(hex(payload["address"])))
+            elif chosen in method_actions:
+                self.owner.open_invoke_for_method(
+                    client, method_actions[chosen], payload["class"], instance_ptr=payload["address"]
+                )

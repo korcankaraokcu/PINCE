@@ -1,30 +1,54 @@
 from typing import Any
 
-from PyQt6.QtWidgets import QDialog, QLabel, QLineEdit, QWidget
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QWidget,
+)
 
 from GUI.Widgets.MonoInvoke.Form.MonoInvokeDialog import Ui_Dialog
 from GUI.Utils import guiutils
 from libpince import monocore, utils
 from tr.tr import TranslationConstants as tr
 
+_MAX_PICK = 2000  # cap the instance picker list, same as the Find Instances tree
+
 
 class MonoInvokeDialog(QDialog, Ui_Dialog):
-    def __init__(self, parent: QWidget, method_info: dict, signature: dict, instance_ptr: int | None = None) -> None:
+    def __init__(
+        self, parent: QWidget, method_info: dict, signature: dict, instance_ptr: int | None = None, klass: int = 0
+    ) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.method = method_info["method"]
         self.signature = signature
+        self.klass = klass  # declaring class, for the "Find instance" picker
         self.label_Method.setText(method_info["full_name"] or method_info["name"])
         self.params: list[dict] = []  # one descriptor per parameter (see _add_param)
 
-        # Instance ("this") pointer. Disabled for static methods, prefilled for instance ones.
+        # Instance ("this") pointer. Disabled for static methods, prefilled/pickable for instance ones.
         self.instance_input = QLineEdit(self)
         if signature.get("static", True):
             self.instance_input.setText("0")
             self.instance_input.setEnabled(False)
-        elif instance_ptr:
-            self.instance_input.setText(utils.upper_hex(hex(instance_ptr)))
-        self.formLayout.addRow(tr.MONO_INVOKE_INSTANCE, self.instance_input)
+            self.formLayout.addRow(tr.MONO_INVOKE_INSTANCE, self.instance_input)
+        else:
+            if instance_ptr:
+                self.instance_input.setText(utils.upper_hex(hex(instance_ptr)))
+            row = QHBoxLayout()
+            row.addWidget(self.instance_input)
+            find_button = QPushButton(tr.MONO_INVOKE_FIND_INSTANCE, self)
+            find_button.setEnabled(bool(klass))
+            find_button.clicked.connect(self._pick_instance)
+            row.addWidget(find_button)
+            self.formLayout.addRow(tr.MONO_INVOKE_INSTANCE, row)
 
         client = monocore.get_client()
         for param in signature.get("params", []):
@@ -32,6 +56,32 @@ class MonoInvokeDialog(QDialog, Ui_Dialog):
 
         self.pushButton_Call.clicked.connect(self.call)
         guiutils.center_to_parent(self)
+
+    def _pick_instance(self) -> None:
+        """Scan for live instances of the class and fill the instance field with a chosen one."""
+        if monocore.get_client() is None:
+            self.label_Result.setText(tr.MONO_NOT_READY)
+            return
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            addresses = monocore.find_instances(self.klass)
+        except monocore.MonoError:
+            addresses = None  # marker unavailable
+        finally:
+            QApplication.restoreOverrideCursor()
+        if addresses is None:
+            QMessageBox.information(self, tr.MONO_FIND_INSTANCES, tr.MONO_INSTANCE_MARKER_UNAVAILABLE)
+            return
+        if not addresses:
+            QMessageBox.information(self, tr.MONO_FIND_INSTANCES, tr.MONO_NO_INSTANCES)
+            return
+        items = [utils.upper_hex(hex(a)) for a in addresses[:_MAX_PICK]]
+        label = tr.MONO_INVOKE_PICK_INSTANCE
+        if len(addresses) > _MAX_PICK:
+            label = f"{label} {tr.MONO_INSTANCES_TRUNCATED.format(_MAX_PICK)}"
+        choice, ok = QInputDialog.getItem(self, tr.MONO_FIND_INSTANCES, label, items, 0, False)
+        if ok and choice:
+            self.instance_input.setText(choice)
 
     def _add_param(self, client: "monocore.MonoClient | None", param: dict) -> dict:
         """Add a parameter's inputs and return a descriptor used to build its invoke arg.

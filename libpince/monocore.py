@@ -27,6 +27,7 @@ import msgpack
 
 from . import debugcore, utils, typedefs
 from .utils import logger
+from .libmemscan.memscan import Libmemscan, DataType, MatchType, ScanLevel
 
 # The active collector connection for the current process or None.
 _client: "MonoClient | None" = None
@@ -361,3 +362,32 @@ class MonoClient:
             self.sock.close()
         except OSError:
             pass
+
+
+def find_instances(klass: int) -> list[int]:
+    """Find live instance addresses of a class.
+    Scan target memory for its instance marker (an object's header word) via a private Libmemscan
+    so the main window scan is left intact (if any).
+    
+    Raises MonoError if the marker can't be resolved.
+    Returns [] if none are mapped.
+    """
+    client = get_client()
+    if client is None or debugcore.currentpid == -1:
+        return []
+    marker = client.instance_marker(klass)
+    if not marker:
+        raise MonoError("instance marker unavailable")
+    arch32 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
+    so_path = os.path.join(utils.get_libpince_directory(), "libmemscan", "libmemscan.so")
+    scanner = Libmemscan(so_path)
+    try:
+        scanner.attach(debugcore.currentpid)
+        scanner.set_data_type(DataType.INTEGER32 if arch32 else DataType.INTEGER64)
+        scanner.set_scan_level(ScanLevel.ALL_RW)
+        scanner.set_alignment(4 if arch32 else 8)
+        scanner.reset()
+        scanner.scan(MatchType.MATCHEQUALTO, marker)
+        return [match.address for match in scanner.matches()]
+    finally:
+        scanner.close()
