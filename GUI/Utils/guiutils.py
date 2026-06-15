@@ -220,16 +220,16 @@ def delete_menu_entries(menu: QMenu, QAction_list: list) -> None:
 
     def remove_entries(menu: QMenu) -> None:
         for action in menu.actions():
-            try:
-                QAction_list.index(action)
-            except ValueError:
-                pass
-            else:
+            if action in QAction_list:
                 menu.removeAction(action)
+            elif action.menu() is not None:  # descend into submenus to delete nested entries
+                remove_entries(action.menu())
 
     def clean_entries(menu: QMenu) -> None:
         for action in menu.actions():
-            if action.isSeparator():
+            if action.menu() is not None:
+                clean_entries(action.menu())
+            elif action.isSeparator():
                 actions = menu.actions()
                 current_index = actions.index(action)
                 if (
