@@ -13,6 +13,38 @@ from tr.tr import TranslationConstants as tr
 # Accepted input for byte-oriented helpers: a hex string, a bytes-like object, or a list of byte values
 BytesLike = bytes | bytearray | memoryview | str | list[int]
 
+ENABLE_TAG = "[ENABLE]"
+DISABLE_TAG = "[DISABLE]"
+
+
+def parse_script_sections(script: str) -> tuple[str, str | None]:
+    """Split a toggle script into runnable (enable, disable) section code.
+
+    Sections are marked by [ENABLE] or [DISABLE] (case-insensitive, surrounding whitespace ignored).
+    Code before the first tag is the prelude and runs before both halves.
+    Tag lines and the half that isn't being run are blanked rather than removed
+    so traceback line numbers still match the editor.
+    A tagless script is returned as (whole script, None) so it keeps running whole.
+    """
+    lines = script.splitlines()
+    enable_line = disable_line = None
+    for i, line in enumerate(lines):
+        tag = line.strip().upper()
+        if tag == ENABLE_TAG and enable_line is None:
+            enable_line = i
+        elif tag == DISABLE_TAG and disable_line is None:
+            disable_line = i
+    if enable_line is None or disable_line is None:
+        return script, None
+    tags = sorted((enable_line, disable_line))
+    prelude_end = tags[0]
+
+    def body(tag_line: int) -> str:
+        end = next((t for t in tags if t > tag_line), len(lines))
+        return "\n".join(ln if i < prelude_end or tag_line < i < end else "" for i, ln in enumerate(lines))
+
+    return body(enable_line), body(disable_line)
+
 
 class LibpinceScriptApi:
     """Class to 'alias' certain libpince functions for easier user experience."""
@@ -215,7 +247,8 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         self.actionOpen.triggered.connect(self.open_file)
         self.actionSave.triggered.connect(self.save_file)
         self.actionLibpince.triggered.connect(self.actionLibpince_triggered)
-        self.actionRun_current_script.triggered.connect(self.run_current_script)
+        self.actionRun_enable.triggered.connect(self.run_enable)
+        self.actionRun_disable.triggered.connect(self.run_disable)
         self.actionRun_selection.triggered.connect(self.run_selection)
         self.actionClear_output.triggered.connect(self.outputEdit.clear)
         if parent is not None:
@@ -329,10 +362,21 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         except Exception as e:
             QMessageBox.critical(self, tr.ERROR, str(e))
 
-    def run_current_script(self) -> None:
+    def run_enable(self) -> None:
         editor = self.get_current_editor()
         if editor:
-            self.run_script(editor, editor.toPlainText())
+            enable_code, _ = parse_script_sections(editor.toPlainText())
+            self.run_script(editor, enable_code)
+
+    def run_disable(self) -> None:
+        editor = self.get_current_editor()
+        if not editor:
+            return
+        _, disable_code = parse_script_sections(editor.toPlainText())
+        if disable_code is None:
+            self.statusbar.showMessage(tr.SCRIPT_NO_DISABLE, 3000)
+            return
+        self.run_script(editor, disable_code)
 
     def run_selection(self) -> None:
         editor = self.get_current_editor()

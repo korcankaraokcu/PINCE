@@ -1204,12 +1204,22 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <source>Run current script</source>
+        <source>Run [ENABLE]</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <source>Ctrl+R</source>
+        <source>Ctrl+Shift+E</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Run [DISABLE]</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Ctrl+Shift+D</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1219,7 +1229,7 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <source>Ctrl+Shift+R</source>
+        <source>Ctrl+R</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -2071,6 +2081,11 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>--- Finished ---</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>This script has no [DISABLE] section</source>
         <translation type="unfinished" />
     </message>
     <message>

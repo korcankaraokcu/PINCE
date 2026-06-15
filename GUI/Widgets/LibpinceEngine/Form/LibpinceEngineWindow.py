@@ -69,7 +69,10 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.actionCode_injection = QtGui.QAction(parent=MainWindow)
         self.actionCode_injection.setProperty("data", "# Code injection template\n"
+"# Prelude runs before both halves.\n"
 "target = address(\"0x0\")\n"
+"\n"
+"[ENABLE]\n"
 "cave = alloc(0x400, \"engine_code_cave\")\n"
 "jump_to_cave = assemble(f\"jmp {cave:#x}\", target)\n"
 "# Read enough to cover the jmp patch plus one max-length x86 instruction (15B),\n"
@@ -98,7 +101,11 @@ class Ui_MainWindow(object):
 "# boundary (a partial instruction left over would corrupt decoding).\n"
 "patch(jump_to_cave + b\"\\x90\" * (stolen_size - len(jump_to_cave)), target, expected=original)\n"
 "print(f\"Injected {target:#x} -> {cave:#x}, return {return_address:#x}\")\n"
-"# Call restore(target) to undo the patch. The cave allocation persists until dealloc(\"engine_code_cave\").\n"
+"\n"
+"[DISABLE]\n"
+"restore(target)\n"
+"dealloc(\"engine_code_cave\")\n"
+"print(f\"Restored {target:#x}\")\n"
 "")
         self.actionCode_injection.setObjectName("actionCode_injection")
         self.actionOpen = QtGui.QAction(parent=MainWindow)
@@ -107,21 +114,27 @@ class Ui_MainWindow(object):
         self.actionSave.setObjectName("actionSave")
         self.actionLibpince = QtGui.QAction(parent=MainWindow)
         self.actionLibpince.setObjectName("actionLibpince")
-        self.actionRun_current_script = QtGui.QAction(parent=MainWindow)
-        self.actionRun_current_script.setObjectName("actionRun_current_script")
+        self.actionRun_enable = QtGui.QAction(parent=MainWindow)
+        self.actionRun_enable.setObjectName("actionRun_enable")
+        self.actionRun_disable = QtGui.QAction(parent=MainWindow)
+        self.actionRun_disable.setObjectName("actionRun_disable")
         self.actionRun_selection = QtGui.QAction(parent=MainWindow)
         self.actionRun_selection.setObjectName("actionRun_selection")
         self.actionClear_output = QtGui.QAction(parent=MainWindow)
         self.actionClear_output.setObjectName("actionClear_output")
         self.actionAOB_scan_nop = QtGui.QAction(parent=MainWindow)
         self.actionAOB_scan_nop.setProperty("data", "# AOB scan + NOP template\n"
+"[ENABLE]\n"
 "addr = aobscan_first(\"48 8B ?? ?? ?? 89\")\n"
 "if addr is None:\n"
 "    raise RuntimeError(\"Pattern not found\")\n"
-"\n"
 "nop(addr, 6)\n"
 "print(f\"NOPed {addr:#x}\")\n"
-"# Call restore(addr) to undo the nop.")
+"\n"
+"[DISABLE]\n"
+"# addr carries over from [ENABLE]\n"
+"restore(addr)\n"
+"print(f\"Restored {addr:#x}\")")
         self.actionAOB_scan_nop.setObjectName("actionAOB_scan_nop")
         self.actionAOB_scan_patch = QtGui.QAction(parent=MainWindow)
         self.actionAOB_scan_patch.setProperty("data", "# AOB scan + patch template\n"
@@ -129,6 +142,7 @@ class Ui_MainWindow(object):
 "# 83 00 FF     add DWORD PTR [rax], 0xffffffff (-0x1)\n"
 "# 48 8B 43 10  mov rax, QWORD PTR [rbx+0x10]\n"
 "# This changes the -1 decrement to +2 addition (eg. add ammo when shooting instead of subtracting)\n"
+"[ENABLE]\n"
 "expected = \"83 00 FF 48 8B 43 10\"\n"
 "addr = aobscan_first(expected)\n"
 "if addr is None:\n"
@@ -144,7 +158,11 @@ class Ui_MainWindow(object):
 "\n"
 "patch(replacement, addr, expected=\"83 00 ff\")\n"
 "print(f\"Patched instruction at {addr:#x}\")\n"
-"# Call restore(addr) to undo the patch.")
+"\n"
+"[DISABLE]\n"
+"# addr carries over from [ENABLE]\n"
+"restore(addr)\n"
+"print(f\"Restored {addr:#x}\")")
         self.actionAOB_scan_patch.setObjectName("actionAOB_scan_patch")
         self.actionRead_write_address = QtGui.QAction(parent=MainWindow)
         self.actionRead_write_address.setProperty("data", "# Read/write template\n"
@@ -161,7 +179,8 @@ class Ui_MainWindow(object):
         self.menuTemplates.addAction(self.actionAOB_scan_patch)
         self.menuTemplates.addAction(self.actionRead_write_address)
         self.menuHelp.addAction(self.actionLibpince)
-        self.menuRun.addAction(self.actionRun_current_script)
+        self.menuRun.addAction(self.actionRun_enable)
+        self.menuRun.addAction(self.actionRun_disable)
         self.menuRun.addAction(self.actionRun_selection)
         self.menuRun.addAction(self.actionClear_output)
         self.menubar.addAction(self.menuFile.menuAction())
@@ -188,10 +207,12 @@ class Ui_MainWindow(object):
         self.actionSave.setText(_translate("MainWindow", "Save"))
         self.actionSave.setShortcut(_translate("MainWindow", "Ctrl+S"))
         self.actionLibpince.setText(_translate("MainWindow", "Libpince"))
-        self.actionRun_current_script.setText(_translate("MainWindow", "Run current script"))
-        self.actionRun_current_script.setShortcut(_translate("MainWindow", "Ctrl+R"))
+        self.actionRun_enable.setText(_translate("MainWindow", "Run [ENABLE]"))
+        self.actionRun_enable.setShortcut(_translate("MainWindow", "Ctrl+Shift+E"))
+        self.actionRun_disable.setText(_translate("MainWindow", "Run [DISABLE]"))
+        self.actionRun_disable.setShortcut(_translate("MainWindow", "Ctrl+Shift+D"))
         self.actionRun_selection.setText(_translate("MainWindow", "Run selection"))
-        self.actionRun_selection.setShortcut(_translate("MainWindow", "Ctrl+Shift+R"))
+        self.actionRun_selection.setShortcut(_translate("MainWindow", "Ctrl+R"))
         self.actionClear_output.setText(_translate("MainWindow", "Clear output"))
         self.actionAOB_scan_nop.setText(_translate("MainWindow", "AOB scan + NOP"))
         self.actionAOB_scan_patch.setText(_translate("MainWindow", "AOB scan + patch"))

@@ -126,7 +126,8 @@
     <property name="title">
      <string>Run</string>
     </property>
-    <addaction name="actionRun_current_script"/>
+    <addaction name="actionRun_enable"/>
+    <addaction name="actionRun_disable"/>
     <addaction name="actionRun_selection"/>
     <addaction name="actionClear_output"/>
    </widget>
@@ -142,7 +143,10 @@
    </property>
    <property name="data" stdset="0">
     <string notr="true"># Code injection template
+# Prelude runs before both halves.
 target = address(&quot;0x0&quot;)
+
+[ENABLE]
 cave = alloc(0x400, &quot;engine_code_cave&quot;)
 jump_to_cave = assemble(f&quot;jmp {cave:#x}&quot;, target)
 # Read enough to cover the jmp patch plus one max-length x86 instruction (15B),
@@ -171,7 +175,11 @@ write_bytes(cave_body + jump_back, cave)
 # boundary (a partial instruction left over would corrupt decoding).
 patch(jump_to_cave + b&quot;\x90&quot; * (stolen_size - len(jump_to_cave)), target, expected=original)
 print(f&quot;Injected {target:#x} -&gt; {cave:#x}, return {return_address:#x}&quot;)
-# Call restore(target) to undo the patch. The cave allocation persists until dealloc(&quot;engine_code_cave&quot;).
+
+[DISABLE]
+restore(target)
+dealloc(&quot;engine_code_cave&quot;)
+print(f&quot;Restored {target:#x}&quot;)
 </string>
    </property>
   </action>
@@ -196,12 +204,20 @@ print(f&quot;Injected {target:#x} -&gt; {cave:#x}, return {return_address:#x}&qu
     <string>Libpince</string>
    </property>
   </action>
-  <action name="actionRun_current_script">
+  <action name="actionRun_enable">
    <property name="text">
-    <string>Run current script</string>
+    <string>Run [ENABLE]</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+R</string>
+    <string>Ctrl+Shift+E</string>
+   </property>
+  </action>
+  <action name="actionRun_disable">
+   <property name="text">
+    <string>Run [DISABLE]</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+D</string>
    </property>
   </action>
   <action name="actionRun_selection">
@@ -209,7 +225,7 @@ print(f&quot;Injected {target:#x} -&gt; {cave:#x}, return {return_address:#x}&qu
     <string>Run selection</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Shift+R</string>
+    <string>Ctrl+R</string>
    </property>
   </action>
   <action name="actionClear_output">
@@ -223,13 +239,17 @@ print(f&quot;Injected {target:#x} -&gt; {cave:#x}, return {return_address:#x}&qu
    </property>
    <property name="data" stdset="0">
     <string notr="true"># AOB scan + NOP template
+[ENABLE]
 addr = aobscan_first(&quot;48 8B ?? ?? ?? 89&quot;)
 if addr is None:
     raise RuntimeError(&quot;Pattern not found&quot;)
-
 nop(addr, 6)
 print(f&quot;NOPed {addr:#x}&quot;)
-# Call restore(addr) to undo the nop.</string>
+
+[DISABLE]
+# addr carries over from [ENABLE]
+restore(addr)
+print(f&quot;Restored {addr:#x}&quot;)</string>
    </property>
   </action>
   <action name="actionAOB_scan_patch">
@@ -242,6 +262,7 @@ print(f&quot;NOPed {addr:#x}&quot;)
 # 83 00 FF     add DWORD PTR [rax], 0xffffffff (-0x1)
 # 48 8B 43 10  mov rax, QWORD PTR [rbx+0x10]
 # This changes the -1 decrement to +2 addition (eg. add ammo when shooting instead of subtracting)
+[ENABLE]
 expected = &quot;83 00 FF 48 8B 43 10&quot;
 addr = aobscan_first(expected)
 if addr is None:
@@ -257,7 +278,11 @@ if len(replacement) != 3:
 
 patch(replacement, addr, expected=&quot;83 00 ff&quot;)
 print(f&quot;Patched instruction at {addr:#x}&quot;)
-# Call restore(addr) to undo the patch.</string>
+
+[DISABLE]
+# addr carries over from [ENABLE]
+restore(addr)
+print(f&quot;Restored {addr:#x}&quot;)</string>
    </property>
   </action>
   <action name="actionRead_write_address">
