@@ -180,7 +180,7 @@ forcing me to use magic numbers for adjusting, which is a bit hackish
 # Roadmap
 So, after learning how to contribute, you are wondering where to start now. You can either search for `TODO` within the code or pick up any task from the roadmap below.
 These tasks are ordered by importance but feel free to pick any of them. Further details can be discussed in the PINCE discord server
-- Libpince support for Mono and Java (symbol recognition, calling functions, dissect obj tree etc.)
+- Libpince support for Java (symbol recognition, calling functions, dissect obj tree etc.)
 - Move GUI classes of PINCE.py to their own files
 - Extend documentation to GUI parts. Libpince has 100% documentation coverage but GUI doesn't
 - Arrows for jump instructions based on disassembled output
