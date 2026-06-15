@@ -233,6 +233,8 @@ class ScriptEditor(QPlainTextEdit):
         self.is_modified = False
         self.tab_widget: QTabWidget | None = None
         self.namespace: dict[str, Any] = {}
+        self.script_entry: Any = None  # set when this tab is bound to a .pct script entry
+        self.display_name: str | None = None  # overrides the tab title, used by bound entry tabs
 
         self.line_number_area = LineNumberArea(self)
         self.completion_model = QStringListModel(self)
@@ -268,7 +270,7 @@ class ScriptEditor(QPlainTextEdit):
         if not self.tab_widget:
             return
         index = self.tab_widget.indexOf(self.parent())
-        base_title = os.path.basename(self.file_path) if self.file_path else tr.UNTITLED
+        base_title = self.display_name or (os.path.basename(self.file_path) if self.file_path else tr.UNTITLED)
         self.tab_widget.setTabText(index, f"{base_title}*" if self.is_modified else base_title)
 
     def line_number_area_width(self) -> int:

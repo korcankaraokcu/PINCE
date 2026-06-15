@@ -122,6 +122,8 @@ class Ui_MainWindow(object):
         self.actionRun_selection.setObjectName("actionRun_selection")
         self.actionClear_output = QtGui.QAction(parent=MainWindow)
         self.actionClear_output.setObjectName("actionClear_output")
+        self.actionSend_to_table = QtGui.QAction(parent=MainWindow)
+        self.actionSend_to_table.setObjectName("actionSend_to_table")
         self.actionAOB_scan_nop = QtGui.QAction(parent=MainWindow)
         self.actionAOB_scan_nop.setProperty("data", "# AOB scan + NOP template\n"
 "[ENABLE]\n"
@@ -182,6 +184,8 @@ class Ui_MainWindow(object):
         self.menuRun.addAction(self.actionRun_enable)
         self.menuRun.addAction(self.actionRun_disable)
         self.menuRun.addAction(self.actionRun_selection)
+        self.menuRun.addSeparator()
+        self.menuRun.addAction(self.actionSend_to_table)
         self.menuRun.addAction(self.actionClear_output)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuTemplates.menuAction())
@@ -214,6 +218,8 @@ class Ui_MainWindow(object):
         self.actionRun_selection.setText(_translate("MainWindow", "Run selection"))
         self.actionRun_selection.setShortcut(_translate("MainWindow", "Ctrl+R"))
         self.actionClear_output.setText(_translate("MainWindow", "Clear output"))
+        self.actionSend_to_table.setText(_translate("MainWindow", "Send to cheat table"))
+        self.actionSend_to_table.setShortcut(_translate("MainWindow", "Ctrl+Shift+T"))
         self.actionAOB_scan_nop.setText(_translate("MainWindow", "AOB scan + NOP"))
         self.actionAOB_scan_patch.setText(_translate("MainWindow", "AOB scan + patch"))
         self.actionRead_write_address.setText(_translate("MainWindow", "Read/write address"))

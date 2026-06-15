@@ -129,6 +129,8 @@
     <addaction name="actionRun_enable"/>
     <addaction name="actionRun_disable"/>
     <addaction name="actionRun_selection"/>
+    <addaction name="separator"/>
+    <addaction name="actionSend_to_table"/>
     <addaction name="actionClear_output"/>
    </widget>
    <addaction name="menuFile"/>
@@ -231,6 +233,14 @@ print(f&quot;Restored {target:#x}&quot;)
   <action name="actionClear_output">
    <property name="text">
     <string>Clear output</string>
+   </property>
+  </action>
+  <action name="actionSend_to_table">
+   <property name="text">
+    <string>Send to cheat table</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+T</string>
    </property>
   </action>
   <action name="actionAOB_scan_nop">

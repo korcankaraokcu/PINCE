@@ -408,6 +408,19 @@ class Frozen:
         self.enabled = False
 
 
+class ScriptEntry:
+    """An address table row that runs a Libpince Engine script when toggled instead of freezing a value.
+
+    Only the script is serialized to the cheat table.
+    Namespace is built on first enable and kept so variables set by the [ENABLE] section survive
+    into a later [DISABLE] run within the same session.
+    """
+
+    def __init__(self, script: str = "") -> None:
+        self.script = script
+        self.namespace: dict[str, Any] | None = None
+
+
 class ValueType:
     def __init__(
         self,

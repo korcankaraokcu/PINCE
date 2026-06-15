@@ -119,6 +119,11 @@ class TranslationConstants(QObject):
     SCRIPT_RUNNING = QT_TR_NOOP("--- Running {} ---")
     SCRIPT_FINISHED = QT_TR_NOOP("--- Finished ---")
     SCRIPT_NO_DISABLE = QT_TR_NOOP("This script has no [DISABLE] section")
+    SEND_TO_TABLE = QT_TR_NOOP("Send to cheat table")
+    SENT_TO_TABLE = QT_TR_NOOP("Sent to the cheat table")
+    SCRIPT = QT_TR_NOOP("Script")
+    EDIT_SCRIPT = QT_TR_NOOP("Edit script")
+    SCRIPT_RUN_FAILED = QT_TR_NOOP("Running the script failed, see the details below.\n\n{}")
 
     # Keep file extensions such as (*.pct) while translating, it doesn't matter where it stays within the sentence
     # For instance, you can keep (*.pct) in the beginning of the sentence for right-to-left languages like arabic

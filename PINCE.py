@@ -127,7 +127,12 @@ from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
 from GUI.Utils import guitypedefs, guiutils, utilwidgets
 from GUI.Validators.HexValidator import QHexValidator
 from GUI.Widgets.Bookmark.Bookmark import BookmarkWidget
-from GUI.Widgets.LibpinceEngine.LibpinceEngine import LibpinceEngineWindow
+from GUI.Widgets.LibpinceEngine.LibpinceEngine import (
+    LibpinceEngineWindow,
+    create_script_namespace,
+    parse_script_sections,
+    run_script_code,
+)
 from GUI.Widgets.ManageScanRegions.ManageScanRegions import ManageScanRegionsDialog
 from GUI.Widgets.PointerScan.PointerScan import PointerScanWindow
 from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
@@ -392,6 +397,7 @@ class MainForm(QMainWindow, MainWindow):
         states.session_signals.on_load.connect(self.on_session_loaded)
         states.session_signals.new_session.connect(self.on_new_session)
         self.session = SessionManager.get_session()
+        self.libpince_engine_window: LibpinceEngineWindow | None = None
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_UndoScan.clicked.connect(self.pushButton_UndoScan_clicked)
         self.pushButton_CancelScan.clicked.connect(self.pushButton_CancelScan_clicked)
@@ -612,6 +618,7 @@ class MainForm(QMainWindow, MainWindow):
         edit_address = edit_menu.addAction(f"{header.text(ADDR_COL)}[Ctrl+Alt+Enter]")
         edit_type = edit_menu.addAction(f"{header.text(TYPE_COL)}[Alt+Enter]")
         edit_value = edit_menu.addAction(f"{header.text(VALUE_COL)}[Enter]")
+        edit_script = menu.addAction(tr.EDIT_SCRIPT)
         show_hex = menu.addAction(tr.SHOW_HEX)
         show_dec = menu.addAction(tr.SHOW_DEC)
         show_unsigned = menu.addAction(tr.SHOW_UNSIGNED)
@@ -639,6 +646,7 @@ class MainForm(QMainWindow, MainWindow):
         if current_row is None:
             deletion_list = [
                 edit_menu.menuAction(),
+                edit_script,
                 show_hex,
                 show_dec,
                 show_unsigned,
@@ -658,7 +666,29 @@ class MainForm(QMainWindow, MainWindow):
                 add_group,
             ]
             guiutils.delete_menu_entries(menu, deletion_list)
+        elif self.get_script_entry(current_row) is not None:
+            # A script entry only edits its description and script, the rest is address oriented
+            script_deletion = [
+                edit_address,
+                edit_type,
+                edit_value,
+                show_hex,
+                show_dec,
+                show_unsigned,
+                show_signed,
+                browse_region,
+                disassemble,
+                pointer_scanner,
+                pointer_scan,
+                what_writes,
+                what_reads,
+                what_accesses,
+            ]
+            if current_row.childCount() == 0:
+                script_deletion.append(toggle_children)
+            guiutils.delete_menu_entries(menu, script_deletion)
         else:
+            guiutils.delete_menu_entries(menu, [edit_script])
             value_type = current_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
             if typedefs.VALUE_INDEX.is_integer(value_type.value_index):
                 if value_type.value_repr is typedefs.VALUE_REPR.HEX:
@@ -689,6 +719,7 @@ class MainForm(QMainWindow, MainWindow):
             edit_address: self.treeWidget_AddressTable_edit_address,
             edit_type: self.treeWidget_AddressTable_edit_type,
             edit_value: self.treeWidget_AddressTable_edit_value,
+            edit_script: lambda: self.open_script_entry_in_engine(current_row, self.get_script_entry(current_row)),
             show_hex: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.HEX),
             show_dec: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.UNSIGNED),
             show_unsigned: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.UNSIGNED),
@@ -771,6 +802,8 @@ class MainForm(QMainWindow, MainWindow):
             # No type has been specified, iterate through the freeze types
             # This usually happens if user clicks the freeze type text instead of the checkbox
             frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+            if not isinstance(frozen, typedefs.Frozen):  # script entries have no freeze type
+                return
             if frozen.freeze_type == typedefs.FREEZE_TYPE.ALLOW_DECREMENT:
                 # Decrement is the last freeze type
                 freeze_type = typedefs.FREEZE_TYPE.DEFAULT
@@ -779,6 +812,8 @@ class MainForm(QMainWindow, MainWindow):
         rows = [row] if row else self.treeWidget_AddressTable.selectedItems()
         for row in rows:
             frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+            if not isinstance(frozen, typedefs.Frozen):  # skip script entries
+                continue
             if row.checkState(FROZEN_COL) == Qt.CheckState.Checked:
                 frozen.freeze_type = freeze_type
                 if freeze_type == typedefs.FREEZE_TYPE.DEFAULT:
@@ -856,16 +891,21 @@ class MainForm(QMainWindow, MainWindow):
         for rec in records:
             row = QTreeWidgetItem()
             row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
-            frozen = typedefs.Frozen("", typedefs.FREEZE_TYPE.DEFAULT)
-            row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
 
-            # Deserialize address_expr and value_type from rec
-            if isinstance(rec[1], (list, tuple)):
-                address_expr = typedefs.PointerChainRequest(*rec[1])
+            # A 5 element record carries an extra dict before its children (see read_address_table_recursively)
+            extra = rec[3] if len(rec) == 5 else None
+            if isinstance(extra, dict) and "script" in extra:
+                self.init_script_row(row, rec[0], typedefs.ScriptEntry(extra["script"]))
             else:
-                address_expr = rec[1]
-            value_type = typedefs.ValueType(*rec[2])
-            self.change_address_table_entries(row, rec[0], address_expr, value_type)
+                frozen = typedefs.Frozen("", typedefs.FREEZE_TYPE.DEFAULT)
+                row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
+                # Deserialize address_expr and value_type from rec
+                if isinstance(rec[1], (list, tuple)):
+                    address_expr = typedefs.PointerChainRequest(*rec[1])
+                else:
+                    address_expr = rec[1]
+                value_type = typedefs.ValueType(*rec[2])
+                self.change_address_table_entries(row, rec[0], address_expr, value_type)
 
             # Insert the row at the current insert_index
             parent_row.insertChild(insert_index, row)
@@ -873,7 +913,7 @@ class MainForm(QMainWindow, MainWindow):
 
             # Recursively insert children of this row
             self.insert_records(rec[-1], row, 0)
-        self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
+        self.mark_address_tree_changed()
 
     def paste_records(self, insert_inside: bool = False) -> None:
         try:
@@ -924,9 +964,22 @@ class MainForm(QMainWindow, MainWindow):
             return True
         return False
 
+    def script_entries_in(self, item: QTreeWidgetItem):
+        # Yields the script entries of item and all its descendants
+        entry = self.get_script_entry(item)
+        if entry is not None:
+            yield entry
+        for index in range(item.childCount()):
+            yield from self.script_entries_in(item.child(index))
+
     def delete_records(self) -> None:
+        selected_items = self.treeWidget_AddressTable.selectedItems()
+        if self.libpince_engine_window:  # close any bound tabs before their rows go away
+            for item in selected_items:
+                for entry in self.script_entries_in(item):
+                    self.libpince_engine_window.close_script_entry(entry)
         root = self.treeWidget_AddressTable.invisibleRootItem()
-        for item in self.treeWidget_AddressTable.selectedItems():
+        for item in selected_items:
             (item.parent() or root).removeChild(item)
 
     def treeWidget_AddressTable_mouse_press_event(self, event: QMouseEvent) -> None:
@@ -948,10 +1001,12 @@ class MainForm(QMainWindow, MainWindow):
             item.setSelected(True)
             box_clicked = old_state != new_state
             current_item = self.treeWidget_AddressTable.currentItem()
+            freeze_type = typedefs.FREEZE_TYPE.DEFAULT
             if not box_clicked and new_state == Qt.CheckState.Checked:
                 self.change_freeze_type(row=current_item)
-                frozen: typedefs.Frozen = current_item.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
-                freeze_type = frozen.freeze_type
+                frozen = current_item.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+                if isinstance(frozen, typedefs.Frozen):  # freeze type cycling doesn't apply to script entries
+                    freeze_type = frozen.freeze_type
             for selected_item in self.treeWidget_AddressTable.selectedItems():
                 if box_clicked:
                     self.handle_freeze_change(selected_item, new_state)
@@ -1028,6 +1083,8 @@ class MainForm(QMainWindow, MainWindow):
                 if not row:
                     break
                 it += 1
+                if self.get_script_entry(row) is not None:  # script entries have no address/value to refresh
+                    continue
                 address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
                 if isinstance(address_data, typedefs.PointerChainRequest):
                     expression = address_data.get_base_address_as_str()
@@ -1685,7 +1742,7 @@ class MainForm(QMainWindow, MainWindow):
             vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
             self.add_entry_to_addresstable(tr.NO_DESCRIPTION, address_item.text(), vt)
         self.update_address_table()
-        self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
+        self.mark_address_tree_changed()
 
     def reset_scan(self, inferior_exit: bool = False) -> None:
         if inferior_exit:
@@ -1772,9 +1829,65 @@ class MainForm(QMainWindow, MainWindow):
         self.change_address_table_entries(current_row, description, address_expr, value_type)
         self.show()  # In case of getting called from elsewhere
         self.activateWindow()
+        self.mark_address_tree_changed()
+
+    def get_script_entry(self, row: QTreeWidgetItem | None) -> typedefs.ScriptEntry | None:
+        # A row is a script entry when its frozen slot holds a ScriptEntry instead of a Frozen.
+        if row is None:
+            return None
+        data = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+        return data if isinstance(data, typedefs.ScriptEntry) else None
+
+    def init_script_row(self, row: QTreeWidgetItem, description: str, entry: typedefs.ScriptEntry) -> None:
+        row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, entry)
+        row.setText(DESC_COL, description or tr.SCRIPT)
+        row.setText(TYPE_COL, tr.SCRIPT)
+
+    def add_script_entry_to_table(self, title: str, entry: typedefs.ScriptEntry) -> None:
+        # entry comes from the engine already bound to its tab so the row and tab share one object.
+        row = QTreeWidgetItem()
+        row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
+        self.init_script_row(row, title, entry)
+        self.treeWidget_AddressTable.addTopLevelItem(row)
+        self.mark_address_tree_changed()
+
+    def open_script_entry_in_engine(self, row: QTreeWidgetItem, entry: typedefs.ScriptEntry) -> None:
+        self.show_libpince_engine().open_script_entry(entry, row.text(DESC_COL) or tr.SCRIPT)
+
+    def show_libpince_engine(self) -> LibpinceEngineWindow:
+        # A single window is reused so table script entries can be reopened in their existing tab.
+        if not self.libpince_engine_window:
+            self.libpince_engine_window = LibpinceEngineWindow(self)
+            self.libpince_engine_window.send_to_table.connect(self.add_script_entry_to_table)
+            self.libpince_engine_window.entry_modified.connect(self.mark_address_tree_changed)
+        self.libpince_engine_window.show()
+        self.libpince_engine_window.activateWindow()
+        return self.libpince_engine_window
+
+    def mark_address_tree_changed(self) -> None:
         self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
+    def toggle_script_entry(
+        self, row: QTreeWidgetItem, entry: typedefs.ScriptEntry, check_state: Qt.CheckState
+    ) -> None:
+        is_enable = check_state == Qt.CheckState.Checked
+        row.setCheckState(FROZEN_COL, check_state)
+        enable_code, disable_code = parse_script_sections(entry.script)
+        code = enable_code if is_enable else disable_code
+        if code is None:  # tagless script or no [DISABLE]: nothing to run when toggling off.
+            return
+        entry.namespace = entry.namespace or create_script_namespace()
+        succeeded, output = run_script_code(code, entry.namespace, f"<{row.text(DESC_COL) or tr.SCRIPT}>")
+        if not succeeded:
+            if is_enable:  # don't leave a failed enable looking active
+                row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
+            QMessageBox.information(self, tr.ERROR, tr.SCRIPT_RUN_FAILED.format(output))
+
     def treeWidget_AddressTable_item_double_clicked(self, row: QTreeWidgetItem, column: int) -> None:
+        entry = self.get_script_entry(row)
+        if entry is not None:
+            self.open_script_entry_in_engine(row, entry)
+            return
         action_for_column = {
             VALUE_COL: self.treeWidget_AddressTable_edit_value,
             DESC_COL: self.treeWidget_AddressTable_edit_desc,
@@ -1859,6 +1972,8 @@ class MainForm(QMainWindow, MainWindow):
             if not row:
                 break
             it += 1
+            if self.get_script_entry(row) is not None:  # script entries toggle on the checkbox, nothing to freeze
+                continue
             if row.checkState(FROZEN_COL) == Qt.CheckState.Checked:
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 address = row.text(ADDR_COL).removeprefix("P->")
@@ -1883,6 +1998,10 @@ class MainForm(QMainWindow, MainWindow):
                 debugcore.write_memory(address, vt.value_index, value, vt.zero_terminate, vt.endian)
 
     def handle_freeze_change(self, row: QTreeWidgetItem, check_state: Qt.CheckState) -> None:
+        entry = self.get_script_entry(row)
+        if entry is not None:
+            self.toggle_script_entry(row, entry, check_state)
+            return
         frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
         is_checked = check_state == Qt.CheckState.Checked
         frozen_state_toggled = (is_checked and not frozen.enabled) or (not is_checked and frozen.enabled)
@@ -1904,6 +2023,8 @@ class MainForm(QMainWindow, MainWindow):
 
     def treeWidget_AddressTable_change_repr(self, new_repr: int) -> None:
         for row in self.treeWidget_AddressTable.selectedItems():
+            if self.get_script_entry(row) is not None:
+                continue
             value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
             value_type.value_repr = new_repr
             row.setText(TYPE_COL, value_type.text())
@@ -1911,7 +2032,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def treeWidget_AddressTable_edit_value(self) -> None:
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
-        if not row:
+        if not row or self.get_script_entry(row) is not None:
             return
         value = row.text(VALUE_COL)
         value_index = row.data(TYPE_COL, Qt.ItemDataRole.UserRole).value_index
@@ -1922,6 +2043,8 @@ class MainForm(QMainWindow, MainWindow):
                 QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
                 return
             for row in self.treeWidget_AddressTable.selectedItems():
+                if self.get_script_entry(row) is not None:
+                    continue
                 address = row.text(ADDR_COL).removeprefix("P->")
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 parsed_value = utils.parse_string(new_value, vt.value_index)
@@ -1943,10 +2066,13 @@ class MainForm(QMainWindow, MainWindow):
             description_text = dialog.get_values()[0]
             for row in self.treeWidget_AddressTable.selectedItems():
                 row.setText(DESC_COL, description_text)
+                entry = self.get_script_entry(row)
+                if entry is not None and self.libpince_engine_window:
+                    self.libpince_engine_window.rename_script_entry(entry, description_text)
 
     def treeWidget_AddressTable_edit_address(self) -> None:
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
-        if not row:
+        if not row or self.get_script_entry(row) is not None:
             return
         desc, address_expr, vt = self.read_address_table_entries(row)
         manual_address_dialog = ManualAddressDialogForm(self, desc, address_expr, vt)
@@ -1955,11 +2081,11 @@ class MainForm(QMainWindow, MainWindow):
             desc, address_expr, vt = manual_address_dialog.get_values()
             self.change_address_table_entries(row, desc, address_expr, vt)
             self.update_address_table()
-            self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
+            self.mark_address_tree_changed()
 
     def treeWidget_AddressTable_edit_type(self) -> None:
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
-        if not row:
+        if not row or self.get_script_entry(row) is not None:
             return
         vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
         dialog = EditTypeDialogForm(self, vt)
@@ -1967,10 +2093,12 @@ class MainForm(QMainWindow, MainWindow):
             vt = dialog.get_values()
             type_text = vt.text()
             for row in self.treeWidget_AddressTable.selectedItems():
+                if self.get_script_entry(row) is not None:
+                    continue
                 row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, copy.copy(vt))
                 row.setText(TYPE_COL, type_text)
             self.update_address_table()
-            self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
+            self.mark_address_tree_changed()
 
     # Changes the column values of the given row
     def change_address_table_entries(
@@ -2006,12 +2134,14 @@ class MainForm(QMainWindow, MainWindow):
         return description, address_expr, value_type
 
     # Returns the values inside the given row and all of its descendants.
-    # All values except the last are the same as read_address_table_entries output.
-    # Last value is an iterable of information about its direct children.
-    def read_address_table_recursively(self, row: QTreeWidgetItem) -> tuple[str, Any, Any, list]:
-        return self.read_address_table_entries(row, True) + (
-            [self.read_address_table_recursively(row.child(i)) for i in range(row.childCount())],
-        )
+    # A script entry adds an extra dict before them so it stays backward compatible with plain rows,
+    # which insert_records tells apart by length.
+    def read_address_table_recursively(self, row: QTreeWidgetItem) -> tuple:
+        children = [self.read_address_table_recursively(row.child(i)) for i in range(row.childCount())]
+        entry = self.get_script_entry(row)
+        if entry is not None:
+            return row.text(DESC_COL), "", typedefs.ValueType().serialize(), {"script": entry.script}, children
+        return self.read_address_table_entries(row, True) + (children,)
 
     # Flashing Attach Button when the process is not attached
     def flash_attach_button(self) -> None:
@@ -4373,9 +4503,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.refresh_disassemble_view()
 
     def actionLibpince_Engine_triggered(self) -> None:
-        libpince_engine_window = LibpinceEngineWindow(self)
-        libpince_engine_window.show()
-        libpince_engine_window.activateWindow()
+        # The engine is owned by the main form since it integrates with the address table
+        self.parent().show_libpince_engine()
 
     def actionLibpince_triggered(self) -> None:
         utils.execute_command_as_user('python3 -m webbrowser "https://korcankaraokcu.github.io/PINCE/"')

@@ -1,8 +1,9 @@
 import builtins, contextlib, io, os, traceback
 from typing import Any
 
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QTextCursor
-from PyQt6.QtWidgets import QFileDialog, QMainWindow, QMessageBox, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QFileDialog, QInputDialog, QMainWindow, QMessageBox, QVBoxLayout, QWidget
 
 from GUI.Utils import guiutils
 from GUI.Widgets.LibpinceEngine.Form.LibpinceEngineWindow import Ui_MainWindow
@@ -225,7 +226,51 @@ class LibpinceScriptApi:
         return bytes(int(item) & 0xFF for item in data)
 
 
+def create_script_namespace() -> dict[str, Any]:
+    """Build a fresh execution namespace exposing the LibpinceScriptApi helpers."""
+    api = LibpinceScriptApi()
+    namespace = {
+        "__builtins__": builtins,
+        "__name__": "__libpince_engine__",
+        "api": api,
+        "debugcore": debugcore,
+        "typedefs": typedefs,
+        "utils": utils,
+        "VALUE_INDEX": typedefs.VALUE_INDEX,
+        "VALUE_REPR": typedefs.VALUE_REPR,
+    }
+    for name in dir(api):
+        function = getattr(api, name)
+        if not name.startswith("_") and callable(function):
+            namespace[name] = function
+    return namespace
+
+
+def run_script_code(script_content: str, namespace: dict[str, Any], filename: str) -> tuple[bool, str]:
+    """Compile and exec script_content in namespace, capturing its combined output.
+
+    Returns (succeeded, output).
+    Namespace is mutated in place so variables set by an [ENABLE] run survive into a later [DISABLE] run.
+    Used by the engine window and any headless caller (e.g. address-table script entries).
+    """
+    namespace["__file__"] = filename
+    output = io.StringIO()
+    succeeded = True
+    try:
+        with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+            exec(compile(script_content, filename, "exec"), namespace, namespace)
+    except Exception:
+        traceback.print_exc(file=output)
+        succeeded = False
+    return succeeded, output.getvalue()
+
+
 class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
+    # Emitted with (title, entry) when the user pushes the current editor to the address table
+    send_to_table = pyqtSignal(str, object)
+    # Emitted when a tab bound to a table script entry is edited, so the session can be marked dirty
+    entry_modified = pyqtSignal()
+
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setupUi(self)
@@ -250,32 +295,15 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         self.actionRun_enable.triggered.connect(self.run_enable)
         self.actionRun_disable.triggered.connect(self.run_disable)
         self.actionRun_selection.triggered.connect(self.run_selection)
+        self.actionSend_to_table.triggered.connect(self.send_to_cheat_table)
         self.actionClear_output.triggered.connect(self.outputEdit.clear)
         if parent is not None:
             guiutils.center_to_parent(self)
 
     def configure_editor(self, editor: ScriptEditor) -> None:
         editor.bind_tab_widget(self.tabWidget)
-        editor.set_namespace(self.create_script_namespace())
+        editor.set_namespace(create_script_namespace())
         editor.update_line_number_area_width()
-
-    def create_script_namespace(self) -> dict[str, Any]:
-        api = LibpinceScriptApi()
-        namespace = {
-            "__builtins__": builtins,
-            "__name__": "__libpince_engine__",
-            "api": api,
-            "debugcore": debugcore,
-            "typedefs": typedefs,
-            "utils": utils,
-            "VALUE_INDEX": typedefs.VALUE_INDEX,
-            "VALUE_REPR": typedefs.VALUE_REPR,
-        }
-        for name in dir(api):
-            function = getattr(api, name)
-            if not name.startswith("_") and callable(function):
-                namespace[name] = function
-        return namespace
 
     def create_new_tab(self) -> ScriptEditor:
         new_tab = QWidget()
@@ -326,7 +354,9 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
             self.tabWidget.setCurrentIndex(index - 1)
 
     def open_file(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(self, tr.OPEN_SCRIPT_FILE, os.path.expanduser("~"), tr.FILE_TYPES_SCRIPT)
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, tr.OPEN_SCRIPT_FILE, os.path.expanduser("~"), tr.FILE_TYPES_SCRIPT
+        )
         if not file_path:
             return
         editor = self.create_new_tab()
@@ -346,7 +376,9 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         if not editor:
             return
         if not editor.file_path:
-            file_path, _ = QFileDialog.getSaveFileName(self, tr.SAVE_SCRIPT_FILE, os.path.expanduser("~"), tr.FILE_TYPES_SCRIPT)
+            file_path, _ = QFileDialog.getSaveFileName(
+                self, tr.SAVE_SCRIPT_FILE, os.path.expanduser("~"), tr.FILE_TYPES_SCRIPT
+            )
             if not file_path:
                 return
             if not file_path.lower().endswith(".py"):
@@ -390,27 +422,101 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         if not script_content.strip():
             return
         filename = editor.file_path or f"<Libpince Engine: {self.tabWidget.tabText(self.tabWidget.currentIndex())}>"
-        namespace = editor.namespace or self.create_script_namespace()
-        namespace["__file__"] = filename
-        stdout = io.StringIO()
-        stderr = io.StringIO()
+        namespace = editor.namespace or create_script_namespace()
         self.append_output("\n" + tr.SCRIPT_RUNNING.format(filename))
-        try:
-            compiled = compile(script_content, filename, "exec")
-            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-                exec(compiled, namespace, namespace)
-        except Exception:
-            self.append_output(stdout.getvalue())
-            self.append_output(stderr.getvalue())
-            self.append_output(traceback.format_exc())
-            self.statusbar.showMessage(tr.SCRIPT_FAILED, 3000)
+        succeeded, output = run_script_code(script_content, namespace, filename)
+        editor.set_namespace(namespace)
+        self.append_output(output)
+        message = tr.SCRIPT_FINISHED if succeeded else tr.SCRIPT_FAILED
+        if succeeded:
+            self.append_output(message)
+        self.statusbar.showMessage(message, 3000)
+
+    def send_to_cheat_table(self) -> None:
+        editor = self.get_current_editor()
+        if not editor:
             return
-        finally:
-            editor.set_namespace(namespace)
-        self.append_output(stdout.getvalue())
-        self.append_output(stderr.getvalue())
-        self.append_output(tr.SCRIPT_FINISHED)
-        self.statusbar.showMessage(tr.SCRIPT_FINISHED, 3000)
+        script = editor.toPlainText()
+        if not script.strip():
+            return
+        default = self.tabWidget.tabText(self.tabWidget.currentIndex()).rstrip("*")
+        name, accepted = QInputDialog.getText(self, tr.SEND_TO_TABLE, tr.ENTER_DESCRIPTION, text=default)
+        if not accepted:
+            return
+        entry = typedefs.ScriptEntry(script)
+        # Adopt an unsaved scratch tab as the entry's live tab. A file or already-bound tab keeps its identity.
+        if editor.script_entry is None and not editor.file_path:
+            self._bind_editor(editor, entry, name)
+        self.send_to_table.emit(name, entry)
+        self.statusbar.showMessage(tr.SENT_TO_TABLE, 3000)
+
+    def _iter_editors(self):
+        # Walks every tab's editor. The trailing "+" tab holds none and is skipped.
+        for index in range(self.tabWidget.count()):
+            tab = self.tabWidget.widget(index)
+            editor = tab.findChild(ScriptEditor) if tab else None
+            if editor is not None:
+                yield editor
+
+    def _editor_for_entry(self, entry: typedefs.ScriptEntry) -> ScriptEditor | None:
+        return next((e for e in self._iter_editors() if e.script_entry is entry), None)
+
+    def _scratch_editor(self) -> ScriptEditor | None:
+        # An unbound, empty, unsaved tab (e.g. the one a fresh window starts with) an entry can take over
+        scratch = (
+            e
+            for e in self._iter_editors()
+            if e.script_entry is None and not e.file_path and not e.is_modified and not e.toPlainText().strip()
+        )
+        return next(scratch, None)
+
+    def _bind_editor(self, editor: ScriptEditor, entry: typedefs.ScriptEntry, title: str) -> None:
+        # Tie editor to a table script entry so its edits mirror back into it. Editor must already hold entry.script.
+        editor.script_entry = entry
+        editor.display_name = title
+        editor.saved_content = entry.script
+        editor.is_modified = False
+        editor.update_tab_title()
+        editor.textChanged.connect(lambda e=editor: self.mirror_script_entry(e))
+
+    def open_script_entry(self, entry: typedefs.ScriptEntry, title: str) -> None:
+        """Open or focus if already open, a tab bound to a table script entry.
+
+        The tab shares the entry object so edits mirror straight back into it (see mirror_script_entry).
+        """
+        editor = self._editor_for_entry(entry)
+        if editor is None:
+            editor = self._scratch_editor() or self.create_new_tab()
+            editor.setPlainText(entry.script)
+            self._bind_editor(editor, entry, title)
+        self.tabWidget.setCurrentIndex(self.tabWidget.indexOf(editor.parent()))
+        editor.setFocus()
+
+    def rename_script_entry(self, entry: typedefs.ScriptEntry, title: str) -> None:
+        # Keep an open bound tab's title in sync when the row description is edited from the table
+        editor = self._editor_for_entry(entry)
+        if editor is not None:
+            editor.display_name = title
+            editor.update_tab_title()
+
+    def close_script_entry(self, entry: typedefs.ScriptEntry) -> None:
+        # Close the bound tab when its table row is deleted so edits can't orphan onto a gone entry
+        editor = self._editor_for_entry(entry)
+        if editor is not None:
+            self.close_tab(self.tabWidget.indexOf(editor.parent()))
+
+    def mirror_script_entry(self, editor: ScriptEditor) -> None:
+        entry = editor.script_entry
+        if entry is None:
+            return
+        text = editor.toPlainText()
+        entry.script = text
+        # Bound tabs are live so keep them unmodified to skip the "*" marker and the close-save prompt
+        editor.saved_content = text
+        if editor.is_modified:
+            editor.is_modified = False
+            editor.update_tab_title()
+        self.entry_modified.emit()
 
     def append_output(self, text: str) -> None:
         if not text:

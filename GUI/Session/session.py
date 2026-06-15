@@ -19,9 +19,26 @@ class SessionDataChanged(IntFlag):
     PROCESS_NAME = auto()
 
 
+LATEST_VERSION = 2
+
+
+def _legacy_to_v1(content: list) -> dict[str, Any]:
+    utils.logger.info("Migrating legacy session data to version 1")
+    return {"version": 1, "notes": "", "bookmarks": {}, "address_tree": content, "process_name": ""}
+
+
+def _v1_to_v2(content: dict[str, Any]) -> dict[str, Any]:
+    # v2 added script entry rows which are told apart by length so no row transform is needed
+    utils.logger.info("Migrating version 1 session data to version 2")
+    content["version"] = 2
+    return content
+
+
 def migrate_version(content: Any) -> dict[str, Any]:
     if not hasattr(content, "version") and type(content) == list:
-        return legacy_to_v1(content)
+        content = _legacy_to_v1(content)
+    if isinstance(content, dict) and content.get("version") == 1:
+        content = _v1_to_v2(content)
 
     return content
 
@@ -39,17 +56,12 @@ def is_valid_session_data(content: dict[str, Any]) -> bool:
     return True
 
 
-def legacy_to_v1(content: list) -> dict[str, Any]:
-    utils.logger.info("Migrating legacy session data to version 1")
-    return {"version": 1, "notes": "", "bookmarks": {}, "address_tree": content, "process_name": ""}
-
-
 class Session:
     def __init__(self) -> None:
         # Anything labled with pct should be saved to the session file
         self.pct_notes: str = ""
         self.pct_bookmarks: dict[int, dict] = {}
-        self.pct_version: int = 1
+        self.pct_version: int = LATEST_VERSION
         self.pct_address_tree: list = []
         self.pct_process_name: str = ""
         self.data_changed = SessionDataChanged.NONE
