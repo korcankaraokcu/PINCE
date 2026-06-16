@@ -484,6 +484,56 @@ class ValueType:
         return returned_string
 
 
+class StructureMember:
+    """One field of a Structure: a value at an offset or a link to another structure.
+
+    Exactly one of value_type / struct_ref is set.
+    Nested members (struct_ref set) are pointer members when is_pointer else inline/embedded.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        offset: int,
+        value_type: "ValueType | None" = None,
+        struct_ref: str | None = None,
+        is_pointer: bool = False,
+    ) -> None:
+        if (value_type is None) == (struct_ref is None):
+            raise ValueError("StructureMember needs exactly one of value_type or struct_ref")
+        self.name = name
+        self.offset = offset
+        self.value_type = value_type
+        self.struct_ref = struct_ref
+        self.is_pointer = is_pointer
+
+    def serialize(self) -> tuple:
+        vt = self.value_type.serialize() if self.value_type is not None else None
+        return self.name, self.offset, vt, self.struct_ref, self.is_pointer
+
+    @classmethod
+    def deserialize(cls, data: tuple) -> "StructureMember":
+        name, offset, vt, struct_ref, is_pointer = data
+        return cls(name, offset, ValueType(*vt) if vt is not None else None, struct_ref, is_pointer)
+
+
+class Structure:
+    """A named, ordered list of StructureMembers. Offsets are explicit and relative to a base."""
+
+    def __init__(self, name: str, members: "list[StructureMember] | None" = None, size: int = 0) -> None:
+        self.name = name
+        self.members = members if members else []
+        self.size = size
+
+    def serialize(self) -> tuple:
+        return self.name, self.size, [m.serialize() for m in self.members]
+
+    @classmethod
+    def deserialize(cls, data: tuple) -> "Structure":
+        name, size, members = data
+        return cls(name, [StructureMember.deserialize(m) for m in members], size)
+
+
 class PointerChainResult:
     def __init__(self) -> None:
         self.pointer_chain: list[int] = []

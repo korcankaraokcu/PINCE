@@ -7,7 +7,7 @@ from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
 from GUI.States import states
-from libpince import utils, debugcore
+from libpince import debugcore, typedefs, utils
 from tr.tr import TranslationConstants as tr
 
 
@@ -17,9 +17,10 @@ class SessionDataChanged(IntFlag):
     BOOKMARKS = auto()
     NOTES = auto()
     PROCESS_NAME = auto()
+    STRUCTURES = auto()
 
 
-LATEST_VERSION = 2
+LATEST_VERSION = 3
 
 
 def _legacy_to_v1(content: list) -> dict[str, Any]:
@@ -34,12 +35,21 @@ def _v1_to_v2(content: dict[str, Any]) -> dict[str, Any]:
     return content
 
 
+def _v2_to_v3(content: dict[str, Any]) -> dict[str, Any]:
+    # v3 added saved structures
+    utils.logger.info("Migrating version 2 session data to version 3")
+    content["version"] = 3
+    content.setdefault("structures", {})
+    return content
+
+
 def migrate_version(content: Any) -> dict[str, Any]:
     if not hasattr(content, "version") and type(content) == list:
         content = _legacy_to_v1(content)
     if isinstance(content, dict) and content.get("version") == 1:
         content = _v1_to_v2(content)
-
+    if isinstance(content, dict) and content.get("version") == 2:
+        content = _v2_to_v3(content)
     return content
 
 
@@ -52,7 +62,6 @@ def is_valid_session_data(content: dict[str, Any]) -> bool:
             return False
     if not isinstance(content["bookmarks"], dict):
         return False
-
     return True
 
 
@@ -64,6 +73,7 @@ class Session:
         self.pct_version: int = LATEST_VERSION
         self.pct_address_tree: list = []
         self.pct_process_name: str = ""
+        self.pct_structures: dict[str, tuple] = {}
         self.data_changed = SessionDataChanged.NONE
         self.file_path: str = os.path.expanduser("~")
         self.last_file_name: str = ""  # process name or file name
@@ -95,6 +105,7 @@ class Session:
             "bookmarks": self.pct_bookmarks,
             "address_tree": self.pct_address_tree,
             "process_name": self.pct_process_name,
+            "structures": self.pct_structures,
         }
 
         file_path = utils.append_file_extension(file_path, "pct")
@@ -168,6 +179,7 @@ class Session:
 
         self.pct_address_tree = content["address_tree"]
         self.pct_process_name = content["process_name"]
+        self.pct_structures = content.get("structures", {})
 
         self.file_path = os.path.dirname(file_path)
         self.last_file_name = os.path.basename(file_path)
@@ -323,3 +335,50 @@ class SessionManager:
                 session = SessionManager.get_session()
                 session.pct_process_name = process_name
                 session.last_file_name = utils.append_file_extension(process_name, "pct")
+
+
+class StructureManager:
+    @staticmethod
+    def _registry() -> dict[str, tuple]:
+        return SessionManager.get_session().pct_structures
+
+    @staticmethod
+    def list_names() -> list[str]:
+        return sorted(StructureManager._registry().keys())
+
+    @staticmethod
+    def get(name: str) -> typedefs.Structure | None:
+        data = StructureManager._registry().get(name)
+        return typedefs.Structure.deserialize(data) if data is not None else None
+
+    @staticmethod
+    def add(structure: typedefs.Structure) -> bool:
+        registry = StructureManager._registry()
+        if structure.name in registry:
+            return False
+        registry[structure.name] = structure.serialize()
+        StructureManager._mark_changed()
+        return True
+
+    @staticmethod
+    def update(structure: typedefs.Structure) -> None:
+        StructureManager._registry()[structure.name] = structure.serialize()
+        StructureManager._mark_changed()
+
+    @staticmethod
+    def rename(old: str, new: str) -> bool:
+        registry = StructureManager._registry()
+        if old not in registry or new in registry:
+            return False
+        registry[new] = registry.pop(old)
+        StructureManager._mark_changed()
+        return True
+
+    @staticmethod
+    def delete(name: str) -> None:
+        if StructureManager._registry().pop(name, None) is not None:
+            StructureManager._mark_changed()
+
+    @staticmethod
+    def _mark_changed() -> None:
+        SessionManager.get_session().data_changed |= SessionDataChanged.STRUCTURES
