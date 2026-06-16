@@ -848,7 +848,7 @@ def inject_dll(dll_path: str) -> bool:
     Returns:
         bool: True if LoadLibraryW returned a module handle, False otherwise.
     """
-    if currentpid == -1 or inferior_arch != typedefs.INFERIOR_ARCH.ARCH_64:
+    if currentpid == -1:
         return False
     k32 = utils.get_module_load_bias(currentpid, r"^kernel32\.dll$")
     nt = utils.get_module_load_bias(currentpid, r"^ntdll\.dll$")
@@ -915,7 +915,7 @@ def inject_dll(dll_path: str) -> bool:
         timed_out = inferior_status == typedefs.INFERIOR_STATUS.RUNNING
         if timed_out:
             interrupt_inferior()
-        pc = examine_expression("$rip").address
+        pc = examine_expression("$pc").address
         reached = bool(pc) and int(pc, 16) == brk
         if not reached and bp:
             send_command(f"delete {bp.group(1)}")
@@ -932,7 +932,10 @@ def inject_dll(dll_path: str) -> bool:
             buf = call(f"((void*(*)(unsigned long)){hex(malloc)})({len(wide)})")
             if buf:
                 write_memory(buf, typedefs.VALUE_INDEX.AOB, list(wide))
-                hmod = call(f"((void*(*)(void*,void*,void*,void*)){hex(llw)})(0,0,0,{hex(buf)})")
+                if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64:
+                    hmod = call(f"((void*(*)(void*,void*,void*,void*)){hex(llw)})(0,0,0,{hex(buf)})")
+                else:
+                    hmod = call(f"((void*(*)(void*)){hex(llw)})({hex(buf)})")
 
         # Restore previous state and return result.
         if was_running and (reached or timed_out):
