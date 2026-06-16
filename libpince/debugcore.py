@@ -123,11 +123,11 @@ allocated_memory_chunks: dict[str, typedefs.AllocatedMemory] = {}
 # ID generator used for the above
 allocated_memory_gen_id = 0
 
-# A string. Holds the main executable's basename. Used by is_address_static() and _refresh_main_module_info()
-_main_module_name: str | None = None
-
 # A bool. Used by is_address_static() and _refresh_main_module_info() to mark if the main executable is PIE enabled or not.
 _main_module_is_static: bool = False
+
+# Cached (start, end) range of the main module's mappings, filled by _refresh_main_module_info() when the module is static.
+_main_module_ranges: list[tuple[int, int]] = []
 
 """
 When PINCE was first launched, it used gdb 7.7.1, which is a very outdated version of gdb
@@ -1291,9 +1291,9 @@ def _refresh_main_module_info() -> None:
     - Windows PE under WINE: main module is the first .exe with executable permissions in /proc/PID/maps.
       Static if DllCharacteristics has the IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE bit cleared.
     """
-    global _main_module_name, _main_module_is_static
-    _main_module_name = None
+    global _main_module_is_static, _main_module_ranges
     _main_module_is_static = False
+    _main_module_ranges = []
     if currentpid == -1:
         return
     try:
@@ -1333,10 +1333,17 @@ def _refresh_main_module_info() -> None:
                 is_static = (int.from_bytes(f.read(2), "little") & 0x40) == 0  # IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE
             else:
                 return
-            _main_module_name = os.path.basename(module_path)
             _main_module_is_static = is_static
     except (OSError, ValueError):
-        pass
+        return
+
+    if _main_module_is_static:
+        # Cache the module's ranges now so is_address_static() is a plain memory check, not a maps read per address.
+        _main_module_ranges = [
+            (int(start, 16), int(end, 16))
+            for start, end, _, _, _, _, path in utils.get_regions(currentpid)
+            if path == module_path
+        ]
 
 
 def is_address_static(address: str | int) -> bool:
@@ -1353,7 +1360,7 @@ def is_address_static(address: str | int) -> bool:
     Returns:
         bool: True if the absolute address is static across restarts, False otherwise
     """
-    if not _main_module_is_static:
+    if currentpid == -1 or not _main_module_is_static:
         return False
     if isinstance(address, str):
         address_str = utils.extract_hex_address(address)
@@ -1364,8 +1371,7 @@ def is_address_static(address: str | int) -> bool:
     elif not isinstance(address, int):
         logger.error(f"Passed wrong type '{type(address)}' instead of str or int")
         return False
-    region_info = utils.get_region_info(currentpid, address)
-    return region_info is not None and region_info.file_name == _main_module_name
+    return any(start <= address < end for start, end in _main_module_ranges)
 
 
 def get_thread_info() -> str | None:
