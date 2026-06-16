@@ -15,6 +15,10 @@ class Ui_Form(object):
         Form.resize(684, 539)
         self.gridLayout = QtWidgets.QGridLayout(Form)
         self.gridLayout.setObjectName("gridLayout")
+        self.lineEdit_Search = QtWidgets.QLineEdit(parent=Form)
+        self.lineEdit_Search.setClearButtonEnabled(True)
+        self.lineEdit_Search.setObjectName("lineEdit_Search")
+        self.gridLayout.addWidget(self.lineEdit_Search, 0, 0, 1, 1)
         self.tableWidget_MemoryRegions = QtWidgets.QTableWidget(parent=Form)
         font = QtGui.QFont()
         font.setFamily("Monospace")
@@ -39,7 +43,7 @@ class Ui_Form(object):
         self.tableWidget_MemoryRegions.verticalHeader().setVisible(False)
         self.tableWidget_MemoryRegions.verticalHeader().setDefaultSectionSize(16)
         self.tableWidget_MemoryRegions.verticalHeader().setMinimumSectionSize(16)
-        self.gridLayout.addWidget(self.tableWidget_MemoryRegions, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.tableWidget_MemoryRegions, 1, 0, 1, 1)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -47,6 +51,7 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Memory Regions"))
+        self.lineEdit_Search.setPlaceholderText(_translate("Form", "Search path"))
         self.tableWidget_MemoryRegions.setSortingEnabled(True)
         item = self.tableWidget_MemoryRegions.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Regions"))

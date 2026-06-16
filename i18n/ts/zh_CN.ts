@@ -750,6 +750,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
+        <source>Search path</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
         <source>Regions</source>
         <translation>区域</translation>
     </message>

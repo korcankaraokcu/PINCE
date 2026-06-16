@@ -5556,6 +5556,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         self.refresh_table()
         self.tableWidget_MemoryRegions.contextMenuEvent = self.tableWidget_MemoryRegions_context_menu_event
         self.tableWidget_MemoryRegions.itemDoubleClicked.connect(self.tableWidget_MemoryRegions_item_double_clicked)
+        self.lineEdit_Search.textChanged.connect(self.filter_table)
         self.shortcut_refresh = QShortcut(QKeySequence("R"), self)
         self.shortcut_refresh.activated.connect(self.refresh_table)
         guiutils.center_to_parent(self)
@@ -5583,6 +5584,13 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
             )
 
         guiutils.resize_to_contents(self.tableWidget_MemoryRegions)
+        self.filter_table()
+
+    def filter_table(self) -> None:
+        search_text = self.lineEdit_Search.text().lower()
+        for row in range(self.tableWidget_MemoryRegions.rowCount()):
+            path = self.tableWidget_MemoryRegions.item(row, MEMORY_REGIONS_PATH_COL).text()
+            self.tableWidget_MemoryRegions.setRowHidden(row, search_text not in path.lower())
 
     def tableWidget_MemoryRegions_context_menu_event(self, event: QContextMenuEvent) -> None:
         def copy_to_clipboard(row: int, column: int) -> None:
