@@ -1408,6 +1408,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <source>Inject D&amp;LL file</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Break</source>
         <translation type="unfinished" />
     </message>
@@ -2050,6 +2055,11 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
+        <source>Dynamic-link library (*.dll)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
         <source>Trace File (*.trace)</source>
         <translation type="unfinished" />
     </message>
@@ -2578,17 +2588,37 @@ PINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Select the .so file</source>
+        <source>Select the shared object (.so) file</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>The file has been injected</source>
+        <source>The shared object (.so) file has been injected</source>
         <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Failed to inject the .so file</source>
+        <source>Failed to inject the shared object (.so) file</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Select the DLL file</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>The DLL has been injected</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Failed to inject the DLL</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>DLL injection is only supported for WINE/Proton processes</source>
         <translation type="unfinished" />
     </message>
     <message>

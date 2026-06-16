@@ -169,6 +169,27 @@ def get_module_load_bias(pid: int, name_regex: str) -> tuple[int, str] | None:
     return None
 
 
+def resolve_mapped_path(pid: int, mapped_path: str) -> str:
+    """Resolves a path from an inferior's /proc/PID/maps into one PINCE can open.
+
+    Sandboxed inferiors (Flatpak, Steam pressure-vessel) report library paths in their own mount namespace
+    (e.g. /run/host/usr/lib/libc.so.6) which don't exist in PINCE's namespace.
+    Going through /proc/PID/root resolves the exact file the inferior mapped regardless of the sandbox.
+
+    Args:
+        pid (int): PID of the inferior
+        mapped_path (str): A file path as it appears in the inferior's /proc/PID/maps
+
+    Returns:
+        str: mapped_path if it's directly readable, else the /proc/PID/root path to the same file,
+        falling back to mapped_path if neither exists.
+    """
+    if os.path.exists(mapped_path):
+        return mapped_path
+    proc_root_path = f"/proc/{pid}/root{mapped_path}"
+    return proc_root_path if os.path.exists(proc_root_path) else mapped_path
+
+
 def get_defined_dynamic_symbols(elf_path: str, symbol_names: list[str]) -> dict[str, int]:
     """Parses the .dynsym/.dynstr of an ELF file and returns {name: st_value} for each
     requested symbol that is defined in the file.

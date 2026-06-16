@@ -508,12 +508,12 @@ class MainForm(QMainWindow, MainWindow):
     # Instead of using Qt functions, try to use their signals to prevent crashes
     @utils.ignore_exceptions
     def pause_hotkey_pressed(self) -> None:
-        if not debugcore.active_trace:
+        if not debugcore.driving_inferior:
             debugcore.interrupt_inferior(typedefs.STOP_REASON.PAUSE)
 
     @utils.ignore_exceptions
     def break_hotkey_pressed(self) -> None:
-        if not debugcore.active_trace:
+        if not debugcore.driving_inferior:
             debugcore.interrupt_inferior()
 
     @utils.ignore_exceptions
@@ -521,7 +521,7 @@ class MainForm(QMainWindow, MainWindow):
         if not (
             debugcore.currentpid == -1
             or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
-            or debugcore.active_trace
+            or debugcore.driving_inferior
         ):
             debugcore.continue_inferior()
 
@@ -2908,6 +2908,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def initialize_tools_context_menu(self) -> None:
         self.actionInject_so_file.triggered.connect(self.actionInject_so_file_triggered)
+        self.actionInject_DLL_file.triggered.connect(self.actionInject_DLL_file_triggered)
         self.actionCall_Function.triggered.connect(self.actionCall_Function_triggered)
         self.actionSearch_Instructions.triggered.connect(self.actionSearch_Instructions_triggered)
         self.actionDissect_Code.triggered.connect(self.actionDissect_Code_triggered)
@@ -3032,7 +3033,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def step_instruction(self) -> None:
         if not (
             debugcore.currentpid == -1
-            or debugcore.active_trace
+            or debugcore.driving_inferior
             or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
             or self.updating_memoryview
         ):
@@ -3041,7 +3042,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def step_over_instruction(self) -> None:
         if not (
             debugcore.currentpid == -1
-            or debugcore.active_trace
+            or debugcore.driving_inferior
             or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
             or self.updating_memoryview
         ):
@@ -3050,7 +3051,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def execute_till_return(self) -> None:
         if not (
             debugcore.currentpid == -1
-            or debugcore.active_trace
+            or debugcore.driving_inferior
             or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
             or self.updating_memoryview
         ):
@@ -4453,9 +4454,24 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         )
         if file_path:
             if debugcore.inject_so(file_path):
-                QMessageBox.information(self, tr.SUCCESS, tr.FILE_INJECTED)
+                QMessageBox.information(self, tr.SUCCESS, tr.SO_INJECTED)
             else:
-                QMessageBox.information(self, tr.ERROR, tr.FILE_INJECT_FAILED)
+                QMessageBox.information(self, tr.ERROR, tr.SO_INJECT_FAILED)
+
+    def actionInject_DLL_file_triggered(self) -> None:
+        if debugcore.currentpid == -1:
+            return
+        if not utils.is_wine_process(debugcore.currentpid):
+            QMessageBox.information(self, tr.ERROR, tr.DLL_INJECT_WINE_ONLY)
+            return
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, tr.SELECT_DLL_FILE, os.path.expanduser("~"), tr.DLL_TYPE
+        )
+        if file_path:
+            if debugcore.inject_dll(file_path):
+                QMessageBox.information(self, tr.SUCCESS, tr.DLL_INJECTED)
+            else:
+                QMessageBox.information(self, tr.ERROR, tr.DLL_INJECT_FAILED)
 
     def actionCall_Function_triggered(self) -> None:
         if debugcore.currentpid == -1:

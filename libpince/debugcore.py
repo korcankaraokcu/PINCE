@@ -93,8 +93,10 @@ gdb_async_output = typedefs.RegisterQueue()
 # Return value of the current send_command call will be an empty string
 cancel_send_command = False
 
-# A boolean value. Used by state_observe_thread to check if a trace session is active
-active_trace = False
+# True while an internal routine (the tracer or inject_dll) is driving the inferior's execution.
+# state_observe_thread checks it to skip UI stop/run notifications and PINCE blocks user run controls
+# (pause/continue/step) while it's set so nothing interferes with the operation.
+driving_inferior = False
 
 # A boolean value. Used by dissect_code() to mark an ongoing code dissection.
 dissect_code_active = False
@@ -338,7 +340,7 @@ def state_observe_thread() -> None:
             # 1. Status hasn't changed
             # 2. Last stop was a tracking breakpoint
             # 3. A trace is active
-            should_not_notify = old_status == inferior_status or last_stop_was_tracking or active_trace
+            should_not_notify = old_status == inferior_status or last_stop_was_tracking or driving_inferior
 
             if not should_not_notify:
                 with status_changed_condition:
@@ -816,6 +818,7 @@ def inject_so(library_path: str) -> bool:
         if module is None:
             continue
         load_bias, path = module
+        path = utils.resolve_mapped_path(currentpid, path)  # resolve sandboxed (Flatpak/pressure-vessel) paths
         symbols = utils.get_defined_dynamic_symbols(path, _sym_names)
         for sym in _sym_names:
             if sym not in symbols:
@@ -830,6 +833,113 @@ def inject_so(library_path: str) -> bool:
             if hex_m and int(hex_m.group(1), 16) != 0:
                 return True
     return False
+
+
+def inject_dll(dll_path: str) -> bool:
+    """Injects a Windows DLL into the current WINE/Proton inferior via "kernel32!LoadLibraryW".
+
+    GDB can't resolve PE exports by symbol so LoadLibraryW is found through kernel32/ntdll's PE export tables in memory.
+    The call has to run from a clean PE context, not a thread parked mid-syscall,
+    so we'll try to run into a hot ntdll wrapper first.
+
+    Args:
+        dll_path (str): Path to the Windows .dll on the Linux filesystem.
+
+    Returns:
+        bool: True if LoadLibraryW returned a module handle, False otherwise.
+    """
+    if currentpid == -1 or inferior_arch != typedefs.INFERIOR_ARCH.ARCH_64:
+        return False
+    k32 = utils.get_module_load_bias(currentpid, r"^kernel32\.dll$")
+    nt = utils.get_module_load_bias(currentpid, r"^ntdll\.dll$")
+    if not (k32 and nt):
+        return False
+
+    # Resolve malloc ourselves as GDB can't resolve symbols on a freshly-attached WINE process.
+    malloc = 0
+    for regex in (r"^libc\.so", r"^libc-[\d.]+\.so", r"libc\.musl", r"ld-musl"):
+        libc = utils.get_module_load_bias(currentpid, regex)
+        if libc:
+            elf_path = utils.resolve_mapped_path(currentpid, libc[1])  # resolve sandboxed paths
+            if (off := utils.get_defined_dynamic_symbols(elf_path, ["malloc"]).get("malloc", 0)):
+                malloc = libc[0] + off
+                break
+    if not malloc:
+        return False
+
+    global driving_inferior
+    driving_inferior = True
+    was_running = inferior_status == typedefs.INFERIOR_STATUS.RUNNING
+    try:
+        if was_running:
+            interrupt_inferior()
+
+        # Walk the export tables and find "LoadLibraryW".
+        with memory_handle() as mem:
+            def u(addr, n):
+                mem.seek(addr)
+                return int.from_bytes(mem.read(n), "little")
+
+            def export(base, name):
+                if u(base, 2) != 0x5A4D:  # "MZ" DOS magic
+                    return 0
+                opt = base + u(base + 0x3C, 4) + 0x18  # optional header
+                dd = opt + (0x70 if u(opt, 2) == 0x20B else 0x60)  # export data directory
+                ed_rva, ed_size = u(dd, 4), u(dd + 4, 4)
+                if ed_rva == 0:
+                    return 0
+                ed = base + ed_rva  # IMAGE_EXPORT_DIRECTORY
+                funcs, names, ords = (base + u(ed + off, 4) for off in (0x1C, 0x20, 0x24))
+                want = name.encode() + b"\x00"
+                for i in range(u(ed + 0x18, 4)):  # NumberOfNames
+                    mem.seek(base + u(names + i * 4, 4))
+                    if mem.read(len(want)) == want:
+                        frva = u(funcs + u(ords + i * 2, 2) * 4, 4)
+                        return 0 if ed_rva <= frva < ed_rva + ed_size else base + frva
+                return 0
+
+            llw = export(k32[0], "LoadLibraryW")
+            if not llw:  # sometimes kernel32 forwards "LoadLibraryW" so export can return 0, let's resolve the real one.
+                kb = utils.get_module_load_bias(currentpid, r"^kernelbase\.dll$")
+                llw = export(kb[0], "LoadLibraryW") if kb else 0
+            brk = export(nt[0], "NtWaitForSingleObject") or export(nt[0], "NtDelayExecution")
+        if not llw or not brk:
+            if was_running:
+                continue_inferior()
+            return False
+
+        # Find a clean PE context to run our load functions from.
+        bp = regexes.breakpoint_number.search(send_command(f"tbreak *{hex(brk)}"))
+        continue_inferior()
+        wait_for_stop(10)
+        timed_out = inferior_status == typedefs.INFERIOR_STATUS.RUNNING
+        if timed_out:
+            interrupt_inferior()
+        pc = examine_expression("$rip").address
+        reached = bool(pc) and int(pc, 16) == brk
+        if not reached and bp:
+            send_command(f"delete {bp.group(1)}")
+
+        # Actual injection if everything is fine until now.
+        hmod = 0
+        if reached:
+            def call(expr):
+                m = regexes.convenience_variable.search(send_command(f"call {expr}"))
+                h = regexes.hex_number_grouped.search(m.group(2)) if m else None
+                return int(h.group(1), 16) if h else 0
+
+            wide = ("Z:" + dll_path.replace("/", "\\")).encode("utf-16le") + b"\x00\x00"
+            buf = call(f"((void*(*)(unsigned long)){hex(malloc)})({len(wide)})")
+            if buf:
+                write_memory(buf, typedefs.VALUE_INDEX.AOB, list(wide))
+                hmod = call(f"((void*(*)(void*,void*,void*,void*)){hex(llw)})(0,0,0,{hex(buf)})")
+
+        # Restore previous state and return result.
+        if was_running and (reached or timed_out):
+            continue_inferior()
+        return bool(hmod)
+    finally:
+        driving_inferior = False
 
 
 def read_pointer_chain(pointer_request: typedefs.PointerChainRequest) -> typedefs.PointerChainResult | None:
@@ -2247,8 +2357,8 @@ class Tracer:
             delete_breakpoint(self.bp_num)
             self.trace_status = typedefs.TRACE_STATUS.FINISHED
             return
-        global active_trace
-        active_trace = True
+        global driving_inferior
+        driving_inferior = True
         delete_breakpoint(self.bp_num)
         self.trace_status = typedefs.TRACE_STATUS.TRACING
 
@@ -2310,7 +2420,7 @@ class Tracer:
             traceback.print_exc()
         self.trace_data = (tree, root_index)
         self.trace_status = typedefs.TRACE_STATUS.FINISHED
-        active_trace = False
+        driving_inferior = False
         if not self.stop_after_trace:
             continue_inferior()
 

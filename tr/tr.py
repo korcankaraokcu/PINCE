@@ -108,6 +108,7 @@ class TranslationConstants(QObject):
     FILE_TYPES_PCT = QT_TR_NOOP("PINCE Cheat Table (*.pct)")
     FILE_TYPES_SCRIPT = QT_TR_NOOP("Python Scripts (*.py)")
     SHARED_OBJECT_TYPE = QT_TR_NOOP("Shared object library (*.so)")
+    DLL_TYPE = QT_TR_NOOP("Dynamic-link library (*.dll)")
     FILE_TYPES_TRACE = QT_TR_NOOP("Trace File (*.trace)")
     FILE_TYPES_POINTER_MAP = QT_TR_NOOP("Pointer Scan Map (*.lmptr)")
     CLEAR_TABLE = QT_TR_NOOP("Clear address table?")
@@ -247,9 +248,13 @@ class TranslationConstants(QObject):
     )
     ALREADY_BOOKMARKED = QT_TR_NOOP("This address has already been bookmarked")
     ENTER_BOOKMARK_COMMENT = QT_TR_NOOP("Enter the comment for bookmarked address")
-    SELECT_SO_FILE = QT_TR_NOOP("Select the .so file")
-    FILE_INJECTED = QT_TR_NOOP("The file has been injected")
-    FILE_INJECT_FAILED = QT_TR_NOOP("Failed to inject the .so file")
+    SELECT_SO_FILE = QT_TR_NOOP("Select the shared object (.so) file")
+    SO_INJECTED = QT_TR_NOOP("The shared object (.so) file has been injected")
+    SO_INJECT_FAILED = QT_TR_NOOP("Failed to inject the shared object (.so) file")
+    SELECT_DLL_FILE = QT_TR_NOOP("Select the DLL file")
+    DLL_INJECTED = QT_TR_NOOP("The DLL has been injected")
+    DLL_INJECT_FAILED = QT_TR_NOOP("Failed to inject the DLL")
+    DLL_INJECT_WINE_ONLY = QT_TR_NOOP("DLL injection is only supported for WINE/Proton processes")
     ENTER_CALL_EXPRESSION = QT_TR_NOOP(
         "Enter the expression for the function that'll be called from the inferior\n"
         "You can view functions list from View->Functions\n\n"

@@ -1608,6 +1608,7 @@
      <string>&amp;Tools</string>
     </property>
     <addaction name="actionInject_so_file"/>
+    <addaction name="actionInject_DLL_file"/>
     <addaction name="actionCall_Function"/>
     <addaction name="actionSearch_Instructions"/>
     <addaction name="actionDissect_Code"/>
@@ -1646,6 +1647,11 @@
   <action name="actionInject_so_file">
    <property name="text">
     <string>&amp;Inject .so file</string>
+   </property>
+  </action>
+  <action name="actionInject_DLL_file">
+   <property name="text">
+    <string>Inject D&amp;LL file</string>
    </property>
   </action>
   <action name="actionRun">
