@@ -835,7 +835,7 @@ def inject_so(library_path: str) -> bool:
     return False
 
 
-def inject_dll(dll_path: str) -> bool:
+def inject_dll(dll_path: str) -> tuple[bool, int]:
     """Injects a Windows DLL into the current WINE/Proton inferior via "kernel32!LoadLibraryW".
 
     GDB can't resolve PE exports by symbol so LoadLibraryW is found through kernel32/ntdll's PE export tables in memory.
@@ -846,14 +846,15 @@ def inject_dll(dll_path: str) -> bool:
         dll_path (str): Path to the Windows .dll on the Linux filesystem.
 
     Returns:
-        bool: True if LoadLibraryW returned a module handle, False otherwise.
+        tuple[bool, int]: (success, hmod) where success is True if LoadLibraryW returned a module handle
+        and hmod is that handle (0 on failure).
     """
     if currentpid == -1:
-        return False
+        return False, 0
     k32 = utils.get_module_load_bias(currentpid, r"^kernel32\.dll$")
     nt = utils.get_module_load_bias(currentpid, r"^ntdll\.dll$")
     if not (k32 and nt):
-        return False
+        return False, 0
 
     # Resolve malloc ourselves as GDB can't resolve symbols on a freshly-attached WINE process.
     malloc = 0
@@ -865,7 +866,7 @@ def inject_dll(dll_path: str) -> bool:
                 malloc = libc[0] + off
                 break
     if not malloc:
-        return False
+        return False, 0
 
     global driving_inferior
     driving_inferior = True
@@ -906,7 +907,7 @@ def inject_dll(dll_path: str) -> bool:
         if not llw or not brk:
             if was_running:
                 continue_inferior()
-            return False
+            return False, 0
 
         # Find a clean PE context to run our load functions from.
         bp = regexes.breakpoint_number.search(send_command(f"tbreak *{hex(brk)}"))
@@ -928,6 +929,8 @@ def inject_dll(dll_path: str) -> bool:
                 h = regexes.hex_number_grouped.search(m.group(2)) if m else None
                 return int(h.group(1), 16) if h else 0
 
+            # TODO BRK: "Z:" maps to "/" in the default WINE prefix so this reaches any absolute UNIX path.
+            # For prefixes that remapped or removed "Z:", we should later resolve via kernel32!wine_get_dos_file_name.
             wide = ("Z:" + dll_path.replace("/", "\\")).encode("utf-16le") + b"\x00\x00"
             buf = call(f"((void*(*)(unsigned long)){hex(malloc)})({len(wide)})")
             if buf:
@@ -940,7 +943,7 @@ def inject_dll(dll_path: str) -> bool:
         # Restore previous state and return result.
         if was_running and (reached or timed_out):
             continue_inferior()
-        return bool(hmod)
+        return bool(hmod), hmod
     finally:
         driving_inferior = False
 

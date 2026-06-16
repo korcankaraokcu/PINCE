@@ -252,7 +252,7 @@ class TranslationConstants(QObject):
     SO_INJECTED = QT_TR_NOOP("The shared object (.so) file has been injected")
     SO_INJECT_FAILED = QT_TR_NOOP("Failed to inject the shared object (.so) file")
     SELECT_DLL_FILE = QT_TR_NOOP("Select the DLL file")
-    DLL_INJECTED = QT_TR_NOOP("The DLL has been injected")
+    DLL_INJECTED = QT_TR_NOOP("The DLL has been injected at {}")
     DLL_INJECT_FAILED = QT_TR_NOOP("Failed to inject the DLL")
     DLL_INJECT_WINE_ONLY = QT_TR_NOOP("DLL injection is only supported for WINE/Proton processes")
     ENTER_CALL_EXPRESSION = QT_TR_NOOP(

@@ -4468,8 +4468,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self, tr.SELECT_DLL_FILE, os.path.expanduser("~"), tr.DLL_TYPE
         )
         if file_path:
-            if debugcore.inject_dll(file_path):
-                QMessageBox.information(self, tr.SUCCESS, tr.DLL_INJECTED)
+            success, hmod = debugcore.inject_dll(file_path)
+            if success:
+                QMessageBox.information(self, tr.SUCCESS, tr.DLL_INJECTED.format(hex(hmod)))
             else:
                 QMessageBox.information(self, tr.ERROR, tr.DLL_INJECT_FAILED)
 

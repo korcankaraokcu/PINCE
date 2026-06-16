@@ -2608,7 +2608,7 @@ PINCE will track down addresses [rax],[rbx*rcx+4] and [rbp]</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>The DLL has been injected</source>
+        <source>The DLL has been injected at {}</source>
         <translation type="unfinished" />
     </message>
     <message>

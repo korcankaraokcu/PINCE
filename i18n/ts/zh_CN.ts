@@ -2629,7 +2629,7 @@ PINCE 将追踪地址 [rax]，[rbx*rcx+4] 和 [rbp]</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>The DLL has been injected</source>
+        <source>The DLL has been injected at {}</source>
         <translation type="unfinished" />
     </message>
     <message>
