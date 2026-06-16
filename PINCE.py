@@ -39,6 +39,8 @@ from PyQt6.QtCore import (
     QItemSelection,
     QItemSelectionModel,
     QKeyCombination,
+    QLibraryInfo,
+    QLocale,
     QModelIndex,
     QObject,
     QSettings,
@@ -158,6 +160,7 @@ if __name__ == "__main__":
     )
     settings_instance = QSettings()
     translator = QTranslator()
+    qt_translator = QTranslator()
     try:
         locale = settings_instance.value("General/locale", type=str)
     except SystemError:
@@ -167,6 +170,11 @@ if __name__ == "__main__":
         locale = None
     if not locale:
         locale = get_locale()
+    # Load Qt's own translations for standard widget strings (file dialog buttons, message box buttons etc...).
+    # Installed before PINCE's catalog so PINCE's strings take precedence on any overlap.
+    translations_path = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
+    if qt_translator.load(QLocale(locale), "qtbase", "_", translations_path):
+        app.installTranslator(qt_translator)
     locale_file = utils.get_script_directory() + f"/i18n/qm/{locale}.qm"
     translator.load(locale_file)
     app.installTranslator(translator)
