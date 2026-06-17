@@ -144,6 +144,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation>多个条目用分号（;）分隔</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <location filename="../../GUI/EditTypeDialog.ui" line="0" />
         <location filename="../../GUI/EditTypeDialog.ui" line="0" />
@@ -151,11 +152,13 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation>类型</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
         <location filename="../../GUI/EditTypeDialog.ui" line="0" />
         <source>Endianness</source>
         <translation>字节序</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
         <location filename="../../GUI/EditTypeDialog.ui" line="0" />
         <source>Length</source>
         <translation>长度</translation>
@@ -332,6 +335,9 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/MonoFindInstances/Form/MonoFindInstancesDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
         <source>Name</source>
@@ -624,6 +630,71 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Reset Settings</source>
         <translation>重置设置</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
+        <source>Member</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
+        <source>Offset (hex)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
+        <source>Kind</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
+        <source>Value type</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
+        <source>Repr</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
+        <source>Structure</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
+        <source>Edit structure</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
+        <source>Offset</source>
+        <translation type="unfinished">偏移量</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
+        <source>Add</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
+        <source>Edit</source>
+        <translation type="unfinished">编辑</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
+        <source>Remove</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
+        <source>Up</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
+        <source>Down</source>
+        <translation type="unfinished" />
     </message>
 </context><context>
     <name>Form</name>
@@ -3289,5 +3360,100 @@ Do you want to keep the current session with the new process?</source>
         <location filename="../../tr/tr.py" line="0" />
         <source>Disassemble</source>
         <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Structures</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>New Structure</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Edit Structure</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Structure name</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Add Member</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Edit Member</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Remove Member</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Move Up</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Move Down</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Member name</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Member offset</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Value</source>
+        <translation type="unfinished">值</translation>
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Pointer</source>
+        <translation type="unfinished">指针</translation>
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Inline</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>A structure with this name already exists</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Structure name cannot be empty</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Unsigned</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Signed</source>
+        <translation type="unfinished">有符号</translation>
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Hex</source>
+        <translation type="unfinished">十六进制</translation>
     </message>
 </context></TS>

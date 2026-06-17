@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>340</width><height>300</height></rect>
+  </property>
+  <property name="windowTitle"><string>Member</string></property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0"><widget class="QLabel" name="label_Name"><property name="text"><string>Name</string></property></widget></item>
+   <item row="0" column="1"><widget class="QLineEdit" name="lineEdit_Name"/></item>
+   <item row="1" column="0"><widget class="QLabel" name="label_Offset"><property name="text"><string>Offset (hex)</string></property></widget></item>
+   <item row="1" column="1"><widget class="QLineEdit" name="lineEdit_Offset"/></item>
+   <item row="2" column="0"><widget class="QLabel" name="label_Kind"><property name="text"><string>Kind</string></property></widget></item>
+   <item row="2" column="1"><widget class="QComboBox" name="comboBox_Kind"/></item>
+   <item row="3" column="0"><widget class="QLabel" name="label_Type"><property name="text"><string>Value type</string></property></widget></item>
+   <item row="3" column="1"><widget class="QComboBox" name="comboBox_Type"/></item>
+   <item row="4" column="0"><widget class="QLabel" name="label_Length"><property name="text"><string>Length</string></property></widget></item>
+   <item row="4" column="1"><widget class="QLineEdit" name="lineEdit_Length"/></item>
+   <item row="5" column="0"><widget class="QLabel" name="label_Repr"><property name="text"><string>Repr</string></property></widget></item>
+   <item row="5" column="1"><widget class="QComboBox" name="comboBox_Repr"/></item>
+   <item row="6" column="0"><widget class="QLabel" name="label_Endian"><property name="text"><string>Endianness</string></property></widget></item>
+   <item row="6" column="1"><widget class="QComboBox" name="comboBox_Endian"/></item>
+   <item row="7" column="0"><widget class="QLabel" name="label_StructRef"><property name="text"><string>Structure</string></property></widget></item>
+   <item row="7" column="1"><widget class="QComboBox" name="comboBox_StructRef"/></item>
+   <item row="8" column="0" colspan="2">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation"><enum>Qt::Horizontal</enum></property>
+     <property name="standardButtons"><set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set></property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection><sender>buttonBox</sender><signal>accepted()</signal><receiver>Dialog</receiver><slot>accept()</slot></connection>
+  <connection><sender>buttonBox</sender><signal>rejected()</signal><receiver>Dialog</receiver><slot>reject()</slot></connection>
+ </connections>
+</ui>
