@@ -879,6 +879,8 @@ class MainForm(QMainWindow, MainWindow):
                 if toggle_children:
                     for index in range(row.childCount()):
                         child = row.child(index)
+                        check_state = child.checkState(FROZEN_COL)
+                        new_state = Qt.CheckState.Checked if check_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
                         self.handle_freeze_change(child, new_state)
 
     def cut_records(self) -> None:
