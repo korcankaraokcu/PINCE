@@ -620,7 +620,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def treeWidget_AddressTable_context_menu_event(self, event: QContextMenuEvent) -> None:
         current_row = guiutils.get_current_item(self.treeWidget_AddressTable)
-        current_address = current_row.text(ADDR_COL) if current_row else None
+        current_address = self._resolved_address(current_row) if current_row else None
         header = self.treeWidget_AddressTable.headerItem()
         menu = QMenu()
         delete_record = menu.addAction(f"{tr.DELETE}[Del]")
@@ -772,9 +772,7 @@ class MainForm(QMainWindow, MainWindow):
     def _view_struct_at_row(self, row: QTreeWidgetItem, structure_name: str) -> None:
         if row is None:
             return
-        resolved_address = row.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1)
-        if not resolved_address:
-            resolved_address = row.text(ADDR_COL).removeprefix("P->")
+        resolved_address = self._resolved_address(row)
         view = StructureViewDialog(self, structure_name, resolved_address)
         view.add_to_table_requested.connect(self._add_structure_records_to_table)
         view.show()
@@ -787,7 +785,7 @@ class MainForm(QMainWindow, MainWindow):
         selected_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not selected_row:
             return
-        address = selected_row.text(ADDR_COL).removeprefix("P->")
+        address = self._resolved_address(selected_row)
         pointer_window = PointerScanWindow(self, address)
         pointer_window.show()
         dialog = PointerScanSearchDialog(pointer_window, address)
@@ -798,9 +796,7 @@ class MainForm(QMainWindow, MainWindow):
         selected_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not selected_row:
             return
-        address = selected_row.text(ADDR_COL).removeprefix(
-            "P->"
-        )  # @todo Maybe rework address grabbing logic in the future
+        address = self._resolved_address(selected_row)
         address_data = selected_row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
         if isinstance(address_data, typedefs.PointerChainRequest):
             selection_dialog = TrackSelectorDialogForm(self)
@@ -880,7 +876,9 @@ class MainForm(QMainWindow, MainWindow):
                     for index in range(row.childCount()):
                         child = row.child(index)
                         check_state = child.checkState(FROZEN_COL)
-                        new_state = Qt.CheckState.Checked if check_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
+                        new_state = (
+                            Qt.CheckState.Checked if check_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
+                        )
                         self.handle_freeze_change(child, new_state)
 
     def cut_records(self) -> None:
@@ -1078,7 +1076,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def treeWidget_AddressTable_key_press_event(self, event: QKeyEvent) -> None:
         current_row = guiutils.get_current_item(self.treeWidget_AddressTable)
-        current_address = current_row.text(ADDR_COL) if current_row else None
+        current_address = self._resolved_address(current_row) if current_row else None
         actions = typedefs.KeyboardModifiersTupleDict(
             [
                 (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete), self.delete_records),
@@ -2063,7 +2061,7 @@ class MainForm(QMainWindow, MainWindow):
                 continue
             if row.checkState(FROZEN_COL) == Qt.CheckState.Checked:
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-                address = row.text(ADDR_COL).removeprefix("P->")
+                address = self._resolved_address(row)
                 frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 value = frozen.value
                 if value is None:  # nothing valid was captured (e.g. frozen while unreadable) so we skip.
@@ -2125,6 +2123,12 @@ class MainForm(QMainWindow, MainWindow):
         vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
         return vt is not None and vt.value_index == typedefs.VALUE_INDEX.STRUCT
 
+    def _resolved_address(self, row: QTreeWidgetItem) -> str:
+        # The displayed address can be relative (struct children show "+0x4") or "P->…" for pointers,
+        # so the resolved absolute kept in UserRole+1 is the source of truth for reads/writes.
+        # If nothing useful is in UserRole+1, fall back to text.
+        return row.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1) or row.text(ADDR_COL).removeprefix("P->")
+
     def treeWidget_AddressTable_edit_value(self) -> None:
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not row or self.get_script_entry(row) is not None or self._is_struct_row(row):
@@ -2140,7 +2144,7 @@ class MainForm(QMainWindow, MainWindow):
             for row in self.treeWidget_AddressTable.selectedItems():
                 if self.get_script_entry(row) is not None or self._is_struct_row(row):
                     continue
-                address = row.text(ADDR_COL).removeprefix("P->")
+                address = self._resolved_address(row)
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 parsed_value = utils.parse_string(new_value, vt.value_index)
                 if typedefs.VALUE_INDEX.has_length(vt.value_index) and parsed_value is not None:
