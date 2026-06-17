@@ -2177,7 +2177,10 @@ class MainForm(QMainWindow, MainWindow):
             self._edit_struct_address(row)
             return
         desc, address_expr, vt = self.read_address_table_entries(row)
-        manual_address_dialog = ManualAddressDialogForm(self, desc, address_expr, vt)
+        parent = row.parent()
+        # Pass the parent's resolved base so the dialog can preview relative ("+0x4") children
+        relative_base = parent.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1) if parent else ""
+        manual_address_dialog = ManualAddressDialogForm(self, desc, address_expr, vt, relative_base)
         manual_address_dialog.setWindowTitle(tr.EDIT_ADDRESS)
         if manual_address_dialog.exec():
             desc, address_expr, vt = manual_address_dialog.get_values()
@@ -2362,9 +2365,11 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         description: str = tr.NO_DESCRIPTION,
         address: str | typedefs.PointerChainRequest = "0x",
         value_type: typedefs.ValueType | None = None,
+        relative_base: str = "",
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
+        self.relative_base = relative_base
         self.lineEdit_PtrStartAddress.setFixedWidth(180)
         self.lineEdit_Address.setFixedWidth(180)
         vt = typedefs.ValueType() if not value_type else value_type
@@ -2480,9 +2485,17 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             return "<font color=red>??</font>"
         return utils.upper_hex(hex(address))
 
+    def _apply_relative_base(self, expression: str) -> str:
+        # Prepend the parent base so a relative offset resolves while the stored expression stays relative.
+        if self.relative_base and expression.startswith(("+", "-")):
+            return self.relative_base + expression
+        return expression
+
     def update_value(self) -> None:
         if self.checkBox_IsPointer.isChecked():
-            hex_converted_expr = debugcore.convert_to_hex(self.lineEdit_PtrStartAddress.text())
+            hex_converted_expr = debugcore.convert_to_hex(
+                self._apply_relative_base(self.lineEdit_PtrStartAddress.text())
+            )
             pointer_chain_req = typedefs.PointerChainRequest(hex_converted_expr, self.get_offsets_int_list())
             pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
             address = None
@@ -2494,7 +2507,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_Address.setText(address_text)
             self.update_deref_labels(pointer_chain_result)
         else:
-            hex_converted_expr = debugcore.convert_to_hex(self.lineEdit_Address.text())
+            hex_converted_expr = debugcore.convert_to_hex(self._apply_relative_base(self.lineEdit_Address.text()))
             address = debugcore.examine_expression(hex_converted_expr).address
         if self.checkBox_Hex.isChecked():
             value_repr = typedefs.VALUE_REPR.HEX
