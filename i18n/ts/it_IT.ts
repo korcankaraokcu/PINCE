@@ -708,6 +708,11 @@ Patterns at former positions have higher priority if regex is off</source>
         <source>Base address</source>
         <translation type="unfinished" />
     </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
+        <source>Add to address table</source>
+        <translation type="unfinished" />
+    </message>
 </context><context>
     <name>Form</name>
     <message>
@@ -3403,7 +3408,7 @@ Do you want to keep the current session with the new process?</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Apply structure</source>
+        <source>View as structure</source>
         <translation type="unfinished" />
     </message>
     <message>

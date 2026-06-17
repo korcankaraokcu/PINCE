@@ -3,40 +3,133 @@
  <class>Dialog</class>
  <widget class="QDialog" name="Dialog">
   <property name="geometry">
-   <rect><x>0</x><y>0</y><width>460</width><height>460</height></rect>
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>460</width>
+    <height>460</height>
+   </rect>
   </property>
-  <property name="windowTitle"><string>Edit structure</string></property>
+  <property name="windowTitle">
+   <string>Edit structure</string>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0"><widget class="QLabel" name="label_Name"><property name="text"><string>Name</string></property></widget></item>
-   <item row="0" column="1"><widget class="QLineEdit" name="lineEdit_Name"/></item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label_Name">
+     <property name="text">
+      <string>Name</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLineEdit" name="lineEdit_Name"/>
+   </item>
    <item row="1" column="0" colspan="2">
     <widget class="QTreeWidget" name="treeWidget_Members">
-     <property name="rootIsDecorated"><bool>false</bool></property>
-     <column><property name="text"><string>Offset</string></property></column>
-     <column><property name="text"><string>Name</string></property></column>
-     <column><property name="text"><string>Type</string></property></column>
+     <property name="rootIsDecorated">
+      <bool>false</bool>
+     </property>
+     <column>
+      <property name="text">
+       <string>Offset</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Name</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Type</string>
+      </property>
+     </column>
     </widget>
    </item>
    <item row="2" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout">
-     <item><widget class="QPushButton" name="pushButton_Add"><property name="text"><string>Add</string></property></widget></item>
-     <item><widget class="QPushButton" name="pushButton_Edit"><property name="text"><string>Edit</string></property></widget></item>
-     <item><widget class="QPushButton" name="pushButton_Remove"><property name="text"><string>Remove</string></property></widget></item>
-     <item><widget class="QPushButton" name="pushButton_Up"><property name="text"><string>Up</string></property></widget></item>
-     <item><widget class="QPushButton" name="pushButton_Down"><property name="text"><string>Down</string></property></widget></item>
+     <item>
+      <widget class="QPushButton" name="pushButton_Add">
+       <property name="text">
+        <string>Add</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_Edit">
+       <property name="text">
+        <string>Edit</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_Remove">
+       <property name="text">
+        <string>Remove</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_Up">
+       <property name="text">
+        <string>Up</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_Down">
+       <property name="text">
+        <string>Down</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item row="3" column="0" colspan="2">
     <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation"><enum>Qt::Horizontal</enum></property>
-     <property name="standardButtons"><set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set></property>
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
+     </property>
     </widget>
    </item>
   </layout>
  </widget>
  <resources/>
  <connections>
-  <connection><sender>buttonBox</sender><signal>accepted()</signal><receiver>Dialog</receiver><slot>accept()</slot></connection>
-  <connection><sender>buttonBox</sender><signal>rejected()</signal><receiver>Dialog</receiver><slot>reject()</slot></connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>Dialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>Dialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
 </ui>

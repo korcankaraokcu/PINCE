@@ -414,7 +414,7 @@ class TranslationConstants(QObject):
     VIEW_AT_ADDRESS = QT_TR_NOOP("View at address…")
     DELETE_STRUCTURE = QT_TR_NOOP("Delete structure")
     DELETE_STRUCTURE_PROMPT = QT_TR_NOOP("Delete structure '{}'?")
-    APPLY_STRUCTURE = QT_TR_NOOP("Apply structure")
+    VIEW_AS_STRUCT = QT_TR_NOOP("View as structure")
     ENTER_BASE_ADDRESS = QT_TR_NOOP("Enter base address")
     STRUCTURES = QT_TR_NOOP("Structures")
     NEW_STRUCTURE = QT_TR_NOOP("New Structure")

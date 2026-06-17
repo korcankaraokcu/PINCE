@@ -71,6 +71,7 @@ class StructuresWindow(QWidget, Ui_Form):
         if not ok or not address.strip():
             return
         view = StructureViewDialog(self, name, address)
+        view.add_to_table_requested.connect(self.add_to_table_requested)
         self._view_windows.append(view)
         view.finished.connect(lambda _result, v=view: self._forget_view(v))
         view.show()

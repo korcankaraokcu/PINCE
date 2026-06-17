@@ -1,4 +1,4 @@
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QDialog, QMessageBox, QTreeWidgetItem, QWidget
 
@@ -6,6 +6,7 @@ from GUI.Session.session import StructureManager
 from GUI.States import states
 from GUI.Utils import guiutils, utilwidgets
 from GUI.Widgets.Structures.Form.StructureViewDialog import Ui_Dialog
+from GUI.Widgets.Structures.materialize import structure_to_group_record
 from libpince import debugcore, typedefs, utils
 from tr.tr import TranslationConstants as tr
 
@@ -17,6 +18,8 @@ _MAX_DEPTH = 16
 
 
 class StructureViewDialog(QDialog, Ui_Dialog):
+    add_to_table_requested = pyqtSignal(list)
+
     def __init__(self, parent: QWidget, structure_name: str, base_address: str = "") -> None:
         super().__init__(parent)
         self.setupUi(self)
@@ -25,7 +28,7 @@ class StructureViewDialog(QDialog, Ui_Dialog):
         self.base = utils.safe_str_to_int(base_address, 16) if base_address else 0
 
         self.lineEdit_Base.setText(hex(self.base) if self.base else "")
-        self.lineEdit_Base.returnPressed.connect(self._on_base_changed)
+        self.pushButton_AddToTable.clicked.connect(self._add_to_table)
 
         self.treeWidget_View.itemExpanded.connect(self._on_item_expanded)
         self.treeWidget_View.itemDoubleClicked.connect(self._on_item_double_clicked)
@@ -38,14 +41,11 @@ class StructureViewDialog(QDialog, Ui_Dialog):
         self._start_refresh()
         guiutils.center_to_parent(self)
 
-    def set_base(self, address: str | int) -> None:
-        self.base = utils.safe_str_to_int(address, 16) if isinstance(address, str) else address
-        self.lineEdit_Base.setText(hex(self.base) if self.base else "")
-        self._build_tree()
-        self._start_refresh()
-
-    def _on_base_changed(self) -> None:
-        self.set_base(self.lineEdit_Base.text())
+    def _add_to_table(self) -> None:
+        struct = StructureManager.get(self.structure_name)
+        if struct is None:
+            return
+        self.add_to_table_requested.emit([structure_to_group_record(struct, self.base)])
 
     def _build_tree(self) -> None:
         self.treeWidget_View.clear()

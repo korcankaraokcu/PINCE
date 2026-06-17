@@ -630,11 +630,11 @@ class MainForm(QMainWindow, MainWindow):
         edit_type = edit_menu.addAction(f"{header.text(TYPE_COL)}[Alt+Enter]")
         edit_value = edit_menu.addAction(f"{header.text(VALUE_COL)}[Enter]")
         edit_script = menu.addAction(tr.EDIT_SCRIPT)
-        apply_structure_menu = menu.addMenu(tr.APPLY_STRUCTURE)
+        view_as_struct_menu = menu.addMenu(tr.VIEW_AS_STRUCT)
         structure_names = StructureManager.list_names()
         structure_actions = {}
         for name in structure_names:
-            structure_actions[apply_structure_menu.addAction(name)] = name
+            structure_actions[view_as_struct_menu.addAction(name)] = name
         show_hex = menu.addAction(tr.SHOW_HEX)
         show_dec = menu.addAction(tr.SHOW_DEC)
         show_unsigned = menu.addAction(tr.SHOW_UNSIGNED)
@@ -663,7 +663,7 @@ class MainForm(QMainWindow, MainWindow):
             deletion_list = [
                 edit_menu.menuAction(),
                 edit_script,
-                apply_structure_menu.menuAction(),
+                view_as_struct_menu.menuAction(),
                 show_hex,
                 show_dec,
                 show_unsigned,
@@ -689,7 +689,7 @@ class MainForm(QMainWindow, MainWindow):
                 edit_address,
                 edit_type,
                 edit_value,
-                apply_structure_menu.menuAction(),
+                view_as_struct_menu.menuAction(),
                 show_hex,
                 show_dec,
                 show_unsigned,
@@ -708,10 +708,10 @@ class MainForm(QMainWindow, MainWindow):
         else:
             guiutils.delete_menu_entries(menu, [edit_script])
             if not structure_names:
-                guiutils.delete_menu_entries(menu, [apply_structure_menu.menuAction()])
+                guiutils.delete_menu_entries(menu, [view_as_struct_menu.menuAction()])
             value_type = current_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
             if self._is_struct_row(current_row):  # struct rows have no editable value or type, only an address.
-                guiutils.delete_menu_entries(menu, [edit_value, edit_type, apply_structure_menu.menuAction()])
+                guiutils.delete_menu_entries(menu, [edit_value, edit_type, view_as_struct_menu.menuAction()])
             if typedefs.VALUE_INDEX.is_integer(value_type.value_index):
                 if value_type.value_repr is typedefs.VALUE_REPR.HEX:
                     guiutils.delete_menu_entries(menu, [show_unsigned, show_signed, show_hex])
@@ -763,19 +763,20 @@ class MainForm(QMainWindow, MainWindow):
             create_group: self.create_group,
         }
         for struct_action, struct_name in structure_actions.items():
-            actions[struct_action] = lambda n=struct_name: self._apply_structure_to_row(current_row, n)
+            actions[struct_action] = lambda n=struct_name: self._view_struct_at_row(current_row, n)
         try:
             actions[action]()
         except KeyError:
             pass
 
-    def _apply_structure_to_row(self, row: QTreeWidgetItem, structure_name: str) -> None:
+    def _view_struct_at_row(self, row: QTreeWidgetItem, structure_name: str) -> None:
         if row is None:
             return
         resolved_address = row.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1)
         if not resolved_address:
             resolved_address = row.text(ADDR_COL).removeprefix("P->")
         view = StructureViewDialog(self, structure_name, resolved_address)
+        view.add_to_table_requested.connect(self._add_structure_records_to_table)
         view.show()
 
     def exec_pointer_scanner(self) -> None:

@@ -3,23 +3,66 @@
  <class>Form</class>
  <widget class="QWidget" name="Form">
   <property name="geometry">
-   <rect><x>0</x><y>0</y><width>400</width><height>450</height></rect>
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>611</width>
+    <height>450</height>
+   </rect>
   </property>
-  <property name="windowTitle"><string>Structures</string></property>
+  <property name="windowTitle">
+   <string>Structures</string>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <widget class="QTreeWidget" name="treeWidget_Structures">
-     <property name="rootIsDecorated"><bool>false</bool></property>
-     <column><property name="text"><string>Name</string></property></column>
+     <property name="rootIsDecorated">
+      <bool>false</bool>
+     </property>
+     <column>
+      <property name="text">
+       <string>Name</string>
+      </property>
+     </column>
     </widget>
    </item>
    <item row="1" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
-     <item><widget class="QPushButton" name="pushButton_New"><property name="text"><string>New</string></property></widget></item>
-     <item><widget class="QPushButton" name="pushButton_Edit"><property name="text"><string>Edit</string></property></widget></item>
-     <item><widget class="QPushButton" name="pushButton_Delete"><property name="text"><string>Delete</string></property></widget></item>
-     <item><widget class="QPushButton" name="pushButton_ViewAtAddress"><property name="text"><string>View at address…</string></property></widget></item>
-     <item><widget class="QPushButton" name="pushButton_AddToTable"><property name="text"><string>Add to address table</string></property></widget></item>
+     <item>
+      <widget class="QPushButton" name="pushButton_New">
+       <property name="text">
+        <string>New</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_Edit">
+       <property name="text">
+        <string>Edit</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_Delete">
+       <property name="text">
+        <string>Delete</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_ViewAtAddress">
+       <property name="text">
+        <string>View at address…</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_AddToTable">
+       <property name="text">
+        <string>Add to address table</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>
