@@ -3555,4 +3555,9 @@ Do you want to keep the current session with the new process?</source>
         <source>Hex</source>
         <translation type="unfinished">十六进制</translation>
     </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Export as structure</source>
+        <translation type="unfinished" />
+    </message>
 </context></TS>

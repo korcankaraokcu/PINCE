@@ -144,6 +144,8 @@ from GUI.Widgets.Settings.Settings import SettingsDialog
 from GUI.Widgets.MonoDissect.MonoDissect import MonoDissectDialog
 from GUI.Widgets.Structures.StructuresWindow import StructuresWindow
 from GUI.Widgets.Structures.StructureViewDialog import StructureViewDialog
+from GUI.Widgets.Structures.StructureEditorDialog import StructureEditorDialog
+from GUI.Widgets.Structures import mono_export
 from libpince import debugcore, linux_speedhack, monocore, scancore, typedefs, utils, wine_speedhack
 from libpince.libmemscan.memscan import ScanLevel, DataType, MatchView, BytePattern
 from libpince.scancore import memscan
@@ -4644,12 +4646,29 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         mono_dialog.add_to_table_requested.connect(
             lambda description, address: self.parent().add_entry_to_addresstable(description, address)
         )
+        mono_dialog.export_structure_requested.connect(self._export_mono_structure)
         mono_dialog.show()
 
     def _mono_breakpoint(self, address: object) -> None:
         if not debugcore.add_breakpoint(hex(int(address))):
             QMessageBox.information(self, tr.ERROR, tr.BREAKPOINT_FAILED.format(hex(int(address))))
         self.refresh_disassemble_view()
+
+    def _export_mono_structure(self, class_data: object) -> None:
+        client = monocore.get_client()
+        if client is None:
+            return
+        struct = mono_export.structure_from_class(client, class_data)
+        name = struct.name
+        if not StructureManager.add(struct):
+            counter = 1
+            while not StructureManager.add(typedefs.Structure(f"{name}_{counter}", struct.members, struct.size)):
+                counter += 1
+            name = f"{name}_{counter}"
+        if not StructureEditorDialog(self, name).exec():
+            StructureManager.delete(name)
+        if self.parent().structures_window:
+            self.parent().structures_window.refresh()
 
     def actionLibpince_Engine_triggered(self) -> None:
         # The engine is owned by the main form since it integrates with the address table

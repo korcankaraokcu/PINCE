@@ -22,6 +22,7 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
     disassemble_requested = pyqtSignal(object)  # native address (int)
     breakpoint_requested = pyqtSignal(object)  # native address (int)
     add_to_table_requested = pyqtSignal(str, object)  # description, address-expr (str | PointerChainRequest)
+    export_structure_requested = pyqtSignal(object)  # class_data dict
 
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
@@ -298,8 +299,12 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
     def _class_context_menu(self, client: monocore.MonoClient, item: QTreeWidgetItem, global_pos) -> None:
         menu = QMenu(self)
         action_find = menu.addAction(tr.MONO_FIND_INSTANCES)
-        if menu.exec(global_pos) == action_find:
+        action_export = menu.addAction(tr.EXPORT_AS_STRUCTURE)
+        chosen = menu.exec(global_pos)
+        if chosen == action_find:
             self._find_instances(item.data(0, ROLE_DATA))
+        elif chosen == action_export:
+            self.export_structure_requested.emit(item.data(0, ROLE_DATA))
 
     def _field_context_menu(self, client: monocore.MonoClient, item: QTreeWidgetItem, global_pos) -> None:
         """Build the field/ref_field context menu. Shared with the Find Instances tree."""
