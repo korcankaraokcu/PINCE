@@ -1011,6 +1011,11 @@ Patterns at former positions have higher priority if regex is off</source>
         <source>View at address…</source>
         <translation type="unfinished" />
     </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
+        <source>Add to address table</source>
+        <translation type="unfinished" />
+    </message>
 </context><context>
     <name>MainWindow</name>
     <message>
@@ -2195,6 +2200,11 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
+        <source>Add to address table</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
         <source>Clear address table?</source>
         <translation type="unfinished" />
     </message>
@@ -2281,6 +2291,11 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Enter the new description</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Enter the new address</source>
         <translation type="unfinished" />
     </message>
     <message>

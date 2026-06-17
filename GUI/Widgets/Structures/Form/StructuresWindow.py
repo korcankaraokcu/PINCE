@@ -33,6 +33,9 @@ class Ui_Form(object):
         self.pushButton_ViewAtAddress = QtWidgets.QPushButton(parent=Form)
         self.pushButton_ViewAtAddress.setObjectName("pushButton_ViewAtAddress")
         self.horizontalLayout.addWidget(self.pushButton_ViewAtAddress)
+        self.pushButton_AddToTable = QtWidgets.QPushButton(parent=Form)
+        self.pushButton_AddToTable.setObjectName("pushButton_AddToTable")
+        self.horizontalLayout.addWidget(self.pushButton_AddToTable)
         self.gridLayout.addLayout(self.horizontalLayout, 1, 0, 1, 1)
 
         self.retranslateUi(Form)
@@ -46,3 +49,4 @@ class Ui_Form(object):
         self.pushButton_Edit.setText(_translate("Form", "Edit"))
         self.pushButton_Delete.setText(_translate("Form", "Delete"))
         self.pushButton_ViewAtAddress.setText(_translate("Form", "View at address…"))
+        self.pushButton_AddToTable.setText(_translate("Form", "Add to address table"))

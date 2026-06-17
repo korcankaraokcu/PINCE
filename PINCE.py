@@ -710,6 +710,8 @@ class MainForm(QMainWindow, MainWindow):
             if not structure_names:
                 guiutils.delete_menu_entries(menu, [apply_structure_menu.menuAction()])
             value_type = current_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+            if self._is_struct_row(current_row):  # struct rows have no editable value or type, only an address.
+                guiutils.delete_menu_entries(menu, [edit_value, edit_type, apply_structure_menu.menuAction()])
             if typedefs.VALUE_INDEX.is_integer(value_type.value_index):
                 if value_type.value_repr is typedefs.VALUE_REPR.HEX:
                     guiutils.delete_menu_entries(menu, [show_unsigned, show_signed, show_hex])
@@ -1898,10 +1900,15 @@ class MainForm(QMainWindow, MainWindow):
     def show_structures_window(self) -> StructuresWindow:
         if not self.structures_window:
             self.structures_window = StructuresWindow(self)
+            self.structures_window.add_to_table_requested.connect(self._add_structure_records_to_table)
         self.structures_window.refresh()
         self.structures_window.show()
         self.structures_window.activateWindow()
         return self.structures_window
+
+    def _add_structure_records_to_table(self, records: list) -> None:
+        self.insert_records(records, self.treeWidget_AddressTable.invisibleRootItem(), 0)
+        self.update_address_table()
 
     def mark_address_tree_changed(self) -> None:
         self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
@@ -2041,6 +2048,9 @@ class MainForm(QMainWindow, MainWindow):
         if entry is not None:
             self.toggle_script_entry(row, entry, check_state)
             return
+        if self._is_struct_row(row):
+            row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
+            return
         frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
         is_checked = check_state == Qt.CheckState.Checked
         frozen_state_toggled = (is_checked and not frozen.enabled) or (not is_checked and frozen.enabled)
@@ -2069,9 +2079,14 @@ class MainForm(QMainWindow, MainWindow):
             row.setText(TYPE_COL, value_type.text())
         self.update_address_table()
 
+    def _is_struct_row(self, row: QTreeWidgetItem) -> bool:
+        # Only carries an address, has no readable value or editable type.
+        vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+        return vt is not None and vt.value_index == typedefs.VALUE_INDEX.STRUCT
+
     def treeWidget_AddressTable_edit_value(self) -> None:
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
-        if not row or self.get_script_entry(row) is not None:
+        if not row or self.get_script_entry(row) is not None or self._is_struct_row(row):
             return
         value = row.text(VALUE_COL)
         value_index = row.data(TYPE_COL, Qt.ItemDataRole.UserRole).value_index
@@ -2082,7 +2097,7 @@ class MainForm(QMainWindow, MainWindow):
                 QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
                 return
             for row in self.treeWidget_AddressTable.selectedItems():
-                if self.get_script_entry(row) is not None:
+                if self.get_script_entry(row) is not None or self._is_struct_row(row):
                     continue
                 address = row.text(ADDR_COL).removeprefix("P->")
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
@@ -2113,6 +2128,9 @@ class MainForm(QMainWindow, MainWindow):
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not row or self.get_script_entry(row) is not None:
             return
+        if self._is_struct_row(row):
+            self._edit_struct_address(row)
+            return
         desc, address_expr, vt = self.read_address_table_entries(row)
         manual_address_dialog = ManualAddressDialogForm(self, desc, address_expr, vt)
         manual_address_dialog.setWindowTitle(tr.EDIT_ADDRESS)
@@ -2122,9 +2140,25 @@ class MainForm(QMainWindow, MainWindow):
             self.update_address_table()
             self.mark_address_tree_changed()
 
+    def _edit_struct_address(self, row: QTreeWidgetItem) -> None:
+        # Struct rows only carry an address so skip the full manual add dialog and just ask for a new address.
+        desc, address_expr, vt = self.read_address_table_entries(row)
+        if isinstance(address_expr, typedefs.PointerChainRequest):
+            current = address_expr.get_base_address_as_str()
+        else:
+            current = address_expr or ""
+        dialog = utilwidgets.InputDialog(self, [(tr.ENTER_ADDRESS, current)])
+        if dialog.exec():
+            new_address = dialog.get_values()[0].strip()
+            if not new_address:
+                return
+            self.change_address_table_entries(row, desc, new_address, vt)
+            self.update_address_table()
+            self.mark_address_tree_changed()
+
     def treeWidget_AddressTable_edit_type(self) -> None:
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
-        if not row or self.get_script_entry(row) is not None:
+        if not row or self.get_script_entry(row) is not None or self._is_struct_row(row):
             return
         vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
         dialog = EditTypeDialogForm(self, vt)
@@ -2132,7 +2166,7 @@ class MainForm(QMainWindow, MainWindow):
             vt = dialog.get_values()
             type_text = vt.text()
             for row in self.treeWidget_AddressTable.selectedItems():
-                if self.get_script_entry(row) is not None:
+                if self.get_script_entry(row) is not None or self._is_struct_row(row):
                     continue
                 row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, copy.copy(vt))
                 row.setText(TYPE_COL, type_text)

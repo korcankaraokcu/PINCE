@@ -19,6 +19,7 @@
      <item><widget class="QPushButton" name="pushButton_Edit"><property name="text"><string>Edit</string></property></widget></item>
      <item><widget class="QPushButton" name="pushButton_Delete"><property name="text"><string>Delete</string></property></widget></item>
      <item><widget class="QPushButton" name="pushButton_ViewAtAddress"><property name="text"><string>View at address…</string></property></widget></item>
+     <item><widget class="QPushButton" name="pushButton_AddToTable"><property name="text"><string>Add to address table</string></property></widget></item>
     </layout>
    </item>
   </layout>

@@ -1,15 +1,19 @@
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QInputDialog, QMessageBox, QTreeWidgetItem, QWidget
 
 from GUI.Session.session import StructureManager
-from GUI.Utils import guiutils, utilwidgets
+from GUI.Utils import guiutils
 from GUI.Widgets.Structures.Form.StructuresWindow import Ui_Form
 from GUI.Widgets.Structures.StructureEditorDialog import StructureEditorDialog
 from GUI.Widgets.Structures.StructureViewDialog import StructureViewDialog
+from GUI.Widgets.Structures.materialize import structure_to_group_record
+from libpince import utils
 from tr.tr import TranslationConstants as tr
 
 
 class StructuresWindow(QWidget, Ui_Form):
+    add_to_table_requested = pyqtSignal(list)
+
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setupUi(self)
@@ -19,6 +23,7 @@ class StructuresWindow(QWidget, Ui_Form):
         self.pushButton_Edit.clicked.connect(self._edit_structure)
         self.pushButton_Delete.clicked.connect(self._delete_structure)
         self.pushButton_ViewAtAddress.clicked.connect(self._view_at_address)
+        self.pushButton_AddToTable.clicked.connect(self._add_to_table)
         self.treeWidget_Structures.itemDoubleClicked.connect(self._edit_structure)
 
         self._view_windows: list[StructureViewDialog] = []
@@ -73,3 +78,17 @@ class StructuresWindow(QWidget, Ui_Form):
     def _forget_view(self, view: StructureViewDialog) -> None:
         if view in self._view_windows:
             self._view_windows.remove(view)
+
+    def _add_to_table(self) -> None:
+        name = self._selected_name()
+        if name is None:
+            return
+        address, ok = QInputDialog.getText(self, tr.ADD_TO_ADDRESS_TABLE, tr.ENTER_BASE_ADDRESS)
+        if not ok or not address.strip():
+            return
+        struct = StructureManager.get(name)
+        if struct is None:
+            return
+        base_addr = utils.safe_str_to_int(address, 16)
+        record = structure_to_group_record(struct, base_addr)
+        self.add_to_table_requested.emit([record])

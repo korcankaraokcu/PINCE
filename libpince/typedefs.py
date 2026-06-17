@@ -179,6 +179,8 @@ class VALUE_INDEX:
 
     AOB = 10  # Array of Bytes
 
+    STRUCT = 11  # Only used to represent a grouping of Struct offsets/variables, not readable directly.
+
     @staticmethod
     def is_integer(value_index: int) -> bool:
         return VALUE_INDEX.INT8 <= value_index <= VALUE_INDEX.INT64
@@ -465,6 +467,8 @@ class ValueType:
             returned str="String_UTF16[15],NZT"
             value_index=VALUE_INDEX.AOB, length=42-->returned str="AoB[42]"
         """
+        if self.value_index == VALUE_INDEX.STRUCT:
+            return "Struct"
         returned_string = index_to_text_dict[self.value_index]
         if VALUE_INDEX.is_string(self.value_index):
             returned_string += f"[{self.length}]"
