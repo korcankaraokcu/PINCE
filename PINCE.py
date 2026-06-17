@@ -915,7 +915,32 @@ class MainForm(QMainWindow, MainWindow):
             items.append(item)
             last_index = index
 
-        app.clipboard().setText(repr([self.read_address_table_recursively(item) for item in items]))
+        app.clipboard().setText(repr([self._read_for_copy(item) for item in items]))
+
+    def _read_for_copy(self, row: QTreeWidgetItem) -> tuple:
+        record = self.read_address_table_recursively(row)
+        if self.get_script_entry(row) is not None:  # scripts carry no address to absolutize
+            return record
+        desc, address_expr, vt, *rest = record
+        return (desc, self._absolutize_root(row, address_expr), vt, *rest)
+
+    def _absolutize_root(self, row: QTreeWidgetItem, address_expr: str | tuple) -> str | tuple:
+        # Rewrite a relative (+/-) address into an absolute one using the parent's resolved address,
+        # so a row copied out of its group still points somewhere when pasted alone.
+        # Pointer chains keep their offsets, only the base is absolutized.
+        parent = row.parent()
+        if not parent:
+            return address_expr
+        parent_resolved = parent.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1)
+        if not parent_resolved:
+            return address_expr
+        if isinstance(address_expr, str) and address_expr.startswith(("+", "-")):
+            return row.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1) or parent_resolved + address_expr
+        if isinstance(address_expr, (list, tuple)) and address_expr:
+            base = address_expr[0]
+            if isinstance(base, str) and base.startswith(("+", "-")):
+                return (parent_resolved + base, *address_expr[1:])
+        return address_expr
 
     def insert_records(self, records: list, parent_row: QTreeWidgetItem, insert_index: int) -> None:
         # parent_row should be a QTreeWidgetItem in treeWidget_AddressTable
@@ -1125,11 +1150,13 @@ class MainForm(QMainWindow, MainWindow):
                     expression = address_data
                 parent = row.parent()
                 if parent and expression.startswith(("+", "-")):
-                    expression = parent.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1) + expression
+                    parent_resolved = parent.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1)
+                    if parent_resolved:
+                        expression = parent_resolved + expression
                 if expression in states.exp_cache:
                     address = states.exp_cache[expression]
-                elif expression.startswith(("+", "-")):  # If parent has an empty address
-                    address = expression
+                elif expression.startswith(("+", "-")):
+                    address = None
                 elif basic_math_exp.match(expression.replace(" ", "")):
                     try:
                         address = hex(eval(expression))
@@ -1140,6 +1167,7 @@ class MainForm(QMainWindow, MainWindow):
                     address = debugcore.examine_expression(expression).address
                     states.exp_cache[expression] = address
                 vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+                is_struct_child = parent and self._is_struct_row(parent)
                 if isinstance(address_data, typedefs.PointerChainRequest):
                     # The original base could be a symbol so we have to save it
                     # This little hack avoids the unnecessary examine_expression call
@@ -1157,13 +1185,23 @@ class MainForm(QMainWindow, MainWindow):
                         else:
                             address = None
                         if address:
-                            row.setText(ADDR_COL, f"P->{address}")
+                            row.setText(
+                                ADDR_COL, address_data.get_base_address_as_str() if is_struct_child else f"P->{address}"
+                            )
                         else:
                             row.setText(ADDR_COL, "P->??")
                     else:
                         row.setText(ADDR_COL, "P->??")
                 else:
-                    row.setText(ADDR_COL, address or address_data)
+                    if address:
+                        if is_struct_child and isinstance(address_data, str) and address_data.startswith(("+", "-")):
+                            row.setText(ADDR_COL, address_data)
+                        else:
+                            row.setText(ADDR_COL, address)
+                    elif expression.startswith(("+", "-")):
+                        row.setText(ADDR_COL, "???")
+                    else:
+                        row.setText(ADDR_COL, address_data)
                 address = "" if not address else address
                 row.setData(ADDR_COL, Qt.ItemDataRole.UserRole + 1, address)
                 value = debugcore.read_memory(
@@ -2152,6 +2190,8 @@ class MainForm(QMainWindow, MainWindow):
             new_address = dialog.get_values()[0].strip()
             if not new_address:
                 return
+            if isinstance(address_expr, typedefs.PointerChainRequest):  # keep the deref, only the base changed
+                new_address = typedefs.PointerChainRequest(new_address, address_expr.offsets_list)
             self.change_address_table_entries(row, desc, new_address, vt)
             self.update_address_table()
             self.mark_address_tree_changed()
