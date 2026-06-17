@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>560</width><height>460</height></rect>
+  </property>
+  <property name="windowTitle"><string>Structure view</string></property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0"><widget class="QLabel" name="label_Base"><property name="text"><string>Base address</string></property></widget></item>
+   <item row="0" column="1"><widget class="QLineEdit" name="lineEdit_Base"/></item>
+   <item row="1" column="0" colspan="2">
+    <widget class="QTreeWidget" name="treeWidget_View">
+     <column><property name="text"><string>Offset</string></property></column>
+     <column><property name="text"><string>Name</string></property></column>
+     <column><property name="text"><string>Type</string></property></column>
+     <column><property name="text"><string>Value</string></property></column>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation"><enum>Qt::Horizontal</enum></property>
+     <property name="standardButtons"><set>QDialogButtonBox::Close</set></property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection><sender>buttonBox</sender><signal>rejected()</signal><receiver>Dialog</receiver><slot>reject()</slot></connection>
+ </connections>
+</ui>

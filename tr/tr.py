@@ -408,6 +408,7 @@ class TranslationConstants(QObject):
     FIELDS = QT_TR_NOOP("Fields")
     METHODS = QT_TR_NOOP("Methods")
     DISASSEMBLE = QT_TR_NOOP("Disassemble")
+    STRUCTURE_VIEW = QT_TR_NOOP("Structure view")
     STRUCTURES = QT_TR_NOOP("Structures")
     NEW_STRUCTURE = QT_TR_NOOP("New Structure")
     EDIT_STRUCTURE = QT_TR_NOOP("Edit Structure")

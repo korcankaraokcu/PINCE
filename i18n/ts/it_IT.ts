@@ -143,6 +143,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <location filename="../../GUI/EditTypeDialog.ui" line="0" />
@@ -334,6 +335,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
@@ -343,6 +345,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/MonoFindInstances/Form/MonoFindInstancesDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
         <source>Value</source>
@@ -665,6 +668,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <source>Offset</source>
         <translation type="unfinished" />
@@ -692,6 +696,16 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <source>Down</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
+        <source>Structure view</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
+        <source>Base address</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -3315,6 +3329,11 @@ Do you want to keep the current session with the new process?</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Disassemble</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Structure view</source>
         <translation type="unfinished" />
     </message>
     <message>
