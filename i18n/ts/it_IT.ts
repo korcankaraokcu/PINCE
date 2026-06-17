@@ -981,6 +981,36 @@ Patterns at former positions have higher priority if regex is off</source>
         <source>Original Instruction</source>
         <translation type="unfinished" />
     </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
+        <source>Structures</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
+        <source>Name</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
+        <source>New</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
+        <source>Edit</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
+        <source>Delete</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
+        <source>View at address…</source>
+        <translation type="unfinished" />
+    </message>
 </context><context>
     <name>MainWindow</name>
     <message>
@@ -1609,6 +1639,11 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
         <source>Libpince Engine</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <source>Structures</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -3334,6 +3369,31 @@ Do you want to keep the current session with the new process?</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Structure view</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>View at address…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Delete structure</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Delete structure '{}'?</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Apply structure</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Enter base address</source>
         <translation type="unfinished" />
     </message>
     <message>

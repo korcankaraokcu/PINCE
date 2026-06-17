@@ -837,6 +837,8 @@ class Ui_MainWindow_MemoryView(object):
         self.actionRestore_Instructions.setObjectName("actionRestore_Instructions")
         self.actionLibpince_Engine = QtGui.QAction(parent=MainWindow_MemoryView)
         self.actionLibpince_Engine.setObjectName("actionLibpince_Engine")
+        self.actionStructures = QtGui.QAction(parent=MainWindow_MemoryView)
+        self.actionStructures.setObjectName("actionStructures")
         self.menuView.addAction(self.actionBookmarks)
         self.menuView.addAction(self.actionStackTrace_Info)
         self.menuView.addAction(self.actionBreakpoints)
@@ -863,6 +865,7 @@ class Ui_MainWindow_MemoryView(object):
         self.menuTools.addAction(self.actionSearch_Instructions)
         self.menuTools.addAction(self.actionDissect_Code)
         self.menuTools.addAction(self.actionDissect_Mono)
+        self.menuTools.addAction(self.actionStructures)
         self.menuTools.addAction(self.actionLibpince_Engine)
         self.menuFile.addAction(self.actionLoad_Trace)
         self.menuHelp.addAction(self.actionLibpince)
@@ -935,6 +938,7 @@ class Ui_MainWindow_MemoryView(object):
         self.actionToggle_Attach.setText(_translate("MainWindow_MemoryView", "To&ggle Attach"))
         self.actionRestore_Instructions.setText(_translate("MainWindow_MemoryView", "Restore Instructions"))
         self.actionLibpince_Engine.setText(_translate("MainWindow_MemoryView", "Libpince Engine"))
+        self.actionStructures.setText(_translate("MainWindow_MemoryView", "Structures"))
 from GUI.Labels.FlagRegisterLabel import QFlagRegisterLabel
 from GUI.Labels.RegisterLabel import QRegisterLabel
 from GUI.TableViews.AsciiView import QAsciiView

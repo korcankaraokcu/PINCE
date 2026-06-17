@@ -115,7 +115,7 @@ from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 from GUI.SearchInstructionsWidget import Ui_Form as SearchInstructionsWidget
 from GUI.SelectProcess import Ui_MainWindow as ProcessWindow
-from GUI.Session.session import SessionDataChanged, SessionManager
+from GUI.Session.session import SessionDataChanged, SessionManager, StructureManager
 from GUI.Settings import settings, themes
 from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
 from GUI.States import states
@@ -142,6 +142,8 @@ from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructi
 from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
 from GUI.Widgets.Settings.Settings import SettingsDialog
 from GUI.Widgets.MonoDissect.MonoDissect import MonoDissectDialog
+from GUI.Widgets.Structures.StructuresWindow import StructuresWindow
+from GUI.Widgets.Structures.StructureViewDialog import StructureViewDialog
 from libpince import debugcore, linux_speedhack, monocore, scancore, typedefs, utils, wine_speedhack
 from libpince.libmemscan.memscan import ScanLevel, DataType, MatchView, BytePattern
 from libpince.scancore import memscan
@@ -406,6 +408,7 @@ class MainForm(QMainWindow, MainWindow):
         states.session_signals.new_session.connect(self.on_new_session)
         self.session = SessionManager.get_session()
         self.libpince_engine_window: LibpinceEngineWindow | None = None
+        self.structures_window: StructuresWindow | None = None
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
         self.pushButton_UndoScan.clicked.connect(self.pushButton_UndoScan_clicked)
         self.pushButton_CancelScan.clicked.connect(self.pushButton_CancelScan_clicked)
@@ -627,6 +630,11 @@ class MainForm(QMainWindow, MainWindow):
         edit_type = edit_menu.addAction(f"{header.text(TYPE_COL)}[Alt+Enter]")
         edit_value = edit_menu.addAction(f"{header.text(VALUE_COL)}[Enter]")
         edit_script = menu.addAction(tr.EDIT_SCRIPT)
+        apply_structure_menu = menu.addMenu(tr.APPLY_STRUCTURE)
+        structure_names = StructureManager.list_names()
+        structure_actions = {}
+        for name in structure_names:
+            structure_actions[apply_structure_menu.addAction(name)] = name
         show_hex = menu.addAction(tr.SHOW_HEX)
         show_dec = menu.addAction(tr.SHOW_DEC)
         show_unsigned = menu.addAction(tr.SHOW_UNSIGNED)
@@ -655,6 +663,7 @@ class MainForm(QMainWindow, MainWindow):
             deletion_list = [
                 edit_menu.menuAction(),
                 edit_script,
+                apply_structure_menu.menuAction(),
                 show_hex,
                 show_dec,
                 show_unsigned,
@@ -680,6 +689,7 @@ class MainForm(QMainWindow, MainWindow):
                 edit_address,
                 edit_type,
                 edit_value,
+                apply_structure_menu.menuAction(),
                 show_hex,
                 show_dec,
                 show_unsigned,
@@ -697,6 +707,8 @@ class MainForm(QMainWindow, MainWindow):
             guiutils.delete_menu_entries(menu, script_deletion)
         else:
             guiutils.delete_menu_entries(menu, [edit_script])
+            if not structure_names:
+                guiutils.delete_menu_entries(menu, [apply_structure_menu.menuAction()])
             value_type = current_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
             if typedefs.VALUE_INDEX.is_integer(value_type.value_index):
                 if value_type.value_repr is typedefs.VALUE_REPR.HEX:
@@ -748,10 +760,21 @@ class MainForm(QMainWindow, MainWindow):
             add_group: self.group_records,
             create_group: self.create_group,
         }
+        for struct_action, struct_name in structure_actions.items():
+            actions[struct_action] = lambda n=struct_name: self._apply_structure_to_row(current_row, n)
         try:
             actions[action]()
         except KeyError:
             pass
+
+    def _apply_structure_to_row(self, row: QTreeWidgetItem, structure_name: str) -> None:
+        if row is None:
+            return
+        resolved_address = row.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1)
+        if not resolved_address:
+            resolved_address = row.text(ADDR_COL).removeprefix("P->")
+        view = StructureViewDialog(self, structure_name, resolved_address)
+        view.show()
 
     def exec_pointer_scanner(self) -> None:
         pointer_window = PointerScanWindow(self, "0x0")
@@ -1872,6 +1895,14 @@ class MainForm(QMainWindow, MainWindow):
         self.libpince_engine_window.activateWindow()
         return self.libpince_engine_window
 
+    def show_structures_window(self) -> StructuresWindow:
+        if not self.structures_window:
+            self.structures_window = StructuresWindow(self)
+        self.structures_window.refresh()
+        self.structures_window.show()
+        self.structures_window.activateWindow()
+        return self.structures_window
+
     def mark_address_tree_changed(self) -> None:
         self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
@@ -2913,6 +2944,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.actionSearch_Instructions.triggered.connect(self.actionSearch_Instructions_triggered)
         self.actionDissect_Code.triggered.connect(self.actionDissect_Code_triggered)
         self.actionDissect_Mono.triggered.connect(self.actionDissect_Mono_triggered)
+        self.actionStructures.triggered.connect(self.actionStructures_triggered)
         self.actionLibpince_Engine.triggered.connect(self.actionLibpince_Engine_triggered)
 
     def initialize_help_context_menu(self) -> None:
@@ -4464,9 +4496,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if not utils.is_wine_process(debugcore.currentpid):
             QMessageBox.information(self, tr.ERROR, tr.DLL_INJECT_WINE_ONLY)
             return
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, tr.SELECT_DLL_FILE, os.path.expanduser("~"), tr.DLL_TYPE
-        )
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_DLL_FILE, os.path.expanduser("~"), tr.DLL_TYPE)
         if file_path:
             success, hmod = debugcore.inject_dll(file_path)
             if success:
@@ -4530,6 +4560,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionLibpince_Engine_triggered(self) -> None:
         # The engine is owned by the main form since it integrates with the address table
         self.parent().show_libpince_engine()
+
+    def actionStructures_triggered(self) -> None:
+        self.parent().show_structures_window()
 
     def actionLibpince_triggered(self) -> None:
         utils.execute_command_as_user('python3 -m webbrowser "https://korcankaraokcu.github.io/PINCE/"')

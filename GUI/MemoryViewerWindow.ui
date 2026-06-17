@@ -1613,6 +1613,7 @@
     <addaction name="actionSearch_Instructions"/>
     <addaction name="actionDissect_Code"/>
     <addaction name="actionDissect_Mono"/>
+    <addaction name="actionStructures"/>
     <addaction name="actionLibpince_Engine"/>
    </widget>
    <widget class="QMenu" name="menuFile">
@@ -1762,6 +1763,11 @@
   <action name="actionLibpince_Engine">
    <property name="text">
     <string>Libpince Engine</string>
+   </property>
+  </action>
+  <action name="actionStructures">
+   <property name="text">
+    <string>Structures</string>
    </property>
   </action>
  </widget>
