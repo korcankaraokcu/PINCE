@@ -395,8 +395,6 @@ class MainForm(QMainWindow, MainWindow):
         guiutils.append_shortcut_to_tooltip(self.pushButton_Save, self.shortcut_save_file)
 
         # Saving the original function because super() doesn't work when we override functions like this
-        self.treeWidget_AddressTable.mousePressEvent_original = self.treeWidget_AddressTable.mousePressEvent
-        self.treeWidget_AddressTable.mousePressEvent = self.treeWidget_AddressTable_mouse_press_event
         self.treeWidget_AddressTable.mouseReleaseEvent_original = self.treeWidget_AddressTable.mouseReleaseEvent
         self.treeWidget_AddressTable.mouseReleaseEvent = self.treeWidget_AddressTable_mouse_release_event
         self.treeWidget_AddressTable.keyPressEvent_original = self.treeWidget_AddressTable.keyPressEvent
@@ -1043,15 +1041,6 @@ class MainForm(QMainWindow, MainWindow):
         for item in selected_items:
             (item.parent() or root).removeChild(item)
 
-    def treeWidget_AddressTable_mouse_press_event(self, event: QMouseEvent) -> None:
-        self.treeWidget_AddressTable.mousePressEvent_original(event)
-        item = self.treeWidget_AddressTable.itemAt(event.pos())
-        column = self.treeWidget_AddressTable.columnAt(event.pos().x())
-        # Qt doesn't select rows when checkboxes are clicked
-        # Ensure that the row is selected when frozen col is clicked
-        if item and column == FROZEN_COL:
-            item.setSelected(True)
-
     def treeWidget_AddressTable_mouse_release_event(self, event: QMouseEvent) -> None:
         item = self.treeWidget_AddressTable.itemAt(event.pos())
         column = self.treeWidget_AddressTable.columnAt(event.pos().x())
@@ -1059,20 +1048,13 @@ class MainForm(QMainWindow, MainWindow):
             old_state = item.checkState(FROZEN_COL)
             self.treeWidget_AddressTable.mouseReleaseEvent_original(event)
             new_state = item.checkState(FROZEN_COL)
-            item.setSelected(True)
-            box_clicked = old_state != new_state
-            current_item = self.treeWidget_AddressTable.currentItem()
-            freeze_type = typedefs.FREEZE_TYPE.DEFAULT
-            if not box_clicked and new_state == Qt.CheckState.Checked:
-                self.change_freeze_type(row=current_item)
-                frozen = current_item.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
-                if isinstance(frozen, typedefs.Frozen):  # freeze type cycling doesn't apply to script entries
-                    freeze_type = frozen.freeze_type
-            for selected_item in self.treeWidget_AddressTable.selectedItems():
-                if box_clicked:
-                    self.handle_freeze_change(selected_item, new_state)
-                elif new_state == Qt.CheckState.Checked:
-                    self.change_freeze_type(freeze_type, selected_item)
+            if old_state != new_state:
+                self.handle_freeze_change(item, new_state)
+            elif new_state == Qt.CheckState.Checked:
+                self.change_freeze_type(row=item)
+                frozen = item.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+                if isinstance(frozen, typedefs.Frozen):
+                    self.change_freeze_type(frozen.freeze_type, item)
         else:
             self.treeWidget_AddressTable.mouseReleaseEvent_original(event)
 
