@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QApplication, QDialog, QMenu, QMessageBox, QTreeWidg
 from GUI.Widgets.MonoDissect.Form.MonoDissectDialog import Ui_Dialog
 from GUI.Widgets.MonoInvoke.MonoInvoke import MonoInvokeDialog
 from GUI.Widgets.MonoFindInstances.MonoFindInstances import MonoFindInstancesDialog
+from GUI.Widgets.Structures import mono_export
 from GUI.Utils import guiutils
 from libpince import debugcore, monocore, utils, typedefs
 from tr.tr import TranslationConstants as tr
@@ -23,6 +24,7 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
     breakpoint_requested = pyqtSignal(object)  # native address (int)
     add_to_table_requested = pyqtSignal(str, object)  # description, address-expr (str | PointerChainRequest)
     export_structure_requested = pyqtSignal(object)  # class_data dict
+    view_structure_requested = pyqtSignal(str, object)  # structure name, base address (int)
 
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
@@ -297,14 +299,23 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             QApplication.clipboard().setText(utils.upper_hex(hex(address)))
 
     def _class_context_menu(self, client: monocore.MonoClient, item: QTreeWidgetItem, global_pos) -> None:
+        class_data = item.data(0, ROLE_DATA)
         menu = QMenu(self)
         action_find = menu.addAction(tr.MONO_FIND_INSTANCES)
         action_export = menu.addAction(tr.EXPORT_AS_STRUCTURE)
+        singleton = self._singleton_root(client, class_data)
+        action_dissect_singleton = None
+        if singleton is not None:
+            action_dissect_singleton = menu.addAction(tr.DISSECT_AS_STRUCTURE)
         chosen = menu.exec(global_pos)
+        if chosen is None:
+            return
         if chosen == action_find:
-            self._find_instances(item.data(0, ROLE_DATA))
+            self._find_instances(class_data)
         elif chosen == action_export:
-            self.export_structure_requested.emit(item.data(0, ROLE_DATA))
+            self.export_structure_requested.emit(class_data)
+        elif chosen == action_dissect_singleton:
+            self._dissect_singleton_as_structure(client, class_data, singleton)
 
     def _field_context_menu(self, client: monocore.MonoClient, item: QTreeWidgetItem, global_pos) -> None:
         """Build the field/ref_field context menu. Shared with the Find Instances tree."""
@@ -427,3 +438,27 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             if candidate["is_static"] and candidate["type"] == full_name:
                 return candidate
         return None
+
+    def _dissect_instance_as_structure(self, class_data: dict, address: int) -> None:
+        client = monocore.get_client()
+        if client is None:
+            return
+        try:
+            struct = mono_export.structure_from_class(client, class_data, force_new=False)
+        except monocore.MonoError:
+            QMessageBox.information(self, tr.ERROR, tr.MONO_NOT_READY)
+            return
+        self.view_structure_requested.emit(struct.name, address)
+
+    def _dissect_singleton_as_structure(self, client: monocore.MonoClient, class_data: dict, singleton: dict) -> None:
+        try:
+            address = client.static_field_address(class_data["klass"], singleton["field"])
+        except monocore.MonoError:
+            QMessageBox.information(self, tr.ERROR, tr.MONO_STATIC_UNAVAILABLE)
+            return
+        try:
+            struct = mono_export.structure_from_class(client, class_data, force_new=False)
+        except monocore.MonoError:
+            QMessageBox.information(self, tr.ERROR, tr.MONO_NOT_READY)
+            return
+        self.view_structure_requested.emit(struct.name, address)

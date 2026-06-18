@@ -4647,6 +4647,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             lambda description, address: self.parent().add_entry_to_addresstable(description, address)
         )
         mono_dialog.export_structure_requested.connect(self._export_mono_structure)
+        mono_dialog.view_structure_requested.connect(self._view_mono_structure)
         mono_dialog.show()
 
     def _mono_breakpoint(self, address: object) -> None:
@@ -4665,6 +4666,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         if not StructureEditorDialog(self, struct.name).exec():
             StructureManager.delete(struct.name)
+        if self.parent().structures_window:
+            self.parent().structures_window.refresh()
+
+    def _view_mono_structure(self, structure_name: str, address: object) -> None:
+        view = StructureViewDialog(self, structure_name, hex(int(address)))
+        view.add_to_table_requested.connect(self.parent()._add_structure_records_to_table)
+        view.show()
         if self.parent().structures_window:
             self.parent().structures_window.refresh()
 

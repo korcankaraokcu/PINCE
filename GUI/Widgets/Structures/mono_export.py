@@ -161,12 +161,12 @@ def _build_structure(
 
 
 def structure_from_class(
-    client: monocore.MonoClient, class_data: dict, include_inherited: bool = True
+    client: monocore.MonoClient, class_data: dict, include_inherited: bool = True, force_new: bool = True
 ) -> typedefs.Structure:
     pointer_index = (
         typedefs.VALUE_INDEX.INT32
         if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
         else typedefs.VALUE_INDEX.INT64
     )
-    name = _build_structure(client, class_data, set(), pointer_index, include_inherited, force_new=True)
+    name = _build_structure(client, class_data, set(), pointer_index, include_inherited, force_new)
     return StructureManager.get(name)

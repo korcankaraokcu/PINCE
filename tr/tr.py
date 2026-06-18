@@ -436,3 +436,4 @@ class TranslationConstants(QObject):
     REPR_SIGNED = QT_TR_NOOP("Signed")
     REPR_HEX = QT_TR_NOOP("Hex")
     EXPORT_AS_STRUCTURE = QT_TR_NOOP("Export as structure")
+    DISSECT_AS_STRUCTURE = QT_TR_NOOP("Dissect as structure")

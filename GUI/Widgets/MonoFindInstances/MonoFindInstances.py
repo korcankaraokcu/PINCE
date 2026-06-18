@@ -83,6 +83,7 @@ class MonoFindInstancesDialog(QDialog, Ui_Dialog):
             payload = item.data(0, ROLE_DATA)
             menu = QMenu(self)
             action_table = menu.addAction(tr.ADD_TO_ADDRESS_LIST)
+            action_dissect = menu.addAction(tr.DISSECT_AS_STRUCTURE)
             action_copy = menu.addAction(tr.COPY_ADDRESS)
             invoke_menu = menu.addMenu(tr.MONO_INVOKE)
             try:
@@ -96,6 +97,8 @@ class MonoFindInstancesDialog(QDialog, Ui_Dialog):
                 self.owner.add_to_table_requested.emit(
                     f"{payload['class'].get('name', '?')} {item.text(0)}", hex(payload["address"])
                 )
+            elif chosen == action_dissect:
+                self.owner._dissect_instance_as_structure(payload["class"], payload["address"])
             elif chosen == action_copy:
                 QApplication.clipboard().setText(utils.upper_hex(hex(payload["address"])))
             elif chosen in method_actions:
