@@ -22,6 +22,43 @@ def _is_instance_field(fld: dict) -> bool:
     return not fld["is_static"] and not (fld["flags"] & 0x40)
 
 
+def _ensure_managed_string_structure() -> str:
+    if StructureManager.get("System.String") is None:
+        is_32 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
+        ptr_type = typedefs.VALUE_INDEX.INT32 if is_32 else typedefs.VALUE_INDEX.INT64
+        if is_32:
+            members = [
+                typedefs.StructureMember(
+                    "vtable_ptr", 0x00, typedefs.ValueType(ptr_type, value_repr=typedefs.VALUE_REPR.HEX)
+                ),
+                typedefs.StructureMember("sync", 0x04, typedefs.ValueType(ptr_type)),
+                typedefs.StructureMember("length", 0x08, typedefs.ValueType(typedefs.VALUE_INDEX.INT32)),
+                typedefs.StructureMember(
+                    "chars",
+                    0x0C,
+                    # We'll use a default of length 32 (about 16 UTF16 characters) for a small preview until we export
+                    # this struct to address table where we calculate the proper length and modify it.
+                    typedefs.ValueType(typedefs.VALUE_INDEX.STRING_UTF16, length=32, zero_terminate=False),
+                ),
+            ]
+        else:
+            members = [
+                typedefs.StructureMember(
+                    "vtable_ptr", 0x00, typedefs.ValueType(ptr_type, value_repr=typedefs.VALUE_REPR.HEX)
+                ),
+                typedefs.StructureMember("sync", 0x08, typedefs.ValueType(ptr_type)),
+                typedefs.StructureMember("length", 0x10, typedefs.ValueType(typedefs.VALUE_INDEX.INT32)),
+                typedefs.StructureMember(
+                    "chars",
+                    0x14,
+                    # Same length default as 32 bits case above for the same stated reasons.
+                    typedefs.ValueType(typedefs.VALUE_INDEX.STRING_UTF16, length=32, zero_terminate=False),
+                ),
+            ]
+        StructureManager.add(typedefs.Structure("System.String", members, 0))
+    return "System.String"
+
+
 def member_from_field(
     fld: dict, pointer_index: typedefs.VALUE_INDEX = typedefs.VALUE_INDEX.INT64
 ) -> "typedefs.StructureMember | None":
@@ -31,7 +68,11 @@ def member_from_field(
     if tag in _TAG_TO_VALUE:
         index, repr_ = _TAG_TO_VALUE[tag]
         return typedefs.StructureMember(fld["name"], fld["offset"], typedefs.ValueType(index, value_repr=repr_))
-    if tag in ("object", "str"):
+    if tag == "str":
+        return typedefs.StructureMember(
+            fld["name"], fld["offset"], struct_ref=_ensure_managed_string_structure(), is_pointer=True
+        )
+    if tag == "object":
         return typedefs.StructureMember(
             fld["name"], fld["offset"], typedefs.ValueType(pointer_index, value_repr=typedefs.VALUE_REPR.HEX)
         )
@@ -70,7 +111,7 @@ def _leaf_member(
     fld: dict, instance: list[dict], i: int, pointer_index: typedefs.VALUE_INDEX
 ) -> typedefs.StructureMember:
     m = member_from_field(fld, pointer_index)
-    if m.value_type.value_index == typedefs.VALUE_INDEX.AOB and m.value_type.length <= 0:
+    if m.value_type is not None and m.value_type.value_index == typedefs.VALUE_INDEX.AOB and m.value_type.length <= 0:
         nxt = instance[i + 1]["offset"] if i + 1 < len(instance) else fld["offset"] + 8
         m.value_type.length = max(1, nxt - fld["offset"])
     return m
