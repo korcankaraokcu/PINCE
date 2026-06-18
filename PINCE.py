@@ -861,25 +861,17 @@ class MainForm(QMainWindow, MainWindow):
                 row.setForeground(FROZEN_COL, QBrush())
 
     def toggle_records(self, toggle_children: bool = False) -> None:
-        row = guiutils.get_current_item(self.treeWidget_AddressTable)
         selected_items = self.treeWidget_AddressTable.selectedItems()
-        # If only one item is selected and then clicked while ctrl is being held
-        # There'll be no selected rows even with a current row present
-        if row and selected_items:
-            if not row.isSelected():
-                row = selected_items[0]
+        for row in selected_items:
             check_state = row.checkState(FROZEN_COL)
             new_state = Qt.CheckState.Checked if check_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
-            for row in selected_items:
-                self.handle_freeze_change(row, new_state)
-                if toggle_children:
-                    for index in range(row.childCount()):
-                        child = row.child(index)
-                        check_state = child.checkState(FROZEN_COL)
-                        new_state = (
-                            Qt.CheckState.Checked if check_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
-                        )
-                        self.handle_freeze_change(child, new_state)
+            self.handle_freeze_change(row, new_state)
+            if toggle_children:
+                for index in range(row.childCount()):
+                    child = row.child(index)
+                    child_old_state = child.checkState(FROZEN_COL)
+                    child_new_state = Qt.CheckState.Checked if child_old_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
+                    self.handle_freeze_change(child, child_new_state)
 
     def cut_records(self) -> None:
         self.copy_records()
