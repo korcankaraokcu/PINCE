@@ -104,24 +104,24 @@
     <message>
         <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
         <source>String references found:</source>
-        <translation>找到的 字符串引用：</translation>
+        <translation>找到的字符串引用：</translation>
     </message>
     <message>
         <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
         <source>Jumps found:</source>
-        <translation>找到的 跳转：</translation>
+        <translation>找到的跳转：</translation>
     </message>
     <message>
         <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
         <source>Calls found:</source>
-        <translation>找到的 调用：</translation>
+        <translation>找到的调用：</translation>
     </message>
     <message>
         <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
         <source>Entries that can't be decoded as utf-8 won't be included in referenced strings
 Unchecking it makes ReferencedStringsWidget load slower but allows you to examine non-string pointers on it</source>
         <translation>无法解码为 UTF-8 的条目将不会包含在引用的字符串中
-取消勾选此选项会导致 ReferencedStringsWidget 加载变慢，但允许你检查其中的非字符串指针</translation>
+取消勾选此选项会导致引用的字符串窗口（ReferencedStringsWidget）加载变慢，但允许你检查其中的非字符串指针</translation>
     </message>
     <message>
         <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
@@ -242,7 +242,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
         <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
         <source>Collect registers</source>
-        <translation type="unfinished" />
+        <translation>收集寄存器</translation>
     </message>
     <message>
         <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
@@ -268,7 +268,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
         <location filename="../../GUI/Widgets/HandleSignals/Form/HandleSignalsDialog.ui" line="0" />
         <source>Stop &amp; Print</source>
-        <translation>停止和打印</translation>
+        <translation>停止并打印</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/HandleSignals/Form/HandleSignalsDialog.ui" line="0" />
@@ -278,62 +278,62 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <source>Manage Scan Regions</source>
-        <translation type="unfinished" />
+        <translation>管理扫描区域</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <source>Selected regions will be deleted from the current scan</source>
-        <translation type="unfinished" />
+        <translation>选中的区域将会从当前的扫描中删除</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <source>Invert Selection</source>
-        <translation type="unfinished" />
+        <translation>反选</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <source>ID</source>
-        <translation type="unfinished" />
+        <translation>ID</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <source>Start Address</source>
-        <translation type="unfinished" />
+        <translation>起始地址</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <source>Size(bytes)</source>
-        <translation type="unfinished" />
+        <translation>大小（字节）</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <source>Load Address</source>
-        <translation type="unfinished" />
+        <translation>加载地址</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <source>Perms</source>
-        <translation type="unfinished">权限</translation>
+        <translation>权限</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <source>File</source>
-        <translation type="unfinished">文件</translation>
+        <translation>文件</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
         <source>Dissect Mono/IL2CPP</source>
-        <translation type="unfinished" />
+        <translation>分析 Mono/IL2CPP</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
         <source>Search</source>
-        <translation type="unfinished" />
+        <translation>搜索</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
         <source>Show inherited members</source>
-        <translation type="unfinished" />
+        <translation>显示继承的成员</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
@@ -343,39 +343,39 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/Widgets/MonoFindInstances/Form/MonoFindInstancesDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
         <source>Name</source>
-        <translation type="unfinished" />
+        <translation>名称</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/MonoFindInstances/Form/MonoFindInstancesDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
         <source>Value</source>
-        <translation type="unfinished">值</translation>
+        <translation>值</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/MonoFindInstances/Form/MonoFindInstancesDialog.ui" line="0" />
         <source>Find Instances</source>
-        <translation type="unfinished" />
+        <translation>查找实例</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/MonoInvoke/Form/MonoInvokeDialog.ui" line="0" />
         <source>Invoke</source>
-        <translation type="unfinished" />
+        <translation>调用</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/MonoInvoke/Form/MonoInvokeDialog.ui" line="0" />
         <source>Call</source>
-        <translation type="unfinished" />
+        <translation>执行</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
         <source>Compare &amp; Filter Pointers</source>
-        <translation type="unfinished" />
+        <translation>对比和过滤指针</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
         <source>Previous Map:</source>
-        <translation type="unfinished" />
+        <translation>先前的图：</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
@@ -383,99 +383,99 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
         <source>Browse</source>
-        <translation type="unfinished" />
+        <translation>浏览</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
         <source>Current Map:</source>
-        <translation type="unfinished" />
+        <translation>现在的图：</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanFilter/Form/PointerScanFilterDialog.ui" line="0" />
         <source>New Output Map:</source>
-        <translation type="unfinished" />
+        <translation>新输出图：</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Scan for Pointers</source>
-        <translation type="unfinished" />
+        <translation>指针扫描</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Target Address:</source>
-        <translation type="unfinished" />
+        <translation>目标地址：</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Pointer Map File Path:</source>
-        <translation type="unfinished" />
+        <translation>指针图文件路径：</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Advanced Options</source>
-        <translation type="unfinished" />
+        <translation>高级选项</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Native</source>
-        <translation type="unfinished" />
+        <translation>原生</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Little</source>
-        <translation type="unfinished">小</translation>
+        <translation>小</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Big</source>
-        <translation type="unfinished">大</translation>
+        <translation>大</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Pointer Size:</source>
-        <translation type="unfinished" />
+        <translation>指针大小：</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>8 Bytes</source>
-        <translation type="unfinished" />
+        <translation>8 字节</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>4 Bytes</source>
-        <translation type="unfinished" />
+        <translation>4 字节</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Max Depth:</source>
-        <translation type="unfinished" />
+        <translation>最大深度：</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Max Positive Offset:</source>
-        <translation type="unfinished" />
+        <translation>最大正偏移：</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>0x</source>
-        <translation type="unfinished" />
+        <translation>0x</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Max Negative Offset:</source>
-        <translation type="unfinished" />
+        <translation>最大负偏移：</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Max Results</source>
-        <translation type="unfinished" />
+        <translation>最大结果</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Module Bases Only</source>
-        <translation type="unfinished" />
+        <translation>仅模块基址</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
@@ -490,12 +490,12 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Hotkeys</source>
-        <translation>热键</translation>
+        <translation>快捷键</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Memory View</source>
-        <translation type="unfinished">内存查看器</translation>
+        <translation>内存查看器</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
@@ -582,7 +582,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Hotkey</source>
-        <translation>热键</translation>
+        <translation>快捷键</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
@@ -597,17 +597,17 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Bring Memory View to front when the inferior is stopped</source>
-        <translation type="unfinished" />
+        <translation>当被调试程序停止时将内存查看器置于前台</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Instructions shown per scroll in Disassembly View</source>
-        <translation type="unfinished" />
+        <translation>反汇编视图中每次滚动显示的指令数</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Bytes shown per scroll in Hex View</source>
-        <translation type="unfinished" />
+        <translation>十六进制视图中每次滚动显示的字节数</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
@@ -637,83 +637,83 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
         <source>Member</source>
-        <translation type="unfinished" />
+        <translation>成员</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
         <source>Offset (hex)</source>
-        <translation type="unfinished" />
+        <translation>偏移量（十六进制）</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
         <source>Kind</source>
-        <translation type="unfinished" />
+        <translation>种类</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
         <source>Value type</source>
-        <translation type="unfinished" />
+        <translation>值类型</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
         <source>Repr</source>
-        <translation type="unfinished" />
+        <translation>表现形式</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
         <source>Structure</source>
-        <translation type="unfinished" />
+        <translation>结构体</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <source>Edit structure</source>
-        <translation type="unfinished" />
+        <translation>编辑结构体</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <source>Offset</source>
-        <translation type="unfinished">偏移量</translation>
+        <translation>偏移量</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <source>Add</source>
-        <translation type="unfinished" />
+        <translation>添加</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <source>Edit</source>
-        <translation type="unfinished">编辑</translation>
+        <translation>编辑</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <source>Remove</source>
-        <translation type="unfinished" />
+        <translation>删除</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <source>Up</source>
-        <translation type="unfinished" />
+        <translation>上</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
         <source>Down</source>
-        <translation type="unfinished" />
+        <translation>下</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
         <source>Structure view</source>
-        <translation type="unfinished" />
+        <translation>结构体查看器</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
         <source>Base address</source>
-        <translation type="unfinished" />
+        <translation>基址</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
         <source>Add to address table</source>
-        <translation type="unfinished" />
+        <translation>添加到地址表</translation>
     </message>
 </context><context>
     <name>Form</name>
@@ -841,7 +841,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
         <source>Search path</source>
-        <translation type="unfinished" />
+        <translation>搜索路径</translation>
     </message>
     <message>
         <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
@@ -888,12 +888,12 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <source>Search for Instructions</source>
-        <translation type="unfinished" />
+        <translation>指令搜索</translation>
     </message>
     <message>
         <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <source>Search:</source>
-        <translation type="unfinished" />
+        <translation>搜索：</translation>
     </message>
     <message>
         <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
@@ -908,7 +908,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <source>Instruction</source>
-        <translation type="unfinished" />
+        <translation>指令</translation>
     </message>
     <message>
         <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
@@ -929,7 +929,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
         <source>Tracer Status</source>
-        <translation type="unfinished" />
+        <translation>追踪器状态</translation>
     </message>
     <message>
         <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
@@ -981,7 +981,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
         <source>Original Opcodes</source>
-        <translation type="unfinished" />
+        <translation>原始操作码</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
@@ -991,37 +991,37 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
         <source>Structures</source>
-        <translation type="unfinished" />
+        <translation>结构体</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
         <source>Name</source>
-        <translation type="unfinished" />
+        <translation>名称</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
         <source>New</source>
-        <translation type="unfinished" />
+        <translation>新建</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
         <source>Edit</source>
-        <translation type="unfinished">编辑</translation>
+        <translation>编辑</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
         <source>Delete</source>
-        <translation type="unfinished">删除</translation>
+        <translation>删除</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
         <source>View at address…</source>
-        <translation type="unfinished" />
+        <translation>查看此地址...</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
         <source>Add to address table</source>
-        <translation type="unfinished" />
+        <translation>添加到地址表</translation>
     </message>
 </context><context>
     <name>MainWindow</name>
@@ -1061,7 +1061,10 @@ Patterns at former positions have higher priority if regex is off</source>
 - No arrow: Frozen at current value
 - ▲: Allow increments only
 - ▼: Allow decrements only</source>
-        <translation type="unfinished" />
+        <translation>冻结该值。点击复选框右侧区域可在不同冻结模式之间切换：
+无箭头：冻结为当前值
+▲：只允许值增加
+▼：只允许值减少</translation>
     </message>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
@@ -1108,7 +1111,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
         <source>Cancel Scan</source>
-        <translation type="unfinished" />
+        <translation>终止扫描</translation>
     </message>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
@@ -1143,27 +1146,27 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
         <source>Alignment:</source>
-        <translation type="unfinished" />
+        <translation>对齐：</translation>
     </message>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
         <source>Manage Scan Regions</source>
-        <translation type="unfinished" />
+        <translation>管理扫描区域</translation>
     </message>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
         <source>Enable Speedhack</source>
-        <translation type="unfinished" />
+        <translation>启用速度修改</translation>
     </message>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
         <source>Open session notes</source>
-        <translation type="unfinished" />
+        <translation>打开会话笔记</translation>
     </message>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
         <source>Notes</source>
-        <translation type="unfinished" />
+        <translation>笔记</translation>
     </message>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
@@ -1173,7 +1176,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
         <source>Open a cheat table</source>
-        <translation>打开一个PCT文件</translation>
+        <translation>打开一个作弊表</translation>
     </message>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
@@ -1282,152 +1285,152 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Libpince Engine</source>
-        <translation type="unfinished" />
+        <translation>Libpince 引擎</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>(untitled)</source>
-        <translation type="unfinished" />
+        <translation>（无标题）</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>+</source>
-        <translation type="unfinished" />
+        <translation>+</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Script output</source>
-        <translation type="unfinished" />
+        <translation>脚本输出</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Templates</source>
-        <translation type="unfinished" />
+        <translation>模板</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Help</source>
-        <translation type="unfinished">帮助</translation>
+        <translation>帮助</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Run</source>
-        <translation type="unfinished" />
+        <translation>运行</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Code injection</source>
-        <translation type="unfinished" />
+        <translation>代码注入</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Ctrl+O</source>
-        <translation type="unfinished" />
+        <translation>Ctrl+O</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Ctrl+S</source>
-        <translation type="unfinished" />
+        <translation>Ctrl+S</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Libpince</source>
-        <translation>&amp;Libpince</translation>
+        <translation>Libpince</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Run [ENABLE]</source>
-        <translation type="unfinished" />
+        <translation>运行 [启用]</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Ctrl+Shift+E</source>
-        <translation type="unfinished" />
+        <translation>Ctrl+Shift+E</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Run [DISABLE]</source>
-        <translation type="unfinished" />
+        <translation>运行 [禁用]</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Ctrl+Shift+D</source>
-        <translation type="unfinished" />
+        <translation>Ctrl+Shift+D</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Run selection</source>
-        <translation type="unfinished" />
+        <translation>运行选定</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Ctrl+R</source>
-        <translation type="unfinished" />
+        <translation>Ctrl+R</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Clear output</source>
-        <translation type="unfinished" />
+        <translation>清除输出</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Send to cheat table</source>
-        <translation type="unfinished" />
+        <translation>发送到作弊表</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Ctrl+Shift+T</source>
-        <translation type="unfinished" />
+        <translation>Ctrl+Shift+T</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>AOB scan + NOP</source>
-        <translation type="unfinished" />
+        <translation>AOB 扫描 + NOP</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>AOB scan + patch</source>
-        <translation type="unfinished" />
+        <translation>AOB 扫描 + patch</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Read/write address</source>
-        <translation type="unfinished" />
+        <translation>读/写 地址</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
         <source>Pointer Scanner</source>
-        <translation type="unfinished" />
+        <translation>指针扫描器</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
         <source>Fi&amp;le</source>
-        <translation type="unfinished">文件[&amp;l]</translation>
+        <translation>文件[&amp;l]</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
         <source>Actio&amp;ns</source>
-        <translation type="unfinished" />
+        <translation>行动[&amp;n]</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
         <source>&amp;Open</source>
-        <translation type="unfinished">打开[&amp;O]</translation>
+        <translation>打开[&amp;O]</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
         <source>&amp;Save As...</source>
-        <translation type="unfinished" />
+        <translation>另存为[&amp;S]...</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
         <source>&amp;Scan</source>
-        <translation type="unfinished" />
+        <translation>扫描[&amp;S]</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
         <source>&amp;Filter</source>
-        <translation type="unfinished" />
+        <translation>过滤[&amp;F]</translation>
     </message>
 </context><context>
     <name>MainWindow_MemoryView</name>
@@ -1451,7 +1454,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
         <source>Instruction</source>
-        <translation type="unfinished" />
+        <translation>指令</translation>
     </message>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
@@ -1541,7 +1544,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
         <source>Inject D&amp;LL file</source>
-        <translation type="unfinished" />
+        <translation>注入 DLL 文件[&amp;L]</translation>
     </message>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
@@ -1611,7 +1614,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Search Instructions</source>
-        <translation type="unfinished" />
+        <translation>搜索指令[&amp;S]</translation>
     </message>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
@@ -1626,7 +1629,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
         <source>Dissect &amp;Mono/IL2CPP</source>
-        <translation type="unfinished" />
+        <translation>分析 Mono/IL2CPP[&amp;M]</translation>
     </message>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
@@ -1651,24 +1654,24 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
         <source>Libpince Engine</source>
-        <translation type="unfinished" />
+        <translation>Libpince 引擎</translation>
     </message>
     <message>
         <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
         <source>Structures</source>
-        <translation type="unfinished" />
+        <translation>结构体</translation>
     </message>
 </context><context>
     <name>SessionNotes</name>
     <message>
         <location filename="../../GUI/Widgets/SessionNotes/Form/SessionNotes.ui" line="0" />
         <source>Notes</source>
-        <translation type="unfinished" />
+        <translation>笔记</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/SessionNotes/Form/SessionNotes.ui" line="0" />
         <source>Session Notes</source>
-        <translation type="unfinished" />
+        <translation>会话笔记</translation>
     </message>
 </context><context>
     <name>TabWidget</name>
@@ -1784,7 +1787,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Cancel ongoing GDB command</source>
-        <translation type="unfinished" />
+        <translation>取消正在运行的 GDB 命令</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -1794,17 +1797,17 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Toggle speedhack</source>
-        <translation type="unfinished" />
+        <translation>切换速度修改</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Speedhack - Increase speed</source>
-        <translation type="unfinished" />
+        <translation>速度修改 - 增加速度</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Speedhack - Decrease speed</source>
-        <translation type="unfinished" />
+        <translation>速度修改 - 减少速度</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -1814,7 +1817,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Next Scan - Not</source>
-        <translation type="unfinished" />
+        <translation>再次扫描 - 不等</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -1824,7 +1827,7 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Next Scan - Increased By</source>
-        <translation type="unfinished" />
+        <translation>再次扫描 - 增加自</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -1834,22 +1837,22 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Next Scan - Decreased By</source>
-        <translation type="unfinished" />
+        <translation>再次扫描 - 减少自</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Next Scan - Less Than</source>
-        <translation type="unfinished" />
+        <translation>再次扫描 - 少于</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Next Scan - More Than</source>
-        <translation type="unfinished" />
+        <translation>再次扫描 - 多于</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Next Scan - Between</source>
-        <translation type="unfinished" />
+        <translation>再次扫描 - 介于</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -1879,12 +1882,12 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>This feature is not available while attached to a WINE/Proton process!</source>
-        <translation type="unfinished" />
+        <translation>此功能在附加到 WINE/Proton 进程时无效！</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Speedhack couldn't be enabled for this process.</source>
-        <translation type="unfinished" />
+        <translation>速度修改无法在此进程中启用。</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -1948,7 +1951,7 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Auto</source>
-        <translation type="unfinished" />
+        <translation>自动</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -1968,7 +1971,7 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Delete selection</source>
-        <translation type="unfinished" />
+        <translation>删除选定</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -1988,62 +1991,62 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Stop</source>
-        <translation type="unfinished">停止</translation>
+        <translation>停止</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Stopping</source>
-        <translation type="unfinished" />
+        <translation>停止中</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Paste inside</source>
-        <translation>粘贴在里</translation>
+        <translation>粘贴到其内</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Pointer scan for this address</source>
-        <translation type="unfinished" />
+        <translation>此地址的指针扫描</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Open pointer scanner</source>
-        <translation type="unfinished" />
+        <translation>打开指针扫描器</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Pointer scan finished. Found {} valid pointer paths.</source>
-        <translation type="unfinished" />
+        <translation>指针扫描完成。发现 {} 个有效指针路径。</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Pointer filtering finished. Found {} stable pointer paths.</source>
-        <translation type="unfinished" />
+        <translation>指针过滤完成。发现 {} 个稳定指针路径。</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Scanning for pointers</source>
-        <translation type="unfinished" />
+        <translation>指针扫描中</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Resolving pointer paths</source>
-        <translation type="unfinished" />
+        <translation>解析指针路径中</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Base Address</source>
-        <translation type="unfinished" />
+        <translation>基址</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Offset</source>
-        <translation type="unfinished">偏移量</translation>
+        <translation>偏移量</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Pointer paths count: {}</source>
-        <translation type="unfinished" />
+        <translation>指针路径数量：{}</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2108,74 +2111,76 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Open script file</source>
-        <translation type="unfinished" />
+        <translation>打开脚本文件</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Save script file</source>
-        <translation type="unfinished" />
+        <translation>保存脚本文件</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>(untitled)</source>
-        <translation type="unfinished" />
+        <translation>（无标题）</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Script execution failed</source>
-        <translation type="unfinished" />
+        <translation>脚本执行失败</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Unsaved script</source>
-        <translation type="unfinished" />
+        <translation>未保存的脚本</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Save changes to {}?</source>
-        <translation type="unfinished" />
+        <translation>保存修改到 {}？</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>--- Running {} ---</source>
-        <translation type="unfinished" />
+        <translation>--- 运行 {} ---</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>--- Finished ---</source>
-        <translation type="unfinished" />
+        <translation>--- 完成 ---</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>This script has no [DISABLE] section</source>
-        <translation type="unfinished" />
+        <translation>此脚本无 [禁用] 段</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Send to cheat table</source>
-        <translation type="unfinished" />
+        <translation>发送到作弊表</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Sent to the cheat table</source>
-        <translation type="unfinished" />
+        <translation>发送到作弊表</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Script</source>
-        <translation type="unfinished" />
+        <translation>脚本</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Edit script</source>
-        <translation type="unfinished" />
+        <translation>编辑脚本</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Running the script failed, see the details below.
 
 {}</source>
-        <translation type="unfinished" />
+        <translation>脚本运行失败，详情如下。
+
+{}</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2185,7 +2190,7 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Python Scripts (*.py)</source>
-        <translation type="unfinished" />
+        <translation>Python 脚本 (*.py)</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2195,7 +2200,7 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Dynamic-link library (*.dll)</source>
-        <translation type="unfinished" />
+        <translation>动态链接库 (*.dll)</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2205,12 +2210,12 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Pointer Scan Map (*.lmptr)</source>
-        <translation type="unfinished" />
+        <translation>指针扫描图 (*.lmptr)</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Add to address table</source>
-        <translation type="unfinished" />
+        <translation>添加到地址表</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2290,7 +2295,7 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>This requires the process to be stopped</source>
-        <translation type="unfinished" />
+        <translation>这需要进程停止</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2305,7 +2310,7 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Enter the new address</source>
-        <translation type="unfinished" />
+        <translation>输入新地址</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2385,7 +2390,10 @@ Proceed?</source>
 [as]df --&gt; search for both adf and sdf
 Use the char \ to escape special chars such as [
 </source>
-        <translation type="unfinished" />
+        <translation>asdf|qwer --&gt; 搜索 asdf 或 qwer
+[as]df --&gt; 搜索 adf 和 sdf
+用字符 \ 转义特殊字符，比如 [
+</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2395,7 +2403,7 @@ Use the char \ to escape special chars such as [
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>This setting is unused in AppImage builds</source>
-        <translation type="unfinished" />
+        <translation>此设置在 AppImage 构建中未使用</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2410,7 +2418,7 @@ Use the char \ to escape special chars such as [
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Use global hotkeys or the commands 'interrupt' and 'c&amp;' to stop/run the inferior</source>
-        <translation>使用全局快捷键或者命令 'interrupt' 和 'c&amp;' 停止/运行被调试程序（inferior）</translation>
+        <translation>使用全局快捷键或者命令 'interrupt' 和 'c&amp;' 停止/运行被调试程序</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2428,7 +2436,20 @@ phase-in: Attach back to the previously detached process |
 ---------------------------------------------------------------------------------------------------
 You can change the output mode from bottom right
 Changing output mode only affects commands sent. Any other output coming from external sources(e.g async output) will be shown in MI format</source>
-        <translation type="unfinished" />
+        <translation>快捷键：
+--------------------
+发送: Enter         |
+多行模式：Ctrl+Enter |
+命令补全：Tab        |
+--------------------
+命令:
+--------------------------------
+/clear：清空控制台               |
+phase-out: 分离当前进程          |
+phase-in: 重新附加上一个分离的进程 |
+-----------------------------------------------------------------------------------------
+你可以在右下角切换输出模式
+更改输出模式仅影响命令的发送。来自外部源的任何其他输出（例如异步输出）将以 MI 格式显示</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2498,7 +2519,7 @@ Changing output mode only affects commands sent. Any other output coming from ex
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Set Breakpoint</source>
-        <translation type="unfinished" />
+        <translation>设置断点</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2603,7 +2624,7 @@ Check terminal for details</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Toggle stack from BP/SP register</source>
-        <translation type="unfinished" />
+        <translation>从 BP/SP 寄存器中切换堆栈</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2703,7 +2724,7 @@ Check terminal for details</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Copy Instruction</source>
-        <translation type="unfinished" />
+        <translation>复制指令</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2755,37 +2776,37 @@ PINCE 将追踪地址 [rax]，[rbx*rcx+4] 和 [rbp]</translation>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Select the shared object (.so) file</source>
-        <translation type="unfinished" />
+        <translation>选择共享对象库 (*.so) 文件</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>The shared object (.so) file has been injected</source>
-        <translation type="unfinished" />
+        <translation>共享对象库 (*.so) 文件已注入</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Failed to inject the shared object (.so) file</source>
-        <translation type="unfinished" />
+        <translation>共享对象库 (*.so) 文件注入失败</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Select the DLL file</source>
-        <translation type="unfinished" />
+        <translation>选择 DLL 文件</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>The DLL has been injected at {}</source>
-        <translation type="unfinished" />
+        <translation>DLL 已注入到 {}</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Failed to inject the DLL</source>
-        <translation type="unfinished" />
+        <translation>DLL 注入失败</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>DLL injection is only supported for WINE/Proton processes</source>
-        <translation type="unfinished" />
+        <translation>DLL 注入只支持 WINE/Proton 进程</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2800,17 +2821,17 @@ $28 = 4
 $28 is the assigned convenience variable
 4 is the result
 You can use the assigned variable from the GDB Console</source>
-        <translation>请输入从被调试程序（inferior）中将要调用的函数表达式
+        <translation>输入要从被调试程序中调用的函数表达式
 你可以从 视图 -&gt; 函数 查看函数列表
 
 例如：
-调用 printf("1234") 将产生类似下面的结果
+调用 printf("1234") 会产生类似如下的结果
 ↓
 $28 = 4
 
 $28 是分配的便利变量
 4 是函数调用的结果
-你可以从 GDB 控制台中使用分配的变量</translation>
+你可以在 GDB 控制台中使用该已赋值的变量</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2895,17 +2916,17 @@ $28 是分配的便利变量
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Instructions writing to the address {}</source>
-        <translation type="unfinished" />
+        <translation>从地址 {} 写入指令中</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Instructions reading from the address {}</source>
-        <translation type="unfinished" />
+        <translation>从地址 {} 读取指令中</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Instructions accessing to the address {}</source>
-        <translation type="unfinished" />
+        <translation>从地址 {} 访问指令中</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -2970,27 +2991,27 @@ $28 是分配的便利变量
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Select a pointer map file</source>
-        <translation type="unfinished" />
+        <translation>选择一个指针图文件</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Scan</source>
-        <translation type="unfinished" />
+        <translation>扫描</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Scanning</source>
-        <translation type="unfinished" />
+        <translation>扫描中</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Filter</source>
-        <translation type="unfinished" />
+        <translation>过滤</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Filtering</source>
-        <translation type="unfinished" />
+        <translation>过滤中</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -3002,9 +3023,9 @@ $28 是分配的便利变量
         <source>This symbol is defined. You can use its body as a gdb expression. For instance:
 
 void func(param) can be used as 'func' as a gdb expression</source>
-        <translation>该符号已定义。您可以将其作为 GDB 表达式使用其主体。例如：
+        <translation>该符号已定义。你可以直接将其主体作为 GDB 表达式使用。例如：
 
-void func(param) 可以作为 'func' 作为 GDB 表达式使用</translation>
+void func(param) 可用 'func' 作为 GDB 表达式使用</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -3024,23 +3045,24 @@ These 3 functions will have different addresses
 @plt means this function is a subroutine for the original one
 There can be more than one of the same function
 It means that the function is overloaded</source>
-        <translation>	以下是一些有用的正则表达式提示：
-^quaso --&gt; 搜索以 quaso 开头的所有内容
-[ab]cd --&gt; 搜索同时包含 acd 和 bcd 的内容
+        <translation>	这里有一些实用的正则表达式小技巧：
+^quaso --&gt; 匹配所有以 quaso 开头的内容
+[ab]cd --&gt; 同时匹配 acd 和 bcd
 
-	如何解释符号：
-一个看起来像 'func(param)@plt' 的符号由三个部分组成：
+	如何解读符号：
+一个形如 func(param)@plt 的符号由 3 个部分组成，分别是：
 func, func(param), func(param)@plt
-这三个函数将有不同的地址
-@plt 表示该函数是原始函数的一个子程序
-同一个函数可能有多个
-这意味着函数是重载的</translation>
+这 3 个函数（地址）各不相同
+其中，@plt 表示该函数是原始函数的一个子程序
+此外，如果出现多个同名函数，
+这表示该函数发生了重载（Overload）</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>New instruction is {} bytes long but old instruction is only {} bytes long
 This will cause an overflow, proceed?</source>
-        <translation type="unfinished" />
+        <translation>新指令的长度为 {} 字节，但旧指令的长度仅为 {} 字节
+这会导致溢出，是否继续？</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -3094,7 +3116,11 @@ call|rax --&gt; search for instructions that contain call or rax
 [re]cx --&gt; search for both rcx and ecx
 Use the char \ to escape special chars such as [
 \[rsp\] --&gt; search for instructions that contain [rsp]</source>
-        <translation type="unfinished" />
+        <translation>	这里有一些有用的正则表达式示例：
+call|rax --&gt; 搜索包含 call 或 rax 的指令
+[re]cx --&gt; 搜索 rcx 和 ecx
+用字符 \ 转义特殊字符，比如 [
+\[rsp\] --&gt; 搜索包含 [rsp] 的指令</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -3161,7 +3187,7 @@ Proceed?</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Not</source>
-        <translation type="unfinished" />
+        <translation>不等</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -3216,7 +3242,7 @@ Proceed?</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Unknown Value</source>
-        <translation>未知值</translation>
+        <translation>未知</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -3266,303 +3292,305 @@ Proceed?</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Dark</source>
-        <translation type="unfinished" />
+        <translation>暗</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Light</source>
-        <translation type="unfinished" />
+        <translation>亮</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>System Default</source>
-        <translation type="unfinished" />
+        <translation>系统默认</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Wong (Colorblind Friendly)</source>
-        <translation type="unfinished" />
+        <translation>错（色盲友好）</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Session - Unsaved changes</source>
-        <translation type="unfinished" />
+        <translation>会话 - 未保存的修改</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>You have unsaved changes.
 Do you want to save the current session?</source>
-        <translation type="unfinished" />
+        <translation>你有未保存的修改。
+你是否想保存当前会话？</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Session - Process changed</source>
-        <translation type="unfinished" />
+        <translation>会话 - 进程变动</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>The process name has changed.
 Do you want to keep the current session with the new process?</source>
-        <translation type="unfinished" />
+        <translation>进程名已变化。
+你是否想保留当前会话到新进程？</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Mono collector is not connected</source>
-        <translation type="unfinished" />
+        <translation>Mono 收集器未连接</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>No supported managed runtime found in this process</source>
-        <translation type="unfinished" />
+        <translation>在此进程中未找到受支持的托管运行时环境</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Invoke...</source>
-        <translation type="unfinished" />
+        <translation>调用...</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Instance (this)</source>
-        <translation type="unfinished" />
+        <translation>实例 (this)</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Result: {}</source>
-        <translation type="unfinished" />
+        <translation>结果：{}</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Returned (void)</source>
-        <translation type="unfinished" />
+        <translation>返回了 (void)</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Exception thrown (object @ {})</source>
-        <translation type="unfinished" />
+        <translation>抛出异常 (object @ {})</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Could not parse the argument values</source>
-        <translation type="unfinished" />
+        <translation>无法解析参数值</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Invalid instance pointer</source>
-        <translation type="unfinished" />
+        <translation>无效的实例指针</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>This method has a parameter type that can't be marshalled yet</source>
-        <translation type="unfinished" />
+        <translation>此方法的某个参数类型尚无法进行封送处理</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>{} raw bytes (hex)</source>
-        <translation type="unfinished" />
+        <translation>{} 原始字节（十六进制）</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Find instance...</source>
-        <translation type="unfinished" />
+        <translation>查找实例...</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Select a live instance:</source>
-        <translation type="unfinished" />
+        <translation>选择一个活动实例：</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Static field address is unavailable for this runtime</source>
-        <translation type="unfinished" />
+        <translation>此运行时无法获取静态字段地址</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>(type could not be resolved)</source>
-        <translation type="unfinished" />
+        <translation>（类型无法解析）</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>(maximum drill depth reached)</source>
-        <translation type="unfinished" />
+        <translation>（达到最大钻洞深度）</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Find Instances</source>
-        <translation type="unfinished" />
+        <translation>查找实例</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Find Instances - {}</source>
-        <translation type="unfinished" />
+        <translation>查找实例 - {}</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>{} instance(s) found</source>
-        <translation type="unfinished" />
+        <translation>发现 {} 个实例</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>(showing first {})</source>
-        <translation type="unfinished" />
+        <translation>（展示第一个 {}）</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>No live instances found</source>
-        <translation type="unfinished" />
+        <translation>未找到活动实例</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Could not resolve an instance marker for this class</source>
-        <translation type="unfinished" />
+        <translation>无法解析此类别的实例标记</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Fields</source>
-        <translation type="unfinished" />
+        <translation>字段</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Methods</source>
-        <translation type="unfinished" />
+        <translation>方法</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Disassemble</source>
-        <translation type="unfinished" />
+        <translation>反汇编</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Structure view</source>
-        <translation type="unfinished" />
+        <translation>结构体查看器</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>View at address…</source>
-        <translation type="unfinished" />
+        <translation>查看此地址...</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Delete structure</source>
-        <translation type="unfinished" />
+        <translation>删除结构体</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Delete structure '{}'?</source>
-        <translation type="unfinished" />
+        <translation>删除结构体 '{}'？</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>View as structure</source>
-        <translation type="unfinished" />
+        <translation>以结构体形式查看</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Enter base address</source>
-        <translation type="unfinished" />
+        <translation>输入基址</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Structures</source>
-        <translation type="unfinished" />
+        <translation>结构体</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>New Structure</source>
-        <translation type="unfinished" />
+        <translation>新结构体</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Edit Structure</source>
-        <translation type="unfinished" />
+        <translation>编辑结构体</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Structure name</source>
-        <translation type="unfinished" />
+        <translation>结构体名称</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Add Member</source>
-        <translation type="unfinished" />
+        <translation>添加成员</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Edit Member</source>
-        <translation type="unfinished" />
+        <translation>编辑成员</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Remove Member</source>
-        <translation type="unfinished" />
+        <translation>删除成员</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Move Up</source>
-        <translation type="unfinished" />
+        <translation>上移</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Move Down</source>
-        <translation type="unfinished" />
+        <translation>下移</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Member name</source>
-        <translation type="unfinished" />
+        <translation>成员名称</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Member offset</source>
-        <translation type="unfinished" />
+        <translation>成员偏移量</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Value</source>
-        <translation type="unfinished">值</translation>
+        <translation>值</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Pointer</source>
-        <translation type="unfinished">指针</translation>
+        <translation>指针</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Inline</source>
-        <translation type="unfinished" />
+        <translation>内联</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>A structure with this name already exists</source>
-        <translation type="unfinished" />
+        <translation>以此为命名的结构体已存在</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Structure name cannot be empty</source>
-        <translation type="unfinished" />
+        <translation>结构体名称不能为空</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Unsigned</source>
-        <translation type="unfinished" />
+        <translation>无符号</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Signed</source>
-        <translation type="unfinished">有符号</translation>
+        <translation>有符号</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Hex</source>
-        <translation type="unfinished">十六进制</translation>
+        <translation>十六进制</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Export as structure</source>
-        <translation type="unfinished" />
+        <translation>导出为结构体</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Dissect as structure</source>
-        <translation type="unfinished" />
+        <translation>以结构体形式分析</translation>
     </message>
 </context></TS>
