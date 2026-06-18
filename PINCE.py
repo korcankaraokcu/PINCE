@@ -4658,15 +4658,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         client = monocore.get_client()
         if client is None:
             return
-        struct = mono_export.structure_from_class(client, class_data)
-        name = struct.name
-        if not StructureManager.add(struct):
-            counter = 1
-            while not StructureManager.add(typedefs.Structure(f"{name}_{counter}", struct.members, struct.size)):
-                counter += 1
-            name = f"{name}_{counter}"
-        if not StructureEditorDialog(self, name).exec():
-            StructureManager.delete(name)
+        try:
+            struct = mono_export.structure_from_class(client, class_data)
+        except monocore.MonoError:
+            QMessageBox.information(self, tr.ERROR, tr.MONO_NOT_READY)
+            return
+        if not StructureEditorDialog(self, struct.name).exec():
+            StructureManager.delete(struct.name)
         if self.parent().structures_window:
             self.parent().structures_window.refresh()
 
