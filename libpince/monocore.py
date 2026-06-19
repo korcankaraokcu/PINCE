@@ -185,22 +185,25 @@ _INT_WIDTH = {"i1": 1, "u1": 1, "i2": 2, "u2": 2, "char": 2, "i4": 4, "u4": 4, "
 
 def _arg_to_bits(tag: str, value: Any) -> int:
     """Encode a Python value into the raw bit pattern the collector expects for tag."""
-    if tag == "nil":
-        return 0
-    if tag == "object":
-        return int(value) & 0xFFFFFFFFFFFFFFFF
-    if tag == "bool":
-        return 1 if value else 0
-    if tag == "r4":
-        return struct.unpack("<I", struct.pack("<f", float(value)))[0]
-    if tag == "r8":
-        return struct.unpack("<Q", struct.pack("<d", float(value)))[0]
-    if tag == "char" and isinstance(value, str):
-        value = ord(value[0]) if value else 0
-    width = _INT_WIDTH.get(tag)
-    if width is None:
-        raise MonoError(f"unsupported argument type {tag}")
-    return int(value) & ((1 << (8 * width)) - 1)
+    try:
+        if tag == "nil":
+            return 0
+        if tag == "object":
+            return int(value) & 0xFFFFFFFFFFFFFFFF
+        if tag == "bool":
+            return 1 if value else 0
+        if tag == "r4":
+            return struct.unpack("<I", struct.pack("<f", float(value)))[0]
+        if tag == "r8":
+            return struct.unpack("<Q", struct.pack("<d", float(value)))[0]
+        if tag == "char" and isinstance(value, str):
+            value = ord(value[0]) if value else 0
+        width = _INT_WIDTH.get(tag)
+        if width is None:
+            raise MonoError(f"unsupported argument type {tag}")
+        return int(value) & ((1 << (8 * width)) - 1)
+    except (TypeError, ValueError, OverflowError, struct.error) as e:
+        raise MonoError(f"invalid value for type {tag}: {e}") from e
 
 
 def _bits_to_value(tag: str, bits: int) -> Any:
@@ -304,13 +307,25 @@ class MonoClient:
         return self.request("methods", klass=klass)
 
     def compile_method(self, method: int) -> int:
-        return self.request("compile", method=method)["native_addr"]
+        result = self.request("compile", method=method)
+        addr = result.get("native_addr") if isinstance(result, dict) else None
+        if addr is None:
+            raise MonoError("malformed response: missing 'native_addr'")
+        return addr
 
     def static_field_address(self, klass: int, field: int) -> int:
-        return self.request("static_addr", klass=klass, field=field)["address"]
+        result = self.request("static_addr", klass=klass, field=field)
+        addr = result.get("address") if isinstance(result, dict) else None
+        if addr is None:
+            raise MonoError("malformed response: missing 'address'")
+        return addr
 
     def find_class(self, image: int, namespace: str, name: str) -> int:
-        return self.request("find_class", image=image, namespace=namespace, name=name)["klass"]
+        result = self.request("find_class", image=image, namespace=namespace, name=name)
+        klass = result.get("klass") if isinstance(result, dict) else None
+        if klass is None:
+            raise MonoError("malformed response: missing 'klass'")
+        return klass
 
     def class_info(self, klass: int) -> dict:
         """Return {namespace, name, parent} for a class handle."""
@@ -318,11 +333,19 @@ class MonoClient:
 
     def type_klass(self, field: int) -> int:
         """Return the klass handle of a field's declared type or 0 if unresolvable."""
-        return self.request("type_klass", field=field)["klass"]
+        result = self.request("type_klass", field=field)
+        klass = result.get("klass") if isinstance(result, dict) else None
+        if klass is None:
+            raise MonoError("malformed response: missing 'klass'")
+        return klass
 
     def instance_marker(self, klass: int) -> int:
         """Return the marker every live instance carries in word 0 (Mono: MonoVTable*, IL2CPP: klass)."""
-        return self.request("instance_marker", klass=klass)["marker"]
+        result = self.request("instance_marker", klass=klass)
+        marker = result.get("marker") if isinstance(result, dict) else None
+        if marker is None:
+            raise MonoError("malformed response: missing 'marker'")
+        return marker
 
     def signature(self, method: int) -> dict:
         """Return {ret:{tag,name}, params:[{name,tag,type}]} for a method handle.
@@ -336,20 +359,23 @@ class MonoClient:
         """
         header = object_header_size()
         layout = []
-        for fld in self.fields(klass):
-            if fld["is_static"]:
-                continue
-            if fld["tag"] not in _PACKABLE_TAGS:
-                return None
-            layout.append(
-                {
-                    "name": fld["name"],
-                    "tag": fld["tag"],
-                    "type": fld["type"],
-                    "offset": fld["offset"] - header,
-                    "width": _value_width(fld["tag"]),
-                }
-            )
+        try:
+            for fld in self.fields(klass):
+                if fld["is_static"]:
+                    continue
+                if fld["tag"] not in _PACKABLE_TAGS:
+                    return None
+                layout.append(
+                    {
+                        "name": fld["name"],
+                        "tag": fld["tag"],
+                        "type": fld["type"],
+                        "offset": fld["offset"] - header,
+                        "width": _value_width(fld["tag"]),
+                    }
+                )
+        except (KeyError, TypeError) as e:
+            raise MonoError(f"malformed field in collector response: {e}") from e
         return layout
 
     def invoke(self, method: int, obj: int = 0, args: list[tuple[str, Any]] | None = None) -> dict:
