@@ -374,6 +374,9 @@ def state_observe_thread() -> None:
         gdb_initialized = False
         with gdb_waiting_for_prompt_condition:
             gdb_waiting_for_prompt_condition.notify_all()
+        with process_exited_condition:
+            if currentpid != -1:
+                process_exited_condition.notify_all()
         if isinstance(e, pexpect.EOF):
             logger.exception(
                 f"EOF exception caught within pexpect, here's the contents of child.before:\n{child.before}"
@@ -2086,8 +2089,8 @@ def add_watchpoint(
         breakpoints_nums.append(safe_int_cast(breakpoint_number))
         global breakpoint_on_hit_dict
         breakpoint_on_hit_dict[breakpoint_number] = on_hit
-        remaining_length -= max_length
-        str_address_int += max_length
+        remaining_length -= breakpoint_length
+        str_address_int += breakpoint_length
     global chained_breakpoints
     if breakpoints_nums:
         chained_breakpoints.append(breakpoints_nums)
@@ -2547,7 +2550,7 @@ def get_dissect_code_status() -> tuple:
     """Returns the current state of dissect code process
 
     Returns:
-        tuple:(current_region, current_region_count, referenced_strings_count,
+        tuple:(current_region, current_region_count, current_range, referenced_strings_count,
                                referenced_jumps_count, referenced_calls_count)
 
         current_region-->(str) Currently scanned memory region
