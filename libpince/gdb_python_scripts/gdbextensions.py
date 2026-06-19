@@ -68,7 +68,7 @@ class IgnoreErrors(gdb.Command):
     def invoke(self, argument: str, from_tty: bool) -> None:
         try:
             gdb.execute(argument, from_tty)
-        except:
+        except Exception:
             pass
 
 
@@ -162,7 +162,7 @@ class GetStackTraceInfo(gdb.Command):
         for item in range(int(max_frame) + 1):
             try:
                 result = gdb.execute(f"info frame {item}", from_tty, to_string=True)
-            except:
+            except Exception:
                 break
             frame_address = regexes.frame_address.search(result)
             if not frame_address:
@@ -263,7 +263,7 @@ class GetFrameReturnAddresses(gdb.Command):
         for item in range(int(max_frame) + 1):
             try:
                 result = gdb.execute(f"info frame {item}", from_tty, to_string=True)
-            except:
+            except Exception:
                 break
             return_address = regexes.return_address.search(result)
             if return_address:
@@ -317,7 +317,7 @@ class GetTrackWatchpointInfo(gdb.Command):
             # Just before the line "End of assembler dump"
             last_instruction = disas_output.splitlines()[-2]
             previous_pc_address = utils.extract_hex_address(last_instruction) or hex(current_pc_int)
-        except:
+        except Exception:
             previous_pc_address = hex(current_pc_int)
         global track_watchpoint_dict
         try:
@@ -332,7 +332,7 @@ class GetTrackWatchpointInfo(gdb.Command):
         float_info = gdbutils.get_float_registers()
         try:
             disas_info = gdb.execute("disas " + previous_pc_address + ",+40", to_string=True).replace("=>", "  ")
-        except:
+        except Exception:
             disas_info = ""
         track_watchpoint_dict[breakpoints][current_pc_int] = [
             count,
@@ -364,7 +364,7 @@ class GetTrackBreakpointInfo(gdb.Command):
                 track_breakpoint_dict[breakpoint_number][register_expression] = OrderedDict()
             try:
                 address = gdbutils.examine_expression(register_expression).address
-            except:
+            except Exception:
                 address = None
             if address:
                 if address not in track_breakpoint_dict[breakpoint_number][register_expression]:
@@ -420,7 +420,7 @@ class DissectCode(gdb.Command):
                 data_read.decode("utf-8")
             else:
                 self.memory.read(1)
-        except:
+        except Exception:
             return False
         return True
 
