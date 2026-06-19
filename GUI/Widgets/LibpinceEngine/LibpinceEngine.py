@@ -352,6 +352,8 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         self.tabWidget.removeTab(index)
         if index == current_index and index > 0:
             self.tabWidget.setCurrentIndex(index - 1)
+        if self.get_current_editor() is None:
+            self.create_new_tab()
 
     def open_file(self) -> None:
         file_path, _ = QFileDialog.getOpenFileName(
