@@ -1760,6 +1760,7 @@ class MainForm(QMainWindow, MainWindow):
 
     # Changes appearance whenever a new process is created or attached
     def on_new_process(self) -> None:
+        monocore.reset()
         name = utils.get_process_name(debugcore.currentpid)
         self.label_SelectedProcess.setText(str(debugcore.currentpid) + " - " + name)
         self.is_wine_process = utils.is_wine_process(debugcore.currentpid)
@@ -1806,6 +1807,7 @@ class MainForm(QMainWindow, MainWindow):
         self.label_MatchCount.setText(tr.MATCH_COUNT.format(0))
 
     def on_inferior_exit(self) -> None:
+        monocore.reset()
         if debugcore.currentpid == -1:
             self.memory_view_window.close()
         # Inferior is gone, so just drop speedhack state.
@@ -4635,13 +4637,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         client = monocore.get_client()
         if client is None:
             return
+        existing = set(StructureManager.list_names())
         try:
             struct = mono_export.structure_from_class(client, class_data)
         except monocore.MonoError:
             QMessageBox.information(self, tr.ERROR, tr.MONO_NOT_READY)
             return
+        created = set(StructureManager.list_names()) - existing
         if not StructureEditorDialog(self, struct.name).exec():
-            StructureManager.delete(struct.name)
+            for name in created:
+                StructureManager.delete(name)
         if self.parent().structures_window:
             self.parent().structures_window.refresh()
 

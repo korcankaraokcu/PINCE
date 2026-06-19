@@ -290,7 +290,11 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             class_info = methods_node.data(0, ROLE_DATA) if methods_node is not None else None
             self.open_invoke_for_method(client, item.data(0, ROLE_DATA), class_info)
             return
-        address = client.compile_method(method)
+        try:
+            address = client.compile_method(method)
+        except monocore.MonoError:
+            QMessageBox.information(self, tr.ERROR, tr.MONO_NOT_READY)
+            return
         if chosen == action_disas:
             self.disassemble_requested.emit(address)
         elif chosen == action_break:

@@ -164,6 +164,18 @@ def get_client() -> "MonoClient | None":
     return _client
 
 
+def reset() -> None:
+    """Drop the active collector connection.
+
+    Call when the inferior changes/exits so get_client() doesn't hand back a client
+    whose socket points at a process that's gone.
+    """
+    global _client
+    if _client is not None:
+        _client.close()
+        _client = None
+
+
 # Invoke argument marshalling.
 # Value type args/returns travel as a type tag + raw bit pattern (a uint) but the collector
 # writes/reads the native bytes.
@@ -264,9 +276,14 @@ class MonoClient:
     def request(self, op: str, **args: Any) -> Any:
         """Send one request frame, return the decoded "data" (or raise MonoError)"""
         payload = msgpack.packb({"op": op, **args}, use_bin_type=False)
-        self.sock.sendall(struct.pack(">I", len(payload)) + payload)
-        (length,) = struct.unpack(">I", self._recv_exact(4))
-        response = msgpack.unpackb(self._recv_exact(length), raw=False)
+        try:
+            self.sock.sendall(struct.pack(">I", len(payload)) + payload)
+            (length,) = struct.unpack(">I", self._recv_exact(4))
+            response = msgpack.unpackb(self._recv_exact(length), raw=False)
+        except OSError as e:
+            raise MonoError(f"collector connection lost: {e}")
+        if not isinstance(response, dict):
+            raise MonoError("malformed response from collector")
         if not response.get("ok"):
             raise MonoError(response.get("error", "unknown error"))
         return response.get("data")

@@ -152,7 +152,11 @@ def _inline_value_type(client: monocore.MonoClient, fld: dict) -> "str | None":
         vt_name = _class_name(client.class_info(vt_klass))
         if StructureManager.get(vt_name) is None:
             members = [
-                typedefs.StructureMember(sf["name"], sf["offset"], typedefs.ValueType(_TAG_TO_VALUE[sf["tag"]][0]))
+                typedefs.StructureMember(
+                    sf["name"],
+                    sf["offset"],
+                    typedefs.ValueType(_TAG_TO_VALUE[sf["tag"]][0], value_repr=_TAG_TO_VALUE[sf["tag"]][1]),
+                )
                 for sf in sub_fields
             ]
             size = max((sf["offset"] + sf["width"] for sf in sub_fields), default=0)
