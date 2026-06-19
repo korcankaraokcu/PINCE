@@ -46,7 +46,8 @@ class PointerChainOffset(QFrame):
         try:
             offsetValue = int(offsetText, 16)
             # first parent is the widget_pointer, second parent is the ManualAddressDialog
-            sizeVal = self.parent().parent().get_type_size() if hasattr(self.parent().parent(), "get_type_size") else 1
+            dialog = self.parent().parent()
+            sizeVal = (dialog.get_type_size() or 1) if hasattr(dialog, "get_type_size") else 1
             offsetValue = operator_func(offsetValue, sizeVal)
         except ValueError:
             offsetValue = 0
