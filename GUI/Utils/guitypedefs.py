@@ -4,6 +4,7 @@ from typing import Any, Callable
 from tr.tr import TranslationConstants as tr
 from libpince import debugcore, typedefs
 import queue
+import threading
 
 # Docstrings of pyqtSignal causes Sphinx to throw a warning about inline emphasis strings
 # The hack below overwrites the docstrings of pyqtSignal so we avoid the warnings
@@ -104,10 +105,23 @@ class AwaitAsyncOutput(QThread):
 class AwaitProcessExit(QThread):
     process_exited = pyqtSignal()
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._shutdown = threading.Event()
+
+    def request_shutdown(self) -> None:
+        self._shutdown.set()
+        with debugcore.process_exited_condition:
+            debugcore.process_exited_condition.notify_all()
+
     def run(self) -> None:
-        while True:
+        while not self._shutdown.is_set():
             with debugcore.process_exited_condition:
+                if self._shutdown.is_set():
+                    break
                 debugcore.process_exited_condition.wait()
+                if self._shutdown.is_set():
+                    break
             self.process_exited.emit()
 
 

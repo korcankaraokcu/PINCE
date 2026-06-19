@@ -361,7 +361,7 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.setColumnWidth(SEARCH_TABLE_VALUE_COL, 80)
         self.tableWidget_valuesearchtable.horizontalHeader().setSortIndicatorClearable(True)
         self.await_exit_thread = guitypedefs.AwaitProcessExit()
-        self.auto_attach_timer = QTimer(timeout=self.auto_attach_loop)
+        self.auto_attach_timer = QTimer(self, timeout=self.auto_attach_loop)
 
         settings.init_settings()
         self.settings_changed()
@@ -381,11 +381,11 @@ class MainForm(QMainWindow, MainWindow):
         states.status_thread.process_stopped.connect(self.on_status_stopped)
         states.status_thread.process_running.connect(self.on_status_running)
         states.setting_signals.changed.connect(self.settings_changed)
-        self.address_table_timer = QTimer(timeout=self.address_table_loop, singleShot=True)
+        self.address_table_timer = QTimer(self, timeout=self.address_table_loop, singleShot=True)
         self.address_table_timer.start()
-        self.search_table_timer = QTimer(timeout=self.search_table_loop, singleShot=True)
+        self.search_table_timer = QTimer(self, timeout=self.search_table_loop, singleShot=True)
         self.search_table_timer.start()
-        self.freeze_timer = QTimer(timeout=self.freeze_loop, singleShot=True)
+        self.freeze_timer = QTimer(self, timeout=self.freeze_loop, singleShot=True)
         self.freeze_timer.start()
         self.shortcut_open_file = QShortcut(QKeySequence("Ctrl+O"), self)
         self.shortcut_open_file.activated.connect(SessionManager.load_session)
@@ -467,7 +467,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_UndoScan.setEnabled(False)
         self.pushButton_CancelScan.setEnabled(False)
         self.flashAttachButton = True
-        self.flashAttachButtonTimer = QTimer()
+        self.flashAttachButtonTimer = QTimer(self)
         self.flashAttachButtonTimer.timeout.connect(self.flash_attach_button)
         self.flashAttachButton_gradiantState = 0
         self.flashAttachButtonTimer.start(100)
@@ -1144,10 +1144,12 @@ class MainForm(QMainWindow, MainWindow):
                         address = hex(eval(expression))
                     except:
                         address = debugcore.examine_expression(expression).address
-                        states.exp_cache[expression] = address
+                        if address is not None:
+                            states.exp_cache[expression] = address
                 else:
                     address = debugcore.examine_expression(expression).address
-                    states.exp_cache[expression] = address
+                    if address is not None:
+                        states.exp_cache[expression] = address
                 vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 is_struct_child = parent and self._is_struct_row(parent)
                 if isinstance(address_data, typedefs.PointerChainRequest):
@@ -1285,7 +1287,7 @@ class MainForm(QMainWindow, MainWindow):
             scan_type = scancore.scan_type_to_memscan_dict[type_index]
             scan_thread = guitypedefs.Worker(memscan.scan, scan_type, value_1, value_2)
         self.progressBar.setValue(0)
-        self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
+        self.progress_bar_timer = QTimer(self, timeout=self.update_progress_bar)
         self.progress_bar_timer.start(100)
         scan_thread.signals.finished.connect(self.scan_callback)
         states.threadpool.start(scan_thread)
@@ -1425,12 +1427,13 @@ class MainForm(QMainWindow, MainWindow):
         value_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         self.comboBox_ScanType.clear()
         items = typedefs.SCAN_TYPE.get_list(self.scan_mode, value_type)
-        old_index = 0
-        for index, type_index in enumerate(items):
-            if current_type == type_index:
-                old_index = index
+        for type_index in items:
             self.comboBox_ScanType.addItem(scan_type_text[type_index], type_index)
-        self.comboBox_ScanType.setCurrentIndex(old_index)
+        idx = self.comboBox_ScanType.findData(current_type)
+        if idx >= 0:
+            self.comboBox_ScanType.setCurrentIndex(idx)
+        else:
+            self.comboBox_ScanType.setCurrentIndex(0)
 
     def comboBox_ScanScope_init(self) -> None:
         scan_scope_text = [
@@ -1441,7 +1444,7 @@ class MainForm(QMainWindow, MainWindow):
         ]
         for scope, text in scan_scope_text:
             self.comboBox_ScanScope.addItem(text, scope)
-        self.comboBox_ScanScope.setCurrentIndex(1)  # typedefs.SCAN_SCOPE.NORMAL
+        self.comboBox_ScanScope.setCurrentIndex(self.comboBox_ScanScope.findData(ScanLevel.HEAP_STACK_EXE_BSS))  # NORMAL
         self.comboBox_ScanScope.currentIndexChanged.connect(self.on_scan_scope_changed)
 
     def on_scan_scope_changed(self) -> None:
@@ -1467,7 +1470,7 @@ class MainForm(QMainWindow, MainWindow):
         self.comboBox_ValueType.clear()
         for value_index, value_text in typedefs.scan_index_to_text_dict.items():
             self.comboBox_ValueType.addItem(value_text, value_index)
-        self.comboBox_ValueType.setCurrentIndex(typedefs.SCAN_INDEX.INT32)
+        self.comboBox_ValueType.setCurrentIndex(self.comboBox_ValueType.findData(typedefs.SCAN_INDEX.INT32))
         self.comboBox_ValueType_current_index_changed()
 
     def pushButton_NextScan_clicked(self) -> None:
@@ -1862,6 +1865,8 @@ class MainForm(QMainWindow, MainWindow):
             # user cancelled the exit
             return
 
+        self.await_exit_thread.request_shutdown()
+        self.await_exit_thread.wait(1000)
         self.cleanup_speedhack()
         debugcore.detach()
         memscan.close()
@@ -2100,6 +2105,7 @@ class MainForm(QMainWindow, MainWindow):
             value_type.value_repr = new_repr
             row.setText(TYPE_COL, value_type.text())
         self.update_address_table()
+        self.mark_address_tree_changed()
 
     def _is_struct_row(self, row: QTreeWidgetItem) -> bool:
         # Only carries an address, has no readable value or editable type.
@@ -2216,6 +2222,7 @@ class MainForm(QMainWindow, MainWindow):
         vt: typedefs.ValueType | None = None,
     ) -> None:
         assert isinstance(row, QTreeWidgetItem)
+        address_expr = "" if address_expr is None else address_expr
         row.setText(DESC_COL, description)
         row.setData(ADDR_COL, Qt.ItemDataRole.UserRole, address_expr)
         if utils.extract_hex_address(address_expr) and debugcore.is_address_static(address_expr):
@@ -2372,7 +2379,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_PtrStartAddress.setText(address.get_base_address_as_str())
             self.create_offsets_list(address)
             self.widget_Pointer.show()
-        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
+        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)):
             self.widget_Length.show()
             try:
                 length = str(vt.length)
@@ -2381,7 +2388,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             self.lineEdit_Length.setText(length)
             self.checkBox_ZeroTerminate.show()
             self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
-        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.AOB:
+        elif self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole) == typedefs.VALUE_INDEX.AOB:
             self.widget_Length.show()
             try:
                 length = str(vt.length)
@@ -2499,7 +2506,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             value_repr = typedefs.VALUE_REPR.SIGNED
         else:
             value_repr = typedefs.VALUE_REPR.UNSIGNED
-        address_type = self.comboBox_ValueType.currentIndex()
+        address_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         length = safe_str_to_int(self.lineEdit_Length.text(), 0)
         zero_terminate = self.checkBox_ZeroTerminate.isChecked()
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
@@ -2511,10 +2518,10 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.resize(old_width, self.minimumHeight())
 
     def comboBox_ValueType_current_index_changed(self) -> None:
-        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
+        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)):
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.show()
-        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.AOB:
+        elif self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole) == typedefs.VALUE_INDEX.AOB:
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.hide()
         else:
@@ -2563,7 +2570,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         length = self.lineEdit_Length.text()
         length = safe_str_to_int(length, 0)
         zero_terminate = self.checkBox_ZeroTerminate.isChecked()
-        value_index = self.comboBox_ValueType.currentIndex()
+        value_index = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         if self.checkBox_Hex.isChecked():
             value_repr = typedefs.VALUE_REPR.HEX
         elif self.checkBox_Signed.isChecked():
@@ -2600,7 +2607,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
             frame.layout().itemAt(1).widget().setText(hex(offset))
 
     def get_type_size(self) -> int:
-        return typedefs.index_to_valuetype_dict[self.comboBox_ValueType.currentIndex()][0]
+        return typedefs.index_to_valuetype_dict[self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)][0]
 
 
 class EditTypeDialogForm(QDialog, EditTypeDialog):
@@ -2612,7 +2619,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         self.lineEdit_Length.setFixedWidth(40)
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
-        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
+        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)):
             self.widget_Length.show()
             try:
                 length = str(vt.length)
@@ -2621,7 +2628,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
             self.lineEdit_Length.setText(length)
             self.checkBox_ZeroTerminate.show()
             self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
-        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.AOB:
+        elif self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole) == typedefs.VALUE_INDEX.AOB:
             self.widget_Length.show()
             try:
                 length = str(vt.length)
@@ -2645,10 +2652,10 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         guiutils.center_to_parent(self)
 
     def comboBox_ValueType_current_index_changed(self) -> None:
-        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentIndex()):
+        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)):
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.show()
-        elif self.comboBox_ValueType.currentIndex() == typedefs.VALUE_INDEX.AOB:
+        elif self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole) == typedefs.VALUE_INDEX.AOB:
             self.widget_Length.show()
             self.checkBox_ZeroTerminate.hide()
         else:
@@ -2679,7 +2686,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         super().accept()
 
     def get_values(self) -> typedefs.ValueType:
-        value_index = self.comboBox_ValueType.currentIndex()
+        value_index = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
         length = self.lineEdit_Length.text()
         length = safe_str_to_int(length, 0)
         zero_terminate = self.checkBox_ZeroTerminate.isChecked()
@@ -3134,7 +3141,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableView_HexView_Hex.verticalHeader().maximumSectionSize()
         )
 
-        self.hex_update_timer = QTimer(timeout=self.hex_update_loop)
+        self.hex_update_timer = QTimer(self, timeout=self.hex_update_loop)
         self.hex_update_timer.start(200)
 
     def show_trace_window(self) -> None:
@@ -4918,7 +4925,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowFlags(Qt.WindowType.Window)
-        self.update_timer = QTimer(timeout=self.update_list)
+        self.update_timer = QTimer(self, timeout=self.update_list)
         self.stopped = False
         self.address = address
         self.info = {}
@@ -5012,8 +5019,8 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
     def __init__(self, parent: QWidget, address: str, instruction: str, register_expressions: str) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.update_list_timer = QTimer(timeout=self.update_list)
-        self.update_values_timer = QTimer(timeout=self.update_values)
+        self.update_list_timer = QTimer(self, timeout=self.update_list)
+        self.update_values_timer = QTimer(self, timeout=self.update_values)
         self.stopped = False
         self.address = address
         self.info = {}
@@ -5060,7 +5067,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
 
     def update_values(self) -> None:
         with debugcore.memory_handle() as mem_handle:
-            value_type = self.comboBox_ValueType.currentIndex()
+            value_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
             for row in range(self.tableWidget_TrackInfo.rowCount()):
                 address = self.tableWidget_TrackInfo.item(row, TRACK_BREAKPOINT_ADDR_COL).text()
                 value = debugcore.read_memory(address, value_type, 10, mem_handle=mem_handle)
@@ -5076,7 +5083,7 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
 
     def tableWidget_TrackInfo_item_double_clicked(self, index: QTableWidgetItem) -> None:
         address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
-        vt = typedefs.ValueType(self.comboBox_ValueType.currentIndex())
+        vt = typedefs.ValueType(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
         self.parent().parent().add_entry_to_addresstable(tr.ACCESSED_BY.format(self.address), address, vt)
         self.parent().parent().update_address_table()
 
@@ -5160,7 +5167,7 @@ class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
         tracer_thread = guitypedefs.Worker(tracer.tracer_loop)
         tracer_thread.signals.finished.connect(self.close)
         states.threadpool.start(tracer_thread)
-        self.status_timer = QTimer()
+        self.status_timer = QTimer(self)
         self.status_timer.setInterval(50)
         self.status_timer.timeout.connect(self.change_status)
         self.status_timer.start()
@@ -5560,7 +5567,7 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         self.setWindowFlags(Qt.WindowType.Window)
         self.contents = ""
         self.refresh_contents()
-        self.refresh_timer = QTimer()
+        self.refresh_timer = QTimer(self)
         self.refresh_timer.setInterval(500)
         self.refresh_timer.timeout.connect(self.refresh_contents)
         self.refresh_timer.start()
@@ -5781,7 +5788,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
         self.show_memory_regions()
         self.splitter.setStretchFactor(0, 1)
         self.pushButton_StartCancel.clicked.connect(self.pushButton_StartCancel_clicked)
-        self.refresh_timer = QTimer()
+        self.refresh_timer = QTimer(self)
         self.refresh_timer.setInterval(100)
         self.refresh_timer.timeout.connect(self.refresh_dissect_status)
         if int_address != -1:
@@ -5955,7 +5962,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
     def refresh_table(self) -> None:
         item_list = debugcore.search_referenced_strings(
             self.lineEdit_Regex.text(),
-            self.comboBox_ValueType.currentIndex(),
+            self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole),
             self.checkBox_CaseSensitive.isChecked(),
             self.checkBox_Regex.isChecked(),
         )

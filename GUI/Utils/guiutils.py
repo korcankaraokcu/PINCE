@@ -106,8 +106,10 @@ def fill_value_combobox(combobox: QComboBox, current_index: int = typedefs.VALUE
         current_index (int): Can be a member of typedefs.VALUE_INDEX
     """
     for key in typedefs.index_to_text_dict:
-        combobox.addItem(typedefs.index_to_text_dict[key])
-    combobox.setCurrentIndex(current_index)
+        combobox.addItem(typedefs.index_to_text_dict[key], key)
+    idx = combobox.findData(current_index)
+    if idx >= 0:
+        combobox.setCurrentIndex(idx)
 
 
 def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.ENDIANNESS.HOST) -> None:
@@ -124,7 +126,11 @@ def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.
     ]
     for endian, text in endianness_text:
         combobox.addItem(text, endian)
-    combobox.setCurrentIndex(current_index)
+    idx = combobox.findData(current_index)
+    if idx >= 0:
+        combobox.setCurrentIndex(idx)
+    else:
+        combobox.setCurrentIndex(0)
 
 
 def fill_alignment_combobox(combobox: QComboBox) -> None:
@@ -143,7 +149,7 @@ def fill_alignment_combobox(combobox: QComboBox) -> None:
     ]
     for text, value in alignment_text_val:
         combobox.addItem(text, value)
-    combobox.setCurrentIndex(0)
+    combobox.setCurrentIndex(combobox.findData(0))
 
 
 def get_current_row(tablewidget: QTableWidget) -> int:

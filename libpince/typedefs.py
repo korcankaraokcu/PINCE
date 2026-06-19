@@ -94,8 +94,7 @@ class STEP_MODE:
 class TRACE_STATUS:
     IDLE = 1
     TRACING = 2
-    CANCELED = 3
-    FINISHED = 4
+    FINISHED = 3
 
 
 class STOP_REASON:
