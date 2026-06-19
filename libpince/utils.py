@@ -21,7 +21,7 @@ from . import typedefs, regexes
 from capstone import Cs, CsError, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
 from keystone import Ks, KsError, KS_ARCH_X86, KS_MODE_32, KS_MODE_64
 from collections import OrderedDict
-from importlib.machinery import SourceFileLoader
+from importlib import util as importlib_util
 from pygdbmi import gdbmiparser
 from types import ModuleType
 from typing import Any, Callable
@@ -208,55 +208,58 @@ def get_defined_dynamic_symbols(elf_path: str, symbol_names: list[str]) -> dict[
             data = elf_file.read()
     except OSError:
         return {}
-    if data[:4] != b"\x7fELF":
+    if len(data) < 6 or data[:4] != b"\x7fELF":
         return {}
-    is64 = data[4] == 2
-    endian = "<" if data[5] == 1 else ">"
-    if is64:
-        e_shoff = struct.unpack_from(endian + "Q", data, 0x28)[0]
-        e_shentsize, e_shnum, e_shstrndx = struct.unpack_from(endian + "HHH", data, 0x3A)
-        shdr_fmt, sym_fmt, default_sym_size = endian + "IIQQQQIIQQ", endian + "IBBHQQ", 24
-    else:
-        e_shoff = struct.unpack_from(endian + "I", data, 0x20)[0]
-        e_shentsize, e_shnum, e_shstrndx = struct.unpack_from(endian + "HHH", data, 0x2E)
-        shdr_fmt, sym_fmt, default_sym_size = endian + "IIIIIIIIII", endian + "IIIBBH", 16
-    if e_shoff == 0 or e_shnum == 0:
+    try:
+        is64 = data[4] == 2
+        endian = "<" if data[5] == 1 else ">"
+        if is64:
+            e_shoff = struct.unpack_from(endian + "Q", data, 0x28)[0]
+            e_shentsize, e_shnum, e_shstrndx = struct.unpack_from(endian + "HHH", data, 0x3A)
+            shdr_fmt, sym_fmt, default_sym_size = endian + "IIQQQQIIQQ", endian + "IBBHQQ", 24
+        else:
+            e_shoff = struct.unpack_from(endian + "I", data, 0x20)[0]
+            e_shentsize, e_shnum, e_shstrndx = struct.unpack_from(endian + "HHH", data, 0x2E)
+            shdr_fmt, sym_fmt, default_sym_size = endian + "IIIIIIIIII", endian + "IIIBBH", 16
+        if e_shoff == 0 or e_shnum == 0:
+            return {}
+
+        def read_shdr(i):
+            return struct.unpack_from(shdr_fmt, data, e_shoff + i * e_shentsize)
+
+        def read_cstr(base):
+            try:
+                return data[base : data.index(b"\x00", base)].decode("latin-1")
+            except (ValueError, IndexError):
+                return ""
+
+        shstr_offset = read_shdr(e_shstrndx)[4]
+        dynsym = dynstr = None
+        for i in range(e_shnum):
+            sh = read_shdr(i)
+            nm = read_cstr(shstr_offset + sh[0])
+            if nm == ".dynsym":
+                dynsym = sh
+            elif nm == ".dynstr":
+                dynstr = sh
+        if dynsym is None or dynstr is None:
+            return {}
+        dynsym_offset, dynsym_size, dynsym_entsize = dynsym[4], dynsym[5], dynsym[9]
+        dynstr_offset = dynstr[4]
+        sym_size = dynsym_entsize or default_sym_size
+        wanted, found = set(symbol_names), {}
+        for i in range(dynsym_size // sym_size):
+            f = struct.unpack_from(sym_fmt, data, dynsym_offset + i * sym_size)
+            st_name, st_value, st_shndx = (f[0], f[4], f[3]) if is64 else (f[0], f[1], f[5])
+            if st_shndx == 0 or st_value == 0:
+                continue
+            name = read_cstr(dynstr_offset + st_name)
+            if name in wanted:
+                found[name] = st_value
+                if len(found) == len(wanted):
+                    break
+    except (struct.error, IndexError, ValueError):
         return {}
-
-    def read_shdr(i):
-        return struct.unpack_from(shdr_fmt, data, e_shoff + i * e_shentsize)
-
-    def read_cstr(base):
-        try:
-            return data[base : data.index(b"\x00", base)].decode("latin-1")
-        except (ValueError, IndexError):
-            return ""
-
-    shstr_offset = read_shdr(e_shstrndx)[4]
-    dynsym = dynstr = None
-    for i in range(e_shnum):
-        sh = read_shdr(i)
-        nm = read_cstr(shstr_offset + sh[0])
-        if nm == ".dynsym":
-            dynsym = sh
-        elif nm == ".dynstr":
-            dynstr = sh
-    if dynsym is None or dynstr is None:
-        return {}
-    dynsym_offset, dynsym_size, dynsym_entsize = dynsym[4], dynsym[5], dynsym[9]
-    dynstr_offset = dynstr[4]
-    sym_size = dynsym_entsize or default_sym_size
-    wanted, found = set(symbol_names), {}
-    for i in range(dynsym_size // sym_size):
-        f = struct.unpack_from(sym_fmt, data, dynsym_offset + i * sym_size)
-        st_name, st_value, st_shndx = (f[0], f[4], f[3]) if is64 else (f[0], f[1], f[5])
-        if st_shndx == 0 or st_value == 0:
-            continue
-        name = read_cstr(dynstr_offset + st_name)
-        if name in wanted:
-            found[name] = st_value
-            if len(found) == len(wanted):
-                break
     return found
 
 
@@ -360,17 +363,14 @@ def is_traced(pid: int) -> str | None:
     """
     try:
         status_file = open(f"/proc/{pid}/status")
-    except FileNotFoundError:
+    except OSError:
         return
     with status_file:
         for line in status_file:
             if line.startswith("TracerPid:"):
                 tracer_pid = line.split(":", 1)[1].strip()
                 if tracer_pid != "0":
-                    try:
-                        return get_process_name(tracer_pid)
-                    except FileNotFoundError:
-                        return "<unknown tracer>"
+                    return get_process_name(tracer_pid)
                 return
 
 
@@ -709,7 +709,7 @@ def get_referenced_jumps_file(pid: int | str) -> str:
 
 
 def get_referenced_calls_file(pid: int | str) -> str:
-    """Get the path of referenced strings dict file for given pid
+    """Get the path of referenced calls dict file for given pid
 
     Args:
         pid (int,str): PID of the process
@@ -781,7 +781,7 @@ def parse_string(string: str, value_index: int) -> str | list[int] | float | int
         return
     try:
         value_index = int(value_index)
-    except:
+    except (ValueError, TypeError):
         logger.exception(f"Value index ({value_index}) can't be converted to int")
         return
     if typedefs.VALUE_INDEX.is_string(value_index):
@@ -796,27 +796,27 @@ def parse_string(string: str, value_index: int) -> str | list[int] | float | int
                     return
             hex_list = [int(x, 16) for x in string_list]
             return hex_list
-        except:
+        except (ValueError, TypeError):
             logger.exception(f"{string} can't be parsed as array of bytes")
             return
     elif typedefs.VALUE_INDEX.is_float(value_index):
         string = string.replace(",", ".")
         try:
             string = float(string)
-        except:
+        except ValueError:
             try:
                 string = float(int(string, 0))
-            except:
+            except (ValueError, TypeError, OverflowError):
                 logger.exception(f"{string} can't be parsed as floating point variable")
                 return
         return string
     else:
         try:
             string = int(string, 0)
-        except:
+        except ValueError:
             try:
                 string = int(float(string))
-            except:
+            except (ValueError, TypeError, OverflowError):
                 logger.exception(f"{string} can't be parsed as integer or hexadecimal")
                 return
         return wrap_integer(string, value_index)
@@ -1112,7 +1112,10 @@ def get_user_home_dir() -> str:
         str: Home directory of the current user
     """
     uid, _ = get_user_ids()
-    return pwd.getpwuid(int(uid)).pw_dir
+    try:
+        return pwd.getpwuid(int(uid)).pw_dir
+    except (KeyError, ValueError):
+        return os.path.expanduser("~")
 
 
 def get_user_path(user_path: str) -> str:
@@ -1152,14 +1155,21 @@ def execute_script(file_path: str) -> tuple[ModuleType | None, str | None]:
     """
     _, tail = os.path.split(file_path)
     file_name = tail.split(".", maxsplit=1)[0]
+    spec = importlib_util.spec_from_file_location(file_name, file_path)
+    if spec is None or spec.loader is None:
+        logger.error(f"Failed to create module spec for {file_path}")
+        return None, f"Failed to create module spec for {file_path}"
+    module = importlib_util.module_from_spec(spec)
+    sys.modules[file_name] = module
     try:
-        module = SourceFileLoader(file_name, file_path).load_module()
+        spec.loader.exec_module(module)
     except Exception as e:
         logger.error(f"Encountered an exception while loading the script located at {file_path}")
         tb = traceback.format_exception(None, e, e.__traceback__)
         tb.insert(0, "------->You can ignore the importlib part if the source file is valid<-------\n")
         tb = "".join(tb)
         logger.error(tb)
+        sys.modules.pop(file_name, None)
         return None, tb
     return module, None
 
