@@ -1283,6 +1283,8 @@ def aob_scan(
                     position += read_size
                     tail = b""
                     continue
+                if not chunk:
+                    break
                 data = tail + chunk
                 base = position - len(tail)
                 for match in matcher.finditer(data):
@@ -1290,7 +1292,7 @@ def aob_scan(
                     if limit is not None and len(results) >= limit:
                         return results
                 tail = data[-overlap:] if overlap else b""
-                position += read_size
+                position += len(chunk)
     return results
 
 
