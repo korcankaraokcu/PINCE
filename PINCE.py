@@ -4688,13 +4688,11 @@ class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
         self.tableWidget_XMM.itemDoubleClicked.connect(self.set_register)
 
     def update_registers(self) -> None:
-        self.tableWidget_FPU.setRowCount(0)
-        self.tableWidget_FPU.setRowCount(8)
-        self.tableWidget_XMM.setRowCount(0)
-        self.tableWidget_XMM.setRowCount(16)
         float_registers = list(debugcore.read_float_registers().items())
         st_registers = float_registers[:8]
         xmm_registers = float_registers[8:]
+        self.tableWidget_FPU.setRowCount(len(st_registers))
+        self.tableWidget_XMM.setRowCount(len(xmm_registers))
         for row, (name, value) in enumerate(st_registers):
             self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(name))
             self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(value))
