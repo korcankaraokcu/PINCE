@@ -940,8 +940,7 @@ def inject_dll(dll_path: str) -> tuple[bool, int]:
                 else:
                     hmod = call(f"((void*(*)(void*)){hex(llw)})({hex(buf)})")
 
-        # Restore previous state and return result.
-        if was_running and (reached or timed_out):
+        if was_running:
             continue_inferior()
         return bool(hmod), hmod
     finally:
