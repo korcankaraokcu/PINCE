@@ -21,9 +21,7 @@ from capstone import Cs, CsError, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
 from collections import OrderedDict
 from typing import Any
 
-# This is some retarded hack
-gdbvalue = gdb.parse_and_eval("$PINCE_PATH")
-PINCE_PATH = gdbvalue.string()
+PINCE_PATH = gdb.parse_and_eval("$PINCE_PATH").string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
 
 from libpince.gdb_python_scripts import gdbutils

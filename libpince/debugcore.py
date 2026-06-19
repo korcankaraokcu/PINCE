@@ -615,9 +615,13 @@ def set_pince_paths() -> None:
     libpince_dir = utils.get_libpince_directory()
     pince_dir = os.path.dirname(libpince_dir)
     gdbinit_aa_dir = utils.get_user_path(typedefs.USER_PATHS.GDBINIT_AA)
+    # Force C while defining these vars and sourcing the scripts to avoid some languages (like debug Rust)
+    # causing issues where strings are being inferred as types that do not have gdb python's ".string()" support.
+    send_command("set language c")
     send_command("set $GDBINIT_AA_PATH=" + '"' + gdbinit_aa_dir + '"')
     send_command("set $PINCE_PATH=" + '"' + pince_dir + '"')
     send_command("source gdb_python_scripts/gdbextensions.py")
+    send_command("set language auto")
 
 
 def init_referenced_dicts(pid: int | str) -> None:

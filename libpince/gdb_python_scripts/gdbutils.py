@@ -20,7 +20,6 @@ import gdb, sys, traceback, functools
 from collections import OrderedDict
 from typing import Any, Callable
 
-# This is some retarded hack
 PINCE_PATH = gdb.parse_and_eval("$PINCE_PATH").string()
 GDBINIT_AA_PATH = gdb.parse_and_eval("$GDBINIT_AA_PATH").string()
 sys.path.append(PINCE_PATH)  # Adds the PINCE directory to PYTHONPATH to import libraries from PINCE
@@ -31,7 +30,10 @@ inferior = gdb.selected_inferior()
 pid = -1 if inferior.pid == 0 else inferior.pid
 mem_file = "/proc/" + str(pid) + "/mem"
 
-void_ptr = gdb.lookup_type("void").pointer()
+try:
+    void_ptr = gdb.lookup_type("void").pointer()
+except gdb.error:
+    void_ptr = gdb.parse_and_eval("0").type.pointer()
 
 if void_ptr.sizeof == 8:
     current_arch = typedefs.INFERIOR_ARCH.ARCH_64
@@ -117,7 +119,11 @@ def examine_expression(
     expression: str, regions: dict[str, list[str]] | None = None
 ) -> typedefs.tuple_examine_expression:
     try:
-        value = gdb.parse_and_eval(expression).cast(void_ptr)
+        value = gdb.parse_and_eval(expression)
+        try:
+            value = value.cast(void_ptr)
+        except gdb.error:
+            value = str(value)
     except Exception:
         if regions:  # this check comes first for optimization
             offset = regexes.offset_expression.search(expression)
