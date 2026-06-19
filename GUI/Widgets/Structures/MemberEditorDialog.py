@@ -99,9 +99,12 @@ class MemberEditorDialog(QDialog, Ui_Dialog):
         kind = self.comboBox_Kind.currentIndex()
         if kind == KIND_VALUE:
             value_index = self.comboBox_Type.currentIndex()
-            length = utils.safe_str_to_int(self.lineEdit_Length.text(), 0) if self.lineEdit_Length.isVisible() else 10
+            has_length = typedefs.VALUE_INDEX.has_length(value_index)
+            length = utils.safe_str_to_int(self.lineEdit_Length.text(), 0) if has_length else 10
             value_repr = (
-                self.comboBox_Repr.currentIndex() if self.comboBox_Repr.isVisible() else typedefs.VALUE_REPR.UNSIGNED
+                self.comboBox_Repr.currentIndex()
+                if typedefs.VALUE_INDEX.is_integer(value_index)
+                else typedefs.VALUE_REPR.UNSIGNED
             )
             endian = self.comboBox_Endian.currentData()
             vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
