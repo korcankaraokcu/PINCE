@@ -81,7 +81,7 @@ maps = compile(
     (\S+)\s+                                # Permissions
     ([0-9a-f]+)\s+                          # Map offset
     (\S+)\s+                                # Device node
-    (\d+)\s+                                # Inode
+    (\d+)\s*                                # Inode
     (.*)$                                   # Pathname
 """,
     VERBOSE,

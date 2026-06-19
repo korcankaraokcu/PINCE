@@ -800,6 +800,7 @@ def parse_string(string: str, value_index: int) -> str | list[int] | float | int
             logger.exception(f"{string} can't be parsed as array of bytes")
             return
     elif typedefs.VALUE_INDEX.is_float(value_index):
+        string = string.replace(",", ".")
         try:
             string = float(string)
         except:
