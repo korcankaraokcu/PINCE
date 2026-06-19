@@ -3756,33 +3756,35 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.setWindowTitle(tr.MV_PAUSED)
             return
         self.updating_memoryview = True
-        time0 = time()
-        self.setWindowTitle(tr.MV_DEBUGGING.format(debugcore.get_thread_info()))
-        self.disassemble_expression("$pc", append_history=False)
-        self.update_registers()
-        if self.stackedWidget_StackScreens.currentWidget() == self.StackTrace:
-            self.update_stacktrace()
-        elif self.stackedWidget_StackScreens.currentWidget() == self.Stack:
-            self.update_stack()
+        try:
+            time0 = time()
+            self.setWindowTitle(tr.MV_DEBUGGING.format(debugcore.get_thread_info()))
+            self.disassemble_expression("$pc", append_history=False)
+            self.update_registers()
+            if self.stackedWidget_StackScreens.currentWidget() == self.StackTrace:
+                self.update_stacktrace()
+            elif self.stackedWidget_StackScreens.currentWidget() == self.Stack:
+                self.update_stack()
 
-        # These tableWidgets are never emptied but initially both are empty, so this runs only once
-        if self.tableWidget_StackTrace.rowCount() == 0:
-            self.update_stacktrace()
-        if self.tableWidget_Stack.rowCount() == 0:
-            self.update_stack()
-        self.refresh_hex_view()
-        if states.show_memory_view_on_stop:
-            self.showMaximized()
-            self.activateWindow()
-        if self.stacktrace_info_widget.isVisible():
-            self.stacktrace_info_widget.update_stacktrace()
-        self.pushButton_ShowFloatRegisters.setEnabled(True)
-        if self.float_registers_widget.isVisible():
-            self.float_registers_widget.update_registers()
-        app.processEvents()
-        time1 = time()
-        logger.debug(f"Updated memory view in: {str(time1 - time0)}")
-        self.updating_memoryview = False
+            # These tableWidgets are never emptied but initially both are empty, so this runs only once
+            if self.tableWidget_StackTrace.rowCount() == 0:
+                self.update_stacktrace()
+            if self.tableWidget_Stack.rowCount() == 0:
+                self.update_stack()
+            self.refresh_hex_view()
+            if states.show_memory_view_on_stop:
+                self.showMaximized()
+                self.activateWindow()
+            if self.stacktrace_info_widget.isVisible():
+                self.stacktrace_info_widget.update_stacktrace()
+            self.pushButton_ShowFloatRegisters.setEnabled(True)
+            if self.float_registers_widget.isVisible():
+                self.float_registers_widget.update_registers()
+            app.processEvents()
+            time1 = time()
+            logger.debug(f"Updated memory view in: {str(time1 - time0)}")
+        finally:
+            self.updating_memoryview = False
 
     def on_process_running(self) -> None:
         self.setWindowTitle(tr.MV_RUNNING)

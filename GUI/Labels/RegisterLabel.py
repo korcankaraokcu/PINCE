@@ -27,7 +27,9 @@ class QRegisterLabel(QLabel):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-    def set_value(self, value: str) -> None:
+    def set_value(self, value: str | None) -> None:
+        if value is None:
+            value = "??"
         new = self.objectName() + "=" + value
         old = self.text()
         if old != new:
