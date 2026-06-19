@@ -1032,6 +1032,8 @@ class MainForm(QMainWindow, MainWindow):
         root = self.treeWidget_AddressTable.invisibleRootItem()
         for item in selected_items:
             (item.parent() or root).removeChild(item)
+        if selected_items:
+            self.mark_address_tree_changed()
 
     def treeWidget_AddressTable_mouse_release_event(self, event: QMouseEvent) -> None:
         item = self.treeWidget_AddressTable.itemAt(event.pos())
@@ -2146,6 +2148,7 @@ class MainForm(QMainWindow, MainWindow):
                 entry = self.get_script_entry(row)
                 if entry is not None and self.libpince_engine_window:
                     self.libpince_engine_window.rename_script_entry(entry, description_text)
+            self.mark_address_tree_changed()
 
     def treeWidget_AddressTable_edit_address(self) -> None:
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
