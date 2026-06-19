@@ -62,6 +62,24 @@ def is_valid_session_data(content: dict[str, Any]) -> bool:
             return False
     if not isinstance(content["bookmarks"], dict):
         return False
+    for addr, value in content["bookmarks"].items():
+        try:
+            int(addr)
+        except (TypeError, ValueError):
+            return False
+        if not isinstance(value, dict):
+            return False
+        for field in ("comment", "symbol", "address_region_details"):
+            if field not in value:
+                return False
+        details = value["address_region_details"]
+        if not isinstance(details, dict):
+            return False
+        for field in ("region_name", "offset_in_region", "region_index"):
+            if field not in details:
+                return False
+        if not isinstance(details["region_index"], int):
+            return False
     if not isinstance(content.get("structures", {}), dict):
         return False
     return True
@@ -253,7 +271,7 @@ class Session:
             if region is None:
                 utils.logger.warning(f"Could not find region with name: {region_name}")
                 continue
-            if region_index >= len(region):
+            if region_index < 0 or region_index >= len(region):
                 utils.logger.warning(
                     f"Region '{region_name}' now has {len(region)} mapping(s). "
                     f"Bookmark expected index {region_index}, dropping it..."
