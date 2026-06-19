@@ -232,6 +232,7 @@ def uninstall() -> bool:
     except Exception:
         logger.exception("Linux speedhack uninstall failed")
     session = Session()
+    debugcore.allocated_memory_chunks.pop(ALLOC_NAME, None)
     return success
 
 

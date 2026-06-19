@@ -2421,7 +2421,8 @@ class Tracer:
                     step_instruction()
                 elif self.step_mode == typedefs.STEP_MODE.STEP_OVER:
                     step_over_instruction()
-                wait_for_stop()
+                while inferior_status == typedefs.INFERIOR_STATUS.RUNNING and not (self.cancel or currentpid == -1):
+                    wait_for_stop(0.1)
         except Exception:
             traceback.print_exc()
         self.trace_data = (tree, root_index)
