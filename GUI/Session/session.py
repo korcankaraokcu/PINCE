@@ -62,6 +62,8 @@ def is_valid_session_data(content: dict[str, Any]) -> bool:
             return False
     if not isinstance(content["bookmarks"], dict):
         return False
+    if not isinstance(content.get("structures", {}), dict):
+        return False
     return True
 
 

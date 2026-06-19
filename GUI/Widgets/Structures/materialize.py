@@ -50,9 +50,11 @@ def structure_to_records(
             records.append((member.name, _rel_off(member.offset), vt, []))
         else:
             child = StructureManager.get(member.struct_ref)
-            if child is None:
-                continue
             off = _rel_off(member.offset)
+            if child is None:
+                group_expr = typedefs.PointerChainRequest(off, [0]).serialize() if member.is_pointer else off
+                records.append((member.name, group_expr, _struct_vt(), []))
+                continue
             child_base = base_addr + member.offset
             if member.is_pointer and base_addr > 0:
                 ptr_index = (
