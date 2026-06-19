@@ -615,7 +615,10 @@ class MainForm(QMainWindow, MainWindow):
     def on_nextscan_requested(self, index: int) -> None:
         if self.scan_mode == typedefs.SCAN_MODE.NEW or self.is_scanning:
             return
-        self.comboBox_ScanType.setCurrentIndex(index)
+        row = self.comboBox_ScanType.findData(index)
+        if row == -1:
+            return
+        self.comboBox_ScanType.setCurrentIndex(row)
         self.pushButton_NextScan.clicked.emit()
 
     def treeWidget_AddressTable_context_menu_event(self, event: QContextMenuEvent) -> None:
