@@ -43,11 +43,9 @@ class QRegisterLabel(QLabel):
         super().enterEvent(event)
 
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
-        if (
-            event.button() != Qt.MouseButton.LeftButton
-            or debugcore.currentpid == -1
-            or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
-        ):
+        if event.button() != Qt.MouseButton.LeftButton:
+            return
+        if debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
             # self.window() is needed to fix messagebox text color being red
             QMessageBox.information(self.window(), tr.ERROR, tr.REQUIRE_PROCESS_STOP)
             return

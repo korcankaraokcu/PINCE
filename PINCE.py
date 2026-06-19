@@ -5219,6 +5219,12 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         else:
             self.close()
 
+    def closeEvent(self, event: QCloseEvent) -> None:
+        wait_dialog = getattr(self, "wait_dialog", None)
+        if wait_dialog is not None:
+            wait_dialog.close()
+        super().closeEvent(event)
+
     def display_collected_data(self, QTreeWidgetItem_current: QTreeWidgetItem) -> None:
         if QTreeWidgetItem_current is None:
             return
@@ -5578,11 +5584,11 @@ class LogFileWidgetForm(QWidget, LogFileWidget):
         with log_file:
             log_file.seek(0, io.SEEK_END)
             end_pos = log_file.tell()
-            if end_pos > 20000:
-                log_file.seek(end_pos - 20000, io.SEEK_SET)
-            else:
-                log_file.seek(0, io.SEEK_SET)
-            contents = log_file.read().split("\n", 1)[-1]
+            truncated = end_pos > 20000
+            log_file.seek(end_pos - 20000 if truncated else 0, io.SEEK_SET)
+            contents = log_file.read()
+            if truncated:
+                contents = contents.split("\n", 1)[-1]
         if contents != self.contents:
             self.contents = contents
             self.textBrowser_LogContent.clear()
@@ -5981,7 +5987,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
                 return
             addrs = [hex(address) for address in referrers]
             self.listWidget_Referrers.addItems(
-                [self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)]
+                [self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs) if item.all]
             )
             self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
         finally:
@@ -6108,7 +6114,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
                 return
             addrs = [hex(address) for address in referrers]
             self.listWidget_Referrers.addItems(
-                [self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs)]
+                [self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs) if item.all]
             )
             self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
         finally:
@@ -6199,14 +6205,14 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
                 pass
             else:
                 jmp_referrers = [hex(item) for item in jmp_referrers]
-                self.referrer_data.extend([item.all for item in debugcore.examine_expressions(jmp_referrers)])
+                self.referrer_data.extend([item.all for item in debugcore.examine_expressions(jmp_referrers) if item.all])
             try:
                 call_referrers = call_dict[self.referenced_hex]
             except KeyError:
                 pass
             else:
                 call_referrers = [hex(item) for item in call_referrers]
-                self.referrer_data.extend([item.all for item in debugcore.examine_expressions(call_referrers)])
+                self.referrer_data.extend([item.all for item in debugcore.examine_expressions(call_referrers) if item.all])
         finally:
             jmp_dict.close()
             call_dict.close()
