@@ -25,9 +25,12 @@ class StructureViewDialog(QDialog, Ui_Dialog):
         self.setupUi(self)
 
         self.structure_name = structure_name
-        self.base = utils.safe_str_to_int(base_address, 16) if base_address else 0
+        base_address = base_address.strip()
+        self.base_expr = debugcore.convert_to_hex(base_address) if base_address else ""
+        resolved = debugcore.examine_expression(self.base_expr).address if self.base_expr else None
+        self.base = int(resolved, 0) if resolved else 0
 
-        self.lineEdit_Base.setText(hex(self.base) if self.base else "")
+        self.lineEdit_Base.setText(self.base_expr)
         self.pushButton_AddToTable.clicked.connect(self._add_to_table)
 
         self.treeWidget_View.itemExpanded.connect(self._on_item_expanded)
@@ -45,7 +48,7 @@ class StructureViewDialog(QDialog, Ui_Dialog):
         struct = StructureManager.get(self.structure_name)
         if struct is None:
             return
-        self.add_to_table_requested.emit([structure_to_group_record(struct, self.base)])
+        self.add_to_table_requested.emit([structure_to_group_record(struct, self.base_expr)])
 
     def _build_tree(self) -> None:
         self.treeWidget_View.clear()

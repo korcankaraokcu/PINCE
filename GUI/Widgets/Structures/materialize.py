@@ -72,7 +72,9 @@ def structure_to_records(
 
 
 def structure_to_group_record(
-    structure: typedefs.Structure, base_addr: int
+    structure: typedefs.Structure, base_expr: str
 ) -> tuple[str, str, tuple[int, int, bool, int, int], list]:
+    address = debugcore.examine_expression(base_expr).address if base_expr else None
+    base_addr = int(address, 0) if address else 0
     members = structure_to_records(structure, 0, base_addr)
-    return structure.name, hex(base_addr), _struct_vt(), members
+    return structure.name, base_expr, _struct_vt(), members

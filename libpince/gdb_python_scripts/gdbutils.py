@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import gdb, sys, traceback, functools
+import gdb, sys, traceback, functools, re
 from collections import OrderedDict
 from typing import Any, Callable
 
@@ -118,40 +118,46 @@ def get_float_registers() -> OrderedDict[str, str]:
 def examine_expression(
     expression: str, regions: dict[str, list[str]] | None = None
 ) -> typedefs.tuple_examine_expression:
-    try:
-        value = gdb.parse_and_eval(expression)
+    # Resolve one candidate through GDB's evaluator. Return None if it yields no address.
+    def via_gdb(expr):
         try:
-            value = value.cast(void_ptr)
-        except gdb.error:
-            value = str(value)
-    except Exception:
-        if regions:  # this check comes first for optimization
-            offset = regexes.offset_expression.search(expression)
-            if offset:
-                offset = offset.group(0)
-                expression = expression.split(offset[0])[0]
-            else:
-                offset = "+0"
-            index = regexes.index.search(expression)
-            if index:
-                expression = expression[: index.start()]
-                index = int(index.group(1))
-            else:
-                index = 0
-            if expression in regions:
-                start_address_list = regions[expression]
-                if len(start_address_list) > index:
-                    address = start_address_list[index]
-                    try:
-                        address = hex(eval(address + offset))
-                    except Exception:
-                        utils.logger.exception("An exception occurred while trying to extract address from region")
-                        return typedefs.tuple_examine_expression(None, None, None)
-                    return typedefs.tuple_examine_expression(f"{address} {expression}", address, expression)
-            return typedefs.tuple_examine_expression(None, None, None)
-        utils.logger.exception("An exception occurred while trying to evaluate a gdb expression")
-        return typedefs.tuple_examine_expression(None, None, None)
-    result = regexes.address_with_symbol.search(str(value))
-    if not result:
-        return typedefs.tuple_examine_expression(None, None, None)
-    return typedefs.tuple_examine_expression(*result.groups())
+            value = gdb.parse_and_eval(expr)
+            try:
+                value = value.cast(void_ptr)
+            except gdb.error:
+                value = str(value)
+            match = regexes.address_with_symbol.search(str(value))
+        except Exception:
+            return None
+        return typedefs.tuple_examine_expression(*match.groups()) if match else None
+
+    none = typedefs.tuple_examine_expression(None, None, None)
+    # Try the expression first so real symbols win.
+    resolved = via_gdb(expression)
+    if resolved:
+        return resolved
+    if not regions:
+        return none
+
+    # Swap each module name for its live base address, so module text resolves anywhere in the expression.
+    # Longest names match first so libc.so.6 wins over libc.so.
+    names = "|".join(re.escape(name) for name in sorted(regions, key=len, reverse=True))
+    substituted = re.sub(
+        regexes.module_reference.format(names),
+        lambda m: regions[m.group(1)][int(m.group(2) or 0)]
+        if int(m.group(2) or 0) < len(regions[m.group(1)])
+        else m.group(0),
+        expression,
+    )
+    if substituted == expression:
+        return none
+
+    # Plain module+offset is now pure arithmetic so we'll evaluate in-process to skip a second gdb parse.
+    # The whitelist keeps eval injection-safe and sends anything with a deref/cast/register to gdb instead.
+    if regexes.hex_arithmetic.fullmatch(substituted):
+        try:
+            address = hex(eval(substituted))
+            return typedefs.tuple_examine_expression(address, address, None)
+        except Exception:
+            pass
+    return via_gdb(substituted) or none

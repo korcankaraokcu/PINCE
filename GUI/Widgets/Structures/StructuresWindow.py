@@ -7,7 +7,7 @@ from GUI.Widgets.Structures.Form.StructuresWindow import Ui_Form
 from GUI.Widgets.Structures.StructureEditorDialog import StructureEditorDialog
 from GUI.Widgets.Structures.StructureViewDialog import StructureViewDialog
 from GUI.Widgets.Structures.materialize import structure_to_group_record
-from libpince import utils
+from libpince import debugcore
 from tr.tr import TranslationConstants as tr
 
 
@@ -90,6 +90,5 @@ class StructuresWindow(QWidget, Ui_Form):
         struct = StructureManager.get(name)
         if struct is None:
             return
-        base_addr = utils.safe_str_to_int(address, 16)
-        record = structure_to_group_record(struct, base_addr)
-        self.add_to_table_requested.emit([record])
+        base_expr = debugcore.convert_to_hex(address.strip())
+        self.add_to_table_requested.emit([structure_to_group_record(struct, base_expr)])

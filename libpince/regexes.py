@@ -105,5 +105,5 @@ trace_instructions_call = compile(r":\s+call")  # 0x7f71a4dc5fe4 <poll+52>:	call
 dissect_code_valid_address = compile(r"(\s+|\[|,)" + hex_number.pattern + r"(\s+|\]|,|$)")
 alphanumerics = compile(r"\w+")
 file_with_extension = compile(r".+?\.\w+")
-offset_expression = compile(r"[/*+\-][0-9a-fA-FxX/*+\-\[\]]+$")
-index = compile(r"\[(\d+)\]$")
+module_reference = r"(?<![\w.])({})(?:\[(\d+)\])?(?![\w.])"
+hex_arithmetic = compile(r"[0-9a-fA-FxX+\-*/() ]+")
