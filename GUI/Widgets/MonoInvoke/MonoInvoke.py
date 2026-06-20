@@ -132,7 +132,7 @@ class MonoInvokeDialog(QDialog, Ui_Dialog):
             return
         try:
             args = [self._param_arg(p) for p in self.params]
-        except ValueError:
+        except (ValueError, monocore.MonoError):
             self.label_Result.setText(tr.MONO_INVOKE_BAD_ARG)
             return
         try:
@@ -167,7 +167,10 @@ class MonoInvokeDialog(QDialog, Ui_Dialog):
     def _format_struct(self, client: "monocore.MonoClient", raw: bytes) -> str:
         """Render a returned struct as "field=value, ..." or hex bytes if its fields aren't primitive."""
         ret_klass = self.signature["ret"].get("klass", 0)
-        layout = client.struct_fields(ret_klass) if ret_klass else None
+        try:
+            layout = client.struct_fields(ret_klass) if ret_klass else None
+        except monocore.MonoError:
+            layout = None
         if not layout:
             return raw.hex()
         return ", ".join(

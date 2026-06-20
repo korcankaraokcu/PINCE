@@ -456,9 +456,18 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
 
     def _dissect_singleton_as_structure(self, client: monocore.MonoClient, class_data: dict, singleton: dict) -> None:
         try:
-            address = client.static_field_address(class_data["klass"], singleton["field"])
+            slot = client.static_field_address(class_data["klass"], singleton["field"])
         except monocore.MonoError:
             QMessageBox.information(self, tr.ERROR, tr.MONO_STATIC_UNAVAILABLE)
+            return
+        value_index = (
+            typedefs.VALUE_INDEX.INT32
+            if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
+            else typedefs.VALUE_INDEX.INT64
+        )
+        address = debugcore.read_memory(slot, value_index)
+        if not address:
+            QMessageBox.information(self, tr.MONO_FIND_INSTANCES, tr.MONO_NO_INSTANCES)
             return
         try:
             struct = mono_export.structure_from_class(client, class_data, force_new=False)
