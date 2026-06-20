@@ -424,10 +424,13 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         if not script_content.strip():
             return
         filename = editor.file_path or f"<Libpince Engine: {self.tabWidget.tabText(self.tabWidget.currentIndex())}>"
-        namespace = editor.namespace or create_script_namespace()
+        entry = editor.script_entry
+        namespace = (entry.namespace if entry else None) or editor.namespace or create_script_namespace()
         self.append_output("\n" + tr.SCRIPT_RUNNING.format(filename))
         succeeded, output = run_script_code(script_content, namespace, filename)
         editor.set_namespace(namespace)
+        if entry is not None:
+            entry.namespace = namespace
         self.append_output(output)
         message = tr.SCRIPT_FINISHED if succeeded else tr.SCRIPT_FAILED
         if succeeded:
