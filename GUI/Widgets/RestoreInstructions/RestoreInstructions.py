@@ -55,6 +55,7 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
     def refresh(self) -> None:
         modified_instructions = debugcore.get_modified_instructions()
         self.tableWidget_Instructions.setRowCount(len(modified_instructions))
+        self.tableWidget_Instructions.setSortingEnabled(False)
         for row, (address, aob) in enumerate(modified_instructions.items()):
             self.tableWidget_Instructions.setItem(row, ADDR_COL, QTableWidgetItem(hex(address)))
             self.tableWidget_Instructions.setItem(row, AOB_COL, QTableWidgetItem(aob))
@@ -62,6 +63,7 @@ class RestoreInstructionsWidget(QWidget, Ui_Form):
             if not instr_name:
                 instr_name = "??"
             self.tableWidget_Instructions.setItem(row, NAME_COL, QTableWidgetItem(instr_name))
+        self.tableWidget_Instructions.setSortingEnabled(True)
         guiutils.resize_to_contents(self.tableWidget_Instructions)
         self.repaint()
 

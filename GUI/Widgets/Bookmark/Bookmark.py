@@ -32,6 +32,7 @@ class BookmarkWidget(QWidget, Ui_Form):
         self.refresh_table()
         states.session_signals.new_session.connect(self.on_new_session)
         states.session_signals.bookmarks_changed.connect(self.refresh_table)
+        states.session_signals.on_load.connect(self.refresh_table)
         guiutils.center_to_parent(self)
 
     def refresh_table(self) -> None:

@@ -308,6 +308,7 @@ class SessionManager:
                 return
         SessionManager.session = Session()
         states.session_signals.new_session.emit()
+        SessionManager.session.data_changed = SessionDataChanged.NONE
 
     @staticmethod
     def save_session() -> None:
