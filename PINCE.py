@@ -2137,6 +2137,7 @@ class MainForm(QMainWindow, MainWindow):
             if utils.parse_string(new_value, value_index) is None:
                 QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
                 return
+            length_changed = False
             for row in self.treeWidget_AddressTable.selectedItems():
                 if self.get_script_entry(row) is not None or self._is_struct_row(row):
                     continue
@@ -2144,12 +2145,16 @@ class MainForm(QMainWindow, MainWindow):
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 parsed_value = utils.parse_string(new_value, vt.value_index)
                 if typedefs.VALUE_INDEX.has_length(vt.value_index) and parsed_value is not None:
+                    if vt.length != len(parsed_value):
+                        length_changed = True
                     vt.length = len(parsed_value)
                     row.setText(TYPE_COL, vt.text())
                 frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 frozen.value = parsed_value
                 debugcore.write_memory(address, vt.value_index, parsed_value, vt.zero_terminate, vt.endian)
             self.update_address_table()
+            if length_changed:
+                self.mark_address_tree_changed()
 
     def treeWidget_AddressTable_edit_desc(self) -> None:
         row = guiutils.get_current_item(self.treeWidget_AddressTable)

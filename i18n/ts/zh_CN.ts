@@ -417,34 +417,8 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>Native</source>
-        <translation>原生</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>Little</source>
-        <translation>小</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>Big</source>
-        <translation>大</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Pointer Size:</source>
         <translation>指针大小：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>8 Bytes</source>
-        <translation>8 字节</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <source>4 Bytes</source>
-        <translation>4 字节</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />

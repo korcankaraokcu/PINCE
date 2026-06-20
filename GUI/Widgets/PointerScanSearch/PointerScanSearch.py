@@ -4,7 +4,7 @@ from GUI.Widgets.PointerScanSearch.Form.PointerScanSearchDialog import Ui_Dialog
 from GUI.Utils import guiutils, guitypedefs
 from libpince import debugcore, utils
 from libpince.scancore import memscan
-from libpince.libmemscan.memscan import PointerScanOptions
+from libpince.libmemscan.memscan import PointerEndianness, PointerScanOptions
 from tr.tr import TranslationConstants as tr
 import os
 
@@ -13,6 +13,14 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
     def __init__(self, parent: QWidget, address: str) -> None:
         super().__init__(parent)
         self.setupUi(self)
+        for endian, text in (
+            (PointerEndianness.NATIVE, tr.HOST),
+            (PointerEndianness.LITTLE, tr.LITTLE),
+            (PointerEndianness.BIG, tr.BIG),
+        ):
+            self.comboBox_Endian.addItem(text, endian)
+        for width in (8, 4):
+            self.comboBox_PointerSize.addItem(f"{width} Bytes", width)
         guiutils.center_to_parent(self)
         self.lineEdit_Address.setText(address)
         self.lineEdit_Path.setText(os.path.expanduser("~") + f"/{utils.get_process_name(debugcore.currentpid)}.lmptr")
@@ -70,8 +78,8 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         ptrmap_file_path = self.lineEdit_Path.text()
         if self.checkBox_CheckAdvOptions.isChecked():
             ptr_opts = PointerScanOptions()
-            ptr_opts.endianness = self.comboBox_Endian.currentIndex()
-            ptr_opts.pointer_width = 8 if self.comboBox_PointerSize.currentIndex() == 0 else 4
+            ptr_opts.endianness = self.comboBox_Endian.currentData()
+            ptr_opts.pointer_width = self.comboBox_PointerSize.currentData()
             ptr_opts.max_depth = self.spinBox_Depth.value()
             ptr_opts.max_positive_offset = self.spinBox_MaxOffset.value()
             ptr_opts.max_negative_offset = self.spinBox_MinOffset.value()
@@ -89,7 +97,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.progressBar.setValue(0)
         self.progressBar.setFormat(f"{tr.SCANNING_POINTERS} - %p%")
         self.progressBar.setVisible(True)
-        self.progress_bar_timer = QTimer(timeout=self.update_progress_bar)
+        self.progress_bar_timer = QTimer(self, timeout=self.update_progress_bar)
         self.progress_bar_timer.start(100)
 
     def update_progress_bar(self) -> None:

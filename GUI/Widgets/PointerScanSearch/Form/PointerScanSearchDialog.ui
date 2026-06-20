@@ -137,23 +137,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="comboBox_Endian">
-            <item>
-             <property name="text">
-              <string>Native</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Little</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Big</string>
-             </property>
-            </item>
-           </widget>
+           <widget class="QComboBox" name="comboBox_Endian"/>
           </item>
           <item>
            <spacer name="horizontalSpacer_Endian">
@@ -190,22 +174,9 @@
             <property name="editable">
              <bool>false</bool>
             </property>
-            <property name="currentText">
-             <string>8 Bytes</string>
-            </property>
             <property name="maxVisibleItems">
              <number>2</number>
             </property>
-            <item>
-             <property name="text">
-              <string>8 Bytes</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>4 Bytes</string>
-             </property>
-            </item>
            </widget>
           </item>
           <item>
