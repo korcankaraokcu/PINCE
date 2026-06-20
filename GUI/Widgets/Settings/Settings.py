@@ -33,7 +33,8 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.comboBox_InterruptSignal.addItem("SIGINT")
         self.comboBox_InterruptSignal.addItems([f"SIG{x}" for x in range(signal.SIGRTMIN, signal.SIGRTMAX + 1)])
         self.comboBox_InterruptSignal.setStyleSheet("combobox-popup: 0;")  # maxVisibleItems doesn't work otherwise
-        self.comboBox_Theme.addItems(themes.theme_strings.values())
+        for theme_value, theme_name in themes.theme_strings.items():
+            self.comboBox_Theme.addItem(theme_name, theme_value)
         logo_directory = utils.get_logo_directory()
         logo_list = utils.search_files(logo_directory, r"\.(png|jpg|jpeg|svg)$")
         for logo in logo_list:
@@ -80,7 +81,7 @@ class SettingsDialog(QDialog, Ui_Dialog):
             QMessageBox.information(self, tr.INFO, tr.LANG_RESET)
         self.settings.setValue("General/locale", new_locale)
         self.settings.setValue("General/logo_path", self.comboBox_Logo.currentText())
-        self.settings.setValue("General/theme", list(themes.Themes)[self.comboBox_Theme.currentIndex()].value)
+        self.settings.setValue("General/theme", self.comboBox_Theme.currentData())
         for hotkey in states.hotkeys.get_hotkeys():
             self.settings.setValue("Hotkeys/" + hotkey.name, self.hotkey_to_value[hotkey.name])
         self.settings.setValue("MemoryView/show_memory_view_on_stop", self.checkBox_ShowMemoryViewOnStop.isChecked())
@@ -123,7 +124,9 @@ class SettingsDialog(QDialog, Ui_Dialog):
         current_locale = self.settings.value("General/locale", type=str)
         self.comboBox_Language.setCurrentText(language_list.get(current_locale, language_list["en_US"]))
         with QSignalBlocker(self.comboBox_Theme):
-            self.comboBox_Theme.setCurrentText(themes.theme_strings[self.settings.value("General/theme", type=str)])
+            self.comboBox_Theme.setCurrentIndex(
+                self.comboBox_Theme.findData(self.settings.value("General/theme", type=str))
+            )
         with QSignalBlocker(self.comboBox_Logo):
             self.comboBox_Logo.setCurrentText(self.settings.value("General/logo_path", type=str))
         self.hotkey_to_value.clear()
@@ -187,7 +190,7 @@ class SettingsDialog(QDialog, Ui_Dialog):
         QApplication.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), logo_path)))
 
     def comboBox_Theme_current_index_changed(self, index: int) -> None:
-        QApplication.setPalette(themes.get_theme(list(themes.Themes)[index].value))
+        QApplication.setPalette(themes.get_theme(self.comboBox_Theme.itemData(index)))
 
     def pushButton_GDBPath_clicked(self) -> None:
         current_path = self.lineEdit_GDBPath.text()
