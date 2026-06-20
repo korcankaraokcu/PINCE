@@ -55,7 +55,7 @@ def _ensure_managed_string_structure() -> str:
                     typedefs.ValueType(typedefs.VALUE_INDEX.STRING_UTF16, length=32, zero_terminate=False),
                 ),
             ]
-        StructureManager.add(typedefs.Structure("System.String", members, 0))
+        StructureManager.add(typedefs.Structure("System.String", members))
     return "System.String"
 
 
@@ -159,8 +159,7 @@ def _inline_value_type(client: monocore.MonoClient, fld: dict) -> "str | None":
                 )
                 for sf in sub_fields
             ]
-            size = max((sf["offset"] + sf["width"] for sf in sub_fields), default=0)
-            StructureManager.add(typedefs.Structure(vt_name, members, size))
+            StructureManager.add(typedefs.Structure(vt_name, members))
         return vt_name
     except monocore.MonoError:
         return None
@@ -183,7 +182,7 @@ def _build_structure(
         name = _unique_name(name)
     fields = list(client.fields(class_data["klass"]))  # call can fail so do it before registering anything
     seen.add(name)
-    StructureManager.add(typedefs.Structure(name, [], 0))
+    StructureManager.add(typedefs.Structure(name, []))
     if include_inherited:
         fields += _inherited_instance_fields(client, class_data)
     instance = sorted((f for f in fields if _is_instance_field(f)), key=lambda f: f["offset"])
@@ -200,8 +199,7 @@ def _build_structure(
             if vt_name is not None:
                 member = typedefs.StructureMember(fld["name"], fld["offset"], struct_ref=vt_name, is_pointer=False)
         members.append(member if member is not None else _leaf_member(fld, instance, i, pointer_index))
-    size = (instance[-1]["offset"] + 8) if instance else 0
-    StructureManager.update(typedefs.Structure(name, members, size))
+    StructureManager.update(typedefs.Structure(name, members))
     return name
 
 

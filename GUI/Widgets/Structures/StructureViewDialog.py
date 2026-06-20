@@ -1,3 +1,5 @@
+import io
+
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QDialog, QMessageBox, QTreeWidgetItem, QWidget
@@ -23,6 +25,7 @@ class StructureViewDialog(QDialog, Ui_Dialog):
     def __init__(self, parent: QWidget, structure_name: str, base_address: str = "") -> None:
         super().__init__(parent)
         self.setupUi(self)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
 
         self.structure_name = structure_name
         base_address = base_address.strip()
@@ -170,14 +173,18 @@ class StructureViewDialog(QDialog, Ui_Dialog):
         if debugcore.currentpid == -1:
             self._start_refresh()
             return
-        self._refresh_item(self.treeWidget_View.invisibleRootItem())
+        try:
+            with debugcore.memory_handle() as mem_handle:
+                self._refresh_item(self.treeWidget_View.invisibleRootItem(), mem_handle)
+        except OSError:
+            pass
         self._start_refresh()
 
     def showEvent(self, event: QShowEvent) -> None:
         self._start_refresh()
         return super().showEvent(event)
 
-    def _refresh_item(self, item: QTreeWidgetItem) -> None:
+    def _refresh_item(self, item: QTreeWidgetItem, mem_handle: io.BufferedReader) -> None:
         for i in range(item.childCount()):
             child = item.child(i)
             member: typedefs.StructureMember = child.data(0, ROLE_MEMBER)
@@ -190,7 +197,8 @@ class StructureViewDialog(QDialog, Ui_Dialog):
                     member.value_type.zero_terminate,
                     member.value_type.value_repr,
                     member.value_type.endian,
+                    mem_handle=mem_handle,
                 )
                 child.setText(3, str(value) if value is not None else "??")
             if child.isExpanded():
-                self._refresh_item(child)
+                self._refresh_item(child, mem_handle)

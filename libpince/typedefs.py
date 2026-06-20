@@ -523,18 +523,17 @@ class StructureMember:
 class Structure:
     """A named, ordered list of StructureMembers. Offsets are explicit and relative to a base."""
 
-    def __init__(self, name: str, members: "list[StructureMember] | None" = None, size: int = 0) -> None:
+    def __init__(self, name: str, members: "list[StructureMember] | None" = None) -> None:
         self.name = name
         self.members = members if members else []
-        self.size = size
 
     def serialize(self) -> tuple:
-        return self.name, self.size, [m.serialize() for m in self.members]
+        return self.name, [m.serialize() for m in self.members]
 
     @classmethod
     def deserialize(cls, data: tuple) -> "Structure":
-        name, size, members = data
-        return cls(name, [StructureMember.deserialize(m) for m in members], size)
+        name, members = data
+        return cls(name, [StructureMember.deserialize(m) for m in members])
 
 
 class PointerChainResult:
