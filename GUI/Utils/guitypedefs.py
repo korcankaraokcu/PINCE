@@ -165,9 +165,10 @@ class Hotkey:
             remove_hotkey(self.handle)
             self.handle = None
         self.custom = custom
-        if custom == "":
-            return
-        self.handle = add_hotkey(custom.lower(), self.func)
+        if custom != "":
+            self.handle = add_hotkey(custom.lower(), self.func)
+        elif self.default != "":
+            self.handle = add_hotkey(self.default, self.func)
 
     def change_func(self, func: Callable) -> None:
         self.func = func
