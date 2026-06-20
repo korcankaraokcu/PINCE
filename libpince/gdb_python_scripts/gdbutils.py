@@ -154,7 +154,7 @@ def examine_expression(
 
     # Plain module+offset is now pure arithmetic so we'll evaluate in-process to skip a second gdb parse.
     # The whitelist keeps eval injection-safe and sends anything with a deref/cast/register to gdb instead.
-    if regexes.hex_arithmetic.fullmatch(substituted):
+    if regexes.hex_arithmetic.fullmatch(substituted) and "**" not in substituted.replace(" ", ""):
         try:
             address = hex(eval(substituted))
             return typedefs.tuple_examine_expression(address, address, None)

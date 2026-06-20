@@ -314,7 +314,7 @@ class SessionManager:
         SessionManager.get_session().save_session()
 
     @staticmethod
-    def load_session(file_path: str | None) -> None:
+    def load_session(file_path: str | None = None) -> None:
         SessionManager.get_session().load_session(file_path)
 
     @staticmethod

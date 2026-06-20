@@ -714,7 +714,10 @@ class MainForm(QMainWindow, MainWindow):
                 guiutils.delete_menu_entries(menu, [view_as_struct_menu.menuAction()])
             value_type = current_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
             if self._is_struct_row(current_row):  # struct rows have no editable value or type, only an address.
-                guiutils.delete_menu_entries(menu, [edit_value, edit_type, view_as_struct_menu.menuAction()])
+                guiutils.delete_menu_entries(
+                    menu,
+                    [edit_value, edit_type, view_as_struct_menu.menuAction(), what_writes, what_reads, what_accesses],
+                )
             if typedefs.VALUE_INDEX.is_integer(value_type.value_index):
                 if value_type.value_repr is typedefs.VALUE_REPR.HEX:
                     guiutils.delete_menu_entries(menu, [show_unsigned, show_signed, show_hex])
@@ -1139,9 +1142,10 @@ class MainForm(QMainWindow, MainWindow):
                     address = states.exp_cache[expression]
                 elif expression.startswith(("+", "-")):
                     address = None
-                elif basic_math_exp.match(expression.replace(" ", "")):
+                elif basic_math_exp.match(expression.replace(" ", "")) and "**" not in expression.replace(" ", ""):
                     try:
                         address = hex(eval(expression))
+                        states.exp_cache[expression] = address
                     except:
                         address = debugcore.examine_expression(expression).address
                         if address is not None:
@@ -1247,8 +1251,11 @@ class MainForm(QMainWindow, MainWindow):
             # Python's float() only accepts '.' as the decimal separator, so always normalize to '.'
             search_for = search_for.replace(",", ".")
             search_for2 = search_for2.replace(",", ".")
-            value_1 = float(search_for)
-            value_2 = float(search_for2) if search_for2 != "" else None
+            try:
+                value_1 = float(search_for)
+                value_2 = float(search_for2) if search_for2 != "" else None
+            except ValueError:
+                return None, None
         elif scan_index == typedefs.SCAN_INDEX.STRING:
             value_1 = search_for
         elif scan_index == typedefs.SCAN_INDEX.AOB:
@@ -3827,6 +3834,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         registers = debugcore.read_registers()
+        if not registers:
+            return
         if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64:
             self.stackedWidget.setCurrentWidget(self.registers_64)
             self.RAX.set_value(registers["rax"])
@@ -4978,7 +4987,7 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         key = key_list[self.last_selected_row]
         self.textBrowser_Info.clear()
         for item in info[key][2]:
-            self.textBrowser_Info.append(item + "=" + info[key][2][item])
+            self.textBrowser_Info.append(item + "=" + str(info[key][2][item]))
         self.textBrowser_Info.append(" ")
         for item in info[key][3]:
             self.textBrowser_Info.append(item + "=" + info[key][3][item])
