@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from PyQt6.QtGui import QKeyEvent, QWheelEvent
-from PyQt6.QtWidgets import QTableView, QAbstractItemView, QWidget
+from PyQt6.QtWidgets import QTableView, QAbstractItemView, QWidget, QStyledItemDelegate
 from PyQt6.QtCore import QItemSelectionModel, QModelIndex, Qt, pyqtSignal
 from GUI.ItemDelegates.HexDelegate import QHexDelegate
 from GUI.AbstractTableModels.HexModel import QHexModel
@@ -82,7 +82,9 @@ class QHexView(QTableView):
         self.setMinimumWidth(size)
         self.setMaximumWidth(size)
 
-    def on_editor_close(self) -> None:
+    def on_editor_close(self, editor: QWidget | None = None, hint: QStyledItemDelegate.EndEditHint | None = None) -> None:
+        if hint == QStyledItemDelegate.EndEditHint.RevertModelCache:
+            return
         if not self.delegate.editor.isModified():
             return
         model: QHexModel = self.model()
