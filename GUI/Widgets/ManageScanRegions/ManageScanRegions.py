@@ -12,6 +12,7 @@ class ManageScanRegionsDialog(QDialog, Ui_Dialog):
         self.deleted_regions: list[int] = []
         regions = list(scancore.memscan.regions())
         self.tableWidget_Regions.setRowCount(len(regions))
+        self.tableWidget_Regions.setSortingEnabled(False)
         for row, region in enumerate(regions):
             region_id, start_address, size, region_type, load_address, perms, file = region.as_text_fields()
             id_item = QTableWidgetItem(region_id)
@@ -23,6 +24,7 @@ class ManageScanRegionsDialog(QDialog, Ui_Dialog):
             self.tableWidget_Regions.setItem(row, 4, QTableWidgetItem(load_address))
             self.tableWidget_Regions.setItem(row, 5, QTableWidgetItem(perms))
             self.tableWidget_Regions.setItem(row, 6, QTableWidgetItem(file))
+        self.tableWidget_Regions.setSortingEnabled(True)
         self.tableWidget_Regions.resizeColumnsToContents()
         guiutils.center_to_parent(self)
         self.pushButton_Invert.clicked.connect(self.invert_selection)
