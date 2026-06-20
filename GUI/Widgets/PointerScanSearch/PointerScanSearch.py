@@ -85,6 +85,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.memscan_thread.signals.finished.connect(self.memscan_callback)
         self.memscan_thread.signals.error.connect(self.memscan_error)
         self.memscan_thread.start()
+        self.started_path_resolve = False
         self.progressBar.setValue(0)
         self.progressBar.setFormat(f"{tr.SCANNING_POINTERS} - %p%")
         self.progressBar.setVisible(True)
