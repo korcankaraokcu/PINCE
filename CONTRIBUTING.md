@@ -9,9 +9,11 @@
 - [tr](./tr) - Contains translation constants
 - [docs](./docs) - Contains Sphinx documentation. The build files are automatically generated in the `gh-pages` branch.
 - [i18n](./i18n) - Contains translation files. `ts` files are created with Qt Linguist and [compile_ts.sh](./compile_ts.sh), `qm` files are created within the last section of [install.sh](./install.sh)
+- [mono_collector](./mono_collector) - Zig source for the collector libraries that PINCE injects into Mono/IL2CPP processes to dissect their managed runtime. Built (Linux native and WINE, x86 and x64) into `libpince/libmono_collector` by the installation script
 - ### **[libpince](./libpince)**
   - [debugcore.py](./libpince/debugcore.py) - Everything related to communicating with GDB and debugging
   - [scancore.py](./libpince/scancore.py) - Everything related to the variable scanning backend
+  - [monocore.py](./libpince/monocore.py) - Everything related to dissecting the Mono/IL2CPP managed runtime
   - [linux_speedhack.py](./libpince/linux_speedhack.py) - Everything related to speedhack functionality for Linux native processes
   - [wine_speedhack.py](./libpince/wine_speedhack.py) - Everything related to speedhack functionality for WINE/Proton processes
   - [utils.py](./libpince/utils.py) - Contains generic utility functions such as parsing, file creation, process querying etc
@@ -109,7 +111,7 @@ The py files that contains the same name with the ui files are auto-generated, p
 You need to have [Qt6 Linguist](https://pkgs.org/search/?q=linguist&on=files) installed. If there are no available packages for your distro, install [pyqt6-tools](https://pypi.org/project/pyqt6-tools/) instead  
 
 Follow the steps below:
-- To create a new translation file, use [compile_ts.sh](./compile_ts.sh) with the locale as the parameter, such as `sh compile.sh ja_JP`. This will create a ts file with the locale you entered.
+- To create a new translation file, use [compile_ts.sh](./compile_ts.sh) with the locale as the parameter, such as `sh compile_ts.sh ja_JP`. This will create a ts file with the locale you entered.
 You can skip this step if you only want to edit already existing files
 - Edit ts files in [/i18n/ts](./i18n/ts) with the linguist and then save them. After saving the files, run the [compile_ts.sh](./compile_ts.sh) script.
 This script fixes inconsistencies between Qt6 Linguist and pylupdate6, also removes line information so the git history stays cleaner
