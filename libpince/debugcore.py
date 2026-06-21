@@ -1215,7 +1215,7 @@ def write_memory(
         encoding, option = typedefs.resolve_string_encoding(value_index, endian, system_endianness)
         write_data = write_data.encode(encoding, option)
         if zero_terminate:
-            write_data += b"\x00"
+            write_data += "\x00".encode(encoding, option)
     else:
         if value_index == typedefs.VALUE_INDEX.AOB:
             write_data = bytearray(write_data)
@@ -1249,25 +1249,26 @@ def aob_scan(
     """Scan readable memory regions of the attached process for a byte pattern.
 
     Args:
-        pattern: Whitespace-separated hex tokens. Use '?' or '??' for wildcard bytes,
+        pattern: Whitespace-separated hex tokens. Use '?' or '??' for a whole-byte wildcard,
                  e.g. '48 8b 05 ?? ?? ?? ??'.
         writable: If True/False, restrict to writable/non-writable regions. None = either.
         executable: If True/False, restrict to executable/non-executable regions. None = either.
         limit: Stop after this many matches. None = unlimited.
 
     Returns:
-        List of match addresses in ascending order. Empty list if no process is attached.
+        List of match addresses in ascending order, including overlapping matches.
+        Empty list if no process is attached or the pattern is invalid.
     """
     if currentpid == -1:
         return []
     try:
-        parts = [b"." if "?" in t else re.escape(bytes([int(t, 16)])) for t in pattern.split()]
+        parts = [b"." if t in ("?", "??") else re.escape(bytes([int(t, 16)])) for t in pattern.split()]
     except ValueError:
         logger.error(f"Invalid hex token in AOB pattern: {pattern!r}")
         return []
     if not parts:
         return []
-    matcher = re.compile(b"".join(parts), re.DOTALL)
+    matcher = re.compile(b"(?=(" + b"".join(parts) + b"))", re.DOTALL)
     overlap = len(parts) - 1
     results = []
     with memory_handle() as mem:

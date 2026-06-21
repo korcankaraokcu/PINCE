@@ -1914,16 +1914,6 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Freeze</source>
-        <translation>冻结</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Default</source>
-        <translation>默认</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
         <source>Auto</source>
         <translation>自动</translation>
     </message>
@@ -2190,11 +2180,6 @@ To change the current GDB path, check Settings-&gt;Debug</source>
         <location filename="../../tr/tr.py" line="0" />
         <source>Add to address table</source>
         <translation>添加到地址表</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Clear address table?</source>
-        <translation>清除地址表？</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
@@ -3434,11 +3419,6 @@ Do you want to keep the current session with the new process?</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Structure view</source>
-        <translation>结构体查看器</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
         <source>View at address…</source>
         <translation>查看此地址...</translation>
     </message>
@@ -3461,61 +3441,6 @@ Do you want to keep the current session with the new process?</source>
         <location filename="../../tr/tr.py" line="0" />
         <source>Enter base address</source>
         <translation>输入基址</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Structures</source>
-        <translation>结构体</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>New Structure</source>
-        <translation>新结构体</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Edit Structure</source>
-        <translation>编辑结构体</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Structure name</source>
-        <translation>结构体名称</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Add Member</source>
-        <translation>添加成员</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Edit Member</source>
-        <translation>编辑成员</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Remove Member</source>
-        <translation>删除成员</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Move Up</source>
-        <translation>上移</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Move Down</source>
-        <translation>下移</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Member name</source>
-        <translation>成员名称</translation>
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Member offset</source>
-        <translation>成员偏移量</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />

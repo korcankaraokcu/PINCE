@@ -1907,16 +1907,6 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Freeze</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Default</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
         <source>Auto</source>
         <translation type="unfinished" />
     </message>
@@ -2180,11 +2170,6 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Add to address table</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Clear address table?</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -3362,11 +3347,6 @@ Do you want to keep the current session with the new process?</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Structure view</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
         <source>View at address…</source>
         <translation type="unfinished" />
     </message>
@@ -3388,61 +3368,6 @@ Do you want to keep the current session with the new process?</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Enter base address</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Structures</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>New Structure</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Edit Structure</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Structure name</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Add Member</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Edit Member</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Remove Member</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Move Up</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Move Down</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Member name</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../tr/tr.py" line="0" />
-        <source>Member offset</source>
         <translation type="unfinished" />
     </message>
     <message>
