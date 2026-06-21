@@ -31,23 +31,18 @@ pub const Backend = struct {
     ctx: *anyopaque,
     kind: RuntimeKind,
 
-    helloFn: *const fn (*anyopaque, *Encoder) anyerror!void,
     assembliesFn: *const fn (*anyopaque, *Encoder) anyerror!void,
     classesFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
     fieldsFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
     methodsFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
     compileFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
     staticAddrFn: *const fn (*anyopaque, u64, u64, *Encoder) anyerror!void,
-    findClassFn: *const fn (*anyopaque, u64, []const u8, []const u8, *Encoder) anyerror!void,
     invokeFn: *const fn (*anyopaque, u64, u64, []const Arg, *Encoder) anyerror!void,
     signatureFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
     classInfoFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
     typeKlassFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
     instanceMarkerFn: *const fn (*anyopaque, u64, *Encoder) anyerror!void,
 
-    pub fn hello(self: *const Backend, e: *Encoder) !void {
-        return self.helloFn(self.ctx, e);
-    }
     pub fn assemblies(self: *const Backend, e: *Encoder) !void {
         return self.assembliesFn(self.ctx, e);
     }
@@ -65,9 +60,6 @@ pub const Backend = struct {
     }
     pub fn staticAddr(self: *const Backend, klass: u64, field: u64, e: *Encoder) !void {
         return self.staticAddrFn(self.ctx, klass, field, e);
-    }
-    pub fn findClass(self: *const Backend, image: u64, ns: []const u8, name: []const u8, e: *Encoder) !void {
-        return self.findClassFn(self.ctx, image, ns, name, e);
     }
     pub fn invoke(self: *const Backend, method: u64, obj: u64, args: []const Arg, e: *Encoder) !void {
         return self.invokeFn(self.ctx, method, obj, args, e);

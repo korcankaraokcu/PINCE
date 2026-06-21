@@ -70,8 +70,6 @@ const FnValueSize = *const fn (?*anyopaque, ?*u32) callconv(CC) c_int;
 const Il2CppApi = struct {
     allocator: std.mem.Allocator,
     root_domain: ?*anyopaque = null,
-    module_buf: [256]u8 = undefined,
-    module_len: usize = 0,
     static_fields_offset: ?usize = null,
 
     domain_get: FnDomain,
@@ -117,9 +115,7 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
     // Bind the runtime module using the resolver.
     // ELF -> dlopen/dlsym, PE -> export parsing.
     const substr = if (resolver.is_wine) "GameAssembly.dll" else "GameAssembly";
-    var path_buf: [256]u8 = undefined;
-    var path_len: usize = 0;
-    const mod = resolver.open(allocator, "il2cpp_domain_get", substr, &path_buf, &path_len) orelse return null;
+    const mod = resolver.open(allocator, "il2cpp_domain_get", substr) orelse return null;
 
     const api = try allocator.create(Il2CppApi);
     api.* = .{
@@ -167,20 +163,15 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
     _ = api.thread_attach(api.root_domain);
     api.static_fields_offset = calibrateStaticFields(api);
 
-    @memcpy(api.module_buf[0..path_len], path_buf[0..path_len]);
-    api.module_len = path_len;
-
     return rt.Backend{
         .ctx = api,
         .kind = .il2cpp,
-        .helloFn = il2cppHello,
         .assembliesFn = il2cppAssemblies,
         .classesFn = il2cppClasses,
         .fieldsFn = il2cppFields,
         .methodsFn = il2cppMethods,
         .compileFn = il2cppCompile,
         .staticAddrFn = il2cppStaticAddr,
-        .findClassFn = il2cppFindClass,
         .invokeFn = il2cppInvoke,
         .signatureFn = il2cppSignature,
         .classInfoFn = il2cppClassInfo,
@@ -191,23 +182,6 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
 
 inline fn self(ctx: *anyopaque) *Il2CppApi {
     return @ptrCast(@alignCast(ctx));
-}
-
-fn il2cppHello(ctx: *anyopaque, e: *Encoder) !void {
-    const m = self(ctx);
-    try e.mapHeader(6);
-    try e.str("version");
-    try e.uint(1);
-    try e.str("arch");
-    try e.str(if (@sizeOf(usize) == 8) "x64" else "x86");
-    try e.str("runtime");
-    try e.str("il2cpp");
-    try e.str("abi");
-    try e.str("sysv");
-    try e.str("module");
-    try e.str(m.module_buf[0..m.module_len]);
-    try e.str("root_domain");
-    try e.uint(@intFromPtr(m.root_domain));
 }
 
 fn il2cppAssemblies(ctx: *anyopaque, e: *Encoder) !void {
@@ -237,22 +211,27 @@ fn il2cppClasses(ctx: *anyopaque, image_u: u64, e: *Encoder) !void {
     const m = self(ctx);
     const image: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(image_u)));
     const count = m.image_get_class_count(image);
-    try e.arrayHeader(count);
 
+    var list: std.ArrayList(u64) = .empty;
+    defer list.deinit(m.allocator);
     var i: usize = 0;
     while (i < count) : (i += 1) {
         const klass = m.image_get_class(image, i);
-        try e.mapHeader(5);
+        if (klass != null) try list.append(m.allocator, @intFromPtr(klass));
+    }
+    try e.arrayHeader(list.items.len);
+
+    for (list.items) |ku| {
+        const klass: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(ku)));
+        try e.mapHeader(4);
         try e.str("klass");
-        try e.uint(@intFromPtr(klass));
+        try e.uint(ku);
         try e.str("namespace");
         try e.str(cspan(m.class_get_namespace(klass)));
         try e.str("name");
         try e.str(cspan(m.class_get_name(klass)));
         try e.str("parent");
         try e.uint(@intFromPtr(m.class_get_parent(klass)));
-        try e.str("token");
-        try e.uint(@as(u64, i + 1)); // IL2CPP has no metadata token here (unlike mono) so we'll create a 1-based index for parity
     }
 }
 
@@ -351,11 +330,10 @@ fn il2cppCompile(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
     // IL2CPP is AOT (ahead of time) compilation so there is no JIT/compile step.
     // MethodInfo.methodPointer is the first struct field (offset 0) across known IL2CPP versions,
     // so the native code address is the pointer sized value stored at the MethodInfo handle.
-    var addr: u64 = 0;
-    if (method_u != 0) {
-        const mi: *const usize = @ptrFromInt(@as(usize, @intCast(method_u)));
-        addr = mi.*;
-    }
+    if (method_u == 0) return error.CompileFailed;
+    const mi: *const usize = @ptrFromInt(@as(usize, @intCast(method_u)));
+    const addr = mi.*;
+    if (addr == 0) return error.CompileFailed; // null methodPointer (not AOT'd) -> 0 would SIGSEGV the target
 
     try e.mapHeader(1);
     try e.str("native_addr");
@@ -439,26 +417,6 @@ fn il2cppInstanceMarker(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
     try e.uint(klass_u);
 }
 
-fn il2cppFindClass(ctx: *anyopaque, image_u: u64, ns: []const u8, name: []const u8, e: *Encoder) !void {
-    const m = self(ctx);
-    const image: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(image_u)));
-
-    // il2cpp_class_from_name needs NUL-terminated C strings.
-    var ns_buf: [512]u8 = undefined;
-    var nm_buf: [512]u8 = undefined;
-    if (ns.len >= ns_buf.len or name.len >= nm_buf.len) return error.NameTooLong;
-    @memcpy(ns_buf[0..ns.len], ns);
-    ns_buf[ns.len] = 0;
-    @memcpy(nm_buf[0..name.len], name);
-    nm_buf[name.len] = 0;
-
-    const klass = m.class_from_name(image, @ptrCast(&ns_buf), @ptrCast(&nm_buf));
-
-    try e.mapHeader(1);
-    try e.str("klass");
-    try e.uint(@intFromPtr(klass));
-}
-
 fn il2cppClassInfo(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
     const m = self(ctx);
     const klass: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(klass_u)));
@@ -540,10 +498,9 @@ fn il2cppInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg
     const meth: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(method_u)));
     const obj: ?*anyopaque = if (obj_u == 0) null else @ptrFromInt(@as(usize, @intCast(obj_u)));
 
-    const slots = try m.allocator.alloc(u64, args.len);
-    defer m.allocator.free(slots);
-    const argv = try m.allocator.alloc(?*anyopaque, args.len);
-    defer m.allocator.free(argv);
+    if (args.len > 32) return error.TooManyArgs; // Make sure this is sync'd with main.zig's dispatcher args_buf[32] cap.
+    var slots: [32]u64 = undefined;
+    var argv: [32]?*anyopaque = undefined;
 
     for (args, 0..) |a, i| {
         if (eql(a.tag, "str")) {
@@ -564,7 +521,7 @@ fn il2cppInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg
             argv[i] = &slots[i]; // value type: pointer to the value
         }
     }
-    const argv_ptr: ?[*]?*anyopaque = if (args.len == 0) null else argv.ptr;
+    const argv_ptr: ?[*]?*anyopaque = if (args.len == 0) null else &argv;
 
     var exc: ?*anyopaque = null;
     const ret = invoke(meth, obj, argv_ptr, &exc);

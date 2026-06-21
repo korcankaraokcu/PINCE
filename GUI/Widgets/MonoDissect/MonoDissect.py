@@ -44,13 +44,17 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
             self.label_Status.setText(tr.MONO_NOT_READY)
             return
         self.treeWidget_Mono.clear()
-        for assembly in client.assemblies():
-            item = QTreeWidgetItem([assembly["name"], ""])
-            item.setData(0, ROLE_KIND, "image")
-            item.setData(0, ROLE_DATA, assembly)
-            item.setData(0, ROLE_LOADED, False)
-            item.addChild(QTreeWidgetItem(["", ""]))  # placeholder for the expand arrow
-            self.treeWidget_Mono.addTopLevelItem(item)
+        try:
+            for assembly in client.assemblies():
+                item = QTreeWidgetItem([assembly["name"], ""])
+                item.setData(0, ROLE_KIND, "image")
+                item.setData(0, ROLE_DATA, assembly)
+                item.setData(0, ROLE_LOADED, False)
+                item.addChild(QTreeWidgetItem(["", ""]))  # placeholder for the expand arrow
+                self.treeWidget_Mono.addTopLevelItem(item)
+        except monocore.MonoError:
+            self.label_Status.setText(tr.MONO_NOT_READY)
+            return
         self.resize_columns()
 
     def _on_inherited_toggled(self, checked: bool) -> None:
@@ -164,50 +168,53 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
         client = monocore.get_client()
         if client is None:
             return
-        if kind == "image":
-            data = item.data(0, ROLE_DATA)
-            for klass in client.classes(data["image"]):
-                ns = klass["namespace"]
-                label = f"{ns}.{klass['name']}" if ns else klass["name"]
-                child = QTreeWidgetItem([label, ""])
-                child.setData(0, ROLE_KIND, "class")
-                child.setData(0, ROLE_DATA, klass)
-                child.setData(0, ROLE_LOADED, False)
-                child.addChild(QTreeWidgetItem(["", ""]))
-                item.addChild(child)
-        elif kind == "class":
-            data = item.data(0, ROLE_DATA)
-            fields_node = QTreeWidgetItem([tr.FIELDS, ""])
-            fields_node.setData(0, ROLE_KIND, "fields")
-            fields_node.setData(0, ROLE_DATA, data)
-            fields_node.setData(0, ROLE_LOADED, False)
-            fields_node.addChild(QTreeWidgetItem(["", ""]))
-            methods_node = QTreeWidgetItem([tr.METHODS, ""])
-            methods_node.setData(0, ROLE_KIND, "methods")
-            methods_node.setData(0, ROLE_DATA, data)
-            methods_node.setData(0, ROLE_LOADED, False)
-            methods_node.addChild(QTreeWidgetItem(["", ""]))
-            item.addChild(fields_node)
-            item.addChild(methods_node)
-        elif kind == "fields":
-            class_data = item.data(0, ROLE_DATA)
-            klass = class_data["klass"]
-            for fld in client.fields(klass):
-                self._add_field_node(item, fld, class_data, [fld["offset"]], class_data)
-            if self.checkBox_ShowInherited.isChecked():
-                self._add_inherited_fields(client, item, class_data)
-        elif kind == "methods":
-            class_data = item.data(0, ROLE_DATA)
-            klass = class_data["klass"]
-            for meth in client.methods(klass):
-                child = QTreeWidgetItem([meth["full_name"] or meth["name"], ""])
-                child.setData(0, ROLE_KIND, "method")
-                child.setData(0, ROLE_DATA, meth)
-                item.addChild(child)
-            if self.checkBox_ShowInherited.isChecked():
-                self._add_inherited_methods(client, item, class_data)
-        elif kind == "ref_field":
-            self._expand_ref_field(item, client)
+        try:
+            if kind == "image":
+                data = item.data(0, ROLE_DATA)
+                for klass in client.classes(data["image"]):
+                    ns = klass["namespace"]
+                    label = f"{ns}.{klass['name']}" if ns else klass["name"]
+                    child = QTreeWidgetItem([label, ""])
+                    child.setData(0, ROLE_KIND, "class")
+                    child.setData(0, ROLE_DATA, klass)
+                    child.setData(0, ROLE_LOADED, False)
+                    child.addChild(QTreeWidgetItem(["", ""]))
+                    item.addChild(child)
+            elif kind == "class":
+                data = item.data(0, ROLE_DATA)
+                fields_node = QTreeWidgetItem([tr.FIELDS, ""])
+                fields_node.setData(0, ROLE_KIND, "fields")
+                fields_node.setData(0, ROLE_DATA, data)
+                fields_node.setData(0, ROLE_LOADED, False)
+                fields_node.addChild(QTreeWidgetItem(["", ""]))
+                methods_node = QTreeWidgetItem([tr.METHODS, ""])
+                methods_node.setData(0, ROLE_KIND, "methods")
+                methods_node.setData(0, ROLE_DATA, data)
+                methods_node.setData(0, ROLE_LOADED, False)
+                methods_node.addChild(QTreeWidgetItem(["", ""]))
+                item.addChild(fields_node)
+                item.addChild(methods_node)
+            elif kind == "fields":
+                class_data = item.data(0, ROLE_DATA)
+                klass = class_data["klass"]
+                for fld in client.fields(klass):
+                    self._add_field_node(item, fld, class_data, [fld["offset"]], class_data)
+                if self.checkBox_ShowInherited.isChecked():
+                    self._add_inherited_fields(client, item, class_data)
+            elif kind == "methods":
+                class_data = item.data(0, ROLE_DATA)
+                klass = class_data["klass"]
+                for meth in client.methods(klass):
+                    child = QTreeWidgetItem([meth["full_name"] or meth["name"], ""])
+                    child.setData(0, ROLE_KIND, "method")
+                    child.setData(0, ROLE_DATA, meth)
+                    item.addChild(child)
+                if self.checkBox_ShowInherited.isChecked():
+                    self._add_inherited_methods(client, item, class_data)
+            elif kind == "ref_field":
+                self._expand_ref_field(item, client)
+                return
+        except monocore.MonoError:
             return
         item.setData(0, ROLE_LOADED, True)
 
@@ -413,7 +420,11 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
         self, client: monocore.MonoClient, method_info: dict, class_info: dict | None, instance_ptr: int | None = None
     ) -> None:
         """Open the Invoke dialog for a method."""
-        signature = client.signature(method_info["method"])
+        try:
+            signature = client.signature(method_info["method"])
+        except monocore.MonoError:
+            QMessageBox.information(self, tr.ERROR, tr.MONO_NOT_READY)
+            return
         klass = class_info["klass"] if class_info else 0
         if instance_ptr is None and not signature.get("static", True) and class_info is not None:
             # No concrete instance given: try the class' self-referential static (singleton pattern).
@@ -438,7 +449,11 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
         root a pointer chain that resolves the class's instance fields to that object automatically.
         """
         full_name = f"{klass_info['namespace']}.{klass_info['name']}" if klass_info["namespace"] else klass_info["name"]
-        for candidate in client.fields(klass_info["klass"]):
+        try:
+            fields = client.fields(klass_info["klass"])
+        except monocore.MonoError:
+            return None
+        for candidate in fields:
             if candidate["is_static"] and candidate["type"] == full_name:
                 return candidate
         return None

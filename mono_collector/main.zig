@@ -24,6 +24,7 @@ const Decoder = msgpack.Decoder;
 
 const AF_UNIX: u32 = 1;
 const SOCK_STREAM: u32 = 1;
+const EINTR = -@as(isize, @intFromEnum(linux.E.INTR));
 
 var started = std.atomic.Value(bool).init(false);
 
@@ -42,8 +43,12 @@ fn readN(fd: i32, buf: []u8) !void {
     var off: usize = 0;
     while (off < buf.len) {
         const n = linux.read(fd, buf[off..].ptr, buf.len - off);
+        const signed = @as(isize, @bitCast(n));
+        if (signed < 0) {
+            if (signed == EINTR) continue;
+            return error.ReadError;
+        }
         if (n == 0) return error.Eof;
-        if (@as(isize, @bitCast(n)) < 0) return error.ReadError;
         off += n;
     }
 }
@@ -52,8 +57,12 @@ fn writeN(fd: i32, buf: []const u8) !void {
     var off: usize = 0;
     while (off < buf.len) {
         const n = linux.write(fd, buf[off..].ptr, buf.len - off);
+        const signed = @as(isize, @bitCast(n));
+        if (signed < 0) {
+            if (signed == EINTR) continue;
+            return error.WriteError;
+        }
         if (n == 0) return error.Closed;
-        if (@as(isize, @bitCast(n)) < 0) return error.WriteError;
         off += n;
     }
 }
@@ -94,8 +103,6 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
     var obj: u64 = 0;
     var args_buf: [32]rt.Arg = undefined;
     var args_len: usize = 0;
-    var ns: []const u8 = "";
-    var name: []const u8 = "";
     var i: usize = 0;
 
     while (i < n) : (i += 1) {
@@ -112,10 +119,6 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
             method = dec.uint() catch return writeErr(out, "bad method");
         } else if (eql(key, "obj")) {
             obj = dec.uint() catch return writeErr(out, "bad obj");
-        } else if (eql(key, "namespace")) {
-            ns = dec.str() catch return writeErr(out, "bad ns");
-        } else if (eql(key, "name")) {
-            name = dec.str() catch return writeErr(out, "bad name");
         } else if (eql(key, "args")) {
             const count = dec.arrayLen() catch return writeErr(out, "bad args");
             args_len = 0;
@@ -143,9 +146,7 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
     defer tmp.deinit(allocator);
     var tenc = Encoder{ .list = &tmp, .allocator = allocator };
 
-    const result: anyerror!void = if (eql(op, "hello"))
-        backend.hello(&tenc)
-    else if (eql(op, "assemblies"))
+    const result: anyerror!void = if (eql(op, "assemblies"))
         backend.assemblies(&tenc)
     else if (eql(op, "classes"))
         backend.classes(image, &tenc)
@@ -163,8 +164,6 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
         backend.typeKlass(field, &tenc)
     else if (eql(op, "instance_marker"))
         backend.instanceMarker(klass, &tenc)
-    else if (eql(op, "find_class"))
-        backend.findClass(image, ns, name, &tenc)
     else if (eql(op, "invoke"))
         backend.invoke(method, obj, args_buf[0..args_len], &tenc)
     else if (eql(op, "signature"))
@@ -214,8 +213,9 @@ fn workerMain() void {
     const allocator = std.heap.c_allocator;
     var backend = (rt.detectAndLoad(allocator) catch return) orelse return;
 
-    const fd = @as(i32, @intCast(linux.socket(AF_UNIX, SOCK_STREAM, 0)));
-    if (fd < 0) return;
+    const sock_rc = linux.socket(AF_UNIX, SOCK_STREAM, 0);
+    if (@as(isize, @bitCast(sock_rc)) < 0) return;
+    const fd: i32 = @intCast(sock_rc);
 
     const pid = std.c.getpid();
     var namebuf: [64]u8 = undefined;
@@ -231,8 +231,9 @@ fn workerMain() void {
     if (linux.listen(fd, 1) != 0) return;
 
     while (true) {
-        const cfd = @as(i32, @intCast(linux.accept(fd, null, null)));
-        if (cfd < 0) continue;
+        const accept_rc = linux.accept(fd, null, null);
+        if (@as(isize, @bitCast(accept_rc)) < 0) continue;
+        const cfd: i32 = @intCast(accept_rc);
         handleConn(allocator, &backend, cfd);
     }
 }

@@ -291,9 +291,6 @@ class MonoClient:
             raise MonoError(response.get("error", "unknown error"))
         return response.get("data")
 
-    def hello(self) -> dict:
-        return self.request("hello")
-
     def assemblies(self) -> list[dict]:
         return self.request("assemblies")
 
@@ -319,13 +316,6 @@ class MonoClient:
         if addr is None:
             raise MonoError("malformed response: missing 'address'")
         return addr
-
-    def find_class(self, image: int, namespace: str, name: str) -> int:
-        result = self.request("find_class", image=image, namespace=namespace, name=name)
-        klass = result.get("klass") if isinstance(result, dict) else None
-        if klass is None:
-            raise MonoError("malformed response: missing 'klass'")
-        return klass
 
     def class_info(self, klass: int) -> dict:
         """Return {namespace, name, parent} for a class handle."""

@@ -31,19 +31,16 @@ pub const Module = if (is_wine) WINEModule else NativeModule;
 /// Find + bind the runtime module and confirm "core" resolves through it.
 /// - core: a symbol that must exist (proves it is the expected runtime).
 /// - substr: identifies the mapped module file in /proc/self/maps.
-/// - path_buf/path_len: receives the bound module path.
 /// Returns null when the module isn't present or isn't the expected runtime.
 pub fn open(
     allocator: std.mem.Allocator,
     core: [*:0]const u8,
     substr: []const u8,
-    path_buf: []u8,
-    path_len: *usize,
 ) ?Module {
     return if (is_wine)
-        openWINE(allocator, core, substr, path_buf, path_len)
+        openWINE(allocator, core, substr)
     else
-        openNative(allocator, core, substr, path_buf, path_len);
+        openNative(allocator, core, substr);
 }
 
 // native (ELF)
@@ -90,8 +87,6 @@ fn openNative(
     allocator: std.mem.Allocator,
     core: [*:0]const u8,
     substr: []const u8,
-    path_buf: []u8,
-    path_len: *usize,
 ) ?NativeModule {
     // Try the global scope first, works when the runtime is linked into the executable or was loaded RTLD_GLOBAL.
     var h = std.c.dlopen(null, std.c.RTLD{ .NOW = true });
@@ -102,13 +97,6 @@ fn openNative(
         const path = findModulePath(allocator, substr, &find_buf) orelse return null;
         h = std.c.dlopen(path.ptr, std.c.RTLD{ .NOW = true, .NOLOAD = true });
         if (h == null or std.c.dlsym(h, core) == null) return null;
-    }
-
-    var find_buf: [4096]u8 = undefined;
-    if (findModulePath(allocator, substr, &find_buf)) |path| {
-        const len = @min(path.len, path_buf.len);
-        @memcpy(path_buf[0..len], path[0..len]);
-        path_len.* = len;
     }
     return .{ .handle = h };
 }
@@ -169,8 +157,6 @@ fn openWINE(
     allocator: std.mem.Allocator,
     core: [*:0]const u8,
     substr: []const u8,
-    path_buf: []u8,
-    path_len: *usize,
 ) ?WINEModule {
     const io = std.Io.Threaded.global_single_threaded.io();
     const f = std.Io.Dir.openFileAbsolute(io, "/proc/self/maps", .{}) catch return null;
@@ -198,12 +184,6 @@ fn openWINE(
         const start = std.fmt.parseInt(usize, line[0..dash], 16) catch continue;
         const mod = parsePe(@ptrFromInt(start)) orelse continue;
         if (mod.lookup(core) == null) continue; // exports parsed but not the right runtime
-        if (std.mem.indexOfScalar(u8, line, '/')) |s| {
-            const path = line[s..];
-            const len = @min(path.len, path_buf.len);
-            @memcpy(path_buf[0..len], path[0..len]);
-            path_len.* = len;
-        }
         return mod;
     }
     return null;

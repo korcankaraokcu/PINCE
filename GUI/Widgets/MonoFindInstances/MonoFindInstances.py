@@ -56,15 +56,18 @@ class MonoFindInstancesDialog(QDialog, Ui_Dialog):
         client = monocore.get_client()
         if client is None:
             return
-        if kind == "instance":
-            payload = item.data(0, ROLE_DATA)
-            base = payload["address"]
-            class_data = payload["class"]
-            for fld in client.fields(class_data["klass"]):
-                self.owner._add_field_node(item, fld, class_data, [fld["offset"]], class_data, instance_base=base)
-            item.setData(0, ROLE_LOADED, True)
-        elif kind == "ref_field":
-            self.owner._expand_ref_field(item, client)
+        try:
+            if kind == "instance":
+                payload = item.data(0, ROLE_DATA)
+                base = payload["address"]
+                class_data = payload["class"]
+                for fld in client.fields(class_data["klass"]):
+                    self.owner._add_field_node(item, fld, class_data, [fld["offset"]], class_data, instance_base=base)
+                item.setData(0, ROLE_LOADED, True)
+            elif kind == "ref_field":
+                self.owner._expand_ref_field(item, client)
+        except monocore.MonoError:
+            return
         for column in range(self.treeWidget_Instances.columnCount()):
             self.treeWidget_Instances.resizeColumnToContents(column)
 

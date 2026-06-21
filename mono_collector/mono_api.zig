@@ -53,7 +53,6 @@ const FnVtable = *const fn (?*anyopaque, ?*anyopaque) callconv(CC) ?*anyopaque;
 const FnStaticData = *const fn (?*anyopaque) callconv(CC) ?*anyopaque;
 const FnValueSize = *const fn (?*anyopaque, ?*u32) callconv(CC) c_int;
 const FnClassInit = *const fn (?*anyopaque) callconv(CC) void;
-const FnFromName = *const fn (?*anyopaque, CStr, CStr) callconv(CC) ?*anyopaque;
 const FnFree = *const fn (?*anyopaque) callconv(CC) void;
 const FnInvoke = *const fn (?*anyopaque, ?*anyopaque, ?[*]?*anyopaque, *?*anyopaque) callconv(CC) ?*anyopaque;
 const FnTypeType = *const fn (?*anyopaque) callconv(CC) c_int;
@@ -63,8 +62,6 @@ const FnParamNames = *const fn (?*anyopaque, [*]?CStr) callconv(CC) void;
 const MonoApi = struct {
     allocator: std.mem.Allocator,
     root_domain: ?*anyopaque = null,
-    module_buf: [256]u8 = undefined,
-    module_len: usize = 0,
 
     get_root_domain: FnDomain,
     thread_attach: FnP_P,
@@ -102,7 +99,6 @@ const MonoApi = struct {
     vtable_get_static_field_data: FnStaticData,
     class_value_size: ?FnValueSize,
     runtime_class_init: ?FnClassInit,
-    class_from_name: FnFromName,
     class_from_type: ?FnP_P,
     free: ?FnFree,
     runtime_invoke: ?FnInvoke = null,
@@ -112,9 +108,7 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
     // Bind the runtime module using the resolver.
     // ELF -> dlopen/dlsym, PE -> export parsing.
     const substr = if (resolver.is_wine) "mono-2.0-bdwgc.dll" else "libmono";
-    var path_buf: [256]u8 = undefined;
-    var path_len: usize = 0;
-    const mod = resolver.open(allocator, "mono_get_root_domain", substr, &path_buf, &path_len) orelse return null;
+    const mod = resolver.open(allocator, "mono_get_root_domain", substr) orelse return null;
 
     const api = try allocator.create(MonoApi);
     api.* = .{
@@ -155,7 +149,6 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
         .vtable_get_static_field_data = try req(FnStaticData, mod, "mono_vtable_get_static_field_data"),
         .class_value_size = opt(FnValueSize, mod, "mono_class_value_size"),
         .runtime_class_init = opt(FnClassInit, mod, "mono_runtime_class_init"),
-        .class_from_name = try req(FnFromName, mod, "mono_class_from_name"),
         .class_from_type = opt(FnP_P, mod, "mono_class_from_mono_type"),
         .free = opt(FnFree, mod, "mono_free"),
         .runtime_invoke = opt(FnInvoke, mod, "mono_runtime_invoke"),
@@ -164,20 +157,15 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
     api.root_domain = api.get_root_domain();
     _ = api.thread_attach(api.root_domain);
 
-    @memcpy(api.module_buf[0..path_len], path_buf[0..path_len]);
-    api.module_len = path_len;
-
     return rt.Backend{
         .ctx = api,
         .kind = .mono,
-        .helloFn = monoHello,
         .assembliesFn = monoAssemblies,
         .classesFn = monoClasses,
         .fieldsFn = monoFields,
         .methodsFn = monoMethods,
         .compileFn = monoCompile,
         .staticAddrFn = monoStaticAddr,
-        .findClassFn = monoFindClass,
         .invokeFn = monoInvoke,
         .signatureFn = monoSignature,
         .classInfoFn = monoClassInfo,
@@ -188,23 +176,6 @@ pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
 
 inline fn self(ctx: *anyopaque) *MonoApi {
     return @ptrCast(@alignCast(ctx));
-}
-
-fn monoHello(ctx: *anyopaque, e: *Encoder) !void {
-    const m = self(ctx);
-    try e.mapHeader(6);
-    try e.str("version");
-    try e.uint(1);
-    try e.str("arch");
-    try e.str(if (@sizeOf(usize) == 8) "x64" else "x86");
-    try e.str("runtime");
-    try e.str("mono");
-    try e.str("abi");
-    try e.str("sysv");
-    try e.str("module");
-    try e.str(m.module_buf[0..m.module_len]);
-    try e.str("root_domain");
-    try e.uint(@intFromPtr(m.root_domain));
 }
 
 const CollectCtx = struct { list: *std.ArrayList(u64), allocator: std.mem.Allocator, oom: bool };
@@ -258,11 +229,9 @@ fn monoClasses(ctx: *anyopaque, image_u: u64, e: *Encoder) !void {
     }
     try e.arrayHeader(list.items.len);
 
-    var idx: usize = 0;
     for (list.items) |ku| {
-        idx += 1;
         const klass: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(ku)));
-        try e.mapHeader(5);
+        try e.mapHeader(4);
         try e.str("klass");
         try e.uint(ku);
         try e.str("namespace");
@@ -271,8 +240,6 @@ fn monoClasses(ctx: *anyopaque, image_u: u64, e: *Encoder) !void {
         try e.str(cspan(m.class_get_name(klass)));
         try e.str("parent");
         try e.uint(@intFromPtr(m.class_get_parent(klass)));
-        try e.str("token");
-        try e.uint(MONO_TOKEN_TYPE_DEF | @as(u32, @intCast(idx)));
     }
 }
 
@@ -345,6 +312,7 @@ fn monoCompile(ctx: *anyopaque, method_u: u64, e: *Encoder) !void {
     const m = self(ctx);
     const meth: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(method_u)));
     const addr = m.compile_method(meth);
+    if (addr == null) return error.CompileFailed; // 0 would SIGSEGV the target on disas/breakpoint
 
     try e.mapHeader(1);
     try e.str("native_addr");
@@ -362,6 +330,7 @@ fn monoStaticAddr(ctx: *anyopaque, klass_u: u64, field_u: u64, e: *Encoder) !voi
 
     const base = m.vtable_get_static_field_data(vt);
     const off = m.field_get_offset(fld);
+    if (off < 0) return error.Unsupported;
     const addr = @intFromPtr(base) +% @as(u64, @intCast(off));
 
     try e.mapHeader(1);
@@ -380,26 +349,6 @@ fn monoInstanceMarker(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
     try e.mapHeader(1);
     try e.str("marker");
     try e.uint(@intFromPtr(vt));
-}
-
-fn monoFindClass(ctx: *anyopaque, image_u: u64, ns: []const u8, name: []const u8, e: *Encoder) !void {
-    const m = self(ctx);
-    const image: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(image_u)));
-
-    // mono_class_from_name needs NUL-terminated C strings.
-    var ns_buf: [512]u8 = undefined;
-    var nm_buf: [512]u8 = undefined;
-    if (ns.len >= ns_buf.len or name.len >= nm_buf.len) return error.NameTooLong;
-    @memcpy(ns_buf[0..ns.len], ns);
-    ns_buf[ns.len] = 0;
-    @memcpy(nm_buf[0..name.len], name);
-    nm_buf[name.len] = 0;
-
-    const klass = m.class_from_name(image, @ptrCast(&ns_buf), @ptrCast(&nm_buf));
-
-    try e.mapHeader(1);
-    try e.str("klass");
-    try e.uint(@intFromPtr(klass));
 }
 
 fn monoClassInfo(ctx: *anyopaque, klass_u: u64, e: *Encoder) !void {
@@ -486,10 +435,9 @@ fn monoInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg, 
     const meth: ?*anyopaque = @ptrFromInt(@as(usize, @intCast(method_u)));
     const obj: ?*anyopaque = if (obj_u == 0) null else @ptrFromInt(@as(usize, @intCast(obj_u)));
 
-    const slots = try m.allocator.alloc(u64, args.len);
-    defer m.allocator.free(slots);
-    const argv = try m.allocator.alloc(?*anyopaque, args.len);
-    defer m.allocator.free(argv);
+    if (args.len > 32) return error.TooManyArgs; // Make sure this is sync'd with main.zig's dispatcher args_buf[32] cap.
+    var slots: [32]u64 = undefined;
+    var argv: [32]?*anyopaque = undefined;
 
     for (args, 0..) |a, i| {
         if (eql(a.tag, "str")) {
@@ -510,7 +458,7 @@ fn monoInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg, 
             argv[i] = &slots[i]; // value type: pointer to the value
         }
     }
-    const argv_ptr: ?[*]?*anyopaque = if (args.len == 0) null else argv.ptr;
+    const argv_ptr: ?[*]?*anyopaque = if (args.len == 0) null else &argv;
 
     var exc: ?*anyopaque = null;
     const ret = invoke(meth, obj, argv_ptr, &exc);
