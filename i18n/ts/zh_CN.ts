@@ -185,16 +185,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../../GUI/TextEditDialog.ui" line="0" />
-        <source>Dialog</source>
-        <translation>对话框</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TextEditDialog.ui" line="0" />
-        <source>Hit Esc to cancel and Ctrl+Enter to accept</source>
-        <translation>按 Esc 取消，按 Ctrl+Enter 接受</translation>
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
         <source>Parameters for tracing</source>
         <translation>用于追踪的参数</translation>
@@ -688,6 +678,16 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
         <source>Add to address table</source>
         <translation>添加到地址表</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TextEdit/Form/TextEditDialog.ui" line="0" />
+        <source>Dialog</source>
+        <translation>对话框</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TextEdit/Form/TextEditDialog.ui" line="0" />
+        <source>Hit Esc to cancel and Ctrl+Enter to accept</source>
+        <translation>按 Esc 取消，按 Ctrl+Enter 接受</translation>
     </message>
 </context><context>
     <name>Form</name>

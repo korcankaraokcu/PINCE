@@ -124,7 +124,6 @@ from GUI.Session.session import SessionDataChanged, SessionManager, StructureMan
 from GUI.Settings import settings, themes
 from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
 from GUI.States import states
-from GUI.TextEditDialog import Ui_Dialog as TextEditDialog
 from GUI.TraceInstructionsPromptDialog import Ui_Dialog as TraceInstructionsPromptDialog
 from GUI.TraceInstructionsWaitWidget import Ui_Form as TraceInstructionsWaitWidget
 from GUI.TraceInstructionsWindow import Ui_MainWindow as TraceInstructionsWindow
@@ -151,6 +150,7 @@ from GUI.Widgets.Structures.StructuresWindow import StructuresWindow
 from GUI.Widgets.Structures.StructureViewDialog import StructureViewDialog
 from GUI.Widgets.Structures.StructureEditorDialog import StructureEditorDialog
 from GUI.Widgets.Structures import mono_export
+from GUI.Widgets.TextEdit.TextEdit import TextEditDialog
 from libpince import debugcore, linux_speedhack, monocore, scancore, typedefs, utils, wine_speedhack
 from libpince.libmemscan.memscan import ScanLevel, DataType, MatchView, BytePattern
 from libpince.scancore import memscan
@@ -2787,25 +2787,6 @@ class LoadingDialogForm(QDialog, LoadingDialog):
             return 0
 
 
-class TextEditDialogForm(QDialog, TextEditDialog):
-    def __init__(self, parent: QWidget, text: str = "") -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.textEdit.setPlainText(str(text))
-        self.accept_shortcut = QShortcut(QKeySequence("Ctrl+Return"), self)
-        self.accept_shortcut.activated.connect(self.accept)
-        guiutils.center_to_parent(self)
-
-    def get_values(self) -> str:
-        return self.textEdit.toPlainText()
-
-    def keyPressEvent(self, QKeyEvent: QKeyEvent) -> None:
-        if QKeyEvent.key() == Qt.Key.Key_Enter:
-            pass
-        else:
-            super().keyPressEvent(QKeyEvent)
-
-
 class ConsoleWidgetForm(QWidget, ConsoleWidget):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
@@ -2877,7 +2858,7 @@ class ConsoleWidgetForm(QWidget, ConsoleWidget):
         self.textBrowser.ensureCursorVisible()
 
     def enter_multiline_mode(self) -> None:
-        multiline_dialog = TextEditDialogForm(self, self.lineEdit.text())
+        multiline_dialog = TextEditDialog(self, self.lineEdit.text())
         if multiline_dialog.exec():
             self.lineEdit.setText(multiline_dialog.get_values())
             self.communicate()

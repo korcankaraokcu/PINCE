@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'TextEditDialog.ui'
+# Form implementation generated from reading ui file 'Widgets/TextEdit/Form/TextEditDialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #
