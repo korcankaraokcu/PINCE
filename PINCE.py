@@ -93,7 +93,6 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from GUI.AboutWidget import Ui_TabWidget as AboutWidget
 from GUI.AbstractTableModels.AsciiModel import QAsciiModel
 from GUI.AbstractTableModels.HexModel import QHexModel
 from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
@@ -129,6 +128,7 @@ from GUI.TrackSelectorDialog import Ui_Dialog as TrackSelectorDialog
 from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
 from GUI.Utils import guitypedefs, guiutils, utilwidgets
 from GUI.Validators.HexValidator import QHexValidator
+from GUI.Widgets.About.About import AboutWidget
 from GUI.Widgets.Bookmark.Bookmark import BookmarkWidget
 from GUI.Widgets.Console.Console import ConsoleWidget
 from GUI.Widgets.LibpinceEngine.LibpinceEngine import (
@@ -1309,7 +1309,7 @@ class MainForm(QMainWindow, MainWindow):
         utils.execute_command_as_user('python3 -m webbrowser "https://github.com/korcankaraokcu/PINCE/wiki"')
 
     def pushButton_About_clicked(self) -> None:
-        about_widget = AboutWidgetForm(self)
+        about_widget = AboutWidget(self)
         about_widget.show()
         about_widget.activateWindow()
 
@@ -2755,36 +2755,6 @@ class LoadingDialogForm(QDialog, LoadingDialog):
         def overrided_func(self) -> Any:
             logger.debug("Override this function")
             return 0
-
-
-class AboutWidgetForm(QTabWidget, AboutWidget):
-    def __init__(self, parent: QWidget) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.setWindowFlags(Qt.WindowType.Window)
-
-        # This section has untranslated text since it's just a placeholder
-        pince_dir = utils.get_script_directory()
-        with open(f"{pince_dir}/COPYING", encoding="utf-8") as f:
-            license_text = f.read()
-        with open(f"{pince_dir}/AUTHORS", encoding="utf-8") as f:
-            authors_text = f.read()
-        with open(f"{pince_dir}/THANKS", encoding="utf-8") as f:
-            thanks_text = f.read()
-        self.textBrowser_License.setPlainText(license_text)
-        self.textBrowser_Contributors.append(
-            "This is only a placeholder, this section may look different when the project finishes"
-            + "\nIn fact, something like a demo-scene for here would look absolutely fabulous <:"
-        )
-        self.textBrowser_Contributors.append("\n########")
-        self.textBrowser_Contributors.append("#AUTHORS#")
-        self.textBrowser_Contributors.append("########\n")
-        self.textBrowser_Contributors.append(authors_text)
-        self.textBrowser_Contributors.append("\n#######")
-        self.textBrowser_Contributors.append("#THANKS#")
-        self.textBrowser_Contributors.append("#######\n")
-        self.textBrowser_Contributors.append(thanks_text)
-        guiutils.center_to_parent(self)
 
 
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):

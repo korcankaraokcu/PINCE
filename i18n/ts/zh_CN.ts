@@ -1650,21 +1650,6 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>TabWidget</name>
     <message>
-        <location filename="../../GUI/AboutWidget.ui" line="0" />
-        <source>About PINCE</source>
-        <translation>关于 PINCE</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/AboutWidget.ui" line="0" />
-        <source>Contributors</source>
-        <translation>贡献者</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/AboutWidget.ui" line="0" />
-        <source>License</source>
-        <translation>许可</translation>
-    </message>
-    <message>
         <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
         <source>Breakpoints</source>
         <translation>断点</translation>
@@ -1740,6 +1725,21 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
         <source>Value</source>
         <translation>值</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/About/Form/AboutWidget.ui" line="0" />
+        <source>About PINCE</source>
+        <translation>关于 PINCE</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/About/Form/AboutWidget.ui" line="0" />
+        <source>Contributors</source>
+        <translation>贡献者</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/About/Form/AboutWidget.ui" line="0" />
+        <source>License</source>
+        <translation>许可</translation>
     </message>
 </context><context>
     <name>TranslationConstants</name>
