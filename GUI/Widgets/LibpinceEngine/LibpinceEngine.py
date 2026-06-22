@@ -390,6 +390,7 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
             with open(editor.file_path, "w", encoding="utf-8") as file:
                 content = editor.toPlainText()
                 file.write(content)
+            guiutils.own_path_as_user(editor.file_path)
             editor.saved_content = content
             editor.is_modified = False
             editor.update_tab_title()

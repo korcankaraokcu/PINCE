@@ -1095,13 +1095,21 @@ def init_user_files() -> None:
 
 
 def get_user_ids() -> tuple[str, str]:
-    """Gets uid and gid of the current user
+    """Gets uid and gid of the user who invoked PINCE/libpince. Resolves real user if invoked through sudo/pkexec.
 
     Returns:
-        tuple: (str, str)-->uid and gid of the current user
+        tuple (str, str): uid and gid of the real invoking user.
     """
-    uid = os.getenv("SUDO_UID") or str(os.getuid())
-    gid = os.getenv("SUDO_GID") or str(os.getgid())
+    # pkexec before polkit version 127 (Dec 2025) would only set "PKEXEC_UID" and nothing else,
+    # but starting with that version they do set both "SUDO_UID" and "SUDO_GID" for sudo compatibility reasons.
+    # If we're using an older polkit and don't have "SUDO_GID" set, we'll resolve the gid from user's passwd entry.
+    uid = os.getenv("SUDO_UID") or os.getenv("PKEXEC_UID") or str(os.getuid())
+    gid = os.getenv("SUDO_GID")
+    if not gid:
+        try:
+            gid = str(pwd.getpwuid(int(uid)).pw_gid)
+        except (KeyError, ValueError):
+            gid = str(os.getgid())
     return uid, gid
 
 

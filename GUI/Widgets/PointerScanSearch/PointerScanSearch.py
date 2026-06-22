@@ -116,6 +116,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.memscan_thread.wait()
         self.memscan_thread = None
         self.result_map_path = self.lineEdit_Path.text()
+        guiutils.own_path_as_user(self.result_map_path)
         self.accept()
         QMessageBox.information(self, tr.SUCCESS, tr.POINTER_SCAN_SUCCESS.format(paths_found))
 

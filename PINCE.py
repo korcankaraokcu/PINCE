@@ -33,6 +33,11 @@ from time import sleep, time
 from types import FrameType, ModuleType, TracebackType
 from typing import Any
 
+# Must precede the imports below in case any of the PyQt and other imports want to create bytecodes.
+if os.geteuid() == 0:
+    sys.dont_write_bytecode = True
+    os.environ["PYTHONDONTWRITEBYTECODE"] = "1"  # For GDB and other processes that will inherit environ.
+
 from PyQt6.QtCore import (
     QByteArray,
     QEvent,
@@ -5281,12 +5286,10 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.treeWidget_InstructionInfo.expandAll()
 
     def save_file(self) -> None:
-        file_path, _ = QFileDialog.getSaveFileName(
-            self, tr.SAVE_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE
-        )
-        if file_path:
-            file_path = utils.append_file_extension(file_path, "trace")
-            if not utils.save_file(self.tracer.trace_data, file_path):
+        with guiutils.save_dialog_as_user(
+            self, tr.SAVE_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE, "trace"
+        ) as file_path:
+            if file_path and not utils.save_file(self.tracer.trace_data, file_path):
                 QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
 
     def load_file(self) -> None:

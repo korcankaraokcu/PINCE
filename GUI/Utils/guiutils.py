@@ -29,12 +29,15 @@ from PyQt6.QtWidgets import (
     QMenu,
     QLayout,
     QMessageBox,
+    QFileDialog,
 )
 from PyQt6.QtCore import QObject, QRegularExpression
 from PyQt6.QtGui import QShortcut, QRegularExpressionValidator
 from libpince import debugcore, utils, typedefs, regexes
 from tr.tr import TranslationConstants as tr
 from typing import overload
+from contextlib import contextmanager
+import os
 
 validator_map: dict[str, QRegularExpressionValidator | None] = {
     "int": QRegularExpressionValidator(QRegularExpression(regexes.decimal_number.pattern)),  # integers
@@ -43,6 +46,43 @@ validator_map: dict[str, QRegularExpressionValidator | None] = {
     "bytearray": QRegularExpressionValidator(QRegularExpression(regexes.bytearray_input.pattern)),  # array of bytes
     "string": None,
 }
+
+
+def own_path_as_user(path: str, recursive: bool = False) -> None:
+    """chowns a path PINCE created as root back to the user who launched it.
+
+    Args:
+        path (str): Path to chown
+        recursive (bool): Also chown everything under path if it's a directory
+    """
+    if os.geteuid() != 0:
+        return
+    uid, gid = utils.get_user_ids()
+    if not uid.isdigit() or not gid.isdigit() or int(uid) == 0:
+        return
+    uid, gid = int(uid), int(gid)
+    paths = [path]
+    if recursive:
+        for root, dirs, files in os.walk(path):
+            paths += [os.path.join(root, name) for name in dirs + files]
+    for target in paths:
+        try:
+            os.chown(target, uid, gid)
+        except OSError as e:
+            utils.logger.error(f"Failed to chown {target}: {e}")
+
+
+@contextmanager
+def save_dialog_as_user(parent: QWidget | None, caption: str, directory: str, file_filter: str, extension: str = ""):
+    """Opens a save dialog and chowns the chosen path back to the user once the block exits."""
+    file_path, _ = QFileDialog.getSaveFileName(parent, caption, directory, file_filter)
+    if file_path and extension:
+        file_path = utils.append_file_extension(file_path, extension)
+    try:
+        yield file_path or None
+    finally:
+        if file_path and os.path.exists(file_path):
+            own_path_as_user(file_path)
 
 
 def get_icons_directory() -> str:

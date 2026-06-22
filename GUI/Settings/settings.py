@@ -3,6 +3,7 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 from GUI.States import states
 from GUI.Settings import themes
+from GUI.Utils import guiutils
 from tr.tr import get_locale
 from libpince import debugcore, utils, typedefs
 import json, os
@@ -178,3 +179,9 @@ def apply_after_init() -> None:
         if java_ignore_segfault and utils.get_process_name(debugcore.currentpid).startswith("java"):
             debugcore.handle_signal("SIGSEGV", False, True)
         debugcore.set_interrupt_signal(interrupt_signal)  # Needs to be called after handle_signals
+
+    # gdb init/attach has just created root-owned files so we'll chown them as the real user.
+    guiutils.own_path_as_user("/var/log/pince.log")  # mirrors utils.__init_logging
+    guiutils.own_path_as_user(utils.get_user_path(typedefs.USER_PATHS.ROOT), recursive=True)
+    guiutils.own_path_as_user(typedefs.PATHS.TMP, recursive=True)
+    guiutils.own_path_as_user(typedefs.PATHS.IPC, recursive=True)

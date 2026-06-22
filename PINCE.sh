@@ -50,7 +50,7 @@ EOF
 	elif command -v sudo > /dev/null 2>&1; then
 		# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
 		# so we need to force PATH preservation with venv activated user's PATH.
-		sudo -E --preserve-env=PATH PYTHONDONTWRITEBYTECODE=1 "$PYTHON" "$PINCE_PY" "$PCT_FILE"
+		sudo -E --preserve-env=PATH "$PYTHON" "$PINCE_PY" "$PCT_FILE"
 	else
 		echo "No supported privilege escalation utility found. Please run this as root manually."
 		echo "Don't forget to preserve normal user environment variables for proper functionality."

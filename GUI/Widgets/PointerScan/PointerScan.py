@@ -99,10 +99,10 @@ class PointerScanWindow(QMainWindow, Ui_MainWindow):
         QMessageBox.information(self, tr.ERROR, str(error))
 
     def actionSaveAs_triggered(self) -> None:
-        file_path, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), None)
-        if file_path != "":
-            with open(file_path, "w") as file:
-                file.write("".join(self.model.format_row(row) + "\n" for row in range(self.model.rowCount())))
+        with guiutils.save_dialog_as_user(self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), "") as file_path:
+            if file_path:
+                with open(file_path, "w") as file:
+                    file.write("".join(self.model.format_row(row) + "\n" for row in range(self.model.rowCount())))
 
     def tableView_double_clicked(self, index: QModelIndex) -> None:
         self.add_rows_to_address_table([index.row()])
