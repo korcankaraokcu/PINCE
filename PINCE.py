@@ -164,9 +164,7 @@ if __name__ == "__main__":
     app.setOrganizationName("PINCE")
     app.setOrganizationDomain("github.io")
     app.setDesktopFileName("io.github.korcankaraokcu.PINCE")
-    QSettings.setPath(
-        QSettings.Format.NativeFormat, QSettings.Scope.UserScope, utils.get_user_path(typedefs.USER_PATHS.CONFIG)
-    )
+    QSettings.setPath(QSettings.Format.NativeFormat, QSettings.Scope.UserScope, utils.get_user_path(typedefs.USER_PATHS.CONFIG))
     settings_instance = QSettings()
     translator = QTranslator()
     qt_translator = QTranslator()
@@ -343,13 +341,9 @@ class MainForm(QMainWindow, MainWindow):
             states.hotkeys.exact_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.EXACT),
             states.hotkeys.not_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.NOT),
             states.hotkeys.increased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.INCREASED),
-            states.hotkeys.increased_by_scan_hotkey: lambda: self.nextscan_hotkey_pressed(
-                typedefs.SCAN_TYPE.INCREASED_BY
-            ),
+            states.hotkeys.increased_by_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.INCREASED_BY),
             states.hotkeys.decreased_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.DECREASED),
-            states.hotkeys.decreased_by_scan_hotkey: lambda: self.nextscan_hotkey_pressed(
-                typedefs.SCAN_TYPE.DECREASED_BY
-            ),
+            states.hotkeys.decreased_by_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.DECREASED_BY),
             states.hotkeys.less_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.LESS),
             states.hotkeys.more_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.MORE),
             states.hotkeys.between_scan_hotkey: lambda: self.nextscan_hotkey_pressed(typedefs.SCAN_TYPE.BETWEEN),
@@ -446,9 +440,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_RefreshAdressTable.clicked.connect(self.pushButton_RefreshAdressTable_clicked)
         self.pushButton_CopyToAddressTable.clicked.connect(self.copy_to_address_table)
         self.pushButton_CleanAddressTable.clicked.connect(self.clear_address_table)
-        self.tableWidget_valuesearchtable.cellDoubleClicked.connect(
-            self.tableWidget_valuesearchtable_cell_double_clicked
-        )
+        self.tableWidget_valuesearchtable.cellDoubleClicked.connect(self.tableWidget_valuesearchtable_cell_double_clicked)
         self.tableWidget_valuesearchtable.keyPressEvent_original = self.tableWidget_valuesearchtable.keyPressEvent
         self.tableWidget_valuesearchtable.keyPressEvent = self.tableWidget_valuesearchtable_key_press_event
         self.tableWidget_valuesearchtable.contextMenuEvent = self.tableWidget_valuesearchtable_context_menu_event
@@ -526,11 +518,7 @@ class MainForm(QMainWindow, MainWindow):
 
     @utils.ignore_exceptions
     def continue_hotkey_pressed(self) -> None:
-        if not (
-            debugcore.currentpid == -1
-            or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
-            or debugcore.driving_inferior
-        ):
+        if not (debugcore.currentpid == -1 or debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING or debugcore.driving_inferior):
             debugcore.continue_inferior()
 
     @utils.ignore_exceptions
@@ -1104,9 +1092,7 @@ class MainForm(QMainWindow, MainWindow):
                     self.treeWidget_AddressTable_edit_desc,
                 ),
                 (
-                    QKeyCombination(
-                        Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return
-                    ),
+                    QKeyCombination(Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return),
                     self.treeWidget_AddressTable_edit_address,
                 ),
                 (
@@ -1178,9 +1164,7 @@ class MainForm(QMainWindow, MainWindow):
                         else:
                             address = None
                         if address:
-                            row.setText(
-                                ADDR_COL, address_data.get_base_address_as_str() if is_struct_child else f"P->{address}"
-                            )
+                            row.setText(ADDR_COL, address_data.get_base_address_as_str() if is_struct_child else f"P->{address}")
                         else:
                             row.setText(ADDR_COL, "P->??")
                     else:
@@ -1231,9 +1215,7 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_Alignment.setEnabled(is_new_scan)
 
     # Create properly typed values for memscan
-    def validate_search_values(
-        self, search_for: str, search_for2: str
-    ) -> tuple[int | float | str | BytePattern | None, int | float | None]:
+    def validate_search_values(self, search_for: str, search_for2: str) -> tuple[int | float | str | BytePattern | None, int | float | None]:
         # Manually fix an edge case in number validators
         if search_for == "-":
             search_for = ""
@@ -1539,11 +1521,7 @@ class MainForm(QMainWindow, MainWindow):
                 if self.checkBox_Hex.isChecked():
                     value_repr = typedefs.VALUE_REPR.HEX
                 else:
-                    value_repr = (
-                        typedefs.VALUE_REPR.SIGNED
-                        if match.match_info.is_signed_integer_only()
-                        else typedefs.VALUE_REPR.UNSIGNED
-                    )
+                    value_repr = typedefs.VALUE_REPR.SIGNED if match.match_info.is_signed_integer_only() else typedefs.VALUE_REPR.UNSIGNED
                 endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
                 current_item = QTableWidgetItem(address)
                 current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian))
@@ -1952,9 +1930,7 @@ class MainForm(QMainWindow, MainWindow):
     def mark_address_tree_changed(self) -> None:
         self.session.data_changed |= SessionDataChanged.ADDRESS_TREE
 
-    def toggle_script_entry(
-        self, row: QTreeWidgetItem, entry: typedefs.ScriptEntry, check_state: Qt.CheckState
-    ) -> None:
+    def toggle_script_entry(self, row: QTreeWidgetItem, entry: typedefs.ScriptEntry, check_state: Qt.CheckState) -> None:
         is_enable = check_state == Qt.CheckState.Checked
         row.setCheckState(FROZEN_COL, check_state)
         enable_code, disable_code = parse_script_sections(entry.script)
@@ -2028,9 +2004,7 @@ class MainForm(QMainWindow, MainWindow):
                     for row_index in range(row_count):
                         address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
                         value_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_VALUE_COL)
-                        previous_text = self.tableWidget_valuesearchtable.item(
-                            row_index, SEARCH_TABLE_PREVIOUS_COL
-                        ).text()
+                        previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
                         value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
                         address = address_item.text()
                         new_value = debugcore.read_memory(
@@ -2501,9 +2475,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
 
     def update_value(self) -> None:
         if self.checkBox_IsPointer.isChecked():
-            hex_converted_expr = debugcore.convert_to_hex(
-                self._apply_relative_base(self.lineEdit_PtrStartAddress.text())
-            )
+            hex_converted_expr = debugcore.convert_to_hex(self._apply_relative_base(self.lineEdit_PtrStartAddress.text()))
             pointer_chain_req = typedefs.PointerChainRequest(hex_converted_expr, self.get_offsets_int_list())
             pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
             address = None
@@ -3129,15 +3101,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.scrollArea_Hex.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.tableWidget_HexView_Address.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.tableWidget_HexView_Address.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.tableWidget_HexView_Address.verticalHeader().setMinimumSectionSize(
-            self.tableView_HexView_Hex.verticalHeader().minimumSectionSize()
-        )
-        self.tableWidget_HexView_Address.verticalHeader().setDefaultSectionSize(
-            self.tableView_HexView_Hex.verticalHeader().defaultSectionSize()
-        )
-        self.tableWidget_HexView_Address.verticalHeader().setMaximumSectionSize(
-            self.tableView_HexView_Hex.verticalHeader().maximumSectionSize()
-        )
+        self.tableWidget_HexView_Address.verticalHeader().setMinimumSectionSize(self.tableView_HexView_Hex.verticalHeader().minimumSectionSize())
+        self.tableWidget_HexView_Address.verticalHeader().setDefaultSectionSize(self.tableView_HexView_Hex.verticalHeader().defaultSectionSize())
+        self.tableWidget_HexView_Address.verticalHeader().setMaximumSectionSize(self.tableView_HexView_Hex.verticalHeader().maximumSectionSize())
 
         self.hex_update_timer = QTimer(self, timeout=self.hex_update_loop)
         self.hex_update_timer.start(200)
@@ -3227,9 +3193,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 QMessageBox.information(self, tr.ERROR, tr.BREAKPOINT_FAILED.format(current_address))
         self.refresh_disassemble_view()
 
-    def toggle_watchpoint(
-        self, address: int, length: int, watchpoint_type: int = typedefs.WATCHPOINT_TYPE.BOTH
-    ) -> None:
+    def toggle_watchpoint(self, address: int, length: int, watchpoint_type: int = typedefs.WATCHPOINT_TYPE.BOTH) -> None:
         if debugcore.currentpid == -1:
             return
         breakpoints = debugcore.get_breakpoints_in_range(address, length)
@@ -3550,9 +3514,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             info = utils.get_region_info(debugcore.currentpid, int_address)
             if info:
                 self.hex_view_current_region = info
-                self.label_HexView_Information.setText(
-                    tr.REGION_INFO.format(info.perms, hex(info.start), hex(info.end), info.file_name)
-                )
+                self.label_HexView_Information.setText(tr.REGION_INFO.format(info.perms, hex(info.start), hex(info.end), info.file_name))
             else:
                 self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None, None)
                 self.label_HexView_Information.setText(tr.INVALID_REGION)
@@ -3605,9 +3567,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         # TODO: Change this nonsense when the huge refactorization happens
         current_first_address = utils.extract_hex_address(disas_data[0][0])  # address of first list entry
         try:
-            previous_first_address = utils.extract_hex_address(
-                self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text()
-            )
+            previous_first_address = utils.extract_hex_address(self.tableWidget_Disassemble.item(0, DISAS_ADDR_COL).text())
         except AttributeError:
             previous_first_address = current_first_address
 
@@ -3816,9 +3776,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if condition_dialog.exec():
             condition = condition_dialog.get_values()[0]
             for bp in breakpoints:
-                if not debugcore.modify_breakpoint(
-                    safe_int_cast(bp.number), typedefs.BREAKPOINT_MODIFY.CONDITION, condition
-                ):
+                if not debugcore.modify_breakpoint(safe_int_cast(bp.number), typedefs.BREAKPOINT_MODIFY.CONDITION, condition):
                     QMessageBox.information(app.focusWidget(), tr.ERROR, tr.BP_CONDITION_FAILED.format(bp.address))
 
     def update_registers(self) -> None:
@@ -3950,9 +3908,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if selected_row == -1:
-            actions = typedefs.KeyboardModifiersTupleDict(
-                [(QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack)]
-            )
+            actions = typedefs.KeyboardModifiersTupleDict([(QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack)])
         else:
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
             current_address = utils.extract_hex_address(current_address_text)
@@ -4061,9 +4017,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def tableWidget_StackTrace_key_press_event(self, event: QKeyEvent) -> None:
         if debugcore.currentpid == -1:
             return
-        actions = typedefs.KeyboardModifiersTupleDict(
-            [(QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stacktrace)]
-        )
+        actions = typedefs.KeyboardModifiersTupleDict([(QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stacktrace)])
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
@@ -4098,9 +4052,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 if self.tableWidget_Disassemble.rowViewportPosition(row) > height:
                     break
                 last_visible_row += 1
-            current_address = utils.extract_hex_address(
-                self.tableWidget_Disassemble.item(current_row, DISAS_ADDR_COL).text()
-            )
+            current_address = utils.extract_hex_address(self.tableWidget_Disassemble.item(current_row, DISAS_ADDR_COL).text())
             new_address = debugcore.find_closest_instruction_address(current_address, "previous", last_visible_row)
             if not new_address:
                 return
@@ -4241,9 +4193,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def follow_instruction(self, selected_row: int) -> None:
         if debugcore.currentpid == -1:
             return
-        address = utils.instruction_follow_address(
-            self.tableWidget_Disassemble.item(selected_row, DISAS_INSTR_COL).text()
-        )
+        address = utils.instruction_follow_address(self.tableWidget_Disassemble.item(selected_row, DISAS_INSTR_COL).text())
         if address:
             self.disassemble_expression(address)
 
@@ -4282,9 +4232,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         back = menu.addAction(tr.BACK)
         show_in_hex_view = menu.addAction(f"{tr.HEXVIEW_ADDRESS}[Ctrl+H]")
         menu.addSeparator()
-        followable = utils.instruction_follow_address(
-            self.tableWidget_Disassemble.item(selected_row, DISAS_INSTR_COL).text()
-        )
+        followable = utils.instruction_follow_address(self.tableWidget_Disassemble.item(selected_row, DISAS_INSTR_COL).text())
         follow = menu.addAction(f"{tr.FOLLOW}[Space]")
         if not followable:
             guiutils.delete_menu_entries(menu, [follow])
@@ -4568,9 +4516,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionInject_so_file_triggered(self) -> None:
         if debugcore.currentpid == -1:
             return
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, tr.SELECT_SO_FILE, os.path.expanduser("~"), tr.SHARED_OBJECT_TYPE
-        )
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_SO_FILE, os.path.expanduser("~"), tr.SHARED_OBJECT_TYPE)
         if file_path:
             if debugcore.inject_so(file_path):
                 QMessageBox.information(self, tr.SUCCESS, tr.SO_INJECTED)
@@ -4634,9 +4580,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         mono_dialog = MonoDissectDialog(self)
         mono_dialog.disassemble_requested.connect(lambda address: self.disassemble_expression(hex(int(address))))
         mono_dialog.breakpoint_requested.connect(self._mono_breakpoint)
-        mono_dialog.add_to_table_requested.connect(
-            lambda description, address: self.parent().add_entry_to_addresstable(description, address)
-        )
+        mono_dialog.add_to_table_requested.connect(lambda description, address: self.parent().add_entry_to_addresstable(description, address))
         mono_dialog.export_structure_requested.connect(self._export_mono_structure)
         mono_dialog.view_structure_requested.connect(self._view_mono_structure)
         mono_dialog.show()
@@ -4986,9 +4930,8 @@ class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
         self.textBrowser_Disassemble.setPlainText(info[key][4])
 
     def tableWidget_Addresses_item_double_clicked(self, index: QTableWidgetItem) -> None:
-        self.parent().memory_view_window.disassemble_expression(
-            self.tableWidget_Addresses.item(index.row(), TRACK_WATCHPOINT_ADDR_COL).text()
-        )
+        address = self.tableWidget_Addresses.item(index.row(), TRACK_WATCHPOINT_ADDR_COL).text()
+        self.parent().memory_view_window.disassemble_expression(address)
         self.parent().memory_view_window.show()
         self.parent().memory_view_window.activateWindow()
 
@@ -5055,13 +4998,9 @@ class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
         for register_expression in info:
             for address in info[register_expression]:
                 self.tableWidget_TrackInfo.setRowCount(row + 1)
-                self.tableWidget_TrackInfo.setItem(
-                    row, TRACK_BREAKPOINT_COUNT_COL, QTableWidgetItem(str(info[register_expression][address]))
-                )
+                self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_COUNT_COL, QTableWidgetItem(str(info[register_expression][address])))
                 self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_ADDR_COL, QTableWidgetItem(address))
-                self.tableWidget_TrackInfo.setItem(
-                    row, TRACK_BREAKPOINT_SOURCE_COL, QTableWidgetItem("[" + register_expression + "]")
-                )
+                self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_SOURCE_COL, QTableWidgetItem("[" + register_expression + "]"))
                 row += 1
         self.update_values()
 
@@ -5240,9 +5179,7 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         if current_dict:
             for key in current_dict:
                 self.textBrowser_RegisterInfo.append(str(key) + " = " + str(current_dict[key]))
-            self.textBrowser_RegisterInfo.verticalScrollBar().setValue(
-                self.textBrowser_RegisterInfo.verticalScrollBar().minimum()
-            )
+            self.textBrowser_RegisterInfo.verticalScrollBar().setValue(self.textBrowser_RegisterInfo.verticalScrollBar().minimum())
 
     def show_trace_info(self) -> None:
         self.treeWidget_InstructionInfo.setStyleSheet("QTreeWidget::item{ height: 16px; }")
@@ -5267,16 +5204,12 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         self.treeWidget_InstructionInfo.expandAll()
 
     def save_file(self) -> None:
-        with guiutils.save_dialog_as_user(
-            self, tr.SAVE_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE, "trace"
-        ) as file_path:
+        with guiutils.save_dialog_as_user(self, tr.SAVE_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE, "trace") as file_path:
             if file_path and not utils.save_file(self.tracer.trace_data, file_path):
                 QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
 
     def load_file(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, tr.OPEN_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE
-        )
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.OPEN_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE)
         if file_path:
             content = utils.load_file(file_path)
             if content is None:
@@ -5642,15 +5575,11 @@ class SearchInstructionsWidgetForm(QWidget, SearchInstructionsWidget):
                 return
         self.loading_dialog = LoadingDialogForm(self)
         self.background_thread = self.loading_dialog.background_thread
-        self.background_thread.overrided_func = lambda: self.process_data(
-            regex, start_address, end_address, case_sensitive, enable_regex
-        )
+        self.background_thread.overrided_func = lambda: self.process_data(regex, start_address, end_address, case_sensitive, enable_regex)
         self.background_thread.output_ready.connect(self.apply_data)
         self.loading_dialog.exec()
 
-    def process_data(
-        self, regex: str, start_address: str, end_address: str, case_sensitive: bool, enable_regex: bool
-    ) -> list | None:
+    def process_data(self, regex: str, start_address: str, end_address: str, case_sensitive: bool, enable_regex: bool) -> list | None:
         return debugcore.search_instr(regex, start_address, end_address, case_sensitive, enable_regex)
 
     def apply_data(self, disas_data: list | None) -> None:
@@ -5727,9 +5656,7 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_ADDR_COL, QTableWidgetItem(address))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PERM_COL, QTableWidgetItem(perms))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_OFFSET_COL, QTableWidgetItem(offset))
-            self.tableWidget_MemoryRegions.setItem(
-                row, MEMORY_REGIONS_PATH_COL, QTableWidgetItem(path + f"[{region_index}]")
-            )
+            self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PATH_COL, QTableWidgetItem(path + f"[{region_index}]"))
 
         guiutils.resize_to_contents(self.tableWidget_MemoryRegions)
         self.filter_table()
@@ -5895,9 +5822,7 @@ class DissectCodeDialogForm(QDialog, DissectCodeDialog):
                 return
             selected_indexes = [selected_row.row() for selected_row in selected_rows]
             selected_regions = [self.region_list[selected_index] for selected_index in selected_indexes]
-            self.background_thread = self.BackgroundThread(
-                selected_regions, self.checkBox_DiscardInvalidStrings.isChecked()
-            )
+            self.background_thread = self.BackgroundThread(selected_regions, self.checkBox_DiscardInvalidStrings.isChecked())
             self.background_thread.output_ready.connect(self.scan_finished)
             self.init_after_scan_gui()
             self.refresh_timer.start()
@@ -5991,9 +5916,7 @@ class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
             if referrers is None:
                 return
             addrs = [hex(address) for address in referrers]
-            self.listWidget_Referrers.addItems(
-                [self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs) if item.all]
-            )
+            self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs) if item.all])
             self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
         finally:
             str_dict.close()
@@ -6118,9 +6041,7 @@ class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
             if referrers is None:
                 return
             addrs = [hex(address) for address in referrers]
-            self.listWidget_Referrers.addItems(
-                [self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs) if item.all]
-            )
+            self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs) if item.all])
             self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
         finally:
             call_dict.close()
@@ -6256,9 +6177,8 @@ class ExamineReferrersWidgetForm(QWidget, ExamineReferrersWidget):
         if QModelIndex_current.row() < 0:
             return
         self.textBrowser_DisasInfo.clear()
-        disas_data = debugcore.disassemble(
-            utils.extract_hex_address(self.listWidget_Referrers.item(QModelIndex_current.row()).text()), "+200"
-        )
+        address = utils.extract_hex_address(self.listWidget_Referrers.item(QModelIndex_current.row()).text())
+        disas_data = debugcore.disassemble(address, "+200")
         for address_info, _, instr in disas_data:
             self.textBrowser_DisasInfo.append(address_info + instr)
         cursor = self.textBrowser_DisasInfo.textCursor()

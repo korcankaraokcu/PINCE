@@ -54,10 +54,10 @@ Make good use of `python -m compileall -q .` to ensure all of the Python files d
 # Code Style
 ***Make sure that you add type hints to all of the functions that you add or modify in .py files.*** You can follow the rest of the codebase as an example of how they should look like.
 
-Formatting style is [Black](https://github.com/psf/black) defaults, except line length is 120. You can use Black without parameters since we already use `pyproject.toml` for this setting.
+Formatting style is [Black](https://github.com/psf/black) defaults, except line length is 150. You can use Black without parameters since we already use `pyproject.toml` for this setting.
 
 ***You must format the files you changed using Black before you open a PR!*** Please do not format automatically generated files under GUI folder. Your changes will be overwritten by Qt Designer. More info at [UI Files](#ui-files)
-- Max characters per line: 120
+- Max characters per line: 150
 - Variable naming for libpince:
   - Classes: PascalCase
   - Class members: snake_case
@@ -88,8 +88,6 @@ If you feel unsure to which naming convention you should use, try to check out s
 The reason behind Qt class member naming convention is that when this project first started, supported python version didn't have type hints.
 So, to have an idea about the type of the variable we are working with, I've come up with that naming idea. It's an old habit if anything.
 It could maybe replaced with something else after a refactorization
-
-About the max characters per line, I used to use PyCharm when I first started this project years ago. 120 characters is a limit brought by PyCharm, I've quit using PyCharm eventually but I think the limit makes the code look quite nice. Black suggests a limit of 88 characters, which is a bit short to be frank. So I think it's good to keep this old habit, especially considering that docstrings have also followed this rule for a long time now. This limit for docstrings however, is not strict at all. A few characters passing the limit is ok, sometimes going for a newline messes up the readability, trust your guts and decide for yourself
 
 # Documentation
 We use Google style documentation and type hints. A good example would be `get_breakpoints_in_range` function in [debugcore.py](./libpince/debugcore.py). Root folder of libpince has 100% documentation coverage so a pull request regarding libpince has to be documented. For other places, it's enough to document the parts you think that'd be confusing to read later on. You are not obliged to document everything in other places as we are also quite lax with it
