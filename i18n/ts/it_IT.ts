@@ -690,26 +690,6 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>Form</name>
     <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0" />
-        <source>GDB Console</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0" />
-        <source>Send</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0" />
-        <source>CLI</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0" />
-        <source>MI</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
         <source>Examine Referrers</source>
         <translation type="unfinished" />
@@ -943,6 +923,26 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
         <source>Comment</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
+        <source>GDB Console</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
+        <source>Send</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
+        <source>CLI</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
+        <source>MI</source>
         <translation type="unfinished" />
     </message>
     <message>

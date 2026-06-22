@@ -692,26 +692,6 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>Form</name>
     <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0" />
-        <source>GDB Console</source>
-        <translation>GDB 控制台</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0" />
-        <source>Send</source>
-        <translation>发送</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0" />
-        <source>CLI</source>
-        <translation>CLI</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/ConsoleWidget.ui" line="0" />
-        <source>MI</source>
-        <translation>MI</translation>
-    </message>
-    <message>
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
         <source>Examine Referrers</source>
         <translation>检查引用来源</translation>
@@ -946,6 +926,26 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
         <source>Comment</source>
         <translation>注解</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
+        <source>GDB Console</source>
+        <translation>GDB 控制台</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
+        <source>Send</source>
+        <translation>发送</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
+        <source>CLI</source>
+        <translation>CLI</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
+        <source>MI</source>
+        <translation>MI</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />

@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'ConsoleWidget.ui'
+# Form implementation generated from reading ui file 'Widgets/Console/Form/ConsoleWidget.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #
