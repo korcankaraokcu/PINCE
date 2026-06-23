@@ -1650,66 +1650,6 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>TabWidget</name>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Breakpoints</source>
-        <translation>断点</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Interactive</source>
-        <translation>交互</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>No</source>
-        <translation>No</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Type</source>
-        <translation>类型</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Disp</source>
-        <translation>显示</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Enabled</source>
-        <translation>启用</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Address</source>
-        <translation>地址</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Size</source>
-        <translation>大小</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>On Hit</source>
-        <translation>命中时</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Hit Count</source>
-        <translation>命中计数</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Condition</source>
-        <translation>条件</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Raw</source>
-        <translation>原始</translation>
-    </message>
-    <message>
         <location filename="../../GUI/Widgets/About/Form/AboutWidget.ui" line="0" />
         <source>About PINCE</source>
         <translation>关于 PINCE</translation>
@@ -1723,6 +1663,66 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/About/Form/AboutWidget.ui" line="0" />
         <source>License</source>
         <translation>许可</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Breakpoints</source>
+        <translation>断点</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Interactive</source>
+        <translation>交互</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>No</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Type</source>
+        <translation>类型</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Disp</source>
+        <translation>显示</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Enabled</source>
+        <translation>启用</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Address</source>
+        <translation>地址</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Size</source>
+        <translation>大小</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>On Hit</source>
+        <translation>命中时</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Hit Count</source>
+        <translation>命中计数</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Condition</source>
+        <translation>条件</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Raw</source>
+        <translation>原始</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/FloatRegister/Form/FloatRegisterWidget.ui" line="0" />

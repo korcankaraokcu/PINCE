@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'BreakpointInfoWidget.ui'
+# Form implementation generated from reading ui file 'Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #

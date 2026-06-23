@@ -1645,66 +1645,6 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>TabWidget</name>
     <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Breakpoints</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Interactive</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>No</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Type</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Disp</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Enabled</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Address</source>
-        <translation type="unfinished">Indirizzo</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Size</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>On Hit</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Hit Count</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Condition</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/BreakpointInfoWidget.ui" line="0" />
-        <source>Raw</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <location filename="../../GUI/Widgets/About/Form/AboutWidget.ui" line="0" />
         <source>About PINCE</source>
         <translation type="unfinished" />
@@ -1717,6 +1657,66 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/About/Form/AboutWidget.ui" line="0" />
         <source>License</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Breakpoints</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Interactive</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>No</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Type</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Disp</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Enabled</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Address</source>
+        <translation type="unfinished">Indirizzo</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Size</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>On Hit</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Hit Count</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Condition</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/BreakpointInfo/Form/BreakpointInfoWidget.ui" line="0" />
+        <source>Raw</source>
         <translation type="unfinished" />
     </message>
     <message>
