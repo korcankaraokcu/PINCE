@@ -858,22 +858,6 @@ def inject_dll(dll_path: str) -> tuple[bool, int]:
     """
     if currentpid == -1:
         return False, 0
-    k32 = utils.get_module_load_bias(currentpid, r"^kernel32\.dll$")
-    nt = utils.get_module_load_bias(currentpid, r"^ntdll\.dll$")
-    if not (k32 and nt):
-        return False, 0
-
-    # Resolve malloc ourselves as GDB can't resolve symbols on a freshly-attached WINE process.
-    malloc = 0
-    for regex in (r"^libc\.so", r"^libc-[\d.]+\.so", r"libc\.musl", r"ld-musl"):
-        libc = utils.get_module_load_bias(currentpid, regex)
-        if libc:
-            elf_path = utils.resolve_mapped_path(currentpid, libc[1])  # resolve sandboxed paths
-            if (off := utils.get_defined_dynamic_symbols(elf_path, ["malloc"]).get("malloc", 0)):
-                malloc = libc[0] + off
-                break
-    if not malloc:
-        return False, 0
 
     global driving_inferior
     driving_inferior = True
@@ -888,11 +872,40 @@ def inject_dll(dll_path: str) -> tuple[bool, int]:
                 mem.seek(addr)
                 return int.from_bytes(mem.read(n), "little")
 
-            def export(base, name):
+            def pe_magic(base):
                 if u(base, 2) != 0x5A4D:  # "MZ" DOS magic
                     return 0
+                pe = base + u(base + 0x3C, 4)
+                return u(pe + 0x18, 2) if u(pe, 4) == 0x4550 else 0  # "PE\0\0"
+
+            # Cache relevant PE image bases by bitness.
+            pe_bases = {}
+            for start, _, _, offset, _, _, path in utils.get_regions(currentpid):
+                name = os.path.basename(path).lower() if path and int(offset, 16) == 0 else ""
+                if name in ("kernel32.dll", "ntdll.dll", "kernelbase.dll"):
+                    base = int(start, 16)
+                    magic = pe_magic(base)
+                    if magic in (0x10B, 0x20B):
+                        pe_bases.setdefault((name, magic), base)
+
+            # New-WoW64 can map both 32 and 64-bit PE images, so pick the Windows-world bitness explicitly.
+            has_pe32_world = bool(pe_bases.get(("kernel32.dll", 0x10B), 0) and pe_bases.get(("ntdll.dll", 0x10B), 0))
+            wow64 = inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 and has_pe32_world
+            want_magic = 0x10B if wow64 or inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 0x20B
+            k32 = pe_bases.get(("kernel32.dll", want_magic), 0)
+            nt = pe_bases.get(("ntdll.dll", want_magic), 0)
+            kb = pe_bases.get(("kernelbase.dll", want_magic), 0)
+            if not (k32 and nt):
+                if was_running:
+                    continue_inferior()
+                return False, 0
+
+            def export(base, name):
+                magic = pe_magic(base)
+                if not magic:
+                    return 0
                 opt = base + u(base + 0x3C, 4) + 0x18  # optional header
-                dd = opt + (0x70 if u(opt, 2) == 0x20B else 0x60)  # export data directory
+                dd = opt + (0x70 if magic == 0x20B else 0x60)  # export data directory
                 ed_rva, ed_size = u(dd, 4), u(dd + 4, 4)
                 if ed_rva == 0:
                     return 0
@@ -906,46 +919,123 @@ def inject_dll(dll_path: str) -> tuple[bool, int]:
                         return 0 if ed_rva <= frva < ed_rva + ed_size else base + frva
                 return 0
 
-            llw = export(k32[0], "LoadLibraryW")
-            if not llw:  # sometimes kernel32 forwards "LoadLibraryW" so export can return 0, let's resolve the real one.
-                kb = utils.get_module_load_bias(currentpid, r"^kernelbase\.dll$")
-                llw = export(kb[0], "LoadLibraryW") if kb else 0
-            brk = export(nt[0], "NtWaitForSingleObject") or export(nt[0], "NtDelayExecution")
-        if not llw or not brk:
+            # Sometimes kernel32 forwards "LoadLibraryW" so export can return 0, let's resolve the real one.
+            llw = export(k32, "LoadLibraryW") or (export(kb, "LoadLibraryW") if kb else 0)
+            # Apps idle in Sleep (NtDelayExecution) just as often as waiting on a handle (NtWaitForSingleObject),
+            # so trap both hot wrapper entries and run from whichever the inferior reaches first.
+            traps = [t for t in (export(nt, "NtWaitForSingleObject"), export(nt, "NtDelayExecution")) if t]
+
+            # In New-WoW64, GDB still uses the 64-bit ABI, so 32-bit stdcall frames are built by hand below.
+            valloc = 0
+            if wow64:
+                valloc = export(k32, "VirtualAlloc") or (export(kb, "VirtualAlloc") if kb else 0)
+
+        # Non-WoW64 paths allocate the path buffer with glibc malloc via GDB's native "call".
+        # WoW64 allocates via kernel32!VirtualAlloc which is resolved above.
+        malloc = 0
+        if not wow64:
+            for regex in (r"^libc\.so", r"^libc-[\d.]+\.so", r"libc\.musl", r"ld-musl"):
+                libc = utils.get_module_load_bias(currentpid, regex)
+                if libc:
+                    elf_path = utils.resolve_mapped_path(currentpid, libc[1])  # resolve sandboxed paths
+                    if (off := utils.get_defined_dynamic_symbols(elf_path, ["malloc"]).get("malloc", 0)):
+                        malloc = libc[0] + off
+                        break
+
+        # We need to have:
+        # - LoadLibraryW
+        # - At least one ntdll trap function
+        # - VirtualAlloc if New-WoW64, malloc otherwise.
+        # If not, we have to bail since we cannot reliably inject in this process.
+        if not (llw and traps and (valloc if wow64 else malloc)):
             if was_running:
                 continue_inferior()
             return False, 0
 
         # Find a clean PE context to run our load functions from.
-        bp = regexes.breakpoint_number.search(send_command(f"tbreak *{hex(brk)}"))
+        bps = [(t, regexes.breakpoint_number.search(send_command(f"tbreak *{hex(t)}"))) for t in traps]
+        if not any(b for _, b in bps):
+            if was_running:
+                continue_inferior()
+            return False, 0
         continue_inferior()
         wait_for_stop(10)
         timed_out = inferior_status == typedefs.INFERIOR_STATUS.RUNNING
         if timed_out:
             interrupt_inferior()
         pc = examine_expression("$pc").address
-        reached = bool(pc) and int(pc, 16) == brk
-        if not reached and bp:
-            send_command(f"delete {bp.group(1)}")
+        brk = int(pc, 16) if pc and int(pc, 16) in traps else 0  # the wrapper we stopped in, also the manual-frame trap
+        for t, b in bps:  # the fired tbreak auto-deletes itself, so drop the ones that didn't fire
+            if b and t != brk:
+                send_command(f"delete {b.group(1)}")
 
         # Actual injection if everything is fine until now.
         hmod = 0
-        if reached:
-            def call(expr):
-                m = regexes.convenience_variable.search(send_command(f"call {expr}"))
-                h = regexes.hex_number_grouped.search(m.group(2)) if m else None
-                return int(h.group(1), 16) if h else 0
-
+        if brk:
             # TODO BRK: "Z:" maps to "/" in the default WINE prefix so this reaches any absolute UNIX path.
             # For prefixes that remapped or removed "Z:", we should later resolve via kernel32!wine_get_dos_file_name.
             wide = ("Z:" + dll_path.replace("/", "\\")).encode("utf-16le") + b"\x00\x00"
-            buf = call(f"((void*(*)(unsigned long)){hex(malloc)})({len(wide)})")
-            if buf:
-                write_memory(buf, typedefs.VALUE_INDEX.AOB, list(wide))
-                if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64:
-                    hmod = call(f"((void*(*)(void*,void*,void*,void*)){hex(llw)})(0,0,0,{hex(buf)})")
-                else:
-                    hmod = call(f"((void*(*)(void*)){hex(llw)})({hex(buf)})")
+            if wow64:
+                esp0 = parse_and_eval("$rsp", int)
+                tid = parse_and_eval("$_thread", int)  # scope the trap to our thread as the wrapper is hot across threads
+
+                # Build a 32-bit stdcall frame manually and run until the return trap.
+                def stdcall(func, args):
+                    blob = brk.to_bytes(4, "little")  # return address -> our trap
+                    for a in args:
+                        blob += (a & 0xFFFFFFFF).to_bytes(4, "little")
+                    frame = (esp0 - len(blob) - 0x20) & 0xFFFFFFF0  # small aligned scratch frame under parked esp
+                    try:
+                        with memory_handle("rb+") as mem:
+                            mem.seek(frame)
+                            if mem.write(blob) != len(blob):
+                                return 0
+                    except (OSError, ValueError):
+                        return 0
+                    expected = frame + 4 + 4 * len(args)  # esp once the callee's stdcall "ret N" cleaned the args off
+                    cond = f" thread {tid}" if tid else ""
+                    tb_cmd = f"tbreak *{hex(brk)}{cond} if ($rsp & 0xffffffff) == {hex(expected)}"
+                    tb = regexes.breakpoint_number.search(send_command(tb_cmd))
+                    if not tb:
+                        return 0
+                    set_convenience_variable("rsp", hex(frame))
+                    set_convenience_variable("rip", hex(func))
+                    continue_inferior()
+                    wait_for_stop(10)
+                    timed_out = inferior_status == typedefs.INFERIOR_STATUS.RUNNING
+                    if timed_out:
+                        interrupt_inferior()
+                    pc = examine_expression("$pc").address
+                    if timed_out or not pc or int(pc, 16) != brk:  # never returned or stopped elsewhere mid-call
+                        send_command(f"delete {tb.group(1)}")
+                        return 0
+                    return (parse_and_eval("$rax", int) or 0) & 0xFFFFFFFF
+
+                # Load the DLL through the 32-bit Windows ABI.
+                if esp0 is not None and brk <= 0xFFFFFFFF:
+                    try:
+                        buf = stdcall(valloc, [0, len(wide), 0x3000, 0x04])  # VirtualAlloc(0, size, COMMIT|RESERVE, PAGE_RW)
+                        if buf:
+                            write_memory(buf, typedefs.VALUE_INDEX.AOB, list(wide))
+                            hmod = stdcall(llw, [buf])
+                    finally:
+                        if tid:
+                            send_command(f"thread {tid}")
+                        set_convenience_variable("rip", hex(brk))
+                        set_convenience_variable("rsp", hex(esp0))
+            else:  # 64 bits process or pure 32 bits.
+                def call(expr):
+                    m = regexes.convenience_variable.search(send_command(f"call {expr}"))
+                    h = regexes.hex_number_grouped.search(m.group(2)) if m else None
+                    return int(h.group(1), 16) if h else 0
+
+                buf = call(f"((void*(*)(unsigned long)){hex(malloc)})({len(wide)})")
+                if buf:
+                    write_memory(buf, typedefs.VALUE_INDEX.AOB, list(wide))
+                    if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64:
+                        hmod = call(f"((void*(*)(void*,void*,void*,void*)){hex(llw)})(0,0,0,{hex(buf)})")
+                    else:
+                        hmod = call(f"((void*(*)(void*)){hex(llw)})({hex(buf)})")
 
         if was_running:
             continue_inferior()
