@@ -137,7 +137,7 @@ class BreakpointInfoWidget(QTabWidget, Ui_TabWidget):
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
         actions = {
-            change_condition: lambda: self.parent().add_breakpoint_condition(current_address_int),
+            change_condition: lambda: self.edit_breakpoint_condition(current_address_int),
             enable: lambda: debugcore.modify_breakpoint(bp_num, typedefs.BREAKPOINT_MODIFY.ENABLE),
             disable: lambda: debugcore.modify_breakpoint(bp_num, typedefs.BREAKPOINT_MODIFY.DISABLE),
             enable_once: lambda: debugcore.modify_breakpoint(bp_num, typedefs.BREAKPOINT_MODIFY.ENABLE_ONCE),
@@ -157,6 +157,11 @@ class BreakpointInfoWidget(QTabWidget, Ui_TabWidget):
         self.parent().refresh_disassemble_view()
         self.refresh()
 
+    def edit_breakpoint_condition(self, address: int | None) -> None:
+        # Parent the condition dialog to ourselves instead of the memory view window (its default parent),
+        # so closing the dialog returns activation straight here without flickering through the memory view.
+        self.parent().add_breakpoint_condition(address, dialog_parent=self)
+
     def tableWidget_BreakpointInfo_double_clicked(self, index: QTableWidgetItem) -> None:
         current_address_text = self.tableWidget_BreakpointInfo.item(index.row(), BREAK_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
@@ -166,7 +171,7 @@ class BreakpointInfoWidget(QTabWidget, Ui_TabWidget):
         current_address_int = utils.safe_str_to_int(current_address, 16)
 
         if index.column() == BREAK_COND_COL:
-            self.parent().add_breakpoint_condition(current_address_int)
+            self.edit_breakpoint_condition(current_address_int)
             self.refresh_all()
         else:
             current_breakpoint_type = self.tableWidget_BreakpointInfo.item(index.row(), BREAK_TYPE_COL).text()

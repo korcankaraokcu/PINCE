@@ -3377,7 +3377,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.setWindowTitle(tr.MV_RUNNING)
         self.pushButton_ShowFloatRegisters.setEnabled(False)
 
-    def add_breakpoint_condition(self, int_address: int, length: int = 1) -> None:
+    def add_breakpoint_condition(self, int_address: int, length: int = 1, dialog_parent: QWidget | None = None) -> None:
         if debugcore.currentpid == -1:
             return
         breakpoints = debugcore.get_breakpoints_in_range(int_address, length)
@@ -3386,7 +3386,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         else:
             condition_line_edit_text = ""
         items = [(tr.ENTER_BP_CONDITION, condition_line_edit_text)]
-        condition_dialog = utilwidgets.InputDialog(self, items, Qt.AlignmentFlag.AlignLeft)
+        condition_dialog = utilwidgets.InputDialog(dialog_parent or self, items, Qt.AlignmentFlag.AlignLeft)
         if condition_dialog.exec():
             condition = condition_dialog.get_values()[0]
             for bp in breakpoints:
