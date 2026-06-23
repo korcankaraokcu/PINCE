@@ -773,19 +773,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <location filename="../../GUI/LogFileWidget.ui" line="0" />
-        <source>Form</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/LogFileWidget.ui" line="0" />
-        <location filename="../../GUI/LogFileWidget.ui" line="0" />
-        <source>TextLabel</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
         <source>Memory Regions</source>
         <translation type="unfinished" />
@@ -889,6 +876,13 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished">Annulla</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
+        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+        <source>Form</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
         <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
         <source>Count</source>
@@ -943,6 +937,12 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
         <source>MI</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
+        <source>TextLabel</source>
         <translation type="unfinished" />
     </message>
     <message>

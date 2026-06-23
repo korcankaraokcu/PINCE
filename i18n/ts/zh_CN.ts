@@ -775,19 +775,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>请输入正则表达式。如果不输入任何内容，则会显示所有函数</translation>
     </message>
     <message>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <location filename="../../GUI/LogFileWidget.ui" line="0" />
-        <source>Form</source>
-        <translation>表格</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/LogFileWidget.ui" line="0" />
-        <location filename="../../GUI/LogFileWidget.ui" line="0" />
-        <source>TextLabel</source>
-        <translation>文本标签</translation>
-    </message>
-    <message>
         <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
         <source>Memory Regions</source>
         <translation>内存区域</translation>
@@ -891,6 +878,13 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>取消</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
+        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+        <source>Form</source>
+        <translation>表格</translation>
+    </message>
+    <message>
         <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
         <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
         <source>Count</source>
@@ -946,6 +940,12 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
         <source>MI</source>
         <translation>MI</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
+        <source>TextLabel</source>
+        <translation>文本标签</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
