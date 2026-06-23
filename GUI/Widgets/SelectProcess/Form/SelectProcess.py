@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'SelectProcess.ui'
+# Form implementation generated from reading ui file 'Widgets/SelectProcess/Form/SelectProcess.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #

@@ -1178,58 +1178,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Please select a Process</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Name or PID of the Process:</source>
-        <translation>Nome o PID del processo:</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>PID</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Username</source>
-        <translation>Nome Utente</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Process Name</source>
-        <translation>Nome Processo</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Attach to the selected process</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Open</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Cancel</source>
-        <translation>Annulla</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Open an executable</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Create Process[F1]</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
         <source>Tracer</source>
         <translation type="unfinished" />
@@ -1238,6 +1186,13 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
         <source>File</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
+        <source>Open</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1399,6 +1354,51 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
         <source>&amp;Filter</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Please select a Process</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Name or PID of the Process:</source>
+        <translation>Nome o PID del processo:</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>PID</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Username</source>
+        <translation>Nome Utente</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Process Name</source>
+        <translation>Nome Processo</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Attach to the selected process</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Cancel</source>
+        <translation>Annulla</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Open an executable</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Create Process[F1]</source>
         <translation type="unfinished" />
     </message>
 </context><context>

@@ -1183,58 +1183,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>配置选项</translation>
     </message>
     <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Please select a Process</source>
-        <translation>请选择一个进程</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Name or PID of the Process:</source>
-        <translation>进程名称或PID：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>PID</source>
-        <translation>PID</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Username</source>
-        <translation>用户名</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Process Name</source>
-        <translation>进程名称</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Attach to the selected process</source>
-        <translation>附加到选中进程</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Open</source>
-        <translation>打开</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Cancel</source>
-        <translation>取消</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Open an executable</source>
-        <translation>打开一个可执行程序</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SelectProcess.ui" line="0" />
-        <source>Create Process[F1]</source>
-        <translation>创建进程[F1]</translation>
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
         <source>Tracer</source>
         <translation>追踪器</translation>
@@ -1244,6 +1192,13 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
         <source>File</source>
         <translation>文件</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
+        <source>Open</source>
+        <translation>打开</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
@@ -1405,6 +1360,51 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />
         <source>&amp;Filter</source>
         <translation>过滤[&amp;F]</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Please select a Process</source>
+        <translation>请选择一个进程</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Name or PID of the Process:</source>
+        <translation>进程名称或PID：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>PID</source>
+        <translation>PID</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Username</source>
+        <translation>用户名</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Process Name</source>
+        <translation>进程名称</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Attach to the selected process</source>
+        <translation>附加到选中进程</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Open an executable</source>
+        <translation>打开一个可执行程序</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <source>Create Process[F1]</source>
+        <translation>创建进程[F1]</translation>
     </message>
 </context><context>
     <name>MainWindow_MemoryView</name>
