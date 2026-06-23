@@ -64,8 +64,8 @@
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
         <location filename="../../GUI/HexEditDialog.ui" line="0" />
-        <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Address:</source>
         <translation>Indirizzo:</translation>
@@ -125,21 +125,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
         <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
         <source>Discard invalid strings</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
-        <source>Edit Instruction</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
-        <source>Instruction:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
-        <source>Multiple entries are separated with ;</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -241,6 +226,21 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
         <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
         <source>Pointed Address</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
+        <source>Edit Instruction</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
+        <source>Instruction:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
+        <source>Multiple entries are separated with ;</source>
         <translation type="unfinished" />
     </message>
     <message>

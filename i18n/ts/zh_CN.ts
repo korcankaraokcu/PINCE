@@ -64,8 +64,8 @@
         <translation>备注：</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
         <location filename="../../GUI/HexEditDialog.ui" line="0" />
-        <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Address:</source>
         <translation>地址：</translation>
@@ -127,21 +127,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
         <source>Discard invalid strings</source>
         <translation>丢弃无效的字符串</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
-        <source>Edit Instruction</source>
-        <translation>编辑指令</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
-        <source>Instruction:</source>
-        <translation>指令：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/EditInstructionDialog.ui" line="0" />
-        <source>Multiple entries are separated with ;</source>
-        <translation>多个条目用分号（;）分隔</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
@@ -243,6 +228,21 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
         <source>Pointed Address</source>
         <translation>指向的地址</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
+        <source>Edit Instruction</source>
+        <translation>编辑指令</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
+        <source>Instruction:</source>
+        <translation>指令：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
+        <source>Multiple entries are separated with ;</source>
+        <translation>多个条目用分号（;）分隔</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
