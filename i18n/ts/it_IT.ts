@@ -704,19 +704,19 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
         <source>Ignore case if checked</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
         <source>Case sensitive</source>
         <translation type="unfinished" />
@@ -738,38 +738,12 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
         <source>Search(Enter)</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
-        <source>Functions</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
-        <source>Address</source>
-        <translation type="unfinished">Indirizzo</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
-        <source>Symbol</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
-        <source>Enter the regex. Leave blank to see all functions</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -806,6 +780,17 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <source>Referenced Calls</source>
         <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Address</source>
+        <translation type="unfinished">Indirizzo</translation>
     </message>
     <message>
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
@@ -937,6 +922,21 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
         <source>MI</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <source>Functions</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <source>Symbol</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <source>Enter the regex. Leave blank to see all functions</source>
         <translation type="unfinished" />
     </message>
     <message>

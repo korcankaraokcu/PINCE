@@ -19,7 +19,7 @@ class LoadingDialog(QDialog, Ui_Dialog):
         # Make use of this background_thread when you spawn a LoadingDialog
         # Warning: overrided_func() can only return one value, so if your overridden function returns more than one
         # value, refactor your overriden function to return only one object(convert tuple to list etc.)
-        # Check refresh_table method of FunctionsInfoWidgetForm for exemplary usage
+        # Check refresh_table method of FunctionsInfoWidget for exemplary usage
         self.background_thread = self.BackgroundThread()
         self.background_thread.output_ready.connect(self.accept)
         self.pushButton_Cancel.clicked.connect(self.close)

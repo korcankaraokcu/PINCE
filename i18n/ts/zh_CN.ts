@@ -706,19 +706,19 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>输入字符串或 Python 正则表达式</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
         <source>Ignore case if checked</source>
         <translation>如果选中则忽略大小写</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
         <source>Case sensitive</source>
         <translation>大小写敏感</translation>
@@ -740,39 +740,13 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>正则</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
         <source>Search(Enter)</source>
         <translation>搜索（Enter）</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
-        <source>Functions</source>
-        <translation>函数</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
-        <source>Address</source>
-        <translation>地址</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
-        <source>Symbol</source>
-        <translation>符号</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/FunctionsInfoWidget.ui" line="0" />
-        <source>Enter the regex. Leave blank to see all functions</source>
-        <translation>请输入正则表达式。如果不输入任何内容，则会显示所有函数</translation>
     </message>
     <message>
         <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
@@ -808,6 +782,17 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <source>Referenced Calls</source>
         <translation>引用的调用</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Address</source>
+        <translation>地址</translation>
     </message>
     <message>
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
@@ -940,6 +925,21 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
         <source>MI</source>
         <translation>MI</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <source>Functions</source>
+        <translation>函数</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <source>Symbol</source>
+        <translation>符号</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <source>Enter the regex. Leave blank to see all functions</source>
+        <translation>请输入正则表达式。如果不输入任何内容，则会显示所有函数</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
