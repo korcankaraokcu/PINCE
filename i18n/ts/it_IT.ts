@@ -1705,23 +1705,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
-        <source>Floating Point Registers</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
-        <source>Register</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
-        <source>Value</source>
-        <translation type="unfinished">Valore</translation>
-    </message>
-    <message>
         <location filename="../../GUI/Widgets/About/Form/AboutWidget.ui" line="0" />
         <source>About PINCE</source>
         <translation type="unfinished" />
@@ -1735,6 +1718,23 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/About/Form/AboutWidget.ui" line="0" />
         <source>License</source>
         <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/FloatRegister/Form/FloatRegisterWidget.ui" line="0" />
+        <source>Floating Point Registers</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/FloatRegister/Form/FloatRegisterWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FloatRegister/Form/FloatRegisterWidget.ui" line="0" />
+        <source>Register</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/FloatRegister/Form/FloatRegisterWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FloatRegister/Form/FloatRegisterWidget.ui" line="0" />
+        <source>Value</source>
+        <translation type="unfinished">Valore</translation>
     </message>
 </context><context>
     <name>TranslationConstants</name>

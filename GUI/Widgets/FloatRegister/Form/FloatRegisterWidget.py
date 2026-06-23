@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'FloatRegisterWidget.ui'
+# Form implementation generated from reading ui file 'Widgets/FloatRegister/Form/FloatRegisterWidget.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #

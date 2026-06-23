@@ -96,7 +96,6 @@ from GUI.BreakpointInfoWidget import Ui_TabWidget as BreakpointInfoWidget
 from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
 from GUI.EditTypeDialog import Ui_Dialog as EditTypeDialog
 from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
-from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.ManualAddressDialogUtils.PointerChainOffset import PointerChainOffset
 from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
@@ -122,6 +121,7 @@ from GUI.Widgets.About.About import AboutWidget
 from GUI.Widgets.Bookmark.Bookmark import BookmarkWidget
 from GUI.Widgets.Console.Console import ConsoleWidget
 from GUI.Widgets.EditInstruction.EditInstruction import EditInstructionDialog
+from GUI.Widgets.FloatRegister.FloatRegister import FloatRegisterWidget
 from GUI.Widgets.FunctionsInfo.FunctionsInfo import FunctionsInfoWidget
 from GUI.Widgets.HexEdit.HexEdit import HexEditDialog
 from GUI.Widgets.LogFile.LogFile import LogFileWidget
@@ -218,10 +218,6 @@ DISAS_ADDR_COL = 0
 DISAS_OPCODES_COL = 1
 DISAS_INSTR_COL = 2
 DISAS_COMMENT_COL = 3
-
-# represents the index of columns in floating point table
-FLOAT_REGISTERS_NAME_COL = 0
-FLOAT_REGISTERS_VALUE_COL = 1
 
 # represents the index of columns in stacktrace table
 STACKTRACE_RETURN_ADDRESS_COL = 0
@@ -2637,7 +2633,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.updating_memoryview = False
         self.stack_from_base_pointer = False
         self.stacktrace_info_widget = StackTraceInfoWidgetForm(self)
-        self.float_registers_widget = FloatRegisterWidgetForm(self)
+        self.float_registers_widget = FloatRegisterWidget(self)
         # Created lazily on first open and reused afterwards, so we don't leak on each open.
         self.bookmark_widget = None
         self.breakpoint_widget = None
@@ -4354,50 +4350,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def on_new_session(self) -> None:
         self.session = SessionManager.get_session()
-
-
-class FloatRegisterWidgetForm(QTabWidget, FloatRegisterWidget):
-    def __init__(self, parent: QWidget) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.setWindowFlags(Qt.WindowType.Window)
-        self.tableWidget_FPU.itemDoubleClicked.connect(self.set_register)
-        self.tableWidget_XMM.itemDoubleClicked.connect(self.set_register)
-
-    def update_registers(self) -> None:
-        float_registers = list(debugcore.read_float_registers().items())
-        st_registers = float_registers[:8]
-        xmm_registers = float_registers[8:]
-        self.tableWidget_FPU.setRowCount(len(st_registers))
-        self.tableWidget_XMM.setRowCount(len(xmm_registers))
-        for row, (name, value) in enumerate(st_registers):
-            self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(name))
-            self.tableWidget_FPU.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(value))
-        for row, (name, value) in enumerate(xmm_registers):
-            self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_NAME_COL, QTableWidgetItem(name))
-            self.tableWidget_XMM.setItem(row, FLOAT_REGISTERS_VALUE_COL, QTableWidgetItem(value))
-
-    def set_register(self, index: QTableWidgetItem) -> None:
-        if guiutils.check_inferior_running(self):
-            return
-        current_row = index.row()
-        if self.currentWidget() == self.FPU:
-            current_table_widget = self.tableWidget_FPU
-        elif self.currentWidget() == self.XMM:
-            current_table_widget = self.tableWidget_XMM
-        else:
-            raise Exception("Current widget is invalid: " + str(self.currentWidget().objectName()))
-        current_register = current_table_widget.item(current_row, FLOAT_REGISTERS_NAME_COL).text()
-        current_value = current_table_widget.item(current_row, FLOAT_REGISTERS_VALUE_COL).text()
-        label_text = tr.ENTER_REGISTER_VALUE.format(current_register.upper())
-        register_dialog = utilwidgets.InputDialog(self, [(label_text, current_value)])
-        if register_dialog.exec():
-            if guiutils.check_inferior_running(self):
-                return
-            if self.currentWidget() == self.XMM:
-                current_register += ".v4_float"
-            debugcore.set_convenience_variable(current_register, register_dialog.get_values()[0])
-            self.update_registers()
 
 
 class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):

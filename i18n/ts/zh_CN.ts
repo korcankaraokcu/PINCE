@@ -1710,23 +1710,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>原始</translation>
     </message>
     <message>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
-        <source>Floating Point Registers</source>
-        <translation>浮点寄存器</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
-        <source>Register</source>
-        <translation>寄存器</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
-        <location filename="../../GUI/FloatRegisterWidget.ui" line="0" />
-        <source>Value</source>
-        <translation>值</translation>
-    </message>
-    <message>
         <location filename="../../GUI/Widgets/About/Form/AboutWidget.ui" line="0" />
         <source>About PINCE</source>
         <translation>关于 PINCE</translation>
@@ -1740,6 +1723,23 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/About/Form/AboutWidget.ui" line="0" />
         <source>License</source>
         <translation>许可</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/FloatRegister/Form/FloatRegisterWidget.ui" line="0" />
+        <source>Floating Point Registers</source>
+        <translation>浮点寄存器</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/FloatRegister/Form/FloatRegisterWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FloatRegister/Form/FloatRegisterWidget.ui" line="0" />
+        <source>Register</source>
+        <translation>寄存器</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/FloatRegister/Form/FloatRegisterWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FloatRegister/Form/FloatRegisterWidget.ui" line="0" />
+        <source>Value</source>
+        <translation>值</translation>
     </message>
 </context><context>
     <name>TranslationConstants</name>
