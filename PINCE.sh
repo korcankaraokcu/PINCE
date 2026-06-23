@@ -34,7 +34,10 @@ fi
 if [ "$(id -u)" = "0" ]; then
 	"$PYTHON" "$PINCE_PY" "$PCT_FILE"
 else
-	if command -v pkexec > /dev/null 2>&1; then
+	# Check if we have both polkit/pkexec installed AND also an authentication agent so we can properly prompt for credentials.
+	# Some WMs (like Hyprland) come with no agent by default (they have to manually install hyprpolkitagent) so even though the distro has polkitd active,
+	# there's no agent for the prompt and authentication fails for the user with a vague unrelated xcb message.
+	if command -v pkexec > /dev/null 2>&1 && pgrep -f 'polkit.*agent|policykit.*agent|agent-polkit|xfce-polkit|mate-polkit|lxpolkit|gnome-shell|soteria|pkttyagent' > /dev/null 2>&1; then
 		# Preserve env vars to keep settings like theme preferences.
 		# Pkexec does not support passing all of env via a flag like `-E` so we need to
 		# rebuild the env and then pass it through.
