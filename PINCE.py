@@ -104,7 +104,6 @@ from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 from GUI.SearchInstructionsWidget import Ui_Form as SearchInstructionsWidget
 from GUI.Session.session import SessionDataChanged, SessionManager, StructureManager
 from GUI.Settings import settings, themes
-from GUI.StackTraceInfoWidget import Ui_Form as StackTraceInfoWidget
 from GUI.States import states
 from GUI.TraceInstructionsPromptDialog import Ui_Dialog as TraceInstructionsPromptDialog
 from GUI.TraceInstructionsWaitWidget import Ui_Form as TraceInstructionsWaitWidget
@@ -137,6 +136,7 @@ from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDia
 from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructionsWidget
 from GUI.Widgets.SelectProcess.SelectProcess import SelectProcessWindow
 from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
+from GUI.Widgets.StackTraceInfo.StackTraceInfo import StackTraceInfoWidget
 from GUI.Widgets.Settings.Settings import SettingsDialog
 from GUI.Widgets.MonoDissect.MonoDissect import MonoDissectDialog
 from GUI.Widgets.Structures.StructuresWindow import StructuresWindow
@@ -2530,7 +2530,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.setupUi(self)
         self.updating_memoryview = False
         self.stack_from_base_pointer = False
-        self.stacktrace_info_widget = StackTraceInfoWidgetForm(self)
+        self.stacktrace_info_widget = StackTraceInfoWidget(self)
         self.float_registers_widget = FloatRegisterWidget(self)
         # Created lazily on first open and reused afterwards, so we don't leak on each open.
         self.bookmark_widget = None
@@ -4248,33 +4248,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def on_new_session(self) -> None:
         self.session = SessionManager.get_session()
-
-
-class StackTraceInfoWidgetForm(QWidget, StackTraceInfoWidget):
-    def __init__(self, parent: QWidget) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.setWindowFlags(Qt.WindowType.Window)
-        self.listWidget_ReturnAddresses.currentRowChanged.connect(self.update_frame_info)
-
-    def update_stacktrace(self) -> None:
-        self.listWidget_ReturnAddresses.clear()
-        self.textBrowser_Info.clear()
-        error_message = guiutils.check_inferior_running(self, show_message=False)
-        if error_message:
-            self.textBrowser_Info.setText(error_message)
-            return
-        return_addresses = debugcore.get_stack_frame_return_addresses()
-        self.listWidget_ReturnAddresses.addItems(return_addresses)
-
-    def update_frame_info(self, index: int) -> None:
-        self.textBrowser_Info.clear()
-        error_message = guiutils.check_inferior_running(self, show_message=False)
-        if error_message:
-            self.textBrowser_Info.setText(error_message)
-            return
-        frame_info = debugcore.get_stack_frame_info(index)
-        self.textBrowser_Info.setText(frame_info)
 
 
 class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):

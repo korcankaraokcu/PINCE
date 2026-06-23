@@ -835,22 +835,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
-        <source>StackTrace Information</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
-        <source>Return Address</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
-        <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
-        <source>Info</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
         <source>Tracer Status</source>
         <translation type="unfinished" />
@@ -897,6 +881,12 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
         <source>Bookmarked Addresses</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/StackTraceInfo/Form/StackTraceInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
+        <source>Info</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -958,6 +948,16 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
         <source>Original Instruction</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/StackTraceInfo/Form/StackTraceInfoWidget.ui" line="0" />
+        <source>StackTrace Information</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/StackTraceInfo/Form/StackTraceInfoWidget.ui" line="0" />
+        <source>Return Address</source>
         <translation type="unfinished" />
     </message>
     <message>

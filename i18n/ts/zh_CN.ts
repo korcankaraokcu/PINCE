@@ -837,22 +837,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>指令</translation>
     </message>
     <message>
-        <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
-        <source>StackTrace Information</source>
-        <translation>堆栈跟踪信息</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
-        <source>Return Address</source>
-        <translation>返回地址</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
-        <location filename="../../GUI/StackTraceInfoWidget.ui" line="0" />
-        <source>Info</source>
-        <translation>信息</translation>
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
         <source>Tracer Status</source>
         <translation>追踪器状态</translation>
@@ -900,6 +884,12 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
         <source>Bookmarked Addresses</source>
         <translation>书签地址</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/StackTraceInfo/Form/StackTraceInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
+        <source>Info</source>
+        <translation>信息</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
@@ -961,6 +951,16 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
         <source>Original Instruction</source>
         <translation>原始指令</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/StackTraceInfo/Form/StackTraceInfoWidget.ui" line="0" />
+        <source>StackTrace Information</source>
+        <translation>堆栈跟踪信息</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/StackTraceInfo/Form/StackTraceInfoWidget.ui" line="0" />
+        <source>Return Address</source>
+        <translation>返回地址</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
