@@ -22,4 +22,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           make_latest: true
-          files: ci/PINCE-x86_64.AppImage
+          files: |
+            ci/PINCE-x86_64.AppImage
+            ci/PINCE-x86_64.AppImage.zsync
