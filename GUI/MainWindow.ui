@@ -115,7 +115,7 @@
      </layout>
     </item>
     <item row="3" column="0">
-     <widget class="QAddressTree" name="treeWidget_AddressTable">
+     <widget class="AddressTree" name="treeWidget_AddressTable">
       <property name="editTriggers">
        <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
       </property>
@@ -669,7 +669,7 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QAddressTree</class>
+   <class>AddressTree</class>
    <extends>QTreeWidget</extends>
    <header location="global">GUI.TreeWidgets.AddressTree</header>
   </customwidget>

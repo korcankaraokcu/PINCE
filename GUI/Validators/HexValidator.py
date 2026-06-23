@@ -2,7 +2,7 @@ from PyQt6.QtCore import QObject
 from PyQt6.QtGui import QValidator
 
 
-class QHexValidator(QValidator):
+class HexValidator(QValidator):
     def __init__(self, max_limit: int, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.max_limit = max_limit

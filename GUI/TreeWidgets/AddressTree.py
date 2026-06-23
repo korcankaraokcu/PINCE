@@ -19,7 +19,7 @@ from PyQt6.QtGui import QDropEvent
 from PyQt6.QtWidgets import QTreeWidget, QWidget
 
 
-class QAddressTree(QTreeWidget):
+class AddressTree(QTreeWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 

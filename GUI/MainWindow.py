@@ -48,7 +48,7 @@ class Ui_MainWindow(object):
         self.pushButton_AddAddressManually.setObjectName("pushButton_AddAddressManually")
         self.horizontalLayout_8.addWidget(self.pushButton_AddAddressManually)
         self.gridLayout.addLayout(self.horizontalLayout_8, 2, 0, 1, 1)
-        self.treeWidget_AddressTable = QAddressTree(parent=self.centralwidget)
+        self.treeWidget_AddressTable = AddressTree(parent=self.centralwidget)
         self.treeWidget_AddressTable.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.treeWidget_AddressTable.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragDrop)
         self.treeWidget_AddressTable.setDefaultDropAction(QtCore.Qt.DropAction.MoveAction)
@@ -342,4 +342,4 @@ class Ui_MainWindow(object):
         self.label_SelectedProcess.setText(_translate("MainWindow", "No Process Selected"))
         self.pushButton_Console.setToolTip(_translate("MainWindow", "Open a gdb console"))
         self.pushButton_Settings.setToolTip(_translate("MainWindow", "Configure options"))
-from GUI.TreeWidgets.AddressTree import QAddressTree
+from GUI.TreeWidgets.AddressTree import AddressTree

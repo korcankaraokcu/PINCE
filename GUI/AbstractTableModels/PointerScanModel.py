@@ -35,7 +35,7 @@ def _base_sort_key(row: tuple[str, list[int]]) -> tuple[str, int]:
         return (base, 0)
 
 
-class QPointerScanModel(QAbstractTableModel):
+class PointerScanModel(QAbstractTableModel):
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.rows: list[tuple[str, list[int]]] = []

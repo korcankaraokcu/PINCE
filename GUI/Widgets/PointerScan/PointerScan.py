@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QMainWindow, QFileDialog, QLabel, QWidget, QMessageB
 from GUI.Widgets.PointerScan.Form.PointerScanWindow import Ui_MainWindow
 from GUI.Widgets.PointerScanFilter.PointerScanFilter import PointerScanFilterDialog
 from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
-from GUI.AbstractTableModels.PointerScanModel import QPointerScanModel
+from GUI.AbstractTableModels.PointerScanModel import PointerScanModel
 from GUI.Utils import guiutils, guitypedefs
 from GUI.States import states
 from libpince import debugcore, typedefs, utils
@@ -24,7 +24,7 @@ class PointerScanWindow(QMainWindow, Ui_MainWindow):
         self.actionSaveAs.triggered.connect(self.actionSaveAs_triggered)
         self.actionScan.triggered.connect(self.scan_triggered)
         self.actionFilter.triggered.connect(self.filter_triggered)
-        self.model = QPointerScanModel(self)
+        self.model = PointerScanModel(self)
         self.tableView.setModel(self.model)
         self.tableView.setSortingEnabled(True)
         self.tableView.horizontalHeader().setSortIndicator(-1, Qt.SortOrder.AscendingOrder)

@@ -16,11 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from PyQt6.QtCore import QObject
-from GUI.AbstractTableModels.HexModel import QHexModel
+from GUI.AbstractTableModels.HexModel import HexModel
 from libpince import utils
 
 
-class QAsciiModel(QHexModel):
+class AsciiModel(HexModel):
     def __init__(self, row_count: int, column_count: int, parent: QObject | None = None) -> None:
         super().__init__(row_count, column_count, parent)
 

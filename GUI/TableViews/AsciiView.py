@@ -16,15 +16,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from PyQt6.QtWidgets import QWidget
-from GUI.TableViews.HexView import QHexView
-from GUI.ItemDelegates.HexDelegate import QHexDelegate
+from GUI.TableViews.HexView import HexView
+from GUI.ItemDelegates.HexDelegate import HexDelegate
 from libpince import typedefs
 
 
-class QAsciiView(QHexView):
+class AsciiView(HexView):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.write_type = typedefs.VALUE_INDEX.STRING_UTF8
-        self.delegate = QHexDelegate(1, ".+")
+        self.delegate = HexDelegate(1, ".+")
         self.delegate.closeEditor.connect(self.on_editor_close)
         self.setItemDelegate(self.delegate)

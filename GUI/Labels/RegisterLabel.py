@@ -23,7 +23,7 @@ from GUI.Utils import guiutils, utilwidgets
 from tr.tr import TranslationConstants as tr
 
 
-class QRegisterLabel(QLabel):
+class RegisterLabel(QLabel):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 

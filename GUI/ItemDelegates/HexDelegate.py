@@ -20,7 +20,7 @@ from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QModelIndex, QObject, Qt, QRegularExpression
 
 
-class QHexDelegate(QStyledItemDelegate):
+class HexDelegate(QStyledItemDelegate):
     def __init__(self, max_length: int = 2, regexp: str = "[0-9a-fA-F]+", parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.max_length = max_length

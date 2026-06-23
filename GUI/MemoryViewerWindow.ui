@@ -288,7 +288,7 @@
                             <number>0</number>
                            </property>
                            <item>
-                            <widget class="QRegisterLabel" name="RAX">
+                            <widget class="RegisterLabel" name="RAX">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -300,7 +300,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="RBX">
+                            <widget class="RegisterLabel" name="RBX">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -312,7 +312,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="RCX">
+                            <widget class="RegisterLabel" name="RCX">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -324,7 +324,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="RDX">
+                            <widget class="RegisterLabel" name="RDX">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -336,7 +336,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="RSI">
+                            <widget class="RegisterLabel" name="RSI">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -348,7 +348,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="RDI">
+                            <widget class="RegisterLabel" name="RDI">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -360,7 +360,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="RBP">
+                            <widget class="RegisterLabel" name="RBP">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -372,7 +372,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="RSP">
+                            <widget class="RegisterLabel" name="RSP">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -404,7 +404,7 @@
                             <number>0</number>
                            </property>
                            <item>
-                            <widget class="QRegisterLabel" name="R8">
+                            <widget class="RegisterLabel" name="R8">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -416,7 +416,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="R9">
+                            <widget class="RegisterLabel" name="R9">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -428,7 +428,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="R10">
+                            <widget class="RegisterLabel" name="R10">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -440,7 +440,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="R11">
+                            <widget class="RegisterLabel" name="R11">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -452,7 +452,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="R12">
+                            <widget class="RegisterLabel" name="R12">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -464,7 +464,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="R13">
+                            <widget class="RegisterLabel" name="R13">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -476,7 +476,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="R14">
+                            <widget class="RegisterLabel" name="R14">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -488,7 +488,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="R15">
+                            <widget class="RegisterLabel" name="R15">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -509,7 +509,7 @@
                           <number>0</number>
                          </property>
                          <item>
-                          <widget class="QRegisterLabel" name="RIP">
+                          <widget class="RegisterLabel" name="RIP">
                            <property name="font">
                             <font>
                              <family>Monospace</family>
@@ -585,7 +585,7 @@
                             <number>0</number>
                            </property>
                            <item>
-                            <widget class="QRegisterLabel" name="EAX">
+                            <widget class="RegisterLabel" name="EAX">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -597,7 +597,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="EBX">
+                            <widget class="RegisterLabel" name="EBX">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -609,7 +609,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="ECX">
+                            <widget class="RegisterLabel" name="ECX">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -621,7 +621,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="EDX">
+                            <widget class="RegisterLabel" name="EDX">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -633,7 +633,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="ESI">
+                            <widget class="RegisterLabel" name="ESI">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -645,7 +645,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="EDI">
+                            <widget class="RegisterLabel" name="EDI">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -657,7 +657,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="EBP">
+                            <widget class="RegisterLabel" name="EBP">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -669,7 +669,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="ESP">
+                            <widget class="RegisterLabel" name="ESP">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -681,7 +681,7 @@
                             </widget>
                            </item>
                            <item>
-                            <widget class="QRegisterLabel" name="EIP">
+                            <widget class="RegisterLabel" name="EIP">
                              <property name="font">
                               <font>
                                <family>Monospace</family>
@@ -757,7 +757,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QFlagRegisterLabel" name="CF">
+                      <widget class="FlagRegisterLabel" name="CF">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -788,7 +788,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QFlagRegisterLabel" name="PF">
+                      <widget class="FlagRegisterLabel" name="PF">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -819,7 +819,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QFlagRegisterLabel" name="AF">
+                      <widget class="FlagRegisterLabel" name="AF">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -850,7 +850,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QFlagRegisterLabel" name="ZF">
+                      <widget class="FlagRegisterLabel" name="ZF">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -881,7 +881,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QFlagRegisterLabel" name="SF">
+                      <widget class="FlagRegisterLabel" name="SF">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -912,7 +912,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QFlagRegisterLabel" name="TF">
+                      <widget class="FlagRegisterLabel" name="TF">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -943,7 +943,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QFlagRegisterLabel" name="IF">
+                      <widget class="FlagRegisterLabel" name="IF">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -974,7 +974,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QFlagRegisterLabel" name="DF">
+                      <widget class="FlagRegisterLabel" name="DF">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -1005,7 +1005,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QFlagRegisterLabel" name="OF">
+                      <widget class="FlagRegisterLabel" name="OF">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -1066,7 +1066,7 @@
                       <number>0</number>
                      </property>
                      <item>
-                      <widget class="QRegisterLabel" name="CS">
+                      <widget class="RegisterLabel" name="CS">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -1078,7 +1078,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRegisterLabel" name="ES">
+                      <widget class="RegisterLabel" name="ES">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -1110,7 +1110,7 @@
                       <number>0</number>
                      </property>
                      <item>
-                      <widget class="QRegisterLabel" name="SS">
+                      <widget class="RegisterLabel" name="SS">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -1122,7 +1122,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRegisterLabel" name="GS">
+                      <widget class="RegisterLabel" name="GS">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -1154,7 +1154,7 @@
                       <number>0</number>
                      </property>
                      <item>
-                      <widget class="QRegisterLabel" name="DS">
+                      <widget class="RegisterLabel" name="DS">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -1166,7 +1166,7 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QRegisterLabel" name="FS">
+                      <widget class="RegisterLabel" name="FS">
                        <property name="font">
                         <font>
                          <family>Monospace</family>
@@ -1332,7 +1332,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QHexView" name="tableView_HexView_Hex">
+                <widget class="HexView" name="tableView_HexView_Hex">
                  <property name="font">
                   <font>
                    <family>Monospace</family>
@@ -1351,7 +1351,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QAsciiView" name="tableView_HexView_Ascii">
+                <widget class="AsciiView" name="tableView_HexView_Ascii">
                  <property name="font">
                   <font>
                    <family>Monospace</family>
@@ -1773,22 +1773,22 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QRegisterLabel</class>
+   <class>RegisterLabel</class>
    <extends>QLabel</extends>
    <header location="global">GUI.Labels.RegisterLabel</header>
   </customwidget>
   <customwidget>
-   <class>QFlagRegisterLabel</class>
+   <class>FlagRegisterLabel</class>
    <extends>QLabel</extends>
    <header location="global">GUI.Labels.FlagRegisterLabel</header>
   </customwidget>
   <customwidget>
-   <class>QHexView</class>
+   <class>HexView</class>
    <extends>QTableView</extends>
    <header location="global">GUI.TableViews.HexView</header>
   </customwidget>
   <customwidget>
-   <class>QAsciiView</class>
+   <class>AsciiView</class>
    <extends>QTableView</extends>
    <header location="global">GUI.TableViews.AsciiView</header>
   </customwidget>

@@ -89,8 +89,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from GUI.AbstractTableModels.AsciiModel import QAsciiModel
-from GUI.AbstractTableModels.HexModel import QHexModel
+from GUI.AbstractTableModels.AsciiModel import AsciiModel
+from GUI.AbstractTableModels.HexModel import HexModel
 from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
 from GUI.BreakpointInfoWidget import Ui_TabWidget as BreakpointInfoWidget
 from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
@@ -116,7 +116,7 @@ from GUI.TrackBreakpointWidget import Ui_Form as TrackBreakpointWidget
 from GUI.TrackSelectorDialog import Ui_Dialog as TrackSelectorDialog
 from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
 from GUI.Utils import guitypedefs, guiutils, utilwidgets
-from GUI.Validators.HexValidator import QHexValidator
+from GUI.Validators.HexValidator import HexValidator
 from GUI.Widgets.About.About import AboutWidget
 from GUI.Widgets.Bookmark.Bookmark import BookmarkWidget
 from GUI.Widgets.Console.Console import ConsoleWidget
@@ -2278,7 +2278,7 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         self.lineEdit_PtrStartAddress.setFixedWidth(180)
         self.lineEdit_Address.setFixedWidth(180)
         vt = typedefs.ValueType() if not value_type else value_type
-        self.lineEdit_Length.setValidator(QHexValidator(99, self))
+        self.lineEdit_Length.setValidator(HexValidator(99, self))
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
         self.lineEdit_Description.setText(description)
@@ -2527,7 +2527,7 @@ class EditTypeDialogForm(QDialog, EditTypeDialog):
         super().__init__(parent)
         self.setupUi(self)
         vt = typedefs.ValueType() if not value_type else value_type
-        self.lineEdit_Length.setValidator(QHexValidator(99, self))
+        self.lineEdit_Length.setValidator(HexValidator(99, self))
         self.lineEdit_Length.setFixedWidth(40)
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
@@ -2780,8 +2780,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_view_current_region = typedefs.tuple_region_info(0, 0, None, None, None)
         # Number of rows shown is recomputed from the viewport height (see adjust_hex_view_rows).
         self.hex_row_count = HEX_VIEW_ROW_COUNT
-        self.hex_model = QHexModel(self.hex_row_count, HEX_VIEW_COL_COUNT)
-        self.ascii_model = QAsciiModel(self.hex_row_count, HEX_VIEW_COL_COUNT)
+        self.hex_model = HexModel(self.hex_row_count, HEX_VIEW_COL_COUNT)
+        self.ascii_model = AsciiModel(self.hex_row_count, HEX_VIEW_COL_COUNT)
         self.tableView_HexView_Hex.setModel(self.hex_model)
         self.tableView_HexView_Ascii.setModel(self.ascii_model)
         # Adjust cell sizes after setting model to ensure correct size

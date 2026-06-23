@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QDialog, QWidget, QMessageBox
 from GUI.Utils import guiutils
-from GUI.Validators.HexValidator import QHexValidator
+from GUI.Validators.HexValidator import HexValidator
 from GUI.Widgets.HexEdit.Form.HexEditDialog import Ui_Dialog
 from libpince import debugcore, typedefs, utils
 from libpince.utils import logger
@@ -11,7 +11,7 @@ class HexEditDialog(QDialog, Ui_Dialog):
     def __init__(self, parent: QWidget, address: int, length: int = 20) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.lineEdit_Length.setValidator(QHexValidator(999, self))
+        self.lineEdit_Length.setValidator(HexValidator(999, self))
         self.lineEdit_Address.setText(hex(address))
         self.lineEdit_Length.setText(str(length))
         self.refresh_view()

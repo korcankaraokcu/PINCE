@@ -21,7 +21,7 @@ from libpince import utils, debugcore, typedefs
 from typing import Any
 
 
-class QHexModel(QAbstractTableModel):
+class HexModel(QAbstractTableModel):
     def __init__(self, row_count: int, column_count: int, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.breakpoint_list: set[int] = set()

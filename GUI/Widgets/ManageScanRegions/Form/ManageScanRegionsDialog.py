@@ -26,7 +26,7 @@ class Ui_Dialog(object):
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
-        self.tableWidget_Regions = QScanRegionTable(parent=Dialog)
+        self.tableWidget_Regions = ScanRegionTable(parent=Dialog)
         font = QtGui.QFont()
         font.setFamily("Monospace")
         self.tableWidget_Regions.setFont(font)
@@ -86,4 +86,4 @@ class Ui_Dialog(object):
         item.setText(_translate("Dialog", "Perms"))
         item = self.tableWidget_Regions.horizontalHeaderItem(6)
         item.setText(_translate("Dialog", "File"))
-from GUI.Widgets.ManageScanRegions.ScanRegionTable import QScanRegionTable
+from GUI.Widgets.ManageScanRegions.ScanRegionTable import ScanRegionTable

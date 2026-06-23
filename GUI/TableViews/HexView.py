@@ -18,12 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt6.QtGui import QKeyEvent, QWheelEvent
 from PyQt6.QtWidgets import QTableView, QAbstractItemView, QWidget, QStyledItemDelegate
 from PyQt6.QtCore import QItemSelectionModel, QModelIndex, Qt, pyqtSignal
-from GUI.ItemDelegates.HexDelegate import QHexDelegate
-from GUI.AbstractTableModels.HexModel import QHexModel
+from GUI.ItemDelegates.HexDelegate import HexDelegate
+from GUI.AbstractTableModels.HexModel import HexModel
 from libpince import utils, debugcore, typedefs
 
 
-class QHexView(QTableView):
+class HexView(QTableView):
     scroll_requested = pyqtSignal(int)
     page_scroll_requested = pyqtSignal(int)
 
@@ -38,7 +38,7 @@ class QHexView(QTableView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setAutoScroll(False)
         self.write_type = typedefs.VALUE_INDEX.AOB
-        self.delegate = QHexDelegate()
+        self.delegate = HexDelegate()
         self.delegate.closeEditor.connect(self.on_editor_close)
         self.setItemDelegate(self.delegate)
 
@@ -87,7 +87,7 @@ class QHexView(QTableView):
             return
         if not self.delegate.editor.isModified():
             return
-        model: QHexModel = self.model()
+        model: HexModel = self.model()
         cell = self.currentIndex()
         index = cell.row() * model.columnCount() + cell.column()
         address = utils.modulo_address(model.current_address + index, debugcore.inferior_arch)
