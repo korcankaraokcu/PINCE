@@ -697,7 +697,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>检查引用来源</translation>
     </message>
     <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -706,8 +706,8 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>输入字符串或 Python 正则表达式</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -715,8 +715,8 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>如果选中则忽略大小写</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -724,7 +724,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>大小写敏感</translation>
     </message>
     <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -732,7 +732,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>如果选中，你的字符串将被视为正则表达式</translation>
     </message>
     <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -740,8 +740,8 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>正则</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -784,11 +784,11 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>引用的调用</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
         <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <source>Address</source>
@@ -810,31 +810,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <source>Value</source>
         <translation>值</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
-        <source>Search for Instructions</source>
-        <translation>指令搜索</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
-        <source>Search:</source>
-        <translation>搜索：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
-        <source>Start</source>
-        <translation>开始</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
-        <source>End</source>
-        <translation>结束</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
-        <source>Instruction</source>
-        <translation>指令</translation>
     </message>
     <message>
         <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
@@ -951,6 +926,31 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
         <source>Original Instruction</source>
         <translation>原始指令</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <source>Search for Instructions</source>
+        <translation>指令搜索</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <source>Search:</source>
+        <translation>搜索：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <source>Start</source>
+        <translation>开始</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <source>End</source>
+        <translation>结束</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <source>Instruction</source>
+        <translation>指令</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/StackTraceInfo/Form/StackTraceInfoWidget.ui" line="0" />

@@ -695,7 +695,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -704,8 +704,8 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -713,8 +713,8 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -722,7 +722,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -730,7 +730,7 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -738,8 +738,8 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
@@ -782,11 +782,11 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
         <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <source>Address</source>
@@ -808,31 +808,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
         <source>Value</source>
         <translation type="unfinished">Valore</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
-        <source>Search for Instructions</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
-        <source>Search:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
-        <source>Start</source>
-        <translation>Inizio</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
-        <source>End</source>
-        <translation>Fine</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/SearchInstructionsWidget.ui" line="0" />
-        <source>Instruction</source>
-        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
@@ -948,6 +923,31 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
         <source>Original Instruction</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <source>Search for Instructions</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <source>Search:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <source>Start</source>
+        <translation>Inizio</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <source>End</source>
+        <translation>Fine</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <source>Instruction</source>
         <translation type="unfinished" />
     </message>
     <message>

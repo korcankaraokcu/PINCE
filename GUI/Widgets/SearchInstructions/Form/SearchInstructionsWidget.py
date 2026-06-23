@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'SearchInstructionsWidget.ui'
+# Form implementation generated from reading ui file 'Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #

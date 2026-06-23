@@ -101,7 +101,6 @@ from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
 from GUI.MemoryViewerWindow import Ui_MainWindow_MemoryView as MemoryViewWindow
 from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
 from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
-from GUI.SearchInstructionsWidget import Ui_Form as SearchInstructionsWidget
 from GUI.Session.session import SessionDataChanged, SessionManager, StructureManager
 from GUI.Settings import settings, themes
 from GUI.States import states
@@ -134,6 +133,7 @@ from GUI.Widgets.ManageScanRegions.ManageScanRegions import ManageScanRegionsDia
 from GUI.Widgets.PointerScan.PointerScan import PointerScanWindow
 from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
 from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructionsWidget
+from GUI.Widgets.SearchInstructions.SearchInstructions import SearchInstructionsWidget
 from GUI.Widgets.SelectProcess.SelectProcess import SelectProcessWindow
 from GUI.Widgets.SessionNotes.SessionNotes import SessionNotesWidget
 from GUI.Widgets.StackTraceInfo.StackTraceInfo import StackTraceInfoWidget
@@ -233,10 +233,6 @@ TRACK_BREAKPOINT_SOURCE_COL = 3
 # represents the index of columns in libpince reference resources table
 LIBPINCE_REFERENCE_ITEM_COL = 0
 LIBPINCE_REFERENCE_VALUE_COL = 1
-
-# represents the index of columns in search instructions table
-SEARCH_INSTR_ADDR_COL = 0
-SEARCH_INSTR_INSTR_COL = 1
 
 # represents the index of columns in memory regions table
 MEMORY_REGIONS_ADDR_COL = 0
@@ -4171,7 +4167,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if region_info:
             start_address = region_info.start
             end_address = region_info.end
-        search_instr_widget = SearchInstructionsWidgetForm(self, hex(start_address), hex(end_address))
+        search_instr_widget = SearchInstructionsWidget(self, hex(start_address), hex(end_address))
         search_instr_widget.show()
 
     def actionDissect_Code_triggered(self) -> None:
@@ -4628,88 +4624,6 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         address = utils.extract_hex_address(current_item.trace_data[0])
         if address:
             self.parent().disassemble_expression(address)
-
-
-class SearchInstructionsWidgetForm(QWidget, SearchInstructionsWidget):
-    def __init__(self, parent: QWidget, start: str = "", end: str = "") -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.setWindowFlags(Qt.WindowType.Window)
-        self.lineEdit_Start.setText(start)
-        self.lineEdit_End.setText(end)
-        self.tableWidget_Instructions.setColumnWidth(SEARCH_INSTR_ADDR_COL, 250)
-        icons_directory = guiutils.get_icons_directory()
-        self.pushButton_Help.setIcon(QIcon(QPixmap(icons_directory + "/help.png")))
-        self.pushButton_Help.clicked.connect(self.pushButton_Help_clicked)
-        self.pushButton_Search.clicked.connect(self.refresh_table)
-        self.shortcut_search = QShortcut(QKeySequence("Return"), self)
-        self.shortcut_search.activated.connect(self.refresh_table)
-        self.tableWidget_Instructions.itemDoubleClicked.connect(self.tableWidget_Instructions_item_double_clicked)
-        self.tableWidget_Instructions.contextMenuEvent = self.tableWidget_Instructions_context_menu_event
-        guiutils.center_to_parent(self)
-
-    def refresh_table(self) -> None:
-        start_address = self.lineEdit_Start.text()
-        end_address = self.lineEdit_End.text()
-        regex = self.lineEdit_Regex.text()
-        case_sensitive = self.checkBox_CaseSensitive.isChecked()
-        enable_regex = self.checkBox_Regex.isChecked()
-        if enable_regex:
-            try:
-                re.compile(regex) if case_sensitive else re.compile(regex, re.IGNORECASE)
-            except re.error:
-                QMessageBox.information(self, tr.ERROR, tr.INVALID_REGEX)
-                return
-        self.loading_dialog = LoadingDialog(self)
-        self.background_thread = self.loading_dialog.background_thread
-        self.background_thread.overrided_func = lambda: self.process_data(regex, start_address, end_address, case_sensitive, enable_regex)
-        self.background_thread.output_ready.connect(self.apply_data)
-        self.loading_dialog.exec()
-
-    def process_data(self, regex: str, start_address: str, end_address: str, case_sensitive: bool, enable_regex: bool) -> list | None:
-        return debugcore.search_instr(regex, start_address, end_address, case_sensitive, enable_regex)
-
-    def apply_data(self, disas_data: list | None) -> None:
-        if disas_data is None:
-            return
-        self.tableWidget_Instructions.setSortingEnabled(False)
-        self.tableWidget_Instructions.setRowCount(0)
-        self.tableWidget_Instructions.setRowCount(len(disas_data))
-        for row, item in enumerate(disas_data):
-            self.tableWidget_Instructions.setItem(row, SEARCH_INSTR_ADDR_COL, QTableWidgetItem(item[0]))
-            self.tableWidget_Instructions.setItem(row, SEARCH_INSTR_INSTR_COL, QTableWidgetItem(item[1]))
-        self.tableWidget_Instructions.setSortingEnabled(True)
-
-    def pushButton_Help_clicked(self) -> None:
-        utilwidgets.InputDialog(self, tr.SEARCH_INSTR_HELPER, Qt.AlignmentFlag.AlignLeft, False).exec()
-
-    def tableWidget_Instructions_item_double_clicked(self, index: QTableWidgetItem) -> None:
-        row = index.row()
-        address = self.tableWidget_Instructions.item(row, SEARCH_INSTR_ADDR_COL).text()
-        self.parent().disassemble_expression(utils.extract_hex_address(address))
-
-    def tableWidget_Instructions_context_menu_event(self, event: QContextMenuEvent) -> None:
-        def copy_to_clipboard(row: int, column: int) -> None:
-            app.clipboard().setText(self.tableWidget_Instructions.item(row, column).text())
-
-        selected_row = guiutils.get_current_row(self.tableWidget_Instructions)
-
-        menu = QMenu()
-        copy_address = menu.addAction(tr.COPY_ADDRESS)
-        copy_instr = menu.addAction(tr.COPY_INSTR)
-        if selected_row == -1:
-            guiutils.delete_menu_entries(menu, [copy_address, copy_instr])
-        font_size = self.tableWidget_Instructions.font().pointSize()
-        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec(event.globalPos())
-        actions = {
-            copy_address: lambda: copy_to_clipboard(selected_row, SEARCH_INSTR_ADDR_COL),
-            copy_instr: lambda: copy_to_clipboard(selected_row, SEARCH_INSTR_INSTR_COL),
-        }
-        try:
-            actions[action]()
-        except KeyError:
-            pass
 
 
 class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
