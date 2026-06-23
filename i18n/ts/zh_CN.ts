@@ -20,13 +20,13 @@
         <translation>字节序：</translation>
     </message>
     <message>
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Hex</source>
         <translation>十六进制</translation>
     </message>
     <message>
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Signed</source>
         <translation>有符号</translation>
@@ -38,7 +38,7 @@
         <translation>长度：</translation>
     </message>
     <message>
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Zero-Terminated</source>
         <translation>以零终止</translation>
@@ -129,27 +129,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation>丢弃无效的字符串</translation>
     </message>
     <message>
-        <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
-        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
-        <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-        <source>Type</source>
-        <translation>类型</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-        <source>Endianness</source>
-        <translation>字节序</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-        <source>Length</source>
-        <translation>长度</translation>
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
         <source>Parameters for tracing</source>
         <translation>用于追踪的参数</translation>
@@ -223,6 +202,27 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
         <source>Multiple entries are separated with ;</source>
         <translation>多个条目用分号（;）分隔</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Type</source>
+        <translation>类型</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Endianness</source>
+        <translation>字节序</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Length</source>
+        <translation>长度</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />

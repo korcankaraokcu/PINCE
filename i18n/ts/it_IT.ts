@@ -20,13 +20,13 @@
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Hex</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Signed</source>
         <translation type="unfinished" />
@@ -38,7 +38,7 @@
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Zero-Terminated</source>
         <translation type="unfinished" />
@@ -128,27 +128,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
-        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
-        <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-        <source>Type</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-        <source>Endianness</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
-        <location filename="../../GUI/EditTypeDialog.ui" line="0" />
-        <source>Length</source>
-        <translation type="unfinished">Lunghezza</translation>
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
         <source>Parameters for tracing</source>
         <translation type="unfinished" />
@@ -222,6 +201,27 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
         <source>Multiple entries are separated with ;</source>
         <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/StructureViewDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/Structures/Form/StructureEditorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Type</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Endianness</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Length</source>
+        <translation type="unfinished">Lunghezza</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
