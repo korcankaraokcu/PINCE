@@ -160,16 +160,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation>刷新</translation>
     </message>
     <message>
-        <location filename="../../GUI/LoadingDialog.ui" line="0" />
-        <source>Processing</source>
-        <translation>处理中</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/LoadingDialog.ui" line="0" />
-        <source>Cancel</source>
-        <translation>取消</translation>
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
         <source>Parameters for tracing</source>
         <translation>用于追踪的参数</translation>
@@ -264,6 +254,16 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/Widgets/HandleSignals/Form/HandleSignalsDialog.ui" line="0" />
         <source>Pass to Program</source>
         <translation>传递到程序</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LoadingDialog/Form/LoadingDialog.ui" line="0" />
+        <source>Processing</source>
+        <translation>处理中</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LoadingDialog/Form/LoadingDialog.ui" line="0" />
+        <source>Cancel</source>
+        <translation>取消</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />

@@ -99,7 +99,6 @@ from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
 from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
 from GUI.FunctionsInfoWidget import Ui_Form as FunctionsInfoWidget
 from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
-from GUI.LoadingDialog import Ui_Dialog as LoadingDialog
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.ManualAddressDialogUtils.PointerChainOffset import PointerChainOffset
 from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
@@ -126,6 +125,7 @@ from GUI.Widgets.Bookmark.Bookmark import BookmarkWidget
 from GUI.Widgets.Console.Console import ConsoleWidget
 from GUI.Widgets.EditInstruction.EditInstruction import EditInstructionDialog
 from GUI.Widgets.LogFile.LogFile import LogFileWidget
+from GUI.Widgets.LoadingDialog.LoadingDialog import LoadingDialog
 from GUI.Widgets.LibpinceEngine.LibpinceEngine import (
     LibpinceEngineWindow,
     create_script_namespace,
@@ -2634,62 +2634,6 @@ class TrackSelectorDialogForm(QDialog, TrackSelectorDialog):
         self.close()
 
 
-class LoadingDialogForm(QDialog, LoadingDialog):
-    def __init__(self, parent: QWidget) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.setWindowFlags(self.windowFlags())
-        self.keyPressEvent = QEvent.ignore
-
-        # Make use of this background_thread when you spawn a LoadingDialogForm
-        # Warning: overrided_func() can only return one value, so if your overridden function returns more than one
-        # value, refactor your overriden function to return only one object(convert tuple to list etc.)
-        # Check refresh_table method of FunctionsInfoWidgetForm for exemplary usage
-        self.background_thread = self.BackgroundThread()
-        self.background_thread.output_ready.connect(self.accept)
-        self.pushButton_Cancel.clicked.connect(self.close)
-        media_directory = utils.get_media_directory()
-        self.movie = QMovie(media_directory + "/LoadingDialog/ajax-loader.gif", QByteArray())
-        self.label_Animated.setMovie(self.movie)
-        self.movie.setScaledSize(QSize(25, 25))
-        self.movie.setCacheMode(QMovie.CacheMode.CacheAll)
-        self.movie.setSpeed(100)
-        self.movie.start()
-        guiutils.center_to_parent(self)
-
-    # TODO: This function only cancels the last command sent, redesign this if it's needed to cancel non-gdb functions
-    def cancel_thread(self) -> None:
-        debugcore.cancel_ongoing_command()
-        self.background_thread.wait()
-
-    def exec(self) -> None:
-        self.background_thread.start()
-        super().exec()
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        self.cancel_thread()
-        super().closeEvent(event)
-
-    class BackgroundThread(QThread):
-        output_ready = pyqtSignal(object)
-
-        def __init__(self) -> None:
-            super().__init__()
-
-        # Unhandled exceptions in this thread freezes PINCE
-        def run(self) -> None:
-            try:
-                output = self.overrided_func()
-            except:
-                traceback.print_exc()
-                output = None
-            self.output_ready.emit(output)
-
-        def overrided_func(self) -> Any:
-            logger.debug("Override this function")
-            return 0
-
-
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
@@ -5044,7 +4988,7 @@ class FunctionsInfoWidgetForm(QWidget, FunctionsInfoWidget):
     def refresh_table(self) -> None:
         input_text = self.lineEdit_SearchInput.text()
         case_sensitive = self.checkBox_CaseSensitive.isChecked()
-        self.loading_dialog = LoadingDialogForm(self)
+        self.loading_dialog = LoadingDialog(self)
         self.background_thread = self.loading_dialog.background_thread
         self.background_thread.overrided_func = lambda: self.process_data(input_text, case_sensitive)
         self.background_thread.output_ready.connect(self.apply_data)
@@ -5235,7 +5179,7 @@ class SearchInstructionsWidgetForm(QWidget, SearchInstructionsWidget):
             except re.error:
                 QMessageBox.information(self, tr.ERROR, tr.INVALID_REGEX)
                 return
-        self.loading_dialog = LoadingDialogForm(self)
+        self.loading_dialog = LoadingDialog(self)
         self.background_thread = self.loading_dialog.background_thread
         self.background_thread.overrided_func = lambda: self.process_data(regex, start_address, end_address, case_sensitive, enable_regex)
         self.background_thread.output_ready.connect(self.apply_data)

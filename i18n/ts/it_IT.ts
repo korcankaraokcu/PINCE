@@ -159,16 +159,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/LoadingDialog.ui" line="0" />
-        <source>Processing</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/LoadingDialog.ui" line="0" />
-        <source>Cancel</source>
-        <translation>Annulla</translation>
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
         <source>Parameters for tracing</source>
         <translation type="unfinished" />
@@ -263,6 +253,16 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/Widgets/HandleSignals/Form/HandleSignalsDialog.ui" line="0" />
         <source>Pass to Program</source>
         <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LoadingDialog/Form/LoadingDialog.ui" line="0" />
+        <source>Processing</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/LoadingDialog/Form/LoadingDialog.ui" line="0" />
+        <source>Cancel</source>
+        <translation>Annulla</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
