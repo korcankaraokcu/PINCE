@@ -97,7 +97,6 @@ from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
 from GUI.EditTypeDialog import Ui_Dialog as EditTypeDialog
 from GUI.ExamineReferrersWidget import Ui_Form as ExamineReferrersWidget
 from GUI.FloatRegisterWidget import Ui_TabWidget as FloatRegisterWidget
-from GUI.HexEditDialog import Ui_Dialog as HexEditDialog
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.ManualAddressDialogUtils.PointerChainOffset import PointerChainOffset
 from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
@@ -124,6 +123,7 @@ from GUI.Widgets.Bookmark.Bookmark import BookmarkWidget
 from GUI.Widgets.Console.Console import ConsoleWidget
 from GUI.Widgets.EditInstruction.EditInstruction import EditInstructionDialog
 from GUI.Widgets.FunctionsInfo.FunctionsInfo import FunctionsInfoWidget
+from GUI.Widgets.HexEdit.HexEdit import HexEditDialog
 from GUI.Widgets.LogFile.LogFile import LogFileWidget
 from GUI.Widgets.LoadingDialog.LoadingDialog import LoadingDialog
 from GUI.Widgets.LibpinceEngine.LibpinceEngine import (
@@ -2994,7 +2994,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def exec_hex_view_edit_dialog(self) -> None:
         if debugcore.currentpid == -1:
             return
-        HexEditDialogForm(self, self.hex_selection_address_begin, self.get_hex_selection_length()).exec()
+        HexEditDialog(self, self.hex_selection_address_begin, self.get_hex_selection_length()).exec()
         self.refresh_hex_view()
 
     def exec_hex_view_go_to_dialog(self) -> None:
@@ -4962,91 +4962,6 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
         address = utils.extract_hex_address(current_item.trace_data[0])
         if address:
             self.parent().disassemble_expression(address)
-
-
-class HexEditDialogForm(QDialog, HexEditDialog):
-    def __init__(self, parent: QWidget, address: int, length: int = 20) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.lineEdit_Length.setValidator(QHexValidator(999, self))
-        self.lineEdit_Address.setText(hex(address))
-        self.lineEdit_Length.setText(str(length))
-        self.refresh_view()
-        self.lineEdit_AsciiView.selectionChanged.connect(self.lineEdit_AsciiView_selection_changed)
-        guiutils.center_to_parent(self)
-
-        # TODO: Implement this
-        # self.lineEdit_HexView.selectionChanged.connect(self.lineEdit_HexView_selection_changed)
-        self.lineEdit_HexView.textEdited.connect(self.lineEdit_HexView_text_edited)
-        self.lineEdit_AsciiView.textEdited.connect(self.lineEdit_AsciiView_text_edited)
-        self.pushButton_Refresh.pressed.connect(self.refresh_view)
-        self.lineEdit_Address.textChanged.connect(self.refresh_view)
-        self.lineEdit_Length.textChanged.connect(self.refresh_view)
-
-    def lineEdit_AsciiView_selection_changed(self) -> None:
-        length = len(utils.str_to_aob(self.lineEdit_AsciiView.selectedText(), "utf-8"))
-        start_index = self.lineEdit_AsciiView.selectionStart()
-        start_index = len(utils.str_to_aob(self.lineEdit_AsciiView.text()[0:start_index], "utf-8"))
-        if start_index > 0:
-            start_index += 1
-        self.lineEdit_HexView.deselect()
-        self.lineEdit_HexView.setSelection(start_index, length)
-
-    def lineEdit_HexView_selection_changed(self) -> None:
-        # TODO: Implement this
-        logger.debug("TODO: Implement selectionChanged signal of lineEdit_HexView")
-        raise NotImplementedError
-
-    def lineEdit_HexView_text_edited(self) -> None:
-        aob_string = self.lineEdit_HexView.text()
-        if not utils.parse_string(aob_string, typedefs.VALUE_INDEX.AOB):
-            self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
-            return
-        aob_array = aob_string.split()
-        try:
-            self.lineEdit_AsciiView.setText(utils.aob_to_str(aob_array, "utf-8", replace_unprintable=False))
-            self.lineEdit_HexView.setStyleSheet("")  # This should set background color back to QT default
-        except ValueError:
-            self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
-
-    def lineEdit_AsciiView_text_edited(self) -> None:
-        ascii_str = self.lineEdit_AsciiView.text()
-        try:
-            self.lineEdit_HexView.setText(utils.str_to_aob(ascii_str, "utf-8"))
-            self.lineEdit_AsciiView.setStyleSheet("")
-        except ValueError:
-            self.lineEdit_AsciiView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
-
-    def refresh_view(self) -> None:
-        self.lineEdit_AsciiView.clear()
-        self.lineEdit_HexView.clear()
-        address = debugcore.examine_expression(self.lineEdit_Address.text()).address
-        if not address:
-            return
-        length = self.lineEdit_Length.text()
-        try:
-            length = int(length, 0)
-            address = int(address, 0)
-        except ValueError:
-            return
-        aob_array = debugcore.hex_dump(address, length)
-        ascii_str = utils.aob_to_str(aob_array, "utf-8", replace_unprintable=False)
-        self.lineEdit_AsciiView.setText(ascii_str)
-        self.lineEdit_HexView.setText(" ".join(aob_array))
-
-    def accept(self) -> None:
-        expression = self.lineEdit_Address.text()
-        address = debugcore.examine_expression(expression).address
-        if not address:
-            QMessageBox.information(self, tr.ERROR, tr.IS_INVALID_EXPRESSION.format(expression))
-            return
-        value = self.lineEdit_HexView.text()
-        parsed = utils.parse_string(value, typedefs.VALUE_INDEX.AOB)
-        if parsed is None:
-            QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
-            return
-        debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, value)
-        super().accept()
 
 
 class SearchInstructionsWidgetForm(QWidget, SearchInstructionsWidget):

@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'HexEditDialog.ui'
+# Form implementation generated from reading ui file 'Widgets/HexEdit/Form/HexEditDialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #

@@ -32,7 +32,7 @@
         <translation>有符号</translation>
     </message>
     <message>
-        <location filename="../../GUI/HexEditDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Length:</source>
         <translation>长度：</translation>
@@ -64,8 +64,8 @@
         <translation>备注：</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
-        <location filename="../../GUI/HexEditDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Address:</source>
         <translation>地址：</translation>
@@ -148,16 +148,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/EditTypeDialog.ui" line="0" />
         <source>Length</source>
         <translation>长度</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/HexEditDialog.ui" line="0" />
-        <source>Hex Edit</source>
-        <translation>十六进制编辑</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/HexEditDialog.ui" line="0" />
-        <source>Refresh</source>
-        <translation>刷新</translation>
     </message>
     <message>
         <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
@@ -254,6 +244,16 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/Widgets/HandleSignals/Form/HandleSignalsDialog.ui" line="0" />
         <source>Pass to Program</source>
         <translation>传递到程序</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
+        <source>Hex Edit</source>
+        <translation>十六进制编辑</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
+        <source>Refresh</source>
+        <translation>刷新</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LoadingDialog/Form/LoadingDialog.ui" line="0" />

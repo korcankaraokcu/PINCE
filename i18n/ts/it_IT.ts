@@ -32,7 +32,7 @@
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/HexEditDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Length:</source>
         <translation type="unfinished" />
@@ -64,8 +64,8 @@
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
-        <location filename="../../GUI/HexEditDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Address:</source>
         <translation>Indirizzo:</translation>
@@ -147,16 +147,6 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/EditTypeDialog.ui" line="0" />
         <source>Length</source>
         <translation type="unfinished">Lunghezza</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/HexEditDialog.ui" line="0" />
-        <source>Hex Edit</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/HexEditDialog.ui" line="0" />
-        <source>Refresh</source>
-        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
@@ -252,6 +242,16 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
         <location filename="../../GUI/Widgets/HandleSignals/Form/HandleSignalsDialog.ui" line="0" />
         <source>Pass to Program</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
+        <source>Hex Edit</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
+        <source>Refresh</source>
         <translation type="unfinished" />
     </message>
     <message>
