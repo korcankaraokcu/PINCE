@@ -191,4 +191,5 @@ patchelf --add-rpath "\$ORIGIN/../../../../../../" AppDir/usr/conda/lib/python3.
 # Package AppDir into AppImage
 LD_LIBRARY_PATH="$(readlink -f ./AppDir/usr/conda/lib)"
 export LD_LIBRARY_PATH
+export UPDATE_INFORMATION="gh-releases-zsync|korcankaraokcu|PINCE|latest|PINCE-x86_64.AppImage.zsync"
 $DEPLOYTOOL --icon-file PINCE.png --appdir AppDir/ --output appimage --custom-apprun AppRun.sh || exit_on_failure
