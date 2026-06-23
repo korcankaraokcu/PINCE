@@ -1,8 +1,8 @@
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QListWidgetItem
 from PyQt6.QtCore import Qt
 from GUI.Utils import guiutils
 from GUI.Widgets.StackTraceInfo.Form.StackTraceInfoWidget import Ui_Form
-from libpince import debugcore
+from libpince import debugcore, utils
 
 
 class StackTraceInfoWidget(QWidget, Ui_Form):
@@ -11,6 +11,7 @@ class StackTraceInfoWidget(QWidget, Ui_Form):
         self.setupUi(self)
         self.setWindowFlags(Qt.WindowType.Window)
         self.listWidget_ReturnAddresses.currentRowChanged.connect(self.update_frame_info)
+        self.listWidget_ReturnAddresses.itemDoubleClicked.connect(self.listWidget_ReturnAddresses_item_double_clicked)
 
     def update_stacktrace(self) -> None:
         self.listWidget_ReturnAddresses.clear()
@@ -30,3 +31,10 @@ class StackTraceInfoWidget(QWidget, Ui_Form):
             return
         frame_info = debugcore.get_stack_frame_info(index)
         self.textBrowser_Info.setText(frame_info)
+
+    def listWidget_ReturnAddresses_item_double_clicked(self, item: QListWidgetItem) -> None:
+        if debugcore.currentpid == -1:
+            return
+        address = utils.extract_hex_address(item.text())
+        if address:
+            self.parent().disassemble_expression(address)
