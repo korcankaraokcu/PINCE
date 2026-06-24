@@ -144,7 +144,7 @@ from GUI.Widgets.Structures.StructureViewDialog import StructureViewDialog
 from GUI.Widgets.Structures.StructureEditorDialog import StructureEditorDialog
 from GUI.Widgets.Structures import mono_export
 from libpince import debugcore, linux_speedhack, monocore, scancore, typedefs, utils, wine_speedhack
-from libpince.libmemscan.memscan import ScanLevel, DataType, MatchView, BytePattern
+from libpince.libmemscan.memscan import DataType, MatchView, BytePattern
 from libpince.scancore import memscan
 from libpince.utils import logger, safe_str_to_int, safe_int_cast
 from tr.tr import TranslationConstants as tr
@@ -1407,15 +1407,7 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_ScanType.setCurrentIndex(0)
 
     def comboBox_ScanScope_init(self) -> None:
-        scan_scope_text = [
-            (ScanLevel.HEAP_STACK_EXE, tr.BASIC),
-            (ScanLevel.HEAP_STACK_EXE_BSS, tr.NORMAL),
-            (ScanLevel.ALL_RW, tr.RW),
-            (ScanLevel.ALL, tr.FULL),
-        ]
-        for scope, text in scan_scope_text:
-            self.comboBox_ScanScope.addItem(text, scope)
-        self.comboBox_ScanScope.setCurrentIndex(self.comboBox_ScanScope.findData(ScanLevel.HEAP_STACK_EXE_BSS))  # NORMAL
+        guiutils.fill_scope_combobox(self.comboBox_ScanScope)
         self.comboBox_ScanScope.currentIndexChanged.connect(self.on_scan_scope_changed)
 
     def on_scan_scope_changed(self) -> None:

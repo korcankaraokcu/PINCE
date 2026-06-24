@@ -34,6 +34,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QObject, QRegularExpression
 from PyQt6.QtGui import QShortcut, QRegularExpressionValidator
 from libpince import debugcore, utils, typedefs, regexes
+from libpince.libmemscan.memscan import ScanLevel
 from tr.tr import TranslationConstants as tr
 from typing import overload
 from contextlib import contextmanager
@@ -166,6 +167,22 @@ def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.
     ]
     for endian, text in endianness_text:
         combobox.addItem(text, endian)
+    idx = combobox.findData(current_index)
+    if idx >= 0:
+        combobox.setCurrentIndex(idx)
+    else:
+        combobox.setCurrentIndex(0)
+
+
+def fill_scope_combobox(combobox: QComboBox, current_index: ScanLevel = ScanLevel.HEAP_STACK_EXE_BSS) -> None:
+    scan_scope_text = [
+        (ScanLevel.HEAP_STACK_EXE, tr.BASIC),
+        (ScanLevel.HEAP_STACK_EXE_BSS, tr.NORMAL),
+        (ScanLevel.ALL_RW, tr.RW),
+        (ScanLevel.ALL, tr.FULL),
+    ]
+    for scope, text in scan_scope_text:
+        combobox.addItem(text, scope)
     idx = combobox.findData(current_index)
     if idx >= 0:
         combobox.setCurrentIndex(idx)

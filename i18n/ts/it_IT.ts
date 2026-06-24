@@ -406,6 +406,11 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <source>Scan Scope:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Pointer Size:</source>
         <translation type="unfinished" />
     </message>
