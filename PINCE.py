@@ -1555,6 +1555,14 @@ class MainForm(QMainWindow, MainWindow):
                     QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete),
                     self.delete_valuesearchtable_selection,
                 ),
+                (
+                    QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Return),
+                    self.copy_to_address_table,
+                ),
+                (
+                    QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Enter),
+                    self.copy_to_address_table,
+                ),
             ]
         )
         try:
