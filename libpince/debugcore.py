@@ -125,6 +125,9 @@ allocated_memory_chunks: dict[str, typedefs.AllocatedMemory] = {}
 # ID generator used for the above
 allocated_memory_gen_id = 0
 
+# Dictionary cache for manually resolved libc symbols. Cleared whenever the inferior changes.
+_libc_symbol_cache: dict[str, int] = {}
+
 # A bool. Used by is_address_static() and _refresh_main_module_info() to mark if the main executable is PIE enabled or not.
 _main_module_is_static: bool = False
 
@@ -672,6 +675,7 @@ def attach(pid: int | str, gdb_path: str = utils.get_default_gdb_path()) -> int:
     global current_process_identity
     currentpid = pid
     current_process_identity = (currentpid, utils.get_process_start_time(currentpid))
+    _libc_symbol_cache.clear()
     mem_file = "/proc/" + str(currentpid) + "/mem"
     utils.create_ipc_path(pid)
     utils.create_tmp_path(pid)
@@ -735,6 +739,7 @@ def create_process(
         return False
     currentpid = int(pid)
     current_process_identity = (currentpid, utils.get_process_start_time(currentpid))
+    _libc_symbol_cache.clear()
     mem_file = "/proc/" + str(currentpid) + "/mem"
     utils.create_ipc_path(pid)
     utils.create_tmp_path(pid)
@@ -753,6 +758,7 @@ def detach() -> None:
     global current_process_identity
     old_pid = currentpid
     current_process_identity = None
+    _libc_symbol_cache.clear()
     if gdb_initialized:
         global child
         global inferior_status
@@ -792,6 +798,21 @@ def is_attached() -> bool:
     if regexes.gdb_error.search(send_command("info proc")):
         return False
     return True
+
+
+def resolve_libc_symbol(name: str) -> int:
+    if address := _libc_symbol_cache.get(name, 0):
+        return address
+    for lib_regex in (r"^libc\.so", r"^libc-[\d.]+\.so", r"libc\.musl", r"ld-musl"):
+        module = utils.get_module_load_bias(currentpid, lib_regex)
+        if module is None:
+            continue
+        load_bias, path = module
+        path = utils.resolve_mapped_path(currentpid, path)
+        if offset := utils.get_defined_dynamic_symbols(path, [name]).get(name, 0):
+            _libc_symbol_cache[name] = load_bias + offset
+            return _libc_symbol_cache[name]
+    return 0
 
 
 def inject_so(library_path: str) -> bool:
@@ -934,13 +955,7 @@ def inject_dll(dll_path: str) -> tuple[bool, int]:
         # WoW64 allocates via kernel32!VirtualAlloc which is resolved above.
         malloc = 0
         if not wow64:
-            for regex in (r"^libc\.so", r"^libc-[\d.]+\.so", r"libc\.musl", r"ld-musl"):
-                libc = utils.get_module_load_bias(currentpid, regex)
-                if libc:
-                    elf_path = utils.resolve_mapped_path(currentpid, libc[1])  # resolve sandboxed paths
-                    if (off := utils.get_defined_dynamic_symbols(elf_path, ["malloc"]).get("malloc", 0)):
-                        malloc = libc[0] + off
-                        break
+            malloc = resolve_libc_symbol("malloc")
 
         # We need to have:
         # - LoadLibraryW
@@ -1110,6 +1125,19 @@ def memory_handle(mode: str = "rb") -> io.BufferedReader:
     return open(mem_file, mode)
 
 
+def mprotect_memory(address: int, length: int, prot: int = 7) -> bool:  # PROT_READ | PROT_WRITE | PROT_EXEC = 7
+    output = send_command(f"p (int)mprotect({address}, {length}, {prot})")
+    match = regexes.convenience_variable.search(output)
+    if match is None and (mprotect := resolve_libc_symbol("mprotect")):
+        output = send_command(f"p ((int(*)(void*, unsigned long, int)) {hex(mprotect)})((void*){address}, {length}, {prot})")
+        match = regexes.convenience_variable.search(output)
+    if match is None:
+        return False
+    result = match.group(2)
+    value = regexes.hex_number.search(result) or re.search(r"-?\d+", result)
+    return value is not None and safe_str_to_int(value.group(0), 0) == 0
+
+
 @execute_with_temporary_interruption
 def allocate_memory(size: int, name: str | None) -> int:
     global allocated_memory_chunks
@@ -1120,13 +1148,18 @@ def allocate_memory(size: int, name: str | None) -> int:
         allocated_memory_gen_id += 1
         name = str(allocated_memory_gen_id)
     output = send_command(f"p (void*)malloc({size})")
-    match = regexes.hex_number.search(output)
-    if match == None:
+    match = regexes.convenience_variable.search(output)
+    hex_match = regexes.hex_number.search(match.group(2)) if match else None
+    if hex_match is None and (malloc := resolve_libc_symbol("malloc")):
+        output = send_command(f"p ((void*(*)(unsigned long)) {hex(malloc)})({size})")
+        match = regexes.convenience_variable.search(output)
+        hex_match = regexes.hex_number.search(match.group(2)) if match else None
+    if hex_match is None:
         logger.error("Memory allocation failed!")
         return 0
-    allocated_address = safe_str_to_int(match[0], 16)
+    allocated_address = safe_str_to_int(hex_match[0], 16)
     if allocated_address == 0:
-        logger.error(f"Couldn't find allocation address! Allocation output: {output}")
+        logger.error("Couldn't find allocation address!")
         return 0
     allocated_memory = typedefs.AllocatedMemory(allocated_address, size, current_process_identity)
     allocated_memory_chunks[name] = allocated_memory
@@ -1135,7 +1168,8 @@ def allocate_memory(size: int, name: str | None) -> int:
     end_addr = allocated_memory.address + size
     end_page_addr = (end_addr + page_size - 1) & ~(page_size - 1)
     mprotect_length = end_page_addr - page_memory_addr
-    send_command(f"p (int)mprotect({page_memory_addr}, {mprotect_length}, 7)")  # PROT_READ | PROT_WRITE | PROT_EXEC = 7
+    if not mprotect_memory(page_memory_addr, mprotect_length):
+        logger.error(f"Failed to change protection for allocated memory at {hex(allocated_memory.address)}")
     return allocated_memory.address
 
 
@@ -1156,7 +1190,14 @@ def free_memory(name: str) -> bool:
         logger.error(f"Refusing to free memory '{name}' belonging to a different process")
         return False
     # This shit will crash the process if you call it on invalid or already freed memory.
-    send_command(f"p (void)free({allocated_memory.address})")
+    output = send_command(f"p (void)free({allocated_memory.address})")
+    match = regexes.convenience_variable.search(output)
+    if match is None and (free := resolve_libc_symbol("free")):
+        output = send_command(f"p ((void(*)(void*)) {hex(free)})((void*){allocated_memory.address})")
+        match = regexes.convenience_variable.search(output)
+    if match is None:
+        logger.error(f"Failed to free memory '{name}' at {hex(allocated_memory.address)}")
+        return False
     del allocated_memory_chunks[name]
     return True
 

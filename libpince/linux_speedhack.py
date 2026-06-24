@@ -131,7 +131,7 @@ def _install(speed: float = 1.0) -> bool:
     targets = []
     for symbol, build in builders:
         hex_addr = utils.extract_hex_address(debugcore.get_symbol_info(symbol))
-        address = utils.safe_str_to_int(hex_addr, 16) if hex_addr else 0
+        address = utils.safe_str_to_int(hex_addr, 16) if hex_addr else debugcore.resolve_libc_symbol(symbol)
         if not address:
             continue
         original_aob, patch_size = _read_patch_bytes(symbol, address, disassembler, jump_size)
@@ -865,4 +865,5 @@ def _mprotect_cave(address: int) -> None:
     # We mprotect both pages unconditionally, which is cheaper than checking and harmless if only one is used.
     page = os.sysconf("SC_PAGE_SIZE")
     start = address & ~(page - 1)
-    debugcore.send_command(f"p (int)mprotect({start}, {2 * page}, 7)")
+    if not debugcore.mprotect_memory(start, 2 * page):
+        logger.error(f"Failed to change protection for speedhack memory at {hex(address)}")
