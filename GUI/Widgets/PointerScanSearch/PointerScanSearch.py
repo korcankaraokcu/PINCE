@@ -2,7 +2,7 @@ from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QPushButton, QMessageBox, QWidget
 from GUI.Widgets.PointerScanSearch.Form.PointerScanSearchDialog import Ui_Dialog
 from GUI.Utils import guiutils, guitypedefs
-from libpince import debugcore, utils
+from libpince import debugcore, typedefs, utils
 from libpince.scancore import memscan
 from libpince.libmemscan.memscan import PointerEndianness, PointerScanOptions
 from tr.tr import TranslationConstants as tr
@@ -21,6 +21,10 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
             self.comboBox_Endian.addItem(text, endian)
         for width in (8, 4):
             self.comboBox_PointerSize.addItem(f"{width} Bytes", width)
+        inferior_pointer_width = 4 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 8
+        pointer_size_index = self.comboBox_PointerSize.findData(inferior_pointer_width)
+        if pointer_size_index != -1:
+            self.comboBox_PointerSize.setCurrentIndex(pointer_size_index)
         guiutils.center_to_parent(self)
         self.lineEdit_Address.setText(address)
         self.lineEdit_Path.setText(os.path.expanduser("~") + f"/{utils.get_process_name(debugcore.currentpid)}.lmptr")
@@ -77,16 +81,17 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.parent().default_scan_address = hex(addr_val)
         ptrmap_file_path = self.lineEdit_Path.text()
         if self.checkBox_CheckAdvOptions.isChecked():
-            ptr_opts = PointerScanOptions()
+            ptr_opts = PointerScanOptions(pointer_width=self.comboBox_PointerSize.currentData())
             ptr_opts.endianness = self.comboBox_Endian.currentData()
-            ptr_opts.pointer_width = self.comboBox_PointerSize.currentData()
             ptr_opts.max_depth = self.spinBox_Depth.value()
             ptr_opts.max_positive_offset = self.spinBox_MaxOffset.value()
             ptr_opts.max_negative_offset = self.spinBox_MinOffset.value()
             ptr_opts.max_results = self.spinBox_MaxResults.value() if self.checkBox_MaxResults.isChecked() else None
             ptr_opts.module_base_only = self.checkBox_Module.isChecked()
         else:
-            ptr_opts = None
+            ptr_opts = PointerScanOptions(
+                pointer_width=4 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 8
+            )
         self.memscan_thread = guitypedefs.InterruptableWorker(
             memscan.pointer_scan, addr_val, ptrmap_file_path, ptr_opts
         )
