@@ -135,6 +135,7 @@ Name=PINCE
 Exec=PINCE
 Icon=PINCE
 Type=Application
+MimeType=image/x-pict;
 Categories=Development;
 EOF
 
