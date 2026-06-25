@@ -38,6 +38,12 @@ class TranslationConstants(QObject):
     ERROR = QT_TR_NOOP("Error")
     SUCCESS = QT_TR_NOOP("Success")
     INFO = QT_TR_NOOP("Information")
+    UPDATE_CHECK_FAILED = QT_TR_NOOP("Could not check for updates.")
+    UPDATE_AVAILABLE_MESSAGE = QT_TR_NOOP(
+        "A newer PINCE AppImage is available.\n\n"
+        "You can grab it from PINCE's GitHub releases or update this AppImage with AppImageUpdate/appimageupdatetool."
+    )
+    UPDATE_NOT_AVAILABLE = QT_TR_NOOP("This PINCE AppImage is up to date.")
     DISABLED_UNDER_WINE = QT_TR_NOOP("This feature is not available while attached to a WINE/Proton process!")
     SPEEDHACK_UNAVAILABLE = QT_TR_NOOP("Speedhack couldn't be enabled for this process.")
     GDB_INIT = QT_TR_NOOP("GDB isn't initialized yet")

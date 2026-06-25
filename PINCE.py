@@ -110,7 +110,7 @@ from GUI.TraceInstructionsWindow import Ui_MainWindow as TraceInstructionsWindow
 from GUI.TrackBreakpointWidget import Ui_Form as TrackBreakpointWidget
 from GUI.TrackSelectorDialog import Ui_Dialog as TrackSelectorDialog
 from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
-from GUI.Utils import guitypedefs, guiutils, utilwidgets
+from GUI.Utils import guitypedefs, guiutils, update_check, utilwidgets
 from GUI.Validators.HexValidator import HexValidator
 from GUI.Widgets.About.About import AboutWidget
 from GUI.Widgets.Bookmark.Bookmark import BookmarkWidget
@@ -299,6 +299,7 @@ class MainForm(QMainWindow, MainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setupUi(self)
+        self.update_check_thread: update_check.UpdateCheckThread | None = None
         self.deleted_regions: list[int] = []
         self.is_wine_process = False
         self.speedhack_action_requested.connect(self.on_speedhack_hotkey_action)
@@ -383,6 +384,8 @@ class MainForm(QMainWindow, MainWindow):
         states.session_signals.on_load.connect(self.on_session_loaded)
         states.session_signals.new_session.connect(self.on_new_session)
         self.session = SessionManager.get_session()
+        self.pushButton_CheckForUpdates.clicked.connect(self.check_for_updates)
+        self._set_update_button_enabled(True)
         self.libpince_engine_window: LibpinceEngineWindow | None = None
         self.structures_window: StructuresWindow | None = None
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
@@ -430,6 +433,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_AttachProcess.setIcon(QIcon(QPixmap(icons_directory + "/monitor.png")))
         self.pushButton_Open.setIcon(QIcon(QPixmap(icons_directory + "/folder.png")))
         self.pushButton_Save.setIcon(QIcon(QPixmap(icons_directory + "/disk.png")))
+        self.pushButton_CheckForUpdates.setIcon(QIcon(QPixmap(icons_directory + "/arrow_refresh.png")))
         self.pushButton_Settings.setIcon(QIcon(QPixmap(icons_directory + "/wrench.png")))
         self.pushButton_CopyToAddressTable.setIcon(QIcon(QPixmap(icons_directory + "/arrow_down.png")))
         self.pushButton_CleanAddressTable.setIcon(QIcon(QPixmap(icons_directory + "/bin_closed.png")))
@@ -1291,6 +1295,35 @@ class MainForm(QMainWindow, MainWindow):
         about_widget = AboutWidget(self)
         about_widget.show()
         about_widget.activateWindow()
+
+    def check_for_updates(self) -> None:
+        if self.update_check_thread and self.update_check_thread.isRunning():
+            return
+        self._set_update_button_enabled(False)
+        self.update_check_thread = update_check.UpdateCheckThread(self)
+        self.update_check_thread.finished.connect(self._on_update_check_thread_finished)
+        self.update_check_thread.start()
+
+    def _on_update_check_thread_finished(self) -> None:
+        self._set_update_button_enabled(True)
+        thread = self.update_check_thread
+        self.update_check_thread = None
+        if thread:
+            self.on_update_check_finished(thread.result)
+            thread.deleteLater()
+
+    def _set_update_button_enabled(self, enabled: bool) -> None:
+        self.pushButton_CheckForUpdates.setEnabled(enabled and bool(os.environ.get("APPDIR")))
+
+    def on_update_check_finished(self, result: update_check.UpdateCheckResult) -> None:
+        status = result.status
+        if status == update_check.UpdateCheckStatus.UPDATE_AVAILABLE:
+            QMessageBox.information(self, tr.INFO, tr.UPDATE_AVAILABLE_MESSAGE)
+        elif status == update_check.UpdateCheckStatus.UP_TO_DATE:
+            QMessageBox.information(self, tr.INFO, tr.UPDATE_NOT_AVAILABLE)
+        else:
+            logger.warning("Update check failed: %s", result.message)
+            QMessageBox.information(self, tr.ERROR, tr.UPDATE_CHECK_FAILED)
 
     def pushButton_Settings_clicked(self) -> None:
         SettingsDialog(self).exec()

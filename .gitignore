@@ -17,3 +17,4 @@ gdb_pince/*
 *.gnbs.conf
 .venv/*
 *.AppImage
+*.zsync

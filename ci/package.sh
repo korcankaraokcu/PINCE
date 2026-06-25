@@ -63,8 +63,9 @@ chmod +x $CONDAPLUGIN
 # Create AppImage's AppDir with a Conda environment pre-baked
 # containing our required pip packages
 export PIP_REQUIREMENTS="-r ../requirements.txt"
-# Need this to get libstdc++ higher than default 6.0.29 and libxcb-cursor for Debian family
-export CONDA_PACKAGES="libstdcxx-ng;xcb-util-cursor"
+# Need this to get libstdc++ higher than default 6.0.29, libxcb-cursor for Debian family,
+# and a CA bundle for Python HTTPS requests inside the AppImage
+export CONDA_PACKAGES="libstdcxx-ng;xcb-util-cursor;ca-certificates"
 $DEPLOYTOOL --appdir AppDir -pconda || exit_on_failure
 
 # Create PINCE directory
@@ -82,6 +83,13 @@ compile_translations || exit_on_failure
 # Copy necessary PINCE folders/files to inside AppDir
 cp -r GUI i18n libpince media tr AUTHORS COPYING COPYING.CC-BY PINCE.py THANKS ci/AppDir/opt/PINCE/
 cd ci || exit
+
+cat > AppDir/opt/PINCE/update-check.json <<\EOF
+{
+  "type": "zsync",
+  "url": "https://github.com/korcankaraokcu/PINCE/releases/latest/download/PINCE-x86_64.AppImage.zsync"
+}
+EOF
 
 # Create a wrapper so GDB can correctly link against the
 # included conda's python environment to ensure compatibility

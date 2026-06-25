@@ -1179,6 +1179,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/MainWindow.ui" line="0" />
+        <source>Check for updates</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/MainWindow.ui" line="0" />
         <source>Configure options</source>
         <translation type="unfinished" />
     </message>
@@ -1851,6 +1856,23 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Information</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Could not check for updates.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>A newer PINCE AppImage is available.
+
+You can grab it from PINCE's GitHub releases or update this AppImage with AppImageUpdate/appimageupdatetool.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>This PINCE AppImage is up to date.</source>
         <translation type="unfinished" />
     </message>
     <message>

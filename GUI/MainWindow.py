@@ -276,6 +276,11 @@ class Ui_MainWindow(object):
         self.pushButton_Console.setText("")
         self.pushButton_Console.setObjectName("pushButton_Console")
         self.horizontalLayout_5.addWidget(self.pushButton_Console)
+        self.pushButton_CheckForUpdates = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.pushButton_CheckForUpdates.setEnabled(False)
+        self.pushButton_CheckForUpdates.setText("")
+        self.pushButton_CheckForUpdates.setObjectName("pushButton_CheckForUpdates")
+        self.horizontalLayout_5.addWidget(self.pushButton_CheckForUpdates)
         self.pushButton_Settings = QtWidgets.QPushButton(parent=self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
         sizePolicy.setHorizontalStretch(0)
@@ -341,5 +346,6 @@ class Ui_MainWindow(object):
         self.pushButton_About.setToolTip(_translate("MainWindow", "About"))
         self.label_SelectedProcess.setText(_translate("MainWindow", "No Process Selected"))
         self.pushButton_Console.setToolTip(_translate("MainWindow", "Open a gdb console"))
+        self.pushButton_CheckForUpdates.setToolTip(_translate("MainWindow", "Check for updates"))
         self.pushButton_Settings.setToolTip(_translate("MainWindow", "Configure options"))
 from GUI.TreeWidgets.AddressTree import AddressTree
