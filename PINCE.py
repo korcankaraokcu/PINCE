@@ -3247,15 +3247,17 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                 comment = ""
                 current_address_str = utils.extract_hex_address(address_info)
                 current_address = safe_str_to_int(current_address_str, 16)
+                # dissect stores keys as unpadded hex but extract_hex_address keeps gdb's leading zeros, normalize first
+                referrer_key = hex(current_address)
                 jmp_ref_exists = False
                 call_ref_exists = False
                 try:
-                    jmp_referrers = jmp_dict[current_address_str]
+                    jmp_referrers = jmp_dict[referrer_key]
                     jmp_ref_exists = True
                 except KeyError:
                     pass
                 try:
-                    call_referrers = call_dict[current_address_str]
+                    call_referrers = call_dict[referrer_key]
                     call_ref_exists = True
                 except KeyError:
                     pass
