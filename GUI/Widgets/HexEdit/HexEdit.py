@@ -30,16 +30,23 @@ class HexEditDialog(QDialog, Ui_Dialog):
     def lineEdit_AsciiView_selection_changed(self) -> None:
         if self.is_syncing_selection:
             return
-        length = len(utils.str_to_aob(self.lineEdit_AsciiView.selectedText(), "utf-8"))
-        start_index = self.lineEdit_AsciiView.selectionStart()
-        start_index = len(utils.str_to_aob(self.lineEdit_AsciiView.text()[0:start_index], "utf-8"))
-        if start_index > 0:
-            start_index += 1
-        # is_syncing_selection must always be reset, otherwise a single failure permanently breaks the sync
+        hex_start = hex_length = 0
+        selected_text = self.lineEdit_AsciiView.selectedText()
+        if selected_text:
+            # Map by converting the selected/preceding text to their AoB form and counting characters; the +1 skips
+            # the space that separates the byte before the selection from the first selected byte in the hex view.
+            selection_start = self.lineEdit_AsciiView.selectionStart()
+            hex_length = len(utils.str_to_aob(selected_text, "utf-8"))
+            hex_start = len(utils.str_to_aob(self.lineEdit_AsciiView.text()[0:selection_start], "utf-8"))
+            if hex_start > 0:
+                hex_start += 1
+        # is_syncing_selection must always be reset, otherwise a single failure permanently breaks the sync. With no
+        # selection we only deselect; setSelection would move the cursor (e.g. when setText regenerates this field)
         self.is_syncing_selection = True
         try:
             self.lineEdit_HexView.deselect()
-            self.lineEdit_HexView.setSelection(start_index, length)
+            if hex_length:
+                self.lineEdit_HexView.setSelection(hex_start, hex_length)
         finally:
             self.is_syncing_selection = False
 
@@ -65,11 +72,13 @@ class HexEditDialog(QDialog, Ui_Dialog):
             except ValueError:
                 # Malformed hex (e.g. while the field is being edited) can't be decoded; clear the ascii selection
                 ascii_start = ascii_length = 0
-        # is_syncing_selection must always be reset, otherwise a single failure permanently breaks the sync
+        # is_syncing_selection must always be reset, otherwise a single failure permanently breaks the sync. With no
+        # selection we only deselect; setSelection would move the cursor (e.g. when setText regenerates this field)
         self.is_syncing_selection = True
         try:
             self.lineEdit_AsciiView.deselect()
-            self.lineEdit_AsciiView.setSelection(ascii_start, ascii_length)
+            if ascii_length:
+                self.lineEdit_AsciiView.setSelection(ascii_start, ascii_length)
         finally:
             self.is_syncing_selection = False
 
