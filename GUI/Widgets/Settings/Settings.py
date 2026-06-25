@@ -58,6 +58,8 @@ class SettingsDialog(QDialog, Ui_Dialog):
 
     def accept(self) -> None:
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
+        if os.environ.get("APPDIR"):
+            self.settings.setValue(settings.CHECK_UPDATES_ON_STARTUP, self.checkBox_CheckUpdatesOnStartup.isChecked())
         if self.checkBox_AutoUpdateAddressTable.isChecked():
             self.settings.setValue("General/address_table_update_interval", self.spinBox_UpdateInterval.value())
         self.settings.setValue("General/freeze_interval", self.spinBox_FreezeInterval.value())
@@ -112,6 +114,11 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.checkBox_AutoUpdateAddressTable.setChecked(
             self.settings.value("General/auto_update_address_table", type=bool)
         )
+        self.checkBox_CheckUpdatesOnStartup.setChecked(
+            self.settings.value(settings.CHECK_UPDATES_ON_STARTUP, False, type=bool)
+        )
+        if not os.environ.get("APPDIR"):
+            self.checkBox_CheckUpdatesOnStartup.hide()
         self.spinBox_UpdateInterval.setValue(self.settings.value("General/address_table_update_interval", type=int))
         self.spinBox_FreezeInterval.setValue(self.settings.value("General/freeze_interval", type=int))
         output_mode = json.loads(self.settings.value("General/gdb_output_mode", type=str))

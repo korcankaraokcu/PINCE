@@ -76,6 +76,7 @@ from PyQt6.QtWidgets import (
     QAbstractItemView,
     QAbstractSlider,
     QApplication,
+    QCheckBox,
     QDialog,
     QFileDialog,
     QListWidgetItem,
@@ -300,6 +301,7 @@ class MainForm(QMainWindow, MainWindow):
         super().__init__()
         self.setupUi(self)
         self.update_check_thread: update_check.UpdateCheckThread | None = None
+        self.show_update_check_result = True
         self.deleted_regions: list[int] = []
         self.is_wine_process = False
         self.speedhack_action_requested.connect(self.on_speedhack_hotkey_action)
@@ -384,8 +386,12 @@ class MainForm(QMainWindow, MainWindow):
         states.session_signals.on_load.connect(self.on_session_loaded)
         states.session_signals.new_session.connect(self.on_new_session)
         self.session = SessionManager.get_session()
-        self.pushButton_CheckForUpdates.clicked.connect(self.check_for_updates)
-        self._set_update_button_enabled(True)
+        self.pushButton_CheckForUpdates.clicked.connect(lambda: self.check_for_updates())
+        if os.environ.get("APPDIR"):
+            self._set_update_button_enabled(True)
+            QTimer.singleShot(1000, self.check_for_updates_on_startup)
+        else:
+            self.pushButton_CheckForUpdates.hide()
         self.libpince_engine_window: LibpinceEngineWindow | None = None
         self.structures_window: StructuresWindow | None = None
         self.pushButton_NewFirstScan.clicked.connect(self.pushButton_NewFirstScan_clicked)
@@ -1296,9 +1302,27 @@ class MainForm(QMainWindow, MainWindow):
         about_widget.show()
         about_widget.activateWindow()
 
-    def check_for_updates(self) -> None:
+    def check_for_updates_on_startup(self) -> None:
+        if not os.environ.get("APPDIR"):
+            return
+        settings_instance = QSettings()
+        if not settings_instance.contains(settings.CHECK_UPDATES_ON_STARTUP):
+            message_box = QMessageBox(self)
+            message_box.setIcon(QMessageBox.Icon.Question)
+            message_box.setWindowTitle(tr.INFO)
+            message_box.setText(tr.UPDATE_CHECK_ON_STARTUP_PROMPT)
+            checkbox = QCheckBox(tr.CHECK_FOR_UPDATES_ON_STARTUP)
+            message_box.setCheckBox(checkbox)
+            message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+            message_box.exec()
+            settings_instance.setValue(settings.CHECK_UPDATES_ON_STARTUP, checkbox.isChecked())
+        if settings_instance.value(settings.CHECK_UPDATES_ON_STARTUP, False, type=bool):
+            self.check_for_updates(show_result=False)
+
+    def check_for_updates(self, show_result: bool = True) -> None:
         if self.update_check_thread and self.update_check_thread.isRunning():
             return
+        self.show_update_check_result = show_result
         self._set_update_button_enabled(False)
         self.update_check_thread = update_check.UpdateCheckThread(self)
         self.update_check_thread.finished.connect(self._on_update_check_thread_finished)
@@ -1309,21 +1333,23 @@ class MainForm(QMainWindow, MainWindow):
         thread = self.update_check_thread
         self.update_check_thread = None
         if thread:
-            self.on_update_check_finished(thread.result)
+            self.on_update_check_finished(thread.result, self.show_update_check_result)
             thread.deleteLater()
+        self.show_update_check_result = True
 
     def _set_update_button_enabled(self, enabled: bool) -> None:
         self.pushButton_CheckForUpdates.setEnabled(enabled and bool(os.environ.get("APPDIR")))
 
-    def on_update_check_finished(self, result: update_check.UpdateCheckResult) -> None:
+    def on_update_check_finished(self, result: update_check.UpdateCheckResult, show_result: bool = True) -> None:
         status = result.status
         if status == update_check.UpdateCheckStatus.UPDATE_AVAILABLE:
             QMessageBox.information(self, tr.INFO, tr.UPDATE_AVAILABLE_MESSAGE)
-        elif status == update_check.UpdateCheckStatus.UP_TO_DATE:
+        elif show_result and status == update_check.UpdateCheckStatus.UP_TO_DATE:
             QMessageBox.information(self, tr.INFO, tr.UPDATE_NOT_AVAILABLE)
-        else:
+        elif status == update_check.UpdateCheckStatus.ERROR:
             logger.warning("Update check failed: %s", result.message)
-            QMessageBox.information(self, tr.ERROR, tr.UPDATE_CHECK_FAILED)
+            if show_result:
+                QMessageBox.information(self, tr.ERROR, tr.UPDATE_CHECK_FAILED)
 
     def pushButton_Settings_clicked(self) -> None:
         SettingsDialog(self).exec()

@@ -43,6 +43,10 @@ class TranslationConstants(QObject):
         "A newer PINCE AppImage is available.\n\n"
         "You can grab it from PINCE's GitHub releases or update this AppImage with AppImageUpdate/appimageupdatetool."
     )
+    UPDATE_CHECK_ON_STARTUP_PROMPT = QT_TR_NOOP(
+        "PINCE can check for AppImage updates on startup. This contacts the configured release host to download update metadata."
+    )
+    CHECK_FOR_UPDATES_ON_STARTUP = QT_TR_NOOP("Allow startup update checks")
     UPDATE_NOT_AVAILABLE = QT_TR_NOOP("This PINCE AppImage is up to date.")
     DISABLED_UNDER_WINE = QT_TR_NOOP("This feature is not available while attached to a WINE/Proton process!")
     SPEEDHACK_UNAVAILABLE = QT_TR_NOOP("Speedhack couldn't be enabled for this process.")

@@ -9,6 +9,7 @@ from libpince import debugcore, utils, typedefs
 import json, os
 
 current_settings_version = "37"  # Increase version by one if you change settings
+CHECK_UPDATES_ON_STARTUP = "General/check_updates_on_startup"
 
 # Due to community feedback, these signals are disabled by default: SIGUSR1, SIGUSR2, SIGPWR, SIGXCPU, SIGXFSZ, SIGSYS
 default_signals = [

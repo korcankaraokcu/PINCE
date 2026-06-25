@@ -482,6 +482,11 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+        <source>Check for AppImage updates on startup</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Update Interval</source>
         <translation type="unfinished" />
     </message>
@@ -1868,6 +1873,16 @@ Patterns at former positions have higher priority if regex is off</source>
         <source>A newer PINCE AppImage is available.
 
 You can grab it from PINCE's GitHub releases or update this AppImage with AppImageUpdate/appimageupdatetool.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>PINCE can check for AppImage updates on startup. This contacts the configured release host to download update metadata.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Allow startup update checks</source>
         <translation type="unfinished" />
     </message>
     <message>

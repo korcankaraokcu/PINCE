@@ -87,6 +87,13 @@
                      </property>
                     </widget>
                    </item>
+                   <item>
+                    <widget class="QCheckBox" name="checkBox_CheckUpdatesOnStartup">
+                     <property name="text">
+                      <string>Check for AppImage updates on startup</string>
+                     </property>
+                    </widget>
+                   </item>
                   </layout>
                  </item>
                  <item>
