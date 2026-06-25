@@ -159,10 +159,7 @@ if [ -n "$1" ]; then
 fi
 
 if [ "$(id -u)" != "0" ]; then
-	# Check if we have both polkit/pkexec installed AND also an authentication agent so we can properly prompt for credentials.
-	# Some WMs (like Hyprland) come with no agent by default (they have to manually install hyprpolkitagent) so even though the distro has polkitd active,
-	# there's no agent for the prompt and authentication fails for the user with a vague unrelated xcb message.
-	if command -v pkexec > /dev/null 2>&1 && pgrep -f 'polkit.*agent|policykit.*agent|agent-polkit|xfce-polkit|mate-polkit|lxpolkit|cinnamon|gnome-shell|soteria|pkttyagent' > /dev/null 2>&1; then
+	if command -v pkexec > /dev/null 2>&1; then
 		# Preserve env vars to keep settings like theme preferences.
 		# Pkexec does not support passing all of env via a flag like `-E` so we need to
 		# rebuild the env and then pass it through.
@@ -173,9 +170,23 @@ if [ "$(id -u)" != "0" ]; then
 		done <<EOF
 $(printenv)
 EOF
+		set -- "$@" "PINCE_PARENT_PID=$$"
 
-		pkexec env "$@" "$APPIMAGE" "$PCT_FILE"
-	elif command -v sudo > /dev/null 2>&1; then
+		pkexec_err=$(pkexec --disable-internal-agent env "$@" /bin/sh -c 'p=$PINCE_PARENT_PID; unset PINCE_PARENT_PID; exec "$@" >"/proc/$p/fd/1" 2>"/proc/$p/fd/2"' sh "$APPIMAGE" "$PCT_FILE" 2>&1)
+		pkexec_status=$?
+
+		case "$pkexec_status:$pkexec_err" in
+		127:*"No authentication agent found"*) ;;
+		*)
+			if [ -n "$pkexec_err" ]; then
+				printf '%s\n' "$pkexec_err" >&2
+			fi
+			exit "$pkexec_status"
+			;;
+		esac
+	fi
+
+	if command -v sudo > /dev/null 2>&1; then
 		# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
 		# so we need to force PATH preservation with venv activated user's PATH.
 		sudo -E --preserve-env=PATH "$APPIMAGE" "$PCT_FILE"
