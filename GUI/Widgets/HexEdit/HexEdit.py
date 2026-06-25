@@ -1,3 +1,5 @@
+import re
+
 from PyQt6.QtWidgets import QDialog, QWidget, QMessageBox
 from GUI.Utils import guiutils
 from GUI.Validators.HexValidator import HexValidator
@@ -14,6 +16,7 @@ class HexEditDialog(QDialog, Ui_Dialog):
         # setSelection() and deselect() re-emit selectionChanged while we mirror the selection
         self.is_syncing_selection = False
         self.lineEdit_Length.setValidator(HexValidator(999, self))
+        self.lineEdit_HexView.setValidator(guiutils.validator_map["bytearray"])
         self.lineEdit_Address.setText(hex(address))
         self.lineEdit_Length.setText(str(length))
         self.refresh_view()
@@ -33,13 +36,12 @@ class HexEditDialog(QDialog, Ui_Dialog):
         hex_start = hex_length = 0
         selected_text = self.lineEdit_AsciiView.selectedText()
         if selected_text:
-            # Map by converting the selected/preceding text to their AoB form and counting characters; the +1 skips
-            # the space that separates the byte before the selection from the first selected byte in the hex view.
             selection_start = self.lineEdit_AsciiView.selectionStart()
-            hex_length = len(utils.str_to_aob(selected_text, "utf-8"))
-            hex_start = len(utils.str_to_aob(self.lineEdit_AsciiView.text()[0:selection_start], "utf-8"))
-            if hex_start > 0:
-                hex_start += 1
+            selection_end = selection_start + len(selected_text)
+            tokens = list(re.finditer(r"\S+", self.lineEdit_HexView.text()))
+            if selection_end <= len(tokens):
+                hex_start = tokens[selection_start].start()
+                hex_length = tokens[selection_end - 1].end() - hex_start
         # is_syncing_selection must always be reset, otherwise a single failure permanently breaks the sync. With no
         # selection we only deselect; setSelection would move the cursor (e.g. when setText regenerates this field)
         self.is_syncing_selection = True
@@ -56,19 +58,23 @@ class HexEditDialog(QDialog, Ui_Dialog):
         ascii_start = ascii_length = 0
         selected_text = self.lineEdit_HexView.selectedText()
         if selected_text:
-            # HexView holds space separated byte pairs while AsciiView holds the decoded string. A right-to-left
-            # drag can start or end on a single nibble, so snap the selection to whole bytes (by counting hex
-            # digits, ignoring the separators) before mapping each side back to ascii characters. Unlike the hex
-            # view, the ascii view has no separators, so no offset adjustment is needed here.
             text = self.lineEdit_HexView.text()
-            aob_array = text.split()
             selection_start = self.lineEdit_HexView.selectionStart()
             selection_end = selection_start + len(selected_text)
-            start_byte = len(text[:selection_start].replace(" ", "")) // 2
-            end_byte = (len(text[:selection_end].replace(" ", "")) - 1) // 2
             try:
-                ascii_start = len(utils.aob_to_str(aob_array[:start_byte], "utf-8", replace_unprintable=False))
-                ascii_length = len(utils.aob_to_str(aob_array[start_byte : end_byte + 1], "utf-8", replace_unprintable=False))
+                tokens = list(re.finditer(r"\S+", text))
+                for token in tokens:
+                    byte = token.group(0)
+                    if byte != "??" and (len(byte) > 2 or not 0 <= int(byte, 16) <= 0xFF):
+                        raise ValueError
+                selected_bytes = [
+                    index
+                    for index, token in enumerate(tokens)
+                    if token.start() < selection_end and selection_start < token.end()
+                ]
+                if selected_bytes:
+                    ascii_start = selected_bytes[0]
+                    ascii_length = selected_bytes[-1] - ascii_start + 1
             except ValueError:
                 # Malformed hex (e.g. while the field is being edited) can't be decoded; clear the ascii selection
                 ascii_start = ascii_length = 0
@@ -88,22 +94,19 @@ class HexEditDialog(QDialog, Ui_Dialog):
             self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
             return
         aob_array = aob_string.split()
-        try:
-            self.lineEdit_AsciiView.setText(utils.aob_to_str(aob_array, "utf-8", replace_unprintable=False))
-            # Both views now hold valid, matching data, so clear any leftover error highlight from either side
-            self.lineEdit_HexView.setStyleSheet("")  # This should set background color back to QT default
-            self.lineEdit_AsciiView.setStyleSheet("")
-        except ValueError:
-            self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
+        self.lineEdit_AsciiView.setText(utils.aob_to_str(aob_array))
+        # Both views now hold valid, matching data, so clear any leftover error highlight from either side
+        self.lineEdit_HexView.setStyleSheet("")  # This should set background color back to QT default
+        self.lineEdit_AsciiView.setStyleSheet("")
 
     def lineEdit_AsciiView_text_edited(self) -> None:
         ascii_str = self.lineEdit_AsciiView.text()
         try:
-            self.lineEdit_HexView.setText(utils.str_to_aob(ascii_str, "utf-8"))
+            self.lineEdit_HexView.setText(utils.str_to_aob(ascii_str))
             # Both views now hold valid, matching data, so clear any leftover error highlight from either side
             self.lineEdit_AsciiView.setStyleSheet("")
             self.lineEdit_HexView.setStyleSheet("")
-        except ValueError:
+        except UnicodeError:
             self.lineEdit_AsciiView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
 
     def refresh_view(self) -> None:
@@ -122,7 +125,7 @@ class HexEditDialog(QDialog, Ui_Dialog):
         except ValueError:
             return
         aob_array = debugcore.hex_dump(address, length)
-        ascii_str = utils.aob_to_str(aob_array, "utf-8", replace_unprintable=False)
+        ascii_str = utils.aob_to_str(aob_array)
         self.lineEdit_AsciiView.setText(ascii_str)
         self.lineEdit_HexView.setText(" ".join(aob_array))
 
