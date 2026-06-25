@@ -700,63 +700,6 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>Form</name>
     <message>
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Examine Referrers</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Enter a string or a python regex</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Ignore case if checked</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Case sensitive</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Your string will be treated as a regex if checked</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Regex</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Search(Enter)</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
         <source>Memory Regions</source>
         <translation type="unfinished" />
@@ -789,6 +732,58 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <source>Referenced Calls</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Enter a string or a python regex</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Ignore case if checked</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Case sensitive</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Your string will be treated as a regex if checked</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Regex</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Search(Enter)</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -897,6 +892,11 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
         <source>MI</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Examine Referrers</source>
         <translation type="unfinished" />
     </message>
     <message>

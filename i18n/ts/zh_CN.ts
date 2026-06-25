@@ -702,63 +702,6 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>Form</name>
     <message>
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Examine Referrers</source>
-        <translation>检查引用来源</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Enter a string or a python regex</source>
-        <translation>输入字符串或 Python 正则表达式</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Ignore case if checked</source>
-        <translation>如果选中则忽略大小写</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Case sensitive</source>
-        <translation>大小写敏感</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Your string will be treated as a regex if checked</source>
-        <translation>如果选中，你的字符串将被视为正则表达式</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Regex</source>
-        <translation>正则</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/ExamineReferrersWidget.ui" line="0" />
-        <source>Search(Enter)</source>
-        <translation>搜索（Enter）</translation>
-    </message>
-    <message>
         <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
         <source>Memory Regions</source>
         <translation>内存区域</translation>
@@ -792,6 +735,58 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
         <source>Referenced Calls</source>
         <translation>引用的调用</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Enter a string or a python regex</source>
+        <translation>输入字符串或 Python 正则表达式</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Ignore case if checked</source>
+        <translation>如果选中则忽略大小写</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Case sensitive</source>
+        <translation>大小写敏感</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Your string will be treated as a regex if checked</source>
+        <translation>如果选中，你的字符串将被视为正则表达式</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Regex</source>
+        <translation>正则</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
+        <source>Search(Enter)</source>
+        <translation>搜索（Enter）</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
@@ -900,6 +895,11 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/Console/Form/ConsoleWidget.ui" line="0" />
         <source>MI</source>
         <translation>MI</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Examine Referrers</source>
+        <translation>检查引用来源</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
