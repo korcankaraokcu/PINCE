@@ -3,7 +3,6 @@ from GUI.Utils import guiutils
 from GUI.Validators.HexValidator import HexValidator
 from GUI.Widgets.HexEdit.Form.HexEditDialog import Ui_Dialog
 from libpince import debugcore, typedefs, utils
-from libpince.utils import logger
 from tr.tr import TranslationConstants as tr
 
 
@@ -11,15 +10,17 @@ class HexEditDialog(QDialog, Ui_Dialog):
     def __init__(self, parent: QWidget, address: int, length: int = 20) -> None:
         super().__init__(parent)
         self.setupUi(self)
+        # Guards against the AsciiView<->HexView selection sync recursing into itself, since both
+        # setSelection() and deselect() re-emit selectionChanged while we mirror the selection
+        self.is_syncing_selection = False
         self.lineEdit_Length.setValidator(HexValidator(999, self))
         self.lineEdit_Address.setText(hex(address))
         self.lineEdit_Length.setText(str(length))
         self.refresh_view()
         self.lineEdit_AsciiView.selectionChanged.connect(self.lineEdit_AsciiView_selection_changed)
+        self.lineEdit_HexView.selectionChanged.connect(self.lineEdit_HexView_selection_changed)
         guiutils.center_to_parent(self)
 
-        # TODO: Implement this
-        # self.lineEdit_HexView.selectionChanged.connect(self.lineEdit_HexView_selection_changed)
         self.lineEdit_HexView.textEdited.connect(self.lineEdit_HexView_text_edited)
         self.lineEdit_AsciiView.textEdited.connect(self.lineEdit_AsciiView_text_edited)
         self.pushButton_Refresh.pressed.connect(self.refresh_view)
@@ -27,18 +28,50 @@ class HexEditDialog(QDialog, Ui_Dialog):
         self.lineEdit_Length.textChanged.connect(self.refresh_view)
 
     def lineEdit_AsciiView_selection_changed(self) -> None:
+        if self.is_syncing_selection:
+            return
         length = len(utils.str_to_aob(self.lineEdit_AsciiView.selectedText(), "utf-8"))
         start_index = self.lineEdit_AsciiView.selectionStart()
         start_index = len(utils.str_to_aob(self.lineEdit_AsciiView.text()[0:start_index], "utf-8"))
         if start_index > 0:
             start_index += 1
-        self.lineEdit_HexView.deselect()
-        self.lineEdit_HexView.setSelection(start_index, length)
+        # is_syncing_selection must always be reset, otherwise a single failure permanently breaks the sync
+        self.is_syncing_selection = True
+        try:
+            self.lineEdit_HexView.deselect()
+            self.lineEdit_HexView.setSelection(start_index, length)
+        finally:
+            self.is_syncing_selection = False
 
     def lineEdit_HexView_selection_changed(self) -> None:
-        # TODO: Implement this
-        logger.debug("TODO: Implement selectionChanged signal of lineEdit_HexView")
-        raise NotImplementedError
+        if self.is_syncing_selection:
+            return
+        ascii_start = ascii_length = 0
+        selected_text = self.lineEdit_HexView.selectedText()
+        if selected_text:
+            # HexView holds space separated byte pairs while AsciiView holds the decoded string. A right-to-left
+            # drag can start or end on a single nibble, so snap the selection to whole bytes (by counting hex
+            # digits, ignoring the separators) before mapping each side back to ascii characters. Unlike the hex
+            # view, the ascii view has no separators, so no offset adjustment is needed here.
+            text = self.lineEdit_HexView.text()
+            aob_array = text.split()
+            selection_start = self.lineEdit_HexView.selectionStart()
+            selection_end = selection_start + len(selected_text)
+            start_byte = len(text[:selection_start].replace(" ", "")) // 2
+            end_byte = (len(text[:selection_end].replace(" ", "")) - 1) // 2
+            try:
+                ascii_start = len(utils.aob_to_str(aob_array[:start_byte], "utf-8", replace_unprintable=False))
+                ascii_length = len(utils.aob_to_str(aob_array[start_byte : end_byte + 1], "utf-8", replace_unprintable=False))
+            except ValueError:
+                # Malformed hex (e.g. while the field is being edited) can't be decoded; clear the ascii selection
+                ascii_start = ascii_length = 0
+        # is_syncing_selection must always be reset, otherwise a single failure permanently breaks the sync
+        self.is_syncing_selection = True
+        try:
+            self.lineEdit_AsciiView.deselect()
+            self.lineEdit_AsciiView.setSelection(ascii_start, ascii_length)
+        finally:
+            self.is_syncing_selection = False
 
     def lineEdit_HexView_text_edited(self) -> None:
         aob_string = self.lineEdit_HexView.text()
