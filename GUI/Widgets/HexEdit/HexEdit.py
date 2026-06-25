@@ -81,7 +81,9 @@ class HexEditDialog(QDialog, Ui_Dialog):
         aob_array = aob_string.split()
         try:
             self.lineEdit_AsciiView.setText(utils.aob_to_str(aob_array, "utf-8", replace_unprintable=False))
+            # Both views now hold valid, matching data, so clear any leftover error highlight from either side
             self.lineEdit_HexView.setStyleSheet("")  # This should set background color back to QT default
+            self.lineEdit_AsciiView.setStyleSheet("")
         except ValueError:
             self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
 
@@ -89,13 +91,18 @@ class HexEditDialog(QDialog, Ui_Dialog):
         ascii_str = self.lineEdit_AsciiView.text()
         try:
             self.lineEdit_HexView.setText(utils.str_to_aob(ascii_str, "utf-8"))
+            # Both views now hold valid, matching data, so clear any leftover error highlight from either side
             self.lineEdit_AsciiView.setStyleSheet("")
+            self.lineEdit_HexView.setStyleSheet("")
         except ValueError:
             self.lineEdit_AsciiView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
 
     def refresh_view(self) -> None:
         self.lineEdit_AsciiView.clear()
         self.lineEdit_HexView.clear()
+        # Reloading from memory replaces any user edit, so clear any leftover error highlight
+        self.lineEdit_AsciiView.setStyleSheet("")
+        self.lineEdit_HexView.setStyleSheet("")
         address = debugcore.examine_expression(self.lineEdit_Address.text()).address
         if not address:
             return
