@@ -702,36 +702,6 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>Form</name>
     <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
-        <source>Memory Regions</source>
-        <translation>内存区域</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
-        <source>Search path</source>
-        <translation>搜索路径</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
-        <source>Regions</source>
-        <translation>区域</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
-        <source>Perms</source>
-        <translation>权限</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
-        <source>Offset</source>
-        <translation>偏移量</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
-        <source>Path</source>
-        <translation>路径</translation>
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
         <source>Tracer Status</source>
         <translation>追踪器状态</translation>
@@ -905,6 +875,36 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
         <source>TextLabel</source>
         <translation>文本标签</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui" line="0" />
+        <source>Memory Regions</source>
+        <translation>内存区域</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui" line="0" />
+        <source>Search path</source>
+        <translation>搜索路径</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui" line="0" />
+        <source>Regions</source>
+        <translation>区域</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui" line="0" />
+        <source>Perms</source>
+        <translation>权限</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui" line="0" />
+        <source>Offset</source>
+        <translation>偏移量</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui" line="0" />
+        <source>Path</source>
+        <translation>路径</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />

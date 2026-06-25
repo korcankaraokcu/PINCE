@@ -700,36 +700,6 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>Form</name>
     <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
-        <source>Memory Regions</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
-        <source>Search path</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
-        <source>Regions</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
-        <source>Perms</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
-        <source>Offset</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MemoryRegionsWidget.ui" line="0" />
-        <source>Path</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
         <source>Tracer Status</source>
         <translation type="unfinished" />
@@ -902,6 +872,36 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
         <source>TextLabel</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui" line="0" />
+        <source>Memory Regions</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui" line="0" />
+        <source>Search path</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui" line="0" />
+        <source>Regions</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui" line="0" />
+        <source>Perms</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui" line="0" />
+        <source>Offset</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui" line="0" />
+        <source>Path</source>
         <translation type="unfinished" />
     </message>
     <message>

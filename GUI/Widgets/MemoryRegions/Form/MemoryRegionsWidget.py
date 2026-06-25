@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'MemoryRegionsWidget.ui'
+# Form implementation generated from reading ui file 'Widgets/MemoryRegions/Form/MemoryRegionsWidget.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #
