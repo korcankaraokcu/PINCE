@@ -77,58 +77,6 @@
         <translation>指针</translation>
     </message>
     <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Dissect Code</source>
-        <translation>分析代码</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Regions</source>
-        <translation>区域</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Path</source>
-        <translation>路径</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Selected regions will be scanned</source>
-        <translation>选中区域将会被扫描</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Currently scanning range:</source>
-        <translation>当前扫描范围：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>String references found:</source>
-        <translation>找到的字符串引用：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Jumps found:</source>
-        <translation>找到的跳转：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Calls found:</source>
-        <translation>找到的调用：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Entries that can't be decoded as utf-8 won't be included in referenced strings
-Unchecking it makes ReferencedStringsWidget load slower but allows you to examine non-string pointers on it</source>
-        <translation>无法解码为 UTF-8 的条目将不会包含在引用的字符串中
-取消勾选此选项会导致引用的字符串窗口（ReferencedStringsWidget）加载变慢，但允许你检查其中的非字符串指针</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Discard invalid strings</source>
-        <translation>丢弃无效的字符串</translation>
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
         <source>Parameters for tracing</source>
         <translation>用于追踪的参数</translation>
@@ -187,6 +135,58 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
         <source>Pointed Address</source>
         <translation>指向的地址</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Dissect Code</source>
+        <translation>分析代码</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Regions</source>
+        <translation>区域</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Path</source>
+        <translation>路径</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Selected regions will be scanned</source>
+        <translation>选中区域将会被扫描</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Currently scanning range:</source>
+        <translation>当前扫描范围：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>String references found:</source>
+        <translation>找到的字符串引用：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Jumps found:</source>
+        <translation>找到的跳转：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Calls found:</source>
+        <translation>找到的调用：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Entries that can't be decoded as utf-8 won't be included in referenced strings
+Unchecking it makes ReferencedStringsWidget load slower but allows you to examine non-string pointers on it</source>
+        <translation>无法解码为 UTF-8 的条目将不会包含在引用的字符串中
+取消勾选此选项会导致引用的字符串窗口（ReferencedStringsWidget）加载变慢，但允许你检查其中的非字符串指针</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Discard invalid strings</source>
+        <translation>丢弃无效的字符串</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
@@ -732,91 +732,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>路径</translation>
     </message>
     <message>
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Referenced Calls</source>
-        <translation>引用的调用</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Enter a string or a python regex</source>
-        <translation>输入字符串或 Python 正则表达式</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Ignore case if checked</source>
-        <translation>如果选中则忽略大小写</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Case sensitive</source>
-        <translation>大小写敏感</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Your string will be treated as a regex if checked</source>
-        <translation>如果选中，你的字符串将被视为正则表达式</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Regex</source>
-        <translation>正则</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Search(Enter)</source>
-        <translation>搜索（Enter）</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Address</source>
-        <translation>地址</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Refcount</source>
-        <translation>引用计数</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <source>Referenced Strings and Values</source>
-        <translation>引用的字符串和值</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <source>Value</source>
-        <translation>值</translation>
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
         <source>Tracer Status</source>
         <translation>追踪器状态</translation>
@@ -838,6 +753,23 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
         <source>Count</source>
         <translation>计数</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+        <source>Address</source>
+        <translation>地址</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+        <source>Value</source>
+        <translation>值</translation>
     </message>
     <message>
         <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
@@ -902,6 +834,58 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>检查引用来源</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Enter a string or a python regex</source>
+        <translation>输入字符串或 Python 正则表达式</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Ignore case if checked</source>
+        <translation>如果选中则忽略大小写</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Case sensitive</source>
+        <translation>大小写敏感</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Your string will be treated as a regex if checked</source>
+        <translation>如果选中，你的字符串将被视为正则表达式</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Regex</source>
+        <translation>正则</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Search(Enter)</source>
+        <translation>搜索（Enter）</translation>
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <source>Functions</source>
         <translation>函数</translation>
@@ -921,6 +905,22 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
         <source>TextLabel</source>
         <translation>文本标签</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <source>Referenced Calls</source>
+        <translation>引用的调用</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <source>Refcount</source>
+        <translation>引用计数</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <source>Referenced Strings and Values</source>
+        <translation>引用的字符串和值</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />

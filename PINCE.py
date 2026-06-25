@@ -51,7 +51,6 @@ from PyQt6.QtCore import (
     QSignalBlocker,
     QSize,
     Qt,
-    QThread,
     QTimer,
     QTranslator,
     pyqtSignal,
@@ -78,7 +77,6 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QDialog,
     QFileDialog,
-    QListWidgetItem,
     QMainWindow,
     QMenu,
     QMessageBox,
@@ -91,15 +89,12 @@ from PyQt6.QtWidgets import (
 from GUI.AbstractTableModels.AsciiModel import AsciiModel
 from GUI.AbstractTableModels.HexModel import HexModel
 from GUI.AddAddressManuallyDialog import Ui_Dialog as ManualAddressDialog
-from GUI.DissectCodeDialog import Ui_Dialog as DissectCodeDialog
 from GUI.MainWindow import Ui_MainWindow as MainWindow
 from GUI.ManualAddressDialogUtils.PointerChainOffset import PointerChainOffset
 from GUI.MemoryRegionsWidget import Ui_Form as MemoryRegionsWidget
 
 # If you are going to change the name "Ui_MainWindow_MemoryView", review GUI/Labels/RegisterLabel.py as well
 from GUI.MemoryViewerWindow import Ui_MainWindow_MemoryView as MemoryViewWindow
-from GUI.ReferencedCallsWidget import Ui_Form as ReferencedCallsWidget
-from GUI.ReferencedStringsWidget import Ui_Form as ReferencedStringsWidget
 from GUI.Session.session import SessionDataChanged, SessionManager, StructureManager
 from GUI.Settings import settings, themes
 from GUI.States import states
@@ -115,6 +110,7 @@ from GUI.Widgets.About.About import AboutWidget
 from GUI.Widgets.Bookmark.Bookmark import BookmarkWidget
 from GUI.Widgets.BreakpointInfo.BreakpointInfo import BreakpointInfoWidget
 from GUI.Widgets.Console.Console import ConsoleWidget
+from GUI.Widgets.DissectCode.DissectCode import DissectCodeDialog
 from GUI.Widgets.EditInstruction.EditInstruction import EditInstructionDialog
 from GUI.Widgets.EditType.EditType import EditTypeDialog
 from GUI.Widgets.ExamineReferrers.ExamineReferrers import ExamineReferrersWidget
@@ -132,6 +128,8 @@ from GUI.Widgets.LibpinceEngine.LibpinceEngine import (
 from GUI.Widgets.ManageScanRegions.ManageScanRegions import ManageScanRegionsDialog
 from GUI.Widgets.PointerScan.PointerScan import PointerScanWindow
 from GUI.Widgets.PointerScanSearch.PointerScanSearch import PointerScanSearchDialog
+from GUI.Widgets.ReferencedCalls.ReferencedCalls import ReferencedCallsWidget
+from GUI.Widgets.ReferencedStrings.ReferencedStrings import ReferencedStringsWidget
 from GUI.Widgets.RestoreInstructions.RestoreInstructions import RestoreInstructionsWidget
 from GUI.Widgets.SearchInstructions.SearchInstructions import SearchInstructionsWidget
 from GUI.Widgets.SelectProcess.SelectProcess import SelectProcessWindow
@@ -239,19 +237,6 @@ MEMORY_REGIONS_ADDR_COL = 0
 MEMORY_REGIONS_PERM_COL = 1
 MEMORY_REGIONS_OFFSET_COL = 2
 MEMORY_REGIONS_PATH_COL = 3
-
-# represents the index of columns in dissect code table
-DISSECT_CODE_ADDR_COL = 0
-DISSECT_CODE_PATH_COL = 1
-
-# represents the index of columns in referenced strings table
-REF_STR_ADDR_COL = 0
-REF_STR_COUNT_COL = 1
-REF_STR_VAL_COL = 2
-
-# represents the index of columns in referenced calls table
-REF_CALL_ADDR_COL = 0
-REF_CALL_COUNT_COL = 1
 
 
 def except_hook(exception_type: type[BaseException], value: BaseException, tb: TracebackType | None) -> None:
@@ -3988,7 +3973,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
-        dissect_code_dialog = DissectCodeDialogForm(self, safe_str_to_int(current_address, 16))
+        dissect_code_dialog = DissectCodeDialog(self, safe_str_to_int(current_address, 16))
         dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
         dissect_code_dialog.exec()
         self.refresh_disassemble_view()
@@ -4174,13 +4159,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionReferenced_Strings_triggered(self) -> None:
         if debugcore.currentpid == -1:
             return
-        ref_str_widget = ReferencedStringsWidgetForm(self)
+        ref_str_widget = ReferencedStringsWidget(self)
         ref_str_widget.show()
 
     def actionReferenced_Calls_triggered(self) -> None:
         if debugcore.currentpid == -1:
             return
-        ref_call_widget = ReferencedCallsWidgetForm(self)
+        ref_call_widget = ReferencedCallsWidget(self)
         ref_call_widget.show()
 
     def actionInject_so_file_triggered(self) -> None:
@@ -4233,7 +4218,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def actionDissect_Code_triggered(self) -> None:
         if debugcore.currentpid == -1:
             return
-        dissect_code_dialog = DissectCodeDialogForm(self)
+        dissect_code_dialog = DissectCodeDialog(self)
         dissect_code_dialog.exec()
         self.refresh_disassemble_view()
 
@@ -4761,397 +4746,6 @@ class MemoryRegionsWidgetForm(QWidget, MemoryRegionsWidget):
         address = self.tableWidget_MemoryRegions.item(row, MEMORY_REGIONS_ADDR_COL).text()
         address_int = safe_str_to_int(address.split("-")[0], 16)
         self.parent().hex_dump_address(address_int)
-
-
-class DissectCodeDialogForm(QDialog, DissectCodeDialog):
-    scan_finished_signal = pyqtSignal()
-
-    def __init__(self, parent: QWidget, int_address: int = -1) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.init_pre_scan_gui()
-        self.update_dissect_results()
-        self.show_memory_regions()
-        self.splitter.setStretchFactor(0, 1)
-        self.pushButton_StartCancel.clicked.connect(self.pushButton_StartCancel_clicked)
-        self.refresh_timer = QTimer(self)
-        self.refresh_timer.setInterval(100)
-        self.refresh_timer.timeout.connect(self.refresh_dissect_status)
-        if int_address != -1:
-            for row in range(self.tableWidget_ExecutableMemoryRegions.rowCount()):
-                item = self.tableWidget_ExecutableMemoryRegions.item(row, DISSECT_CODE_ADDR_COL).text()
-                start_addr, end_addr = item.split("-")
-                if safe_str_to_int(start_addr, 16) <= int_address <= safe_str_to_int(end_addr, 16):
-                    self.tableWidget_ExecutableMemoryRegions.clearSelection()
-                    self.tableWidget_ExecutableMemoryRegions.selectRow(row)
-                    self.pushButton_StartCancel_clicked()
-                    break
-            else:
-                QMessageBox.information(self, tr.ERROR, tr.INVALID_REGION)
-        else:
-            if self.tableWidget_ExecutableMemoryRegions.rowCount() > 0:
-                self.tableWidget_ExecutableMemoryRegions.selectRow(0)
-        guiutils.center_to_parent(self)
-
-    class BackgroundThread(QThread):
-        output_ready = pyqtSignal()
-        is_canceled = False
-
-        def __init__(self, region_list: list, discard_invalid_strings: bool) -> None:
-            super().__init__()
-            self.region_list = region_list
-            self.discard_invalid_strings = discard_invalid_strings
-
-        def run(self) -> None:
-            debugcore.dissect_code(self.region_list, self.discard_invalid_strings)
-            if not self.is_canceled:
-                self.output_ready.emit()
-
-    def init_pre_scan_gui(self) -> None:
-        self.is_scanning = False
-        self.is_canceled = False
-        self.pushButton_StartCancel.setText(tr.START)
-
-    def init_after_scan_gui(self) -> None:
-        self.is_scanning = True
-        self.label_ScanInfo.setText(tr.CURRENT_SCAN_REGION)
-        self.pushButton_StartCancel.setText(tr.CANCEL)
-
-    def refresh_dissect_status(self) -> None:
-        region, region_count, range, string_count, jump_count, call_count = debugcore.get_dissect_code_status()
-        if not region:
-            return
-        self.label_RegionInfo.setText(region)
-        self.label_RegionCountInfo.setText(region_count)
-        self.label_CurrentRange.setText(range)
-        self.label_StringReferenceCount.setText(str(string_count))
-        self.label_JumpReferenceCount.setText(str(jump_count))
-        self.label_CallReferenceCount.setText(str(call_count))
-
-    def update_dissect_results(self) -> None:
-        referenced_strings = None
-        referenced_jumps = None
-        referenced_calls = None
-        try:
-            referenced_strings, referenced_jumps, referenced_calls = debugcore.get_dissect_code_data()
-        except:
-            return
-        try:
-            self.label_StringReferenceCount.setText(str(len(referenced_strings)))
-            self.label_JumpReferenceCount.setText(str(len(referenced_jumps)))
-            self.label_CallReferenceCount.setText(str(len(referenced_calls)))
-        finally:
-            for ref_dict in (referenced_strings, referenced_jumps, referenced_calls):
-                if ref_dict is not None:
-                    ref_dict.close()
-
-    def show_memory_regions(self) -> None:
-        executable_regions = utils.filter_regions(debugcore.currentpid, "permissions", "..x.")
-        self.region_list = []
-        self.tableWidget_ExecutableMemoryRegions.setRowCount(0)
-        self.tableWidget_ExecutableMemoryRegions.setRowCount(len(executable_regions))
-        for row, (start, end, _, _, _, _, path) in enumerate(executable_regions):
-            address = start + "-" + end
-            self.region_list.append((start, end))
-            self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_ADDR_COL, QTableWidgetItem(address))
-            self.tableWidget_ExecutableMemoryRegions.setItem(row, DISSECT_CODE_PATH_COL, QTableWidgetItem(path))
-        guiutils.resize_to_contents(self.tableWidget_ExecutableMemoryRegions)
-
-    def scan_finished(self) -> None:
-        self.init_pre_scan_gui()
-        if not self.is_canceled:
-            self.label_ScanInfo.setText(tr.SCAN_FINISHED)
-        self.is_canceled = False
-        self.refresh_timer.stop()
-        self.refresh_dissect_status()
-        self.update_dissect_results()
-        self.scan_finished_signal.emit()
-
-    def pushButton_StartCancel_clicked(self) -> None:
-        if self.is_scanning:
-            self.is_canceled = True
-            self.background_thread.is_canceled = True
-            debugcore.cancel_dissect_code()
-            self.refresh_timer.stop()
-            self.update_dissect_results()
-            self.label_ScanInfo.setText(tr.SCAN_CANCELED)
-            self.init_pre_scan_gui()
-        else:
-            selected_rows = self.tableWidget_ExecutableMemoryRegions.selectionModel().selectedRows()
-            if not selected_rows:
-                QMessageBox.information(self, tr.ERROR, tr.SELECT_ONE_REGION)
-                return
-            selected_indexes = [selected_row.row() for selected_row in selected_rows]
-            selected_regions = [self.region_list[selected_index] for selected_index in selected_indexes]
-            self.background_thread = self.BackgroundThread(selected_regions, self.checkBox_DiscardInvalidStrings.isChecked())
-            self.background_thread.output_ready.connect(self.scan_finished)
-            self.init_after_scan_gui()
-            self.refresh_timer.start()
-            self.background_thread.start()
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        debugcore.cancel_dissect_code()
-        self.refresh_timer.stop()
-        if hasattr(self, "background_thread"):
-            self.is_canceled = True
-            self.background_thread.is_canceled = True
-            self.background_thread.wait()
-        super().closeEvent(event)
-
-
-class ReferencedStringsWidgetForm(QWidget, ReferencedStringsWidget):
-    def __init__(self, parent: QWidget) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        guiutils.fill_value_combobox(self.comboBox_ValueType, typedefs.VALUE_INDEX.STRING_UTF8)
-        self.setWindowFlags(Qt.WindowType.Window)
-        self.tableWidget_References.setColumnWidth(REF_STR_ADDR_COL, 150)
-        self.tableWidget_References.setColumnWidth(REF_STR_COUNT_COL, 80)
-        self.splitter.setStretchFactor(0, 1)
-        self.listWidget_Referrers.resize(400, self.listWidget_Referrers.height())
-        guiutils.center_to_parent(self)
-        self.hex_len = 16 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 else 8
-        str_dict, jmp_dict, call_dict = debugcore.get_dissect_code_data()
-        try:
-            str_dict_len, jmp_dict_len, call_dict_len = len(str_dict), len(jmp_dict), len(call_dict)
-        finally:
-            str_dict.close()
-            jmp_dict.close()
-            call_dict.close()
-        if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
-            if utilwidgets.InputDialog(self, tr.DISSECT_CODE).exec():
-                dissect_code_dialog = DissectCodeDialogForm(self)
-                dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
-                dissect_code_dialog.exec()
-        self.refresh_table()
-        self.tableWidget_References.sortByColumn(REF_STR_ADDR_COL, Qt.SortOrder.AscendingOrder)
-        self.tableWidget_References.selectionModel().currentChanged.connect(self.tableWidget_References_current_changed)
-        self.listWidget_Referrers.itemDoubleClicked.connect(self.listWidget_Referrers_item_double_clicked)
-        self.tableWidget_References.itemDoubleClicked.connect(self.tableWidget_References_item_double_clicked)
-        self.tableWidget_References.contextMenuEvent = self.tableWidget_References_context_menu_event
-        self.listWidget_Referrers.contextMenuEvent = self.listWidget_Referrers_context_menu_event
-        self.pushButton_Search.clicked.connect(self.refresh_table)
-        self.comboBox_ValueType.currentIndexChanged.connect(self.refresh_table)
-        self.shortcut_search = QShortcut(QKeySequence("Return"), self)
-        self.shortcut_search.activated.connect(self.refresh_table)
-
-    def pad_hex(self, hex_str: str) -> str:
-        index = hex_str.find(" ")
-        if index == -1:
-            self_len = 0
-        else:
-            self_len = len(hex_str) - index
-        return "0x" + hex_str[2:].zfill(self.hex_len + self_len)
-
-    def refresh_table(self) -> None:
-        item_list = debugcore.search_referenced_strings(
-            self.lineEdit_Regex.text(),
-            self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole),
-            self.checkBox_CaseSensitive.isChecked(),
-            self.checkBox_Regex.isChecked(),
-        )
-        if item_list is None:
-            QMessageBox.information(self, tr.ERROR, tr.INVALID_REGEX)
-            return
-        self.tableWidget_References.setSortingEnabled(False)
-        self.tableWidget_References.setRowCount(0)
-        self.tableWidget_References.setRowCount(len(item_list))
-        for row, item in enumerate(item_list):
-            self.tableWidget_References.setItem(row, REF_STR_ADDR_COL, QTableWidgetItem(self.pad_hex(item[0])))
-            table_widget_item = QTableWidgetItem()
-            table_widget_item.setData(Qt.ItemDataRole.EditRole, item[1])
-            self.tableWidget_References.setItem(row, REF_STR_COUNT_COL, table_widget_item)
-            table_widget_item = QTableWidgetItem()
-            table_widget_item.setData(Qt.ItemDataRole.EditRole, item[2])
-            self.tableWidget_References.setItem(row, REF_STR_VAL_COL, table_widget_item)
-        self.tableWidget_References.setSortingEnabled(True)
-
-    def tableWidget_References_current_changed(self, QModelIndex_current: QModelIndex) -> None:
-        if QModelIndex_current.row() < 0:
-            return
-        self.listWidget_Referrers.clear()
-        str_dict = debugcore.get_dissect_code_data(True, False, False)[0]
-        try:
-            addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_STR_ADDR_COL).text()
-            referrers = str_dict.get(hex(int(addr, 16)))
-            if referrers is None:
-                return
-            addrs = [hex(address) for address in referrers]
-            self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs) if item.all])
-            self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
-        finally:
-            str_dict.close()
-
-    def tableWidget_References_item_double_clicked(self, index: QTableWidgetItem) -> None:
-        row = index.row()
-        address = self.tableWidget_References.item(row, REF_STR_ADDR_COL).text()
-        self.parent().hex_dump_address(safe_str_to_int(address, 16))
-
-    def listWidget_Referrers_item_double_clicked(self, item: QListWidgetItem) -> None:
-        self.parent().disassemble_expression(utils.extract_hex_address(item.text()))
-
-    def tableWidget_References_context_menu_event(self, event: QContextMenuEvent) -> None:
-        def copy_to_clipboard(row: int, column: int) -> None:
-            app.clipboard().setText(self.tableWidget_References.item(row, column).text())
-
-        selected_row = guiutils.get_current_row(self.tableWidget_References)
-
-        menu = QMenu()
-        copy_address = menu.addAction(tr.COPY_ADDRESS)
-        copy_value = menu.addAction(tr.COPY_VALUE)
-        if selected_row == -1:
-            guiutils.delete_menu_entries(menu, [copy_address, copy_value])
-        font_size = self.tableWidget_References.font().pointSize()
-        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec(event.globalPos())
-        actions = {
-            copy_address: lambda: copy_to_clipboard(selected_row, REF_STR_ADDR_COL),
-            copy_value: lambda: copy_to_clipboard(selected_row, REF_STR_VAL_COL),
-        }
-        try:
-            actions[action]()
-        except KeyError:
-            pass
-
-    def listWidget_Referrers_context_menu_event(self, event: QContextMenuEvent) -> None:
-        def copy_to_clipboard(row: int) -> None:
-            app.clipboard().setText(self.listWidget_Referrers.item(row).text())
-
-        selected_row = guiutils.get_current_row(self.listWidget_Referrers)
-
-        menu = QMenu()
-        copy_address = menu.addAction(tr.COPY_ADDRESS)
-        if selected_row == -1:
-            guiutils.delete_menu_entries(menu, [copy_address])
-        font_size = self.listWidget_Referrers.font().pointSize()
-        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec(event.globalPos())
-        actions = {copy_address: lambda: copy_to_clipboard(selected_row)}
-        try:
-            actions[action]()
-        except KeyError:
-            pass
-
-
-class ReferencedCallsWidgetForm(QWidget, ReferencedCallsWidget):
-    def __init__(self, parent: QWidget) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.setWindowFlags(Qt.WindowType.Window)
-        self.tableWidget_References.setColumnWidth(REF_CALL_ADDR_COL, 480)
-        self.splitter.setStretchFactor(0, 1)
-        self.listWidget_Referrers.resize(400, self.listWidget_Referrers.height())
-        guiutils.center_to_parent(self)
-        self.hex_len = 16 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 else 8
-        str_dict, jmp_dict, call_dict = debugcore.get_dissect_code_data()
-        try:
-            str_dict_len, jmp_dict_len, call_dict_len = len(str_dict), len(jmp_dict), len(call_dict)
-        finally:
-            str_dict.close()
-            jmp_dict.close()
-            call_dict.close()
-        if str_dict_len == 0 and jmp_dict_len == 0 and call_dict_len == 0:
-            if utilwidgets.InputDialog(self, tr.DISSECT_CODE).exec():
-                dissect_code_dialog = DissectCodeDialogForm(self)
-                dissect_code_dialog.scan_finished_signal.connect(dissect_code_dialog.accept)
-                dissect_code_dialog.exec()
-        self.refresh_table()
-        self.tableWidget_References.sortByColumn(REF_CALL_ADDR_COL, Qt.SortOrder.AscendingOrder)
-        self.tableWidget_References.selectionModel().currentChanged.connect(self.tableWidget_References_current_changed)
-        self.listWidget_Referrers.itemDoubleClicked.connect(self.listWidget_Referrers_item_double_clicked)
-        self.tableWidget_References.itemDoubleClicked.connect(self.tableWidget_References_item_double_clicked)
-        self.tableWidget_References.contextMenuEvent = self.tableWidget_References_context_menu_event
-        self.listWidget_Referrers.contextMenuEvent = self.listWidget_Referrers_context_menu_event
-        self.pushButton_Search.clicked.connect(self.refresh_table)
-        self.shortcut_search = QShortcut(QKeySequence("Return"), self)
-        self.shortcut_search.activated.connect(self.refresh_table)
-
-    def pad_hex(self, hex_str: str) -> str:
-        index = hex_str.find(" ")
-        if index == -1:
-            self_len = 0
-        else:
-            self_len = len(hex_str) - index
-        return "0x" + hex_str[2:].zfill(self.hex_len + self_len)
-
-    def refresh_table(self) -> None:
-        item_list = debugcore.search_referenced_calls(
-            self.lineEdit_Regex.text(), self.checkBox_CaseSensitive.isChecked(), self.checkBox_Regex.isChecked()
-        )
-        if item_list is None:
-            QMessageBox.information(self, tr.ERROR, tr.INVALID_REGEX)
-            return
-        self.tableWidget_References.setSortingEnabled(False)
-        self.tableWidget_References.setRowCount(0)
-        self.tableWidget_References.setRowCount(len(item_list))
-        for row, item in enumerate(item_list):
-            self.tableWidget_References.setItem(row, REF_CALL_ADDR_COL, QTableWidgetItem(self.pad_hex(item[0])))
-            table_widget_item = QTableWidgetItem()
-            table_widget_item.setData(Qt.ItemDataRole.EditRole, item[1])
-            self.tableWidget_References.setItem(row, REF_CALL_COUNT_COL, table_widget_item)
-        self.tableWidget_References.setSortingEnabled(True)
-
-    def tableWidget_References_current_changed(self, QModelIndex_current: QModelIndex) -> None:
-        if QModelIndex_current.row() < 0:
-            return
-        self.listWidget_Referrers.clear()
-        call_dict = debugcore.get_dissect_code_data(False, False, True)[0]
-        try:
-            addr = self.tableWidget_References.item(QModelIndex_current.row(), REF_CALL_ADDR_COL).text()
-            referrers = call_dict.get(hex(int(utils.extract_hex_address(addr), 16)))
-            if referrers is None:
-                return
-            addrs = [hex(address) for address in referrers]
-            self.listWidget_Referrers.addItems([self.pad_hex(item.all) for item in debugcore.examine_expressions(addrs) if item.all])
-            self.listWidget_Referrers.sortItems(Qt.SortOrder.AscendingOrder)
-        finally:
-            call_dict.close()
-
-    def tableWidget_References_item_double_clicked(self, index: QTableWidgetItem) -> None:
-        row = index.row()
-        address = self.tableWidget_References.item(row, REF_CALL_ADDR_COL).text()
-        self.parent().disassemble_expression(utils.extract_hex_address(address))
-
-    def listWidget_Referrers_item_double_clicked(self, item: QListWidgetItem) -> None:
-        self.parent().disassemble_expression(utils.extract_hex_address(item.text()))
-
-    def tableWidget_References_context_menu_event(self, event: QContextMenuEvent) -> None:
-        def copy_to_clipboard(row: int, column: int) -> None:
-            app.clipboard().setText(self.tableWidget_References.item(row, column).text())
-
-        selected_row = guiutils.get_current_row(self.tableWidget_References)
-
-        menu = QMenu()
-        copy_address = menu.addAction(tr.COPY_ADDRESS)
-        if selected_row == -1:
-            guiutils.delete_menu_entries(menu, [copy_address])
-        font_size = self.tableWidget_References.font().pointSize()
-        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec(event.globalPos())
-        actions = {copy_address: lambda: copy_to_clipboard(selected_row, REF_CALL_ADDR_COL)}
-        try:
-            actions[action]()
-        except KeyError:
-            pass
-
-    def listWidget_Referrers_context_menu_event(self, event: QContextMenuEvent) -> None:
-        def copy_to_clipboard(row: int) -> None:
-            app.clipboard().setText(self.listWidget_Referrers.item(row).text())
-
-        selected_row = guiutils.get_current_row(self.listWidget_Referrers)
-
-        menu = QMenu()
-        copy_address = menu.addAction(tr.COPY_ADDRESS)
-        if selected_row == -1:
-            guiutils.delete_menu_entries(menu, [copy_address])
-        font_size = self.listWidget_Referrers.font().pointSize()
-        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec(event.globalPos())
-        actions = {copy_address: lambda: copy_to_clipboard(selected_row)}
-        try:
-            actions[action]()
-        except KeyError:
-            pass
 
 
 def handle_exit() -> None:

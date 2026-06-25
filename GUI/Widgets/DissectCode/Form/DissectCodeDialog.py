@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'DissectCodeDialog.ui'
+# Form implementation generated from reading ui file 'Widgets/DissectCode/Form/DissectCodeDialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #

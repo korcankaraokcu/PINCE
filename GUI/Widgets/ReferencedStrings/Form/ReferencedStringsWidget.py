@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'ReferencedCallsWidget.ui'
+# Form implementation generated from reading ui file 'Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #
@@ -48,17 +48,28 @@ class Ui_Form(object):
         self.tableWidget_References.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.tableWidget_References.setWordWrap(False)
         self.tableWidget_References.setObjectName("tableWidget_References")
-        self.tableWidget_References.setColumnCount(2)
+        self.tableWidget_References.setColumnCount(3)
         self.tableWidget_References.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_References.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_References.setHorizontalHeaderItem(1, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_References.setHorizontalHeaderItem(2, item)
         self.tableWidget_References.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_References.verticalHeader().setVisible(False)
         self.tableWidget_References.verticalHeader().setDefaultSectionSize(16)
         self.tableWidget_References.verticalHeader().setMinimumSectionSize(16)
         self.verticalLayout.addWidget(self.tableWidget_References)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        self.horizontalLayout.addItem(spacerItem)
+        self.comboBox_ValueType = QtWidgets.QComboBox(parent=self.layoutWidget)
+        self.comboBox_ValueType.setSizeAdjustPolicy(QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.comboBox_ValueType.setObjectName("comboBox_ValueType")
+        self.horizontalLayout.addWidget(self.comboBox_ValueType)
+        self.verticalLayout.addLayout(self.horizontalLayout)
         self.listWidget_Referrers = QtWidgets.QListWidget(parent=self.splitter)
         font = QtGui.QFont()
         font.setFamily("Monospace")
@@ -68,11 +79,12 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)
 
         self.retranslateUi(Form)
+        self.comboBox_ValueType.setCurrentIndex(-1)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Referenced Calls"))
+        Form.setWindowTitle(_translate("Form", "Referenced Strings and Values"))
         self.lineEdit_Regex.setPlaceholderText(_translate("Form", "Enter a string or a python regex"))
         self.checkBox_CaseSensitive.setToolTip(_translate("Form", "Ignore case if checked"))
         self.checkBox_CaseSensitive.setText(_translate("Form", "Case sensitive"))
@@ -84,3 +96,5 @@ class Ui_Form(object):
         item.setText(_translate("Form", "Address"))
         item = self.tableWidget_References.horizontalHeaderItem(1)
         item.setText(_translate("Form", "Refcount"))
+        item = self.tableWidget_References.horizontalHeaderItem(2)
+        item.setText(_translate("Form", "Value"))

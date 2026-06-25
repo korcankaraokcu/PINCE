@@ -77,57 +77,6 @@
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Dissect Code</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Regions</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Path</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Selected regions will be scanned</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Currently scanning range:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>String references found:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Jumps found:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Calls found:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Entries that can't be decoded as utf-8 won't be included in referenced strings
-Unchecking it makes ReferencedStringsWidget load slower but allows you to examine non-string pointers on it</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/DissectCodeDialog.ui" line="0" />
-        <source>Discard invalid strings</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
         <source>Parameters for tracing</source>
         <translation type="unfinished" />
@@ -185,6 +134,57 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
         <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
         <source>Pointed Address</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Dissect Code</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Regions</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Path</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Selected regions will be scanned</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Currently scanning range:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>String references found:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Jumps found:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Calls found:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Entries that can't be decoded as utf-8 won't be included in referenced strings
+Unchecking it makes ReferencedStringsWidget load slower but allows you to examine non-string pointers on it</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
+        <source>Discard invalid strings</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -730,91 +730,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Referenced Calls</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Enter a string or a python regex</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Ignore case if checked</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Case sensitive</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Your string will be treated as a regex if checked</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Regex</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Search(Enter)</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Address</source>
-        <translation type="unfinished">Indirizzo</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedCallsWidget.ui" line="0" />
-        <source>Refcount</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <source>Referenced Strings and Values</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <location filename="../../GUI/ReferencedStringsWidget.ui" line="0" />
-        <source>Value</source>
-        <translation type="unfinished">Valore</translation>
-    </message>
-    <message>
         <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
         <source>Tracer Status</source>
         <translation type="unfinished" />
@@ -836,6 +751,23 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
         <source>Count</source>
         <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+        <source>Address</source>
+        <translation type="unfinished">Indirizzo</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
+        <source>Value</source>
+        <translation type="unfinished">Valore</translation>
     </message>
     <message>
         <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
@@ -900,6 +832,58 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Enter a string or a python regex</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Ignore case if checked</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Case sensitive</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Your string will be treated as a regex if checked</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Regex</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ExamineReferrers/Form/ExamineReferrersWidget.ui" line="0" />
+        <source>Search(Enter)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <source>Functions</source>
         <translation type="unfinished" />
@@ -918,6 +902,22 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
         <source>TextLabel</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <source>Referenced Calls</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <source>Refcount</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <source>Referenced Strings and Values</source>
         <translation type="unfinished" />
     </message>
     <message>
