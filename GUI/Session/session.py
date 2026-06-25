@@ -109,9 +109,7 @@ class Session:
             bool: True if the session was saved successfully, False otherwise.
         """
 
-        with guiutils.save_dialog_as_user(
-            None, tr.SAVE_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT, "pct"
-        ) as file_path:
+        with guiutils.save_dialog_as_user(None, tr.SAVE_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT, "pct") as file_path:
             if not file_path:
                 return False
             # until address tree is model view and properly read from this new session object,
@@ -168,9 +166,7 @@ class Session:
                 return False
 
         if file_path is None or not isinstance(file_path, str):
-            file_path, _ = QFileDialog.getOpenFileName(
-                None, tr.OPEN_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT
-            )
+            file_path, _ = QFileDialog.getOpenFileName(None, tr.OPEN_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT)
 
             if not file_path:
                 return False
@@ -269,8 +265,7 @@ class Session:
                 continue
             if region_index < 0 or region_index >= len(region):
                 utils.logger.warning(
-                    f"Region '{region_name}' now has {len(region)} mapping(s). "
-                    f"Bookmark expected index {region_index}, dropping it..."
+                    f"Region '{region_name}' now has {len(region)} mapping(s). " f"Bookmark expected index {region_index}, dropping it..."
                 )
                 continue
             new_addr = utils.safe_str_to_int(region[region_index], 16) + utils.safe_str_to_int(offset, 16)

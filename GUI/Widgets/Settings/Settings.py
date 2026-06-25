@@ -111,12 +111,8 @@ class SettingsDialog(QDialog, Ui_Dialog):
         super().reject()
 
     def config_gui(self) -> None:
-        self.checkBox_AutoUpdateAddressTable.setChecked(
-            self.settings.value("General/auto_update_address_table", type=bool)
-        )
-        self.checkBox_CheckUpdatesOnStartup.setChecked(
-            self.settings.value(settings.CHECK_UPDATES_ON_STARTUP, False, type=bool)
-        )
+        self.checkBox_AutoUpdateAddressTable.setChecked(self.settings.value("General/auto_update_address_table", type=bool))
+        self.checkBox_CheckUpdatesOnStartup.setChecked(self.settings.value(settings.CHECK_UPDATES_ON_STARTUP, False, type=bool))
         if not os.environ.get("APPDIR"):
             self.checkBox_CheckUpdatesOnStartup.hide()
         self.spinBox_UpdateInterval.setValue(self.settings.value("General/address_table_update_interval", type=int))
@@ -131,18 +127,14 @@ class SettingsDialog(QDialog, Ui_Dialog):
         current_locale = self.settings.value("General/locale", type=str)
         self.comboBox_Language.setCurrentText(language_list.get(current_locale, language_list["en_US"]))
         with QSignalBlocker(self.comboBox_Theme):
-            self.comboBox_Theme.setCurrentIndex(
-                self.comboBox_Theme.findData(self.settings.value("General/theme", type=str))
-            )
+            self.comboBox_Theme.setCurrentIndex(self.comboBox_Theme.findData(self.settings.value("General/theme", type=str)))
         with QSignalBlocker(self.comboBox_Logo):
             self.comboBox_Logo.setCurrentText(self.settings.value("General/logo_path", type=str))
         self.hotkey_to_value.clear()
         for hotkey in states.hotkeys.get_hotkeys():
             self.hotkey_to_value[hotkey.name] = self.settings.value("Hotkeys/" + hotkey.name)
         self.listWidget_Functions_current_row_changed(self.listWidget_Functions.currentRow())
-        self.checkBox_ShowMemoryViewOnStop.setChecked(
-            self.settings.value("MemoryView/show_memory_view_on_stop", type=bool)
-        )
+        self.checkBox_ShowMemoryViewOnStop.setChecked(self.settings.value("MemoryView/show_memory_view_on_stop", type=bool))
         self.spinBox_InstructionsPerScroll.setValue(self.settings.value("MemoryView/instructions_per_scroll", type=int))
         self.spinBox_BytesPerScroll.setValue(self.settings.value("MemoryView/bytes_per_scroll", type=int))
         self.lineEdit_GDBPath.setText(str(self.settings.value("Debug/gdb_path", type=str)))

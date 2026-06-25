@@ -23,13 +23,9 @@ class PointerScanFilterDialog(QDialog, Ui_Dialog):
 
     def pointer_map_file_prompt(self, file_path_field: QLineEdit, is_open: bool) -> None:
         if is_open:
-            file_path, _ = QFileDialog.getOpenFileName(
-                self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), tr.FILE_TYPES_POINTER_MAP
-            )
+            file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), tr.FILE_TYPES_POINTER_MAP)
         else:
-            file_path, _ = QFileDialog.getSaveFileName(
-                self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), tr.FILE_TYPES_POINTER_MAP
-            )
+            file_path, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), tr.FILE_TYPES_POINTER_MAP)
         if file_path != "":
             if not is_open:
                 file_path = utils.append_file_extension(file_path, "lmptr")
@@ -38,11 +34,7 @@ class PointerScanFilterDialog(QDialog, Ui_Dialog):
                 self.filter_button.setEnabled(True)
 
     def is_filterable_state(self) -> bool:
-        return (
-            self.lineEdit_PrevFile.text() != ""
-            and self.lineEdit_CurrentFile.text() != ""
-            and self.lineEdit_NewFile.text() != ""
-        )
+        return self.lineEdit_PrevFile.text() != "" and self.lineEdit_CurrentFile.text() != "" and self.lineEdit_NewFile.text() != ""
 
     def reject(self) -> None:
         if self.filter_thread is not None:

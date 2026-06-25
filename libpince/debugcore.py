@@ -381,9 +381,7 @@ def state_observe_thread() -> None:
             if currentpid != -1:
                 process_exited_condition.notify_all()
         if isinstance(e, pexpect.EOF):
-            logger.exception(
-                f"EOF exception caught within pexpect, here's the contents of child.before:\n{child.before}"
-            )
+            logger.exception(f"EOF exception caught within pexpect, here's the contents of child.before:\n{child.before}")
         logger.info("Exiting state_observe_thread")
 
 
@@ -688,9 +686,7 @@ def attach(pid: int | str, gdb_path: str = utils.get_default_gdb_path()) -> int:
     return typedefs.ATTACH_RESULT.SUCCESSFUL
 
 
-def create_process(
-    process_path: str, args: str = "", ld_preload_path: str = "", gdb_path: str = utils.get_default_gdb_path()
-) -> bool:
+def create_process(process_path: str, args: str = "", ld_preload_path: str = "", gdb_path: str = utils.get_default_gdb_path()) -> bool:
     """Creates a new process for debugging and initializes some of the global variables
     Current process will be detached even if the create_process call fails
     Make sure to save your data before calling this monstrosity
@@ -837,8 +833,12 @@ def inject_so(library_path: str) -> bool:
             return True
     # Fallback to manual address resolution if GDB failed.
     _lib_regexes = [
-        r"^libc\.so", r"^libc-[\d.]+\.so", r"libc\.musl", r"ld-musl",
-        r"^libdl\.so", r"^libdl-[\d.]+\.so",
+        r"^libc\.so",
+        r"^libc-[\d.]+\.so",
+        r"libc\.musl",
+        r"ld-musl",
+        r"^libdl\.so",
+        r"^libdl-[\d.]+\.so",
     ]
     _sym_names = ["dlopen", "__libc_dlopen_mode"]
     for regex in _lib_regexes:
@@ -889,6 +889,7 @@ def inject_dll(dll_path: str) -> tuple[bool, int]:
 
         # Walk the export tables and find "LoadLibraryW".
         with memory_handle() as mem:
+
             def u(addr, n):
                 mem.seek(addr)
                 return int.from_bytes(mem.read(n), "little")
@@ -1039,6 +1040,7 @@ def inject_dll(dll_path: str) -> tuple[bool, int]:
                         set_convenience_variable("rip", hex(brk))
                         set_convenience_variable("rsp", hex(esp0))
             else:  # 64 bits process or pure 32 bits.
+
                 def call(expr):
                     m = regexes.convenience_variable.search(send_command(f"call {expr}"))
                     h = regexes.hex_number_grouped.search(m.group(2)) if m else None
@@ -1268,11 +1270,7 @@ def read_memory(
             mem_handle = memory_handle()
         mem_handle.seek(address)
         data_read = mem_handle.read(expected_length)
-        if (
-            endian != typedefs.ENDIANNESS.HOST
-            and system_endianness != endian
-            and typedefs.VALUE_INDEX.is_number(value_index)
-        ):
+        if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian and typedefs.VALUE_INDEX.is_number(value_index):
             data_read = data_read[::-1]
     except (OSError, ValueError):
         # TODO (read/write error output)
@@ -1487,9 +1485,7 @@ def examine_expression(expression: str) -> typedefs.tuple_examine_expression:
     """
     if currentpid == -1:
         return typedefs.tuple_examine_expression(None, None, None)
-    result = send_command(
-        "pince-examine-expressions", send_with_file=True, file_contents_send=[expression], recv_with_file=True
-    )
+    result = send_command("pince-examine-expressions", send_with_file=True, file_contents_send=[expression], recv_with_file=True)
     if not result:
         return typedefs.tuple_examine_expression(None, None, None)
     return result[0]
@@ -1508,9 +1504,7 @@ def examine_expressions(expression_list: list[str]) -> list[typedefs.tuple_exami
         return []
     if currentpid == -1:
         return [typedefs.tuple_examine_expression(None, None, None) for _ in range(len(expression_list))]
-    result = send_command(
-        "pince-examine-expressions", send_with_file=True, file_contents_send=expression_list, recv_with_file=True
-    )
+    result = send_command("pince-examine-expressions", send_with_file=True, file_contents_send=expression_list, recv_with_file=True)
     if not result:
         return [typedefs.tuple_examine_expression(None, None, None) for _ in range(len(expression_list))]
     return result
@@ -1534,9 +1528,7 @@ def parse_and_eval(expression: str, cast: type = str) -> Any:
         cast: Self-explanatory
         None: If casting fails
     """
-    return send_command(
-        "pince-parse-and-eval", send_with_file=True, file_contents_send=(expression, cast), recv_with_file=True
-    )
+    return send_command("pince-parse-and-eval", send_with_file=True, file_contents_send=(expression, cast), recv_with_file=True)
 
 
 def _refresh_main_module_info() -> None:
@@ -1596,9 +1588,7 @@ def _refresh_main_module_info() -> None:
     if _main_module_is_static:
         # Cache the module's ranges now so is_address_static() is a plain memory check, not a maps read per address.
         _main_module_ranges = [
-            (int(start, 16), int(end, 16))
-            for start, end, _, _, _, _, path in utils.get_regions(currentpid)
-            if path == module_path
+            (int(start, 16), int(end, 16)) for start, end, _, _, _, _, path in utils.get_regions(currentpid) if path == module_path
         ]
 
 
@@ -1644,9 +1634,7 @@ def get_thread_info() -> str | None:
     return re.sub(r'\\"', r'"', current_thread.group(1))
 
 
-def find_closest_instruction_address(
-    address: str, instruction_location: str = "next", instruction_count: int = 1
-) -> str | None:
+def find_closest_instruction_address(address: str, instruction_location: str = "next", instruction_count: int = 1) -> str | None:
     """Finds address of the closest instruction next to the given address, assuming that the given address is valid
 
     Args:
@@ -2062,9 +2050,7 @@ def get_breakpoint_info() -> list[typedefs.tuple_breakpoint_info]:
             else:
                 size = 1
         returned_list.append(
-            typedefs.tuple_breakpoint_info(
-                number, breakpoint_type, disp, enabled, address, size, on_hit, hit_count, enable_count, condition
-            )
+            typedefs.tuple_breakpoint_info(number, breakpoint_type, disp, enabled, address, size, on_hit, hit_count, enable_count, condition)
         )
     return returned_list
 
@@ -2235,9 +2221,7 @@ def add_watchpoint(
     return breakpoints_set
 
 
-def modify_breakpoint(
-    breakpoint_number: int, modify_what: int, condition: str | None = None, count: int | None = None
-) -> bool:
+def modify_breakpoint(breakpoint_number: int, modify_what: int, condition: str | None = None, count: int | None = None) -> bool:
     """Adds a condition to an existing breakpoint
 
     Args:
@@ -2344,9 +2328,7 @@ def track_watchpoint(expression: str, length: int, watchpoint_type: int) -> list
     if not breakpoints:
         return
     for breakpoint in breakpoints:
-        send_command(
-            "commands " + breakpoint + "\npince-get-track-watchpoint-info " + str(breakpoints) + "\nc&" + "\nend"
-        )
+        send_command("commands " + breakpoint + "\npince-get-track-watchpoint-info " + str(breakpoints) + "\nc&" + "\nend")
     return breakpoints
 
 
@@ -2396,9 +2378,7 @@ def track_breakpoint(expression: str, register_expressions: str) -> int | None:
         return
     # TODO (lldb): When we switch to LLDB, remove c& and only continue if there isn't an active trace
     # Apply the same for track_watchpoint
-    send_command(
-        f"commands {breakpoint}\npince-get-track-breakpoint-info {register_expressions.replace(' ', '')},{breakpoint}\nc&\nend"
-    )
+    send_command(f"commands {breakpoint}\npince-get-track-breakpoint-info {register_expressions.replace(' ', '')},{breakpoint}\nc&\nend")
     return breakpoint
 
 
@@ -2675,9 +2655,7 @@ def dissect_code(region_list: list, discard_invalid_strings: bool = True) -> Non
     global dissect_code_active
     dissect_code_active = True
     try:
-        send_command(
-            "pince-dissect-code", send_with_file=True, file_contents_send=(region_list, discard_invalid_strings)
-        )
+        send_command("pince-dissect-code", send_with_file=True, file_contents_send=(region_list, discard_invalid_strings))
     finally:
         dissect_code_active = False
 
@@ -2713,9 +2691,7 @@ def cancel_dissect_code() -> None:
         cancel_ongoing_command()
 
 
-def get_dissect_code_data(
-    referenced_strings: bool = True, referenced_jumps: bool = True, referenced_calls: bool = True
-) -> list[shelve.Shelf]:
+def get_dissect_code_data(referenced_strings: bool = True, referenced_jumps: bool = True, referenced_calls: bool = True) -> list[shelve.Shelf]:
     """Returns shelve.DbfilenameShelf objects of referenced dicts
 
     Args:

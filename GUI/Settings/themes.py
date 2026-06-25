@@ -167,9 +167,7 @@ def get_theme(theme_name: str) -> QPalette:
             return apply_palette(light_dict)
         case Themes.DEFAULT.value:
             palette_with_fix = QPalette()
-            palette_with_fix.setColor(
-                QPalette.ColorRole.PlaceholderText, palette_with_fix.color(QPalette.ColorRole.Text).darker()
-            )
+            palette_with_fix.setColor(QPalette.ColorRole.PlaceholderText, palette_with_fix.color(QPalette.ColorRole.Text).darker())
             return palette_with_fix
         case Themes.WONG.value:
             dup_dict = {

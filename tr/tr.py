@@ -52,9 +52,7 @@ class TranslationConstants(QObject):
     SPEEDHACK_UNAVAILABLE = QT_TR_NOOP("Speedhack couldn't be enabled for this process.")
     GDB_INIT = QT_TR_NOOP("GDB isn't initialized yet")
     GDB_INIT_ERROR = QT_TR_NOOP(
-        "Unable to initialize GDB\n"
-        "You might want to reinstall GDB or use the system GDB\n"
-        "To change the current GDB path, check Settings->Debug"
+        "Unable to initialize GDB\n" "You might want to reinstall GDB or use the system GDB\n" "To change the current GDB path, check Settings->Debug"
     )
     EDIT = QT_TR_NOOP("Edit")
     SHOW_HEX = QT_TR_NOOP("Show as hexadecimal")
@@ -153,9 +151,7 @@ class TranslationConstants(QObject):
     RESET_DEFAULT_SETTINGS = QT_TR_NOOP("This will reset to the default settings\n" "Proceed?")
     MOUSE_OVER_EXAMPLES = QT_TR_NOOP("Mouse over on this text for examples")
     AUTO_ATTACH_TOOLTIP = QT_TR_NOOP(
-        "asdf|qwer --> search for asdf or qwer\n"
-        "[as]df --> search for both adf and sdf\n"
-        "Use the char \\ to escape special chars such as [\n"
+        "asdf|qwer --> search for asdf or qwer\n" "[as]df --> search for both adf and sdf\n" "Use the char \\ to escape special chars such as [\n"
     )
     SEPARATE_PROCESSES_WITH = QT_TR_NOOP("Separate processes with {}")
     UNUSED_APPIMAGE_SETTING = QT_TR_NOOP("This setting is unused in AppImage builds")
@@ -210,10 +206,7 @@ class TranslationConstants(QObject):
     MV_DEBUGGING = QT_TR_NOOP("Memory Viewer - Currently debugging {}")
     MV_RUNNING = QT_TR_NOOP("Memory Viewer - Running")
     ENTER_BP_CONDITION = QT_TR_NOOP(
-        "Enter the expression for condition, for instance:\n\n"
-        "$eax==0x523\n"
-        "$rax>0 && ($rbp<0 || $rsp==0)\n"
-        "printf($r10)==3"
+        "Enter the expression for condition, for instance:\n\n" "$eax==0x523\n" "$rax>0 && ($rbp<0 || $rsp==0)\n" "printf($r10)==3"
     )
     BP_CONDITION_FAILED = QT_TR_NOOP("Failed to set condition for address {}\n" "Check terminal for details")
     FULL_STACK = QT_TR_NOOP("Full Stack")
@@ -329,10 +322,7 @@ class TranslationConstants(QObject):
         "There can be more than one of the same function\n"
         "It means that the function is overloaded"
     )
-    NEW_INSTR = QT_TR_NOOP(
-        "New instruction is {} bytes long but old instruction is only {} bytes long\n"
-        "This will cause an overflow, proceed?"
-    )
+    NEW_INSTR = QT_TR_NOOP("New instruction is {} bytes long but old instruction is only {} bytes long\n" "This will cause an overflow, proceed?")
     IS_INVALID_EXPRESSION = QT_TR_NOOP("{} isn't a valid expression")
     LOG_FILE = QT_TR_NOOP("Log File of PID {}")
     LOG_CONTENTS = QT_TR_NOOP("Contents of {} (only last {} bytes are shown)")
@@ -389,9 +379,7 @@ class TranslationConstants(QObject):
     SAVE_SESSION_QUESTION_TITLE = QT_TR_NOOP("Session - Unsaved changes")
     SAVE_SESSION_QUESTION_PROMPT = QT_TR_NOOP("You have unsaved changes.\nDo you want to save the current session?")
     SESSION_PROCESS_CHANGED_TITLE = QT_TR_NOOP("Session - Process changed")
-    SESSION_PROCESS_CHANGED_PROMPT = QT_TR_NOOP(
-        "The process name has changed.\n" "Do you want to keep the current session with the new process?"
-    )
+    SESSION_PROCESS_CHANGED_PROMPT = QT_TR_NOOP("The process name has changed.\n" "Do you want to keep the current session with the new process?")
     MONO_NOT_READY = QT_TR_NOOP("Mono collector is not connected")
     MONO_NO_RUNTIME = QT_TR_NOOP("No supported managed runtime found in this process")
     MONO_INVOKE = QT_TR_NOOP("Invoke...")

@@ -65,9 +65,7 @@ class PointerScanModel(QAbstractTableModel):
             return base
         return hex(offsets[column - 1]) if column - 1 < len(offsets) else ""
 
-    def headerData(
-        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole
-    ) -> str | None:
+    def headerData(self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> str | None:
         if role != Qt.ItemDataRole.DisplayRole or orientation != Qt.Orientation.Horizontal:
             return None
         return tr.BASE_ADDRESS if section == 0 else f"{tr.OFFSET} {section}"

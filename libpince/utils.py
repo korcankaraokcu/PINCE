@@ -951,9 +951,7 @@ def assemble(instructions: str, address: int, inferior_arch: int) -> tuple[list[
         logger.exception("Failed to assemble bytes")
 
 
-def aob_to_str(
-    list_of_bytes: list[int | str] | int | str, encoding: str = "ascii", replace_unprintable: bool = True
-) -> str:
+def aob_to_str(list_of_bytes: list[int | str] | int | str, encoding: str = "ascii", replace_unprintable: bool = True) -> str:
     """Converts given array of hex strings to str
 
     Args:
@@ -1248,14 +1246,10 @@ def safe_str_to_int(input: Any, base: int) -> int:
     try:
         return int(input, base)
     except ValueError:
-        logger.error(
-            f"ValueError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'"
-        )
+        logger.error(f"ValueError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'")
         return 0
     except TypeError:
-        logger.error(
-            f"TypeError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'"
-        )
+        logger.error(f"TypeError: Tried to convert input '{input}' to base {base} for caller '{sys._getframe().f_back.f_code.co_qualname}'")
         return 0
 
 
@@ -1264,12 +1258,8 @@ def safe_int_cast(input: Any) -> int:
     try:
         return int(input)
     except ValueError:
-        logger.error(
-            f"ValueError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'"
-        )
+        logger.error(f"ValueError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'")
         return 0
     except TypeError:
-        logger.error(
-            f"TypeError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'"
-        )
+        logger.error(f"TypeError: Tried to convert input '{input}' for caller '{sys._getframe().f_back.f_code.co_qualname}'")
         return 0

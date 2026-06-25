@@ -110,9 +110,7 @@ class LibpinceScriptApi:
         value_index = typedefs.VALUE_INDEX.FLOAT64 if double else typedefs.VALUE_INDEX.FLOAT32
         debugcore.write_memory(self.address(address), value_index, float(value))
 
-    def read_string(
-        self, address: int | str, length: int = 128, encoding: str = "utf8", zero_terminate: bool = True
-    ) -> str | None:
+    def read_string(self, address: int | str, length: int = 128, encoding: str = "utf8", zero_terminate: bool = True) -> str | None:
         """Read a string using ascii, utf8, utf16, or utf32."""
         value_index = self.string_index_by_encoding[encoding.lower()]
         return debugcore.read_memory(self.address(address), value_index, int(length), zero_terminate=zero_terminate)
@@ -169,9 +167,7 @@ class LibpinceScriptApi:
 
     def disassemble_bytes(self, data: BytesLike, address: int | str = 0) -> str | None:
         """Disassemble bytes and return a semicolon-separated instruction string."""
-        return utils.disassemble(
-            self._bytes(data).hex(" "), self.address(address) if address else 0, debugcore.inferior_arch
-        )
+        return utils.disassemble(self._bytes(data).hex(" "), self.address(address) if address else 0, debugcore.inferior_arch)
 
     def module_base(self, name: str) -> int | None:
         """Return the first mapped base address for a module by basename (e.g. 'libc.so.6')."""
@@ -179,11 +175,7 @@ class LibpinceScriptApi:
             raise RuntimeError("No process is attached!")
         needle = str(name).lower()
         return next(
-            (
-                int(start, 16)
-                for start, *_, path in utils.get_regions(debugcore.currentpid)
-                if path and os.path.basename(path).lower() == needle
-            ),
+            (int(start, 16) for start, *_, path in utils.get_regions(debugcore.currentpid) if path and os.path.basename(path).lower() == needle),
             None,
         )
 
@@ -210,9 +202,7 @@ class LibpinceScriptApi:
         matches = self.aobscan(pattern, writable=writable, executable=executable, limit=1)
         return matches[0] if matches else None
 
-    def aobscan(
-        self, pattern: str, writable: bool | None = None, executable: bool | None = None, limit: int = 1000
-    ) -> list[int]:
+    def aobscan(self, pattern: str, writable: bool | None = None, executable: bool | None = None, limit: int = 1000) -> list[int]:
         """Scan readable maps for an AOB pattern. Wildcards can be '?' or '??'."""
         if debugcore.currentpid == -1:
             raise RuntimeError("No process is attached!")
@@ -337,9 +327,7 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
                 self,
                 tr.UNSAVED_SCRIPT,
                 tr.SAVE_SCRIPT_CHANGES.format(self.tabWidget.tabText(index).rstrip("*")),
-                QMessageBox.StandardButton.Save
-                | QMessageBox.StandardButton.Discard
-                | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
             )
             if result == QMessageBox.StandardButton.Cancel:
                 return
@@ -356,9 +344,7 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
             self.create_new_tab()
 
     def open_file(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, tr.OPEN_SCRIPT_FILE, os.path.expanduser("~"), tr.FILE_TYPES_SCRIPT
-        )
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.OPEN_SCRIPT_FILE, os.path.expanduser("~"), tr.FILE_TYPES_SCRIPT)
         if not file_path:
             return
         editor = self.create_new_tab()
@@ -378,9 +364,7 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         if not editor:
             return
         if not editor.file_path:
-            file_path, _ = QFileDialog.getSaveFileName(
-                self, tr.SAVE_SCRIPT_FILE, os.path.expanduser("~"), tr.FILE_TYPES_SCRIPT
-            )
+            file_path, _ = QFileDialog.getSaveFileName(self, tr.SAVE_SCRIPT_FILE, os.path.expanduser("~"), tr.FILE_TYPES_SCRIPT)
             if not file_path:
                 return
             if not file_path.lower().endswith(".py"):
@@ -470,9 +454,7 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
     def _scratch_editor(self) -> ScriptEditor | None:
         # An unbound, empty, unsaved tab (e.g. the one a fresh window starts with) an entry can take over
         scratch = (
-            e
-            for e in self._iter_editors()
-            if e.script_entry is None and not e.file_path and not e.is_modified and not e.toPlainText().strip()
+            e for e in self._iter_editors() if e.script_entry is None and not e.file_path and not e.is_modified and not e.toPlainText().strip()
         )
         return next(scratch, None)
 

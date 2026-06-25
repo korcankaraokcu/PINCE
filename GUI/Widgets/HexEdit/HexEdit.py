@@ -67,11 +67,7 @@ class HexEditDialog(QDialog, Ui_Dialog):
                     byte = token.group(0)
                     if byte != "??" and (len(byte) > 2 or not 0 <= int(byte, 16) <= 0xFF):
                         raise ValueError
-                selected_bytes = [
-                    index
-                    for index, token in enumerate(tokens)
-                    if token.start() < selection_end and selection_start < token.end()
-                ]
+                selected_bytes = [index for index, token in enumerate(tokens) if token.start() < selection_end and selection_start < token.end()]
                 if selected_bytes:
                     ascii_start = selected_bytes[0]
                     ascii_length = selected_bytes[-1] - ascii_start + 1

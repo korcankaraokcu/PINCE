@@ -114,11 +114,7 @@ class MemberEditorDialog(QDialog, Ui_Dialog):
             value_index = self.comboBox_Type.currentData(Qt.ItemDataRole.UserRole)
             has_length = typedefs.VALUE_INDEX.has_length(value_index)
             length = utils.safe_str_to_int(self.lineEdit_Length.text(), 0) if has_length else 10
-            value_repr = (
-                self.comboBox_Repr.currentData()
-                if typedefs.VALUE_INDEX.is_integer(value_index)
-                else typedefs.VALUE_REPR.UNSIGNED
-            )
+            value_repr = self.comboBox_Repr.currentData() if typedefs.VALUE_INDEX.is_integer(value_index) else typedefs.VALUE_REPR.UNSIGNED
             endian = self.comboBox_Endian.currentData()
             vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
             return typedefs.StructureMember(name, offset, value_type=vt)

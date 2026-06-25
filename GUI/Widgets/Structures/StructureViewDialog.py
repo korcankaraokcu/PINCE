@@ -102,11 +102,7 @@ class StructureViewDialog(QDialog, Ui_Dialog):
             return
         member_addr = item.data(0, ROLE_ADDR)  # already base + member.offset
         if member.is_pointer:
-            ptr_index = (
-                typedefs.VALUE_INDEX.INT32
-                if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
-                else typedefs.VALUE_INDEX.INT64
-            )
+            ptr_index = typedefs.VALUE_INDEX.INT32 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
             child_base = debugcore.read_memory(member_addr, ptr_index)  # one hop deref at the member's address
             if child_base is None or child_base == 0:
                 item.setData(0, ROLE_LOADED, True)

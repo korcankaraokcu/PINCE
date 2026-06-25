@@ -97,14 +97,10 @@ class MonoFindInstancesDialog(QDialog, Ui_Dialog):
             invoke_menu.setEnabled(bool(method_actions))
             chosen = menu.exec(global_pos)
             if chosen == action_table:
-                self.owner.add_to_table_requested.emit(
-                    f"{payload['class'].get('name', '?')} {item.text(0)}", hex(payload["address"])
-                )
+                self.owner.add_to_table_requested.emit(f"{payload['class'].get('name', '?')} {item.text(0)}", hex(payload["address"]))
             elif chosen == action_dissect:
                 self.owner._dissect_instance_as_structure(payload["class"], payload["address"])
             elif chosen == action_copy:
                 QApplication.clipboard().setText(utils.upper_hex(hex(payload["address"])))
             elif chosen in method_actions:
-                self.owner.open_invoke_for_method(
-                    client, method_actions[chosen], payload["class"], instance_ptr=payload["address"]
-                )
+                self.owner.open_invoke_for_method(client, method_actions[chosen], payload["class"], instance_ptr=payload["address"])

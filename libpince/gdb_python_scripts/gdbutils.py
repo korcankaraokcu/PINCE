@@ -115,9 +115,7 @@ def get_float_registers() -> OrderedDict[str, str]:
     return contents_send
 
 
-def examine_expression(
-    expression: str, regions: dict[str, list[str]] | None = None
-) -> typedefs.tuple_examine_expression:
+def examine_expression(expression: str, regions: dict[str, list[str]] | None = None) -> typedefs.tuple_examine_expression:
     # Resolve one candidate through GDB's evaluator. Return None if it yields no address.
     def via_gdb(expr):
         try:
@@ -144,9 +142,7 @@ def examine_expression(
     names = "|".join(re.escape(name) for name in sorted(regions, key=len, reverse=True))
     substituted = re.sub(
         regexes.module_reference.format(names),
-        lambda m: regions[m.group(1)][int(m.group(2) or 0)]
-        if int(m.group(2) or 0) < len(regions[m.group(1)])
-        else m.group(0),
+        lambda m: regions[m.group(1)][int(m.group(2) or 0)] if int(m.group(2) or 0) < len(regions[m.group(1)]) else m.group(0),
         expression,
     )
     if substituted == expression:

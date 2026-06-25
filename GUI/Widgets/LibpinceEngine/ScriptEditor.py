@@ -119,11 +119,7 @@ class PythonHighlighter(QSyntaxHighlighter):
             absolute_start = start + match.start()
             next_index = start + match.end()
             next_char = text[next_index:].lstrip()[:1]
-            if (
-                name not in self.reserved
-                and next_char != "("
-                and (absolute_start == 0 or text[absolute_start - 1] != ".")
-            ):
+            if name not in self.reserved and next_char != "(" and (absolute_start == 0 or text[absolute_start - 1] != "."):
                 self.setFormat(absolute_start, len(name), self.variable_format)
         for match in self.function_regex.finditer(segment):
             name = match.group(1)
@@ -398,19 +394,11 @@ class ScriptEditor(QPlainTextEdit):
             names = (
                 []
                 if obj is None
-                else [
-                    f"{base}.{name}"
-                    for name in dir(obj)
-                    if name.startswith(partial) and (partial.startswith("_") or not name.startswith("_"))
-                ]
+                else [f"{base}.{name}" for name in dir(obj) if name.startswith(partial) and (partial.startswith("_") or not name.startswith("_"))]
             )
         else:
             all_names = sorted(set(keyword.kwlist) | set(dir(builtins)) | set(self.namespace))
-            names = (
-                all_names
-                if force and not prefix
-                else [name for name in all_names if name.startswith(prefix) or prefix in name]
-            )
+            names = all_names if force and not prefix else [name for name in all_names if name.startswith(prefix) or prefix in name]
         if not names:
             self.completer.popup().hide()
             return

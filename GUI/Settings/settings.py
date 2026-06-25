@@ -87,9 +87,7 @@ def init_settings() -> None:
     try:
         apply_settings()
     except Exception:
-        utils.logger.exception(
-            "An exception occurred while loading settings, rolling back to the default configuration"
-        )
+        utils.logger.exception("An exception occurred while loading settings, rolling back to the default configuration")
         settings.clear()
         set_default_settings()
 
@@ -142,9 +140,7 @@ def apply_settings() -> None:
     gdb_output_mode = typedefs.gdb_output_mode(*gdb_output_mode)
     states.auto_attach = settings.value("General/auto_attach", type=str)
     states.auto_attach_regex = settings.value("General/auto_attach_regex", type=bool)
-    QApplication.setWindowIcon(
-        QIcon(os.path.join(utils.get_logo_directory(), settings.value("General/logo_path", type=str)))
-    )
+    QApplication.setWindowIcon(QIcon(os.path.join(utils.get_logo_directory(), settings.value("General/logo_path", type=str))))
     QApplication.setPalette(themes.get_theme(settings.value("General/theme", type=str)))
     debugcore.set_gdb_output_mode(gdb_output_mode)
     for hotkey in states.hotkeys.get_hotkeys():

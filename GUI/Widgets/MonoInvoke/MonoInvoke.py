@@ -22,9 +22,7 @@ _MAX_PICK = 2000  # cap the instance picker list, same as the Find Instances tre
 
 
 class MonoInvokeDialog(QDialog, Ui_Dialog):
-    def __init__(
-        self, parent: QWidget, method_info: dict, signature: dict, instance_ptr: int | None = None, klass: int = 0
-    ) -> None:
+    def __init__(self, parent: QWidget, method_info: dict, signature: dict, instance_ptr: int | None = None, klass: int = 0) -> None:
         super().__init__(parent)
         self.setupUi(self)
         self.method = method_info["method"]
@@ -173,10 +171,7 @@ class MonoInvokeDialog(QDialog, Ui_Dialog):
             layout = None
         if not layout:
             return raw.hex()
-        return ", ".join(
-            f"{fld['name']}={monocore.unpack_value(fld['tag'], raw[fld['offset'] : fld['offset'] + fld['width']])}"
-            for fld in layout
-        )
+        return ", ".join(f"{fld['name']}={monocore.unpack_value(fld['tag'], raw[fld['offset'] : fld['offset'] + fld['width']])}" for fld in layout)
 
     def parse_value(self, tag: str, text: str) -> Any:
         if tag in ("str", "char"):

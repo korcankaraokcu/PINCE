@@ -28,9 +28,7 @@ def _ensure_managed_string_structure() -> str:
         ptr_type = typedefs.VALUE_INDEX.INT32 if is_32 else typedefs.VALUE_INDEX.INT64
         if is_32:
             members = [
-                typedefs.StructureMember(
-                    "vtable_ptr", 0x00, typedefs.ValueType(ptr_type, value_repr=typedefs.VALUE_REPR.HEX)
-                ),
+                typedefs.StructureMember("vtable_ptr", 0x00, typedefs.ValueType(ptr_type, value_repr=typedefs.VALUE_REPR.HEX)),
                 typedefs.StructureMember("sync", 0x04, typedefs.ValueType(ptr_type)),
                 typedefs.StructureMember("length", 0x08, typedefs.ValueType(typedefs.VALUE_INDEX.INT32)),
                 typedefs.StructureMember(
@@ -43,9 +41,7 @@ def _ensure_managed_string_structure() -> str:
             ]
         else:
             members = [
-                typedefs.StructureMember(
-                    "vtable_ptr", 0x00, typedefs.ValueType(ptr_type, value_repr=typedefs.VALUE_REPR.HEX)
-                ),
+                typedefs.StructureMember("vtable_ptr", 0x00, typedefs.ValueType(ptr_type, value_repr=typedefs.VALUE_REPR.HEX)),
                 typedefs.StructureMember("sync", 0x08, typedefs.ValueType(ptr_type)),
                 typedefs.StructureMember("length", 0x10, typedefs.ValueType(typedefs.VALUE_INDEX.INT32)),
                 typedefs.StructureMember(
@@ -59,9 +55,7 @@ def _ensure_managed_string_structure() -> str:
     return "System.String"
 
 
-def member_from_field(
-    fld: dict, pointer_index: typedefs.VALUE_INDEX = typedefs.VALUE_INDEX.INT64
-) -> "typedefs.StructureMember | None":
+def member_from_field(fld: dict, pointer_index: typedefs.VALUE_INDEX = typedefs.VALUE_INDEX.INT64) -> "typedefs.StructureMember | None":
     if not _is_instance_field(fld):
         return None
     tag = fld.get("tag")
@@ -69,13 +63,9 @@ def member_from_field(
         index, repr_ = _TAG_TO_VALUE[tag]
         return typedefs.StructureMember(fld["name"], fld["offset"], typedefs.ValueType(index, value_repr=repr_))
     if tag == "str":
-        return typedefs.StructureMember(
-            fld["name"], fld["offset"], struct_ref=_ensure_managed_string_structure(), is_pointer=True
-        )
+        return typedefs.StructureMember(fld["name"], fld["offset"], struct_ref=_ensure_managed_string_structure(), is_pointer=True)
     if tag == "object":
-        return typedefs.StructureMember(
-            fld["name"], fld["offset"], typedefs.ValueType(pointer_index, value_repr=typedefs.VALUE_REPR.HEX)
-        )
+        return typedefs.StructureMember(fld["name"], fld["offset"], typedefs.ValueType(pointer_index, value_repr=typedefs.VALUE_REPR.HEX))
     return typedefs.StructureMember(fld["name"], fld["offset"], typedefs.ValueType(typedefs.VALUE_INDEX.AOB, length=0))
 
 
@@ -107,9 +97,7 @@ def _unique_name(name: str) -> str:
     return f"{name}_{counter}"
 
 
-def _leaf_member(
-    fld: dict, instance: list[dict], i: int, pointer_index: typedefs.VALUE_INDEX
-) -> typedefs.StructureMember:
+def _leaf_member(fld: dict, instance: list[dict], i: int, pointer_index: typedefs.VALUE_INDEX) -> typedefs.StructureMember:
     m = member_from_field(fld, pointer_index)
     if m.value_type is not None and m.value_type.value_index == typedefs.VALUE_INDEX.AOB and m.value_type.length <= 0:
         nxt = instance[i + 1]["offset"] if i + 1 < len(instance) else fld["offset"] + 8
@@ -203,13 +191,7 @@ def _build_structure(
     return name
 
 
-def structure_from_class(
-    client: monocore.MonoClient, class_data: dict, include_inherited: bool = True, force_new: bool = True
-) -> typedefs.Structure:
-    pointer_index = (
-        typedefs.VALUE_INDEX.INT32
-        if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
-        else typedefs.VALUE_INDEX.INT64
-    )
+def structure_from_class(client: monocore.MonoClient, class_data: dict, include_inherited: bool = True, force_new: bool = True) -> typedefs.Structure:
+    pointer_index = typedefs.VALUE_INDEX.INT32 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
     name = _build_structure(client, class_data, set(), pointer_index, include_inherited, force_new)
     return StructureManager.get(name)

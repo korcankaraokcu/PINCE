@@ -57,11 +57,7 @@ def structure_to_records(
                 continue
             child_base = base_addr + member.offset
             if member.is_pointer and base_addr > 0:
-                ptr_index = (
-                    typedefs.VALUE_INDEX.INT32
-                    if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
-                    else typedefs.VALUE_INDEX.INT64
-                )
+                ptr_index = typedefs.VALUE_INDEX.INT32 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
                 ptr_val = debugcore.read_memory(base_addr + member.offset, ptr_index)
                 if ptr_val is not None:
                     child_base = ptr_val
@@ -71,9 +67,7 @@ def structure_to_records(
     return records
 
 
-def structure_to_group_record(
-    structure: typedefs.Structure, base_expr: str
-) -> tuple[str, str, tuple[int, int, bool, int, int], list]:
+def structure_to_group_record(structure: typedefs.Structure, base_expr: str) -> tuple[str, str, tuple[int, int, bool, int, int], list]:
     address = debugcore.examine_expression(base_expr).address if base_expr else None
     base_addr = int(address, 0) if address else 0
     members = structure_to_records(structure, 0, base_addr)

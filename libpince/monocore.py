@@ -374,9 +374,7 @@ class MonoClient:
 
         Returns {"result": <decoded value, bytes for a struct, or None>, "tag": <tag or None>, "exception": <ptr>}.
         """
-        wire_args = [
-            [tag, value if tag in ("str", "struct") else _arg_to_bits(tag, value)] for tag, value in (args or [])
-        ]
+        wire_args = [[tag, value if tag in ("str", "struct") else _arg_to_bits(tag, value)] for tag, value in (args or [])]
         response = self.request("invoke", method=method, obj=obj, args=wire_args)
         result = response.get("result")
         decoded, tag = None, None
@@ -401,7 +399,7 @@ def find_instances(klass: int) -> list[int]:
     """Find live instance addresses of a class.
     Scan target memory for its instance marker (an object's header word) via a private Libmemscan
     so the main window scan is left intact (if any).
-    
+
     Raises MonoError if the marker can't be resolved.
     Returns [] if none are mapped.
     """

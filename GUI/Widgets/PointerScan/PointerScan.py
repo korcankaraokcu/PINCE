@@ -56,9 +56,7 @@ class PointerScanWindow(QMainWindow, Ui_MainWindow):
         return super().closeEvent(event)
 
     def actionOpen_triggered(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), tr.FILE_TYPES_POINTER_MAP
-        )
+        file_path, _ = QFileDialog.getOpenFileName(self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), tr.FILE_TYPES_POINTER_MAP)
         if file_path != "":
             self.load_map(file_path)
 

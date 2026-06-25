@@ -105,9 +105,7 @@ class ParseAndEval(gdb.Command):
             value = gdb.parse_and_eval(expression)
             parsed_value = cast(value)
         except Exception:
-            logger.exception(
-                f"An exception occurred while trying to parse expression '{expression}' and cast to type '{str(cast)}'"
-            )
+            logger.exception(f"An exception occurred while trying to parse expression '{expression}' and cast to type '{str(cast)}'")
             parsed_value = None
         send_to_pince(parsed_value)
 
@@ -215,9 +213,7 @@ class GetStackInfo(gdb.Command):
                 return
             for index in range(int(4096 / chunk_size)):
                 current_offset = chunk_size * index
-                stack_indicator = (
-                    hex(sp_address + current_offset) + "(" + stack_register + "+" + hex(current_offset) + ")"
-                )
+                stack_indicator = hex(sp_address + current_offset) + "(" + stack_register + "+" + hex(current_offset) + ")"
                 try:
                     FILE.seek(old_position)
                     read = FILE.read(chunk_size)

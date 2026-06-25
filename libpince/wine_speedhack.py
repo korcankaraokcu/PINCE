@@ -452,11 +452,7 @@ def _step_threads_out_of_range(low: int, high: int, max_steps: int = 64) -> bool
     current_match = re.search(r'current-thread-id="(\d+)"', info)
     current_thread = current_match.group(1) if current_match else None
 
-    offenders = [
-        tid
-        for tid, addr in re.findall(r'id="(\d+)",[^}]*?frame=\{[^}]*?addr="(0x[0-9a-fA-F]+)"', info)
-        if low <= int(addr, 16) < high
-    ]
+    offenders = [tid for tid, addr in re.findall(r'id="(\d+)",[^}]*?frame=\{[^}]*?addr="(0x[0-9a-fA-F]+)"', info) if low <= int(addr, 16) < high]
 
     success = True
     for tid in offenders:

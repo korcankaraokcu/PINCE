@@ -49,9 +49,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.spinBox_MaxResults.setEnabled(checked)
 
     def pushButton_Path_clicked(self) -> None:
-        file_path, _ = QFileDialog.getSaveFileName(
-            self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), tr.FILE_TYPES_POINTER_MAP
-        )
+        file_path, _ = QFileDialog.getSaveFileName(self, tr.SELECT_POINTER_MAP, os.path.expanduser("~"), tr.FILE_TYPES_POINTER_MAP)
         if file_path != "":
             file_path = utils.append_file_extension(file_path, "lmptr")
             self.lineEdit_Path.setText(file_path)
@@ -90,9 +88,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
             ptr_opts.max_results = self.spinBox_MaxResults.value() if self.checkBox_MaxResults.isChecked() else None
             ptr_opts.module_base_only = self.checkBox_Module.isChecked()
         else:
-            ptr_opts = PointerScanOptions(
-                pointer_width=4 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 8
-            )
+            ptr_opts = PointerScanOptions(pointer_width=4 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 8)
         self.cleanup()
         scanner = Libmemscan(os.path.join(utils.get_libpince_directory(), "libmemscan", "libmemscan.so"))
         try:
@@ -109,9 +105,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.pushButton_Path.setEnabled(False)
         if self.cancel_button:
             self.cancel_button.setText(tr.STOP)
-        self.memscan_thread = guitypedefs.InterruptableWorker(
-            self.memscan.pointer_scan, addr_val, ptrmap_file_path, ptr_opts
-        )
+        self.memscan_thread = guitypedefs.InterruptableWorker(self.memscan.pointer_scan, addr_val, ptrmap_file_path, ptr_opts)
         self.memscan_thread.signals.finished.connect(self.memscan_callback)
         self.memscan_thread.signals.error.connect(self.memscan_error)
         self.memscan_thread.start()

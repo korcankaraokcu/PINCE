@@ -348,9 +348,7 @@ def _resolve_vdso_function(pid: int, symbol: str, arch64: bool = True) -> int | 
         return None
 
 
-def _read_patch_bytes(
-    symbol: str, address: int, disassembler: Cs = utils.cs_64, jump_size: int = JUMP_SIZE
-) -> tuple[str | None, int]:
+def _read_patch_bytes(symbol: str, address: int, disassembler: Cs = utils.cs_64, jump_size: int = JUMP_SIZE) -> tuple[str | None, int]:
     # Disassemble enough whole instructions at "address" to host a jump of "jump_size" bytes.
     # The defaults patch x86_64, wine_speedhack passes cs_32 for i386 inferiors.
     dump = debugcore.hex_dump(address, 32)
@@ -391,15 +389,9 @@ def _rebase_state(new_num: int, new_den: int) -> None:
         now = time.clock_gettime_ns(clk)
         new_fake = fake_base + (now - real_base) * session.num // session.den
         debugcore.write_memory(slot, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", now & 0xFFFFFFFFFFFFFFFF)))
-        debugcore.write_memory(
-            slot + 8, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", new_fake & 0xFFFFFFFFFFFFFFFF))
-        )
-    debugcore.write_memory(
-        state_addr + NUM_OFFSET, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", new_num & 0xFFFFFFFFFFFFFFFF))
-    )
-    debugcore.write_memory(
-        state_addr + DEN_OFFSET, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", new_den & 0xFFFFFFFFFFFFFFFF))
-    )
+        debugcore.write_memory(slot + 8, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", new_fake & 0xFFFFFFFFFFFFFFFF)))
+    debugcore.write_memory(state_addr + NUM_OFFSET, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", new_num & 0xFFFFFFFFFFFFFFFF)))
+    debugcore.write_memory(state_addr + DEN_OFFSET, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", new_den & 0xFFFFFFFFFFFFFFFF)))
 
 
 def _vdso_call_or_syscall(vdso_addr: int | None, syscall_nr: int, saves: tuple[str, ...]) -> str:
@@ -426,9 +418,7 @@ def _vdso_call_or_syscall(vdso_addr: int | None, syscall_nr: int, saves: tuple[s
     """
 
 
-def _vdso_call_or_syscall_32(
-    vdso_addr: int | None, syscall_nr: int, arg_offsets: tuple[int, ...], syscall_regs: tuple[str, ...]
-) -> str:
+def _vdso_call_or_syscall_32(vdso_addr: int | None, syscall_nr: int, arg_offsets: tuple[int, ...], syscall_regs: tuple[str, ...]) -> str:
     # i386 analogue of _vdso_call_or_syscall.
     # The hooked functions are cdecl so their args sit on the caller's stack,
     # reachable at the ebp-relative "arg_offsets" (8 and 12) once the prologue runs.
