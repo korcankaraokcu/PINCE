@@ -251,11 +251,7 @@ window: "MainForm | None" = None
 
 def signal_handler(signal: int, frame: FrameType | None) -> None:
     with QSignalBlocker(app):
-        if window is not None:
-            window.cleanup_speedhack()
-        debugcore.detach()
-        memscan.close()
-        quit()
+        app.quit()
 
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -367,7 +363,8 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_CheckForUpdates.clicked.connect(lambda: self.check_for_updates())
         if os.environ.get("APPDIR"):
             self._set_update_button_enabled(True)
-            QTimer.singleShot(1000, self.check_for_updates_on_startup)
+            self.update_check_timer = QTimer(self, timeout=self.check_for_updates_on_startup, singleShot=True)
+            self.update_check_timer.start(500)
         else:
             self.pushButton_CheckForUpdates.hide()
         self.libpince_engine_window: LibpinceEngineWindow | None = None
@@ -1869,6 +1866,8 @@ class MainForm(QMainWindow, MainWindow):
             # user cancelled the exit
             return
 
+        if hasattr(self, "update_check_timer"):
+            self.update_check_timer.stop()
         self.await_exit_thread.request_shutdown()
         self.await_exit_thread.wait(1000)
         self.cleanup_speedhack()
@@ -4667,6 +4666,8 @@ class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
 
 def handle_exit() -> None:
     states.exiting = True
+    if window is not None and window.update_check_thread is not None:
+        window.update_check_thread.wait()
 
 
 if __name__ == "__main__":
