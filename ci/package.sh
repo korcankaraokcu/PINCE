@@ -161,33 +161,41 @@ fi
 if [ "$(id -u)" != "0" ]; then
 	if command -v pkexec > /dev/null 2>&1; then
 		# Preserve env vars to keep settings like theme preferences.
-		# Pkexec does not support passing all of env via a flag like `-E` so we need to
-		# rebuild the env and then pass it through.
+		# Pkexec does not support passing all of env via a flag like "-E",
+		# so we need to rebuild the env and then pass it through.
 		set --
 		while IFS= read -r line
 		do
 			set -- "$@" "$line"
-		done <<EOF
+		done <<EOFENV
 $(printenv)
-EOF
-		set -- "$@" "PINCE_PARENT_PID=$$"
+EOFENV
 
-		pkexec_err=$(pkexec --disable-internal-agent env "$@" /bin/sh -c 'p=$PINCE_PARENT_PID; unset PINCE_PARENT_PID; exec "$@" >"/proc/$p/fd/1" 2>"/proc/$p/fd/2"' sh "$APPIMAGE" "$PCT_FILE" 2>&1)
+		pince_stdout=/dev/null
+		pince_stderr=/dev/null
+		[ -t 1 ] && pince_stdout="/proc/$$/fd/1"
+		[ -t 2 ] && pince_stderr="/proc/$$/fd/2"
+
+		pkexec_err=$(LC_ALL=C pkexec --disable-internal-agent env "$@" \
+			sh -c 'out=$1; err=$2; shift 2; exec "$@" >"$out" 2>"$err"' \
+			sh "$pince_stdout" "$pince_stderr" "$APPIMAGE" "$PCT_FILE" \
+			2>&1 >/dev/null)
 		pkexec_status=$?
 
-		case "$pkexec_status:$pkexec_err" in
-		127:*"No authentication agent found"*) ;;
-		*)
-			if [ -n "$pkexec_err" ]; then
-				printf '%s\n' "$pkexec_err" >&2
-			fi
-			exit "$pkexec_status"
-			;;
+		case "$pkexec_err" in
+			*"No authentication agent found"*) ;;
+			*"Request dismissed"*) exit 126 ;;
+			*)
+				if [ -n "$pkexec_err" ]; then
+					printf '%s\n' "$pkexec_err" >&2
+				fi
+				exit "$pkexec_status"
+				;;
 		esac
 	fi
 
 	if command -v sudo > /dev/null 2>&1; then
-		# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons
+		# Debian/Ubuntu does not preserve PATH through sudo even with -E for security reasons,
 		# so we need to force PATH preservation with venv activated user's PATH.
 		sudo -E --preserve-env=PATH "$APPIMAGE" "$PCT_FILE"
 	else
