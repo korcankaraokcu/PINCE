@@ -841,25 +841,63 @@ def inject_so(library_path: str) -> bool:
         r"^libdl-[\d.]+\.so",
     ]
     _sym_names = ["dlopen", "__libc_dlopen_mode"]
-    for regex in _lib_regexes:
-        module = utils.get_module_load_bias(currentpid, regex)
-        if module is None:
-            continue
-        load_bias, path = module
-        path = utils.resolve_mapped_path(currentpid, path)  # resolve sandboxed (Flatpak/pressure-vessel) paths
-        symbols = utils.get_defined_dynamic_symbols(path, _sym_names)
-        for sym in _sym_names:
-            if sym not in symbols:
+    path_bytes = os.fsencode(library_path) + b"\x00"
+    malloc = resolve_libc_symbol("malloc")
+    if not malloc:
+        return False
+    free = resolve_libc_symbol("free")
+
+    global driving_inferior
+    driving_inferior = True
+    was_running = inferior_status == typedefs.INFERIOR_STATUS.RUNNING
+
+    try:
+        if was_running:
+            interrupt_inferior()
+
+        for regex in _lib_regexes:
+            module = utils.get_module_load_bias(currentpid, regex)
+            if module is None:
                 continue
-            addr = load_bias + symbols[sym]
-            cmd = f'call ((void *(*)(char *, int)) {addr})("{library_path}", 2)'
-            out = execute_func_temporary_interruption(send_command, cmd)
-            m = regexes.convenience_variable.search(out)
-            if not m:
-                continue
-            hex_m = regexes.hex_number_grouped.search(m.group(2))
-            if hex_m and int(hex_m.group(1), 16) != 0:
-                return True
+
+            load_bias, path = module
+            path = utils.resolve_mapped_path(currentpid, path)  # resolve sandboxed (Flatpak/pressure-vessel) paths
+            symbols = utils.get_defined_dynamic_symbols(path, _sym_names)
+
+            for sym in _sym_names:
+                if sym not in symbols:
+                    continue
+
+                addr = load_bias + symbols[sym]
+                out = send_command(f"call ((void *(*)(unsigned long)) {hex(malloc)})({len(path_bytes)})")
+                m = regexes.convenience_variable.search(out)
+                hex_m = regexes.hex_number.search(m.group(2)) if m else None
+                if hex_m is None:
+                    continue
+
+                buf = safe_str_to_int(hex_m[0], 16)
+                if not buf:
+                    continue
+                try:
+                    write_memory(buf, typedefs.VALUE_INDEX.AOB, list(path_bytes), zero_terminate=False)
+                    out = send_command(f"call ((void *(*)(char *, int)) {hex(addr)})((char *){hex(buf)}, 2)")
+                    m = regexes.convenience_variable.search(out)
+                    hex_m = regexes.hex_number_grouped.search(m.group(2)) if m else None
+                    if hex_m and int(hex_m.group(1), 16) != 0:
+                        return True
+                finally:
+                    if free and currentpid != -1:
+                        try:
+                            send_command(f"call ((void (*)(void *)) {hex(free)})((void *){hex(buf)})")
+                        except typedefs.GDBInitializeException:
+                            pass
+    finally:
+        try:
+            if was_running:
+                continue_inferior()
+        finally:
+            driving_inferior = False
+
     return False
 
 
