@@ -72,9 +72,9 @@ fn findModulePath(allocator: std.mem.Allocator, substr: []const u8, buf: []u8) ?
 
     var it = std.mem.splitScalar(u8, contents.items, '\n');
     while (it.next()) |line| {
-        if (std.mem.indexOf(u8, line, substr) == null) continue;
         const start = std.mem.indexOfScalar(u8, line, '/') orelse continue;
         const path = line[start..];
+        if (std.mem.indexOf(u8, std.fs.path.basename(path), substr) == null) continue;
         if (path.len == 0 or path.len >= buf.len) return null;
         @memcpy(buf[0..path.len], path);
         buf[path.len] = 0;
