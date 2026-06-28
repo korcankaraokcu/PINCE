@@ -166,6 +166,9 @@ def _install(speed: float = 1.0) -> bool:
             else:
                 # mov eax, cursor; jmp eax (7 bytes), NOP-padded out to whole instructions.
                 patch = b"\xb8" + struct.pack("<I", cursor) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE_32)
+            # We'll mprotect beforehand if region does not contain RWX so we don't fail writes on hardened kernels,
+            # which will block writes that would usually work on un-hardened ones.
+            _ensure_writable(address)
             _write_verified(address, _bytes_to_aob(patch))
             installed.append(HookPatch(symbol, address, original_aob))
             cursor = (cursor + len(code) + 15) & ~15
@@ -857,3 +860,10 @@ def _mprotect_cave(address: int) -> None:
     start = address & ~(page - 1)
     if not debugcore.mprotect_memory(start, 2 * page):
         logger.error(f"Failed to change protection for speedhack memory at {hex(address)}")
+
+
+def _ensure_writable(address: int) -> None:
+    region = utils.get_region_info(debugcore.currentpid, address)
+    if region is not None and region.perms and "w" in region.perms and "x" in region.perms:
+        return
+    _mprotect_cave(address)

@@ -142,9 +142,8 @@ def _install(speed: float = 1.0) -> bool:
     try:
         linux_speedhack._mprotect_cave(cave)
         _initialize_state(cave, ratio.numerator, ratio.denominator)
-        # ntdll may be mapped without the execute bit under Wine.
-        # The write goes through /proc/pid/mem so perms don't block it, but the patched entry has to be executable.
-        _ensure_executable(address)
+        # Wine maps ntdll read-execute, so make the page writable before patching it.
+        linux_speedhack._ensure_writable(address)
         # Step every thread off the patch site first.
         # A thread stopped mid-prologue would resume on a torn instruction stream once we continue,
         # corrupting it for good (QPC is hot enough for that to actually happen, unlike linux native version).
@@ -430,15 +429,6 @@ def _write_cave(cave: int, address: int, blob: bytes, symbol: str) -> int:
         raise RuntimeError(f"Wine speedhack code cave is too small for {symbol}")
     debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, list(blob))
     return (address + len(blob) + 15) & ~15
-
-
-def _ensure_executable(address: int) -> None:
-    # mprotect the page holding address executable if they aren't already,
-    # reusing linux_speedhack's cave mprotect (which flips two pages around the address to RWX).
-    region = utils.get_region_info(debugcore.currentpid, address)
-    if region is not None and region.perms and "x" in region.perms:
-        return
-    linux_speedhack._mprotect_cave(address)
 
 
 def _step_threads_out_of_range(low: int, high: int, max_steps: int = 64) -> bool:
