@@ -512,6 +512,9 @@ def _build_clock_gettime_hook(state_addr: int, vdso_addr: int | None) -> bytes:
         imul r8, r8, 1000000000
         add r8, qword ptr [rsi + 8]
         sub r8, qword ptr [r10]
+        jae delta_ok
+        xor r8d, r8d
+    delta_ok:
         mov rax, r8
         mov rcx, qword ptr [r11 + {NUM_OFFSET}]
         mul rcx
@@ -547,6 +550,9 @@ def _build_gettimeofday_hook(state_addr: int, vdso_addr: int | None) -> bytes:
         imul rax, rax, 1000
         add r8, rax
         sub r8, qword ptr [r11]
+        jae delta_ok
+        xor r8d, r8d
+    delta_ok:
         mov rax, r8
         mov rcx, qword ptr [r11 + {NUM_OFFSET}]
         mul rcx
@@ -662,6 +668,10 @@ def _build_clock_gettime_hook_32(state_addr: int, vdso_addr: int | None) -> byte
         mov eax, dword ptr [ebp - 20]
         sbb eax, dword ptr [ecx + 4]
         mov dword ptr [ebp - 20], eax
+        jnc delta_ok
+        mov dword ptr [ebp - 16], 0
+        mov dword ptr [ebp - 20], 0
+    delta_ok:
         {_scale64_asm(NUM_OFFSET, DEN_OFFSET)}
         mov ecx, dword ptr [ebp - 44]
         mov eax, dword ptr [ebp - 36]
@@ -725,6 +735,10 @@ def _build_gettimeofday_hook_32(state_addr: int, vdso_addr: int | None) -> bytes
         mov eax, dword ptr [ebp - 20]
         sbb eax, dword ptr [esi + 4]
         mov dword ptr [ebp - 20], eax
+        jnc delta_ok
+        mov dword ptr [ebp - 16], 0
+        mov dword ptr [ebp - 20], 0
+    delta_ok:
         {_scale64_asm(NUM_OFFSET, DEN_OFFSET)}
         mov eax, dword ptr [ebp - 36]
         add eax, dword ptr [esi + 8]

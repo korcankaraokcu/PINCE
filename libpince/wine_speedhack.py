@@ -298,6 +298,9 @@ def _build_qpc_wrapper(state_addr: int, tramp_addr: int) -> bytes:
     scale:
         mov r9, rax
         sub rax, qword ptr [r11 + {REAL_BASE_OFFSET}]
+        jae delta_ok
+        xor eax, eax
+    delta_ok:
         mov r10, qword ptr [r11 + {NUM_OFFSET}]
         mul r10
         mov r10, qword ptr [r11 + {DEN_OFFSET}]
@@ -355,6 +358,10 @@ def _build_qpc_wrapper_32(state_addr: int, tramp_addr: int) -> bytes:
         mov eax, dword ptr [ebp - 44]
         sbb eax, dword ptr [esi + {REAL_BASE_OFFSET + 4}]
         mov dword ptr [ebp - 20], eax
+        jnc delta_ok
+        mov dword ptr [ebp - 16], 0
+        mov dword ptr [ebp - 20], 0
+    delta_ok:
         mov eax, dword ptr [ebp - 16]
         mov ebx, dword ptr [esi + {NUM_OFFSET}]
         mul ebx
