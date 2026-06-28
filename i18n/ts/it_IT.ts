@@ -4,79 +4,6 @@
   <context>
     <name>Dialog</name>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Add Address Manually</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Type:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Endianness:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Hex</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Signed</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Length:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Zero-Terminated</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Base Address:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Add Offset</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Remove Offset</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Description:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
-        <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Address:</source>
-        <translation>Indirizzo:</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/TrackSelector/Form/TrackSelectorDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Pointer</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
         <source>Dissect Code</source>
         <translation type="unfinished" />
@@ -133,6 +60,13 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
+        <source>Address:</source>
+        <translation>Indirizzo:</translation>
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
         <source>Instruction:</source>
         <translation type="unfinished" />
@@ -158,10 +92,28 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Hex</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Signed</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
         <source>Length</source>
         <translation type="unfinished">Lunghezza</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Zero-Terminated</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
@@ -187,6 +139,12 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
         <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
         <source>Hex Edit</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
+        <source>Length:</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -247,6 +205,48 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <source>File</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Add Address Manually</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Type:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Endianness:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Base Address:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Add Offset</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Remove Offset</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Description:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackSelector/Form/TrackSelectorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Pointer</source>
         <translation type="unfinished" />
     </message>
     <message>

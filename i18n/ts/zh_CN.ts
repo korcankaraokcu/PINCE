@@ -4,79 +4,6 @@
   <context>
     <name>Dialog</name>
     <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Add Address Manually</source>
-        <translation>手动添加地址</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Type:</source>
-        <translation>类型：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Endianness:</source>
-        <translation>字节序：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Hex</source>
-        <translation>十六进制</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Signed</source>
-        <translation>有符号</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Length:</source>
-        <translation>长度：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Zero-Terminated</source>
-        <translation>以零终止</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Base Address:</source>
-        <translation>基址：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Add Offset</source>
-        <translation>添加偏移量</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Remove Offset</source>
-        <translation>移除偏移量</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Description:</source>
-        <translation>备注：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
-        <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Address:</source>
-        <translation>地址：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/TrackSelector/Form/TrackSelectorDialog.ui" line="0" />
-        <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
-        <source>Pointer</source>
-        <translation>指针</translation>
-    </message>
-    <message>
         <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
         <source>Dissect Code</source>
         <translation>分析代码</translation>
@@ -134,6 +61,13 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation>编辑指令</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
+        <source>Address:</source>
+        <translation>地址：</translation>
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/EditInstruction/Form/EditInstructionDialog.ui" line="0" />
         <source>Instruction:</source>
         <translation>指令：</translation>
@@ -159,10 +93,28 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation>字节序</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Hex</source>
+        <translation>十六进制</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Signed</source>
+        <translation>有符号</translation>
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
         <source>Length</source>
         <translation>长度</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Zero-Terminated</source>
+        <translation>以零终止</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
@@ -189,6 +141,12 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
         <source>Hex Edit</source>
         <translation>十六进制编辑</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
+        <source>Length:</source>
+        <translation>长度：</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/HexEdit/Form/HexEditDialog.ui" line="0" />
@@ -249,6 +207,48 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <source>File</source>
         <translation>文件</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Add Address Manually</source>
+        <translation>手动添加地址</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Type:</source>
+        <translation>类型：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Endianness:</source>
+        <translation>字节序：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Base Address:</source>
+        <translation>基址：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Add Offset</source>
+        <translation>添加偏移量</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Remove Offset</source>
+        <translation>移除偏移量</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Description:</source>
+        <translation>备注：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackSelector/Form/TrackSelectorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Pointer</source>
+        <translation>指针</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/MonoDissect/Form/MonoDissectDialog.ui" line="0" />
