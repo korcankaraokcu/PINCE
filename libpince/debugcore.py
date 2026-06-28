@@ -128,6 +128,9 @@ allocated_memory_gen_id = 0
 # Dictionary cache for manually resolved libc symbols. Cleared whenever the inferior changes.
 _libc_symbol_cache: dict[str, int] = {}
 
+# Reusable new-WoW64 injection buffer. Cleared whenever the inferior changes.
+_wow64_inject_buffer: tuple[int, int] = (0, 0)
+
 # A bool. Used by is_address_static() and _refresh_main_module_info() to mark if the main executable is PIE enabled or not.
 _main_module_is_static: bool = False
 
@@ -671,9 +674,11 @@ def attach(pid: int | str, gdb_path: str = utils.get_default_gdb_path()) -> int:
     global inferior_arch
     global mem_file
     global current_process_identity
+    global _wow64_inject_buffer
     currentpid = pid
     current_process_identity = (currentpid, utils.get_process_start_time(currentpid))
     _libc_symbol_cache.clear()
+    _wow64_inject_buffer = (0, 0)
     mem_file = "/proc/" + str(currentpid) + "/mem"
     utils.create_ipc_path(pid)
     utils.create_tmp_path(pid)
@@ -707,6 +712,7 @@ def create_process(process_path: str, args: str = "", ld_preload_path: str = "",
     global inferior_arch
     global mem_file
     global current_process_identity
+    global _wow64_inject_buffer
     if currentpid != -1 or not gdb_initialized:
         init_gdb(gdb_path)
     output = send_command(f'file "{process_path}"')
@@ -736,6 +742,7 @@ def create_process(process_path: str, args: str = "", ld_preload_path: str = "",
     currentpid = int(pid)
     current_process_identity = (currentpid, utils.get_process_start_time(currentpid))
     _libc_symbol_cache.clear()
+    _wow64_inject_buffer = (0, 0)
     mem_file = "/proc/" + str(currentpid) + "/mem"
     utils.create_ipc_path(pid)
     utils.create_tmp_path(pid)
@@ -752,9 +759,11 @@ def detach() -> None:
     global gdb_initialized
     global currentpid
     global current_process_identity
+    global _wow64_inject_buffer
     old_pid = currentpid
     current_process_identity = None
     _libc_symbol_cache.clear()
+    _wow64_inject_buffer = (0, 0)
     if gdb_initialized:
         global child
         global inferior_status
@@ -901,31 +910,170 @@ def inject_so(library_path: str) -> bool:
     return False
 
 
-def inject_dll(dll_path: str) -> tuple[bool, int]:
+def _inject_dll_wow64(dll_path: str, llw: int, traps: list, nt_alloc: int, get_cpu_area: int) -> bool:
+    """Inject a 32 bits DLL into a new-WoW64 target by patching the live guest eip."""
+    global _wow64_inject_buffer
+    if not (llw and traps and nt_alloc and get_cpu_area):
+        return False
+    wide = ("Z:" + dll_path.replace("/", "\\")).encode("utf-16le") + b"\x00\x00"
+
+    # Find a clean native wait point before touching the guest context.
+    bps = [(t, regexes.breakpoint_number.search(send_command(f"tbreak *{hex(t)}"))) for t in traps]
+    if not any(b for _, b in bps):
+        return False
+    continue_inferior()
+    wait_for_stop(10)
+    if inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+        for _, b in bps:
+            if b:
+                send_command(f"delete {b.group(1)}")
+        return False
+    pc = parse_and_eval("$pc", int)
+    brk = pc if pc in traps else 0
+    for t, b in bps:
+        if b and t != brk:
+            send_command(f"delete {b.group(1)}")
+    if not brk:
+        return False
+
+    # Save the native thread state so it can be restored after our helper calls.
+    tid = parse_and_eval("$_thread", int)
+    thread_scope = f" thread {tid}" if tid else ""
+    saved = {r: parse_and_eval(f"${r}", int) for r in ("rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "rip", "rsp")}
+    sp0 = saved["rsp"]
+    if sp0 is None or saved["rip"] is None:
+        return False
+
+    def write_bytes(addr, data):
+        try:
+            with memory_handle("rb+") as mem:
+                mem.seek(addr)
+                return mem.write(data) == len(data)
+        except (OSError, ValueError):
+            return False
+
+    def read_int(addr, size):
+        try:
+            with memory_handle() as mem:
+                mem.seek(addr)
+                return int.from_bytes(mem.read(size), "little")
+        except (OSError, ValueError):
+            return None
+
+    # Call a native 64 bits function from the parked wait point.
+    def win64(func, args):
+        stack_args = args[4:]
+        frame = ((sp0 - 0x300 - len(stack_args) * 8) & ~0xF) - 8
+        blob = brk.to_bytes(8, "little") + b"\x00" * 32
+        blob += b"".join((a & 0xFFFFFFFFFFFFFFFF).to_bytes(8, "little") for a in stack_args)
+        if not write_bytes(frame, blob):
+            return None
+        tb = regexes.breakpoint_number.search(send_command(f"tbreak *{hex(brk)}{thread_scope} if $rsp == {hex(frame + 8)}"))
+        if not tb:
+            return None
+        for reg, value in zip(("rcx", "rdx", "r8", "r9"), list(args[:4]) + [0] * 4):
+            set_convenience_variable(reg, hex(value & 0xFFFFFFFFFFFFFFFF))
+        set_convenience_variable("rsp", hex(frame))
+        set_convenience_variable("rip", hex(func))
+        continue_inferior()
+        wait_for_stop(10)
+        if inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+            interrupt_inferior()
+            send_command(f"delete {tb.group(1)}")
+            return None
+        if parse_and_eval("$pc", int) != brk:
+            send_command(f"delete {tb.group(1)}")
+            return None
+        return parse_and_eval("$rax", int)
+
+    try:
+        pbase, psize, pmach, pctx, pctxex = (sp0 - off for off in (0x80, 0x78, 0x70, 0x68, 0x60))
+        size = (0x800 + len(wide) + 0xFFF) & ~0xFFF
+
+        # Allocate or reuse memory that 32 bits guest code can reach.
+        cached_buf, cached_size = _wow64_inject_buffer
+        buf = cached_buf if cached_buf and cached_size >= size else 0
+        if not buf:
+            for hint in (0x50000000, 0):
+                if not (write_bytes(pbase, hint.to_bytes(8, "little")) and write_bytes(psize, size.to_bytes(8, "little"))):
+                    break
+                status = win64(nt_alloc, [0xFFFFFFFFFFFFFFFF, pbase, 0, psize, 0x3000, 0x40])
+                if status is None:
+                    break
+                if status:
+                    continue
+                buf = read_int(pbase, 8) or 0
+                if 0 < buf <= 0xFFFFFFFF:
+                    _wow64_inject_buffer = (buf, size)
+                    break
+                buf = 0
+        if not buf or not all(write_bytes(slot, b"\x00" * 8) for slot in (pmach, pctx, pctxex)):
+            return False
+
+        # Ask Wine for the current 32 bit guest CPU context.
+        if win64(get_cpu_area, [pmach, pctx, pctxex]) != 0:
+            return False
+        machine = read_int(pmach, 2)
+        ctxptr = read_int(pctx, 8) or 0
+        orig_eip = read_int(ctxptr + 0xB8, 4) if ctxptr else None
+        if machine != 0x14C or not ctxptr or orig_eip is None:
+            return False
+
+        path_ptr = buf + 0x800
+        # Run LoadLibraryW through the guest eip then return to the original code.
+        asm = f"""
+            pushfd
+            pushad
+            push {hex(path_ptr & 0xFFFFFFFF)}
+            mov eax, {hex(llw & 0xFFFFFFFF)}
+            call eax
+            popad
+            popfd
+            push {hex(orig_eip & 0xFFFFFFFF)}
+            ret
+        """
+        assembled = utils.assemble(asm, buf, typedefs.INFERIOR_ARCH.ARCH_32)
+        code = bytes(assembled[0]) if assembled else b""
+        return (
+            bool(code)
+            and len(code) <= 0x800
+            and write_bytes(path_ptr, wide)
+            and write_bytes(buf, code)
+            and write_bytes(ctxptr + 0xB8, (buf & 0xFFFFFFFF).to_bytes(4, "little"))
+        )
+    finally:
+        # Restore the native thread state.
+        if tid:
+            send_command(f"thread {tid}")
+        for reg, value in saved.items():
+            if value is not None:
+                set_convenience_variable(reg, hex(value & 0xFFFFFFFFFFFFFFFF))
+
+
+def inject_dll(dll_path: str) -> bool:
     """Injects a Windows DLL into the current WINE/Proton inferior via "kernel32!LoadLibraryW".
 
-    GDB can't resolve PE exports by symbol so LoadLibraryW is found through kernel32/ntdll's PE export tables in memory.
-    The call has to run from a clean PE context, not a thread parked mid-syscall,
-    so we'll try to run into a hot ntdll wrapper first.
+    PE exports are resolved from the target memory. Helper calls run from an ntdll wait/sleep wrapper.
+    LoadLibraryW runs from a bootstrap thread or from a patched guest thread on new-WoW64.
 
     Args:
         dll_path (str): Path to the Windows .dll on the Linux filesystem.
 
     Returns:
-        tuple[bool, int]: (success, hmod) where success is True if LoadLibraryW returned a module handle
-        and hmod is that handle (0 on failure).
+        bool: True if the DLL injection was started
     """
     if currentpid == -1:
-        return False, 0
+        return False
 
     global driving_inferior
     driving_inferior = True
     was_running = inferior_status == typedefs.INFERIOR_STATUS.RUNNING
     try:
+        # Stop the process while resolving exports and setting up the call frame.
         if was_running:
             interrupt_inferior()
 
-        # Walk the export tables and find "LoadLibraryW".
+        # Walk the export tables and find the PE-side functions we need.
         with memory_handle() as mem:
 
             def u(addr, n):
@@ -933,33 +1081,45 @@ def inject_dll(dll_path: str) -> tuple[bool, int]:
                 return int.from_bytes(mem.read(n), "little")
 
             def pe_magic(base):
-                if u(base, 2) != 0x5A4D:  # "MZ" DOS magic
+                try:
+                    if u(base, 2) != 0x5A4D:  # "MZ" DOS magic
+                        return 0
+                    pe = base + u(base + 0x3C, 4)
+                    return u(pe + 0x18, 2) if u(pe, 4) == 0x4550 else 0  # "PE\0\0"
+                except (OSError, ValueError):
                     return 0
-                pe = base + u(base + 0x3C, 4)
-                return u(pe + 0x18, 2) if u(pe, 4) == 0x4550 else 0  # "PE\0\0"
 
             # Cache relevant PE image bases by bitness.
             pe_bases = {}
+            process_name = utils.get_process_name(currentpid).lower()
+            main_pe_magic = 0
+            fallback_exe_magic = 0
             for start, _, _, offset, _, _, path in utils.get_regions(currentpid):
                 name = os.path.basename(path).lower() if path and int(offset, 16) == 0 else ""
+                if name.endswith(".exe"):
+                    magic = pe_magic(int(start, 16))
+                    if magic in (0x10B, 0x20B):
+                        if name == process_name:
+                            main_pe_magic = magic
+                        elif not fallback_exe_magic:
+                            fallback_exe_magic = magic
                 if name in ("kernel32.dll", "ntdll.dll", "kernelbase.dll"):
                     base = int(start, 16)
                     magic = pe_magic(base)
                     if magic in (0x10B, 0x20B):
                         pe_bases.setdefault((name, magic), base)
 
-            # New-WoW64 can map both 32 and 64-bit PE images, so pick the Windows-world bitness explicitly.
-            has_pe32_world = bool(pe_bases.get(("kernel32.dll", 0x10B), 0) and pe_bases.get(("ntdll.dll", 0x10B), 0))
-            wow64 = inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 and has_pe32_world
+            # New-WoW64 can map both 32 and 64 bits PE images. The launched exe decides the Windows bitness.
+            main_pe_magic = main_pe_magic or fallback_exe_magic
+            wow64 = inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 and main_pe_magic == 0x10B
             want_magic = 0x10B if wow64 or inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 0x20B
             k32 = pe_bases.get(("kernel32.dll", want_magic), 0)
             nt = pe_bases.get(("ntdll.dll", want_magic), 0)
             kb = pe_bases.get(("kernelbase.dll", want_magic), 0)
             if not (k32 and nt):
-                if was_running:
-                    continue_inferior()
-                return False, 0
+                return False
 
+            # Resolve a PE export by name and ignore forwarded exports.
             def export(base, name):
                 magic = pe_magic(base)
                 if not magic:
@@ -979,124 +1139,227 @@ def inject_dll(dll_path: str) -> tuple[bool, int]:
                         return 0 if ed_rva <= frva < ed_rva + ed_size else base + frva
                 return 0
 
-            # Sometimes kernel32 forwards "LoadLibraryW" so export can return 0, let's resolve the real one.
+            # Grab the addresses of all of the functions we need.
             llw = export(k32, "LoadLibraryW") or (export(kb, "LoadLibraryW") if kb else 0)
-            # Apps idle in Sleep (NtDelayExecution) just as often as waiting on a handle (NtWaitForSingleObject),
-            # so trap both hot wrapper entries and run from whichever the inferior reaches first.
             traps = [t for t in (export(nt, "NtWaitForSingleObject"), export(nt, "NtDelayExecution")) if t]
+            valloc = export(k32, "VirtualAlloc") or (export(kb, "VirtualAlloc") if kb else 0)
+            vfree = export(k32, "VirtualFree") or (export(kb, "VirtualFree") if kb else 0)
+            create_thread = export(k32, "CreateThread") or (export(kb, "CreateThread") if kb else 0)
+            close_handle = export(k32, "CloseHandle") or (export(kb, "CloseHandle") if kb else 0)
 
-            # In New-WoW64, GDB still uses the 64-bit ABI, so 32-bit stdcall frames are built by hand below.
-            valloc = 0
+            # Extra stuff for New-WoW64.
             if wow64:
-                valloc = export(k32, "VirtualAlloc") or (export(kb, "VirtualAlloc") if kb else 0)
+                nt64 = pe_bases.get(("ntdll.dll", 0x20B), 0)
+                traps64 = [t for t in (export(nt64, "NtWaitForSingleObject"), export(nt64, "NtDelayExecution")) if t]
+                nt_alloc = export(nt64, "NtAllocateVirtualMemory")
+                get_cpu_area = export(nt64, "RtlWow64GetCurrentCpuArea")
 
-        # Non-WoW64 paths allocate the path buffer with glibc malloc via GDB's native "call".
-        # WoW64 allocates via kernel32!VirtualAlloc which is resolved above.
-        malloc = 0
-        if not wow64:
-            malloc = resolve_libc_symbol("malloc")
+        # The entire logic of New-WoW64 injection will be handled by this separate function.
+        # This was the most problematic piece to implement so having it separate makes it easier to debug in the future,
+        # as the pure 32/64 bits path uses very stable Wine/Windows ABI/API but wow64 relies more on unstable stuff.
+        if wow64:
+            return _inject_dll_wow64(dll_path, llw, traps64, nt_alloc, get_cpu_area)
 
-        # We need to have:
-        # - LoadLibraryW
-        # - At least one ntdll trap function
-        # - VirtualAlloc if New-WoW64, malloc otherwise.
-        # If not, we have to bail since we cannot reliably inject in this process.
-        if not (llw and traps and (valloc if wow64 else malloc)):
-            if was_running:
-                continue_inferior()
-            return False, 0
+        # If pure 32/64bits WINE process, check that we have the necessary exports then proceed.
+        if not (llw and traps and valloc and vfree and create_thread and close_handle):
+            return False
 
-        # Find a clean PE context to run our load functions from.
+        # Park in a PE entry before issuing helper calls.
         bps = [(t, regexes.breakpoint_number.search(send_command(f"tbreak *{hex(t)}"))) for t in traps]
         if not any(b for _, b in bps):
-            if was_running:
-                continue_inferior()
-            return False, 0
+            return False
         continue_inferior()
         wait_for_stop(10)
-        timed_out = inferior_status == typedefs.INFERIOR_STATUS.RUNNING
-        if timed_out:
-            interrupt_inferior()
+        if inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
+            for _, b in bps:
+                if b:
+                    send_command(f"delete {b.group(1)}")
+            return False
         pc = examine_expression("$pc").address
-        brk = int(pc, 16) if pc and int(pc, 16) in traps else 0  # the wrapper we stopped in, also the manual-frame trap
+        brk = int(pc, 16) if pc and int(pc, 16) in traps else 0
         for t, b in bps:  # the fired tbreak auto-deletes itself, so drop the ones that didn't fire
             if b and t != brk:
                 send_command(f"delete {b.group(1)}")
 
-        # Actual injection if everything is fine until now.
-        hmod = 0
+        # The breakpoint address also becomes the return trap for helper calls.
+        injected = False
         if brk:
-            # TODO BRK: "Z:" maps to "/" in the default WINE prefix so this reaches any absolute UNIX path.
-            # For prefixes that remapped or removed "Z:", we should later resolve via kernel32!wine_get_dos_file_name.
+            # Default Wine maps Z: to /.
+            # TODO BRK: Maybe change this later to query user's mappings.
             wide = ("Z:" + dll_path.replace("/", "\\")).encode("utf-16le") + b"\x00\x00"
-            if wow64:
-                esp0 = parse_and_eval("$rsp", int)
-                tid = parse_and_eval("$_thread", int)  # scope the trap to our thread as the wrapper is hot across threads
 
-                # Build a 32-bit stdcall frame manually and run until the return trap.
-                def stdcall(func, args):
-                    blob = brk.to_bytes(4, "little")  # return address -> our trap
-                    for a in args:
-                        blob += (a & 0xFFFFFFFF).to_bytes(4, "little")
-                    frame = (esp0 - len(blob) - 0x20) & 0xFFFFFFF0  # small aligned scratch frame under parked esp
+            # Pick registers and calling convention for the Windows side we are in.
+            pe32 = inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
+            stack_reg = "esp" if pe32 else "rsp"
+            pc_reg = "eip" if pe32 else "rip"
+            ret_reg = "eax" if pe32 else "rax"
+            sp0 = parse_and_eval(f"${stack_reg}", int)
+            tid = parse_and_eval("$_thread", int)
+
+            if sp0 is None:
+                return False
+            else:
+                thread_scope = f" thread {tid}" if tid else ""
+                saved_regs = {reg: parse_and_eval(f"${reg}", int) for reg in ("rcx", "rdx", "r8", "r9")} if not pe32 else {}
+
+                def write_bytes(addr, data):
                     try:
                         with memory_handle("rb+") as mem:
-                            mem.seek(frame)
-                            if mem.write(blob) != len(blob):
-                                return 0
+                            mem.seek(addr)
+                            return mem.write(data) == len(data)
                     except (OSError, ValueError):
-                        return 0
-                    expected = frame + 4 + 4 * len(args)  # esp once the callee's stdcall "ret N" cleaned the args off
-                    cond = f" thread {tid}" if tid else ""
-                    tb_cmd = f"tbreak *{hex(brk)}{cond} if ($rsp & 0xffffffff) == {hex(expected)}"
-                    tb = regexes.breakpoint_number.search(send_command(tb_cmd))
+                        return False
+
+                # Run one PE function and wait until it returns to the trap.
+                def run_call(func, frame, return_condition, regs):
+                    tb = regexes.breakpoint_number.search(send_command(f"tbreak *{hex(brk)}{thread_scope} if {return_condition}"))
                     if not tb:
                         return 0
-                    set_convenience_variable("rsp", hex(frame))
-                    set_convenience_variable("rip", hex(func))
+                    for reg, value in regs.items():
+                        set_convenience_variable(reg, hex(value))
+                    set_convenience_variable(stack_reg, hex(frame))
+                    set_convenience_variable(pc_reg, hex(func))
                     continue_inferior()
                     wait_for_stop(10)
                     timed_out = inferior_status == typedefs.INFERIOR_STATUS.RUNNING
                     if timed_out:
                         interrupt_inferior()
                     pc = examine_expression("$pc").address
-                    if timed_out or not pc or int(pc, 16) != brk:  # never returned or stopped elsewhere mid-call
+                    if timed_out:
                         send_command(f"delete {tb.group(1)}")
                         return 0
-                    return (parse_and_eval("$rax", int) or 0) & 0xFFFFFFFF
+                    if not pc or int(pc, 16) != brk:
+                        send_command(f"delete {tb.group(1)}")
+                        return 0
+                    return parse_and_eval(f"${ret_reg}", int) or 0
 
-                # Load the DLL through the 32-bit Windows ABI.
-                if esp0 is not None and brk <= 0xFFFFFFFF:
-                    try:
-                        buf = stdcall(valloc, [0, len(wide), 0x3000, 0x04])  # VirtualAlloc(0, size, COMMIT|RESERVE, PAGE_RW)
-                        if buf:
-                            write_memory(buf, typedefs.VALUE_INDEX.AOB, list(wide))
-                            hmod = stdcall(llw, [buf])
-                    finally:
-                        if tid:
-                            send_command(f"thread {tid}")
-                        set_convenience_variable("rip", hex(brk))
-                        set_convenience_variable("rsp", hex(esp0))
-            else:  # 64 bits process or pure 32 bits.
+                # Build a 32 bits stdcall frame.
+                def stdcall(func, args):
+                    if brk > 0xFFFFFFFF:
+                        return 0
+                    blob = brk.to_bytes(4, "little") + b"".join((a & 0xFFFFFFFF).to_bytes(4, "little") for a in args)
+                    frame = (sp0 - len(blob) - 0x20) & 0xFFFFFFF0
+                    if not write_bytes(frame, blob):
+                        return 0
+                    expected = frame + 4 + 4 * len(args)
+                    cond = f"$esp == {hex(expected)}"
+                    return run_call(func, frame, cond, {}) & 0xFFFFFFFF
 
-                def call(expr):
-                    m = regexes.convenience_variable.search(send_command(f"call {expr}"))
-                    h = regexes.hex_number_grouped.search(m.group(2)) if m else None
-                    return int(h.group(1), 16) if h else 0
+                # Build a 64 bits Windows call frame.
+                def win64_call(func, args):
+                    args = list(args)
+                    stack_args = args[4:]
+                    frame = ((sp0 - 0x100 - len(stack_args) * 8) & ~0xF) - 8  # Win64 entry rsp must be 16n+8.
+                    blob = brk.to_bytes(8, "little") + b"\x00" * 32  # return address + shadow space
+                    blob += b"".join((a & 0xFFFFFFFFFFFFFFFF).to_bytes(8, "little") for a in stack_args)
+                    if not write_bytes(frame, blob):
+                        return 0
+                    reg_args = args[:4] + [0] * (4 - len(args[:4]))
+                    regs = dict(zip(("rcx", "rdx", "r8", "r9"), reg_args))
+                    return run_call(func, frame, f"$rsp == {hex(frame + 8)}", regs)
 
-                buf = call(f"((void*(*)(unsigned long)){hex(malloc)})({len(wide)})")
-                if buf:
-                    write_memory(buf, typedefs.VALUE_INDEX.AOB, list(wide))
-                    if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64:
-                        hmod = call(f"((void*(*)(void*,void*,void*,void*)){hex(llw)})(0,0,0,{hex(buf)})")
+                pe_call = stdcall if pe32 else win64_call
+                try:
+                    # Keep the path, thread handle slot and bootstrap in one allocation.
+                    ptr_size = 4 if pe32 else 8
+                    handle_addr = (len(wide) + ptr_size - 1) & ~(ptr_size - 1)
+                    code_addr = (handle_addr + ptr_size + 0xF) & ~0xF
+                    alloc_size = code_addr + 0x400
+                    buf = pe_call(valloc, [0, alloc_size, 0x3000, 0x40])  # COMMIT|RESERVE, PAGE_EXECUTE_READWRITE
+                    handle_ptr = buf + handle_addr
+                    code_ptr = buf + code_addr
+
+                    # The bootstrap calls LoadLibraryW then frees its own allocation.
+                    if pe32:
+                        asm = f"""
+                            push {hex(buf & 0xFFFFFFFF)}
+                            mov eax, {hex(llw & 0xFFFFFFFF)}
+                            call eax
+                            mov ecx, 0x10000000
+                        wait_loop:
+                            mov eax, dword ptr [{hex(handle_ptr & 0xFFFFFFFF)}]
+                            test eax, eax
+                            jne close_self
+                            pause
+                            dec ecx
+                            jne wait_loop
+                            jmp free_self
+                        close_self:
+                            push eax
+                            mov eax, {hex(close_handle & 0xFFFFFFFF)}
+                            call eax
+                        free_self:
+                            mov eax, dword ptr [esp]
+                            mov dword ptr [esp - 8], eax
+                            mov dword ptr [esp - 4], {hex(buf & 0xFFFFFFFF)}
+                            mov dword ptr [esp], 0
+                            mov dword ptr [esp + 4], 0x8000
+                            sub esp, 8
+                            mov eax, {hex(vfree & 0xFFFFFFFF)}
+                            jmp eax
+                        """
+                        remote_arch = typedefs.INFERIOR_ARCH.ARCH_32
                     else:
-                        hmod = call(f"((void*(*)(void*)){hex(llw)})({hex(buf)})")
+                        asm = f"""
+                            sub rsp, 0x28
+                            mov rcx, {hex(buf)}
+                            mov rax, {hex(llw)}
+                            call rax
+                            mov r11, {hex(handle_ptr)}
+                            mov r10d, 0x10000000
+                        wait_loop:
+                            mov rcx, qword ptr [r11]
+                            test rcx, rcx
+                            jne close_self
+                            pause
+                            dec r10d
+                            jne wait_loop
+                            jmp free_self
+                        close_self:
+                            mov rax, {hex(close_handle)}
+                            call rax
+                        free_self:
+                            add rsp, 0x28
+                            mov rcx, {hex(buf)}
+                            xor edx, edx
+                            mov r8d, 0x8000
+                            mov rax, {hex(vfree)}
+                            jmp rax
+                        """
+                        remote_arch = typedefs.INFERIOR_ARCH.ARCH_64
 
-        if was_running:
-            continue_inferior()
-        return bool(hmod), hmod
+                    # Write the path and bootstrap, then start it in a Windows thread.
+                    assembled = utils.assemble(asm, code_ptr, remote_arch)
+                    code = bytes(assembled[0]) if assembled else b""
+                    if (
+                        buf
+                        and code
+                        and len(code) <= alloc_size - code_addr
+                        and write_bytes(buf, wide)
+                        and write_bytes(handle_ptr, b"\x00" * ptr_size)
+                        and write_bytes(code_ptr, code)
+                    ):
+                        thread_handle = pe_call(create_thread, [0, 0, code_ptr, 0, 0, 0])
+                        if thread_handle:
+                            injected = True
+                            write_bytes(handle_ptr, thread_handle.to_bytes(ptr_size, "little"))
+                finally:
+                    # Restore the parked thread after the helper calls.
+                    if tid:
+                        send_command(f"thread {tid}")
+                    for reg, value in saved_regs.items():
+                        if value is not None:
+                            set_convenience_variable(reg, hex(value))
+                    set_convenience_variable(pc_reg, hex(brk))
+                    set_convenience_variable(stack_reg, hex(sp0))
+
+        return injected
     finally:
-        driving_inferior = False
+        try:
+            if was_running and inferior_status != typedefs.INFERIOR_STATUS.RUNNING:
+                continue_inferior()
+        finally:
+            driving_inferior = False
 
 
 def read_pointer_chain(pointer_request: typedefs.PointerChainRequest) -> typedefs.PointerChainResult | None:

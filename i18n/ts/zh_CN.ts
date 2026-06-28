@@ -2796,8 +2796,8 @@ PINCE 将追踪地址 [rax]，[rbx*rcx+4] 和 [rbp]</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>The DLL has been injected at {}</source>
-        <translation>DLL 已注入到 {}</translation>
+        <source>DLL injection thread started. The DLL may still fail to load due to bitness mismatch or missing dependencies.</source>
+        <translation>DLL 注入线程已启动。DLL 仍可能因位数不匹配或缺少依赖项而加载失败。</translation>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
