@@ -71,7 +71,7 @@
         <translation>Indirizzo:</translation>
     </message>
     <message>
-        <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/TrackSelector/Form/TrackSelectorDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Pointer</source>
         <translation type="unfinished" />
@@ -124,16 +124,6 @@
     <message>
         <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
         <source>Collect registers</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
-        <source>Select an address to track</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
-        <source>Pointed Address</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -697,6 +687,16 @@ Patterns at former positions have higher priority if regex is off</source>
         <source>Hit Esc to cancel and Ctrl+Enter to accept</source>
         <translation type="unfinished" />
     </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackSelector/Form/TrackSelectorDialog.ui" line="0" />
+        <source>Select an address to track</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackSelector/Form/TrackSelectorDialog.ui" line="0" />
+        <source>Pointed Address</source>
+        <translation type="unfinished" />
+    </message>
 </context><context>
     <name>Form</name>
     <message>
@@ -708,52 +708,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
         <source>Cancel</source>
         <translation type="unfinished">Annulla</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <source>Form</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <source>Count</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <source>Address</source>
-        <translation type="unfinished">Indirizzo</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <source>Value</source>
-        <translation type="unfinished">Valore</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <source>Source</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <source>Stop</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <source>Refresh</source>
-        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
@@ -859,6 +813,17 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <source>Address</source>
+        <translation type="unfinished">Indirizzo</translation>
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <source>Symbol</source>
         <translation type="unfinished" />
@@ -866,6 +831,13 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <source>Enter the regex. Leave blank to see all functions</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
+        <source>Form</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -919,6 +891,12 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
         <source>Referenced Strings and Values</source>
         <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <source>Value</source>
+        <translation type="unfinished">Valore</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
@@ -1003,6 +981,28 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
         <source>Add to address table</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
+        <source>Count</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
+        <source>Source</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
+        <source>Stop</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui" line="0" />
+        <source>Refresh</source>
         <translation type="unfinished" />
     </message>
 </context><context>

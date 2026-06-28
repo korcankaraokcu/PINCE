@@ -194,7 +194,7 @@ These tasks are ordered by importance but feel free to pick any of them. Further
 - Refactorize memory write/read functions
   - ReferencedStringsWidget refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k.
   Only update the visible rows to prevent this(check ```disassemble_check_viewport``` for an example)
-  - Implement same system for the TrackBreakpointWidgetForm if necessary. Do performance tests
+  - Implement same system for the TrackBreakpointWidget if necessary. Do performance tests
   - Consider using a class instead of primitive return types to store the raw bytes. This class should also include a method to display None type as red '??' text for Qt
   - Put a warning for users about replacement bytes for non UTF-8 types
 - Implement "Investigate Registers" button to gather information about the addresses registers point to

@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'TrackSelectorDialog.ui'
+# Form implementation generated from reading ui file 'Widgets/TrackSelector/Form/TrackSelectorDialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #

@@ -71,7 +71,7 @@
         <translation>地址：</translation>
     </message>
     <message>
-        <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/TrackSelector/Form/TrackSelectorDialog.ui" line="0" />
         <location filename="../../GUI/AddAddressManuallyDialog.ui" line="0" />
         <source>Pointer</source>
         <translation>指针</translation>
@@ -125,16 +125,6 @@
         <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
         <source>Collect registers</source>
         <translation>收集寄存器</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
-        <source>Select an address to track</source>
-        <translation>选择要跟踪的地址</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TrackSelectorDialog.ui" line="0" />
-        <source>Pointed Address</source>
-        <translation>指向的地址</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
@@ -699,6 +689,16 @@ Patterns at former positions have higher priority if regex is off</source>
         <source>Hit Esc to cancel and Ctrl+Enter to accept</source>
         <translation>按 Esc 取消，按 Ctrl+Enter 接受</translation>
     </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackSelector/Form/TrackSelectorDialog.ui" line="0" />
+        <source>Select an address to track</source>
+        <translation>选择要跟踪的地址</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackSelector/Form/TrackSelectorDialog.ui" line="0" />
+        <source>Pointed Address</source>
+        <translation>指向的地址</translation>
+    </message>
 </context><context>
     <name>Form</name>
     <message>
@@ -710,52 +710,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
         <source>Cancel</source>
         <translation>取消</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <source>Form</source>
-        <translation>表格</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <source>Count</source>
-        <translation>计数</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
-        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <source>Address</source>
-        <translation>地址</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <source>Value</source>
-        <translation>值</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <source>Source</source>
-        <translation>源</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <location filename="../../GUI/TrackBreakpointWidget.ui" line="0" />
-        <source>Stop</source>
-        <translation>停止</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TrackWatchpointWidget.ui" line="0" />
-        <source>Refresh</source>
-        <translation>刷新</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
@@ -861,6 +815,17 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>函数</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/SearchInstructions/Form/SearchInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedCalls/Form/ReferencedCallsWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
+        <source>Address</source>
+        <translation>地址</translation>
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <source>Symbol</source>
         <translation>符号</translation>
@@ -869,6 +834,13 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/FunctionsInfo/Form/FunctionsInfoWidget.ui" line="0" />
         <source>Enter the regex. Leave blank to see all functions</source>
         <translation>请输入正则表达式。如果不输入任何内容，则会显示所有函数</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
+        <source>Form</source>
+        <translation>表格</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LogFile/Form/LogFileWidget.ui" line="0" />
@@ -921,6 +893,12 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
         <source>Referenced Strings and Values</source>
         <translation>引用的字符串和值</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/ReferencedStrings/Form/ReferencedStringsWidget.ui" line="0" />
+        <source>Value</source>
+        <translation>值</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/RestoreInstructions/Form/RestoreInstructionsWidget.ui" line="0" />
@@ -1006,6 +984,28 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/Structures/Form/StructuresWindow.ui" line="0" />
         <source>Add to address table</source>
         <translation>添加到地址表</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
+        <source>Count</source>
+        <translation>计数</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
+        <source>Source</source>
+        <translation>源</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui" line="0" />
+        <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
+        <source>Stop</source>
+        <translation>停止</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui" line="0" />
+        <source>Refresh</source>
+        <translation>刷新</translation>
     </message>
 </context><context>
     <name>MainWindow</name>

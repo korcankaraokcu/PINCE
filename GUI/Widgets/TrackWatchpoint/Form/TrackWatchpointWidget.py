@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'TrackWatchpointWidget.ui'
+# Form implementation generated from reading ui file 'Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #

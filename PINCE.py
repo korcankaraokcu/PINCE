@@ -45,7 +45,6 @@ from PyQt6.QtCore import (
     QKeyCombination,
     QLibraryInfo,
     QLocale,
-    QModelIndex,
     QObject,
     QSettings,
     QSignalBlocker,
@@ -100,9 +99,6 @@ from GUI.States import states
 from GUI.TraceInstructionsPromptDialog import Ui_Dialog as TraceInstructionsPromptDialog
 from GUI.TraceInstructionsWaitWidget import Ui_Form as TraceInstructionsWaitWidget
 from GUI.TraceInstructionsWindow import Ui_MainWindow as TraceInstructionsWindow
-from GUI.TrackBreakpointWidget import Ui_Form as TrackBreakpointWidget
-from GUI.TrackSelectorDialog import Ui_Dialog as TrackSelectorDialog
-from GUI.TrackWatchpointWidget import Ui_Form as TrackWatchpointWidget
 from GUI.Utils import guitypedefs, guiutils, update_check, utilwidgets
 from GUI.Validators.HexValidator import HexValidator
 from GUI.Widgets.About.About import AboutWidget
@@ -141,6 +137,9 @@ from GUI.Widgets.Structures.StructuresWindow import StructuresWindow
 from GUI.Widgets.Structures.StructureViewDialog import StructureViewDialog
 from GUI.Widgets.Structures.StructureEditorDialog import StructureEditorDialog
 from GUI.Widgets.Structures import mono_export
+from GUI.Widgets.TrackBreakpoint.TrackBreakpoint import TrackBreakpointWidget
+from GUI.Widgets.TrackSelector.TrackSelector import TrackSelectorDialog
+from GUI.Widgets.TrackWatchpoint.TrackWatchpoint import TrackWatchpointWidget
 from libpince import debugcore, linux_speedhack, monocore, scancore, typedefs, utils, wine_speedhack
 from libpince.libmemscan.memscan import DataType, MatchView, BytePattern
 from libpince.scancore import memscan
@@ -217,16 +216,6 @@ STACK_POINTS_TO_COL = 2
 # represents row and column counts of Hex table
 HEX_VIEW_COL_COUNT = 16
 HEX_VIEW_ROW_COUNT = 42  # J-JUST A COINCIDENCE, I SWEAR!
-
-# represents the index of columns in track watchpoint table(what accesses this address thingy)
-TRACK_WATCHPOINT_COUNT_COL = 0
-TRACK_WATCHPOINT_ADDR_COL = 1
-
-# represents the index of columns in track breakpoint table(which addresses this instruction accesses thingy)
-TRACK_BREAKPOINT_COUNT_COL = 0
-TRACK_BREAKPOINT_ADDR_COL = 1
-TRACK_BREAKPOINT_VALUE_COL = 2
-TRACK_BREAKPOINT_SOURCE_COL = 3
 
 # represents the index of columns in libpince reference resources table
 LIBPINCE_REFERENCE_ITEM_COL = 0
@@ -760,7 +749,7 @@ class MainForm(QMainWindow, MainWindow):
         address = self._resolved_address(selected_row)
         address_data = selected_row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
         if isinstance(address_data, typedefs.PointerChainRequest):
-            selection_dialog = TrackSelectorDialogForm(self)
+            selection_dialog = TrackSelectorDialog(self)
             selection_dialog.exec()
             if not selection_dialog.selection:
                 return
@@ -775,7 +764,7 @@ class MainForm(QMainWindow, MainWindow):
             byte_len = value_type.length
         else:
             byte_len = typedefs.index_to_valuetype_dict[value_type.value_index][0]
-        TrackWatchpointWidgetForm(self, address, byte_len, watchpoint_type)
+        TrackWatchpointWidget(self, address, byte_len, watchpoint_type)
 
     def browse_region_for_address(self, address: str) -> None:
         if address:
@@ -2542,20 +2531,6 @@ class ManualAddressDialogForm(QDialog, ManualAddressDialog):
         return typedefs.index_to_valuetype_dict[self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)][0]
 
 
-class TrackSelectorDialogForm(QDialog, TrackSelectorDialog):
-    def __init__(self, parent: QWidget) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.selection = None
-        self.pushButton_Pointer.clicked.connect(lambda: self.change_selection("pointer"))
-        self.pushButton_Pointed.clicked.connect(lambda: self.change_selection("pointed"))
-        guiutils.center_to_parent(self)
-
-    def change_selection(self, selection: str) -> None:
-        self.selection = selection
-        self.close()
-
-
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
@@ -4005,7 +3980,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         register_expression_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_TRACK_BP_EXPRESSION, "")])
         if register_expression_dialog.exec():
             exp = register_expression_dialog.get_values()[0]
-            TrackBreakpointWidgetForm(self, current_address, current_instruction, exp)
+            TrackBreakpointWidget(self, current_address, current_instruction, exp)
 
     def exec_disassemble_go_to_dialog(self) -> None:
         if debugcore.currentpid == -1:
@@ -4281,192 +4256,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def on_new_session(self) -> None:
         self.session = SessionManager.get_session()
-
-
-class TrackWatchpointWidgetForm(QWidget, TrackWatchpointWidget):
-    def __init__(self, parent: QWidget, address: str, length: int, watchpoint_type: int) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.setWindowFlags(Qt.WindowType.Window)
-        self.update_timer = QTimer(self, timeout=self.update_list)
-        self.stopped = False
-        self.address = address
-        self.info = {}
-        self.last_selected_row = 0
-        if watchpoint_type == typedefs.WATCHPOINT_TYPE.WRITE_ONLY:
-            string = tr.INSTR_WRITING_TO.format(address)
-        elif watchpoint_type == typedefs.WATCHPOINT_TYPE.READ_ONLY:
-            string = tr.INSTR_READING_FROM.format(address)
-        elif watchpoint_type == typedefs.WATCHPOINT_TYPE.BOTH:
-            string = tr.INSTR_ACCESSING_TO.format(address)
-        else:
-            raise Exception("Watchpoint type is invalid: " + str(watchpoint_type))
-        self.setWindowTitle(string)
-        guiutils.center_to_parent(self)  # Called before the QMessageBox to center its position properly
-        self.breakpoints = debugcore.track_watchpoint(address, length, watchpoint_type)
-        if not self.breakpoints:
-            QMessageBox.information(self, tr.ERROR, tr.TRACK_WATCHPOINT_FAILED.format(address))
-            self.close()
-            return
-        self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
-        self.pushButton_Refresh.clicked.connect(self.update_list)
-        self.tableWidget_Addresses.itemDoubleClicked.connect(self.tableWidget_Addresses_item_double_clicked)
-        self.tableWidget_Addresses.selectionModel().currentChanged.connect(self.tableWidget_Addresses_current_changed)
-        self.update_timer.start(100)
-        self.show()
-
-    def update_list(self) -> None:
-        info = debugcore.get_track_watchpoint_info(self.breakpoints)
-        if not info or self.info == info:
-            return
-        self.info = info
-        self.tableWidget_Addresses.setRowCount(0)
-        self.tableWidget_Addresses.setRowCount(len(info))
-        for row, key in enumerate(info):
-            self.tableWidget_Addresses.setItem(row, TRACK_WATCHPOINT_COUNT_COL, QTableWidgetItem(str(info[key][0])))
-            self.tableWidget_Addresses.setItem(row, TRACK_WATCHPOINT_ADDR_COL, QTableWidgetItem(info[key][1]))
-        guiutils.resize_to_contents(self.tableWidget_Addresses)
-        self.tableWidget_Addresses.selectRow(self.last_selected_row)
-
-    def tableWidget_Addresses_current_changed(self, QModelIndex_current: QModelIndex) -> None:
-        current_row = QModelIndex_current.row()
-        if current_row >= 0:
-            self.last_selected_row = current_row
-
-        info = self.info
-        key_list = list(info)
-        if not key_list:
-            return
-        self.last_selected_row = min(self.last_selected_row, len(key_list) - 1)
-        key = key_list[self.last_selected_row]
-        self.textBrowser_Info.clear()
-        for item in info[key][2]:
-            self.textBrowser_Info.append(item + "=" + str(info[key][2][item]))
-        self.textBrowser_Info.append(" ")
-        for item in info[key][3]:
-            self.textBrowser_Info.append(item + "=" + info[key][3][item])
-        self.textBrowser_Info.verticalScrollBar().setValue(self.textBrowser_Info.verticalScrollBar().minimum())
-        self.textBrowser_Disassemble.setPlainText(info[key][4])
-
-    def tableWidget_Addresses_item_double_clicked(self, index: QTableWidgetItem) -> None:
-        address = self.tableWidget_Addresses.item(index.row(), TRACK_WATCHPOINT_ADDR_COL).text()
-        self.parent().memory_view_window.disassemble_expression(address)
-        self.parent().memory_view_window.show()
-        self.parent().memory_view_window.activateWindow()
-
-    def pushButton_Stop_clicked(self) -> None:
-        if self.stopped:
-            self.close()
-            return
-        # Internal chained breakpoints check will delete the rest from self.breakpoints
-        if not debugcore.delete_breakpoint(safe_int_cast(self.breakpoints[0])):
-            QMessageBox.information(self, tr.ERROR, tr.DELETE_WATCHPOINT_FAILED.format(self.address))
-            return
-        self.stopped = True
-        self.pushButton_Stop.setText(tr.CLOSE)
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        self.update_timer.stop()
-        if self.breakpoints:
-            if not self.stopped:
-                # Internal chained breakpoints check will delete the rest from self.breakpoints
-                debugcore.delete_breakpoint(safe_int_cast(self.breakpoints[0]))
-            watchpoint_file = utils.get_track_watchpoint_file(debugcore.currentpid, self.breakpoints)
-            if os.path.exists(watchpoint_file):
-                os.remove(watchpoint_file)
-        super().closeEvent(event)
-
-
-class TrackBreakpointWidgetForm(QWidget, TrackBreakpointWidget):
-    def __init__(self, parent: QWidget, address: str, instruction: str, register_expressions: str) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.update_list_timer = QTimer(self, timeout=self.update_list)
-        self.update_values_timer = QTimer(self, timeout=self.update_values)
-        self.stopped = False
-        self.address = address
-        self.info = {}
-        self.last_selected_row = 0
-        self.setWindowFlags(Qt.WindowType.Window)
-        self.setWindowTitle(tr.ACCESSED_BY_INSTRUCTION.format(instruction))
-        guiutils.center_to_parent(self)  # Called before the QMessageBox to center its position properly
-        self.breakpoint = debugcore.track_breakpoint(address, register_expressions)
-        if not self.breakpoint:
-            QMessageBox.information(self, tr.ERROR, tr.TRACK_BREAKPOINT_FAILED.format(address))
-            self.close()
-            return
-        guiutils.fill_value_combobox(self.comboBox_ValueType)
-        self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
-        self.tableWidget_TrackInfo.itemDoubleClicked.connect(self.tableWidget_TrackInfo_item_double_clicked)
-        self.tableWidget_TrackInfo.selectionModel().currentChanged.connect(self.tableWidget_TrackInfo_current_changed)
-        self.comboBox_ValueType.currentIndexChanged.connect(self.update_values)
-        self.update_list_timer.start(100)
-        self.update_values_timer.start(500)
-        self.parent().refresh_disassemble_view()
-        self.show()
-
-    def update_list(self) -> None:
-        info = debugcore.get_track_breakpoint_info(self.breakpoint)
-        if not info:
-            return
-        if info == self.info:
-            return
-        self.info = info
-        self.tableWidget_TrackInfo.setRowCount(0)
-        row = 0
-        for register_expression in info:
-            for address in info[register_expression]:
-                self.tableWidget_TrackInfo.setRowCount(row + 1)
-                self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_COUNT_COL, QTableWidgetItem(str(info[register_expression][address])))
-                self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_ADDR_COL, QTableWidgetItem(address))
-                self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_SOURCE_COL, QTableWidgetItem("[" + register_expression + "]"))
-                row += 1
-        self.update_values()
-
-    def update_values(self) -> None:
-        with debugcore.memory_handle() as mem_handle:
-            value_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
-            for row in range(self.tableWidget_TrackInfo.rowCount()):
-                address = self.tableWidget_TrackInfo.item(row, TRACK_BREAKPOINT_ADDR_COL).text()
-                value = debugcore.read_memory(address, value_type, 10, mem_handle=mem_handle)
-                value = "" if value is None else str(value)
-                self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(value))
-        guiutils.resize_to_contents(self.tableWidget_TrackInfo)
-        self.tableWidget_TrackInfo.selectRow(self.last_selected_row)
-
-    def tableWidget_TrackInfo_current_changed(self, QModelIndex_current: QModelIndex) -> None:
-        current_row = QModelIndex_current.row()
-        if current_row >= 0:
-            self.last_selected_row = current_row
-
-    def tableWidget_TrackInfo_item_double_clicked(self, index: QTableWidgetItem) -> None:
-        address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
-        vt = typedefs.ValueType(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
-        self.parent().parent().add_entry_to_addresstable(tr.ACCESSED_BY.format(self.address), address, vt)
-        self.parent().parent().update_address_table()
-
-    def pushButton_Stop_clicked(self) -> None:
-        if self.stopped:
-            self.close()
-            return
-        if not debugcore.delete_breakpoint(safe_int_cast(self.breakpoint)):
-            QMessageBox.information(self, tr.ERROR, tr.DELETE_BREAKPOINT_FAILED.format(self.address))
-            return
-        self.stopped = True
-        self.pushButton_Stop.setText(tr.CLOSE)
-        self.parent().refresh_disassemble_view()
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        self.update_list_timer.stop()
-        self.update_values_timer.stop()
-        if self.breakpoint:
-            if not self.stopped:
-                debugcore.delete_breakpoint(safe_int_cast(self.breakpoint))
-            breakpoint_file = utils.get_track_breakpoint_file(debugcore.currentpid, self.breakpoint)
-            if os.path.exists(breakpoint_file):
-                os.remove(breakpoint_file)
-        self.parent().refresh_disassemble_view()
-        super().closeEvent(event)
 
 
 class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
