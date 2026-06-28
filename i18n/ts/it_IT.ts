@@ -77,56 +77,6 @@
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Parameters for tracing</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Number of the instructions that'll be traced</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Max trace count(1 or greater):</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Tracing will start if this condition is met</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Trigger condition(Optional, gdb expression):</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Tracing will stop whenever this condition is met</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Stop condition(Optional, gdb expression):</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Step over instead of single step</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Stop when tracing ends</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Collect registers</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
         <source>Dissect Code</source>
         <translation type="unfinished" />
@@ -688,6 +638,56 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Parameters for tracing</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Number of the instructions that'll be traced</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Max trace count(1 or greater):</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Tracing will start if this condition is met</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Trigger condition(Optional, gdb expression):</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Tracing will stop whenever this condition is met</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Stop condition(Optional, gdb expression):</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Step over instead of single step</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Stop when tracing ends</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Collect registers</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/TrackSelector/Form/TrackSelectorDialog.ui" line="0" />
         <source>Select an address to track</source>
         <translation type="unfinished" />
@@ -699,16 +699,6 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
 </context><context>
     <name>Form</name>
-    <message>
-        <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
-        <source>Tracer Status</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
-        <source>Cancel</source>
-        <translation type="unfinished">Annulla</translation>
-    </message>
     <message>
         <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
         <source>Bookmarks</source>
@@ -984,6 +974,16 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWaitWidget.ui" line="0" />
+        <source>Tracer Status</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWaitWidget.ui" line="0" />
+        <source>Cancel</source>
+        <translation type="unfinished">Annulla</translation>
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
         <source>Count</source>
@@ -1193,35 +1193,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
-        <source>Tracer</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
-        <source>File</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
-        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
-        <source>Open</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
-        <source>Save</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
-        <source>Save as a text file</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Libpince Engine</source>
         <translation type="unfinished" />
@@ -1239,6 +1210,12 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Script output</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>File</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1262,8 +1239,21 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Open</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Ctrl+O</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Save</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1414,6 +1404,16 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
         <source>Create Process[F1]</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWindow.ui" line="0" />
+        <source>Tracer</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWindow.ui" line="0" />
+        <source>Save as a text file</source>
         <translation type="unfinished" />
     </message>
 </context><context>

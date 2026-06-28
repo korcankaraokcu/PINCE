@@ -28,7 +28,7 @@ import re
 import signal
 import sys
 import traceback
-from time import sleep, time
+from time import time
 from types import FrameType, ModuleType, TracebackType
 from typing import Any
 
@@ -38,7 +38,6 @@ if os.geteuid() == 0:
     os.environ["PYTHONDONTWRITEBYTECODE"] = "1"  # For GDB and other processes that will inherit environ.
 
 from PyQt6.QtCore import (
-    QByteArray,
     QEvent,
     QItemSelection,
     QItemSelectionModel,
@@ -48,7 +47,6 @@ from PyQt6.QtCore import (
     QObject,
     QSettings,
     QSignalBlocker,
-    QSize,
     Qt,
     QTimer,
     QTranslator,
@@ -64,7 +62,6 @@ from PyQt6.QtGui import (
     QKeyEvent,
     QKeySequence,
     QMouseEvent,
-    QMovie,
     QPixmap,
     QShortcut,
     QWheelEvent,
@@ -96,9 +93,6 @@ from GUI.MemoryViewerWindow import Ui_MainWindow_MemoryView as MemoryViewWindow
 from GUI.Session.session import SessionDataChanged, SessionManager, StructureManager
 from GUI.Settings import settings, themes
 from GUI.States import states
-from GUI.TraceInstructionsPromptDialog import Ui_Dialog as TraceInstructionsPromptDialog
-from GUI.TraceInstructionsWaitWidget import Ui_Form as TraceInstructionsWaitWidget
-from GUI.TraceInstructionsWindow import Ui_MainWindow as TraceInstructionsWindow
 from GUI.Utils import guitypedefs, guiutils, update_check, utilwidgets
 from GUI.Validators.HexValidator import HexValidator
 from GUI.Widgets.About.About import AboutWidget
@@ -114,7 +108,6 @@ from GUI.Widgets.FunctionsInfo.FunctionsInfo import FunctionsInfoWidget
 from GUI.Widgets.HexEdit.HexEdit import HexEditDialog
 from GUI.Widgets.LogFile.LogFile import LogFileWidget
 from GUI.Widgets.MemoryRegions.MemoryRegions import MemoryRegionsWidget
-from GUI.Widgets.LoadingDialog.LoadingDialog import LoadingDialog
 from GUI.Widgets.LibpinceEngine.LibpinceEngine import (
     LibpinceEngineWindow,
     create_script_namespace,
@@ -137,6 +130,7 @@ from GUI.Widgets.Structures.StructuresWindow import StructuresWindow
 from GUI.Widgets.Structures.StructureViewDialog import StructureViewDialog
 from GUI.Widgets.Structures.StructureEditorDialog import StructureEditorDialog
 from GUI.Widgets.Structures import mono_export
+from GUI.Widgets.TraceInstructions.TraceInstructionsWindow import TraceInstructionsWindow
 from GUI.Widgets.TrackBreakpoint.TrackBreakpoint import TrackBreakpointWidget
 from GUI.Widgets.TrackSelector.TrackSelector import TrackSelectorDialog
 from GUI.Widgets.TrackWatchpoint.TrackWatchpoint import TrackWatchpointWidget
@@ -2730,7 +2724,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.hex_update_timer.start(200)
 
     def show_trace_window(self) -> None:
-        TraceInstructionsWindowForm(self, prompt_dialog=False)
+        TraceInstructionsWindow(self, prompt_dialog=False)
 
     def step_instruction(self) -> None:
         if not (
@@ -3966,7 +3960,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             selected_row = 0
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
-        TraceInstructionsWindowForm(self, current_address)
+        TraceInstructionsWindow(self, current_address)
 
     def exec_track_breakpoint_dialog(self) -> None:
         if debugcore.currentpid == -1:
@@ -4256,200 +4250,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
 
     def on_new_session(self) -> None:
         self.session = SessionManager.get_session()
-
-
-class TraceInstructionsPromptDialogForm(QDialog, TraceInstructionsPromptDialog):
-    def __init__(self, parent: QWidget) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        guiutils.center_to_parent(self)
-
-    def get_values(self) -> tuple[int, str, str, int, bool, bool]:
-        try:
-            max_trace_count = int(self.lineEdit_MaxTraceCount.text())
-        except ValueError:
-            max_trace_count = 0
-        trigger_condition = self.lineEdit_TriggerCondition.text()
-        stop_condition = self.lineEdit_StopCondition.text()
-        if self.checkBox_StepOver.isChecked():
-            step_mode = typedefs.STEP_MODE.STEP_OVER
-        else:
-            step_mode = typedefs.STEP_MODE.SINGLE_STEP
-        stop_after_trace = self.checkBox_StopAfterTrace.isChecked()
-        collect_registers = self.checkBox_CollectRegisters.isChecked()
-        return max_trace_count, trigger_condition, stop_condition, step_mode, stop_after_trace, collect_registers
-
-    def accept(self) -> None:
-        try:
-            max_trace_count = int(self.lineEdit_MaxTraceCount.text())
-        except ValueError:
-            max_trace_count = 0
-        if max_trace_count >= 1:
-            super().accept()
-        else:
-            QMessageBox.information(self, tr.ERROR, tr.MAX_TRACE_COUNT_ASSERT_GT.format(1))
-
-
-class TraceInstructionsWaitWidgetForm(QWidget, TraceInstructionsWaitWidget):
-    widget_closed = pyqtSignal()
-
-    def __init__(self, parent: QWidget, address: str, tracer: debugcore.Tracer) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.status_to_text = {
-            typedefs.TRACE_STATUS.IDLE: tr.WAITING_FOR_BREAKPOINT,
-            typedefs.TRACE_STATUS.FINISHED: tr.TRACING_COMPLETED,
-        }
-        self.setWindowFlags(Qt.WindowType.Window)
-        self.address = address
-        self.tracer = tracer
-        media_directory = utils.get_media_directory()
-        self.movie = QMovie(media_directory + "/TraceInstructionsWaitWidget/ajax-loader.gif", QByteArray())
-        self.label_Animated.setMovie(self.movie)
-        self.movie.setScaledSize(QSize(215, 100))
-        self.movie.setCacheMode(QMovie.CacheMode.CacheAll)
-        self.movie.setSpeed(100)
-        self.movie.start()
-        self.pushButton_Cancel.clicked.connect(self.close)
-        tracer_thread = guitypedefs.Worker(tracer.tracer_loop)
-        tracer_thread.signals.finished.connect(self.close)
-        states.threadpool.start(tracer_thread)
-        self.status_timer = QTimer(self)
-        self.status_timer.setInterval(50)
-        self.status_timer.timeout.connect(self.change_status)
-        self.status_timer.start()
-        guiutils.center_to_parent(self)
-
-    def change_status(self) -> None:
-        if self.tracer.trace_status == typedefs.TRACE_STATUS.TRACING:
-            self.label_StatusText.setText(f"{self.tracer.current_trace_count} / {self.tracer.max_trace_count}")
-        else:
-            self.label_StatusText.setText(self.status_to_text[self.tracer.trace_status])
-        app.processEvents()
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        self.status_timer.stop()
-        self.label_StatusText.setText(tr.TRACING_COMPLETED)
-        self.pushButton_Cancel.setVisible(False)
-        self.adjustSize()
-        app.processEvents()
-        if self.tracer.trace_status == typedefs.TRACE_STATUS.TRACING:
-            self.tracer.cancel_trace()
-            while self.tracer.trace_status != typedefs.TRACE_STATUS.FINISHED:
-                sleep(0.1)
-                app.processEvents()
-        self.widget_closed.emit()
-        super().closeEvent(event)
-
-
-class TraceInstructionsWindowForm(QMainWindow, TraceInstructionsWindow):
-    def __init__(self, parent: QWidget, address: str = "", prompt_dialog: bool = True) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.address = address
-        self.tracer = debugcore.Tracer()
-        self.treeWidget_InstructionInfo.currentItemChanged.connect(self.display_collected_data)
-        self.treeWidget_InstructionInfo.itemDoubleClicked.connect(self.treeWidget_InstructionInfo_item_double_clicked)
-        self.treeWidget_InstructionInfo.contextMenuEvent = self.treeWidget_InstructionInfo_context_menu_event
-        self.actionOpen.triggered.connect(self.load_file)
-        self.actionSave.triggered.connect(self.save_file)
-        self.splitter.setStretchFactor(0, 1)
-        guiutils.center_to_parent(self)
-        if not prompt_dialog:
-            self.showMaximized()
-            return
-        prompt_dialog = TraceInstructionsPromptDialogForm(self)
-        if prompt_dialog.exec():
-            params = (address,) + prompt_dialog.get_values()
-            breakpoint = self.tracer.set_breakpoint(*params)
-            if not breakpoint:
-                QMessageBox.information(self, tr.ERROR, tr.BREAKPOINT_FAILED.format(address))
-                self.close()
-                return
-            self.showMaximized()
-            self.wait_dialog = TraceInstructionsWaitWidgetForm(self, address, self.tracer)
-            self.wait_dialog.widget_closed.connect(self.show_trace_info)
-            self.wait_dialog.show()
-        else:
-            self.close()
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        wait_dialog = getattr(self, "wait_dialog", None)
-        if wait_dialog is not None:
-            wait_dialog.close()
-        super().closeEvent(event)
-
-    def display_collected_data(self, QTreeWidgetItem_current: QTreeWidgetItem) -> None:
-        if QTreeWidgetItem_current is None:
-            return
-        self.textBrowser_RegisterInfo.clear()
-        current_dict = QTreeWidgetItem_current.trace_data[1]
-        if current_dict:
-            for key in current_dict:
-                self.textBrowser_RegisterInfo.append(str(key) + " = " + str(current_dict[key]))
-            self.textBrowser_RegisterInfo.verticalScrollBar().setValue(self.textBrowser_RegisterInfo.verticalScrollBar().minimum())
-
-    def show_trace_info(self) -> None:
-        self.treeWidget_InstructionInfo.setStyleSheet("QTreeWidget::item{ height: 16px; }")
-        parent = QTreeWidgetItem(self.treeWidget_InstructionInfo)
-        self.treeWidget_InstructionInfo.setRootIndex(self.treeWidget_InstructionInfo.indexFromItem(parent))
-        trace_tree, current_root_index = copy.deepcopy(self.tracer.trace_data)
-        while current_root_index is not None:
-            try:
-                current_index = trace_tree[current_root_index][2][0]  # Get the first child
-                current_item = trace_tree[current_index][0]
-                del trace_tree[current_root_index][2][0]  # Delete it
-            except IndexError:  # We've depleted the children
-                current_root_index = trace_tree[current_root_index][1]  # traverse upwards
-                parent = parent.parent()
-                continue
-            child = QTreeWidgetItem(parent)
-            child.trace_data = current_item
-            child.setText(0, current_item[0])
-            if trace_tree[current_index][2]:  # If current item has children, traverse them
-                current_root_index = current_index  # traverse downwards
-                parent = child
-        self.treeWidget_InstructionInfo.expandAll()
-
-    def save_file(self) -> None:
-        with guiutils.save_dialog_as_user(self, tr.SAVE_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE, "trace") as file_path:
-            if file_path and not utils.save_file(self.tracer.trace_data, file_path):
-                QMessageBox.information(self, tr.ERROR, tr.FILE_SAVE_ERROR)
-
-    def load_file(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(self, tr.OPEN_TRACE_FILE, os.path.expanduser("~"), tr.FILE_TYPES_TRACE)
-        if file_path:
-            content = utils.load_file(file_path)
-            if content is None:
-                QMessageBox.information(self, tr.ERROR, tr.FILE_LOAD_ERROR.format(file_path))
-                return
-            self.treeWidget_InstructionInfo.clear()
-            self.tracer.trace_data = content
-            self.show_trace_info()
-
-    def treeWidget_InstructionInfo_context_menu_event(self, event: QContextMenuEvent) -> None:
-        menu = QMenu()
-        expand_all = menu.addAction(tr.EXPAND_ALL)
-        collapse_all = menu.addAction(tr.COLLAPSE_ALL)
-        font_size = self.treeWidget_InstructionInfo.font().pointSize()
-        menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
-        action = menu.exec(event.globalPos())
-        actions = {
-            expand_all: self.treeWidget_InstructionInfo.expandAll,
-            collapse_all: self.treeWidget_InstructionInfo.collapseAll,
-        }
-        try:
-            actions[action]()
-        except KeyError:
-            pass
-
-    def treeWidget_InstructionInfo_item_double_clicked(self, index: QTreeWidgetItem) -> None:
-        current_item = guiutils.get_current_item(self.treeWidget_InstructionInfo)
-        if not current_item:
-            return
-        address = utils.extract_hex_address(current_item.trace_data[0])
-        if address:
-            self.parent().disassemble_expression(address)
 
 
 def handle_exit() -> None:

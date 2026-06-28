@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'TraceInstructionsPromptDialog.ui'
+# Form implementation generated from reading ui file 'Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #

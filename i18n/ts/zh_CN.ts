@@ -77,56 +77,6 @@
         <translation>指针</translation>
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Parameters for tracing</source>
-        <translation>用于追踪的参数</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Number of the instructions that'll be traced</source>
-        <translation>将被追踪的指令数量</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Max trace count(1 or greater):</source>
-        <translation>最大追踪次数（1 或更多）：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Tracing will start if this condition is met</source>
-        <translation>如果满足此条件，将开始追踪</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Trigger condition(Optional, gdb expression):</source>
-        <translation>触发条件（可选，gdb表达式）：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Tracing will stop whenever this condition is met</source>
-        <translation>每当满足此条件时，追踪将停止</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Stop condition(Optional, gdb expression):</source>
-        <translation>停止条件（可选，gdb表达式）：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Step over instead of single step</source>
-        <translation>步过（Step over）而不是单步</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Stop when tracing ends</source>
-        <translation>当追踪结束时停止</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsPromptDialog.ui" line="0" />
-        <source>Collect registers</source>
-        <translation>收集寄存器</translation>
-    </message>
-    <message>
         <location filename="../../GUI/Widgets/DissectCode/Form/DissectCodeDialog.ui" line="0" />
         <source>Dissect Code</source>
         <translation>分析代码</translation>
@@ -690,6 +640,56 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>按 Esc 取消，按 Ctrl+Enter 接受</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Parameters for tracing</source>
+        <translation>用于追踪的参数</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Number of the instructions that'll be traced</source>
+        <translation>将被追踪的指令数量</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Max trace count(1 or greater):</source>
+        <translation>最大追踪次数（1 或更多）：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Tracing will start if this condition is met</source>
+        <translation>如果满足此条件，将开始追踪</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Trigger condition(Optional, gdb expression):</source>
+        <translation>触发条件（可选，gdb表达式）：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Tracing will stop whenever this condition is met</source>
+        <translation>每当满足此条件时，追踪将停止</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Stop condition(Optional, gdb expression):</source>
+        <translation>停止条件（可选，gdb表达式）：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Step over instead of single step</source>
+        <translation>步过（Step over）而不是单步</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Stop when tracing ends</source>
+        <translation>当追踪结束时停止</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsPromptDialog.ui" line="0" />
+        <source>Collect registers</source>
+        <translation>收集寄存器</translation>
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/TrackSelector/Form/TrackSelectorDialog.ui" line="0" />
         <source>Select an address to track</source>
         <translation>选择要跟踪的地址</translation>
@@ -701,16 +701,6 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
 </context><context>
     <name>Form</name>
-    <message>
-        <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
-        <source>Tracer Status</source>
-        <translation>追踪器状态</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsWaitWidget.ui" line="0" />
-        <source>Cancel</source>
-        <translation>取消</translation>
-    </message>
     <message>
         <location filename="../../GUI/Widgets/Bookmark/Form/BookmarkWidget.ui" line="0" />
         <source>Bookmarks</source>
@@ -986,6 +976,16 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>添加到地址表</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWaitWidget.ui" line="0" />
+        <source>Tracer Status</source>
+        <translation>追踪器状态</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWaitWidget.ui" line="0" />
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/TrackWatchpoint/Form/TrackWatchpointWidget.ui" line="0" />
         <location filename="../../GUI/Widgets/TrackBreakpoint/Form/TrackBreakpointWidget.ui" line="0" />
         <source>Count</source>
@@ -1198,35 +1198,6 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>配置选项</translation>
     </message>
     <message>
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
-        <source>Tracer</source>
-        <translation>追踪器</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
-        <source>File</source>
-        <translation>文件</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
-        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
-        <source>Open</source>
-        <translation>打开</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
-        <source>Save</source>
-        <translation>保存</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/TraceInstructionsWindow.ui" line="0" />
-        <source>Save as a text file</source>
-        <translation>保存为文本文件</translation>
-    </message>
-    <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Libpince Engine</source>
         <translation>Libpince 引擎</translation>
@@ -1245,6 +1216,12 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Script output</source>
         <translation>脚本输出</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>File</source>
+        <translation>文件</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
@@ -1267,9 +1244,22 @@ Patterns at former positions have higher priority if regex is off</source>
         <translation>代码注入</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Open</source>
+        <translation>打开</translation>
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Ctrl+O</source>
         <translation>Ctrl+O</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
+        <source>Save</source>
+        <translation>保存</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
@@ -1420,6 +1410,16 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/SelectProcess/Form/SelectProcess.ui" line="0" />
         <source>Create Process[F1]</source>
         <translation>创建进程[F1]</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWindow.ui" line="0" />
+        <source>Tracer</source>
+        <translation>追踪器</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/TraceInstructions/Form/TraceInstructionsWindow.ui" line="0" />
+        <source>Save as a text file</source>
+        <translation>保存为文本文件</translation>
     </message>
 </context><context>
     <name>MainWindow_MemoryView</name>
