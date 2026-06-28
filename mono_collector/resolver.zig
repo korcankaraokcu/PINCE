@@ -16,17 +16,12 @@
 //! Runtime module symbol resolution.
 //!
 //! Native ELF builds resolve mono_*/il2cpp_* via dlopen/dlsym.
-//! The WINE/Proton variant (built with -Dwine) parses the mapped runtime DLL's PE export directory instead.
+//! The WINE/Proton PE variant parses the mapped runtime DLL's PE export directory instead.
 //! WINE maps the DLL as an image but does NOT register its exports with the glibc dynamic linker, so dlsym can't see them.
 const std = @import("std");
-const build_options = @import("build_options");
+const common = @import("common.zig");
 
-pub const is_wine = build_options.wine;
-
-/// On x86 both native and WINE use cdecl (".c"), so backends select ".winapi" only when this is set.
-pub const win64_abi = is_wine and @import("builtin").cpu.arch == .x86_64;
-
-pub const Module = if (is_wine) WINEModule else NativeModule;
+pub const Module = if (common.is_windows) WINEModule else NativeModule;
 
 /// Find + bind the runtime module and confirm "core" resolves through it.
 /// - core: a symbol that must exist (proves it is the expected runtime).
@@ -37,10 +32,7 @@ pub fn open(
     core: [*:0]const u8,
     substr: []const u8,
 ) ?Module {
-    return if (is_wine)
-        openWINE(allocator, core, substr)
-    else
-        openNative(allocator, core, substr);
+    return if (common.is_windows) openWindows(core, substr) else openNative(allocator, core, substr);
 }
 
 // native (ELF)
@@ -153,38 +145,15 @@ fn parsePe(base: [*]const u8) ?WINEModule {
     };
 }
 
-fn openWINE(
-    allocator: std.mem.Allocator,
-    core: [*:0]const u8,
-    substr: []const u8,
-) ?WINEModule {
-    const io = std.Io.Threaded.global_single_threaded.io();
-    const f = std.Io.Dir.openFileAbsolute(io, "/proc/self/maps", .{}) catch return null;
-    defer f.close(io);
+extern "kernel32" fn GetModuleHandleW(lpModuleName: ?[*:0]const u16) callconv(.winapi) ?*anyopaque;
 
-    var contents: std.ArrayList(u8) = .empty;
-    defer contents.deinit(allocator);
-    var chunk: [1 << 16]u8 = undefined;
-    var offset: u64 = 0;
-    while (true) {
-        const n = f.readPositionalAll(io, &chunk, offset) catch return null;
-        if (n == 0) break;
-        contents.appendSlice(allocator, chunk[0..n]) catch return null;
-        offset += n;
-        if (n < chunk.len) break;
-    }
-
-    // A DLL spans several maps lines (one per PE section).
-    // The headers mapping (file offset 0, with the "MZ"/"PE" signatures) is the image base.
-    // Try each matching line's start address and keep the one that parses as a PE whose export table actually contains "core".
-    var it = std.mem.splitScalar(u8, contents.items, '\n');
-    while (it.next()) |line| {
-        if (std.mem.indexOf(u8, line, substr) == null) continue;
-        const dash = std.mem.indexOfScalar(u8, line, '-') orelse continue;
-        const start = std.fmt.parseInt(usize, line[0..dash], 16) catch continue;
-        const mod = parsePe(@ptrFromInt(start)) orelse continue;
-        if (mod.lookup(core) == null) continue; // exports parsed but not the right runtime
-        return mod;
-    }
-    return null;
+fn openWindows(core: [*:0]const u8, substr: []const u8) ?WINEModule {
+    var wbuf: [256]u16 = undefined;
+    if (substr.len >= wbuf.len) return null;
+    for (substr, 0..) |c, i| wbuf[i] = c; // runtime DLL names are ASCII
+    wbuf[substr.len] = 0;
+    const handle = GetModuleHandleW(@ptrCast(&wbuf)) orelse return null; // HMODULE == image base
+    const mod = parsePe(@ptrCast(handle)) orelse return null;
+    if (mod.lookup(core) == null) return null; // mapped but not the expected runtime
+    return mod;
 }

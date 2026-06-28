@@ -107,7 +107,7 @@ const MonoApi = struct {
 pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
     // Bind the runtime module using the resolver.
     // ELF -> dlopen/dlsym, PE -> export parsing.
-    const substr = if (resolver.is_wine) "mono-2.0-bdwgc.dll" else "libmono";
+    const substr = if (common.is_windows) "mono-2.0-bdwgc.dll" else "libmono";
     const mod = resolver.open(allocator, "mono_get_root_domain", substr) orelse return null;
 
     const api = try allocator.create(MonoApi);

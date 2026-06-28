@@ -13,86 +13,143 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//! Entry + worker thread + Unix-socket server + op dispatch.
-//! The worker attaches to the Mono domain, binds an abstract Unix socket "\0pince-mono-<pid>" and serves frames.
+//! Entry + worker thread + request server + op dispatch.
+//! The worker attaches to the Mono domain and serves frames over a socket.
 const std = @import("std");
 const linux = std.os.linux;
+const common = @import("common.zig");
 const rt = @import("runtime.zig");
 const msgpack = @import("msgpack.zig");
 const Encoder = msgpack.Encoder;
-const Decoder = msgpack.Decoder;
+const eql = common.eql;
 
-const AF_UNIX: u32 = 1;
-const SOCK_STREAM: u32 = 1;
 const EINTR = -@as(isize, @intFromEnum(linux.E.INTR));
+const ws = std.os.windows.ws2_32;
 
 var started = std.atomic.Value(bool).init(false);
 
+// Transport: ELF uses a raw syscall abstract Unix socket while the PE DLL uses Winsock TCP on 127.0.0.1,
+// because WINE's seccomp filter kills direct Linux syscalls from PE code (SIGSYS).
+const Sock = if (common.is_windows) usize else i32;
+
+var wine_port: u16 = 0;
+comptime {
+    if (common.is_windows) @export(&wine_port, .{ .name = "pince_mono_port" });
+}
+
+const win = if (common.is_windows) struct {
+    extern "ws2_32" fn WSAStartup(version: u16, data: *anyopaque) callconv(.winapi) c_int;
+    extern "ws2_32" fn socket(af: c_int, kind: c_int, protocol: c_int) callconv(.winapi) usize;
+    extern "ws2_32" fn bind(s: usize, name: *const anyopaque, namelen: c_int) callconv(.winapi) c_int;
+    extern "ws2_32" fn listen(s: usize, backlog: c_int) callconv(.winapi) c_int;
+    extern "ws2_32" fn accept(s: usize, addr: ?*anyopaque, addrlen: ?*c_int) callconv(.winapi) usize;
+    extern "ws2_32" fn getsockname(s: usize, name: *anyopaque, namelen: *c_int) callconv(.winapi) c_int;
+    extern "ws2_32" fn setsockopt(s: usize, level: c_int, optname: c_int, optval: [*]const u8, optlen: c_int) callconv(.winapi) c_int;
+    extern "ws2_32" fn recv(s: usize, buf: [*]u8, len: c_int, flags: c_int) callconv(.winapi) c_int;
+    extern "ws2_32" fn send(s: usize, buf: [*]const u8, len: c_int, flags: c_int) callconv(.winapi) c_int;
+    extern "ws2_32" fn closesocket(s: usize) callconv(.winapi) c_int;
+} else struct {};
+
+fn setupListener() ?Sock {
+    if (common.is_windows) {
+        var wsadata: [512]u8 = undefined;
+        if (win.WSAStartup(0x0202, &wsadata) != 0) return null; // request Winsock 2.2
+        const s = win.socket(ws.AF.INET, ws.SOCK.STREAM, ws.IPPROTO.TCP);
+        if (s == std.math.maxInt(usize)) return null;
+        var addr = ws.sockaddr.in{
+            .port = 0, // kernel-assigned free port
+            .addr = std.mem.nativeToBig(u32, 0x7F00_0001), // 127.0.0.1, loopback only
+        };
+        if (win.bind(s, &addr, @sizeOf(ws.sockaddr.in)) != 0 or win.listen(s, 1) != 0) {
+            _ = win.closesocket(s);
+            return null;
+        }
+        var slen: c_int = @sizeOf(ws.sockaddr.in);
+        if (win.getsockname(s, &addr, &slen) != 0) {
+            _ = win.closesocket(s);
+            return null;
+        }
+        wine_port = std.mem.bigToNative(u16, addr.port);
+        return s;
+    }
+    const rc = linux.socket(linux.AF.UNIX, linux.SOCK.STREAM, 0);
+    if (@as(isize, @bitCast(rc)) < 0) return null;
+    const fd: i32 = @intCast(rc);
+    var namebuf: [64]u8 = undefined;
+    const name = std.fmt.bufPrint(&namebuf, "pince-mono-{d}", .{linux.getpid()}) catch {
+        _ = linux.close(fd);
+        return null;
+    };
+    var addr = std.mem.zeroes(linux.sockaddr.un);
+    addr.family = linux.AF.UNIX;
+    addr.path[0] = 0; // leading NUL -> abstract namespace
+    @memcpy(addr.path[1 .. 1 + name.len], name);
+    const addrlen: linux.socklen_t = @intCast(@offsetOf(linux.sockaddr.un, "path") + 1 + name.len);
+    if (linux.bind(fd, @ptrCast(&addr), addrlen) != 0 or linux.listen(fd, 1) != 0) {
+        _ = linux.close(fd);
+        return null;
+    }
+    return fd;
+}
+
 fn startWorker() void {
     if (started.swap(true, .seq_cst)) return;
-    const t = std.Thread.spawn(.{}, workerMain, .{}) catch return;
-    t.detach();
+    // PE build must spawn a real WINE thread so Mono's GC can suspend it.
+    (std.Thread.spawn(.{}, workerMain, .{}) catch return).detach();
+}
+
+// PE entry point loaded via kernel32!LoadLibraryW.
+pub fn DllMain(
+    _: std.os.windows.HINSTANCE,
+    reason: std.os.windows.DWORD,
+    _: std.os.windows.LPVOID,
+) callconv(.winapi) std.os.windows.BOOL {
+    if (reason == 1) startWorker(); // DLL_PROCESS_ATTACH
+    return .TRUE;
 }
 
 fn ctor() callconv(.c) void {
     startWorker();
 }
-export const _pince_mono_ctor: *const fn () callconv(.c) void linksection(".init_array") = &ctor;
+const ctor_ptr: *const fn () callconv(.c) void = &ctor;
+comptime {
+    if (!common.is_windows) @export(&ctor_ptr, .{ .name = "_pince_mono_ctor", .section = ".init_array" });
+}
 
-fn readN(fd: i32, buf: []u8) !void {
+fn readN(s: Sock, buf: []u8) !void {
     var off: usize = 0;
     while (off < buf.len) {
-        const n = linux.read(fd, buf[off..].ptr, buf.len - off);
-        const signed = @as(isize, @bitCast(n));
-        if (signed < 0) {
-            if (signed == EINTR) continue;
-            return error.ReadError;
-        }
+        const n = if (common.is_windows)
+            win.recv(s, buf[off..].ptr, @intCast(buf.len - off), 0)
+        else blk: {
+            const rc: isize = @bitCast(linux.read(s, buf[off..].ptr, buf.len - off));
+            if (rc == EINTR) continue;
+            break :blk rc;
+        };
+        if (n < 0) return error.ReadError;
         if (n == 0) return error.Eof;
-        off += n;
+        off += @intCast(n);
     }
 }
 
-fn writeN(fd: i32, buf: []const u8) !void {
+fn writeN(s: Sock, buf: []const u8) !void {
     var off: usize = 0;
     while (off < buf.len) {
-        const n = linux.write(fd, buf[off..].ptr, buf.len - off);
-        const signed = @as(isize, @bitCast(n));
-        if (signed < 0) {
-            if (signed == EINTR) continue;
-            return error.WriteError;
-        }
+        const n = if (common.is_windows)
+            win.send(s, buf[off..].ptr, @intCast(buf.len - off), 0)
+        else blk: {
+            const rc: isize = @bitCast(linux.write(s, buf[off..].ptr, buf.len - off));
+            if (rc == EINTR) continue;
+            break :blk rc;
+        };
+        if (n < 0) return error.WriteError;
         if (n == 0) return error.Closed;
-        off += n;
+        off += @intCast(n);
     }
-}
-
-fn readFrame(allocator: std.mem.Allocator, fd: i32) ![]u8 {
-    var len_buf: [4]u8 = undefined;
-    try readN(fd, &len_buf);
-
-    const len = std.mem.readInt(u32, &len_buf, .big);
-    if (len > (16 * 1024 * 1024)) return error.FrameTooBig;
-
-    const buf = try allocator.alloc(u8, len);
-    errdefer allocator.free(buf);
-    try readN(fd, buf);
-    return buf;
-}
-
-fn writeFrame(fd: i32, payload: []const u8) !void {
-    var len_buf: [4]u8 = undefined;
-    std.mem.writeInt(u32, &len_buf, @intCast(payload.len), .big);
-    try writeN(fd, &len_buf);
-    try writeN(fd, payload);
-}
-
-inline fn eql(a: []const u8, b: []const u8) bool {
-    return std.mem.eql(u8, a, b);
 }
 
 fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes: []const u8, out: *Encoder) !void {
-    var dec = Decoder{ .data = req_bytes };
+    var dec = msgpack.Decoder{ .data = req_bytes };
     const n = dec.mapLen() catch return writeErr(out, "bad request");
 
     var op: []const u8 = "";
@@ -103,9 +160,8 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
     var obj: u64 = 0;
     var args_buf: [32]rt.Arg = undefined;
     var args_len: usize = 0;
-    var i: usize = 0;
 
-    while (i < n) : (i += 1) {
+    for (0..n) |_| {
         const key = dec.str() catch return writeErr(out, "bad key");
         if (eql(key, "op")) {
             op = dec.str() catch return writeErr(out, "bad op");
@@ -122,8 +178,7 @@ fn dispatch(allocator: std.mem.Allocator, backend: *const rt.Backend, req_bytes:
         } else if (eql(key, "args")) {
             const count = dec.arrayLen() catch return writeErr(out, "bad args");
             args_len = 0;
-            var p: usize = 0;
-            while (p < count) : (p += 1) {
+            for (0..count) |_| {
                 if (args_len >= args_buf.len) return writeErr(out, "too many args");
                 if ((dec.arrayLen() catch return writeErr(out, "bad arg")) != 2) return writeErr(out, "bad arg");
                 const tag = dec.str() catch return writeErr(out, "bad arg tag");
@@ -191,49 +246,51 @@ fn writeErr(out: *Encoder, msg: []const u8) !void {
     try out.str(msg);
 }
 
-fn handleConn(allocator: std.mem.Allocator, backend: *const rt.Backend, fd: i32) void {
-    defer _ = linux.close(fd);
+fn handleConn(allocator: std.mem.Allocator, backend: *const rt.Backend, conn: Sock) void {
+    defer {
+        if (common.is_windows) _ = win.closesocket(conn) else _ = linux.close(conn);
+    }
     while (true) {
-        const req_bytes = readFrame(allocator, fd) catch return;
+        var len_buf: [4]u8 = undefined;
+        readN(conn, &len_buf) catch return;
+        const len = std.mem.readInt(u32, &len_buf, .big);
+        if (len > (16 * 1024 * 1024)) return;
+
+        const req_bytes = allocator.alloc(u8, len) catch return;
         defer allocator.free(req_bytes);
+        readN(conn, req_bytes) catch return;
 
         var out: std.ArrayList(u8) = .empty;
         defer out.deinit(allocator);
 
         var enc = Encoder{ .list = &out, .allocator = allocator };
         dispatch(allocator, backend, req_bytes, &enc) catch {
-            out.clearRetainingCapacity();
             writeErr(&enc, "internal") catch return;
         };
-        writeFrame(fd, out.items) catch return;
+        std.mem.writeInt(u32, &len_buf, @intCast(out.items.len), .big);
+        writeN(conn, &len_buf) catch return;
+        writeN(conn, out.items) catch return;
     }
 }
 
 fn workerMain() void {
-    const allocator = std.heap.c_allocator;
-    var backend = (rt.detectAndLoad(allocator) catch return) orelse return;
+    // The PE build links no libc, so use the libc-free general allocator there.
+    const allocator = if (common.is_windows) std.heap.smp_allocator else std.heap.c_allocator;
+    const backend = (rt.detectAndLoad(allocator) catch return) orelse return;
 
-    const sock_rc = linux.socket(AF_UNIX, SOCK_STREAM, 0);
-    if (@as(isize, @bitCast(sock_rc)) < 0) return;
-    const fd: i32 = @intCast(sock_rc);
-
-    const pid = std.c.getpid();
-    var namebuf: [64]u8 = undefined;
-    const name = std.fmt.bufPrint(&namebuf, "pince-mono-{d}", .{pid}) catch return;
-
-    var addr = std.mem.zeroes(linux.sockaddr.un);
-    addr.family = AF_UNIX;
-    addr.path[0] = 0; // leading NUL -> abstract namespace
-    @memcpy(addr.path[1 .. 1 + name.len], name);
-    const addrlen: linux.socklen_t = @intCast(@offsetOf(linux.sockaddr.un, "path") + 1 + name.len);
-
-    if (linux.bind(fd, @ptrCast(&addr), addrlen) != 0) return;
-    if (linux.listen(fd, 1) != 0) return;
-
+    const listener = setupListener() orelse return;
     while (true) {
-        const accept_rc = linux.accept(fd, null, null);
-        if (@as(isize, @bitCast(accept_rc)) < 0) continue;
-        const cfd: i32 = @intCast(accept_rc);
-        handleConn(allocator, &backend, cfd);
+        const conn = if (common.is_windows) blk: {
+            const c = win.accept(listener, null, null);
+            if (c == std.math.maxInt(usize)) continue;
+            const one: u32 = 1; // TCP_NODELAY: our frames are a 4 bytes header + body, so avoid Nagle delays
+            _ = win.setsockopt(c, ws.IPPROTO.TCP, ws.TCP.NODELAY, std.mem.asBytes(&one), @sizeOf(u32));
+            break :blk c;
+        } else blk: {
+            const c = linux.accept(listener, null, null);
+            if (@as(isize, @bitCast(c)) < 0) continue;
+            break :blk @as(i32, @intCast(c));
+        };
+        handleConn(allocator, &backend, conn);
     }
 }

@@ -15,11 +15,13 @@
 
 //! Helpers shared by the mono and il2cpp backends.
 const std = @import("std");
-const resolver = @import("resolver.zig");
+const builtin = @import("builtin");
 const Encoder = @import("msgpack.zig").Encoder;
 
 // x86 WINE also uses cdecl.
-pub const CC: std.builtin.CallingConvention = if (resolver.win64_abi) .winapi else .c;
+pub const is_windows = builtin.os.tag == .windows;
+pub const win64_abi = is_windows and builtin.cpu.arch == .x86_64;
+pub const CC: std.builtin.CallingConvention = if (win64_abi) .winapi else .c;
 pub const CStr = [*:0]const u8;
 
 pub inline fn cspan(p: ?CStr) []const u8 {
@@ -31,11 +33,11 @@ pub inline fn eql(a: []const u8, b: []const u8) bool {
 }
 
 // Resolve a symbol through the bound module (dlsym natively, PE export under WINE).
-pub inline fn req(comptime T: type, mod: resolver.Module, name: [*:0]const u8) !T {
+pub inline fn req(comptime T: type, mod: anytype, name: [*:0]const u8) !T {
     const p = mod.lookup(name) orelse return error.SymbolMissing;
     return @ptrCast(p);
 }
-pub inline fn opt(comptime T: type, mod: resolver.Module, name: [*:0]const u8) ?T {
+pub inline fn opt(comptime T: type, mod: anytype, name: [*:0]const u8) ?T {
     const p = mod.lookup(name) orelse return null;
     return @ptrCast(p);
 }

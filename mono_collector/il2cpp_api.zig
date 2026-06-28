@@ -114,7 +114,7 @@ const Il2CppApi = struct {
 pub fn load(allocator: std.mem.Allocator) !?rt.Backend {
     // Bind the runtime module using the resolver.
     // ELF -> dlopen/dlsym, PE -> export parsing.
-    const substr = if (resolver.is_wine) "GameAssembly.dll" else "GameAssembly";
+    const substr = if (common.is_windows) "GameAssembly.dll" else "GameAssembly";
     const mod = resolver.open(allocator, "il2cpp_domain_get", substr) orelse return null;
 
     const api = try allocator.create(Il2CppApi);

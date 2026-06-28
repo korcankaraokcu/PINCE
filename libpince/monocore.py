@@ -33,18 +33,18 @@ from .libmemscan.memscan import Libmemscan, DataType, MatchType, ScanLevel
 _client: "MonoClient | None" = None
 
 _RUNTIME_PATTERNS = [
-    ("mono", "sysv", r"libmono(sgen|bdwgc)?-2\.0\.so"),
-    ("mono", "sysv", r"^mono-sgen$|^mono-boehm$|^mono$"),
-    ("mono", "win64", r"mono-2\.0-bdwgc\.dll"),
-    ("il2cpp", "sysv", r"GameAssembly\.so"),
-    ("il2cpp", "win64", r"GameAssembly\.dll"),
+    ("mono", "elf", r"libmono(sgen|bdwgc)?-2\.0\.so"),
+    ("mono", "elf", r"^mono-sgen$|^mono-boehm$|^mono$"),
+    ("mono", "pe", r"mono-2\.0-bdwgc\.dll"),
+    ("il2cpp", "elf", r"GameAssembly\.so"),
+    ("il2cpp", "pe", r"GameAssembly\.dll"),
 ]
 
 
 @dataclass
 class RuntimeInfo:
     kind: str  # "mono" || "il2cpp"
-    abi: str  # "sysv" || "win64"
+    module_format: str  # "elf" || "pe"
     load_bias: int
     module_path: str
 
@@ -60,33 +60,24 @@ def detect_runtime(pid: int) -> RuntimeInfo | None:
         pid (int): PID of the process
 
     Returns:
-        RuntimeInfo: kind/abi/load_bias/module_path of the detected runtime
+        RuntimeInfo: kind/module_format/load_bias/module_path of the detected runtime
         None: If no supported managed runtime is mapped
     """
-    for kind, abi, pattern in _RUNTIME_PATTERNS:
+    for kind, module_format, pattern in _RUNTIME_PATTERNS:
         module = utils.get_module_load_bias(pid, pattern)
         if module is not None:
             load_bias, path = module
-            return RuntimeInfo(kind, abi, load_bias, path)
+            return RuntimeInfo(kind, module_format, load_bias, path)
     return None
 
 
-def _collector_path(wine: bool = False) -> str:
-    """Returns the collector .so path for the current inferior's arch / ABI.
+def _collector_path(wine: bool, arch32: bool) -> str:
+    """Returns the collector agent path for the given format / bitness."""
+    bits = "x86" if arch32 else "x64"
+    name = f"mono_collector{'_wine' if wine else ''}_{bits}.{'dll' if wine else 'so'}"
+    src = os.path.join(os.path.dirname(__file__), "libmono_collector", name)
 
-    Four variants: native Linux and WINE/Proton, both x64 and x86.
-    If AppImage, the .so is inside a FUSE mount that the target process cannot access,
-    so we copy it to /tmp first.
-    """
-    base = os.path.join(os.path.dirname(__file__), "libmono_collector")
-    arch32 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
-    if wine:
-        src = os.path.join(base, "mono_collector_wine_x86.so" if arch32 else "mono_collector_wine_x64.so")
-    elif arch32:
-        src = os.path.join(base, "mono_collector_x86.so")
-    else:
-        src = os.path.join(base, "mono_collector_x64.so")
-
+    # AppImage FUSE paths may be inaccessible to the target process.
     appdir = os.environ.get("APPDIR")
     if appdir and os.path.commonpath([src, appdir]) == appdir:
         import shutil
@@ -105,13 +96,14 @@ def _abstract_address(pid: int) -> bytes:
     return b"\x00pince-mono-" + str(pid).encode("ascii")
 
 
-def _try_connect(pid: int, retries: int = 1, delay: float = 0.05) -> "MonoClient | None":
-    """Attempts to connect to an already running collector agent."""
-    address = _abstract_address(pid)
+def _connect(family: int, address, retries: int = 1, delay: float = 0.05) -> "MonoClient | None":
+    """Connects to a resident collector: abstract Unix socket (native) or loopback TCP (WINE/Proton)."""
     for _ in range(retries):
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock = socket.socket(family, socket.SOCK_STREAM)
         try:
             sock.connect(address)
+            if family == socket.AF_INET:
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)  # frames are tiny header + body
             return MonoClient(sock)
         except OSError:
             sock.close()
@@ -119,11 +111,61 @@ def _try_connect(pid: int, retries: int = 1, delay: float = 0.05) -> "MonoClient
     return None
 
 
+def _wine_port_addr(mem, base: int) -> int:
+    def u(addr: int, n: int) -> int:
+        mem.seek(addr)
+        return int.from_bytes(mem.read(n), "little")
+
+    try:
+        if u(base, 2) != 0x5A4D:
+            return 0
+        pe = base + u(base + 0x3C, 4)
+        if u(pe, 4) != 0x4550:
+            return 0
+        opt = pe + 0x18
+        dd = opt + (0x70 if u(opt, 2) == 0x20B else 0x60)
+        ed_rva, ed_size = u(dd, 4), u(dd + 4, 4)
+        if not ed_rva:
+            return 0
+        ed = base + ed_rva
+        funcs, names, ords = (base + u(ed + off, 4) for off in (0x1C, 0x20, 0x24))
+        want = b"pince_mono_port\x00"
+        for i in range(u(ed + 0x18, 4)):
+            mem.seek(base + u(names + i * 4, 4))
+            if mem.read(len(want)) == want:
+                rva = u(funcs + u(ords + i * 2, 2) * 4, 4)
+                return 0 if ed_rva <= rva < ed_rva + ed_size else base + rva
+    except (OSError, ValueError):
+        pass
+    return 0
+
+
+def _connect_wine(pid: int, retries: int = 1, delay: float = 0.05) -> "MonoClient | None":
+    """Locate the WINE/Proton collector via its exported port then connect."""
+    for _ in range(retries):
+        module = utils.get_module_load_bias(pid, r"mono_collector_wine_(x86|x64)\.dll")
+        if module is not None:
+            try:
+                with debugcore.memory_handle() as mem:
+                    port_addr = _wine_port_addr(mem, module[0])
+                    if port_addr:
+                        mem.seek(port_addr)
+                        port = int.from_bytes(mem.read(2), "little")
+                        if port:
+                            client = _connect(socket.AF_INET, ("127.0.0.1", port), delay=0)
+                            if client is not None:
+                                return client
+            except (OSError, ValueError):
+                pass
+        sleep(delay)
+    return None
+
+
 def init_mono() -> bool:
     """Ensure a collector agent is injected and connected for the current process
 
     Reuses an existing connection/agent if present.
-    Acts on native Linux Mono/IL2CPP (sysv) and Wine/Proton (win64) targets, both x64 and x86.
+    Acts on native Linux Mono/IL2CPP and Wine/Proton targets, both x64 and x86.
 
     Returns:
         bool: True if a connected MonoClient is ready, False otherwise
@@ -133,21 +175,40 @@ def init_mono() -> bool:
     if pid == -1:
         return False
 
-    # Agent may already be resident from a previous attach.
-    client = _try_connect(pid, retries=1)
+    info = detect_runtime(pid)
+    if info is None:
+        return False  # GUI decides the message
+    wine = info.module_format == "pe"
+
+    # Agent may already be resident from a previous attach/dissect.
+    client = _connect_wine(pid) if wine else _connect(socket.AF_UNIX, _abstract_address(pid))
+
     if client is None:
-        info = detect_runtime(pid)
-        if info is None or info.kind not in ("mono", "il2cpp") or info.abi not in ("sysv", "win64"):
-            return False  # GUI decides the message
-        so_path = _collector_path(info.abi == "win64")
-        if not os.path.exists(so_path):
-            logger.error(f"Mono collector not built: {so_path}")
+        arch32 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
+        if wine:
+            # new-WoW64 can map a 32-bit PE runtime in a 64-bit Linux process.
+            # Trust the runtime PE magic and not the inferior_arch.
+            try:
+                with debugcore.memory_handle() as mem:
+                    mem.seek(info.load_bias + 0x3C)
+                    mem.seek(info.load_bias + int.from_bytes(mem.read(4), "little") + 0x18)
+                    magic = int.from_bytes(mem.read(2), "little")
+                    if magic in (0x10B, 0x20B):
+                        arch32 = magic == 0x10B
+            except (OSError, ValueError):
+                pass
+
+        lib_path = _collector_path(wine, arch32)
+        if not os.path.exists(lib_path):
+            logger.error(f"Mono collector not built: {lib_path}")
             return False
         try:
-            if not debugcore.inject_so(so_path):
+            injected = debugcore.inject_dll(lib_path) if wine else debugcore.inject_so(lib_path)
+            if not injected:
                 logger.error("Failed to inject Mono collector!")
                 return False
-            client = _try_connect(pid, retries=80, delay=0.05)
+            # LoadLibraryW injection runs after resume, so WINE gets a longer poll window.
+            client = _connect_wine(pid, retries=160) if wine else _connect(socket.AF_UNIX, _abstract_address(pid), retries=80)
         except typedefs.GDBInitializeException:
             logger.error("GDB became unavailable while injecting the Mono collector")
             return False
