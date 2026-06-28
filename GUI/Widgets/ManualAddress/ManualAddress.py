@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QDialog, QWidget, QMenu, QMessageBox, QApplication
+from PyQt6.QtWidgets import QDialog, QWidget, QMenu, QMessageBox
 from PyQt6.QtGui import QContextMenuEvent
 from PyQt6.QtCore import Qt
 from GUI.Utils import guiutils
@@ -78,6 +78,9 @@ class ManualAddressDialog(QDialog, Ui_Dialog):
         self.pushButton_RemoveOffset.clicked.connect(self.removeOffsetLayout)
         self.label_Value.contextMenuEvent = self.label_Value_context_menu_event
         self.update_value()
+        # The form's SetFixedSize layout constraint settles lazily. Force it now so center_to_parent
+        # measures the real content size instead of the design-time geometry
+        self.adjustSize()
         guiutils.center_to_parent(self)
 
     def label_Value_context_menu_event(self, event: QContextMenuEvent) -> None:
@@ -170,10 +173,6 @@ class ManualAddressDialog(QDialog, Ui_Dialog):
         endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         value = debugcore.read_memory(address, address_type, length, zero_terminate, value_repr, endian)
         self.label_Value.setText("<font color=red>??</font>" if value is None else str(value))
-        old_width = self.width()
-        QApplication.processEvents()
-        self.adjustSize()
-        self.resize(old_width, self.minimumHeight())
 
     def comboBox_ValueType_current_index_changed(self) -> None:
         if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)):
