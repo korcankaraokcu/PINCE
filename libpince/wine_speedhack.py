@@ -19,9 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # linux_speedhack.py scales the Linux clocks a process reads. Wine games don't read those directly,
 # they go through Wine's ntdll, so we scale there instead.
 #
-# We only touch QueryPerformanceCounter: the hook calls the original through a trampoline and
-# scales the value it returns, so the clock stays continuous no matter how Wine computes QPC
-# (mainline uses CLOCK_BOOTTIME, Proton a TSC counter).
+# We only touch QueryPerformanceCounter: the hook calls the original through a trampoline and scales the value it returns,
+# so the clock stays continuous no matter how Wine computes QPC internally.
 
 # Why only QueryPerformanceCounter:
 # A clock gets used two ways: the value a game reads to pace itself and the deadlines the kernel waits on for it.
@@ -98,8 +97,11 @@ def is_installed() -> bool:
     return session.enabled
 
 
-@debugcore.execute_with_temporary_interruption
 def _install(speed: float = 1.0) -> bool:
+    return linux_speedhack._run_stopped(lambda: _install_stopped(speed))
+
+
+def _install_stopped(speed: float = 1.0) -> bool:
     # Hook RtlQueryPerformanceCounter in the inferior to scale its perceived time.
     # Callers use set_speed(), which installs on first use.
     # We hook only Rtl (not Nt): games reach QPC through it, and it scales right on both Proton
@@ -180,7 +182,6 @@ def _install(speed: float = 1.0) -> bool:
     return True
 
 
-@debugcore.execute_with_temporary_interruption
 def set_speed(speed: float) -> bool:
     """Change the speed multiplier without re-patching anything."""
     if not session.enabled:
@@ -188,14 +189,14 @@ def set_speed(speed: float) -> bool:
     ratio = linux_speedhack._speed_to_ratio(speed)
     if ratio is None:
         return False
-    _rebase_state(ratio.numerator, ratio.denominator)
-    return True
+    return linux_speedhack._run_stopped(lambda: _rebase_state(ratio.numerator, ratio.denominator))
 
 
-# Separate from uninstall() on purpose: if interrupting the inferior fails, the error surfaces to
-# uninstall(), which still resets the session state.
-@debugcore.execute_with_temporary_interruption
 def _do_uninstall() -> bool:
+    return linux_speedhack._run_stopped(_do_uninstall_stopped)
+
+
+def _do_uninstall_stopped() -> bool:
     success = True
     for hook in reversed(session.hooks):
         if not linux_speedhack._restore_hook(hook):
@@ -253,12 +254,11 @@ def _initialize_state(state_addr: int, num: int, den: int) -> None:
     # Zero the block and seed num/den.
     # The base is captured lazily on the first hook call (INIT flag) since we can't read QPC from Python.
     blob = bytearray(STATE_SIZE)
-    struct.pack_into("<Q", blob, NUM_OFFSET, num)
-    struct.pack_into("<Q", blob, DEN_OFFSET, den)
+    struct.pack_into("<QQ", blob, NUM_OFFSET, num, den)
     debugcore.write_memory(state_addr, typedefs.VALUE_INDEX.AOB, list(blob))
 
 
-def _rebase_state(new_num: int, new_den: int) -> None:
+def _rebase_state(new_num: int, new_den: int) -> bool:
     # Re-anchor on the latest (original, fake) pair the hook recorded so fake time stays continuous
     # across speed changes.
     # Runs while the inferior is stopped, so no race with the hook updating LAST_*.
@@ -268,6 +268,7 @@ def _rebase_state(new_num: int, new_den: int) -> None:
         _write_u64(state_addr + FAKE_BASE_OFFSET, linux_speedhack._read_u64(state_addr + LAST_FAKE_OFFSET))
     _write_u64(state_addr + NUM_OFFSET, new_num)
     _write_u64(state_addr + DEN_OFFSET, new_den)
+    return True
 
 
 def _build_qpc_wrapper(state_addr: int, tramp_addr: int) -> bytes:

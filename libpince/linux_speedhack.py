@@ -30,7 +30,7 @@ from . import debugcore, typedefs, utils
 from .utils import logger
 
 ALLOC_NAME = "PINCE_linux_speedhack"
-CAVE_SIZE = 0x400
+CAVE_SIZE = 0x1000
 
 # The spinbox in MainWindow.ui owns the allowed range (0.2-10.0).
 STEP = 0.1
@@ -44,9 +44,12 @@ SCALED_CLOCK_IDS = (
     time.CLOCK_MONOTONIC_RAW,  # 4
     time.CLOCK_BOOTTIME,  # 7
 )
-NUM_OFFSET = 8 * 16
+CLOCK_SLOT_SIZE = 16
+NUM_OFFSET = (max(SCALED_CLOCK_IDS) + 1) * CLOCK_SLOT_SIZE
 DEN_OFFSET = NUM_OFFSET + 8
-STATE_SIZE = DEN_OFFSET + 8
+BUFFER_SIZE = DEN_OFFSET + 8
+ACTIVE_OFFSET = BUFFER_SIZE * 2
+STATE_SIZE = ACTIVE_OFFSET + 8
 
 # Absolute jump: movabs rax, imm64; jmp rax (12 bytes).
 JUMP_SIZE = 12
@@ -90,8 +93,34 @@ def is_installed() -> bool:
     return session.enabled
 
 
-@debugcore.execute_with_temporary_interruption
+def _run_stopped(callback: Callable[[], bool]) -> bool:
+    was_running = debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING
+    if was_running and not debugcore.interrupt_inferior(typedefs.STOP_REASON.PAUSE):
+        logger.error("Speedhack requires stopping the inferior, but interrupt timed out")
+        return False
+    if debugcore.inferior_status != typedefs.INFERIOR_STATUS.STOPPED:
+        logger.error("Speedhack requires a stopped inferior")
+        return False
+    try:
+        return callback()
+    finally:
+        if was_running:
+            debugcore.continue_inferior()
+            resumed = False
+            for _ in range(10_000):
+                if debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING or debugcore.currentpid == -1:
+                    resumed = True
+                    break
+                time.sleep(0.0001)
+            if not resumed:
+                logger.error("Speedhack continue did not report RUNNING within 1s")
+
+
 def _install(speed: float = 1.0) -> bool:
+    return _run_stopped(lambda: _install_stopped(speed))
+
+
+def _install_stopped(speed: float = 1.0) -> bool:
     # Patch libc time functions in the inferior to scale its perceived time.
     # Internal: callers use set_speed(), which installs on first use.
     global session
@@ -190,7 +219,6 @@ def _install(speed: float = 1.0) -> bool:
     return True
 
 
-@debugcore.execute_with_temporary_interruption
 def set_speed(speed: float) -> bool:
     """Change the speed multiplier without re-patching anything."""
     if not session.enabled:
@@ -205,11 +233,13 @@ def set_speed(speed: float) -> bool:
     return True
 
 
-# Kept separate from uninstall() on purpose: if interrupting the inferior fails, the error surfaces to uninstall(),
-# which still resets the session state.
-# _restore_hook already swallows and logs its own failures, so only free_memory needs a guard here.
-@debugcore.execute_with_temporary_interruption
 def _do_uninstall() -> bool:
+    return _run_stopped(_do_uninstall_stopped)
+
+
+# Kept separate from uninstall() on purpose as uninstall() still resets the session state.
+# _restore_hook already swallows and logs its own failures, so only free_memory needs a guard here.
+def _do_uninstall_stopped() -> bool:
     success = True
     for hook in reversed(session.hooks):
         if not _restore_hook(hook):
@@ -370,31 +400,39 @@ def _read_patch_bytes(symbol: str, address: int, disassembler: Cs = utils.cs_64,
 
 
 def _initialize_state(state_addr: int, num: int, den: int) -> None:
-    # Zero the state block then seed real/fake bases for each scaled clock.
-    blob = bytearray(STATE_SIZE)
-    struct.pack_into("<Q", blob, NUM_OFFSET, num)
-    struct.pack_into("<Q", blob, DEN_OFFSET, den)
+    # Seed both buffers with identical bases.
+    # Speed changes rewrite the inactive buffer and publish it by flipping ACTIVE_OFFSET as the final aligned write.
+    buffer = bytearray(BUFFER_SIZE)
+    struct.pack_into("<QQ", buffer, NUM_OFFSET, num, den)
     for clk in SCALED_CLOCK_IDS:
         now = time.clock_gettime_ns(clk)
-        offset = clk * 16
-        struct.pack_into("<Q", blob, offset, now)
-        struct.pack_into("<Q", blob, offset + 8, now)
-    debugcore.write_memory(state_addr, typedefs.VALUE_INDEX.AOB, list(blob))
+        offset = clk * CLOCK_SLOT_SIZE
+        struct.pack_into("<QQ", buffer, offset, now, now)
+    debugcore.write_memory(state_addr, typedefs.VALUE_INDEX.AOB, list(buffer + buffer + b"\0" * 8))
 
 
 def _rebase_state(new_num: int, new_den: int) -> None:
     # Re-anchor each clock so fake time stays continuous across speed changes.
     state_addr = session.state_address
+    active = _read_u64(state_addr + ACTIVE_OFFSET) & 1
+    inactive = active ^ 1
+    active_base = state_addr + active * BUFFER_SIZE
+    inactive_base = state_addr + inactive * BUFFER_SIZE
+    old_num = _read_u64(active_base + NUM_OFFSET) or session.num
+    old_den = _read_u64(active_base + DEN_OFFSET) or session.den
+    blob = bytearray(BUFFER_SIZE)
+    struct.pack_into("<QQ", blob, NUM_OFFSET, new_num, new_den)
     for clk in SCALED_CLOCK_IDS:
-        slot = state_addr + clk * 16
+        slot = active_base + clk * CLOCK_SLOT_SIZE
         real_base = _read_u64(slot)
         fake_base = _read_u64(slot + 8)
         now = time.clock_gettime_ns(clk)
-        new_fake = fake_base + (now - real_base) * session.num // session.den
-        debugcore.write_memory(slot, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", now & 0xFFFFFFFFFFFFFFFF)))
-        debugcore.write_memory(slot + 8, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", new_fake & 0xFFFFFFFFFFFFFFFF)))
-    debugcore.write_memory(state_addr + NUM_OFFSET, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", new_num & 0xFFFFFFFFFFFFFFFF)))
-    debugcore.write_memory(state_addr + DEN_OFFSET, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", new_den & 0xFFFFFFFFFFFFFFFF)))
+        delta = max(0, now - real_base)
+        new_fake = fake_base + delta * old_num // old_den
+        offset = clk * CLOCK_SLOT_SIZE
+        struct.pack_into("<QQ", blob, offset, now & 0xFFFFFFFFFFFFFFFF, new_fake & 0xFFFFFFFFFFFFFFFF)
+    debugcore.write_memory(inactive_base, typedefs.VALUE_INDEX.AOB, list(blob))
+    debugcore.write_memory(state_addr + ACTIVE_OFFSET, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", inactive)))
 
 
 def _vdso_call_or_syscall(vdso_addr: int | None, syscall_nr: int, saves: tuple[str, ...]) -> str:
@@ -505,6 +543,10 @@ def _build_clock_gettime_hook(state_addr: int, vdso_addr: int | None) -> bytes:
         cmp edi, 6
         je done
         mov r11, {hex(state_addr)}
+        mov r10, qword ptr [r11 + {ACTIVE_OFFSET}]
+        and r10, 1
+        imul r10, r10, {BUFFER_SIZE}
+        add r11, r10
         mov r10d, edi
         shl r10, 4
         add r10, r11
@@ -544,6 +586,10 @@ def _build_gettimeofday_hook(state_addr: int, vdso_addr: int | None) -> bytes:
         test rdi, rdi
         jz done
         mov r11, {hex(state_addr)}
+        mov r10, qword ptr [r11 + {ACTIVE_OFFSET}]
+        and r10, 1
+        imul r10, r10, {BUFFER_SIZE}
+        add r11, r10
         mov r8, qword ptr [rdi]
         imul r8, r8, 1000000000
         mov rax, qword ptr [rdi + 8]
@@ -584,6 +630,10 @@ def _build_nanosleep_hook(state_addr: int) -> bytes:
         push rsi
         sub rsp, 16
         mov r11, {hex(state_addr)}
+        mov r10, qword ptr [r11 + {ACTIVE_OFFSET}]
+        and r10, 1
+        imul r10, r10, {BUFFER_SIZE}
+        add r11, r10
         mov r8, qword ptr [rdi]
         imul r8, r8, 1000000000
         add r8, qword ptr [rdi + 8]
@@ -649,6 +699,10 @@ def _build_clock_gettime_hook_32(state_addr: int, vdso_addr: int | None) -> byte
         cmp ecx, 6
         je done
         mov esi, {hex(state_addr)}
+        mov eax, dword ptr [esi + {ACTIVE_OFFSET}]
+        and eax, 1
+        imul eax, eax, {BUFFER_SIZE}
+        add esi, eax
         mov edi, dword ptr [ebp + 12]
         mov eax, dword ptr [edi]
         mov ebx, 1000000000
@@ -719,6 +773,10 @@ def _build_gettimeofday_hook_32(state_addr: int, vdso_addr: int | None) -> bytes
         test edi, edi
         jz done
         mov esi, {hex(state_addr)}
+        mov eax, dword ptr [esi + {ACTIVE_OFFSET}]
+        and eax, 1
+        imul eax, eax, {BUFFER_SIZE}
+        add esi, eax
         mov eax, dword ptr [edi]
         mov ebx, 1000000000
         mul ebx
@@ -785,6 +843,10 @@ def _build_nanosleep_hook_32(state_addr: int) -> bytes:
         push edi
         sub esp, 64
         mov esi, {hex(state_addr)}
+        mov eax, dword ptr [esi + {ACTIVE_OFFSET}]
+        and eax, 1
+        imul eax, eax, {BUFFER_SIZE}
+        add esi, eax
         mov edi, dword ptr [ebp + 8]
         mov eax, dword ptr [edi]
         mov ebx, 1000000000

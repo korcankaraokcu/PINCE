@@ -444,11 +444,14 @@ def can_attach(pid: int | str) -> bool:
     return True
 
 
-def wait_for_stop(timeout: float = 0) -> None:
+def wait_for_stop(timeout: float = 0) -> bool:
     """Block execution till the inferior stops
 
     Args:
         timeout (float): Timeout time in seconds, passing 0 will wait for stop indefinitely
+
+    Returns:
+        bool: True if the inferior is stopped when this function exits, False otherwise
     """
     remaining_time = timeout
     while inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
@@ -458,16 +461,20 @@ def wait_for_stop(timeout: float = 0) -> None:
         remaining_time -= 0.0001
         if remaining_time < 0:
             break
+    return inferior_status == typedefs.INFERIOR_STATUS.STOPPED
 
 
-def interrupt_inferior(interrupt_reason: int = typedefs.STOP_REASON.DEBUG) -> None:
+def interrupt_inferior(interrupt_reason: int = typedefs.STOP_REASON.DEBUG) -> bool:
     """Interrupt the inferior
 
     Args:
         interrupt_reason (int): Just changes the global variable stop_reason. Can be a member of typedefs.STOP_REASON
+
+    Returns:
+        bool: True if the inferior is stopped after the interrupt attempt, False otherwise
     """
     if currentpid == -1:
-        return
+        return False
     global stop_reason
     if interrupt_signal == "SIGINT":
         send_command("interrupt")
@@ -477,8 +484,9 @@ def interrupt_inferior(interrupt_reason: int = typedefs.STOP_REASON.DEBUG) -> No
             os.system(f"kill -{sig_num} {currentpid}")
         else:
             os.system(f"kill -s {interrupt_signal} {currentpid}")
-    wait_for_stop(1)
+    stopped = wait_for_stop(1)
     stop_reason = interrupt_reason
+    return stopped
 
 
 def continue_inferior() -> None:
