@@ -430,7 +430,7 @@ class MainForm(QMainWindow, MainWindow):
         if states.auto_attach_regex:
             try:
                 compiled_re = re.compile(states.auto_attach)
-            except:
+            except re.error:
                 logger.exception(f"Auto-attach failed: {states.auto_attach} isn't a valid regex")
                 return
             for pid, _, name in utils.get_process_list():
