@@ -130,7 +130,7 @@ def _install_stopped(speed: float = 1.0) -> bool:
     if debugcore.currentpid == -1:
         logger.error("Linux speedhack requires an attached process")
         return False
-    if ALLOC_NAME in debugcore.allocated_memory_chunks:
+    if ALLOC_NAME in debugcore.allocated_cave_chunks:
         logger.error("Linux speedhack memory is already allocated")
         return False
 
@@ -172,14 +172,13 @@ def _install_stopped(speed: float = 1.0) -> bool:
         logger.error("Linux speedhack couldn't locate any time functions to hook")
         return False
 
-    cave = debugcore.allocate_memory(CAVE_SIZE, ALLOC_NAME)
+    cave = debugcore.allocate_cave(CAVE_SIZE, ALLOC_NAME)
     if not cave:
         logger.error("Failed to allocate Linux speedhack memory")
         return False
 
     installed: list[HookPatch] = []
     try:
-        _mprotect_cave(cave)
         _initialize_state(cave, ratio.numerator, ratio.denominator)
 
         # Lay hooks out after the state block, 16-byte aligned.
@@ -205,7 +204,7 @@ def _install_stopped(speed: float = 1.0) -> bool:
         logger.exception("Failed to install Linux speedhack")
         for hook in reversed(installed):
             _restore_hook(hook)
-        debugcore.free_memory(ALLOC_NAME)
+        debugcore.free_cave(ALLOC_NAME)
         return False
 
     session = Session(
@@ -238,15 +237,15 @@ def _do_uninstall() -> bool:
 
 
 # Kept separate from uninstall() on purpose as uninstall() still resets the session state.
-# _restore_hook already swallows and logs its own failures, so only free_memory needs a guard here.
+# _restore_hook already swallows and logs its own failures, so only free_cave needs a guard here.
 def _do_uninstall_stopped() -> bool:
     success = True
     for hook in reversed(session.hooks):
         if not _restore_hook(hook):
             success = False
-    if success and ALLOC_NAME in debugcore.allocated_memory_chunks:
+    if success and ALLOC_NAME in debugcore.allocated_cave_chunks:
         try:
-            if not debugcore.free_memory(ALLOC_NAME):
+            if not debugcore.free_cave(ALLOC_NAME):
                 success = False
         except Exception:
             logger.exception("Failed to free Linux speedhack memory")
@@ -265,7 +264,7 @@ def uninstall() -> bool:
     except Exception:
         logger.exception("Linux speedhack uninstall failed")
     session = Session()
-    debugcore.allocated_memory_chunks.pop(ALLOC_NAME, None)
+    debugcore.allocated_cave_chunks.pop(ALLOC_NAME, None)
     return success
 
 
@@ -275,7 +274,7 @@ def reset() -> None:
     so there's nothing to restore or free()."""
     global session
     session = Session()
-    debugcore.allocated_memory_chunks.pop(ALLOC_NAME, None)
+    debugcore.allocated_cave_chunks.pop(ALLOC_NAME, None)
 
 
 def _speed_to_ratio(speed: float) -> Fraction | None:

@@ -113,7 +113,7 @@ def _install_stopped(speed: float = 1.0) -> bool:
     if debugcore.currentpid == -1:
         logger.error("Wine speedhack requires an attached process")
         return False
-    if ALLOC_NAME in debugcore.allocated_memory_chunks:
+    if ALLOC_NAME in debugcore.allocated_cave_chunks:
         logger.error("Wine speedhack memory is already allocated")
         return False
 
@@ -135,14 +135,13 @@ def _install_stopped(speed: float = 1.0) -> bool:
         return False
     raw = bytes.fromhex(original_aob.replace(" ", ""))
 
-    cave = debugcore.allocate_memory(CAVE_SIZE, ALLOC_NAME)
+    cave = debugcore.allocate_cave(CAVE_SIZE, ALLOC_NAME)
     if not cave:
         logger.error("Failed to allocate Wine speedhack memory")
         return False
 
     installed: list[linux_speedhack.HookPatch] = []
     try:
-        linux_speedhack._mprotect_cave(cave)
         _initialize_state(cave, ratio.numerator, ratio.denominator)
         # Wine maps ntdll read-execute, so make the page writable before patching it.
         linux_speedhack._ensure_writable(address)
@@ -175,7 +174,7 @@ def _install_stopped(speed: float = 1.0) -> bool:
         logger.exception("Failed to install Wine speedhack")
         for hook in installed:
             linux_speedhack._restore_hook(hook)
-        debugcore.free_memory(ALLOC_NAME)
+        debugcore.free_cave(ALLOC_NAME)
         return False
 
     session = Session(True, cave, installed)
@@ -201,18 +200,17 @@ def _do_uninstall_stopped() -> bool:
     for hook in reversed(session.hooks):
         if not linux_speedhack._restore_hook(hook):
             success = False
-    # Restoring the entry stops new threads from jumping into the cave. Before freeing it, step any
-    # thread still inside the cave back out so free() can't pull the rug out. Best effort: a thread
-    # in the original with a pending return into the wrapper isn't caught, but free() of a chunk
-    # this small returns it to the heap instead of unmapping, so the bytes stay valid until reused.
+    # Restoring the entry stops new threads from jumping into the cave.
+    # Before unmapping it, step any thread still inside the cave back out so munmap() can't remove code it may still execute.
+    # This is a best effort, a thread in the original with a pending return into the wrapper isn't caught.
     cave = session.state_address
     if cave and not _step_threads_out_of_range(cave, cave + CAVE_SIZE):
         logger.error("Wine speedhack left a thread in the code cave; leaking it instead of freeing")
-        debugcore.allocated_memory_chunks.pop(ALLOC_NAME, None)
+        debugcore.allocated_cave_chunks.pop(ALLOC_NAME, None)
         return False
-    if success and ALLOC_NAME in debugcore.allocated_memory_chunks:
+    if success and ALLOC_NAME in debugcore.allocated_cave_chunks:
         try:
-            if not debugcore.free_memory(ALLOC_NAME):
+            if not debugcore.free_cave(ALLOC_NAME):
                 success = False
         except Exception:
             logger.exception("Failed to free Wine speedhack memory")
@@ -237,7 +235,7 @@ def uninstall() -> bool:
     except Exception:
         logger.exception("Wine speedhack uninstall failed")
     session = Session()
-    debugcore.allocated_memory_chunks.pop(ALLOC_NAME, None)
+    debugcore.allocated_cave_chunks.pop(ALLOC_NAME, None)
     return success
 
 
@@ -247,7 +245,7 @@ def reset() -> None:
     so there's nothing to restore or free()."""
     global session
     session = Session()
-    debugcore.allocated_memory_chunks.pop(ALLOC_NAME, None)
+    debugcore.allocated_cave_chunks.pop(ALLOC_NAME, None)
 
 
 def _initialize_state(state_addr: int, num: int, den: int) -> None:
