@@ -73,7 +73,7 @@ class Ui_MainWindow(object):
 "target = address(\"0x0\")\n"
 "\n"
 "[ENABLE]\n"
-"cave = alloc(0x400, \"engine_code_cave\")\n"
+"cave = alloc_cave(0x400, \"engine_code_cave\", near=target)\n"
 "jump_to_cave = assemble(f\"jmp {cave:#x}\", target)\n"
 "# Read enough to cover the jmp patch plus one max-length x86 instruction (15B),\n"
 "# then round up to the next instruction boundary so we don\'t leave a partial\n"
@@ -104,7 +104,7 @@ class Ui_MainWindow(object):
 "\n"
 "[DISABLE]\n"
 "restore(target)\n"
-"dealloc(\"engine_code_cave\")\n"
+"dealloc_cave(\"engine_code_cave\")\n"
 "print(f\"Restored {target:#x}\")\n"
 "")
         self.actionCode_injection.setObjectName("actionCode_injection")

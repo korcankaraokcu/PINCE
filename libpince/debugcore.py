@@ -122,8 +122,15 @@ interrupt_signal = "SIGINT"
 # If an user allocates memory without a name, it will be given a random ID set as string.
 allocated_memory_chunks: dict[str, typedefs.AllocatedMemory] = {}
 
-# ID generator used for the above
+# ID generator used for the above.
 allocated_memory_gen_id = 0
+
+# Dictionary that maps an id or name to an allocated code cave (mmap-backed, executable) through allocate_cave.
+# Kept separate from allocated_memory_chunks so free_cave and free_memory can never be applied to each other's allocations.
+allocated_cave_chunks: dict[str, typedefs.AllocatedMemory] = {}
+
+# ID generator used for the above.
+allocated_cave_gen_id = 0
 
 # Dictionary cache for manually resolved libc symbols. Cleared whenever the inferior changes.
 _libc_symbol_cache: dict[str, int] = {}
@@ -1437,20 +1444,56 @@ def memory_handle(mode: str = "rb") -> io.BufferedReader:
 
 
 def mprotect_memory(address: int, length: int, prot: int = 7) -> bool:  # PROT_READ | PROT_WRITE | PROT_EXEC = 7
-    output = send_command(f"p (int)mprotect({address}, {length}, {prot})")
+    """Changes the memory protection of the pages overlapping [address, address + length).
+
+    mprotect requires a page-aligned address and acts on whole pages, so we calculate the page boundary given address + length.
+    Tries a direct inferior call and falls back to the resolved libc symbol.
+
+    Args:
+        address (int): Start address of the range to reprotect.
+        length (int): Size of the range in bytes.
+        prot (int): Bitmask of PROT_* flags, default 7 (PROT_READ | PROT_WRITE | PROT_EXEC).
+
+    Returns:
+        bool: True if the inferior's mprotect call returned 0, False otherwise.
+    """
+    if address <= 0 or length <= 0:
+        return False
+    page_size = os.sysconf("SC_PAGE_SIZE")
+    start = address & ~(page_size - 1)
+    length = address + length - start  # grow to cover the pages the original range touched
+    output = send_command(f"p (int)mprotect({start}, {length}, {prot})")
     match = regexes.convenience_variable.search(output)
     if match is None and (mprotect := resolve_libc_symbol("mprotect")):
-        output = send_command(f"p ((int(*)(void*, unsigned long, int)) {hex(mprotect)})((void*){address}, {length}, {prot})")
+        output = send_command(f"p ((int(*)(void*, unsigned long, int)) {hex(mprotect)})((void*){start}, {length}, {prot})")
         match = regexes.convenience_variable.search(output)
     if match is None:
+        logger.error(f"Failed to change protection for memory at {hex(address)}")
         return False
     result = match.group(2)
     value = regexes.hex_number.search(result) or re.search(r"-?\d+", result)
-    return value is not None and safe_str_to_int(value.group(0), 0) == 0
+    success = value is not None and safe_str_to_int(value.group(0), 0) == 0
+    if not success:
+        logger.error(f"Failed to change protection for memory at {hex(address)}")
+    return success
 
 
 @execute_with_temporary_interruption
 def allocate_memory(size: int, name: str | None) -> int:
+    """Allocates writable (non-executable) memory in the inferior via malloc.
+
+    This hands back ordinary heap memory, so for executable code (e.g. code caves) just simply use allocate_cave.
+    A caller that needs this region executable can mprotect_memory it afterwards,
+    but be aware that flips protection on the whole page(s) and so affects any heap neighbours sharing them.
+
+    Args:
+        size (int): Number of bytes to allocate. Allocating 0 bytes does nothing and returns 0.
+        name (str | None): Key to track the allocation under so free_memory can release it later.
+        If None, an auto-incrementing id is used instead.
+
+    Returns:
+        int: Address of the allocated memory or 0 on failure.
+    """
     global allocated_memory_chunks
     global allocated_memory_gen_id
     if size == 0:
@@ -1474,18 +1517,19 @@ def allocate_memory(size: int, name: str | None) -> int:
         return 0
     allocated_memory = typedefs.AllocatedMemory(allocated_address, size, current_process_identity)
     allocated_memory_chunks[name] = allocated_memory
-    page_size = os.sysconf("SC_PAGE_SIZE")
-    page_memory_addr = allocated_memory.address & ~(page_size - 1)
-    end_addr = allocated_memory.address + size
-    end_page_addr = (end_addr + page_size - 1) & ~(page_size - 1)
-    mprotect_length = end_page_addr - page_memory_addr
-    if not mprotect_memory(page_memory_addr, mprotect_length):
-        logger.error(f"Failed to change protection for allocated memory at {hex(allocated_memory.address)}")
     return allocated_memory.address
 
 
 @execute_with_temporary_interruption
 def free_memory(name: str) -> bool:
+    """Frees memory previously allocated with allocate_memory.
+
+    Args:
+        name (str): Key the allocation was tracked under when allocate_memory was called.
+
+    Returns:
+        bool: True if the memory was freed, False otherwise (unknown name, wrong type or the allocation belongs to a different process).
+    """
     global allocated_memory_chunks
     if not isinstance(name, str):
         logger.error(f"Passed wrong type '{type(name)}' instead of str")
@@ -1511,6 +1555,93 @@ def free_memory(name: str) -> bool:
         return False
     del allocated_memory_chunks[name]
     return True
+
+
+@execute_with_temporary_interruption
+def allocate_cave(size: int, name: str | None, near: int | None = None) -> int:
+    """Allocates executable memory in the inferior via mmap.
+
+    Args:
+        size (int): Number of bytes to allocate. Allocating 0 bytes does nothing and returns 0.
+        name (str | None): Key to track the allocation under so free_cave can release it later.
+        If None, an auto-incrementing id is used instead.
+        near (int | None): Preferred mmap address hint. If None, the kernel chooses the address.
+
+    Returns:
+        int: Address of the allocated code cave or 0 on failure.
+    """
+    global allocated_cave_chunks
+    global allocated_cave_gen_id
+    if size == 0:
+        return 0
+    if name == None:
+        allocated_cave_gen_id += 1
+        name = str(allocated_cave_gen_id)
+    near_address = 0 if near is None else safe_int_cast(near)
+    # MAP_PRIVATE | MAP_ANONYMOUS (0x22), PROT_READ | PROT_WRITE | PROT_EXEC (7), fd -1, offset 0.
+    output = send_command(f"p (void*)mmap((void*){hex(near_address)}, {size}, 7, 0x22, -1, 0)")
+    match = regexes.convenience_variable.search(output)
+    hex_match = regexes.hex_number.search(match.group(2)) if match else None
+    if hex_match is None and (mmap := resolve_libc_symbol("mmap")):
+        cast = "(void*(*)(void*, unsigned long, int, int, int, long))"
+        output = send_command(f"p ({cast} {hex(mmap)})((void*){hex(near_address)}, {size}, 7, 0x22, -1, 0)")
+        match = regexes.convenience_variable.search(output)
+        hex_match = regexes.hex_number.search(match.group(2)) if match else None
+    if hex_match is None:
+        logger.error("Cave allocation failed!")
+        return 0
+    allocated_address = safe_str_to_int(hex_match[0], 16)
+    # mmap returns MAP_FAILED ((void*)-1) on failure: 0xff..ff in the inferior's pointer width
+    if allocated_address in (0, 0xFFFFFFFF, 0xFFFFFFFFFFFFFFFF):
+        logger.error("Cave allocation failed!")
+        return 0
+    allocated_cave = typedefs.AllocatedMemory(allocated_address, size, current_process_identity)
+    allocated_cave_chunks[name] = allocated_cave
+    return allocated_cave.address
+
+
+@execute_with_temporary_interruption
+def free_cave(name: str) -> bool:
+    """Frees a code cave previously allocated with allocate_cave.
+
+    Args:
+        name (str): Key the allocation was tracked under when allocate_cave was called.
+
+    Returns:
+        bool: True if the cave was freed, False otherwise (unknown name, wrong type or the allocation belongs to a different process).
+    """
+    global allocated_cave_chunks
+    if not isinstance(name, str):
+        logger.error(f"Passed wrong type '{type(name)}' instead of str")
+        return False
+    if name == "":
+        logger.error(f"Passed empty str!")
+        return False
+    allocated_cave = allocated_cave_chunks.get(name)
+    if allocated_cave is None:
+        logger.error(f"Couldn't find allocated cave with name `{name}`!")
+        return False
+    if allocated_cave.identity != current_process_identity:
+        logger.error(f"Refusing to free cave '{name}' belonging to a different process")
+        return False
+    addr = allocated_cave.address
+    output = send_command(f"p (int)munmap({addr}, {allocated_cave.size})")
+    match = regexes.convenience_variable.search(output)
+    if match is None and (munmap := resolve_libc_symbol("munmap")):
+        output = send_command(f"p ((int(*)(void*, unsigned long)) {hex(munmap)})((void*){addr}, {allocated_cave.size})")
+        match = regexes.convenience_variable.search(output)
+    if match is None:
+        logger.error(f"Failed to free cave '{name}' at {hex(addr)}")
+        return False
+    # munmap returns 0 on success, -1 on error. Drop our record either way: a non-zero result
+    # means our (address, size) no longer maps what we expect, so keeping it tracked is pointless.
+    result = match.group(2)
+    value = regexes.hex_number.search(result) or re.search(r"-?\d+", result)
+    succeeded = value is not None and safe_str_to_int(value.group(0), 0) == 0
+    del allocated_cave_chunks[name]
+    if not succeeded:
+        logger.error(f"munmap failed for cave '{name}' at {hex(addr)}")
+    return succeeded
 
 
 def read_memory(

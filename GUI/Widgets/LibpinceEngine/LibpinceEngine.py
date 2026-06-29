@@ -153,12 +153,24 @@ class LibpinceScriptApi:
         debugcore.restore_instruction(self.address(address))
 
     def alloc(self, size: int, name: str | None = None) -> int:
-        """Allocate executable memory in the inferior and return its address."""
+        """Allocate writable (non-executable) memory in the inferior and return its address.
+
+        For executable code (e.g. code caves) use alloc_cave instead.
+        You can still mprotect this region as executable yourself afterwards, but that's on you.
+        """
         return debugcore.allocate_memory(int(size), name)
 
     def dealloc(self, name: str) -> bool:
         """Free memory allocated with alloc(size, name)."""
         return debugcore.free_memory(str(name))
+
+    def alloc_cave(self, size: int, name: str | None = None, near: int | None = None) -> int:
+        """Allocate an executable, page-aligned code cave in the inferior and return its address."""
+        return debugcore.allocate_cave(int(size), name, near)
+
+    def dealloc_cave(self, name: str) -> bool:
+        """Free a code cave allocated with alloc_cave(size, name)."""
+        return debugcore.free_cave(str(name))
 
     def assemble(self, instructions: str, address: int | str = 0) -> bytes:
         """Assemble instructions at address and return bytes."""

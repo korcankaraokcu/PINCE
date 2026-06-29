@@ -149,7 +149,7 @@
 target = address(&quot;0x0&quot;)
 
 [ENABLE]
-cave = alloc(0x400, &quot;engine_code_cave&quot;)
+cave = alloc_cave(0x400, &quot;engine_code_cave&quot;, near=target)
 jump_to_cave = assemble(f&quot;jmp {cave:#x}&quot;, target)
 # Read enough to cover the jmp patch plus one max-length x86 instruction (15B),
 # then round up to the next instruction boundary so we don't leave a partial
@@ -180,7 +180,7 @@ print(f&quot;Injected {target:#x} -&gt; {cave:#x}, return {return_address:#x}&qu
 
 [DISABLE]
 restore(target)
-dealloc(&quot;engine_code_cave&quot;)
+dealloc_cave(&quot;engine_code_cave&quot;)
 print(f&quot;Restored {target:#x}&quot;)
 </string>
    </property>
