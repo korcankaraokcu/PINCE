@@ -146,11 +146,14 @@
    <property name="data" stdset="0">
     <string notr="true"># Code injection template
 # Prelude runs before both halves.
-target = address(&quot;0x0&quot;)
+target = address(&quot;0x0&quot;)  # &lt;- Make sure to change this!
 
 [ENABLE]
 cave = alloc_cave(0x400, &quot;engine_code_cave&quot;, near=target)
+if not cave:
+    raise RuntimeError(&quot;Could not allocate a code cave close enough for a relative jump&quot;)
 jump_to_cave = assemble(f&quot;jmp {cave:#x}&quot;, target)
+
 # Read enough to cover the jmp patch plus one max-length x86 instruction (15B),
 # then round up to the next instruction boundary so we don't leave a partial
 # instruction at target after patching.
@@ -158,6 +161,7 @@ probe = read_bytes(target, len(jump_to_cave) + 15)
 stolen_size = utils.instruction_aligned_size(probe, len(jump_to_cave), debugcore.inferior_arch)
 if stolen_size == 0:
     raise RuntimeError(&quot;Could not align stolen bytes to an instruction boundary&quot;)
+
 # RIP-relative instructions in the stolen bytes may need manual adjustment when relocated.
 original = probe[:stolen_size]
 return_address = target + stolen_size
@@ -173,6 +177,7 @@ nop
 cave_body = injected_code + original
 jump_back = assemble(f&quot;jmp {return_address:#x}&quot;, cave + len(cave_body))
 write_bytes(cave_body + jump_back, cave)
+
 # Pad leftover stolen_size bytes with NOPs so execution resumes on a clean
 # boundary (a partial instruction left over would corrupt decoding).
 patch(jump_to_cave + b&quot;\x90&quot; * (stolen_size - len(jump_to_cave)), target, expected=original)
@@ -250,7 +255,7 @@ print(f&quot;Restored {target:#x}&quot;)
    <property name="data" stdset="0">
     <string notr="true"># AOB scan + NOP template
 [ENABLE]
-addr = aobscan_first(&quot;48 8B ?? ?? ?? 89&quot;)
+addr = aobscan_first(&quot;48 8B ?? ?? ?? 89&quot;)  # &lt;- Make sure to change this!
 if addr is None:
     raise RuntimeError(&quot;Pattern not found&quot;)
 nop(addr, 6)
@@ -273,7 +278,7 @@ print(f&quot;Restored {addr:#x}&quot;)</string>
 # 48 8B 43 10  mov rax, QWORD PTR [rbx+0x10]
 # This changes the -1 decrement to +2 addition (eg. add ammo when shooting instead of subtracting)
 [ENABLE]
-expected = &quot;83 00 FF 48 8B 43 10&quot;
+expected = &quot;83 00 FF 48 8B 43 10&quot;  # &lt;- Make sure to change this!
 addr = aobscan_first(expected)
 if addr is None:
     raise RuntimeError(&quot;Pattern not found&quot;)
@@ -301,7 +306,7 @@ print(f&quot;Restored {addr:#x}&quot;)</string>
    </property>
    <property name="data" stdset="0">
     <string notr="true"># Read/write template
-addr = address(&quot;0x0&quot;)
+addr = address(&quot;0x0&quot;)  # &lt;- Make sure to change this!
 old_value = read_int(addr, size=4)
 write_int(old_value + 1, addr, size=4)
 print(f&quot;{addr:#x}: {old_value} -&gt; {read_int(addr, size=4)}&quot;)

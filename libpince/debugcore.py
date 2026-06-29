@@ -1494,11 +1494,10 @@ def allocate_memory(size: int, name: str | None) -> int:
     Returns:
         int: Address of the allocated memory or 0 on failure.
     """
-    global allocated_memory_chunks
     global allocated_memory_gen_id
     if size == 0:
         return 0
-    if name == None:
+    if name is None:
         allocated_memory_gen_id += 1
         name = str(allocated_memory_gen_id)
     output = send_command(f"p (void*)malloc({size})")
@@ -1515,9 +1514,8 @@ def allocate_memory(size: int, name: str | None) -> int:
     if allocated_address == 0:
         logger.error("Couldn't find allocation address!")
         return 0
-    allocated_memory = typedefs.AllocatedMemory(allocated_address, size, current_process_identity)
-    allocated_memory_chunks[name] = allocated_memory
-    return allocated_memory.address
+    allocated_memory_chunks[name] = typedefs.AllocatedMemory(allocated_address, size, current_process_identity)
+    return allocated_address
 
 
 @execute_with_temporary_interruption
@@ -1570,34 +1568,80 @@ def allocate_cave(size: int, name: str | None, near: int | None = None) -> int:
     Returns:
         int: Address of the allocated code cave or 0 on failure.
     """
-    global allocated_cave_chunks
     global allocated_cave_gen_id
     if size == 0:
         return 0
-    if name == None:
+    if name is None:
         allocated_cave_gen_id += 1
         name = str(allocated_cave_gen_id)
-    near_address = 0 if near is None else safe_int_cast(near)
-    # MAP_PRIVATE | MAP_ANONYMOUS (0x22), PROT_READ | PROT_WRITE | PROT_EXEC (7), fd -1, offset 0.
-    output = send_command(f"p (void*)mmap((void*){hex(near_address)}, {size}, 7, 0x22, -1, 0)")
-    match = regexes.convenience_variable.search(output)
-    hex_match = regexes.hex_number.search(match.group(2)) if match else None
-    if hex_match is None and (mmap := resolve_libc_symbol("mmap")):
-        cast = "(void*(*)(void*, unsigned long, int, int, int, long))"
-        output = send_command(f"p ({cast} {hex(mmap)})((void*){hex(near_address)}, {size}, 7, 0x22, -1, 0)")
+
+    def mmap_cave(address: int, flags: int) -> int:
+        output = send_command(f"p (void*)mmap((void*){hex(address)}, {size}, 7, {hex(flags)}, -1, 0)")
         match = regexes.convenience_variable.search(output)
         hex_match = regexes.hex_number.search(match.group(2)) if match else None
-    if hex_match is None:
+        if hex_match is None and (mmap := resolve_libc_symbol("mmap")):
+            cast = "(void*(*)(void*, unsigned long, int, int, int, long))"
+            output = send_command(f"p ({cast} {hex(mmap)})((void*){hex(address)}, {size}, 7, {hex(flags)}, -1, 0)")
+            match = regexes.convenience_variable.search(output)
+            hex_match = regexes.hex_number.search(match.group(2)) if match else None
+        if hex_match is None:
+            return 0
+        allocated = safe_str_to_int(hex_match[0], 16)
+        # mmap returns MAP_FAILED ((void*)-1) on failure: 0xff..ff in the inferior's pointer width
+        return 0 if allocated in (0, 0xFFFFFFFF, 0xFFFFFFFFFFFFFFFF) else allocated
+
+    # Just ask kernel for whatever address
+    if near is None:
+        # MAP_PRIVATE | MAP_ANONYMOUS (0x22), PROT_READ | PROT_WRITE | PROT_EXEC (7), fd -1, offset 0.
+        allocated_address = mmap_cave(0, 0x22)
+    else:
+        # We'll try to manually find free gaps near this address and tell the kernel to map the new memory there.
+        # This is because if we ask the kernel to give a memory address near target address with the hint,
+        # sometimes it will give a nearby address but other times (almost every time if main exe region from my tests) will not.
+        # Giving it an address that's guaranteed to not be mapped already with MAP_FIXED_NOREPLACE,
+        # will make mmap either land exactly there or fail without replacing an existing mapping.
+        near_address = safe_int_cast(near)
+        page_size = os.sysconf("SC_PAGE_SIZE")
+        page_mask = ~(page_size - 1)
+        near_page = near_address & page_mask
+        alloc_size = (size + page_size - 1) & page_mask
+        # Keep x86_64 caves well inside rel32 range so hooks can jump into them and back out with E9 rel32.
+        window_start, window_end = (
+            (0, 0x100000000) if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else (max(0, near_address - 0x70000000), near_address + 0x70000000)
+        )
+        # Fast path: exact requested page, if it is free.
+        allocated_address = mmap_cave(near_page, 0x100022)
+        if allocated_address and allocated_address != near_page:
+            # Old kernels may ignore unknown flags and treat this as a hint so we unmap to never keep a wrong address cave.
+            send_command(f"p (int)munmap((void*){hex(allocated_address)}, {size})")
+            allocated_address = 0
+
+        # Slower path: build one candidate from each free gap and sort them from closest to farthest.
+        # We'll then try to mmap each in order until we land a free page that is not mapped already.
+        if not allocated_address:
+            candidates = []
+            previous_end = 0
+            regions = ((safe_str_to_int(start, 16), safe_str_to_int(end, 16)) for start, end, *_ in utils.get_regions(currentpid))
+            for start, end in sorted(regions) + [(window_end, window_end)]:
+                gap_start = (max(previous_end, window_start) + page_size - 1) & page_mask
+                gap_end = min(start, window_end) & page_mask
+                previous_end = max(previous_end, end)
+                if gap_end - gap_start >= alloc_size:
+                    candidates.append(min(max(near_page, gap_start), gap_end - alloc_size))
+            # MAP_FIXED_NOREPLACE (0x100000) makes the address exact without clobbering an existing mapping.
+            for candidate in sorted(candidates, key=lambda address: abs(address - near_address)):
+                allocated_address = mmap_cave(candidate, 0x100022)
+                if allocated_address == candidate:
+                    break
+                if allocated_address:
+                    send_command(f"p (int)munmap((void*){hex(allocated_address)}, {size})")
+                    allocated_address = 0
+
+    if not allocated_address:
         logger.error("Cave allocation failed!")
         return 0
-    allocated_address = safe_str_to_int(hex_match[0], 16)
-    # mmap returns MAP_FAILED ((void*)-1) on failure: 0xff..ff in the inferior's pointer width
-    if allocated_address in (0, 0xFFFFFFFF, 0xFFFFFFFFFFFFFFFF):
-        logger.error("Cave allocation failed!")
-        return 0
-    allocated_cave = typedefs.AllocatedMemory(allocated_address, size, current_process_identity)
-    allocated_cave_chunks[name] = allocated_cave
-    return allocated_cave.address
+    allocated_cave_chunks[name] = typedefs.AllocatedMemory(allocated_address, size, current_process_identity)
+    return allocated_address
 
 
 @execute_with_temporary_interruption
@@ -1633,8 +1677,8 @@ def free_cave(name: str) -> bool:
     if match is None:
         logger.error(f"Failed to free cave '{name}' at {hex(addr)}")
         return False
-    # munmap returns 0 on success, -1 on error. Drop our record either way: a non-zero result
-    # means our (address, size) no longer maps what we expect, so keeping it tracked is pointless.
+    # munmap returns 0 on success, -1 on error.
+    # Drop our record either way: a non-zero result means our (address, size) no longer maps what we expect, so keeping it tracked is pointless.
     result = match.group(2)
     value = regexes.hex_number.search(result) or re.search(r"-?\d+", result)
     succeeded = value is not None and safe_str_to_int(value.group(0), 0) == 0
