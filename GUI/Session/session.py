@@ -2,7 +2,7 @@ import os
 from enum import IntFlag, auto
 from typing import Any
 
-from PyQt6.QtCore import QObject
+from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
@@ -215,6 +215,17 @@ class Session:
         if self.data_changed == SessionDataChanged.NONE:
             close_event.accept()
             return
+
+        self.settings = QSettings()
+
+        if self.settings.contains("General/save_session_on_exit"):
+            if not self.settings.value("General/save_session_on_exit", type=bool):
+                return close_event.accept()
+
+            if not self.save_session():
+                return close_event.ignore()
+
+            return close_event.accept()
 
         pre_exit_unsaved_changes_result = self.check_unsaved_changes()
         if pre_exit_unsaved_changes_result == QMessageBox.StandardButton.Yes:
