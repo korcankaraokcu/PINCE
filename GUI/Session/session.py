@@ -4,8 +4,9 @@ from typing import Any
 
 from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QCloseEvent
-from PyQt6.QtWidgets import QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QCheckBox, QFileDialog, QMessageBox
 
+from GUI.Settings import settings
 from GUI.States import states
 from GUI.Utils import guiutils
 from libpince import debugcore, typedefs, utils
