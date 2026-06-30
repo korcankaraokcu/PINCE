@@ -4,8 +4,9 @@ from typing import Any
 
 from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QCloseEvent
-from PyQt6.QtWidgets import QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QCheckBox, QFileDialog, QMessageBox
 
+from GUI.Settings import settings
 from GUI.States import states
 from GUI.Utils import guiutils
 from libpince import debugcore, typedefs, utils
@@ -136,13 +137,25 @@ class Session:
         if self.data_changed == SessionDataChanged.NONE:
             return QMessageBox.StandardButton.No
 
-        unsaved_changes_result = QMessageBox.question(
-            None,
-            tr.SAVE_SESSION_QUESTION_TITLE,
-            tr.SAVE_SESSION_QUESTION_PROMPT,
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
-        )
-        return unsaved_changes_result
+        unsaved_changes_result = QMessageBox()
+
+        remember_choice = QCheckBox(tr.REMEMBER_MY_DECISION)
+
+        unsaved_changes_result.setCheckBox(remember_choice)
+
+        unsaved_changes_result.setWindowTitle(tr.SAVE_SESSION_QUESTION_TITLE)
+
+        unsaved_changes_result.setText(tr.SAVE_SESSION_QUESTION_PROMPT)
+
+        unsaved_changes_result.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel)
+
+        result = QMessageBox.StandardButton(unsaved_changes_result.exec())
+
+        if result != QMessageBox.StandardButton.Cancel and remember_choice.isChecked():
+            self.settings.setValue("General/save_session_on_exit", result == QMessageBox.StandardButton.Yes)
+            settings.apply_settings()
+
+        return result
 
     def load_session(self, file_path: str | None = None) -> bool:
         """
