@@ -2190,6 +2190,11 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
+        <source>Remember my decision.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
         <source>PINCE Cheat Table (*.pct)</source>
         <translation>PINCE 作弊表 (*.pct)</translation>
     </message>
