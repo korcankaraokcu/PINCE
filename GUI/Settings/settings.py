@@ -106,6 +106,7 @@ def set_default_settings() -> None:
     settings.setValue("locale", get_locale())
     settings.setValue("logo_path", "ozgurozbek/pince_small_transparent.png")
     settings.setValue("theme", themes.Themes.DEFAULT.value)
+    settings.remove("save_session_on_exit")
     settings.endGroup()
     settings.beginGroup("Hotkeys")
     for hotkey in states.hotkeys.get_hotkeys():
