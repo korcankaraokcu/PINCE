@@ -10,6 +10,12 @@ class ManageScanRegionsDialog(QDialog, Ui_Dialog):
         super().__init__(parent)
         self.setupUi(self)
         self.deleted_regions: list[int] = []
+        self.populate_table()
+        guiutils.center_to_parent(self)
+        self.pushButton_Invert.clicked.connect(self.invert_selection)
+        self.pushButton_Reset.clicked.connect(self.reset_regions)
+
+    def populate_table(self) -> None:
         regions = list(scancore.memscan.regions())
         self.tableWidget_Regions.setRowCount(len(regions))
         self.tableWidget_Regions.setSortingEnabled(False)
@@ -26,8 +32,11 @@ class ManageScanRegionsDialog(QDialog, Ui_Dialog):
             self.tableWidget_Regions.setItem(row, 6, QTableWidgetItem(file))
         self.tableWidget_Regions.setSortingEnabled(True)
         self.tableWidget_Regions.resizeColumnsToContents()
-        guiutils.center_to_parent(self)
-        self.pushButton_Invert.clicked.connect(self.invert_selection)
+
+    def reset_regions(self) -> None:
+        scancore.memscan.reset()
+        self.parent().deleted_regions.clear()
+        self.populate_table()
 
     def invert_selection(self) -> None:
         for row in range(self.tableWidget_Regions.rowCount()):

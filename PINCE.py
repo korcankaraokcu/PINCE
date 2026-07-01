@@ -1155,6 +1155,7 @@ class MainForm(QMainWindow, MainWindow):
             self.comboBox_ValueType.setEnabled(is_new_scan)
             self.comboBox_Endianness.setEnabled(is_new_scan)
             self.comboBox_Alignment.setEnabled(is_new_scan)
+            self.pushButton_ScanRegions.setEnabled(is_new_scan)
 
     # Create properly typed values for memscan
     def validate_search_values(self, search_for: str, search_for2: str) -> tuple[int | float | str | BytePattern | None, int | float | None]:

@@ -179,6 +179,11 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     </message>
     <message>
         <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
+        <source>Reset Regions</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManageScanRegions/Form/ManageScanRegionsDialog.ui" line="0" />
         <source>ID</source>
         <translation type="unfinished" />
     </message>
