@@ -2212,7 +2212,7 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Remember my decision.</source>
+        <source>Remember my decision</source>
         <translation type="unfinished" />
     </message>
     <message>
