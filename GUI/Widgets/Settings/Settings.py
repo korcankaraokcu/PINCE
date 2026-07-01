@@ -41,6 +41,14 @@ class SettingsDialog(QDialog, Ui_Dialog):
             self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
         for hotkey in states.hotkeys.get_hotkeys():
             self.listWidget_Functions.addItem(hotkey.desc)
+        self.comboBox_SaveSessionOnExit.addItems(("Always Ask", "Always save", "Aways discard"))
+        if self.settings.contains("General/save_session_on_exit"):
+            if self.settings.value("General/save_session_on_exit", type=bool):
+                self.comboBox_SaveSessionOnExit.setCurrentIndex(1)
+            else:
+                self.comboBox_SaveSessionOnExit.setCurrentIndex(2)
+        else:
+            self.comboBox_SaveSessionOnExit.setCurrentIndex(0)
         self.config_gui()
 
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
@@ -54,6 +62,7 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.comboBox_Theme.currentIndexChanged.connect(self.comboBox_Theme_current_index_changed)
         self.pushButton_HandleSignals.clicked.connect(self.pushButton_HandleSignals_clicked)
         self.lineEdit_Hotkey.keyPressEvent = self.lineEdit_Hotkey_key_pressed_event
+        self.comboBox_SaveSessionOnExit.currentIndexChanged.connect(self.comboBox_SaveSessionOnExit_current_index_changed)
         guiutils.center_to_parent(self)
 
     def accept(self) -> None:
@@ -235,3 +244,11 @@ class SettingsDialog(QDialog, Ui_Dialog):
             self.lineEdit_Hotkey.clear()
         else:
             self.hotkey_to_value[states.hotkeys.get_hotkeys()[index].name] = self.lineEdit_Hotkey.text()
+
+    def comboBox_SaveSessionOnExit_current_index_changed(self, index: int):
+        if index == 1:
+            self.settings.setValue("General/save_session_on_exit", True)
+        elif index == 2:
+            self.settings.setValue("General/save_session_on_exit", False)
+        else:
+            self.settings.remove("General/save_session_on_exit")
