@@ -6,7 +6,6 @@ from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QCheckBox, QFileDialog, QMessageBox
 
-from GUI.Settings import settings
 from GUI.States import states
 from GUI.Utils import guiutils
 from libpince import debugcore, typedefs, utils
@@ -137,19 +136,13 @@ class Session:
         if self.data_changed == SessionDataChanged.NONE:
             return QMessageBox.StandardButton.No
 
-        unsaved_changes_result = QMessageBox()
-        remember_choice = QCheckBox(tr.REMEMBER_MY_DECISION)
-        unsaved_changes_result.setCheckBox(remember_choice)
-        unsaved_changes_result.setWindowTitle(tr.SAVE_SESSION_QUESTION_TITLE)
-        unsaved_changes_result.setText(tr.SAVE_SESSION_QUESTION_PROMPT)
-        unsaved_changes_result.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel)
-        result = QMessageBox.StandardButton(unsaved_changes_result.exec())
-
-        if result != QMessageBox.StandardButton.Cancel and remember_choice.isChecked():
-            self.settings.setValue("General/save_session_on_exit", result == QMessageBox.StandardButton.Yes)
-            settings.apply_settings()
-
-        return result
+        unsaved_changes_result = QMessageBox.question(
+            None,
+            tr.SAVE_SESSION_QUESTION_TITLE,
+            tr.SAVE_SESSION_QUESTION_PROMPT,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
+        )
+        return unsaved_changes_result
 
     def load_session(self, file_path: str | None = None) -> bool:
         """
@@ -223,10 +216,10 @@ class Session:
             close_event.accept()
             return
 
-        self.settings = QSettings()
+        settings = QSettings()
 
-        if self.settings.contains("General/save_session_on_exit"):
-            if not self.settings.value("General/save_session_on_exit", type=bool):
+        if settings.contains("General/save_session_on_exit"):
+            if not settings.value("General/save_session_on_exit", type=bool):
                 return close_event.accept()
 
             if not self.save_session():
@@ -234,15 +227,26 @@ class Session:
 
             return close_event.accept()
 
-        pre_exit_unsaved_changes_result = self.check_unsaved_changes()
-        if pre_exit_unsaved_changes_result == QMessageBox.StandardButton.Yes:
+        unsaved_changes = QMessageBox()
+        remember_choice = QCheckBox(tr.REMEMBER_MY_DECISION)
+        unsaved_changes.setCheckBox(remember_choice)
+        unsaved_changes.setWindowTitle(tr.SAVE_SESSION_QUESTION_TITLE)
+        unsaved_changes.setText(tr.SAVE_SESSION_QUESTION_PROMPT)
+        unsaved_changes.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel)
+        result = QMessageBox.StandardButton(unsaved_changes.exec())
+
+        if result == QMessageBox.StandardButton.Cancel:
+            return close_event.ignore()
+
+        if remember_choice.isChecked():
+            settings.setValue("General/save_session_on_exit", result == QMessageBox.StandardButton.Yes)
+            settings.sync()
+
+        if result == QMessageBox.StandardButton.Yes:
             if self.save_session():
                 close_event.accept()
             else:
                 close_event.ignore()
-
-        elif pre_exit_unsaved_changes_result == QMessageBox.StandardButton.Cancel:
-            close_event.ignore()
         else:
             close_event.accept()
 
