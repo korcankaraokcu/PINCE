@@ -8,7 +8,7 @@ from tr.tr import get_locale
 from libpince import debugcore, utils, typedefs
 import json, os
 
-current_settings_version = "38"  # Increase version by one if you change settings
+current_settings_version = "37"  # Increase version by one if you change settings
 CHECK_UPDATES_ON_STARTUP = "General/check_updates_on_startup"
 
 # Due to community feedback, these signals are disabled by default: SIGUSR1, SIGUSR2, SIGPWR, SIGXCPU, SIGXFSZ, SIGSYS
@@ -106,7 +106,8 @@ def set_default_settings() -> None:
     settings.setValue("locale", get_locale())
     settings.setValue("logo_path", "ozgurozbek/pince_small_transparent.png")
     settings.setValue("theme", themes.Themes.DEFAULT.value)
-    settings.remove("save_session_on_exit")
+    if settings.contains("save_session_on_exit"):
+        settings.remove("save_session_on_exit")
     settings.endGroup()
     settings.beginGroup("Hotkeys")
     for hotkey in states.hotkeys.get_hotkeys():
