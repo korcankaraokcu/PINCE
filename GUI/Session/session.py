@@ -138,17 +138,11 @@ class Session:
             return QMessageBox.StandardButton.No
 
         unsaved_changes_result = QMessageBox()
-
         remember_choice = QCheckBox(tr.REMEMBER_MY_DECISION)
-
         unsaved_changes_result.setCheckBox(remember_choice)
-
         unsaved_changes_result.setWindowTitle(tr.SAVE_SESSION_QUESTION_TITLE)
-
         unsaved_changes_result.setText(tr.SAVE_SESSION_QUESTION_PROMPT)
-
         unsaved_changes_result.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel)
-
         result = QMessageBox.StandardButton(unsaved_changes_result.exec())
 
         if result != QMessageBox.StandardButton.Cancel and remember_choice.isChecked():
