@@ -1455,8 +1455,13 @@ class MainForm(QMainWindow, MainWindow):
         self.undo_scan_available = True
 
     def pushButton_ScanRegions_clicked(self) -> None:
-        scan_regions_dialog = ManageScanRegionsDialog(self)
-        if scan_regions_dialog.exec():
+        scan_regions_dialog = ManageScanRegionsDialog(self, self.scan_mode)
+        accepted = scan_regions_dialog.exec()
+        # A reset reloads every region and is a one-way action the dialog's Cancel can't undo, so drop the
+        # tracked deletions regardless of how the dialog was closed to keep them in sync with the scanner.
+        if scan_regions_dialog.regions_reset:
+            self.deleted_regions.clear()
+        if accepted:
             self.deleted_regions.extend(scan_regions_dialog.get_values())
 
     def get_value_index_for_match(self, match: MatchView) -> int:
