@@ -41,14 +41,20 @@ class SettingsDialog(QDialog, Ui_Dialog):
             self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
         for hotkey in states.hotkeys.get_hotkeys():
             self.listWidget_Functions.addItem(hotkey.desc)
-        self.comboBox_SaveSessionOnExit.addItems(("Always Ask", "Always save", "Aways discard"))
+        save_on_exit_combobox_items = (
+            (tr.ALWAYS_ASK, None),
+            (tr.ALWAYS_SAVE, True),
+            (tr.ALWAYS_DISCARD, False),
+        )
+        for translation, data in save_on_exit_combobox_items:
+            self.comboBox_SaveSessionOnExit.addItem(translation, data)
+
         if self.settings.contains("General/save_session_on_exit"):
-            if self.settings.value("General/save_session_on_exit", type=bool):
-                self.comboBox_SaveSessionOnExit.setCurrentIndex(1)
-            else:
-                self.comboBox_SaveSessionOnExit.setCurrentIndex(2)
+            self.comboBox_SaveSessionOnExit.setCurrentIndex(
+                self.comboBox_SaveSessionOnExit.findData(self.settings.value("General/save_session_on_exit"))
+            )
         else:
-            self.comboBox_SaveSessionOnExit.setCurrentIndex(0)
+            self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(None))
         self.config_gui()
 
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
@@ -246,9 +252,8 @@ class SettingsDialog(QDialog, Ui_Dialog):
             self.hotkey_to_value[states.hotkeys.get_hotkeys()[index].name] = self.lineEdit_Hotkey.text()
 
     def comboBox_SaveSessionOnExit_current_index_changed(self, index: int):
-        if index == 1:
-            self.settings.setValue("General/save_session_on_exit", True)
-        elif index == 2:
-            self.settings.setValue("General/save_session_on_exit", False)
-        else:
+        result: bool | None = self.comboBox_SaveSessionOnExit.itemData(index)
+        if result is None:
             self.settings.remove("General/save_session_on_exit")
+        else:
+            self.settings.setValue("General/save_session_on_exit", result)
