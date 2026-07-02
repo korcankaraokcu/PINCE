@@ -48,13 +48,6 @@ class SettingsDialog(QDialog, Ui_Dialog):
         )
         for translation, data in save_on_exit_combobox_items:
             self.comboBox_SaveSessionOnExit.addItem(translation, data)
-
-        if self.settings.contains("General/save_session_on_exit"):
-            self.comboBox_SaveSessionOnExit.setCurrentIndex(
-                self.comboBox_SaveSessionOnExit.findData(self.settings.value("General/save_session_on_exit"))
-            )
-        else:
-            self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(None))
         self.config_gui()
 
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
@@ -163,6 +156,11 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.checkBox_GDBLogging.setChecked(self.settings.value("Debug/gdb_logging", type=bool))
         self.comboBox_InterruptSignal.setCurrentText(self.settings.value("Debug/interrupt_signal", type=str))
         self.checkBox_JavaSegfault.setChecked(self.settings.value("Java/ignore_segfault", type=bool))
+        self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(None))
+        if self.settings.contains("General/save_session_on_exit"):
+            self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(self.settings.value("General/save_session_on_exit")))
+        else:
+            self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(None))
 
     def change_display(self, index: int) -> None:
         self.stackedWidget.setCurrentIndex(index)
