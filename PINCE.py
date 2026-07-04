@@ -1551,7 +1551,7 @@ class MainForm(QMainWindow, MainWindow):
                 self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
                 self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_PREVIOUS_COL, QTableWidgetItem(previous_value))
                 row += 1
-                if row == 1000:
+                if row == 5000:
                     break
         self.tableWidget_valuesearchtable.resizeColumnsToContents()
         self.tableWidget_valuesearchtable.setSortingEnabled(True)
@@ -1566,8 +1566,8 @@ class MainForm(QMainWindow, MainWindow):
 
     def update_match_count(self) -> None:
         match_count = memscan.get_match_count()
-        if match_count > 1000:
-            self.label_MatchCount.setText(tr.MATCH_COUNT_LIMITED.format(match_count, 1000))
+        if match_count > 5000:
+            self.label_MatchCount.setText(tr.MATCH_COUNT_LIMITED.format(match_count, 5000))
         else:
             self.label_MatchCount.setText(tr.MATCH_COUNT.format(match_count))
 
