@@ -24,7 +24,10 @@ exit_on_error() {
 }
 
 build_libmemscan() {
-	git submodule update --init --recursive || return 1
+	git submodule init libmemscan || return 1
+	if ! git -C libmemscan rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+		git submodule update --init --recursive libmemscan || return 1
+	fi
 	mkdir -p libpince/libmemscan
 	if [ -f "libpince/libmemscan/libmemscan.so" ] && [ -z "$PINCE_LIB_ONLY" ]; then
 		echo "Recompile libmemscan? [y/n]"

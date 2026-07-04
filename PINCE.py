@@ -1481,6 +1481,37 @@ class MainForm(QMainWindow, MainWindow):
             logger.error("Passed invalid match to value_index retrieval! Shouldn't be possible!")
             return -1
 
+    def stored_match_value_to_text(self, match: MatchView, value_index: int, value_repr: int, endian: int, length: int) -> str:
+        value = match.stored_value
+        if value is None:
+            return ""
+        if value_index == typedefs.VALUE_INDEX.AOB:
+            return bytes(value).hex(" ")
+        if typedefs.VALUE_INDEX.is_string(value_index):
+            encoding, option = typedefs.resolve_string_encoding(value_index, endian, debugcore.system_endianness)
+            text = bytes(value).decode(encoding, option)
+            if text.startswith("\x00"):
+                text = "\x00"
+            else:
+                text = text.split("\x00")[0]
+            return text[0:length]
+        if typedefs.VALUE_INDEX.is_integer(value_index):
+            unsigned_field, signed_field = {
+                typedefs.VALUE_INDEX.INT8: ("uint8_value", "int8_value"),
+                typedefs.VALUE_INDEX.INT16: ("uint16_value", "int16_value"),
+                typedefs.VALUE_INDEX.INT32: ("uint32_value", "int32_value"),
+                typedefs.VALUE_INDEX.INT64: ("uint64_value", "int64_value"),
+            }[value_index]
+            field = signed_field if value_repr == typedefs.VALUE_REPR.SIGNED else unsigned_field
+            number = getattr(value.data, field)
+            return hex(number) if value_repr == typedefs.VALUE_REPR.HEX else str(number)
+        data = value.data
+        if value_index == typedefs.VALUE_INDEX.FLOAT32:
+            return str(data.float32_value)
+        if value_index == typedefs.VALUE_INDEX.FLOAT64:
+            return str(data.float64_value)
+        return ""
+
     def scan_callback(self) -> None:
         self.is_scanning = False
         self.progress_bar_timer.stop()
@@ -1512,12 +1543,13 @@ class MainForm(QMainWindow, MainWindow):
                 # TODO: Change GDB reading to memscan
                 value = debugcore.read_memory(address, value_index, length, True, value_repr, endian, mem_handle)
                 value = "" if value is None else str(value)
+                previous_value = self.stored_match_value_to_text(match, value_index, value_repr, endian, length)
                 if debugcore.is_address_static(address):
                     current_item.setForeground(QColor(0, 136, 85))
                 self.tableWidget_valuesearchtable.insertRow(row)
                 self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_ADDRESS_COL, current_item)
                 self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_VALUE_COL, QTableWidgetItem(value))
-                self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_PREVIOUS_COL, QTableWidgetItem(value))
+                self.tableWidget_valuesearchtable.setItem(row, SEARCH_TABLE_PREVIOUS_COL, QTableWidgetItem(previous_value))
                 row += 1
                 if row == 1000:
                     break
