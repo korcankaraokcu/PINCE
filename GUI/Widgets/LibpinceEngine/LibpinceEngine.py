@@ -272,6 +272,8 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
     send_to_table = pyqtSignal(str, object)
     # Emitted when a tab bound to a table script entry is edited, so the session can be marked dirty
     entry_modified = pyqtSignal()
+    # Emitted after a script run, because scripts can change GDB state, mappings or convenience variables.
+    script_executed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
@@ -433,6 +435,7 @@ class LibpinceEngineWindow(QMainWindow, Ui_MainWindow):
         if succeeded:
             self.append_output(message)
         self.statusbar.showMessage(message, 3000)
+        self.script_executed.emit()
 
     def send_to_cheat_table(self) -> None:
         editor = self.get_current_editor()

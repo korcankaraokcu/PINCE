@@ -1048,6 +1048,11 @@ class MainForm(QMainWindow, MainWindow):
         except KeyError:
             self.treeWidget_AddressTable.keyPressEvent_original(event)
 
+    def invalidate_address_expression_cache(self, refresh: bool = False) -> None:
+        states.exp_cache.clear()
+        if refresh:
+            self.update_address_table()
+
     def update_address_table(self) -> None:
         if debugcore.currentpid == -1 or self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
@@ -1243,8 +1248,7 @@ class MainForm(QMainWindow, MainWindow):
             self.update_address_table()
 
     def pushButton_RefreshAdressTable_clicked(self) -> None:
-        states.exp_cache.clear()
-        self.update_address_table()
+        self.invalidate_address_expression_cache(refresh=True)
 
     def pushButton_MemoryView_clicked(self) -> None:
         self.memory_view_window.showMaximized()
@@ -1312,6 +1316,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def pushButton_Console_clicked(self) -> None:
         console_widget = ConsoleWidget(self)
+        console_widget.gdb_command_sent.connect(lambda: self.invalidate_address_expression_cache(refresh=True))
         console_widget.showMaximized()
 
     def checkBox_Hex_stateChanged(self, state: int) -> None:
@@ -1862,6 +1867,7 @@ class MainForm(QMainWindow, MainWindow):
         self.label_InferiorStatus.setStyleSheet("color: blue")
 
     def on_status_stopped(self) -> None:
+        self.invalidate_address_expression_cache()
         self.label_SelectedProcess.setStyleSheet("color: red")
         self.label_InferiorStatus.setText(tr.STATUS_STOPPED)
         self.label_InferiorStatus.setVisible(True)
@@ -1936,6 +1942,7 @@ class MainForm(QMainWindow, MainWindow):
             self.libpince_engine_window = LibpinceEngineWindow(self)
             self.libpince_engine_window.send_to_table.connect(self.add_script_entry_to_table)
             self.libpince_engine_window.entry_modified.connect(self.mark_address_tree_changed)
+            self.libpince_engine_window.script_executed.connect(lambda: self.invalidate_address_expression_cache(refresh=True))
         self.libpince_engine_window.show()
         self.libpince_engine_window.activateWindow()
         return self.libpince_engine_window
@@ -1965,10 +1972,12 @@ class MainForm(QMainWindow, MainWindow):
             return
         entry.namespace = entry.namespace or create_script_namespace()
         succeeded, output = run_script_code(code, entry.namespace, f"<{row.text(DESC_COL) or tr.SCRIPT}>")
-        if not succeeded:
-            if is_enable:  # don't leave a failed enable looking active
-                row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
-            QMessageBox.information(self, tr.ERROR, tr.SCRIPT_RUN_FAILED.format(output))
+        if not succeeded and is_enable:  # don't leave a failed enable looking active
+            row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
+        self.invalidate_address_expression_cache(refresh=True)
+        if succeeded:
+            return
+        QMessageBox.information(self, tr.ERROR, tr.SCRIPT_RUN_FAILED.format(output))
 
     def treeWidget_AddressTable_item_double_clicked(self, row: QTreeWidgetItem, column: int) -> None:
         entry = self.get_script_entry(row)

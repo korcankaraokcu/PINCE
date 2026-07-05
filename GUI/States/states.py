@@ -22,7 +22,7 @@ threadpool.setMaxThreadCount(10)
 # TODO: Try to find a fast and non-gdb way to calculate symbols so we don't need this
 # This is one of the few tricks we do to minimize examine_expression calls
 # This solution might bring problems if the symbols are changing frequently
-# Pressing the refresh button in the address table or attaching to a new process will clear this cache
+# Address table manual refresh, process changes, inferior stops and user run GDB commands/script clear this cache
 # Currently only used in address_table_loop
 exp_cache: dict[str, str] = {}
 

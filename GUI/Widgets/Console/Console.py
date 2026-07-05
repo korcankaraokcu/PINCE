@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QCompleter
 from PyQt6.QtGui import QShortcut, QKeySequence, QKeyEvent, QCloseEvent, QTextCursor
-from PyQt6.QtCore import Qt, QKeyCombination, QStringListModel
+from PyQt6.QtCore import Qt, QKeyCombination, QStringListModel, pyqtSignal
 from GUI.Utils import guitypedefs, guiutils
 from GUI.Widgets.Console.Form.ConsoleWidget import Ui_Form
 from GUI.Widgets.TextEdit.TextEdit import TextEditDialog
@@ -9,6 +9,8 @@ from tr.tr import TranslationConstants as tr
 
 
 class ConsoleWidget(QWidget, Ui_Form):
+    gdb_command_sent = pyqtSignal()
+
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setupUi(self)
@@ -55,18 +57,23 @@ class ConsoleWidget(QWidget, Ui_Form):
             return
         self.lineEdit.clear()
         stripped = console_input.strip().lower()
+        gdb_command_sent = False
         if stripped in self.quit_commands:
             console_output = tr.QUIT_SESSION_CRASH
         elif stripped in self.continue_commands:
             console_output = tr.CONT_SESSION_CRASH
         elif self.radioButton_CLI.isChecked():
             console_output = debugcore.send_command(console_input, cli_output=True)
+            gdb_command_sent = bool(console_input.strip())
         else:
             console_output = debugcore.send_command(console_input)
+            gdb_command_sent = bool(console_input.strip())
         self.textBrowser.append("-->" + console_input)
         if console_output:
             self.textBrowser.append(console_output)
         self.scroll_to_bottom()
+        if gdb_command_sent:
+            self.gdb_command_sent.emit()
 
     def reset_console_text(self) -> None:
         self.textBrowser.clear()
