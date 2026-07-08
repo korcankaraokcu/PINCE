@@ -1072,26 +1072,11 @@ class MainForm(QMainWindow, MainWindow):
                 else:
                     expression = address_data
                 parent = row.parent()
-                if parent and expression.startswith(("+", "-")):
+                if parent and isinstance(expression, str) and expression.startswith(("+", "-")):
                     parent_resolved = parent.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1)
                     if parent_resolved:
                         expression = parent_resolved + expression
-                if expression in states.exp_cache:
-                    address = states.exp_cache[expression]
-                elif expression.startswith(("+", "-")):
-                    address = None
-                elif basic_math_exp.match(expression.replace(" ", "")) and "**" not in expression.replace(" ", ""):
-                    try:
-                        address = hex(eval(expression))
-                        states.exp_cache[expression] = address
-                    except:
-                        address = debugcore.examine_expression(expression).address
-                        if address is not None:
-                            states.exp_cache[expression] = address
-                else:
-                    address = debugcore.examine_expression(expression).address
-                    if address is not None:
-                        states.exp_cache[expression] = address
+                address = self._resolve_address_expression(expression, basic_math_exp)
                 vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 is_struct_child = parent and self._is_struct_row(parent)
                 if isinstance(address_data, typedefs.PointerChainRequest):
@@ -1122,7 +1107,7 @@ class MainForm(QMainWindow, MainWindow):
                             row.setText(ADDR_COL, address_data)
                         else:
                             row.setText(ADDR_COL, address)
-                    elif expression.startswith(("+", "-")):
+                    elif isinstance(expression, str) and expression.startswith(("+", "-")):
                         row.setText(ADDR_COL, "???")
                     else:
                         row.setText(ADDR_COL, address_data)
@@ -2133,10 +2118,76 @@ class MainForm(QMainWindow, MainWindow):
         vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
         return vt is not None and vt.value_index == typedefs.VALUE_INDEX.STRUCT
 
+    def _resolve_address_expression(self, expression: Any, basic_math_exp: re.Pattern | None = None) -> str | None:
+        if not isinstance(expression, str):
+            return None
+        if expression.startswith(("+", "-")):
+            return None
+        uses_gdb_variable = self._address_expression_uses_gdb_variable(expression)
+        # GDB variables can change without the table expression text changing, so caching them makes rows stale.
+        if not uses_gdb_variable and expression in states.exp_cache:
+            return states.exp_cache[expression]
+
+        if basic_math_exp is None:
+            basic_math_exp = re.compile(r"^[0-9a-fA-F][/*+\-0-9a-fA-FxX]+$")
+        expression_no_spaces = expression.replace(" ", "")
+        if basic_math_exp.match(expression_no_spaces) and "**" not in expression_no_spaces:
+            try:
+                address = hex(eval(expression))
+            except:
+                address = debugcore.examine_expression(expression).address
+        else:
+            address = debugcore.examine_expression(expression).address
+
+        if address is not None and not uses_gdb_variable:
+            states.exp_cache[expression] = address
+        return address
+
+    def _address_expression_uses_gdb_variable(self, expression: Any) -> bool:
+        return isinstance(expression, str) and "$" in expression
+
+    def _row_address_uses_gdb_variable(self, row: QTreeWidgetItem) -> bool:
+        address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
+        expression = address_data.get_base_address_as_str() if isinstance(address_data, typedefs.PointerChainRequest) else address_data
+        if self._address_expression_uses_gdb_variable(expression):
+            return True
+        parent = row.parent()
+        return bool(isinstance(expression, str) and expression.startswith(("+", "-")) and parent and self._row_address_uses_gdb_variable(parent))
+
+    def _refresh_resolved_address(self, row: QTreeWidgetItem) -> str | None:
+        address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
+        expression = address_data.get_base_address_as_str() if isinstance(address_data, typedefs.PointerChainRequest) else address_data
+        parent = row.parent()
+        if parent and isinstance(expression, str) and expression.startswith(("+", "-")):
+            parent_resolved = self._resolved_address(parent)
+            if parent_resolved:
+                expression = parent_resolved + expression
+        address = self._resolve_address_expression(expression)
+        if isinstance(address_data, typedefs.PointerChainRequest):
+            pointer_chain_req = address_data
+            if address:
+                old_base = pointer_chain_req.base_address
+                pointer_chain_req.base_address = address
+                try:
+                    pointer_chain_result = debugcore.read_pointer_chain(pointer_chain_req)
+                finally:
+                    pointer_chain_req.base_address = old_base
+                if pointer_chain_result and pointer_chain_result.get_final_address():
+                    address = pointer_chain_result.get_final_address_as_hex()
+                else:
+                    address = None
+            else:
+                address = None
+        row.setData(ADDR_COL, Qt.ItemDataRole.UserRole + 1, "" if not address else address)
+        return address
+
     def _resolved_address(self, row: QTreeWidgetItem) -> str:
         # The displayed address can be relative (struct children show "+0x4") or "P->…" for pointers,
         # so the resolved absolute kept in UserRole+1 is the source of truth for reads/writes.
         # If nothing useful is in UserRole+1, fall back to text.
+        if self._row_address_uses_gdb_variable(row):
+            address = self._refresh_resolved_address(row)
+            return address or ""
         return row.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1) or row.text(ADDR_COL).removeprefix("P->")
 
     def treeWidget_AddressTable_edit_value(self) -> None:
