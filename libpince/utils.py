@@ -791,7 +791,7 @@ def parse_string(string: str, value_index: int) -> str | list[int] | float | int
         try:
             string_list = regexes.whitespaces.split(string)
             for item in string_list:
-                if len(item) > 2:
+                if len(item) > 2 or not regexes.hex_plain.fullmatch(item):
                     logger.error(f"{string} can't be parsed as array of bytes")
                     return
             hex_list = [int(x, 16) for x in string_list]
