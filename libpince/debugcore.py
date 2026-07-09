@@ -1872,6 +1872,8 @@ def aob_scan(
         List of match addresses in ascending order, including overlapping matches.
         Empty list if no process is attached or the pattern is invalid.
     """
+    if limit is not None and limit <= 0:
+        return []
     if currentpid == -1:
         return []
     try:
