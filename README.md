@@ -9,6 +9,8 @@ Read [Features](#features) part of the project to see what is done and [Roadmap]
 
 ### [Feel free to join our discord server!](https://discord.gg/jVt3BzTSpz)  
 
+### [Browse and download community cheat tables at the PCT-archive!](https://pince-org.github.io/PCT-archive/)  
+
 *Disclaimer: Do not trust to any source other than this GitHub repo that claims to have the source code or package for PINCE and remember to report them **immediately***
 
 *Disclaimer: **YOU** are responsible for your actions. PINCE does **NOT** take any responsibility for the damage caused by the users*
@@ -30,7 +32,7 @@ Read [Features](#features) part of the project to see what is done and [Roadmap]
   * **Dynamic Address Table:** Supports drag&drop, recursive copy&pasting&inserting and many more
   * **Smart casting:** PINCE lets you modify multiple different-type values together as long as the input is parsable. All parsing/memory errors are directed to the terminal
   * **Variable Locking:** PINCE lets you freeze(constantly write a value to memory cell) variables
-- **Sessions:** Save and restore your work as a session file (**`.pct`**), including the address table, bookmarks, free-form session notes and structures
+- **Sessions:** Save and restore your work as a session file (**`.pct`**), including the address table, bookmarks, free-form session notes and structures. You can browse and share these tables in the community [PCT-archive](https://github.com/PINCE-org/PCT-archive)
 - **Memory View**
   * **Assembler:** PINCE uses keystone engine to assemble code on the fly
   * **Dissect Code:** You can dissect desired memory regions to find referenced calls, jumps and strings. Disassemble screen will automatically handle the referenced data and show you if there's a referenced address in the current dissasemble view. It can be used from **`Tools -> Dissect Code`** in the MemoryView window. Using its hotkey instead in the MemoryView window automatically dissects the currently viewed region. You can separately view referenced calls and strings after the search from **`View -> Referenced Calls/Strings`**. *Note: If you decide to uncheck 'Discard invalid strings' before the search, PINCE will try to search for regular pointers as well*

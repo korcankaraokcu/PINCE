@@ -21,6 +21,9 @@ class SessionDataChanged(IntFlag):
     STRUCTURES = auto()
 
 
+# The PCT-archive repo (https://github.com/PINCE-org/PCT-archive) validates submitted
+# .pct files against this format. If you change the session structure or bump the version,
+# update its validation too (.github/scripts/common.py in that repo)
 LATEST_VERSION = 3
 
 
@@ -55,6 +58,7 @@ def migrate_version(content: Any) -> dict[str, Any]:
 
 
 def is_valid_session_data(content: dict[str, Any]) -> bool:
+    # PCT-archive mirrors these checks to validate submitted .pct files, keep both in sync
     if not isinstance(content, dict):
         return False
     keys = ["version", "notes", "bookmarks", "address_tree", "process_name"]
