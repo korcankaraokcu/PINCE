@@ -2053,7 +2053,7 @@ class MainForm(QMainWindow, MainWindow):
                         new_value = "" if new_value is None else str(new_value)
                         if new_value != previous_text:
                             value_item.setForeground(QBrush(QColor(255, 0, 0)))
-                            value_item.setText(new_value)
+                        value_item.setText(new_value)
             finally:
                 self.tableWidget_valuesearchtable.setSortingEnabled(True)
 
