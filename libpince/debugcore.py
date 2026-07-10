@@ -2745,13 +2745,13 @@ def modify_breakpoint(breakpoint_number: int, modify_what: int, condition: str |
             if condition is None:
                 logger.error("Missing condition for breakpoint modification")
                 return False
-            send_command(f"condition {breakpoint} {condition}")
+            command = f"condition {breakpoint} {condition}"
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE:
-            send_command(f"enable {breakpoint}")
+            command = f"enable {breakpoint}"
         elif modify_what == typedefs.BREAKPOINT_MODIFY.DISABLE:
-            send_command(f"disable {breakpoint}")
+            command = f"disable {breakpoint}"
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE_ONCE:
-            send_command(f"enable once {breakpoint}")
+            command = f"enable once {breakpoint}"
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE_COUNT:
             if count is None:
                 logger.error("Missing count parameter for ENABLE_COUNT breakpoint modification")
@@ -2759,11 +2759,13 @@ def modify_breakpoint(breakpoint_number: int, modify_what: int, condition: str |
             elif count < 1:
                 logger.error(f"Count parameter can't be less than 1 for ENABLE_COUNT breakpoint modification")
                 return False
-            send_command(f"enable count {count} {breakpoint}")
+            command = f"enable count {count} {breakpoint}"
         elif modify_what == typedefs.BREAKPOINT_MODIFY.ENABLE_DELETE:
-            send_command(f"enable delete {breakpoint}")
+            command = f"enable delete {breakpoint}"
         else:
             logger.error("Parameter modify_what is not valid")
+            return False
+        if regexes.gdb_error.search(send_command(command)):
             return False
     breakpoints_changed.emit()
     return True
@@ -2779,19 +2781,21 @@ def delete_breakpoint(breakpoint_number: int) -> bool:
         bool: True if the breakpoint has been deleted successfully, False otherwise
     """
     deletion_list = [breakpoint_number]
+    chained_index = None
     global chained_breakpoints
     for n, item in enumerate(chained_breakpoints):
         if breakpoint_number in item:
             deletion_list = item
-            del chained_breakpoints[n]
+            chained_index = n
             break
     for breakpoint in deletion_list:
-        global breakpoint_on_hit_dict
-        try:
-            del breakpoint_on_hit_dict[str(breakpoint)]
-        except KeyError:
-            pass
-        send_command(f"delete {breakpoint}")
+        if regexes.gdb_error.search(send_command(f"delete {breakpoint}")):
+            return False
+    global breakpoint_on_hit_dict
+    for breakpoint in deletion_list:
+        breakpoint_on_hit_dict.pop(str(breakpoint), None)
+    if chained_index is not None:
+        del chained_breakpoints[chained_index]
     breakpoints_changed.emit()
     return True
 
