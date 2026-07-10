@@ -99,6 +99,9 @@ class StructureEditorDialog(QDialog, Ui_Dialog):
             if not StructureManager.rename(self._original_name, name):
                 QMessageBox.warning(self, tr.ERROR, tr.STRUCTURE_NAME_TAKEN)
                 return
+            for member in struct.members:
+                if member.struct_ref == self._original_name:
+                    member.struct_ref = name
             StructureManager.update(struct)
         elif self._original_name is None:
             if not StructureManager.add(struct):

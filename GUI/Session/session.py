@@ -387,6 +387,14 @@ class StructureManager:
         if old not in registry or new in registry:
             return False
         registry[new] = registry.pop(old)
+        for key, data in registry.items():
+            structure = typedefs.Structure.deserialize(data)
+            if key == new:
+                structure.name = new
+            for member in structure.members:
+                if member.struct_ref == old:
+                    member.struct_ref = new
+            registry[key] = structure.serialize()
         StructureManager._mark_changed()
         return True
 
