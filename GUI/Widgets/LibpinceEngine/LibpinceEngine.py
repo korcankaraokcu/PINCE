@@ -35,8 +35,11 @@ def parse_script_sections(script: str) -> tuple[str, str | None]:
             enable_line = i
         elif tag == DISABLE_TAG and disable_line is None:
             disable_line = i
-    if enable_line is None or disable_line is None:
+    if enable_line is None and disable_line is None:
         return script, None
+    if enable_line is None or disable_line is None:
+        code = "\n".join("" if i in (enable_line, disable_line) else line for i, line in enumerate(lines))
+        return (code, None) if enable_line is not None else ("", code)
     tags = sorted((enable_line, disable_line))
     prelude_end = tags[0]
 
