@@ -25,7 +25,7 @@ exit_on_error() {
 
 build_libmemscan() {
 	git submodule init libmemscan || return 1
-	if ! git -C libmemscan rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+	if [ ! -e "libmemscan/.git" ]; then
 		git submodule update --init --recursive libmemscan || return 1
 	fi
 	mkdir -p libpince/libmemscan
