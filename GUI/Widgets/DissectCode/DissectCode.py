@@ -51,9 +51,11 @@ class DissectCodeDialog(QDialog, Ui_Dialog):
             self.discard_invalid_strings = discard_invalid_strings
 
         def run(self) -> None:
-            debugcore.dissect_code(self.region_list, self.discard_invalid_strings)
-            if not self.is_canceled:
-                self.output_ready.emit()
+            try:
+                debugcore.dissect_code(self.region_list, self.discard_invalid_strings)
+            finally:
+                if not self.is_canceled:
+                    self.output_ready.emit()
 
     def init_pre_scan_gui(self) -> None:
         self.is_scanning = False
