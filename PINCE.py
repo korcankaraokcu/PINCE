@@ -2088,11 +2088,16 @@ class MainForm(QMainWindow, MainWindow):
                     new_value = debugcore.read_memory(address, vt.value_index, endian=vt.endian)
                     if new_value is None:
                         continue
+                    compare_value, compare_new_value = value, new_value
+                    if typedefs.VALUE_INDEX.is_integer(vt.value_index) and vt.value_repr == typedefs.VALUE_REPR.SIGNED:
+                        limit = 1 << (typedefs.index_to_valuetype_dict[vt.value_index][0] * 8)
+                        compare_value -= limit if compare_value >= limit // 2 else 0
+                        compare_new_value -= limit if compare_new_value >= limit // 2 else 0
                     if (
                         freeze_type == typedefs.FREEZE_TYPE.ALLOW_INCREMENT
-                        and new_value > value
+                        and compare_new_value > compare_value
                         or freeze_type == typedefs.FREEZE_TYPE.ALLOW_DECREMENT
-                        and new_value < value
+                        and compare_new_value < compare_value
                     ):
                         frozen.value = new_value
                         debugcore.write_memory(address, vt.value_index, new_value, endian=vt.endian)
