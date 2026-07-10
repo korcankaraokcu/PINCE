@@ -1739,6 +1739,7 @@ class MainForm(QMainWindow, MainWindow):
         )
 
     def on_new_session(self) -> None:
+        self.session = SessionManager.get_session()
         self.clear_address_table()
 
     # Returns: a bool value indicates whether the operation succeeded.
