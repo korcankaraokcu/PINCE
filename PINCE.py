@@ -934,6 +934,13 @@ class MainForm(QMainWindow, MainWindow):
 
     def group_records(self) -> None:
         selected_items = self.treeWidget_AddressTable.selectedItems()
+        for item in selected_items.copy():
+            parent = item.parent()
+            while parent:
+                if parent in selected_items:
+                    selected_items.remove(item)
+                    break
+                parent = parent.parent()
         if self.create_group():
             item_count = self.treeWidget_AddressTable.topLevelItemCount()
             last_item = self.treeWidget_AddressTable.topLevelItem(item_count - 1)
