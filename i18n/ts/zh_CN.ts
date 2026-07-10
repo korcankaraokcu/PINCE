@@ -512,6 +512,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+        <source>Save session when closing</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Functions</source>
         <translation>功能</translation>
     </message>
@@ -2213,6 +2218,21 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     <message>
         <location filename="../../tr/tr.py" line="0" />
         <source>Remember my decision</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Always ask</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Always save</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
+        <source>Always discard</source>
         <translation type="unfinished" />
     </message>
     <message>
