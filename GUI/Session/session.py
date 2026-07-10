@@ -108,6 +108,19 @@ class Session:
         Returns:
             bool: True if the session was saved successfully, False otherwise.
         """
+        session = {
+            "version": self.pct_version,
+            "notes": self.pct_notes,
+            "bookmarks": self.pct_bookmarks,
+            "address_tree": self.pct_address_tree,
+            "process_name": self.pct_process_name,
+            "structures": self.pct_structures,
+        }
+
+        loaded_file = os.path.join(self.file_path, self.last_file_name)
+        if not loaded_file.endswith("/") and utils.save_file(session, loaded_file):
+            guiutils.own_path_as_user(loaded_file)
+            return True
 
         with guiutils.save_dialog_as_user(None, tr.SAVE_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT, "pct") as file_path:
             if not file_path:
@@ -116,14 +129,6 @@ class Session:
             # address tree must save its data to the session object via signal
             if self.data_changed & SessionDataChanged.ADDRESS_TREE:
                 states.session_signals.on_save.emit()
-            session = {
-                "version": self.pct_version,
-                "notes": self.pct_notes,
-                "bookmarks": self.pct_bookmarks,
-                "address_tree": self.pct_address_tree,
-                "process_name": self.pct_process_name,
-                "structures": self.pct_structures,
-            }
             if not utils.save_file(session, file_path):
                 QMessageBox.information(None, tr.ERROR, tr.FILE_SAVE_ERROR)
                 return False
