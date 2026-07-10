@@ -1226,6 +1226,7 @@ class MainForm(QMainWindow, MainWindow):
     def scan_values(self) -> None:
         if debugcore.currentpid == -1:
             return
+        is_next_scan = self.scan_mode == typedefs.SCAN_MODE.ONGOING
         type_index = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
         if type_index == typedefs.SCAN_TYPE.UNKNOWN:
             scan_thread = guitypedefs.Worker(memscan.snapshot)
@@ -1238,10 +1239,12 @@ class MainForm(QMainWindow, MainWindow):
         self.progressBar.setValue(0)
         self.progress_bar_timer = QTimer(self, timeout=self.update_progress_bar)
         self.progress_bar_timer.start(100)
-        scan_thread.signals.finished.connect(self.scan_callback)
-        states.threadpool.start(scan_thread)
+        scan_thread.signals.finished.connect(lambda _: self.scan_callback(is_next_scan))
+        scan_thread.signals.error.connect(lambda error: self.scan_error(error, not is_next_scan))
         self.is_scanning = True
+        self.undo_scan_available = False
         self.update_scan_box_state()
+        states.threadpool.start(scan_thread)
 
     def resize_address_table(self) -> None:
         self.treeWidget_AddressTable.resizeColumnToContents(FROZEN_COL)
@@ -1376,10 +1379,13 @@ class MainForm(QMainWindow, MainWindow):
         if debugcore.currentpid == -1:
             return
         undo_thread = guitypedefs.Worker(memscan.undo_scan)
-        undo_thread.signals.finished.connect(self.scan_callback)
-        states.threadpool.start(undo_thread)
+        undo_thread.signals.finished.connect(lambda _: self.scan_callback(False))
+        undo_thread.signals.error.connect(self.scan_error)
+        self.is_scanning = True
         self.undo_scan_available = False
-        self.pushButton_UndoScan.setEnabled(False)  # we can undo once so set it to false and re-enable at next scan
+        self.update_scan_box_state()
+        self.pushButton_CancelScan.setEnabled(False)
+        states.threadpool.start(undo_thread)
 
     def pushButton_CancelScan_clicked(self) -> None:
         if debugcore.currentpid == -1:
@@ -1465,7 +1471,6 @@ class MainForm(QMainWindow, MainWindow):
 
     def pushButton_NextScan_clicked(self) -> None:
         self.scan_values()
-        self.undo_scan_available = True
 
     def pushButton_ScanRegions_clicked(self) -> None:
         scan_regions_dialog = ManageScanRegionsDialog(self)
@@ -1524,10 +1529,23 @@ class MainForm(QMainWindow, MainWindow):
             return str(data.float64_value)
         return ""
 
-    def scan_callback(self) -> None:
+    def scan_error(self, error: Exception, first_scan: bool = False) -> None:
         self.is_scanning = False
+        self.undo_scan_available = False
+        self.progress_bar_timer.stop()
+        if first_scan:
+            self.scan_mode = typedefs.SCAN_MODE.NEW
+            self.pushButton_NewFirstScan.setText(tr.FIRST_SCAN)
+            self.comboBox_ScanType_init()
+        self.update_scan_box_state()
+        QMessageBox.information(self, tr.ERROR, str(error))
+
+    def scan_callback(self, undo_available: bool) -> None:
+        self.is_scanning = False
+        self.undo_scan_available = undo_available and self.scan_mode == typedefs.SCAN_MODE.ONGOING
         self.progress_bar_timer.stop()
         self.progressBar.setValue(100)
+        self.update_scan_box_state()
         matches = memscan.matches()
         self.update_match_count()
         self.tableWidget_valuesearchtable.setRowCount(0)
@@ -1567,7 +1585,6 @@ class MainForm(QMainWindow, MainWindow):
                     break
         self.tableWidget_valuesearchtable.resizeColumnsToContents()
         self.tableWidget_valuesearchtable.setSortingEnabled(True)
-        self.update_scan_box_state()
 
     def _scan_to_length(self, type_index: int) -> int:
         if type_index == typedefs.SCAN_INDEX.AOB:
