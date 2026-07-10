@@ -61,7 +61,6 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.comboBox_Theme.currentIndexChanged.connect(self.comboBox_Theme_current_index_changed)
         self.pushButton_HandleSignals.clicked.connect(self.pushButton_HandleSignals_clicked)
         self.lineEdit_Hotkey.keyPressEvent = self.lineEdit_Hotkey_key_pressed_event
-        self.comboBox_SaveSessionOnExit.currentIndexChanged.connect(self.comboBox_SaveSessionOnExit_current_index_changed)
         guiutils.center_to_parent(self)
 
     def accept(self) -> None:
@@ -109,6 +108,11 @@ class SettingsDialog(QDialog, Ui_Dialog):
         if self.handle_signals_data:
             self.settings.setValue("Debug/handle_signals", self.handle_signals_data)
         settings.apply_settings()
+        result: bool | None = self.comboBox_SaveSessionOnExit.currentData()
+        if result is None:
+            self.settings.remove("General/save_session_on_exit")
+        else:
+            self.settings.setValue("General/save_session_on_exit", result)
         super().accept()
 
     def reject(self) -> None:
@@ -158,7 +162,9 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.checkBox_JavaSegfault.setChecked(self.settings.value("Java/ignore_segfault", type=bool))
         self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(None))
         if self.settings.contains("General/save_session_on_exit"):
-            self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(self.settings.value("General/save_session_on_exit")))
+            self.comboBox_SaveSessionOnExit.setCurrentIndex(
+                self.comboBox_SaveSessionOnExit.findData(self.settings.value("General/save_session_on_exit"))
+            )
         else:
             self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(None))
 
@@ -248,10 +254,3 @@ class SettingsDialog(QDialog, Ui_Dialog):
             self.lineEdit_Hotkey.clear()
         else:
             self.hotkey_to_value[states.hotkeys.get_hotkeys()[index].name] = self.lineEdit_Hotkey.text()
-
-    def comboBox_SaveSessionOnExit_current_index_changed(self, index: int):
-        result: bool | None = self.comboBox_SaveSessionOnExit.itemData(index)
-        if result is None:
-            self.settings.remove("General/save_session_on_exit")
-        else:
-            self.settings.setValue("General/save_session_on_exit", result)
