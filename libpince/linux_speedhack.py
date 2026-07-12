@@ -23,6 +23,7 @@ from fractions import Fraction
 from typing import Callable
 from capstone import Cs
 import os
+import re
 import struct
 import time
 
@@ -197,6 +198,8 @@ def _install_stopped(speed: float = 1.0) -> bool:
             # We'll mprotect beforehand if region does not contain RWX so we don't fail writes on hardened kernels,
             # which will block writes that would usually work on un-hardened ones.
             _ensure_writable(address)
+            if not _step_threads_out_of_range(address, address + patch_size):
+                raise RuntimeError(f"Couldn't step all threads out of {symbol}")
             _write_verified(address, _bytes_to_aob(patch))
             installed.append(HookPatch(symbol, address, original_aob))
             cursor = (cursor + len(code) + 15) & ~15
@@ -396,6 +399,63 @@ def _read_patch_bytes(symbol: str, address: int, disassembler: Cs = utils.cs_64,
             return _bytes_to_aob(code[:consumed]), consumed
     logger.error("Failed to find enough whole instructions to patch %s", symbol)
     return None, 0
+
+
+def _step_threads_out_of_range(low: int, high: int, max_steps: int = 64) -> bool:
+    info = debugcore.send_command("-thread-info")
+    if not info:
+        logger.error("Speedhack couldn't query thread info")
+        return False
+    offenders = [
+        tid
+        for tid, addr in re.findall(r'id="(\d+)",[^}]*?frame=\{[^}]*?addr="(0x[0-9a-fA-F]+)"', info)
+        if low <= int(addr, 16) < high
+    ]
+    if not offenders:
+        return True
+    current_match = re.search(r'current-thread-id="(\d+)"', info)
+    scheduler_match = re.search(r'value="(\w+)"', debugcore.send_command("-gdb-show scheduler-locking"))
+    if not current_match or not scheduler_match:
+        logger.error("Speedhack couldn't query GDB thread state")
+        return False
+    current_thread = current_match.group(1)
+    scheduler_mode = scheduler_match.group(1)
+
+    success = True
+    debugcore.send_command("-gdb-set scheduler-locking step")
+    try:
+        for tid in offenders:
+            debugcore.send_command(f"thread {tid}")
+            for _ in range(max_steps):
+                pc = _current_pc()
+                if pc is None:
+                    success = False
+                    break
+                if not low <= pc < high:
+                    break
+                debugcore.step_instruction()
+                if not debugcore.wait_for_stop(2):
+                    debugcore.interrupt_inferior(typedefs.STOP_REASON.PAUSE)
+                    success = False
+                    break
+            else:
+                success = False
+            if not success:
+                logger.error("Speedhack couldn't step thread %s out of the patch site", tid)
+                break
+    finally:
+        debugcore.send_command(f"thread {current_thread}")
+        debugcore.send_command(f"-gdb-set scheduler-locking {scheduler_mode}")
+    return success
+
+
+def _current_pc() -> int | None:
+    registers = debugcore.read_registers()
+    if not registers:
+        return None
+    raw = registers.get("rip") or registers.get("eip")
+    pc = utils.extract_hex_address(str(raw)) if raw is not None else None
+    return int(pc, 16) if pc else None
 
 
 def _initialize_state(state_addr: int, num: int, den: int) -> None:

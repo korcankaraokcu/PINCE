@@ -46,7 +46,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import io
 import os
-import re
 import struct
 
 import capstone
@@ -146,9 +145,8 @@ def _install_stopped(speed: float = 1.0) -> bool:
         # Wine maps ntdll read-execute, so make the page writable before patching it.
         linux_speedhack._ensure_writable(address)
         # Step every thread off the patch site first.
-        # A thread stopped mid-prologue would resume on a torn instruction stream once we continue,
-        # corrupting it for good (QPC is hot enough for that to actually happen, unlike linux native version).
-        if not _step_threads_out_of_range(address, address + patch_size):
+        # A thread stopped mid-prologue would resume on a torn instruction stream once we continue, corrupting it for good.
+        if not linux_speedhack._step_threads_out_of_range(address, address + patch_size):
             raise RuntimeError("Couldn't step all threads out of the patch site")
 
         # Cave layout: state block, then the trampoline (relocated prologue + jump back into the
@@ -204,7 +202,7 @@ def _do_uninstall_stopped() -> bool:
     # Before unmapping it, step any thread still inside the cave back out so munmap() can't remove code it may still execute.
     # This is a best effort, a thread in the original with a pending return into the wrapper isn't caught.
     cave = session.state_address
-    if cave and not _step_threads_out_of_range(cave, cave + CAVE_SIZE):
+    if cave and not linux_speedhack._step_threads_out_of_range(cave, cave + CAVE_SIZE):
         logger.error("Wine speedhack left a thread in the code cave; leaking it instead of freeing")
         debugcore.allocated_cave_chunks.pop(ALLOC_NAME, None)
         return False
@@ -435,51 +433,6 @@ def _write_cave(cave: int, address: int, blob: bytes, symbol: str) -> int:
         raise RuntimeError(f"Wine speedhack code cave is too small for {symbol}")
     debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, list(blob))
     return (address + len(blob) + 15) & ~15
-
-
-def _step_threads_out_of_range(low: int, high: int, max_steps: int = 64) -> bool:
-    # Single-step any thread whose program counter sits in [low, high) until it's clear.
-    # Runs while the inferior is stopped, so other threads stay frozen while we step one.
-    # TODO BRK: Maybe move this to utils in case it might be useful for other stuff?
-    info = debugcore.send_command("-thread-info")
-    if not info:
-        logger.error("Wine speedhack couldn't query thread info")
-        return False
-    current_match = re.search(r'current-thread-id="(\d+)"', info)
-    current_thread = current_match.group(1) if current_match else None
-
-    offenders = [tid for tid, addr in re.findall(r'id="(\d+)",[^}]*?frame=\{[^}]*?addr="(0x[0-9a-fA-F]+)"', info) if low <= int(addr, 16) < high]
-
-    success = True
-    for tid in offenders:
-        debugcore.send_command(f"thread {tid}")
-        stepped_out = False
-        for _ in range(max_steps):
-            pc = _current_pc()
-            if pc is None or not (low <= pc < high):
-                stepped_out = True
-                break
-            debugcore.step_instruction()
-            debugcore.wait_for_stop(2)
-            if debugcore.inferior_status == typedefs.INFERIOR_STATUS.RUNNING:
-                break  # step never settled; bail out and report failure below
-        if not stepped_out:
-            logger.error("Wine speedhack couldn't step thread %s out of the patch site", tid)
-            success = False
-            break
-
-    if current_thread is not None:
-        debugcore.send_command(f"thread {current_thread}")
-    return success
-
-
-def _current_pc() -> int | None:
-    registers = debugcore.read_registers()
-    if not registers:
-        return None
-    raw = registers.get("rip") or registers.get("eip")
-    pc = utils.extract_hex_address(str(raw)) if raw is not None else None
-    return int(pc, 16) if pc else None
 
 
 def _write_u64(address: int, value: int) -> None:
