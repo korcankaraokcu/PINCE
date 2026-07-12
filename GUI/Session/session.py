@@ -48,13 +48,26 @@ def _v2_to_v3(content: dict[str, Any]) -> dict[str, Any]:
 
 
 def migrate_version(content: Any) -> dict[str, Any]:
-    if not hasattr(content, "version") and type(content) == list:
+    if type(content) is list:
         content = _legacy_to_v1(content)
-    if isinstance(content, dict) and content.get("version") == 1:
+    if isinstance(content, dict) and type(content.get("version")) is int and content["version"] == 1:
         content = _v1_to_v2(content)
-    if isinstance(content, dict) and content.get("version") == 2:
+    if isinstance(content, dict) and type(content.get("version")) is int and content["version"] == 2:
         content = _v2_to_v3(content)
     return content
+
+
+def _valid_value_type(data: Any) -> bool:
+    if not isinstance(data, list) or len(data) not in (4, 5):
+        return False
+    value_index, length, zero_terminate, value_repr = data[:4]
+    return (
+        all(type(value) is int for value in (value_index, length, value_repr, *data[4:]))
+        and typedefs.VALUE_INDEX.INT8 <= value_index <= typedefs.VALUE_INDEX.STRUCT
+        and type(zero_terminate) is bool
+        and typedefs.VALUE_REPR.UNSIGNED <= value_repr <= typedefs.VALUE_REPR.HEX
+        and (len(data) == 4 or typedefs.ENDIANNESS.HOST <= data[4] <= typedefs.ENDIANNESS.BIG)
+    )
 
 
 def is_valid_session_data(content: dict[str, Any]) -> bool:
@@ -65,12 +78,16 @@ def is_valid_session_data(content: dict[str, Any]) -> bool:
     for key in keys:
         if key not in content:
             return False
+    if type(content["version"]) is not int or content["version"] != LATEST_VERSION:
+        return False
+    if not isinstance(content["notes"], str) or not isinstance(content["process_name"], str):
+        return False
     if not isinstance(content["bookmarks"], dict):
         return False
     for addr, value in content["bookmarks"].items():
         try:
             int(addr)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             return False
         if not isinstance(value, dict):
             return False
@@ -80,13 +97,58 @@ def is_valid_session_data(content: dict[str, Any]) -> bool:
         details = value["address_region_details"]
         if not isinstance(details, dict):
             return False
-        for field in ("region_name", "offset_in_region", "region_index"):
-            if field not in details:
-                return False
-        if not isinstance(details["region_index"], int):
+        if not isinstance(value["comment"], str) or not isinstance(value["symbol"], str):
             return False
-    if not isinstance(content.get("structures", {}), dict):
+        if not isinstance(details.get("region_name"), str) or not isinstance(details.get("offset_in_region"), str):
+            return False
+        if type(details.get("region_index")) is not int:
+            return False
+        try:
+            int(details["offset_in_region"], 16)
+        except ValueError:
+            return False
+    record_lists = [(content["address_tree"], 0)]
+    while record_lists:
+        records, depth = record_lists.pop()
+        if depth > 900 or not isinstance(records, list):
+            return False
+        for record in records:
+            if not isinstance(record, list) or len(record) not in (4, 5):
+                return False
+            if not isinstance(record[0], str) or not _valid_value_type(record[2]):
+                return False
+            address = record[1]
+            if isinstance(address, list):
+                if len(address) != 2 or type(address[0]) not in (str, int) or not isinstance(address[1], list):
+                    return False
+                if any(type(offset) is not int for offset in address[1]):
+                    return False
+            elif address is not None and type(address) not in (str, int):
+                return False
+            if len(record) == 5 and (not isinstance(record[3], dict) or not isinstance(record[3].get("script"), str)):
+                return False
+            record_lists.append((record[-1], depth + 1))
+    structures = content.get("structures", {})
+    if not isinstance(structures, dict):
         return False
+    for key, data in structures.items():
+        if not isinstance(key, str) or not isinstance(data, list) or len(data) != 2:
+            return False
+        name, members = data
+        if not isinstance(name, str) or not isinstance(members, list):
+            return False
+        for member in members:
+            if not isinstance(member, list) or len(member) != 5:
+                return False
+            member_name, offset, value_type, struct_ref, is_pointer = member
+            if not isinstance(member_name, str) or type(offset) is not int or type(is_pointer) is not bool:
+                return False
+            if (value_type is None) == (struct_ref is None):
+                return False
+            if value_type is not None and not _valid_value_type(value_type):
+                return False
+            if struct_ref is not None and not isinstance(struct_ref, str):
+                return False
     return True
 
 
