@@ -2371,8 +2371,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.label_HexView_Information.contextMenuEvent = self.label_HexView_Information_context_menu_event
 
         self.splitter_Disassemble_Registers.setStretchFactor(0, 1)
-        # Keep the disassembler/registers pane and the hex/stack pane at a 3:2 ratio, both on first show
-        # (setSizes, scaled to fit) and on later window resizes (stretch factors). The handle stays draggable
+        # Keep the disassembler/registers pane and the hex/stack pane at a 3:2 ratio, both on first show and on later window resizes.
         self.splitter_MainMiddle.setStretchFactor(0, 3)
         self.splitter_MainMiddle.setStretchFactor(1, 2)
         self.splitter_MainMiddle.setSizes([3000, 2000])
@@ -2463,8 +2462,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.setColumnWidth(DISAS_OPCODES_COL, 350)
         self.tableWidget_Disassemble.setColumnWidth(DISAS_INSTR_COL, 450)
 
-        # Draw jmp/call references as arrows overlaid on the left of the instruction column, so they
-        # sit right next to the code instead of being highlighted rows
+        # Draw jmp/call references as arrows overlaid on the left of the instruction column.
         self.disassemble_arrow_overlay = DisassembleArrowOverlay(self.tableWidget_Disassemble, DISAS_INSTR_COL)
         self.disassemble_arrow_overlay.follow_requested.connect(self.disassemble_arrow_follow)
 
@@ -3010,8 +3008,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.tableWidget_Disassemble.setRowCount(0)
         self.tableWidget_Disassemble.setRowCount(len(disas_data))
         jmp_dict, call_dict = debugcore.get_dissect_code_data(False, True, True)
-        # Reference arrows are only meaningful within a local range, so we bound the endpoints to the
-        # displayed window (widened by its own span) and let DisassembleArrowOverlay clamp what's off-screen
+        # Reference arrows are only meaningful within a local range, so we bound the endpoints to the displayed window
+        # and let DisassembleArrowOverlay clamp what's off-screen.
         window_first_int = safe_str_to_int(current_first_address, 16)
         window_last_int = safe_str_to_int(utils.extract_hex_address(disas_data[-1][0]), 16)
         arrow_span = max(window_last_int - window_first_int, 0)
@@ -3058,7 +3056,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                         tooltip_text += "\n..."
                     tooltip_text += f"\n\n{tr.SEE_REFERRERS}"
                     # An arrow is drawn from each nearby referrer (caller) into this row (the target).
-                    # Referrers that are out of sight get clamped to the viewport edge by DisassembleArrowOverlay
+                    # Referrers that are out of sight get clamped to the viewport edge by DisassembleArrowOverlay.
                     arrow_refs = 0
                     if jmp_ref_exists:
                         for referrer in jmp_referrers:
@@ -3080,8 +3078,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                     if call_ref_exists:
                         real_ref_count += len(call_referrers)
                     address_info = "{" + str(real_ref_count) + "}" + address_info
-                # An arrow is also drawn from this row (the caller) to its target when the instruction is a
-                # direct jmp/call. The target may be out of sight, the overlay clamps it to an edge if so
+                # An arrow is also drawn from this row (the caller) to its target when the instruction is a direct jmp/call.
+                # The target may be out of sight, the overlay clamps it to an edge if so.
                 followed_address = utils.instruction_follow_address(instruction)
                 if followed_address:
                     target_int = safe_str_to_int(followed_address, 16)
@@ -3143,7 +3141,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             jmp_dict.close()
             call_dict.close()
         self.handle_colors(row_color)
-        # Sorting keeps the per-arrow shade assignment stable across repaints and groups nearby paths
+        # Sorting keeps the per-arrow shade assignment stable across repaints and groups nearby paths.
         sorted_arrows = sorted(arrows)[:DISAS_MAX_ARROWS]
         self.disassemble_arrow_overlay.set_arrows(sorted_arrows, address_to_row, window_first_int, window_last_int)
 
@@ -3665,13 +3663,13 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if address:
             self.disassemble_expression(address)
 
-    # Follows a clicked reference arrow. Normally jumps to the target (called/jumped-to) address, but if
-    # the target is already the selected row we follow the caller instead so the arrow acts as a toggle
+    # Follows a clicked reference arrow.
+    # Normally jumps to the target address, but if the target is already the selected row we follow the caller instead so the arrow acts as a toggle.
     def disassemble_arrow_follow(self, source: int, target: int) -> None:
         if debugcore.currentpid == -1:
             return
         follow_address = source if self.disassemble_last_selected_address_int == target else target
-        # Select the followed address so repeated clicks keep toggling between caller and target
+        # Select the followed address so repeated clicks keep toggling between caller and target.
         self.disassemble_last_selected_address_int = follow_address
         self.disassemble_expression(hex(follow_address))
 

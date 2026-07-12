@@ -183,7 +183,6 @@ These tasks are ordered by importance but feel free to pick any of them. Further
 - Libpince support for Java (symbol recognition, calling functions, dissect obj tree etc.)
 - Move GUI classes of PINCE.py to their own files
 - Extend documentation to GUI parts. Libpince has 100% documentation coverage but GUI doesn't
-- Arrows for jump instructions based on disassembled output
 - Flowcharts based on disassembled output
 - Consider implementing a GUI for catchpoints(syscall, fork, exec etc.). Signal handling already has a GUI(HandleSignals widget), but the remaining catchpoint types are still done via the GDB Console
 - Implement unrandomizer
