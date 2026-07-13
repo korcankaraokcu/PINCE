@@ -476,6 +476,8 @@ class MainForm(QMainWindow, MainWindow):
 
     @utils.ignore_exceptions
     def toggle_attach_hotkey_pressed(self) -> None:
+        if debugcore.currentpid != -1 and debugcore.is_attached():
+            self.cleanup_speedhack()
         self.attach_toggled.emit(debugcore.toggle_attach())
 
     def on_attach_toggled(self, result: int | None) -> None:
