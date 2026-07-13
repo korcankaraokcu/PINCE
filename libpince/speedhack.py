@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from fractions import Fraction
 from typing import Callable
 import capstone
@@ -34,6 +34,7 @@ from . import debugcore, typedefs, utils
 from .utils import logger
 
 CAVE_SIZE = 0x1000
+CAVE_MARKER = b"PINCE_SPEEDHACK\0"
 STEP = 0.1
 DEFAULT_SPEED = 1.0
 
@@ -85,27 +86,17 @@ _cs_32.detail = True
 
 
 @dataclass
-class _HookPatch:
-    symbol: str
-    address: int
-    original_aob: str
-
-
-@dataclass
 class _LinuxSession:
     enabled: bool = False
-    speed: float = 1.0
     num: int = 1
     den: int = 1
     state_address: int = 0
-    hooks: list[_HookPatch] = field(default_factory=list)
 
 
 @dataclass
 class _WineSession:
     enabled: bool = False
     state_address: int = 0
-    hooks: list[_HookPatch] = field(default_factory=list)
 
 
 def _run_stopped(callback: Callable[[], bool]) -> bool:
@@ -138,7 +129,7 @@ class _Speedhack:
     def is_installed(self) -> bool:
         return self._session.enabled
 
-    def _install(self, speed: float = 1.0) -> bool:
+    def _install(self, speed: float) -> bool:
         return _run_stopped(lambda: self._install_stopped(speed))
 
     def _install_ratio(self, speed: float) -> Fraction | None:
@@ -153,32 +144,7 @@ class _Speedhack:
             return None
         return _speed_to_ratio(speed)
 
-    def _uninstall_stopped(self) -> bool:
-        for hook in self._session.hooks:
-            if not _step_threads_out_of_range(hook.address, hook.address + len(hook.original_aob.split())):
-                return False
-        success = True
-        for hook in reversed(self._session.hooks):
-            if not _restore_hook(hook):
-                success = False
-        return success
-
-    def uninstall(self) -> bool:
-        """Restore the patched functions and reset session state."""
-        if not self._session.enabled:
-            return True
-        success = False
-        try:
-            success = _run_stopped(self._uninstall_stopped)
-        except Exception:
-            logger.exception("%s speedhack uninstall failed", self._name)
-        self._session = self._session_type()
-        debugcore.allocated_cave_chunks.pop(self._alloc_name, None)
-        return success
-
     def reset(self) -> None:
-        """Drop session state without touching the inferior.
-        Used when the inferior is already gone as the hooks die with the process, so there's nothing to restore or free()."""
         self._session = self._session_type()
         debugcore.allocated_cave_chunks.pop(self._alloc_name, None)
 
@@ -188,7 +154,7 @@ class LinuxSpeedhack(_Speedhack):
     _alloc_name = "PINCE_linux_speedhack"
     _session_type = _LinuxSession
 
-    def _install_stopped(self, speed: float = 1.0) -> bool:
+    def _install_stopped(self, speed: float) -> bool:
         ratio = self._install_ratio(speed)
         if ratio is None:
             return False
@@ -212,6 +178,7 @@ class LinuxSpeedhack(_Speedhack):
         disassembler = utils.cs_64 if arch64 else utils.cs_32
         jump_size = JUMP_SIZE if arch64 else JUMP_SIZE_32
         targets = []
+        caves = set()
         for symbol, build, call_target in builders:
             hex_addr = utils.extract_hex_address(debugcore.get_symbol_info(symbol))
             entry_address = utils.safe_str_to_int(hex_addr, 16) if hex_addr else debugcore.resolve_libc_symbol(symbol)
@@ -219,10 +186,30 @@ class LinuxSpeedhack(_Speedhack):
                 continue
             needs_trampoline = call_target == entry_address
             patch_address = _get_patch_address(entry_address, arch64)
+            if (target := _detour_target(patch_address, arch64)) is not None:
+                if not _has_marker(target):
+                    logger.error("%s is already hooked", symbol)
+                    return False
+                caves.add(target & -CAVE_SIZE)
+                continue
             original_aob, patch_size = _read_patch_bytes(symbol, patch_address, disassembler, jump_size)
             if original_aob is None:
                 continue
             targets.append((symbol, patch_address, build, call_target, needs_trampoline, original_aob, patch_size))
+
+        if caves:
+            if len(caves) != 1 or targets:
+                logger.error("Linux speedhack hooks don't match")
+                return False
+            cave = caves.pop()
+            state = cave + (_read_u64(cave + ACTIVE_OFFSET) & 1) * BUFFER_SIZE
+            num, den = _read_u64(state + NUM_OFFSET), _read_u64(state + DEN_OFFSET)
+            if not num or not den:
+                logger.error("Linux speedhack state is invalid")
+                return False
+            self._session = _LinuxSession(True, num, den, cave)
+            self._rebase_state(ratio.numerator, ratio.denominator)
+            return True
 
         if not targets:
             logger.error("Linux speedhack couldn't locate any time functions to hook")
@@ -233,7 +220,7 @@ class LinuxSpeedhack(_Speedhack):
             logger.error("Failed to allocate Linux speedhack memory")
             return False
 
-        installed: list[_HookPatch] = []
+        installed = []
         try:
             self._initialize_state(cave, ratio.numerator, ratio.denominator)
             cursor = (cave + STATE_SIZE + 15) & ~15
@@ -244,8 +231,8 @@ class LinuxSpeedhack(_Speedhack):
                     if trampoline is None:
                         raise RuntimeError(f"Linux speedhack can't safely relocate the {symbol} prologue")
                     cursor = _write_cave(cave, cursor, trampoline, symbol)
-                hook_address = cursor
-                cursor = _write_cave(cave, cursor, build(cave, call_target), symbol)
+                hook_address = cursor + len(CAVE_MARKER)
+                cursor = _write_cave(cave, cursor, CAVE_MARKER + build(cave, call_target), symbol)
                 if arch64:
                     patch = b"\x48\xb8" + struct.pack("<Q", hook_address) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE)
                 else:
@@ -253,22 +240,20 @@ class LinuxSpeedhack(_Speedhack):
                 _ensure_writable(address)
                 if not _step_threads_out_of_range(address, address + patch_size):
                     raise RuntimeError(f"Couldn't step all threads out of {symbol}")
-                installed.append(_HookPatch(symbol, address, original_aob))
+                installed.append((symbol, address, original_aob))
                 _write_verified(address, _bytes_to_aob(patch))
         except Exception:
             logger.exception("Failed to install Linux speedhack")
             for hook in reversed(installed):
-                _restore_hook(hook)
+                _restore_hook(*hook)
             debugcore.free_cave(self._alloc_name)
             return False
 
         self._session = _LinuxSession(
             enabled=True,
-            speed=float(speed),
             num=ratio.numerator,
             den=ratio.denominator,
             state_address=cave,
-            hooks=installed,
         )
         return True
 
@@ -280,9 +265,6 @@ class LinuxSpeedhack(_Speedhack):
         if ratio is None:
             return False
         self._rebase_state(ratio.numerator, ratio.denominator)
-        self._session.speed = float(speed)
-        self._session.num = ratio.numerator
-        self._session.den = ratio.denominator
         return True
 
     def _initialize_state(self, state_addr: int, num: int, den: int) -> None:
@@ -315,6 +297,7 @@ class LinuxSpeedhack(_Speedhack):
             struct.pack_into("<QQ", blob, offset, now & 0xFFFFFFFFFFFFFFFF, new_fake & 0xFFFFFFFFFFFFFFFF)
         debugcore.write_memory(inactive_base, typedefs.VALUE_INDEX.AOB, list(blob))
         debugcore.write_memory(state_addr + ACTIVE_OFFSET, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", inactive)))
+        self._session.num, self._session.den = new_num, new_den
 
 
 class WineSpeedhack(_Speedhack):
@@ -322,7 +305,7 @@ class WineSpeedhack(_Speedhack):
     _alloc_name = "PINCE_wine_speedhack"
     _session_type = _WineSession
 
-    def _install_stopped(self, speed: float = 1.0) -> bool:
+    def _install_stopped(self, speed: float) -> bool:
         ratio = self._install_ratio(speed)
         if ratio is None:
             return False
@@ -359,6 +342,17 @@ class WineSpeedhack(_Speedhack):
             logger.error("Wine speedhack couldn't resolve %s", symbol)
             return False
         address = _get_patch_address(address, arch64)
+        if (target := _detour_target(address, arch64)) is not None:
+            cave = target & -CAVE_SIZE
+            if not _has_marker(target):
+                logger.error("%s is already hooked", symbol)
+                return False
+            if not _read_u64(cave + WINE_NUM_OFFSET) or not _read_u64(cave + WINE_DEN_OFFSET):
+                logger.error("Wine speedhack state is invalid")
+                return False
+            self._session = _WineSession(True, cave)
+            self._rebase_state(ratio.numerator, ratio.denominator)
+            return True
         if arch64:
             original_aob, patch_size = _read_patch_bytes(symbol, address)
         else:
@@ -372,7 +366,7 @@ class WineSpeedhack(_Speedhack):
             logger.error("Failed to allocate Wine speedhack memory")
             return False
 
-        installed: list[_HookPatch] = []
+        installed = []
         try:
             self._initialize_state(cave, ratio.numerator, ratio.denominator)
             _ensure_writable(address)
@@ -383,25 +377,26 @@ class WineSpeedhack(_Speedhack):
             trampoline = _build_trampoline(address, raw, arch64, tramp_addr)
             if trampoline is None:
                 raise RuntimeError(f"Wine speedhack can't safely relocate the {symbol} prologue")
-            wrapper_addr = _write_cave(cave, tramp_addr, trampoline, symbol)
+            wrapper_start = _write_cave(cave, tramp_addr, trampoline, symbol)
+            wrapper_addr = wrapper_start + len(CAVE_MARKER)
             wrapper = (_build_qpc_wrapper if arch64 else _build_qpc_wrapper_32)(cave, tramp_addr)
-            _write_cave(cave, wrapper_addr, wrapper, symbol)
+            _write_cave(cave, wrapper_start, CAVE_MARKER + wrapper, symbol)
 
             if arch64:
                 jump = b"\x48\xb8" + struct.pack("<Q", wrapper_addr) + b"\xff\xe0"
             else:
                 jump = b"\xb8" + struct.pack("<I", wrapper_addr) + b"\xff\xe0"
             patch = jump + b"\x90" * (patch_size - (JUMP_SIZE if arch64 else JUMP_SIZE_32))
-            installed.append(_HookPatch(symbol, address, original_aob))
+            installed.append((symbol, address, original_aob))
             _write_verified(address, _bytes_to_aob(patch))
         except Exception:
             logger.exception("Failed to install Wine speedhack")
             for hook in installed:
-                _restore_hook(hook)
+                _restore_hook(*hook)
             debugcore.free_cave(self._alloc_name)
             return False
 
-        self._session = _WineSession(enabled=True, state_address=cave, hooks=installed)
+        self._session = _WineSession(enabled=True, state_address=cave)
         return True
 
     def set_speed(self, speed: float) -> bool:
@@ -552,6 +547,21 @@ def _read_patch_bytes(symbol: str, address: int, disassembler: Cs = utils.cs_64,
 def _get_patch_address(address: int, arch64: bool) -> int:
     endbr = ["F3", "0F", "1E", "FA" if arch64 else "FB"]
     return address + 4 if debugcore.hex_dump(address, 4) == endbr else address
+
+
+def _detour_target(address: int, arch64: bool) -> int | None:
+    raw = debugcore.hex_dump(address, JUMP_SIZE if arch64 else JUMP_SIZE_32)
+    if not raw or "??" in raw:
+        return None
+    code = bytes(int(byte, 16) for byte in raw)
+    prefix = b"\x48\xb8" if arch64 else b"\xb8"
+    if code.startswith(prefix) and code.endswith(b"\xff\xe0"):
+        return int.from_bytes(code[len(prefix) : -2], "little")
+    return None
+
+
+def _has_marker(target: int) -> bool:
+    return debugcore.hex_dump(target - len(CAVE_MARKER), len(CAVE_MARKER)) == [f"{byte:02X}" for byte in CAVE_MARKER]
 
 
 def _build_trampoline(address: int, raw: bytes, arch64: bool, tramp_addr: int) -> bytes | None:
@@ -1103,13 +1113,11 @@ def _write_verified(address: int, aob: str) -> None:
         raise RuntimeError(f"Speedhack write verification failed at {hex(address)}")
 
 
-def _restore_hook(hook: _HookPatch) -> bool:
+def _restore_hook(symbol: str, address: int, original_aob: str) -> None:
     try:
-        _write_verified(hook.address, hook.original_aob)
-        return True
+        _write_verified(address, original_aob)
     except Exception:
-        logger.exception("Failed to restore %s", hook.symbol)
-        return False
+        logger.exception("Failed to restore %s", symbol)
 
 
 def _assemble_hook(asm: str, arch: int = typedefs.INFERIOR_ARCH.ARCH_64) -> bytes:

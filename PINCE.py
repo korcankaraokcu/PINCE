@@ -501,10 +501,10 @@ class MainForm(QMainWindow, MainWindow):
         self.speedhack_action_requested.emit(-1)
 
     def cleanup_speedhack(self) -> None:
-        # Called when the inferior is being replaced or torn down.
-        # uninstall() restores patched bytes and leaves the cave alive for pending returns.
         if self.speedhack is not None:
-            self.speedhack.uninstall()
+            if self.speedhack.is_installed():
+                self.speedhack.set_speed(speedhack.DEFAULT_SPEED)
+            self.speedhack.reset()
         self.reset_speedhack_widgets()
 
     def on_speedhack_hotkey_action(self, delta: int) -> None:
@@ -1865,8 +1865,6 @@ class MainForm(QMainWindow, MainWindow):
         monocore.reset()
         if debugcore.currentpid == -1:
             self.memory_view_window.close()
-        # Inferior is gone, so just drop speedhack state.
-        # No need for uninstall as that would only produce noise with errors.
         if self.speedhack is not None:
             self.speedhack.reset()
             self.speedhack = None
