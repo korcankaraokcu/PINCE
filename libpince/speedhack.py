@@ -327,7 +327,32 @@ class WineSpeedhack(_Speedhack):
         if ratio is None:
             return False
 
-        arch64 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64
+        arch64 = host_arch64 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64
+        if host_arch64:
+            process_name = utils.get_process_name(debugcore.currentpid).lower()
+            exes = sorted(
+                (os.path.basename(path).lower() != process_name, int(start, 16))
+                for start, _, _, offset, _, _, path in utils.get_regions(debugcore.currentpid)
+                if path and int(offset, 16) == 0 and path.lower().endswith(".exe")
+            )
+            try:
+                with debugcore.memory_handle() as mem:
+                    for _, base in exes:
+                        mem.seek(base)
+                        if mem.read(2) != b"MZ":
+                            continue
+                        mem.seek(base + 0x3C)
+                        pe = base + int.from_bytes(mem.read(4), "little")
+                        mem.seek(pe)
+                        if mem.read(4) != b"PE\x00\x00":
+                            continue
+                        mem.seek(pe + 0x18)
+                        magic = int.from_bytes(mem.read(2), "little")
+                        if magic in (0x10B, 0x20B):
+                            arch64 = magic == 0x20B
+                            break
+            except (OSError, ValueError):
+                pass
         symbol = "RtlQueryPerformanceCounter"
         address = _resolve_ntdll_export(debugcore.currentpid, symbol, arch64)
         if not address:
@@ -342,7 +367,7 @@ class WineSpeedhack(_Speedhack):
             return False
         raw = bytes.fromhex(original_aob.replace(" ", ""))
 
-        cave = debugcore.allocate_cave(CAVE_SIZE, self._alloc_name)
+        cave = debugcore.allocate_cave(CAVE_SIZE, self._alloc_name, 0x50000000 if host_arch64 and not arch64 else None)
         if not cave:
             logger.error("Failed to allocate Wine speedhack memory")
             return False
