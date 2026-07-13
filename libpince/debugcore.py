@@ -2567,24 +2567,42 @@ def get_breakpoints_in_range(address: str | int, length: int = 1) -> list[typede
     return breakpoint_list
 
 
-def hardware_breakpoint_available() -> bool:
-    """Checks if there is an available hardware breakpoint slot
+def _get_watchpoint_slot_count(address: int, length: int, max_length: int) -> int:
+    slot_count = 0
+    while length > 0:
+        slot_length = min(max_length, 1 << (length.bit_length() - 1))
+        while address % slot_length:
+            slot_length //= 2
+        address += slot_length
+        length -= slot_length
+        slot_count += 1
+    return slot_count
+
+
+def hardware_breakpoint_available(required_slots: int = 1) -> bool:
+    """Checks if enough hardware breakpoint slots are available
+
+    Args:
+        required_slots (int): Number of slots required
 
     Returns:
-        bool: True if there is at least one available slot, False if not
+        bool: True if enough slots are available, False if not
 
     Todo:
         Check debug registers to determine hardware breakpoint state rather than relying on gdb output because inferior
         might modify its own debug registers
     """
-    breakpoint_info = get_breakpoint_info()
     hw_bp_total = 0
-    for item in breakpoint_info:
+    max_length = 8 if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64 else 4
+    for item in get_breakpoint_info():
         if regexes.hw_breakpoint_count.search(item.breakpoint_type):
-            hw_bp_total += 1
+            if "breakpoint" in item.breakpoint_type:
+                hw_bp_total += 1
+            else:
+                hw_bp_total += _get_watchpoint_slot_count(safe_str_to_int(item.address, 16), item.size, max_length)
 
     # Maximum number of hardware breakpoints is limited to 4 in x86 architecture
-    return hw_bp_total < 4
+    return hw_bp_total + required_slots <= 4
 
 
 def add_breakpoint(
@@ -2663,26 +2681,20 @@ def add_watchpoint(
         watch_command = "rwatch"
     elif watchpoint_type == typedefs.WATCHPOINT_TYPE.BOTH:
         watch_command = "awatch"
-    remaining_length = length
-    breakpoints_set = []
-    breakpoints_nums = []
-    arch = get_inferior_arch()
     str_address_int = int(str_address, 16)
-    if arch == typedefs.INFERIOR_ARCH.ARCH_64:
-        max_length = 8
-    else:
-        max_length = 4
-    while remaining_length > 0:
-        if remaining_length >= max_length:
-            breakpoint_length = max_length
-        else:
-            breakpoint_length = remaining_length
-        if get_breakpoints_in_range(str_address_int, breakpoint_length):
-            logger.error(f"Breakpoint/Watchpoint for address {hex(str_address_int)} is already set. Bailing out...")
-            break
-        if not hardware_breakpoint_available():
-            logger.error("All hardware breakpoint slots are being used, unable to set a new watchpoint. Bailing out...")
-            break
+    max_length = 8 if get_inferior_arch() == typedefs.INFERIOR_ARCH.ARCH_64 else 4
+    watchpoints = [(str_address_int + offset, min(max_length, length - offset)) for offset in range(0, length, max_length)]
+    if not watchpoints:
+        return []
+    if get_breakpoints_in_range(str_address_int, length):
+        logger.error(f"Breakpoint/Watchpoint for address {hex(str_address_int)} is already set. Bailing out...")
+        return
+    required_slots = sum(_get_watchpoint_slot_count(address, size, max_length) for address, size in watchpoints)
+    if not hardware_breakpoint_available(required_slots):
+        logger.error("All hardware breakpoint slots are being used, unable to set a new watchpoint. Bailing out...")
+        return
+    breakpoints_set = []
+    for str_address_int, breakpoint_length in watchpoints:
         cmd = f"{watch_command} * (char[{breakpoint_length}] *) {hex(str_address_int)}"
         output = execute_func_temporary_interruption(send_command, cmd)
         if not regexes.breakpoint_created.search(output):
@@ -2692,19 +2704,14 @@ def add_watchpoint(
         if not breakpoint_number_match:
             logger.error(f"Failed to extract watchpoint number from GDB output: {output}")
             break
-        breakpoint_number = breakpoint_number_match.group(1)
-        breakpoints_set.append(breakpoint_number)
-        breakpoints_nums.append(safe_int_cast(breakpoint_number))
-        global breakpoint_on_hit_dict
-        breakpoint_on_hit_dict[breakpoint_number] = on_hit
-        remaining_length -= breakpoint_length
-        str_address_int += breakpoint_length
-    global chained_breakpoints
-    if breakpoints_nums:
-        chained_breakpoints.append(breakpoints_nums)
-    if breakpoints_set:
+        breakpoints_set.append(breakpoint_number_match.group(1))
+    else:
+        breakpoint_on_hit_dict.update(dict.fromkeys(breakpoints_set, on_hit))
+        chained_breakpoints.append([safe_int_cast(breakpoint) for breakpoint in breakpoints_set])
         breakpoints_changed.emit()
-    return breakpoints_set
+        return breakpoints_set
+    for breakpoint_number in breakpoints_set:
+        send_command(f"delete {breakpoint_number}")
 
 
 def modify_breakpoint(breakpoint_number: int, modify_what: int, condition: str | None = None, count: int | None = None) -> bool:
