@@ -240,24 +240,20 @@ def _do_uninstall() -> bool:
 
 
 # Kept separate from uninstall() on purpose as uninstall() still resets the session state.
-# _restore_hook already swallows and logs its own failures, so only free_cave needs a guard here.
 def _do_uninstall_stopped() -> bool:
+    for hook in session.hooks:
+        if not _step_threads_out_of_range(hook.address, hook.address + len(hook.original_aob.split())):
+            return False
     success = True
     for hook in reversed(session.hooks):
         if not _restore_hook(hook):
             success = False
-    if success and ALLOC_NAME in debugcore.allocated_cave_chunks:
-        try:
-            if not debugcore.free_cave(ALLOC_NAME):
-                success = False
-        except Exception:
-            logger.exception("Failed to free Linux speedhack memory")
-            success = False
+    # The cave stays mapped so calls already inside it can return safely.
     return success
 
 
 def uninstall() -> bool:
-    """Restore the patched functions, free the code cave, and reset module state."""
+    """Restore the patched functions and reset module state."""
     global session
     if not session.enabled:
         return True

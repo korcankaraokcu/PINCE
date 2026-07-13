@@ -500,7 +500,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def cleanup_speedhack(self) -> None:
         # Called when the inferior is being replaced or torn down.
-        # uninstall() is best-effort, it restores patched bytes and frees the cave if it can.
+        # uninstall() restores patched bytes and leaves the cave alive for pending returns.
         self.speedhack.uninstall()
         self.reset_speedhack_widgets()
 

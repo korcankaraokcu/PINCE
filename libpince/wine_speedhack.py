@@ -194,30 +194,19 @@ def _do_uninstall() -> bool:
 
 
 def _do_uninstall_stopped() -> bool:
+    for hook in session.hooks:
+        if not linux_speedhack._step_threads_out_of_range(hook.address, hook.address + len(hook.original_aob.split())):
+            return False
     success = True
     for hook in reversed(session.hooks):
         if not linux_speedhack._restore_hook(hook):
             success = False
-    # Restoring the entry stops new threads from jumping into the cave.
-    # Before unmapping it, step any thread still inside the cave back out so munmap() can't remove code it may still execute.
-    # This is a best effort, a thread in the original with a pending return into the wrapper isn't caught.
-    cave = session.state_address
-    if cave and not linux_speedhack._step_threads_out_of_range(cave, cave + CAVE_SIZE):
-        logger.error("Wine speedhack left a thread in the code cave; leaking it instead of freeing")
-        debugcore.allocated_cave_chunks.pop(ALLOC_NAME, None)
-        return False
-    if success and ALLOC_NAME in debugcore.allocated_cave_chunks:
-        try:
-            if not debugcore.free_cave(ALLOC_NAME):
-                success = False
-        except Exception:
-            logger.exception("Failed to free Wine speedhack memory")
-            success = False
+    # The cave stays mapped so pending trampoline returns remain valid.
     return success
 
 
 def uninstall() -> bool:
-    """Restore the patched function, free the cave, and reset module state.
+    """Restore the patched function and reset module state.
 
     Note: Fully removing the hook snaps QPC from the scaled timeline back to the real one.
     If the game was fast-forwarded that's a backward jump, so it briefly stalls while real time
