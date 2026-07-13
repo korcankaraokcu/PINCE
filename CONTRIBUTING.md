@@ -14,8 +14,7 @@
   - [debugcore.py](./libpince/debugcore.py) - Everything related to communicating with GDB and debugging
   - [scancore.py](./libpince/scancore.py) - Everything related to the variable scanning backend
   - [monocore.py](./libpince/monocore.py) - Everything related to dissecting the Mono/IL2CPP managed runtime
-  - [linux_speedhack.py](./libpince/linux_speedhack.py) - Everything related to speedhack functionality for Linux native processes
-  - [wine_speedhack.py](./libpince/wine_speedhack.py) - Everything related to speedhack functionality for WINE/Proton processes
+  - [speedhack.py](./libpince/speedhack.py) - Everything related to speedhack functionality for Linux native and WINE/Proton processes
   - [utils.py](./libpince/utils.py) - Contains generic utility functions such as parsing, file creation, process querying etc
   - [typedefs.py](./libpince/typedefs.py) - Contains all constants and variable definitions
   - [regexes.py](./libpince/regexes.py) - Contains regexes for parsing GDB output and other things

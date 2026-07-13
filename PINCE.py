@@ -29,7 +29,7 @@ import signal
 import sys
 import traceback
 from time import time
-from types import FrameType, ModuleType, TracebackType
+from types import FrameType, TracebackType
 from typing import Any
 
 # Must precede the imports below in case any of the PyQt and other imports want to create bytecodes.
@@ -132,7 +132,7 @@ from GUI.Widgets.TraceInstructions.TraceInstructionsWindow import TraceInstructi
 from GUI.Widgets.TrackBreakpoint.TrackBreakpoint import TrackBreakpointWidget
 from GUI.Widgets.TrackSelector.TrackSelector import TrackSelectorDialog
 from GUI.Widgets.TrackWatchpoint.TrackWatchpoint import TrackWatchpointWidget
-from libpince import debugcore, linux_speedhack, monocore, scancore, typedefs, utils, wine_speedhack
+from libpince import debugcore, monocore, scancore, speedhack, typedefs, utils
 from libpince.libmemscan.memscan import DataType, MatchView, BytePattern
 from libpince.scancore import memscan
 from libpince.utils import logger, safe_str_to_int, safe_int_cast
@@ -262,6 +262,7 @@ class MainForm(QMainWindow, MainWindow):
         self.show_update_check_result = True
         self.deleted_regions: list[int] = []
         self.is_wine_process = False
+        self.speedhack: speedhack.LinuxSpeedhack | speedhack.WineSpeedhack | None = None
         self.speedhack_action_requested.connect(self.on_speedhack_hotkey_action)
         self.attach_toggled.connect(self.on_attach_toggled)
         self.nextscan_requested.connect(self.on_nextscan_requested)
@@ -501,17 +502,13 @@ class MainForm(QMainWindow, MainWindow):
     def cleanup_speedhack(self) -> None:
         # Called when the inferior is being replaced or torn down.
         # uninstall() restores patched bytes and leaves the cave alive for pending returns.
-        self.speedhack.uninstall()
+        if self.speedhack is not None:
+            self.speedhack.uninstall()
         self.reset_speedhack_widgets()
-
-    @property
-    def speedhack(self) -> ModuleType:
-        # WINE/Proton games are scaled at the Wine ntdll layer, native linux ones at the glibc layer.
-        return wine_speedhack if self.is_wine_process else linux_speedhack
 
     def on_speedhack_hotkey_action(self, delta: int) -> None:
         # We drive the widgets and let their signals run apply_speedhack, so hotkeys and clicks share the same code path.
-        if debugcore.currentpid == -1:
+        if debugcore.currentpid == -1 or self.speedhack is None:
             return
         if delta == 0:
             self.checkBox_Speedhack.toggle()
@@ -519,11 +516,11 @@ class MainForm(QMainWindow, MainWindow):
             # Up/Down also turns the hack on with the spinbox value becoming the live speed.
             if not self.checkBox_Speedhack.isChecked():
                 self.checkBox_Speedhack.setChecked(True)
-            self.doubleSpinBox_Speedhack.setValue(self.doubleSpinBox_Speedhack.value() + delta * self.speedhack.STEP)
+            self.doubleSpinBox_Speedhack.setValue(self.doubleSpinBox_Speedhack.value() + delta * speedhack.STEP)
 
     def apply_speedhack(self, *_: Any) -> None:
         # Both widget signals and the hotkeys (via on_speedhack_hotkey_action) funnel through here.
-        if debugcore.currentpid == -1:
+        if debugcore.currentpid == -1 or self.speedhack is None:
             return
         enabled = self.checkBox_Speedhack.isChecked()
         self.doubleSpinBox_Speedhack.setEnabled(enabled)
@@ -537,13 +534,13 @@ class MainForm(QMainWindow, MainWindow):
                 self.reset_speedhack_widgets()
         # Only restore the default speed if the hooks already exist otherwise set_speed would install them.
         elif self.speedhack.is_installed():
-            self.speedhack.set_speed(self.speedhack.DEFAULT_SPEED)
+            self.speedhack.set_speed(speedhack.DEFAULT_SPEED)
 
     def reset_speedhack_widgets(self) -> None:
         self.checkBox_Speedhack.blockSignals(True)
         self.doubleSpinBox_Speedhack.blockSignals(True)
         self.checkBox_Speedhack.setChecked(False)
-        self.doubleSpinBox_Speedhack.setValue(self.speedhack.DEFAULT_SPEED)
+        self.doubleSpinBox_Speedhack.setValue(speedhack.DEFAULT_SPEED)
         self.doubleSpinBox_Speedhack.setEnabled(False)
         self.checkBox_Speedhack.blockSignals(False)
         self.doubleSpinBox_Speedhack.blockSignals(False)
@@ -1820,6 +1817,7 @@ class MainForm(QMainWindow, MainWindow):
         name = utils.get_process_name(debugcore.currentpid)
         self.label_SelectedProcess.setText(str(debugcore.currentpid) + " - " + name)
         self.is_wine_process = utils.is_wine_process(debugcore.currentpid)
+        self.speedhack = speedhack.WineSpeedhack() if self.is_wine_process else speedhack.LinuxSpeedhack()
 
         # enable scan GUI
         self.lineEdit_Scan.setPlaceholderText(tr.SCAN_FOR)
@@ -1868,7 +1866,9 @@ class MainForm(QMainWindow, MainWindow):
             self.memory_view_window.close()
         # Inferior is gone, so just drop speedhack state.
         # No need for uninstall as that would only produce noise with errors.
-        self.speedhack.reset()
+        if self.speedhack is not None:
+            self.speedhack.reset()
+            self.speedhack = None
         self.reset_speedhack_widgets()
         self.pushButton_MemoryView.setEnabled(False)
         self.pushButton_AddAddressManually.setEnabled(False)

@@ -24,6 +24,7 @@ from typing import Callable
 import capstone
 from capstone import Cs
 from capstone import x86 as cs_x86
+import io
 import os
 import re
 import struct
@@ -32,10 +33,7 @@ import time
 from . import debugcore, typedefs, utils
 from .utils import logger
 
-ALLOC_NAME = "PINCE_linux_speedhack"
 CAVE_SIZE = 0x1000
-
-# The spinbox in MainWindow.ui owns the allowed range (0.2-10.0).
 STEP = 0.1
 DEFAULT_SPEED = 1.0
 
@@ -53,6 +51,15 @@ DEN_OFFSET = NUM_OFFSET + 8
 BUFFER_SIZE = DEN_OFFSET + 8
 ACTIVE_OFFSET = BUFFER_SIZE * 2
 STATE_SIZE = ACTIVE_OFFSET + 8
+
+WINE_NUM_OFFSET = 0
+WINE_DEN_OFFSET = 8
+WINE_INIT_OFFSET = 16
+WINE_REAL_BASE_OFFSET = 24
+WINE_FAKE_BASE_OFFSET = 32
+WINE_LAST_REAL_OFFSET = 40
+WINE_LAST_FAKE_OFFSET = 48
+WINE_STATE_SIZE = 56
 
 # Absolute jump: movabs rax, imm64; jmp rax (12 bytes).
 JUMP_SIZE = 12
@@ -78,27 +85,27 @@ _cs_32.detail = True
 
 
 @dataclass
-class HookPatch:
+class _HookPatch:
     symbol: str
     address: int
     original_aob: str
 
 
 @dataclass
-class Session:
+class _LinuxSession:
     enabled: bool = False
     speed: float = 1.0
     num: int = 1
     den: int = 1
     state_address: int = 0
-    hooks: list[HookPatch] = field(default_factory=list)
+    hooks: list[_HookPatch] = field(default_factory=list)
 
 
-session = Session()
-
-
-def is_installed() -> bool:
-    return session.enabled
+@dataclass
+class _WineSession:
+    enabled: bool = False
+    state_address: int = 0
+    hooks: list[_HookPatch] = field(default_factory=list)
 
 
 def _run_stopped(callback: Callable[[], bool]) -> bool:
@@ -124,167 +131,276 @@ def _run_stopped(callback: Callable[[], bool]) -> bool:
                 logger.error("Speedhack continue did not report RUNNING within 1s")
 
 
-def _install(speed: float = 1.0) -> bool:
-    return _run_stopped(lambda: _install_stopped(speed))
+class _Speedhack:
+    def __init__(self) -> None:
+        self._session = self._session_type()
+
+    def is_installed(self) -> bool:
+        return self._session.enabled
+
+    def _install(self, speed: float = 1.0) -> bool:
+        return _run_stopped(lambda: self._install_stopped(speed))
+
+    def _install_ratio(self, speed: float) -> Fraction | None:
+        if self._session.enabled:
+            logger.error("%s speedhack is already installed", self._name)
+            return None
+        if debugcore.currentpid == -1:
+            logger.error("%s speedhack requires an attached process", self._name)
+            return None
+        if self._alloc_name in debugcore.allocated_cave_chunks:
+            logger.error("%s speedhack memory is already allocated", self._name)
+            return None
+        return _speed_to_ratio(speed)
+
+    def _uninstall_stopped(self) -> bool:
+        for hook in self._session.hooks:
+            if not _step_threads_out_of_range(hook.address, hook.address + len(hook.original_aob.split())):
+                return False
+        success = True
+        for hook in reversed(self._session.hooks):
+            if not _restore_hook(hook):
+                success = False
+        return success
+
+    def uninstall(self) -> bool:
+        """Restore the patched functions and reset session state."""
+        if not self._session.enabled:
+            return True
+        success = False
+        try:
+            success = _run_stopped(self._uninstall_stopped)
+        except Exception:
+            logger.exception("%s speedhack uninstall failed", self._name)
+        self._session = self._session_type()
+        debugcore.allocated_cave_chunks.pop(self._alloc_name, None)
+        return success
+
+    def reset(self) -> None:
+        """Drop session state without touching the inferior.
+        Used when the inferior is already gone as the hooks die with the process, so there's nothing to restore or free()."""
+        self._session = self._session_type()
+        debugcore.allocated_cave_chunks.pop(self._alloc_name, None)
 
 
-def _install_stopped(speed: float = 1.0) -> bool:
-    # Patch libc time functions in the inferior to scale its perceived time.
-    # Internal: callers use set_speed(), which installs on first use.
-    global session
-    if session.enabled:
-        logger.error("Linux speedhack is already installed")
-        return False
-    if debugcore.currentpid == -1:
-        logger.error("Linux speedhack requires an attached process")
-        return False
-    if ALLOC_NAME in debugcore.allocated_cave_chunks:
-        logger.error("Linux speedhack memory is already allocated")
-        return False
+class LinuxSpeedhack(_Speedhack):
+    _name = "Linux"
+    _alloc_name = "PINCE_linux_speedhack"
+    _session_type = _LinuxSession
 
-    arch64 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64
+    def _install_stopped(self, speed: float = 1.0) -> bool:
+        ratio = self._install_ratio(speed)
+        if ratio is None:
+            return False
 
-    ratio = _speed_to_ratio(speed)
-    if ratio is None:
-        return False
+        arch64 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64
+        vdso_clock_gettime = _resolve_vdso_function(debugcore.currentpid, "__vdso_clock_gettime", arch64)
+        vdso_gettimeofday = _resolve_vdso_function(debugcore.currentpid, "__vdso_gettimeofday", arch64)
 
-    vdso_clock_gettime = _resolve_vdso_function(debugcore.currentpid, "__vdso_clock_gettime", arch64)
-    vdso_gettimeofday = _resolve_vdso_function(debugcore.currentpid, "__vdso_gettimeofday", arch64)
+        if arch64:
+            builders = (
+                ("clock_gettime", _build_clock_gettime_hook, vdso_clock_gettime),
+                ("gettimeofday", _build_gettimeofday_hook, vdso_gettimeofday),
+                ("nanosleep", lambda cave, _: _build_nanosleep_hook(cave), None),
+            )
+        else:
+            builders = (
+                ("clock_gettime", _build_clock_gettime_hook_32, vdso_clock_gettime),
+                ("gettimeofday", _build_gettimeofday_hook_32, vdso_gettimeofday),
+                ("nanosleep", lambda cave, _: _build_nanosleep_hook_32(cave), None),
+            )
+        disassembler = utils.cs_64 if arch64 else utils.cs_32
+        jump_size = JUMP_SIZE if arch64 else JUMP_SIZE_32
+        targets = []
+        for symbol, build, call_target in builders:
+            hex_addr = utils.extract_hex_address(debugcore.get_symbol_info(symbol))
+            entry_address = utils.safe_str_to_int(hex_addr, 16) if hex_addr else debugcore.resolve_libc_symbol(symbol)
+            if not entry_address:
+                continue
+            needs_trampoline = call_target == entry_address
+            patch_address = _get_patch_address(entry_address, arch64)
+            original_aob, patch_size = _read_patch_bytes(symbol, patch_address, disassembler, jump_size)
+            if original_aob is None:
+                continue
+            targets.append((symbol, patch_address, build, call_target, needs_trampoline, original_aob, patch_size))
 
-    if arch64:
-        builders = (
-            ("clock_gettime", _build_clock_gettime_hook, vdso_clock_gettime),
-            ("gettimeofday", _build_gettimeofday_hook, vdso_gettimeofday),
-            ("nanosleep", lambda cave, _: _build_nanosleep_hook(cave), None),
+        if not targets:
+            logger.error("Linux speedhack couldn't locate any time functions to hook")
+            return False
+
+        cave = debugcore.allocate_cave(CAVE_SIZE, self._alloc_name)
+        if not cave:
+            logger.error("Failed to allocate Linux speedhack memory")
+            return False
+
+        installed: list[_HookPatch] = []
+        try:
+            self._initialize_state(cave, ratio.numerator, ratio.denominator)
+            cursor = (cave + STATE_SIZE + 15) & ~15
+            for symbol, address, build, call_target, needs_trampoline, original_aob, patch_size in targets:
+                if needs_trampoline:
+                    call_target = cursor
+                    trampoline = _build_trampoline(address, bytes.fromhex(original_aob), arch64, call_target)
+                    if trampoline is None:
+                        raise RuntimeError(f"Linux speedhack can't safely relocate the {symbol} prologue")
+                    cursor = _write_cave(cave, cursor, trampoline, symbol)
+                hook_address = cursor
+                cursor = _write_cave(cave, cursor, build(cave, call_target), symbol)
+                if arch64:
+                    patch = b"\x48\xb8" + struct.pack("<Q", hook_address) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE)
+                else:
+                    patch = b"\xb8" + struct.pack("<I", hook_address) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE_32)
+                _ensure_writable(address)
+                if not _step_threads_out_of_range(address, address + patch_size):
+                    raise RuntimeError(f"Couldn't step all threads out of {symbol}")
+                installed.append(_HookPatch(symbol, address, original_aob))
+                _write_verified(address, _bytes_to_aob(patch))
+        except Exception:
+            logger.exception("Failed to install Linux speedhack")
+            for hook in reversed(installed):
+                _restore_hook(hook)
+            debugcore.free_cave(self._alloc_name)
+            return False
+
+        self._session = _LinuxSession(
+            enabled=True,
+            speed=float(speed),
+            num=ratio.numerator,
+            den=ratio.denominator,
+            state_address=cave,
+            hooks=installed,
         )
-    else:
-        builders = (
-            ("clock_gettime", _build_clock_gettime_hook_32, vdso_clock_gettime),
-            ("gettimeofday", _build_gettimeofday_hook_32, vdso_gettimeofday),
-            ("nanosleep", lambda cave, _: _build_nanosleep_hook_32(cave), None),
-        )
-    disassembler = utils.cs_64 if arch64 else utils.cs_32
-    jump_size = JUMP_SIZE if arch64 else JUMP_SIZE_32
-    targets = []
-    for symbol, build, call_target in builders:
-        hex_addr = utils.extract_hex_address(debugcore.get_symbol_info(symbol))
-        entry_address = utils.safe_str_to_int(hex_addr, 16) if hex_addr else debugcore.resolve_libc_symbol(symbol)
-        if not entry_address:
-            continue
-        needs_trampoline = call_target == entry_address
-        patch_address = _get_patch_address(entry_address, arch64)
-        original_aob, patch_size = _read_patch_bytes(symbol, patch_address, disassembler, jump_size)
+        return True
+
+    def set_speed(self, speed: float) -> bool:
+        """Change the speed multiplier without re-patching anything."""
+        if not self._session.enabled:
+            return self._install(speed)
+        ratio = _speed_to_ratio(speed)
+        if ratio is None:
+            return False
+        self._rebase_state(ratio.numerator, ratio.denominator)
+        self._session.speed = float(speed)
+        self._session.num = ratio.numerator
+        self._session.den = ratio.denominator
+        return True
+
+    def _initialize_state(self, state_addr: int, num: int, den: int) -> None:
+        buffer = bytearray(BUFFER_SIZE)
+        struct.pack_into("<QQ", buffer, NUM_OFFSET, num, den)
+        for clk in SCALED_CLOCK_IDS:
+            now = time.clock_gettime_ns(clk)
+            offset = clk * CLOCK_SLOT_SIZE
+            struct.pack_into("<QQ", buffer, offset, now, now)
+        _write_verified(state_addr, _bytes_to_aob(bytes(buffer + buffer + b"\0" * 8)))
+
+    def _rebase_state(self, new_num: int, new_den: int) -> None:
+        state_addr = self._session.state_address
+        active = _read_u64(state_addr + ACTIVE_OFFSET) & 1
+        inactive = active ^ 1
+        active_base = state_addr + active * BUFFER_SIZE
+        inactive_base = state_addr + inactive * BUFFER_SIZE
+        old_num = _read_u64(active_base + NUM_OFFSET) or self._session.num
+        old_den = _read_u64(active_base + DEN_OFFSET) or self._session.den
+        blob = bytearray(BUFFER_SIZE)
+        struct.pack_into("<QQ", blob, NUM_OFFSET, new_num, new_den)
+        for clk in SCALED_CLOCK_IDS:
+            slot = active_base + clk * CLOCK_SLOT_SIZE
+            real_base = _read_u64(slot)
+            fake_base = _read_u64(slot + 8)
+            now = time.clock_gettime_ns(clk)
+            delta = max(0, now - real_base)
+            new_fake = fake_base + delta * old_num // old_den
+            offset = clk * CLOCK_SLOT_SIZE
+            struct.pack_into("<QQ", blob, offset, now & 0xFFFFFFFFFFFFFFFF, new_fake & 0xFFFFFFFFFFFFFFFF)
+        debugcore.write_memory(inactive_base, typedefs.VALUE_INDEX.AOB, list(blob))
+        debugcore.write_memory(state_addr + ACTIVE_OFFSET, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", inactive)))
+
+
+class WineSpeedhack(_Speedhack):
+    _name = "Wine"
+    _alloc_name = "PINCE_wine_speedhack"
+    _session_type = _WineSession
+
+    def _install_stopped(self, speed: float = 1.0) -> bool:
+        ratio = self._install_ratio(speed)
+        if ratio is None:
+            return False
+
+        arch64 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64
+        symbol = "RtlQueryPerformanceCounter"
+        address = _resolve_ntdll_export(debugcore.currentpid, symbol, arch64)
+        if not address:
+            logger.error("Wine speedhack couldn't resolve %s", symbol)
+            return False
+        address = _get_patch_address(address, arch64)
+        if arch64:
+            original_aob, patch_size = _read_patch_bytes(symbol, address)
+        else:
+            original_aob, patch_size = _read_patch_bytes(symbol, address, utils.cs_32, JUMP_SIZE_32)
         if original_aob is None:
-            continue
-        targets.append((symbol, patch_address, build, call_target, needs_trampoline, original_aob, patch_size))
+            return False
+        raw = bytes.fromhex(original_aob.replace(" ", ""))
 
-    if not targets:
-        logger.error("Linux speedhack couldn't locate any time functions to hook")
-        return False
+        cave = debugcore.allocate_cave(CAVE_SIZE, self._alloc_name)
+        if not cave:
+            logger.error("Failed to allocate Wine speedhack memory")
+            return False
 
-    cave = debugcore.allocate_cave(CAVE_SIZE, ALLOC_NAME)
-    if not cave:
-        logger.error("Failed to allocate Linux speedhack memory")
-        return False
-
-    installed: list[HookPatch] = []
-    try:
-        _initialize_state(cave, ratio.numerator, ratio.denominator)
-
-        # Lay hooks out after the state block, 16-byte aligned.
-        cursor = (cave + STATE_SIZE + 15) & ~15
-        for symbol, address, build, call_target, needs_trampoline, original_aob, patch_size in targets:
-            if needs_trampoline:
-                call_target = cursor
-                trampoline = _build_trampoline(address, bytes.fromhex(original_aob), arch64, call_target)
-                if trampoline is None:
-                    raise RuntimeError(f"Linux speedhack can't safely relocate the {symbol} prologue")
-                cursor = _write_cave(cave, cursor, trampoline, symbol)
-            hook_address = cursor
-            cursor = _write_cave(cave, cursor, build(cave, call_target), symbol)
-            # Absolute jump to hook_address padded out to whole instructions.
-            if arch64:
-                patch = b"\x48\xb8" + struct.pack("<Q", hook_address) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE)
-            else:
-                patch = b"\xb8" + struct.pack("<I", hook_address) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE_32)
-            # We'll mprotect beforehand if region does not contain RWX so we don't fail writes on hardened kernels,
-            # which will block writes that would usually work on un-hardened ones.
+        installed: list[_HookPatch] = []
+        try:
+            self._initialize_state(cave, ratio.numerator, ratio.denominator)
             _ensure_writable(address)
             if not _step_threads_out_of_range(address, address + patch_size):
-                raise RuntimeError(f"Couldn't step all threads out of {symbol}")
-            installed.append(HookPatch(symbol, address, original_aob))
+                raise RuntimeError("Couldn't step all threads out of the patch site")
+
+            tramp_addr = (cave + WINE_STATE_SIZE + 15) & ~15
+            trampoline = _build_trampoline(address, raw, arch64, tramp_addr)
+            if trampoline is None:
+                raise RuntimeError(f"Wine speedhack can't safely relocate the {symbol} prologue")
+            wrapper_addr = _write_cave(cave, tramp_addr, trampoline, symbol)
+            wrapper = (_build_qpc_wrapper if arch64 else _build_qpc_wrapper_32)(cave, tramp_addr)
+            _write_cave(cave, wrapper_addr, wrapper, symbol)
+
+            if arch64:
+                jump = b"\x48\xb8" + struct.pack("<Q", wrapper_addr) + b"\xff\xe0"
+            else:
+                jump = b"\xb8" + struct.pack("<I", wrapper_addr) + b"\xff\xe0"
+            patch = jump + b"\x90" * (patch_size - (JUMP_SIZE if arch64 else JUMP_SIZE_32))
+            installed.append(_HookPatch(symbol, address, original_aob))
             _write_verified(address, _bytes_to_aob(patch))
-    except Exception:
-        logger.exception("Failed to install Linux speedhack")
-        for hook in reversed(installed):
-            _restore_hook(hook)
-        debugcore.free_cave(ALLOC_NAME)
-        return False
-
-    session = Session(
-        enabled=True,
-        speed=float(speed),
-        num=ratio.numerator,
-        den=ratio.denominator,
-        state_address=cave,
-        hooks=installed,
-    )
-    return True
-
-
-def set_speed(speed: float) -> bool:
-    """Change the speed multiplier without re-patching anything."""
-    if not session.enabled:
-        return _install(speed)
-    ratio = _speed_to_ratio(speed)
-    if ratio is None:
-        return False
-    _rebase_state(ratio.numerator, ratio.denominator)
-    session.speed = float(speed)
-    session.num = ratio.numerator
-    session.den = ratio.denominator
-    return True
-
-
-def _do_uninstall() -> bool:
-    return _run_stopped(_do_uninstall_stopped)
-
-
-# Kept separate from uninstall() on purpose as uninstall() still resets the session state.
-def _do_uninstall_stopped() -> bool:
-    for hook in session.hooks:
-        if not _step_threads_out_of_range(hook.address, hook.address + len(hook.original_aob.split())):
+        except Exception:
+            logger.exception("Failed to install Wine speedhack")
+            for hook in installed:
+                _restore_hook(hook)
+            debugcore.free_cave(self._alloc_name)
             return False
-    success = True
-    for hook in reversed(session.hooks):
-        if not _restore_hook(hook):
-            success = False
-    # The cave stays mapped so calls already inside it can return safely.
-    return success
 
-
-def uninstall() -> bool:
-    """Restore the patched functions and reset module state."""
-    global session
-    if not session.enabled:
+        self._session = _WineSession(enabled=True, state_address=cave, hooks=installed)
         return True
-    success = False
-    try:
-        success = _do_uninstall()
-    except Exception:
-        logger.exception("Linux speedhack uninstall failed")
-    session = Session()
-    debugcore.allocated_cave_chunks.pop(ALLOC_NAME, None)
-    return success
 
+    def set_speed(self, speed: float) -> bool:
+        """Change the speed multiplier without re-patching anything."""
+        if not self._session.enabled:
+            return self._install(speed)
+        ratio = _speed_to_ratio(speed)
+        if ratio is None:
+            return False
+        return _run_stopped(lambda: self._rebase_state(ratio.numerator, ratio.denominator))
 
-def reset() -> None:
-    """Drop module state without touching the inferior.
-    Used when the inferior is already gone as the hooks die with the process,
-    so there's nothing to restore or free()."""
-    global session
-    session = Session()
-    debugcore.allocated_cave_chunks.pop(ALLOC_NAME, None)
+    def _initialize_state(self, state_addr: int, num: int, den: int) -> None:
+        blob = bytearray(WINE_STATE_SIZE)
+        struct.pack_into("<QQ", blob, WINE_NUM_OFFSET, num, den)
+        _write_verified(state_addr, _bytes_to_aob(bytes(blob)))
+
+    def _rebase_state(self, new_num: int, new_den: int) -> bool:
+        state_addr = self._session.state_address
+        if _read_u64(state_addr + WINE_INIT_OFFSET):
+            _write_u64(state_addr + WINE_REAL_BASE_OFFSET, _read_u64(state_addr + WINE_LAST_REAL_OFFSET))
+            _write_u64(state_addr + WINE_FAKE_BASE_OFFSET, _read_u64(state_addr + WINE_LAST_FAKE_OFFSET))
+        _write_u64(state_addr + WINE_NUM_OFFSET, new_num)
+        _write_u64(state_addr + WINE_DEN_OFFSET, new_den)
+        return True
 
 
 def _speed_to_ratio(speed: float) -> Fraction | None:
@@ -392,7 +508,7 @@ def _resolve_vdso_function(pid: int, symbol: str, arch64: bool = True) -> int | 
 
 def _read_patch_bytes(symbol: str, address: int, disassembler: Cs = utils.cs_64, jump_size: int = JUMP_SIZE) -> tuple[str | None, int]:
     # Disassemble enough whole instructions at "address" to host a jump of "jump_size" bytes.
-    # The defaults patch x86_64, wine_speedhack passes cs_32 for i386 inferiors.
+    # The defaults patch x86_64, Wine passes cs_32 for i386 inferiors.
     dump = debugcore.hex_dump(address, 32)
     if not dump or "??" in dump:
         logger.error("Failed to read %s instructions at 0x%x", symbol, address)
@@ -493,42 +609,6 @@ def _current_pc() -> int | None:
     return int(pc, 16) if pc else None
 
 
-def _initialize_state(state_addr: int, num: int, den: int) -> None:
-    # Seed both buffers with identical bases.
-    # Speed changes rewrite the inactive buffer and publish it by flipping ACTIVE_OFFSET as the final aligned write.
-    buffer = bytearray(BUFFER_SIZE)
-    struct.pack_into("<QQ", buffer, NUM_OFFSET, num, den)
-    for clk in SCALED_CLOCK_IDS:
-        now = time.clock_gettime_ns(clk)
-        offset = clk * CLOCK_SLOT_SIZE
-        struct.pack_into("<QQ", buffer, offset, now, now)
-    _write_verified(state_addr, _bytes_to_aob(bytes(buffer + buffer + b"\0" * 8)))
-
-
-def _rebase_state(new_num: int, new_den: int) -> None:
-    # Re-anchor each clock so fake time stays continuous across speed changes.
-    state_addr = session.state_address
-    active = _read_u64(state_addr + ACTIVE_OFFSET) & 1
-    inactive = active ^ 1
-    active_base = state_addr + active * BUFFER_SIZE
-    inactive_base = state_addr + inactive * BUFFER_SIZE
-    old_num = _read_u64(active_base + NUM_OFFSET) or session.num
-    old_den = _read_u64(active_base + DEN_OFFSET) or session.den
-    blob = bytearray(BUFFER_SIZE)
-    struct.pack_into("<QQ", blob, NUM_OFFSET, new_num, new_den)
-    for clk in SCALED_CLOCK_IDS:
-        slot = active_base + clk * CLOCK_SLOT_SIZE
-        real_base = _read_u64(slot)
-        fake_base = _read_u64(slot + 8)
-        now = time.clock_gettime_ns(clk)
-        delta = max(0, now - real_base)
-        new_fake = fake_base + delta * old_num // old_den
-        offset = clk * CLOCK_SLOT_SIZE
-        struct.pack_into("<QQ", blob, offset, now & 0xFFFFFFFFFFFFFFFF, new_fake & 0xFFFFFFFFFFFFFFFF)
-    debugcore.write_memory(inactive_base, typedefs.VALUE_INDEX.AOB, list(blob))
-    debugcore.write_memory(state_addr + ACTIVE_OFFSET, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", inactive)))
-
-
 def _vdso_call_or_syscall(vdso_addr: int | None, syscall_nr: int, saves: tuple[str, ...]) -> str:
     # Emit asm that invokes the underlying time function.
     # If "vdso_addr" is set, we call it as a normal C function where the caller-saved regs in "saves" (rdi/rsi) are
@@ -583,7 +663,7 @@ def _vdso_call_or_syscall_32(vdso_addr: int | None, syscall_nr: int, arg_offsets
 
 
 def _scale64_asm(mul_off: int, div_off: int) -> str:
-    # Shared 64-bit scaling kernel for the i386 hooks, lifted from wine_speedhack._build_qpc_wrapper_32.
+    # Shared 64-bit scaling kernel for the i386 hooks.
     # Requires esi == state block base. Computes: OUT (64-bit) = VAL (64-bit) * dword[esi + mul_off] / dword[esi + div_off]
     # via a 96-bit product divided word-by-word by the 32-bit divisor.
     # The top quotient word is dropped because the scaled result fits 64 bits for any real session (num/den keep it in range).
@@ -998,7 +1078,7 @@ def _write_verified(address: int, aob: str) -> None:
         raise RuntimeError(f"Speedhack write verification failed at {hex(address)}")
 
 
-def _restore_hook(hook: HookPatch) -> bool:
+def _restore_hook(hook: _HookPatch) -> bool:
     try:
         _write_verified(hook.address, hook.original_aob)
         return True
@@ -1037,3 +1117,230 @@ def _ensure_writable(address: int) -> None:
     if region is not None and region.perms and "w" in region.perms and "x" in region.perms:
         return
     _mprotect_cave(address)
+
+
+def _build_qpc_wrapper(state_addr: int, tramp_addr: int) -> bytes:
+    # RtlQueryPerformanceCounter(LARGE_INTEGER *counter) -> BOOLEAN,
+    # Microsoft x64 ABI: rcx = counter, returns TRUE.
+    # Call the original (it fills *counter with the real value V),
+    # then overwrite *counter with fake = fake_base + (V - real_base) * num / den.
+    # Base is captured on the first call (INIT).
+    # rsp is 16-byte aligned before the call (entry+8, push rbp, push rcx, sub 40).
+    asm = f"""
+        .byte 0xf3, 0x0f, 0x1e, 0xfa
+        push rbp
+        mov rbp, rsp
+        push rcx
+        sub rsp, 40
+        mov r11, {hex(tramp_addr)}
+        call r11
+        add rsp, 40
+        pop rcx
+        mov rax, qword ptr [rcx]
+        mov r11, {hex(state_addr)}
+        mov r8, qword ptr [r11 + {WINE_INIT_OFFSET}]
+        test r8, r8
+        jnz scale
+        mov qword ptr [r11 + {WINE_REAL_BASE_OFFSET}], rax
+        mov qword ptr [r11 + {WINE_FAKE_BASE_OFFSET}], rax
+        mov qword ptr [r11 + {WINE_INIT_OFFSET}], 1
+    scale:
+        mov r9, rax
+        sub rax, qword ptr [r11 + {WINE_REAL_BASE_OFFSET}]
+        jae delta_ok
+        xor eax, eax
+    delta_ok:
+        mov r10, qword ptr [r11 + {WINE_NUM_OFFSET}]
+        mul r10
+        mov r10, qword ptr [r11 + {WINE_DEN_OFFSET}]
+        div r10
+        add rax, qword ptr [r11 + {WINE_FAKE_BASE_OFFSET}]
+        mov qword ptr [r11 + {WINE_LAST_REAL_OFFSET}], r9
+        mov qword ptr [r11 + {WINE_LAST_FAKE_OFFSET}], rax
+        mov qword ptr [rcx], rax
+        mov eax, 1
+        pop rbp
+        ret
+    """
+    return _assemble_hook(asm)
+
+
+def _build_qpc_wrapper_32(state_addr: int, tramp_addr: int) -> bytes:
+    # Same idea as the x64 wrapper for i386 __stdcall:
+    # the counter pointer is the one stack arg and the callee pops it (ret 4).
+    # The 64-bit math (fake = fake_base + (V - real_base) * num / den) runs on 32-bit ops:
+    # a 96-bit product (delta_lo*num and delta_hi*num combined) divided word by word by den.
+    # num/den fit 32 bits (speeds 0.2-10.0) and the result fits 64 bits for any real session,
+    # so the top division word is dropped.
+    asm = f"""
+        .byte 0xf3, 0x0f, 0x1e, 0xfb
+        push ebp
+        mov ebp, esp
+        push ebx
+        push esi
+        push edi
+        push dword ptr [ebp + 8]
+        mov eax, {hex(tramp_addr)}
+        call eax
+        sub esp, 48
+        mov edi, dword ptr [ebp + 8]
+        mov eax, dword ptr [edi]
+        mov dword ptr [ebp - 40], eax
+        mov eax, dword ptr [edi + 4]
+        mov dword ptr [ebp - 44], eax
+        mov esi, {hex(state_addr)}
+        mov eax, dword ptr [esi + {WINE_INIT_OFFSET}]
+        or eax, dword ptr [esi + {WINE_INIT_OFFSET + 4}]
+        jnz do_scale
+        mov eax, dword ptr [ebp - 40]
+        mov dword ptr [esi + {WINE_REAL_BASE_OFFSET}], eax
+        mov dword ptr [esi + {WINE_FAKE_BASE_OFFSET}], eax
+        mov eax, dword ptr [ebp - 44]
+        mov dword ptr [esi + {WINE_REAL_BASE_OFFSET + 4}], eax
+        mov dword ptr [esi + {WINE_FAKE_BASE_OFFSET + 4}], eax
+        mov dword ptr [esi + {WINE_INIT_OFFSET}], 1
+        mov dword ptr [esi + {WINE_INIT_OFFSET + 4}], 0
+    do_scale:
+        mov eax, dword ptr [ebp - 40]
+        sub eax, dword ptr [esi + {WINE_REAL_BASE_OFFSET}]
+        mov dword ptr [ebp - 16], eax
+        mov eax, dword ptr [ebp - 44]
+        sbb eax, dword ptr [esi + {WINE_REAL_BASE_OFFSET + 4}]
+        mov dword ptr [ebp - 20], eax
+        jnc delta_ok
+        mov dword ptr [ebp - 16], 0
+        mov dword ptr [ebp - 20], 0
+    delta_ok:
+        mov eax, dword ptr [ebp - 16]
+        mov ebx, dword ptr [esi + {WINE_NUM_OFFSET}]
+        mul ebx
+        mov dword ptr [ebp - 24], eax
+        mov ecx, edx
+        mov eax, dword ptr [ebp - 20]
+        mul ebx
+        add eax, ecx
+        mov dword ptr [ebp - 28], eax
+        adc edx, 0
+        mov dword ptr [ebp - 32], edx
+        mov ebx, dword ptr [esi + {WINE_DEN_OFFSET}]
+        xor edx, edx
+        mov eax, dword ptr [ebp - 32]
+        div ebx
+        mov eax, dword ptr [ebp - 28]
+        div ebx
+        mov dword ptr [ebp - 28], eax
+        mov eax, dword ptr [ebp - 24]
+        div ebx
+        mov dword ptr [ebp - 24], eax
+        mov eax, dword ptr [ebp - 24]
+        add eax, dword ptr [esi + {WINE_FAKE_BASE_OFFSET}]
+        mov ecx, eax
+        mov eax, dword ptr [ebp - 28]
+        adc eax, dword ptr [esi + {WINE_FAKE_BASE_OFFSET + 4}]
+        mov dword ptr [edi], ecx
+        mov dword ptr [edi + 4], eax
+        mov edx, dword ptr [ebp - 40]
+        mov dword ptr [esi + {WINE_LAST_REAL_OFFSET}], edx
+        mov edx, dword ptr [ebp - 44]
+        mov dword ptr [esi + {WINE_LAST_REAL_OFFSET + 4}], edx
+        mov dword ptr [esi + {WINE_LAST_FAKE_OFFSET}], ecx
+        mov dword ptr [esi + {WINE_LAST_FAKE_OFFSET + 4}], eax
+        mov eax, 1
+        add esp, 48
+        pop edi
+        pop esi
+        pop ebx
+        pop ebp
+        ret 4
+    """
+    return _assemble_hook(asm, typedefs.INFERIOR_ARCH.ARCH_32)
+
+
+def _write_u64(address: int, value: int) -> None:
+    debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", value & 0xFFFFFFFFFFFFFFFF)))
+
+
+def _resolve_ntdll_export(pid: int, symbol: str, arch64: bool = True) -> int | None:
+    # Resolve a named ntdll.dll export to its runtime address.
+    # gdb doesn't know PE exports, so we parse the export directory out of inferior memory.
+    # A loaded PE spans several mappings, the one at file offset 0 holds the headers and its start is the image base.
+    # A WoW64 prefix can map both a 32 and 64-bits ntdll,
+    # so try each and let _parse_pe_export drop the one whose bitness doesn't match.
+    if pid <= 0:
+        return None
+    try:
+        bases = [
+            int(start, 16)
+            for start, _, _, map_offset, _, _, path in utils.get_regions(pid)
+            if path and os.path.basename(path).lower() == "ntdll.dll" and int(map_offset, 16) == 0
+        ]
+        with debugcore.memory_handle() as mem:
+            for base in bases:
+                address = _parse_pe_export(mem, base, symbol, arch64)
+                if address:
+                    return address
+    except OSError:
+        return None
+    return None
+
+
+def _parse_pe_export(mem: io.BufferedReader, base: int, symbol: str, arch64: bool = True) -> int | None:
+    # Walk a loaded PE's export directory.
+    # In a loaded image an RVA is just an offset from the base.
+    # The data directory sits at optional-header offset 112 on PE32+ (x86_64) but 96 on PE32 (i386),
+    # since PE32's ImageBase/pointers are 4 bytes instead of 8.
+    def read(addr: int, size: int) -> bytes:
+        mem.seek(addr)
+        return mem.read(size)
+
+    header = read(base, 0x400)
+    if len(header) < 0x40 or header[:2] != b"MZ":
+        return None
+    e_lfanew = struct.unpack_from("<I", header, 0x3C)[0]
+    if e_lfanew + 4 + 20 + 2 > len(header) or header[e_lfanew : e_lfanew + 4] != b"PE\x00\x00":
+        return None
+    opt = e_lfanew + 24
+    if struct.unpack_from("<H", header, opt)[0] != (0x20B if arch64 else 0x10B):
+        return None
+    dir_off = 112 if arch64 else 96
+    if opt + dir_off + 8 > len(header):
+        return None
+    export_rva = struct.unpack_from("<I", header, opt + dir_off)[0]
+    export_size = struct.unpack_from("<I", header, opt + dir_off + 4)[0]
+    if not export_rva:
+        return None
+
+    export_dir = read(base + export_rva, 40)
+    if len(export_dir) < 40:
+        return None
+    num_funcs = struct.unpack_from("<I", export_dir, 20)[0]
+    num_names = struct.unpack_from("<I", export_dir, 24)[0]
+    funcs_rva = struct.unpack_from("<I", export_dir, 28)[0]
+    names_rva = struct.unpack_from("<I", export_dir, 32)[0]
+    ordinals_rva = struct.unpack_from("<I", export_dir, 36)[0]
+    if not (num_names and funcs_rva and names_rva and ordinals_rva):
+        return None
+
+    names = read(base + names_rva, num_names * 4)
+    ordinals = read(base + ordinals_rva, num_names * 2)
+    funcs = read(base + funcs_rva, num_funcs * 4)
+    if len(names) < num_names * 4 or len(ordinals) < num_names * 2 or len(funcs) < num_funcs * 4:
+        return None
+
+    target = symbol.encode()
+    for i in range(num_names):
+        name_rva = struct.unpack_from("<I", names, i * 4)[0]
+        name_bytes = read(base + name_rva, len(target) + 1)
+        if name_bytes[: len(target)] != target or name_bytes[len(target) : len(target) + 1] != b"\x00":
+            continue
+        ordinal = struct.unpack_from("<H", ordinals, i * 2)[0]
+        if ordinal >= num_funcs:
+            return None
+        func_rva = struct.unpack_from("<I", funcs, ordinal * 4)[0]
+        if not func_rva:
+            return None
+        if export_rva <= func_rva < export_rva + export_size:
+            logger.error("Wine speedhack: %s is a forwarder, can't hook", symbol)
+            return None
+        return base + func_rva
+    return None
