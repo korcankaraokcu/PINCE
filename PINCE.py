@@ -258,6 +258,7 @@ class MainForm(QMainWindow, MainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setupUi(self)
+        self.doubleSpinBox_Speedhack.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.update_check_thread: update_check.UpdateCheckThread | None = None
         self.show_update_check_result = True
         self.deleted_regions: list[int] = []
