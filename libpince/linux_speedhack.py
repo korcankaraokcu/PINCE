@@ -21,7 +21,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import Callable
+import capstone
 from capstone import Cs
+from capstone import x86 as cs_x86
 import os
 import re
 import struct
@@ -68,6 +70,11 @@ JUMP_SIZE_32 = 7
 SYS_CLOCK_GETTIME_32 = 265
 SYS_GETTIMEOFDAY_32 = 78
 SYS_NANOSLEEP_32 = 162
+
+_cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+_cs.detail = True
+_cs_32 = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
+_cs_32.detail = True
 
 
 @dataclass
@@ -145,29 +152,31 @@ def _install_stopped(speed: float = 1.0) -> bool:
     vdso_gettimeofday = _resolve_vdso_function(debugcore.currentpid, "__vdso_gettimeofday", arch64)
 
     if arch64:
-        builders: tuple[tuple[str, Callable[[int], bytes]], ...] = (
-            ("clock_gettime", lambda cave: _build_clock_gettime_hook(cave, vdso_clock_gettime)),
-            ("gettimeofday", lambda cave: _build_gettimeofday_hook(cave, vdso_gettimeofday)),
-            ("nanosleep", _build_nanosleep_hook),
+        builders = (
+            ("clock_gettime", _build_clock_gettime_hook, vdso_clock_gettime),
+            ("gettimeofday", _build_gettimeofday_hook, vdso_gettimeofday),
+            ("nanosleep", lambda cave, _: _build_nanosleep_hook(cave), None),
         )
     else:
         builders = (
-            ("clock_gettime", lambda cave: _build_clock_gettime_hook_32(cave, vdso_clock_gettime)),
-            ("gettimeofday", lambda cave: _build_gettimeofday_hook_32(cave, vdso_gettimeofday)),
-            ("nanosleep", _build_nanosleep_hook_32),
+            ("clock_gettime", _build_clock_gettime_hook_32, vdso_clock_gettime),
+            ("gettimeofday", _build_gettimeofday_hook_32, vdso_gettimeofday),
+            ("nanosleep", lambda cave, _: _build_nanosleep_hook_32(cave), None),
         )
     disassembler = utils.cs_64 if arch64 else utils.cs_32
     jump_size = JUMP_SIZE if arch64 else JUMP_SIZE_32
     targets = []
-    for symbol, build in builders:
+    for symbol, build, call_target in builders:
         hex_addr = utils.extract_hex_address(debugcore.get_symbol_info(symbol))
-        address = utils.safe_str_to_int(hex_addr, 16) if hex_addr else debugcore.resolve_libc_symbol(symbol)
-        if not address:
+        entry_address = utils.safe_str_to_int(hex_addr, 16) if hex_addr else debugcore.resolve_libc_symbol(symbol)
+        if not entry_address:
             continue
-        original_aob, patch_size = _read_patch_bytes(symbol, address, disassembler, jump_size)
+        needs_trampoline = call_target == entry_address
+        patch_address = _get_patch_address(entry_address, arch64)
+        original_aob, patch_size = _read_patch_bytes(symbol, patch_address, disassembler, jump_size)
         if original_aob is None:
             continue
-        targets.append((symbol, address, build, original_aob, patch_size))
+        targets.append((symbol, patch_address, build, call_target, needs_trampoline, original_aob, patch_size))
 
     if not targets:
         logger.error("Linux speedhack couldn't locate any time functions to hook")
@@ -184,17 +193,20 @@ def _install_stopped(speed: float = 1.0) -> bool:
 
         # Lay hooks out after the state block, 16-byte aligned.
         cursor = (cave + STATE_SIZE + 15) & ~15
-        for symbol, address, build, original_aob, patch_size in targets:
-            code = build(cave)
-            if cursor + len(code) > cave + CAVE_SIZE:
-                raise RuntimeError(f"Linux speedhack code cave is too small for {symbol}")
-            _write_verified(cursor, _bytes_to_aob(code))
+        for symbol, address, build, call_target, needs_trampoline, original_aob, patch_size in targets:
+            if needs_trampoline:
+                call_target = cursor
+                trampoline = _build_trampoline(address, bytes.fromhex(original_aob), arch64, call_target)
+                if trampoline is None:
+                    raise RuntimeError(f"Linux speedhack can't safely relocate the {symbol} prologue")
+                cursor = _write_cave(cave, cursor, trampoline, symbol)
+            hook_address = cursor
+            cursor = _write_cave(cave, cursor, build(cave, call_target), symbol)
+            # Absolute jump to hook_address padded out to whole instructions.
             if arch64:
-                # movabs rax, cursor; jmp rax (12 bytes), NOP-padded out to whole instructions.
-                patch = b"\x48\xb8" + struct.pack("<Q", cursor) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE)
+                patch = b"\x48\xb8" + struct.pack("<Q", hook_address) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE)
             else:
-                # mov eax, cursor; jmp eax (7 bytes), NOP-padded out to whole instructions.
-                patch = b"\xb8" + struct.pack("<I", cursor) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE_32)
+                patch = b"\xb8" + struct.pack("<I", hook_address) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE_32)
             # We'll mprotect beforehand if region does not contain RWX so we don't fail writes on hardened kernels,
             # which will block writes that would usually work on un-hardened ones.
             _ensure_writable(address)
@@ -202,7 +214,6 @@ def _install_stopped(speed: float = 1.0) -> bool:
                 raise RuntimeError(f"Couldn't step all threads out of {symbol}")
             installed.append(HookPatch(symbol, address, original_aob))
             _write_verified(address, _bytes_to_aob(patch))
-            cursor = (cursor + len(code) + 15) & ~15
     except Exception:
         logger.exception("Failed to install Linux speedhack")
         for hook in reversed(installed):
@@ -395,6 +406,34 @@ def _read_patch_bytes(symbol: str, address: int, disassembler: Cs = utils.cs_64,
             return _bytes_to_aob(code[:consumed]), consumed
     logger.error("Failed to find enough whole instructions to patch %s", symbol)
     return None, 0
+
+
+def _get_patch_address(address: int, arch64: bool) -> int:
+    endbr = ["F3", "0F", "1E", "FA" if arch64 else "FB"]
+    return address + 4 if debugcore.hex_dump(address, 4) == endbr else address
+
+
+def _build_trampoline(address: int, raw: bytes, arch64: bool, tramp_addr: int) -> bytes | None:
+    for insn in (_cs if arch64 else _cs_32).disasm(raw, address):
+        if insn.group(capstone.CS_GRP_JUMP) or insn.group(capstone.CS_GRP_CALL) or insn.group(capstone.CS_GRP_RET) or insn.group(capstone.CS_GRP_BRANCH_RELATIVE):
+            return None
+        if arch64:
+            for op in insn.operands:
+                if op.type == cs_x86.X86_OP_MEM and op.mem.base == cs_x86.X86_REG_RIP:
+                    return None
+    prologue = (b"\xf3\x0f\x1e\xfa" if arch64 else b"\xf3\x0f\x1e\xfb") + raw
+    target = address + len(raw)
+    if arch64:
+        return prologue + b"\x3e\xff\x25\x00\x00\x00\x00" + struct.pack("<Q", target)
+    slot = tramp_addr + len(prologue) + 7
+    return prologue + b"\x3e\xff\x25" + struct.pack("<I", slot) + struct.pack("<I", target)
+
+
+def _write_cave(cave: int, address: int, blob: bytes, symbol: str) -> int:
+    if address + len(blob) > cave + CAVE_SIZE:
+        raise RuntimeError(f"Speedhack code cave is too small for {symbol}")
+    _write_verified(address, _bytes_to_aob(blob))
+    return (address + len(blob) + 15) & ~15
 
 
 def _step_threads_out_of_range(low: int, high: int, max_steps: int = 64) -> bool:

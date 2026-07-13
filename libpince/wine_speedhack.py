@@ -48,9 +48,6 @@ import io
 import os
 import struct
 
-import capstone
-from capstone import x86 as cs_x86
-
 from . import debugcore, linux_speedhack, typedefs, utils
 from .utils import logger
 
@@ -73,12 +70,6 @@ FAKE_BASE_OFFSET = 32  # fake QPC value at that same instant
 LAST_REAL_OFFSET = 40  # most recent original QPC value, so a rebase stays continuous
 LAST_FAKE_OFFSET = 48  # most recent fake QPC value
 STATE_SIZE = 56
-
-_cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
-_cs.detail = True
-_cs_32 = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
-_cs_32.detail = True
-
 
 @dataclass
 class Session:
@@ -126,6 +117,7 @@ def _install_stopped(speed: float = 1.0) -> bool:
     if not address:
         logger.error("Wine speedhack couldn't resolve %s", symbol)
         return False
+    address = linux_speedhack._get_patch_address(address, arch64)
     if arch64:
         original_aob, patch_size = linux_speedhack._read_patch_bytes(symbol, address)
     else:
@@ -152,12 +144,12 @@ def _install_stopped(speed: float = 1.0) -> bool:
         # Cave layout: state block, then the trampoline (relocated prologue + jump back into the
         # original), then the wrapper that calls it. 16-byte aligned throughout.
         tramp_addr = (cave + STATE_SIZE + 15) & ~15
-        trampoline = _build_trampoline(address, raw, patch_size, arch64, tramp_addr)
+        trampoline = linux_speedhack._build_trampoline(address, raw, arch64, tramp_addr)
         if trampoline is None:
             raise RuntimeError(f"Wine speedhack can't safely relocate the {symbol} prologue")
-        wrapper_addr = _write_cave(cave, tramp_addr, trampoline, symbol)
+        wrapper_addr = linux_speedhack._write_cave(cave, tramp_addr, trampoline, symbol)
         wrapper = (_build_qpc_wrapper if arch64 else _build_qpc_wrapper_32)(cave, tramp_addr)
-        _write_cave(cave, wrapper_addr, wrapper, symbol)
+        linux_speedhack._write_cave(cave, wrapper_addr, wrapper, symbol)
 
         # Overwrite the entry with an absolute jump into the wrapper, NOP-padded to whole
         # instructions: movabs rax, wrapper; jmp rax (x64) or mov eax, wrapper; jmp eax (i386).
@@ -391,37 +383,6 @@ def _build_qpc_wrapper_32(state_addr: int, tramp_addr: int) -> bytes:
         ret 4
     """
     return linux_speedhack._assemble_hook(asm, typedefs.INFERIOR_ARCH.ARCH_32)
-
-
-def _build_trampoline(address: int, raw: bytes, patch_size: int, arch64: bool, tramp_addr: int) -> bytes | None:
-    # The trampoline is the overwritten prologue plus a jump back into the rest of the original,
-    # so calling it runs the function as if it was never patched.
-    # The prologue is copied as is, so bail (None) if it holds anything position dependent we can't move:
-    # a relative branch, or on x64 a rip-relative operand (i386 has neither rip-relative nor a 64-bit absolute jump).
-    prologue = raw[:patch_size]
-    for insn in (_cs if arch64 else _cs_32).disasm(prologue, address):
-        if insn.group(capstone.CS_GRP_JUMP) or insn.group(capstone.CS_GRP_CALL) or insn.group(capstone.CS_GRP_RET):
-            return None
-        if arch64:
-            for op in insn.operands:
-                if op.type == cs_x86.X86_OP_MEM and op.mem.base == cs_x86.X86_REG_RIP:
-                    return None
-    target = address + patch_size
-    if arch64:
-        # jmp qword ptr [rip+0]; <8-byte target>. Position independent, clobbers nothing.
-        return prologue + b"\xff\x25\x00\x00\x00\x00" + struct.pack("<Q", target)
-    # jmp dword ptr [slot]; <4-byte target> right after it.
-    # No rip-relative on i386, and no ret so it can't trip CET shadow-stack checks.
-    slot = tramp_addr + len(prologue) + 6
-    return prologue + b"\xff\x25" + struct.pack("<I", slot) + struct.pack("<I", target)
-
-
-def _write_cave(cave: int, address: int, blob: bytes, symbol: str) -> int:
-    # Write blob into the cave at address, returning the next 16-byte aligned cursor.
-    if address + len(blob) > cave + CAVE_SIZE:
-        raise RuntimeError(f"Wine speedhack code cave is too small for {symbol}")
-    linux_speedhack._write_verified(address, linux_speedhack._bytes_to_aob(blob))
-    return (address + len(blob) + 15) & ~15
 
 
 def _write_u64(address: int, value: int) -> None:
