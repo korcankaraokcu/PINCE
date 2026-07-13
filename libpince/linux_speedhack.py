@@ -188,7 +188,7 @@ def _install_stopped(speed: float = 1.0) -> bool:
             code = build(cave)
             if cursor + len(code) > cave + CAVE_SIZE:
                 raise RuntimeError(f"Linux speedhack code cave is too small for {symbol}")
-            debugcore.write_memory(cursor, typedefs.VALUE_INDEX.AOB, list(code))
+            _write_verified(cursor, _bytes_to_aob(code))
             if arch64:
                 # movabs rax, cursor; jmp rax (12 bytes), NOP-padded out to whole instructions.
                 patch = b"\x48\xb8" + struct.pack("<Q", cursor) + b"\xff\xe0" + b"\x90" * (patch_size - JUMP_SIZE)
@@ -200,8 +200,8 @@ def _install_stopped(speed: float = 1.0) -> bool:
             _ensure_writable(address)
             if not _step_threads_out_of_range(address, address + patch_size):
                 raise RuntimeError(f"Couldn't step all threads out of {symbol}")
-            _write_verified(address, _bytes_to_aob(patch))
             installed.append(HookPatch(symbol, address, original_aob))
+            _write_verified(address, _bytes_to_aob(patch))
             cursor = (cursor + len(code) + 15) & ~15
     except Exception:
         logger.exception("Failed to install Linux speedhack")
@@ -463,7 +463,7 @@ def _initialize_state(state_addr: int, num: int, den: int) -> None:
         now = time.clock_gettime_ns(clk)
         offset = clk * CLOCK_SLOT_SIZE
         struct.pack_into("<QQ", buffer, offset, now, now)
-    debugcore.write_memory(state_addr, typedefs.VALUE_INDEX.AOB, list(buffer + buffer + b"\0" * 8))
+    _write_verified(state_addr, _bytes_to_aob(bytes(buffer + buffer + b"\0" * 8)))
 
 
 def _rebase_state(new_num: int, new_den: int) -> None:

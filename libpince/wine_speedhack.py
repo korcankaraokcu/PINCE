@@ -166,8 +166,8 @@ def _install_stopped(speed: float = 1.0) -> bool:
         else:
             jump = b"\xb8" + struct.pack("<I", wrapper_addr) + b"\xff\xe0"
         patch = jump + b"\x90" * (patch_size - (JUMP_SIZE if arch64 else JUMP_SIZE_32))
-        linux_speedhack._write_verified(address, linux_speedhack._bytes_to_aob(patch))
         installed.append(linux_speedhack.HookPatch(symbol, address, original_aob))
+        linux_speedhack._write_verified(address, linux_speedhack._bytes_to_aob(patch))
     except Exception:
         logger.exception("Failed to install Wine speedhack")
         for hook in installed:
@@ -240,7 +240,7 @@ def _initialize_state(state_addr: int, num: int, den: int) -> None:
     # The base is captured lazily on the first hook call (INIT flag) since we can't read QPC from Python.
     blob = bytearray(STATE_SIZE)
     struct.pack_into("<QQ", blob, NUM_OFFSET, num, den)
-    debugcore.write_memory(state_addr, typedefs.VALUE_INDEX.AOB, list(blob))
+    linux_speedhack._write_verified(state_addr, linux_speedhack._bytes_to_aob(bytes(blob)))
 
 
 def _rebase_state(new_num: int, new_den: int) -> bool:
@@ -420,7 +420,7 @@ def _write_cave(cave: int, address: int, blob: bytes, symbol: str) -> int:
     # Write blob into the cave at address, returning the next 16-byte aligned cursor.
     if address + len(blob) > cave + CAVE_SIZE:
         raise RuntimeError(f"Wine speedhack code cave is too small for {symbol}")
-    debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, list(blob))
+    linux_speedhack._write_verified(address, linux_speedhack._bytes_to_aob(blob))
     return (address + len(blob) + 15) & ~15
 
 
