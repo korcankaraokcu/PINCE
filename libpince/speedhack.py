@@ -566,7 +566,12 @@ def _has_marker(target: int) -> bool:
 
 def _build_trampoline(address: int, raw: bytes, arch64: bool, tramp_addr: int) -> bytes | None:
     for insn in (_cs if arch64 else _cs_32).disasm(raw, address):
-        if insn.group(capstone.CS_GRP_JUMP) or insn.group(capstone.CS_GRP_CALL) or insn.group(capstone.CS_GRP_RET) or insn.group(capstone.CS_GRP_BRANCH_RELATIVE):
+        if (
+            insn.group(capstone.CS_GRP_JUMP)
+            or insn.group(capstone.CS_GRP_CALL)
+            or insn.group(capstone.CS_GRP_RET)
+            or insn.group(capstone.CS_GRP_BRANCH_RELATIVE)
+        ):
             return None
         if arch64:
             for op in insn.operands:
@@ -592,11 +597,7 @@ def _step_threads_out_of_range(low: int, high: int, max_steps: int = 64) -> bool
     if not info:
         logger.error("Speedhack couldn't query thread info")
         return False
-    offenders = [
-        tid
-        for tid, addr in re.findall(r'id="(\d+)",[^}]*?frame=\{[^}]*?addr="(0x[0-9a-fA-F]+)"', info)
-        if low <= int(addr, 16) < high
-    ]
+    offenders = [tid for tid, addr in re.findall(r'id="(\d+)",[^}]*?frame=\{[^}]*?addr="(0x[0-9a-fA-F]+)"', info) if low <= int(addr, 16) < high]
     if not offenders:
         return True
     current_match = re.search(r'current-thread-id="(\d+)"', info)
