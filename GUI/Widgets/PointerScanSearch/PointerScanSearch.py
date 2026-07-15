@@ -21,8 +21,8 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         for width in (8, 4):
             self.comboBox_PointerSize.addItem(f"{width} Bytes", width)
         guiutils.fill_scope_combobox(self.comboBox_ScanScope)
-        inferior_pointer_width = 4 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 8
-        pointer_size_index = self.comboBox_PointerSize.findData(inferior_pointer_width)
+        effective_pointer_width = 4 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 8
+        pointer_size_index = self.comboBox_PointerSize.findData(effective_pointer_width)
         if pointer_size_index != -1:
             self.comboBox_PointerSize.setCurrentIndex(pointer_size_index)
         guiutils.center_to_parent(self)
@@ -88,7 +88,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
             ptr_opts.max_results = self.spinBox_MaxResults.value() if self.checkBox_MaxResults.isChecked() else None
             ptr_opts.module_base_only = self.checkBox_Module.isChecked()
         else:
-            ptr_opts = PointerScanOptions(pointer_width=4 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 8)
+            ptr_opts = PointerScanOptions(pointer_width=4 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 8)
         self.cleanup()
         scanner = Libmemscan(os.path.join(utils.get_libpince_directory(), "libmemscan", "libmemscan.so"))
         try:
