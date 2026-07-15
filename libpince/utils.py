@@ -146,6 +146,49 @@ def get_regions(pid: int) -> list[tuple[str, ...]]:
         return []
 
 
+def get_effective_arch(pid: int) -> int:
+    """Returns the arch of the code the debugged program actually executes, unlike the arch of the host process.
+
+    They can differ in WINE processes, particularly with New-WoW64 where 32 bits PE programs run inside a 64 bits host process.
+
+    Args:
+        pid (int): PID of the process
+
+    Returns:
+        int: A member of typedefs.INFERIOR_ARCH, -1 if detection fails
+    """
+
+    def pe_magic(path: str) -> int:
+        # Optional header magic: 0x10B -> PE32, 0x20B -> PE32+, 0 -> not a readable PE.
+        try:
+            with open(path, "rb") as pe_file:
+                if pe_file.read(2) != b"MZ":
+                    return 0
+                pe_file.seek(0x3C)
+                pe_file.seek(int.from_bytes(pe_file.read(4), "little"))
+                if pe_file.read(4) != b"PE\x00\x00":
+                    return 0
+                pe_file.seek(0x14, os.SEEK_CUR)  # skip the COFF header to reach the optional header magic.
+                return int.from_bytes(pe_file.read(2), "little")
+        except OSError:
+            return 0
+
+    if is_wine_process(pid):
+        # The launched exe decides the effective bitness, first valid PE wins like in _refresh_main_module_info.
+        for _, _, _, _, _, _, path in get_regions(pid):
+            if path.lower().endswith(".exe"):
+                arch = {0x10B: typedefs.INFERIOR_ARCH.ARCH_32, 0x20B: typedefs.INFERIOR_ARCH.ARCH_64}.get(pe_magic(path))
+                if arch:
+                    return arch
+    # Native processes (or WINE without a mapped PE yet) follow the ELF class of the main binary.
+    try:
+        with open(f"/proc/{pid}/exe", "rb") as exe_file:
+            elf_class = exe_file.read(5)
+    except OSError:
+        return -1
+    return {b"\x7fELF\x01": typedefs.INFERIOR_ARCH.ARCH_32, b"\x7fELF\x02": typedefs.INFERIOR_ARCH.ARCH_64}.get(elf_class, -1)
+
+
 def get_module_load_bias(pid: int, name_regex: str) -> tuple[int, str] | None:
     """Finds the first mapped file whose basename matches name_regex and returns its load bias and absolute path.
 

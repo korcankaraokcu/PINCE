@@ -34,6 +34,11 @@ gdb_initialized = False
 # An integer. Can be a member of typedefs.INFERIOR_ARCH
 inferior_arch = -1
 
+# An integer. Can be a member of typedefs.INFERIOR_ARCH
+# The arch of the code the debugged program actually executes, see utils.get_effective_arch
+# Prefer this over inferior_arch when pointer size or struct layout of the debugged program matters
+effective_arch = -1
+
 # An integer. Can be a member of typedefs.INFERIOR_STATUS
 inferior_status = -1
 
@@ -687,6 +692,7 @@ def attach(pid: int | str, gdb_path: str = utils.get_default_gdb_path()) -> int:
     if currentpid != -1 or not gdb_initialized:
         init_gdb(gdb_path)
     global inferior_arch
+    global effective_arch
     global mem_file
     global current_process_identity
     global _wow64_inject_buffer
@@ -701,6 +707,9 @@ def attach(pid: int | str, gdb_path: str = utils.get_default_gdb_path()) -> int:
     set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
+    effective_arch = utils.get_effective_arch(currentpid)
+    if effective_arch == -1:
+        effective_arch = inferior_arch
     utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_AA))
     _refresh_main_module_info()
     return typedefs.ATTACH_RESULT.SUCCESSFUL
@@ -725,6 +734,7 @@ def create_process(process_path: str, args: str = "", ld_preload_path: str = "",
     """
     global currentpid
     global inferior_arch
+    global effective_arch
     global mem_file
     global current_process_identity
     global _wow64_inject_buffer
@@ -764,6 +774,9 @@ def create_process(process_path: str, args: str = "", ld_preload_path: str = "",
     set_pince_paths()
     init_referenced_dicts(pid)
     inferior_arch = get_inferior_arch()
+    effective_arch = utils.get_effective_arch(currentpid)
+    if effective_arch == -1:
+        effective_arch = inferior_arch
     utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_AA))
     _refresh_main_module_info()
     return True
@@ -1390,7 +1403,7 @@ def read_pointer_chain(pointer_request: typedefs.PointerChainRequest) -> typedef
     if not isinstance(pointer_request, typedefs.PointerChainRequest):
         raise TypeError("Passed non-PointerChainRequest type to read_pointer_chain!")
 
-    if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32:
+    if effective_arch == typedefs.INFERIOR_ARCH.ARCH_32:
         value_index = typedefs.VALUE_INDEX.INT32
     else:
         value_index = typedefs.VALUE_INDEX.INT64
