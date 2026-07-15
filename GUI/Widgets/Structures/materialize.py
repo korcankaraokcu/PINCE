@@ -57,7 +57,7 @@ def structure_to_records(
                 continue
             child_base = base_addr + member.offset
             if member.is_pointer and base_addr > 0:
-                ptr_index = typedefs.VALUE_INDEX.INT32 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
+                ptr_index = typedefs.VALUE_INDEX.INT32 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
                 ptr_val = debugcore.read_memory(base_addr + member.offset, ptr_index)
                 if ptr_val is not None:
                     child_base = ptr_val
