@@ -24,7 +24,7 @@ def _is_instance_field(fld: dict) -> bool:
 
 def _ensure_managed_string_structure() -> str:
     if StructureManager.get("System.String") is None:
-        is_32 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
+        is_32 = debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32
         ptr_type = typedefs.VALUE_INDEX.INT32 if is_32 else typedefs.VALUE_INDEX.INT64
         if is_32:
             members = [
@@ -192,6 +192,6 @@ def _build_structure(
 
 
 def structure_from_class(client: monocore.MonoClient, class_data: dict, include_inherited: bool = True, force_new: bool = True) -> typedefs.Structure:
-    pointer_index = typedefs.VALUE_INDEX.INT32 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
+    pointer_index = typedefs.VALUE_INDEX.INT32 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
     name = _build_structure(client, class_data, set(), pointer_index, include_inherited, force_new)
     return StructureManager.get(name)

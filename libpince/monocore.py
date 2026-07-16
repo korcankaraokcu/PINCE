@@ -184,10 +184,10 @@ def init_mono() -> bool:
     client = _connect_wine(pid) if wine else _connect(socket.AF_UNIX, _abstract_address(pid))
 
     if client is None:
-        arch32 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
+        arch32 = debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32
         if wine:
-            # new-WoW64 can map a 32-bit PE runtime in a 64-bit Linux process.
-            # Trust the runtime PE magic and not the inferior_arch.
+            # The runtime PE magic is read after the runtime is fully loaded,
+            # so trust it over effective_arch in case that detection fell back to the host arch.
             try:
                 with debugcore.memory_handle() as mem:
                     mem.seek(info.load_bias + 0x3C)
@@ -316,7 +316,7 @@ def unpack_value(tag: str, raw: bytes) -> Any:
 def object_header_size() -> int:
     """Bytes of the object header (vtable/klass + sync word) prefixing a boxed value type.
     Value type field offsets from the fields op include it, so subtract it for the unboxed value."""
-    ptr = 4 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 8
+    ptr = 4 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 8
     return 2 * ptr
 
 
@@ -470,7 +470,7 @@ def find_instances(klass: int) -> list[int]:
     marker = client.instance_marker(klass)
     if not marker:
         raise MonoError("instance marker unavailable")
-    arch32 = debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32
+    arch32 = debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32
     so_path = os.path.join(utils.get_libpince_directory(), "libmemscan", "libmemscan.so")
     scanner = Libmemscan(so_path)
     try:

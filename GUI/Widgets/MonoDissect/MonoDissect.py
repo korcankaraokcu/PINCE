@@ -429,7 +429,7 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
                 try:
                     slot = client.static_field_address(klass, root["field"])
                     value_index = (
-                        typedefs.VALUE_INDEX.INT32 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
+                        typedefs.VALUE_INDEX.INT32 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
                     )
                     instance_ptr = debugcore.read_memory(slot, value_index)
                 except monocore.MonoError:
@@ -469,7 +469,7 @@ class MonoDissectDialog(QDialog, Ui_Dialog):
         except monocore.MonoError:
             QMessageBox.information(self, tr.ERROR, tr.MONO_STATIC_UNAVAILABLE)
             return
-        value_index = typedefs.VALUE_INDEX.INT32 if debugcore.inferior_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
+        value_index = typedefs.VALUE_INDEX.INT32 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
         address = debugcore.read_memory(slot, value_index)
         if not address:
             QMessageBox.information(self, tr.MONO_FIND_INSTANCES, tr.MONO_NO_INSTANCES)
