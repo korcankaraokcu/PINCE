@@ -21,14 +21,16 @@ from PyQt6.QtCore import QEvent, QObject, QPointF, QRect, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QPalette, QPen, QPolygonF
 from PyQt6.QtWidgets import QTableWidget, QToolTip
 
-# How an arrow endpoint is anchored. _ROW is a real disassembled row, drawn at its own position and
-# clipped by the viewport. _ABOVE and _BELOW are addresses with no displayed row, pinned to an edge
+# How an arrow endpoint is anchored.
+# _ROW is a real disassembled row, drawn at its own position and clipped by the viewport.
+# _ABOVE and _BELOW are addresses with no displayed row, pinned to an edge.
 _ROW = 0
 _ABOVE = -1
 _BELOW = 1
 
-# Geometry of the arrows, in pixels. They are anchored to the left edge of the instruction column and
-# fan out leftwards over the opcodes column, so the arrowheads sit right next to the instruction text
+# Geometry of the arrows, in pixels.
+# They are anchored to the left edge of the instruction column and fan out leftwards over the opcodes column,
+# putting the arrowheads right next to the instruction text.
 _RIGHT_GAP = 2  # gap between the arrowheads and the instruction text
 _FIRST_LANE_OFFSET = 6  # distance between the instruction column and the innermost (closest) lane
 _LANE_SPACING = 7  # horizontal distance between two neighbouring lanes
@@ -38,16 +40,13 @@ _HEAD = 5  # arrowhead size
 _HOVER_THRESHOLD = 5  # how close (px) the cursor must be to an arrow to hover it
 _TOOLTIP_MSEC = 2147483647  # effectively indefinite display time so the tooltip stays up while hovering an arrow
 
-# Categorical palette. Each arrow keeps a stable colour picked from its own addresses (see _palette_key
-# and _arrow_color) so scrolling other arrows into view never recolours it. Blue comes first so it stays
-# the most common colour. Overlapping arrows are still separated by their lane's x offset if hues repeat
+# Categorical palette.
+# Overlapping arrows are still separated by their lane's x offset if hues repeat.
 _HUES = [210, 145, 32, 280, 190, 340, 55, 0]  # blue, green, orange, purple, teal, pink, yellow, red
 
 # The Wong (colorblind-friendly) theme paints on an orange base (#E69F00, see GUI/Settings/themes.py).
-# On that background the palette above is both low-contrast and confusable under red-green colour
-# blindness, defeating the whole point of the theme. This replacement is dark enough to clear WCAG 3:1
-# against the orange and stays distinct under deuteranopia, protanopia and tritanopia. Fewer colours are
-# needed than usual because overlapping arrows are already separated by their lane's x offset
+# On that background the palette above is both low-contrast and confusable under red-green colour blindness.
+# This replacement is dark enough to clear WCAG 3:1 against the orange and stays distinct under deuteranopia, protanopia and tritanopia.
 _WONG_BASE = "#e69f00"  # lower-cased QColor.name() of the Wong theme's Base role
 _WONG_COLORS = ["#005A8B", "#903E00", "#006246", "#843D66", "#101014"]  # blue, vermillion, green, purple, near-black
 
@@ -67,8 +66,8 @@ class DisassembleArrowOverlay(QObject):
     interaction is handled through an event filter on the viewport.
     """
 
-    # Emitted when an arrow is clicked, carrying its (source_address, target_address). object is used
-    # instead of int because addresses can exceed C++ int range (see the pyqtSignal caveat in CLAUDE.md)
+    # Emitted when an arrow is clicked, carrying its (source_address, target_address).
+    # object is used instead of int because a large address overflows the C++ int a pyqtSignal would marshal it through.
     follow_requested = pyqtSignal(object, object)
 
     def __init__(self, table: QTableWidget, instruction_column: int) -> None:
@@ -87,12 +86,12 @@ class DisassembleArrowOverlay(QObject):
         self.window_last = 0  # address of the last displayed instruction
         self._dark = False  # whether the current theme is dark, refreshed on every paint
         self._wong = False  # whether the colorblind-friendly Wong theme is active, refreshed on every paint
-        # Geometry of the arrows drawn in the last paint, used for hover hit-testing without recomputing
+        # Geometry of the arrows drawn in the last paint, used for hover hit-testing without recomputing.
         self._geometry: list[dict] = []
         self._hovered: tuple[int, int, str] | None = None  # (source, target, kind) of the hovered arrow
 
-        # Wrap the table's paintEvent so we draw on top of the freshly painted cells, and follow its
-        # mouse/resize through an event filter on the viewport
+        # Wrap the table's paintEvent to draw on top of the freshly painted cells.
+        # Follow its mouse and resize events through an event filter on the viewport.
         self._table_paint_event = table.paintEvent
         table.paintEvent = self._paint_event
         self.viewport.setMouseTracking(True)
@@ -141,7 +140,7 @@ class DisassembleArrowOverlay(QObject):
         row = self.address_to_row.get(address)
         if row is not None:
             return self.table.rowViewportPosition(row) + self.table.rowHeight(row) // 2, _ROW
-        # Not part of the disassembled range at all, decide the edge from its address
+        # Not part of the disassembled range at all, decide the edge from its address.
         return (0, _ABOVE) if address < self.window_first else (vp_bottom, _BELOW)
 
     def _arrow_color(self, key: int) -> QColor:
@@ -205,7 +204,7 @@ class DisassembleArrowOverlay(QObject):
         self._geometry = []
         if not self.arrows or not self.address_to_row:
             return
-        # Detect the mode from the actual background so it also tracks live theme changes/previews
+        # Detect the mode from the actual background to also track live theme changes and previews.
         base = self.viewport.palette().color(QPalette.ColorRole.Base)
         self._wong = base.name().lower() == _WONG_BASE
         self._dark = base.lightness() < 128
@@ -213,17 +212,19 @@ class DisassembleArrowOverlay(QObject):
         anchor_x = self.table.columnViewportPosition(self.instruction_column) - _RIGHT_GAP
         innermost_x = anchor_x - _FIRST_LANE_OFFSET
 
-        # Resolve every arrow to its geometry. An arrow is kept only when at least one of its two
-        # instructions is on screen, and the painter clips whatever part of it runs off an edge. A row
-        # clipped past an edge or a clamped off-screen endpoint doesn't count as visible, so a line that
-        # merely crosses the viewport with neither the caller nor the target in view is dropped
+        # Resolve each arrow to on-screen geometry, keeping the arrow whenever any part of its vertical span falls
+        # inside the viewport while the painter clips whatever runs off an edge.
+        # An arrow is dropped only when both endpoints sit past the same edge.
+        # One crossing the viewport is still drawn even when neither endpoint is on screen.
         resolved = []
         for source, target, kind in self.arrows:
             y0, src_dir = self._endpoint(source, vp_bottom)
             y1, tgt_dir = self._endpoint(target, vp_bottom)
-            src_visible = src_dir == _ROW and 0 <= y0 <= vp_bottom
-            tgt_visible = tgt_dir == _ROW and 0 <= y1 <= vp_bottom
-            if not src_visible and not tgt_visible:
+            src_above = src_dir == _ABOVE or (src_dir == _ROW and y0 < 0)
+            src_below = src_dir == _BELOW or (src_dir == _ROW and y0 > vp_bottom)
+            tgt_above = tgt_dir == _ABOVE or (tgt_dir == _ROW and y1 < 0)
+            tgt_below = tgt_dir == _BELOW or (tgt_dir == _ROW and y1 > vp_bottom)
+            if (src_above and tgt_above) or (src_below and tgt_below):
                 continue
             resolved.append((y0, y1, src_dir, tgt_dir, kind, source, target))
 
@@ -244,7 +245,7 @@ class DisassembleArrowOverlay(QObject):
             )
 
         hovering = any(geometry["key"] == self._hovered for geometry in self._geometry)
-        # Draw the non-hovered arrows first (dimmed while hovering), then the hovered one on top
+        # Draw the non-hovered arrows first (dimmed while hovering), then the hovered one on top.
         for geometry in self._geometry:
             if geometry["key"] != self._hovered:
                 self._draw_arrow(painter, geometry, dim=hovering)
@@ -272,7 +273,7 @@ class DisassembleArrowOverlay(QObject):
             path.lineTo(point)
 
         if highlight:
-            # A soft, wide halo underneath makes the hovered path pop out from the dimmed ones
+            # A soft, wide halo underneath makes the hovered path pop out from the dimmed ones.
             halo = QColor(color)
             halo.setAlpha(70)
             painter.strokePath(path, self._make_pen(halo, width + 4, geometry["kind"]))
@@ -320,12 +321,12 @@ class DisassembleArrowOverlay(QObject):
             if geometry:
                 source, target, _ = geometry["key"]
                 self.follow_requested.emit(source, target)
-                return True  # consume so the click doesn't also change the row selection
+                return True  # consume to keep the click from also changing the row selection
         elif event_type == QEvent.Type.ToolTip:
             geometry = self._arrow_at(event.pos().x(), event.pos().y())
             if geometry:
-                # Show our own tooltip and swallow the event so the view doesn't replace it with the
-                # cell's (usually empty) tooltip, which is what made it vanish after the hover delay
+                # Show our own tooltip and swallow the event to stop the view replacing it with the cell's (usually empty) tooltip,
+                # which is what made it vanish after the hover delay.
                 QToolTip.showText(event.globalPos(), self._tooltip_text(geometry["key"]), self.viewport, QRect(), _TOOLTIP_MSEC)
                 return True
         elif event_type == QEvent.Type.Leave:
@@ -350,9 +351,9 @@ class DisassembleArrowOverlay(QObject):
         position = event.position()
         geometry = self._arrow_at(position.x(), position.y())
         hovered = geometry["key"] if geometry else None
-        # Only touch the tooltip when the hovered arrow actually changes. Calling showText on every mouse
-        # move (even over the same arrow) thrashed the shared tooltip window into half-drawn or flickering
-        # states, especially while switching between arrows
+        # Only touch the tooltip when the hovered arrow actually changes.
+        # Calling showText on every mouse move (even over the same arrow) thrashed the shared tooltip window into half-drawn or flickering states,
+        # especially while switching between arrows.
         if hovered == self._hovered:
             return
         self._set_hovered(hovered)  # updates the cursor and repaints
