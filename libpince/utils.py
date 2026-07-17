@@ -177,10 +177,12 @@ def get_effective_arch(pid: int) -> int:
         # The launched exe decides the effective bitness, first valid PE wins like in _refresh_main_module_info.
         for _, _, _, _, _, _, path in get_regions(pid):
             if path.lower().endswith(".exe"):
-                arch = {0x10B: typedefs.INFERIOR_ARCH.ARCH_32, 0x20B: typedefs.INFERIOR_ARCH.ARCH_64}.get(pe_magic(path))
+                resolved_path = resolve_mapped_path(pid, path)
+                arch = {0x10B: typedefs.INFERIOR_ARCH.ARCH_32, 0x20B: typedefs.INFERIOR_ARCH.ARCH_64}.get(pe_magic(resolved_path))
                 if arch:
                     return arch
-    # Native processes (or WINE without a mapped PE yet) follow the ELF class of the main binary.
+        return -1
+    # Native processes follow the ELF class of the main binary.
     try:
         with open(f"/proc/{pid}/exe", "rb") as exe_file:
             elf_class = exe_file.read(5)

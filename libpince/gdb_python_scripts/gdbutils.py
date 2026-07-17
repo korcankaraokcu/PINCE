@@ -31,11 +31,29 @@ pid = -1 if inferior.pid == 0 else inferior.pid
 mem_file = "/proc/" + str(pid) + "/mem"
 
 try:
+    arch = gdb.selected_frame().architecture()
+except gdb.error:
+    arch = inferior.architecture()
+
+# Wine's segment selectors can make GDB mistake normal Win64 for x32, truncating pointers to 32 bits.
+if (
+    pid != -1
+    and arch.name().startswith("i386:x64-32")
+    and utils.is_wine_process(pid)
+    and utils.get_effective_arch(pid) == typedefs.INFERIOR_ARCH.ARCH_64
+):
+    gdb.execute("set architecture i386:x86-64", to_string=True)
+    try:
+        arch = gdb.selected_frame().architecture()
+    except gdb.error:
+        arch = inferior.architecture()
+
+try:
     void_ptr = gdb.lookup_type("void").pointer()
 except gdb.error:
     void_ptr = gdb.parse_and_eval("0").type.pointer()
 
-if void_ptr.sizeof == 8:
+if arch.registers().find("rax") is not None:
     current_arch = typedefs.INFERIOR_ARCH.ARCH_64
 else:
     current_arch = typedefs.INFERIOR_ARCH.ARCH_32

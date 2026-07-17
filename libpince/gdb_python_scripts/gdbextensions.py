@@ -181,18 +181,15 @@ class GetStackInfo(gdb.Command):
 
     def invoke(self, argument: str, from_tty: bool) -> None:
         stack_info_list = []
+        # x32 has 64 bits registers but 32 bits pointers so select these widths independently.
+        chunk_size = gdbutils.void_ptr.sizeof
+        int_format = "Q" if chunk_size == 8 else "I"
         if gdbutils.current_arch == typedefs.INFERIOR_ARCH.ARCH_64:
-            chunk_size = 8
-            int_format = "Q"
-
             if argument == "from-base-pointer":
                 stack_register = "rbp"
             else:
                 stack_register = "rsp"
         else:
-            chunk_size = 4
-            int_format = "I"
-
             if argument == "from-base-pointer":
                 stack_register = "ebp"
             else:
