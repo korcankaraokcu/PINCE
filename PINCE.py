@@ -2994,21 +2994,20 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def disassemble_expression(self, expression: str, append_history: bool = True) -> bool | None:
         if debugcore.currentpid == -1:
             return
-        # We ask for a generous byte span that decodes to at least a screenful of rows at any instruction
-        # density, because gdb sizes disassembly by byte length, not by row count. One forward call then
-        # spares us find_closest counting rows, keeps the target on row 0, and lets disas_data[0] double as
-        # the examine_expression.
+        # We ask for a generous byte span that decodes to at least a screenful of rows at any instruction density,
+        # because gdb sizes disassembly by byte length, not by row count.
+        # One forward call spares us find_closest counting rows, keeps the target on row 0 and lets disas_data[0] double as the examine_expression.
         span = self.disassemble_screen_rows * DISAS_BYTES_PER_ROW
         disas_data = debugcore.disassemble(expression, "+" + str(span))
         if not disas_data:
             QMessageBox.information(app.focusWidget(), tr.ERROR, tr.EXPRESSION_ACCESS_ERROR.format(expression))
             return False
-        # In dense code that span decodes to many more rows than fit. We keep only screen_rows, the most any
-        # viewport could show, to avoid building rows that would never be visible.
+        # In dense code that span decodes to many more rows than fit.
+        # We keep only screen_rows, the most any viewport could show, to avoid building rows that would never be visible.
         disas_data = disas_data[: self.disassemble_screen_rows]
-        # Disassemble a screenful of rows above the target too. They are never shown, only fed to the arrow
-        # overlay, letting a caller above the viewport still draw its arrow. We keep the last rows because
-        # backward disassembly only aligns from the target end.
+        # Disassemble a screenful of rows above the target too.
+        # They are never shown, only fed to the arrow overlay, letting a caller above the viewport still draw its arrow.
+        # We keep the last rows because backward disassembly only aligns from the target end.
         above_data: list = []
         target_int_address = safe_str_to_int(utils.extract_hex_address(disas_data[0][0]), 16)
         if target_int_address is not None and target_int_address > span:
@@ -3039,8 +3038,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         arrows: set[tuple[int, int, str]] = set()  # (source_address, target_address, kind)
         address_to_row: dict[int, int] = {}
         try:
-            # Rows above the shown window aren't displayed, but a direct jmp/call in them still draws as a
-            # caller arriving from off the top edge. We parse them for that arrow only.
+            # Rows above the shown window aren't displayed,
+            # but a direct jmp/call in them still draws as a caller arriving from off the top edge, as we parse them for that arrow only.
             for above_info, _, above_instruction in above_data:
                 source = safe_str_to_int(utils.extract_hex_address(above_info), 16)
                 followed = utils.instruction_follow_address(above_instruction)
