@@ -213,31 +213,36 @@ def get_module_load_bias(pid: int, name_regex: str) -> tuple[int, str] | None:
 
 
 def get_module_dict(pid_or_memory_regions: int | list[tuple[str, ...]]) -> dict[str, str]:
-    """Returns modules of a process as a dictionary where key is the path tail and value is the logical load base, empty paths will be ignored.
-    Also adds shortcuts for file extensions.
-    Returned dict will include both sonames, with and without version information.
+    """Returns logical module bases keyed by basename, or by full path when a basename is ambiguous.
+    Unique shortcuts for versioned sonames are also included. Empty paths are ignored.
 
     Args:
         pid_or_memory_regions (int, list): PID of the process or output from get_regions
 
     Returns:
-        dict: {file_name:load_base}
+        dict: {module_name_or_path:load_base}
     """
     memory_regions = get_regions(pid_or_memory_regions) if isinstance(pid_or_memory_regions, int) else pid_or_memory_regions
-    per_file: dict[str, int] = {}
+    modules_by_name: dict[str, dict[str, int]] = {}
     for start, _, _, offset, _, _, path in memory_regions:
         if path:
+            modules = modules_by_name.setdefault(os.path.basename(path), {})
             base = int(start, 16) - int(offset, 16)
-            per_file[path] = min(base, per_file.get(path, base))
+            modules[path] = min(base, modules.get(path, base))
 
     module_dict: dict[str, str] = {}
-    for path, base in per_file.items():
-        tail = os.path.basename(path)
-        base_address = hex(base)
-        module_dict.setdefault(tail, base_address)
-        short_name = regexes.file_with_extension.search(tail)
-        if short_name and short_name.group(0) != tail:
-            module_dict.setdefault(short_name.group(0), base_address)
+    for name, modules in modules_by_name.items():
+        for path, base in modules.items():
+            module_dict[name if len(modules) == 1 else path] = hex(base)
+
+    aliases: dict[str, list[int]] = {}
+    for name, modules in modules_by_name.items():
+        short_name = regexes.file_with_extension.search(name)
+        if short_name and short_name.group(0) != name:
+            aliases.setdefault(short_name.group(0), []).extend(modules.values())
+    for name, bases in aliases.items():
+        if name not in modules_by_name and len(bases) == 1:
+            module_dict[name] = hex(bases[0])
     return module_dict
 
 
