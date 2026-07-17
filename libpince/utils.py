@@ -212,6 +212,35 @@ def get_module_load_bias(pid: int, name_regex: str) -> tuple[int, str] | None:
     return None
 
 
+def get_module_dict(pid_or_memory_regions: int | list[tuple[str, ...]]) -> dict[str, str]:
+    """Returns modules of a process as a dictionary where key is the path tail and value is the logical load base, empty paths will be ignored.
+    Also adds shortcuts for file extensions.
+    Returned dict will include both sonames, with and without version information.
+
+    Args:
+        pid_or_memory_regions (int, list): PID of the process or output from get_regions
+
+    Returns:
+        dict: {file_name:load_base}
+    """
+    memory_regions = get_regions(pid_or_memory_regions) if isinstance(pid_or_memory_regions, int) else pid_or_memory_regions
+    per_file: dict[str, int] = {}
+    for start, _, _, offset, _, _, path in memory_regions:
+        if path:
+            base = int(start, 16) - int(offset, 16)
+            per_file[path] = min(base, per_file.get(path, base))
+
+    module_dict: dict[str, str] = {}
+    for path, base in per_file.items():
+        tail = os.path.basename(path)
+        base_address = hex(base)
+        module_dict.setdefault(tail, base_address)
+        short_name = regexes.file_with_extension.search(tail)
+        if short_name and short_name.group(0) != tail:
+            module_dict.setdefault(short_name.group(0), base_address)
+    return module_dict
+
+
 def resolve_mapped_path(pid: int, mapped_path: str) -> str:
     """Resolves a path from an inferior's /proc/PID/maps into one PINCE can open.
 
@@ -306,19 +335,21 @@ def get_defined_dynamic_symbols(elf_path: str, symbol_names: list[str]) -> dict[
     return found
 
 
-def get_region_dict(pid: int) -> dict[str, list[str]]:
+def get_region_dict(pid_or_memory_regions: int | list[tuple[str, ...]]) -> dict[str, list[str]]:
     """Returns memory regions of a process as a dictionary where key is the path tail and value is the list of the
-    corresponding start addresses of the tail, empty paths will be ignored. Also adds shortcuts for file extensions,
-    returned dict will include both sonames, with and without version information
+    corresponding start addresses of the tail, empty paths will be ignored.
+    Also adds shortcuts for file extensions.
+    Returned dict will include both sonames, with and without version information.
 
     Args:
-        pid (int): PID of the process
+        pid_or_memory_regions (int, list): PID of the process or output from get_regions
 
     Returns:
         dict: {file_name:start_address_list}
     """
+    memory_regions = get_regions(pid_or_memory_regions) if isinstance(pid_or_memory_regions, int) else pid_or_memory_regions
     region_dict: dict[str, list[str]] = {}
-    for item in get_regions(pid):
+    for item in memory_regions:
         start_addr, _, _, _, _, _, path = item
         if not path:
             continue
@@ -352,7 +383,7 @@ def get_region_info(pid: int | str, address: int | str) -> typedefs.tuple_region
     if type(address) != int:
         address = safe_str_to_int(address, 0)
     region_list = get_regions(pid)
-    region_dict = get_region_dict(pid)
+    region_dict = get_region_dict(region_list)
     for start, end, perms, _, _, _, path in region_list:
         start_int = safe_str_to_int(start, 16)
         end_int = safe_str_to_int(end, 16)

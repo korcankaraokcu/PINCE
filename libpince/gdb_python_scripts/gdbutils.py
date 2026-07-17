@@ -115,7 +115,9 @@ def get_float_registers() -> OrderedDict[str, str]:
     return contents_send
 
 
-def examine_expression(expression: str, regions: dict[str, list[str]] | None = None) -> typedefs.tuple_examine_expression:
+def examine_expression(
+    expression: str, regions: dict[str, list[str]] | None = None, module_bases: dict[str, str] | None = None
+) -> typedefs.tuple_examine_expression:
     # Resolve one candidate through GDB's evaluator. Return None if it yields no address.
     def via_gdb(expr):
         try:
@@ -134,15 +136,25 @@ def examine_expression(expression: str, regions: dict[str, list[str]] | None = N
     resolved = via_gdb(expression)
     if resolved:
         return resolved
-    if not regions:
+    if not regions and not module_bases:
         return none
 
-    # Swap each module name for its live base address, so module text resolves anywhere in the expression.
+    # Bare module names use logical load bases.
+    # Explicit module[n] names retain raw VMA indexing.
     # Longest names match first so libc.so.6 wins over libc.so.
-    names = "|".join(re.escape(name) for name in sorted(regions, key=len, reverse=True))
+    names = "|".join(re.escape(name) for name in sorted(set(regions or ()) | set(module_bases or ()), key=len, reverse=True))
+
+    def resolve_module(match):
+        name, index = match.groups()
+        if index is None:
+            return module_bases.get(name, match.group(0)) if module_bases else match.group(0)
+        addresses = regions.get(name, ()) if regions else ()
+        index = int(index)
+        return addresses[index] if index < len(addresses) else match.group(0)
+
     substituted = re.sub(
         regexes.module_reference.format(names),
-        lambda m: regions[m.group(1)][int(m.group(2) or 0)] if int(m.group(2) or 0) < len(regions[m.group(1)]) else m.group(0),
+        resolve_module,
         expression,
     )
     if substituted == expression:

@@ -562,9 +562,11 @@ class ExamineExpressions(gdb.Command):
         contents_recv = receive_from_pince()
         # contents_recv format: [expression1, expression2, ...]
 
-        regions = utils.get_region_dict(pid)
+        memory_regions = utils.get_regions(pid)
+        regions = utils.get_region_dict(memory_regions)
+        module_bases = utils.get_module_dict(memory_regions)
         for expression in contents_recv:
-            result_tuple = gdbutils.examine_expression(expression, regions)
+            result_tuple = gdbutils.examine_expression(expression, regions, module_bases)
             data_read_list.append(result_tuple)
         send_to_pince(data_read_list)
 
