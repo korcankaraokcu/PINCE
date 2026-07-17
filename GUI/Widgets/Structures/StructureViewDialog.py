@@ -14,7 +14,7 @@ from tr.tr import TranslationConstants as tr
 
 ROLE_MEMBER = Qt.ItemDataRole.UserRole
 ROLE_ADDR = Qt.ItemDataRole.UserRole + 1
-ROLE_LOADED = Qt.ItemDataRole.UserRole + 2
+ROLE_CHILD_BASE = Qt.ItemDataRole.UserRole + 2
 
 _MAX_DEPTH = 16
 
@@ -89,33 +89,24 @@ class StructureViewDialog(QDialog, Ui_Dialog):
                 item = QTreeWidgetItem([offset_text, member.name, type_text, ""])
                 item.setData(0, ROLE_MEMBER, member)
                 item.setData(0, ROLE_ADDR, addr)
-                item.setData(0, ROLE_LOADED, False)
                 item.addChild(QTreeWidgetItem(["", "", "", ""]))
                 parent.addChild(item)
 
-    def _on_item_expanded(self, item: QTreeWidgetItem) -> None:
-        if item.data(0, ROLE_LOADED):
-            return
-        item.takeChildren()
+    def _on_item_expanded(self, item: QTreeWidgetItem, mem_handle: io.BufferedReader | None = None) -> None:
         member: typedefs.StructureMember = item.data(0, ROLE_MEMBER)
         if member is None or member.struct_ref is None:
             return
-        member_addr = item.data(0, ROLE_ADDR)  # already base + member.offset
+        child_base = item.data(0, ROLE_ADDR)  # already base + member.offset
         if member.is_pointer:
             ptr_index = typedefs.VALUE_INDEX.INT32 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
-            child_base = debugcore.read_memory(member_addr, ptr_index)  # one hop deref at the member's address
-            if child_base is None or child_base == 0:
-                item.setData(0, ROLE_LOADED, True)
-                return
-        else:
-            child_base = member_addr
-        child_struct = StructureManager.get(member.struct_ref)
-        if child_struct is None:
-            item.setData(0, ROLE_LOADED, True)
+            child_base = debugcore.read_memory(child_base, ptr_index, mem_handle=mem_handle)  # one hop deref at the member's address
+        if child_base == item.data(0, ROLE_CHILD_BASE):
             return
-        depth = self._get_depth(item)
-        self._build_level(item, child_struct, child_base, depth + 1)
-        item.setData(0, ROLE_LOADED, True)
+        item.takeChildren()
+        child_struct = StructureManager.get(member.struct_ref)
+        if child_struct is not None and (child_base or not member.is_pointer):
+            self._build_level(item, child_struct, child_base, self._get_depth(item) + 1)
+        item.setData(0, ROLE_CHILD_BASE, child_base)
 
     def _get_depth(self, item: QTreeWidgetItem) -> int:
         depth = 0
@@ -197,4 +188,6 @@ class StructureViewDialog(QDialog, Ui_Dialog):
                 )
                 child.setText(3, str(value) if value is not None else "??")
             if child.isExpanded():
+                if member is not None and member.is_pointer:
+                    self._on_item_expanded(child, mem_handle)
                 self._refresh_item(child, mem_handle)
