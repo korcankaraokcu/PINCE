@@ -185,14 +185,15 @@ class LibpinceScriptApi:
         return utils.disassemble(self._bytes(data).hex(" "), self.address(address) if address else 0, debugcore.inferior_arch)
 
     def module_base(self, name: str) -> int | None:
-        """Return the first mapped base address for a module by basename (e.g. 'libc.so.6')."""
+        """Return a module's logical load base by basename or full path when ambiguous."""
         if debugcore.currentpid == -1:
             raise RuntimeError("No process is attached!")
         needle = str(name).lower()
-        return next(
-            (int(start, 16) for start, *_, path in utils.get_regions(debugcore.currentpid) if path and os.path.basename(path).lower() == needle),
+        base = next(
+            (base for module, base in utils.get_module_dict(debugcore.currentpid).items() if module.lower() == needle),
             None,
         )
+        return int(base, 16) if base is not None else None
 
     def regs(self) -> dict[str, str | None]:
         """Return current general-purpose registers."""
