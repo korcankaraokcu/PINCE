@@ -180,7 +180,7 @@ BREAKPOINT_COLOR = QColorConstants.Red
 # jmp/call references are drawn as arrows overlaid left of the instruction column (see DisassembleArrowOverlay)
 DISAS_MAX_REFS_PER_TARGET = 12  # cap referrer arrows converging on a single visible target to avoid clutter
 DISAS_MAX_ARROWS = 240  # overall safety cap on the number of arrows drawn for one view
-DISAS_BYTES_PER_ROW = 10  # generous bytes-per-instruction estimate for sizing a screenful fetch from a row count
+DISAS_BYTES_PER_ROW = 15  # maximum x86 instruction length
 
 # represents the index of columns in address table
 FROZEN_COL = 0  # Frozen
@@ -2470,7 +2470,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         # The most rows any viewport could ever need, computed once from the desktop resolution.
         # Sizing for the largest possible screen keeps a later resize or splitter drag from underfilling the table.
         row_height = max(1, self.tableWidget_Disassemble.verticalHeader().defaultSectionSize())
-        self.disassemble_screen_rows = max(20, QApplication.primaryScreen().size().height() // row_height)
+        screen_height = max(screen.size().height() for screen in QApplication.screens())
+        self.disassemble_screen_rows = max(20, screen_height // row_height)
 
         self.disassemble_last_selected_address_int = 0
         self.disassemble_currently_displayed_address = "0"
@@ -3005,14 +3006,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         # In dense code that span decodes to many more rows than fit.
         # We keep only screen_rows, the most any viewport could show, to avoid building rows that would never be visible.
         disas_data = disas_data[: self.disassemble_screen_rows]
-        # Disassemble a screenful of rows above the target too.
-        # They are never shown, only fed to the arrow overlay, letting a caller above the viewport still draw its arrow.
-        # We keep the last rows because backward disassembly only aligns from the target end.
-        above_data: list = []
-        target_int_address = safe_str_to_int(utils.extract_hex_address(disas_data[0][0]), 16)
-        if target_int_address is not None and target_int_address > span:
-            above_raw = debugcore.disassemble(hex(target_int_address - span), hex(target_int_address))
-            above_data = above_raw[-self.disassemble_screen_rows :]
         program_counter = debugcore.examine_expression("$pc").address
         program_counter_int = int(program_counter, 16) if program_counter else None
         row_color = {}
@@ -3038,15 +3031,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         arrows: set[tuple[int, int, str]] = set()  # (source_address, target_address, kind)
         address_to_row: dict[int, int] = {}
         try:
-            # Rows above the shown window aren't displayed,
-            # but a direct jmp/call in them still draws as a caller arriving from off the top edge, as we parse them for that arrow only.
-            for above_info, _, above_instruction in above_data:
-                source = safe_str_to_int(utils.extract_hex_address(above_info), 16)
-                followed = utils.instruction_follow_address(above_instruction)
-                if followed:
-                    dest = safe_str_to_int(followed, 16)
-                    if dest != source and near_lo <= dest <= near_hi:
-                        arrows.add((source, dest, "call" if above_instruction.startswith("call") else "jmp"))
             for row, (address_info, bytes_aob, instruction) in enumerate(disas_data):
                 comment = ""
                 current_address_str = utils.extract_hex_address(address_info)
