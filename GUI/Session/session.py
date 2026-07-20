@@ -6,6 +6,7 @@ from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QCheckBox, QFileDialog, QMessageBox
 
+from GUI.Settings import settings
 from GUI.States import states
 from GUI.Utils import guiutils
 from libpince import debugcore, typedefs, utils
@@ -227,10 +228,9 @@ class Session:
             close_event.accept()
             return
 
-        settings = QSettings()
-
-        if settings.contains("General/save_session_on_exit"):
-            if not settings.value("General/save_session_on_exit", type=bool):
+        settings_instance = QSettings()
+        if settings_instance.contains(settings.SAVE_SESSION_ON_EXIT):
+            if not settings_instance.value(settings.SAVE_SESSION_ON_EXIT, type=bool):
                 return close_event.accept()
 
             if not self.save_session():
@@ -250,8 +250,8 @@ class Session:
             return close_event.ignore()
 
         if remember_choice.isChecked():
-            settings.setValue("General/save_session_on_exit", result == QMessageBox.StandardButton.Yes)
-            settings.sync()
+            settings_instance.setValue(settings.SAVE_SESSION_ON_EXIT, result == QMessageBox.StandardButton.Yes)
+            settings_instance.sync()
 
         if result == QMessageBox.StandardButton.Yes:
             if self.save_session():
