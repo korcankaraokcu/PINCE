@@ -19,11 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Check if the file is in the correct directory and cd there
 # This script should be only in PINCE/ci folder
 PACKAGEDIR="$(dirname "$(readlink -f "$0")")"
-case $PACKAGEDIR in
-	*"PINCE/ci") ;;
-	*) echo "package.sh is not in PINCE/ci folder!"; exit 1;;
-esac
 cd "$PACKAGEDIR" || exit
+[ -f ../install.sh ] && [ -f ../PINCE.py ] || { echo "package.sh is not in PINCE/ci folder!"; exit 1; }
 
 # Create cleanup function to remove remaining deps/files
 cleanup () {
@@ -39,6 +36,7 @@ exit_on_failure() {
 	echo "Error occured while creating AppImage! Check the log above!"
 	exit 1
 }
+cleanup || exit_on_failure
 
 # Reuse install.sh's functions
 PINCE_LIB_ONLY=1
@@ -46,98 +44,68 @@ PINCE_LIB_ONLY=1
 
 if [ -r /etc/os-release ]; then
 	. /etc/os-release
-	OS_NAME="$ID $ID_LIKE"
+	case "$ID $ID_LIKE" in *arch*) export NO_STRIP=1 ;; esac # skip strip on Arch for linuxdeploy
 fi
-set_install_vars "$OS_NAME" || LRELEASE_CMD="$(command -v lrelease6)" # fallback for unsupported distros
-case $OS_NAME in *arch*) export NO_STRIP=1 ;; esac # skip strip on Arch for linuxdeploy
+export ARCH=x86_64
 
 # Download necessary tools
-curl -L -O https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
 DEPLOYTOOL=./linuxdeploy-x86_64.AppImage
-chmod +x $DEPLOYTOOL
+curl -fLO https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage || exit_on_failure
+curl -fLO https://raw.githubusercontent.com/TheAssassin/linuxdeploy-plugin-conda/master/linuxdeploy-plugin-conda.sh || exit_on_failure
+chmod +x "$DEPLOYTOOL" linuxdeploy-plugin-conda.sh || exit_on_failure
 
-curl -L -O https://raw.githubusercontent.com/TheAssassin/linuxdeploy-plugin-conda/master/linuxdeploy-plugin-conda.sh
-CONDAPLUGIN=./linuxdeploy-plugin-conda.sh
-chmod +x $CONDAPLUGIN
+# Bundle Python, GDB and Qt from conda-forge, with the remaining requirements from PyPI
+sed '/^[[:space:]]*PyQt6/d' ../requirements.txt > requirements-appimage.txt || exit_on_failure
+printf '%s\n' 'channels: [conda-forge]' 'default_channels: []' > conda-appimage.yml || exit_on_failure
+CONDARC="$PWD/conda-appimage.yml" PIP_REQUIREMENTS="--only-binary=:all: -r requirements-appimage.txt" \
+	CONDA_PACKAGES="python=3.14.6;gdb=17.2;qt6-main=6.11.1;pyqt6=6.11.0" "$DEPLOYTOOL" --appdir AppDir -pconda || exit_on_failure
 
-# Create AppImage's AppDir with a Conda environment pre-baked
-# containing our required pip packages
-export PIP_REQUIREMENTS="-r ../requirements.txt"
-# Need this to get libstdc++ higher than default 6.0.29, libxcb-cursor for Debian family,
-# and a CA bundle for Python HTTPS requests inside the AppImage
-export CONDA_PACKAGES="libstdcxx-ng;xcb-util-cursor;ca-certificates"
-$DEPLOYTOOL --appdir AppDir -pconda || exit_on_failure
+# Make Conda's Qt and Fontconfig paths relocatable
+CONDA_DIR="$PWD/AppDir/usr/conda"
+sed -i -e 's|^Prefix = .*/AppDir/usr/conda$|Prefix = ..|' -e 's| = .*/AppDir/usr/conda/| = |' "$CONDA_DIR/bin/qt6.conf" || exit_on_failure
+sed -i -e 's|<dir>.*/AppDir/usr/conda/|<dir prefix="relative">../../|' -e '\|.*/AppDir/usr/conda/var/cache/fontconfig|d' "$CONDA_DIR/etc/fonts/fonts.conf" || exit_on_failure
+
+# Keep AppImage paths out of programs launched by GDB
+rm AppDir/usr/bin/gdb || exit_on_failure
+cat > AppDir/usr/bin/gdb <<'GDB_WRAPPER_EOF' || exit_on_failure
+#!/bin/sh
+exec "$(dirname "$0")/../conda/bin/gdb" \
+	-iex 'unset environment PYTHONHOME' \
+	-iex 'unset environment FONTCONFIG_PATH' \
+	-iex 'unset environment FONTCONFIG_FILE' \
+	-iex 'unset environment XKB_CONFIG_ROOT' \
+	-iex 'unset environment SSL_CERT_FILE' \
+	-iex 'unset environment OPENSSL_CONF' \
+	"$@"
+GDB_WRAPPER_EOF
+chmod +x AppDir/usr/bin/gdb || exit_on_failure
 
 # Create PINCE directory
-mkdir -p AppDir/opt/PINCE
+mkdir -p AppDir/opt/PINCE || exit_on_failure
 
 # Set LIBMEMSCAN_CPU so libmemscan builds with SSE4.2 and not AVX512 (which is the default on our GitHub runner).
 # This way users with CPUs older than 2016 (but not older than 2009) can use our AppImage.
+# Also target glibc 2.35 so the build does not inherit a newer runner host's ABI.
 cd ..
 SCRIPTDIR="$PWD"
-LIBMEMSCAN_CPU="-Dcpu=x86_64_v2"
+LIBMEMSCAN_CPU="-Dtarget=x86_64-linux-gnu.2.35 -Dcpu=x86_64_v2"
 build_libmemscan || exit_on_failure
 build_mono_collector || exit_on_failure
-compile_translations || exit_on_failure
+LRELEASE_CMD="$CONDA_DIR/bin/lrelease6" compile_translations || exit_on_failure
 
 # Copy necessary PINCE folders/files to inside AppDir
-cp -r GUI i18n libpince media tr AUTHORS COPYING COPYING.CC-BY PINCE.py THANKS ci/AppDir/opt/PINCE/
-cd ci || exit
+cp -r GUI i18n libpince media tr AUTHORS COPYING COPYING.CC-BY PINCE.py THANKS ci/AppDir/opt/PINCE/ || exit_on_failure
+cd ci || exit_on_failure
 
-cat > AppDir/opt/PINCE/update-check.json <<\EOF
+cat > AppDir/opt/PINCE/update-check.json <<\EOF || exit_on_failure
 {
   "type": "zsync",
   "url": "https://github.com/korcankaraokcu/PINCE/releases/latest/download/PINCE-x86_64.AppImage.zsync"
 }
 EOF
 
-# Create a wrapper so GDB can correctly link against the
-# included conda's python environment to ensure compatibility
-# Taken from: https://github.com/pwndbg/pwndbg/pull/892
-cat > wrapper.sh <<\EOF
-#!/bin/sh
-if [ -z "$CONDA_PREFIX" ]; then
-	echo "Error: CONDA_PREFIX not set"
-	exit 2
-fi
-case $1 in
-	*python-config.py*) ;;
-	*) exec "$CONDA_PREFIX"/bin/python3 ;;
-esac
-# get rid of the first parameter, which is the path to the python-config.py script
-shift
-# python3-config --ldflags lacks the python library
-# also gdb won't link on GitHub actions without libtinfow, which is not provided by the conda environment
-if [ "$1" = "--ldflags" ]; then
-	printf '%s' "-lpython3.14 -ltinfow "
-fi
-exec "$CONDA_PREFIX"/bin/python3-config "$@"
-EOF
-chmod +x wrapper.sh
-
-# Prepare some env vars for GDB compilation
-INSTALLDIR=$(pwd)/AppDir
-CONDA_PREFIX="$(readlink -f "$INSTALLDIR/usr/conda")"
-export CONDA_PREFIX
-export CPPFLAGS="-I${CONDA_PREFIX}/include ${CPPFLAGS}"
-export LDFLAGS="-L${CONDA_PREFIX}/lib ${LDFLAGS}"
-export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-
-NUM_MAKE_JOBS="$(nproc --ignore=1)"
-# Grab latest GDB at time of writing and compile it with our conda Python
-curl -L -O "https://ftp.gnu.org/gnu/gdb/gdb-17.2.tar.gz"
-tar xf gdb-17.2.tar.gz
-rm gdb-17.2.tar.gz
-cd gdb-17.2 || exit
-./configure --with-python="$(readlink -f ../wrapper.sh)" --prefix=/usr || exit_on_failure
-make -j"$NUM_MAKE_JOBS" || exit_on_failure
-make install DESTDIR="$INSTALLDIR"
-cd ..
-rm -rf gdb-17.2
-rm wrapper.sh
-
 # Create a desktop file for AppImage
-cat > AppDir/usr/share/applications/PINCE.desktop <<\EOF
+cat > AppDir/usr/share/applications/PINCE.desktop <<\EOF || exit_on_failure
 [Desktop Entry]
 Name=PINCE
 Exec=PINCE
@@ -147,10 +115,10 @@ Categories=Development;
 EOF
 
 # Copy icon for the above desktop file
-cp ../media/logo/ozgurozbek/pince_appimage.png PINCE.png
+cp ../media/logo/ozgurozbek/pince_appimage.png PINCE.png || exit_on_failure
 
 # Create main running script
-cat > AppRun.sh <<\APPRUN_EOF
+cat > AppRun.sh <<\APPRUN_EOF || exit_on_failure
 #!/bin/sh
 
 if [ -n "$1" ]; then
@@ -186,9 +154,7 @@ EOFENV
 			*"No authentication agent found"*) ;;
 			*"Request dismissed"*) exit 126 ;;
 			*)
-				if [ -n "$pkexec_err" ]; then
-					printf '%s\n' "$pkexec_err" >&2
-				fi
+				[ -z "$pkexec_err" ] || printf '%s\n' "$pkexec_err" >&2
 				exit "$pkexec_status"
 				;;
 		esac
@@ -207,16 +173,13 @@ EOFENV
 fi
 APPDIR="$(dirname "$0")"
 export APPDIR
-export PYTHONHOME=$APPDIR/usr/conda
-$APPDIR/usr/bin/python3 $APPDIR/opt/PINCE/PINCE.py "$PCT_FILE"
+RUNTIME="$APPDIR/usr/conda"
+export PYTHONHOME="$RUNTIME" FONTCONFIG_PATH="$RUNTIME/etc/fonts" FONTCONFIG_FILE="$RUNTIME/etc/fonts/fonts.conf" \
+	XKB_CONFIG_ROOT="$RUNTIME/share/X11/xkb" SSL_CERT_FILE="$RUNTIME/ssl/cacert.pem" OPENSSL_CONF="$RUNTIME/ssl/openssl.cnf"
+exec "$RUNTIME/bin/python3" "$APPDIR/opt/PINCE/PINCE.py" "$PCT_FILE"
 APPRUN_EOF
-chmod +x AppRun.sh
-
-# Patch libqxcb's runpath (not rpath) to point to our packaged libxcb-cursor to fix X11 issues
-patchelf --add-rpath "\$ORIGIN/../../../../../../" AppDir/usr/conda/lib/python3.14/site-packages/PyQt6/Qt6/plugins/platforms/libqxcb.so
+chmod +x AppRun.sh || exit_on_failure
 
 # Package AppDir into AppImage
-LD_LIBRARY_PATH="$(readlink -f ./AppDir/usr/conda/lib)"
-export LD_LIBRARY_PATH
 export LDAI_UPDATE_INFORMATION="gh-releases-zsync|korcankaraokcu|PINCE|latest|PINCE-x86_64.AppImage.zsync"
-$DEPLOYTOOL --icon-file PINCE.png --appdir AppDir/ --output appimage --custom-apprun AppRun.sh || exit_on_failure
+"$DEPLOYTOOL" --icon-file PINCE.png --appdir AppDir/ --output appimage --custom-apprun AppRun.sh || exit_on_failure

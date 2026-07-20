@@ -13,11 +13,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install Dependencies
-        run: sudo apt install libfuse2 libmpc-dev libmpfr-dev gmpc-dev appstream qt6-l10n-tools libcairo2-dev patchelf
+        run: sudo apt install -y fuse3
       - name: Build
-        run: |
-            export ARCH=x86_64
-            ./ci/package.sh
+        run: ./ci/package.sh
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
