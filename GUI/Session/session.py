@@ -98,6 +98,7 @@ class Session:
         self.data_changed = SessionDataChanged.NONE
         self.file_path: str = os.path.expanduser("~")
         self.last_file_name: str = ""  # process name or file name
+        self.file_backed: bool = False
 
     def save_session(self) -> bool:
         """
@@ -108,6 +109,10 @@ class Session:
         Returns:
             bool: True if the session was saved successfully, False otherwise.
         """
+        # until address tree is model view and properly read from this new session object,
+        # address tree must save its data to the session object via signal
+        if self.data_changed & SessionDataChanged.ADDRESS_TREE:
+            states.session_signals.on_save.emit()
         session = {
             "version": self.pct_version,
             "notes": self.pct_notes,
@@ -116,24 +121,24 @@ class Session:
             "process_name": self.pct_process_name,
             "structures": self.pct_structures,
         }
-
-        loaded_file = os.path.join(self.file_path, self.last_file_name)
-        if not loaded_file.endswith("/") and utils.save_file(session, loaded_file):
-            guiutils.own_path_as_user(loaded_file)
+        if self.file_backed:
+            file_path = os.path.join(self.file_path, self.last_file_name)
+            if not utils.save_file(session, file_path):
+                QMessageBox.information(None, tr.ERROR, tr.FILE_SAVE_ERROR)
+                return False
+            guiutils.own_path_as_user(file_path)
+            self.data_changed = SessionDataChanged.NONE
             return True
 
         with guiutils.save_dialog_as_user(None, tr.SAVE_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT, "pct") as file_path:
             if not file_path:
                 return False
-            # until address tree is model view and properly read from this new session object,
-            # address tree must save its data to the session object via signal
-            if self.data_changed & SessionDataChanged.ADDRESS_TREE:
-                states.session_signals.on_save.emit()
             if not utils.save_file(session, file_path):
                 QMessageBox.information(None, tr.ERROR, tr.FILE_SAVE_ERROR)
                 return False
             self.file_path = os.path.dirname(file_path)
             self.last_file_name = os.path.basename(file_path)
+            self.file_backed = True
             self.data_changed = SessionDataChanged.NONE
             return True
 
@@ -200,6 +205,7 @@ class Session:
 
         self.file_path = os.path.dirname(file_path)
         self.last_file_name = os.path.basename(file_path)
+        self.file_backed = True
 
         states.session_signals.on_load.emit()
         self.data_changed = SessionDataChanged.NONE
