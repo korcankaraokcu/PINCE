@@ -110,9 +110,9 @@ class SettingsDialog(QDialog, Ui_Dialog):
         settings.apply_settings()
         result: bool | None = self.comboBox_SaveSessionOnExit.currentData()
         if result is None:
-            self.settings.remove("General/save_session_on_exit")
+            self.settings.remove(settings.SAVE_SESSION_ON_EXIT)
         else:
-            self.settings.setValue("General/save_session_on_exit", result)
+            self.settings.setValue(settings.SAVE_SESSION_ON_EXIT, result)
         super().accept()
 
     def reject(self) -> None:
@@ -160,13 +160,8 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.checkBox_GDBLogging.setChecked(self.settings.value("Debug/gdb_logging", type=bool))
         self.comboBox_InterruptSignal.setCurrentText(self.settings.value("Debug/interrupt_signal", type=str))
         self.checkBox_JavaSegfault.setChecked(self.settings.value("Java/ignore_segfault", type=bool))
-        self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(None))
-        if self.settings.contains("General/save_session_on_exit"):
-            self.comboBox_SaveSessionOnExit.setCurrentIndex(
-                self.comboBox_SaveSessionOnExit.findData(self.settings.value("General/save_session_on_exit"))
-            )
-        else:
-            self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(None))
+        save_on_exit: bool | None = self.settings.value(settings.SAVE_SESSION_ON_EXIT, type=bool) if self.settings.contains(settings.SAVE_SESSION_ON_EXIT) else None
+        self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(save_on_exit))
 
     def change_display(self, index: int) -> None:
         self.stackedWidget.setCurrentIndex(index)
