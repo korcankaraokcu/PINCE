@@ -30,6 +30,11 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.lineEdit_Path.setText(os.path.expanduser("~") + f"/{utils.get_process_name(debugcore.currentpid)}.lmptr")
         self.pushButton_Path.clicked.connect(self.pushButton_Path_clicked)
         self.checkBox_CheckAdvOptions.toggled.connect(self.checkBox_CheckAdvOptions_checked)
+        self.spinBox_LastOffset.setEnabled(self.checkBox_LastOffset.isChecked())
+        self.checkBox_LastOffset.toggled.connect(self.spinBox_LastOffset.setEnabled)
+        self.spinBox_LastOffset.setRange(-self.spinBox_MinOffset.value(), self.spinBox_MaxOffset.value())
+        self.spinBox_MinOffset.valueChanged.connect(lambda value: self.spinBox_LastOffset.setMinimum(-value))
+        self.spinBox_MaxOffset.valueChanged.connect(self.spinBox_LastOffset.setMaximum)
         self.spinBox_MaxResults.setEnabled(self.checkBox_MaxResults.isChecked())
         self.checkBox_MaxResults.toggled.connect(self.checkBox_MaxResults_checked)
         self.scan_button: QPushButton | None = self.buttonBox.addButton(tr.SCAN, QDialogButtonBox.ButtonRole.ActionRole)
@@ -85,6 +90,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
             ptr_opts.max_depth = self.spinBox_Depth.value()
             ptr_opts.max_positive_offset = self.spinBox_MaxOffset.value()
             ptr_opts.max_negative_offset = self.spinBox_MinOffset.value()
+            ptr_opts.last_offset = self.spinBox_LastOffset.value() if self.checkBox_LastOffset.isChecked() else None
             ptr_opts.max_results = self.spinBox_MaxResults.value() if self.checkBox_MaxResults.isChecked() else None
             ptr_opts.module_base_only = self.checkBox_Module.isChecked()
         else:

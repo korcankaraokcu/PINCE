@@ -339,6 +339,49 @@
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_LastOffset">
+          <item>
+           <widget class="QCheckBox" name="checkBox_LastOffset">
+            <property name="text">
+             <string>Last Offset</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinBox_LastOffset">
+            <property name="prefix">
+             <string>0x</string>
+            </property>
+            <property name="maximum">
+             <number>2048</number>
+            </property>
+            <property name="singleStep">
+             <number>4</number>
+            </property>
+            <property name="displayIntegerBase">
+             <number>16</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_LastOffset">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_MaxResults">
           <item>
            <widget class="QCheckBox" name="checkBox_MaxResults">

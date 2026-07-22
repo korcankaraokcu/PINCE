@@ -373,6 +373,7 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>0x</source>
         <translation>0x</translation>
     </message>
@@ -380,6 +381,11 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
         <source>Max Negative Offset:</source>
         <translation>最大负偏移：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
+        <source>Last Offset</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScanSearch/Form/PointerScanSearchDialog.ui" line="0" />
