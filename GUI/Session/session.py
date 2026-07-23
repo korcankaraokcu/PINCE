@@ -2,10 +2,11 @@ import os
 from enum import IntFlag, auto
 from typing import Any
 
-from PyQt6.QtCore import QObject
+from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QCloseEvent
-from PyQt6.QtWidgets import QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QCheckBox, QFileDialog, QMessageBox
 
+from GUI.Settings import settings
 from GUI.States import states
 from GUI.Utils import guiutils
 from libpince import debugcore, typedefs, utils
@@ -164,6 +165,7 @@ class Session:
         self.data_changed = SessionDataChanged.NONE
         self.file_path: str = os.path.expanduser("~")
         self.last_file_name: str = ""  # process name or file name
+        self.file_backed: bool = False
 
     def save_session(self) -> bool:
         """
@@ -174,27 +176,36 @@ class Session:
         Returns:
             bool: True if the session was saved successfully, False otherwise.
         """
+        # until address tree is model view and properly read from this new session object,
+        # address tree must save its data to the session object via signal
+        if self.data_changed & SessionDataChanged.ADDRESS_TREE:
+            states.session_signals.on_save.emit()
+        session = {
+            "version": self.pct_version,
+            "notes": self.pct_notes,
+            "bookmarks": self.pct_bookmarks,
+            "address_tree": self.pct_address_tree,
+            "process_name": self.pct_process_name,
+            "structures": self.pct_structures,
+        }
+        if self.file_backed:
+            file_path = os.path.join(self.file_path, self.last_file_name)
+            if not utils.save_file(session, file_path):
+                QMessageBox.information(None, tr.ERROR, tr.FILE_SAVE_ERROR)
+                return False
+            guiutils.own_path_as_user(file_path)
+            self.data_changed = SessionDataChanged.NONE
+            return True
 
         with guiutils.save_dialog_as_user(None, tr.SAVE_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT, "pct") as file_path:
             if not file_path:
                 return False
-            # until address tree is model view and properly read from this new session object,
-            # address tree must save its data to the session object via signal
-            if self.data_changed & SessionDataChanged.ADDRESS_TREE:
-                states.session_signals.on_save.emit()
-            session = {
-                "version": self.pct_version,
-                "notes": self.pct_notes,
-                "bookmarks": self.pct_bookmarks,
-                "address_tree": self.pct_address_tree,
-                "process_name": self.pct_process_name,
-                "structures": self.pct_structures,
-            }
             if not utils.save_file(session, file_path):
                 QMessageBox.information(None, tr.ERROR, tr.FILE_SAVE_ERROR)
                 return False
             self.file_path = os.path.dirname(file_path)
             self.last_file_name = os.path.basename(file_path)
+            self.file_backed = True
             self.data_changed = SessionDataChanged.NONE
             return True
 
@@ -261,6 +272,7 @@ class Session:
 
         self.file_path = os.path.dirname(file_path)
         self.last_file_name = os.path.basename(file_path)
+        self.file_backed = True
 
         states.session_signals.on_load.emit()
         self.data_changed = SessionDataChanged.NONE
@@ -282,15 +294,36 @@ class Session:
             close_event.accept()
             return
 
-        pre_exit_unsaved_changes_result = self.check_unsaved_changes()
-        if pre_exit_unsaved_changes_result == QMessageBox.StandardButton.Yes:
+        settings_instance = QSettings()
+        if settings_instance.contains(settings.SAVE_SESSION_ON_EXIT):
+            if not settings_instance.value(settings.SAVE_SESSION_ON_EXIT, type=bool):
+                return close_event.accept()
+
+            if not self.save_session():
+                return close_event.ignore()
+
+            return close_event.accept()
+
+        unsaved_changes = QMessageBox()
+        remember_choice = QCheckBox(tr.REMEMBER_MY_DECISION)
+        unsaved_changes.setCheckBox(remember_choice)
+        unsaved_changes.setWindowTitle(tr.SAVE_SESSION_QUESTION_TITLE)
+        unsaved_changes.setText(tr.SAVE_SESSION_QUESTION_PROMPT)
+        unsaved_changes.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel)
+        result = QMessageBox.StandardButton(unsaved_changes.exec())
+
+        if result == QMessageBox.StandardButton.Cancel:
+            return close_event.ignore()
+
+        if remember_choice.isChecked():
+            settings_instance.setValue(settings.SAVE_SESSION_ON_EXIT, result == QMessageBox.StandardButton.Yes)
+            settings_instance.sync()
+
+        if result == QMessageBox.StandardButton.Yes:
             if self.save_session():
                 close_event.accept()
             else:
                 close_event.ignore()
-
-        elif pre_exit_unsaved_changes_result == QMessageBox.StandardButton.Cancel:
-            close_event.ignore()
         else:
             close_event.accept()
 
