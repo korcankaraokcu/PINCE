@@ -137,6 +137,8 @@ class StructureViewDialog(QDialog, Ui_Dialog):
                 parsed,
                 member.value_type.zero_terminate,
                 member.value_type.endian,
+                member.value_type.length,
+                0,  # TODO: Pass start_index once we've figured out where to store it
             )
             self._refresh_single(item, member, addr)
 

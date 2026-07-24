@@ -2123,9 +2123,11 @@ class MainForm(QMainWindow, MainWindow):
                         and compare_new_value < compare_value
                     ):
                         frozen.value = new_value
-                        debugcore.write_memory(address, vt.value_index, new_value, endian=vt.endian)
+                        # TODO: Pass start_index once we've figured out where to store it
+                        debugcore.write_memory(address, vt.value_index, new_value, endian=vt.endian, length=vt.length, start_index=0)
                         continue
-                debugcore.write_memory(address, vt.value_index, value, vt.zero_terminate, vt.endian)
+                # TODO: Pass start_index once we've figured out where to store it
+                debugcore.write_memory(address, vt.value_index, value, vt.zero_terminate, vt.endian, vt.length, 0)
 
     def handle_freeze_change(self, row: QTreeWidgetItem, check_state: Qt.CheckState) -> None:
         entry = self.get_script_entry(row)
@@ -2194,14 +2196,15 @@ class MainForm(QMainWindow, MainWindow):
                 address = self._resolved_address(row)
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
                 parsed_value = utils.parse_string(new_value, vt.value_index)
-                if typedefs.VALUE_INDEX.has_length(vt.value_index) and parsed_value is not None:
+                if typedefs.VALUE_INDEX.has_length(vt.value_index) and vt.value_index != typedefs.VALUE_INDEX.BINARY and parsed_value is not None:
                     if vt.length != len(parsed_value):
                         length_changed = True
                     vt.length = len(parsed_value)
                     row.setText(TYPE_COL, vt.text())
                 frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 frozen.value = parsed_value
-                debugcore.write_memory(address, vt.value_index, parsed_value, vt.zero_terminate, vt.endian)
+                # TODO: Pass start_index once we've figured out where to store it
+                debugcore.write_memory(address, vt.value_index, parsed_value, vt.zero_terminate, vt.endian, vt.length, 0)
             self.update_address_table()
             if length_changed:
                 self.mark_address_tree_changed()

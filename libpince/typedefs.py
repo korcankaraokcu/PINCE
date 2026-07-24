@@ -180,9 +180,14 @@ class VALUE_INDEX:
 
     STRUCT = 11  # Only used to represent a grouping of Struct offsets/variables, not readable directly.
 
+    BINARY = 12
+
+    # Denotes the highest-numbered valid index
+    MAX_VALUE = BINARY
+
     @staticmethod
     def is_integer(value_index: int) -> bool:
-        return VALUE_INDEX.INT8 <= value_index <= VALUE_INDEX.INT64
+        return VALUE_INDEX.INT8 <= value_index <= VALUE_INDEX.INT64 or value_index == VALUE_INDEX.BINARY
 
     @staticmethod
     def is_float(value_index: int) -> bool:
@@ -190,7 +195,7 @@ class VALUE_INDEX:
 
     @staticmethod
     def is_number(value_index: int) -> bool:
-        return VALUE_INDEX.INT8 <= value_index <= VALUE_INDEX.FLOAT64
+        return VALUE_INDEX.INT8 <= value_index <= VALUE_INDEX.FLOAT64 or value_index == VALUE_INDEX.BINARY
 
     @staticmethod
     def is_string(value_index: int) -> bool:
@@ -198,7 +203,7 @@ class VALUE_INDEX:
 
     @staticmethod
     def has_length(value_index: int) -> bool:
-        return VALUE_INDEX.STRING_ASCII <= value_index <= VALUE_INDEX.AOB
+        return VALUE_INDEX.STRING_ASCII <= value_index <= VALUE_INDEX.AOB or value_index == VALUE_INDEX.BINARY
 
 
 class SCAN_INDEX:
@@ -238,6 +243,7 @@ index_to_text_dict = collections.OrderedDict(
         (VALUE_INDEX.STRING_UTF16, "String_UTF16"),
         (VALUE_INDEX.STRING_UTF32, "String_UTF32"),
         (VALUE_INDEX.AOB, "ByteArray"),
+        (VALUE_INDEX.BINARY, "Binary"),
     ]
 )
 

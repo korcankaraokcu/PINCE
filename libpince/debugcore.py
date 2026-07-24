@@ -1701,6 +1701,27 @@ def free_cave(name: str) -> bool:
     return succeeded
 
 
+def read_memory_bytes(
+    address: int,
+    value_index: int,
+    byte_length: int,
+    endian: int,
+    mem_handle: io.BufferedReader | None = None,
+) -> bytes:
+    own_mem_handle = mem_handle is None
+    try:
+        if own_mem_handle:
+            mem_handle = memory_handle()
+        mem_handle.seek(address)
+        data_read = mem_handle.read(byte_length)
+        if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian and typedefs.VALUE_INDEX.is_number(value_index):
+            data_read = data_read[::-1]
+    finally:
+        if own_mem_handle and mem_handle is not None:
+            mem_handle.close()
+    return data_read
+
+
 def read_memory(
     address: str | int,
     value_index: int,
@@ -1709,6 +1730,7 @@ def read_memory(
     value_repr: int = typedefs.VALUE_REPR.UNSIGNED,
     endian: int = typedefs.ENDIANNESS.HOST,
     mem_handle: io.BufferedReader | None = None,
+    start_index: int = 0,
 ) -> str | float | int | None:
     """Reads value from the given address
 
@@ -1716,14 +1738,16 @@ def read_memory(
         address (str, int): Can be a hex string or an integer.
         value_index (int): Determines the type of data read. Can be a member of typedefs.VALUE_INDEX
         length (int): Length of the data that'll be read. Must be greater than 0. Only used when the value_index is
-        STRING or AOB. Ignored otherwise
+            STRING, AOB, or BINARY. Ignored otherwise
         zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
-        value_index is STRING. Ignored otherwise
+            value_index is STRING. Ignored otherwise
         value_repr (int): Can be a member of typedefs.VALUE_REPR. Only usable with integer types
         endian (int): Can be a member of typedefs.ENDIANNESS
         mem_handle (io.BufferedReader, None): A file handle that points to the memory file of the current process
-        This parameter is used for optimization, See memory_handle
-        Don't forget to close the handle after you're done if you use this parameter manually
+            This parameter is used for optimization, See memory_handle
+            Don't forget to close the handle after you're done if you use this parameter manually
+        start_index (int): Start index (in bits, where 0 is the least significant bit) of the data that'll be read.
+            Must be between 0 and 7 (inclusive). Only used when value_index is BINARY. Ignored otherwise
 
     Returns:
         str: If the value_index is STRING or AOB, also when value_repr is HEX
@@ -1741,34 +1765,29 @@ def read_memory(
         except Exception:
             return
     packed_data = typedefs.index_to_valuetype_dict.get(value_index, -1)
-    if typedefs.VALUE_INDEX.is_string(value_index):
+    if typedefs.VALUE_INDEX.has_length(value_index):
         try:
             length = int(length)
         except Exception:
             return
         if not length > 0:
             return
-        expected_length = length * typedefs.string_index_to_multiplier_dict.get(value_index, 1)
-    elif value_index == typedefs.VALUE_INDEX.AOB:
-        try:
-            expected_length = int(length)
-        except Exception:
-            return
-        if not expected_length > 0:
-            return
+        if typedefs.VALUE_INDEX.is_string(value_index):
+            expected_length = length * typedefs.string_index_to_multiplier_dict.get(value_index, 1)
+        elif value_index == typedefs.VALUE_INDEX.BINARY:
+            if start_index < 0 or start_index > 7:
+                print(f"Binary start index should be between 0 and 7, but was {start_index}")
+                return
+            expected_length = (length + start_index + 7) // 8
+        else:  # value_index == typedefs.VALUE_INDEX.AOB
+            expected_length = length
     else:
         if packed_data == -1:
             return
         expected_length = packed_data[0]
         data_type = packed_data[1]
-    own_mem_handle = mem_handle is None
     try:
-        if own_mem_handle:
-            mem_handle = memory_handle()
-        mem_handle.seek(address)
-        data_read = mem_handle.read(expected_length)
-        if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian and typedefs.VALUE_INDEX.is_number(value_index):
-            data_read = data_read[::-1]
+        data_read = read_memory_bytes(address, value_index, expected_length, endian, mem_handle)
     except (OSError, ValueError):
         # TODO (read/write error output)
         # Disabled read error printing. If needed, find a way to implement error logging with this function
@@ -1776,9 +1795,6 @@ def read_memory(
         # Maybe creating a function that toggles logging on and off? Other functions could use it too
         # print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return
-    finally:
-        if own_mem_handle and mem_handle is not None:
-            mem_handle.close()
     if len(data_read) < expected_length:
         return
     if typedefs.VALUE_INDEX.is_string(value_index):
@@ -1792,14 +1808,26 @@ def read_memory(
         return returned_string[0:length]
     elif value_index == typedefs.VALUE_INDEX.AOB:
         return " ".join(format(n, "02x") for n in data_read)
+
+    is_integer = typedefs.VALUE_INDEX.is_integer(value_index)
+    is_signed = value_repr == typedefs.VALUE_REPR.SIGNED
+
+    if value_index == typedefs.VALUE_INDEX.BINARY:
+        result = int.from_bytes(data_read, sys.byteorder)
+        # Adjust value to start_index
+        result >>= start_index
+        # Mask away all bits beyond length
+        result &= (1 << length) - 1
+        # If it's signed and the sign bit is set, adjust the value
+        if is_signed and result & (1 << (length - 1)):
+            result -= 1 << length
     else:
-        is_integer = typedefs.VALUE_INDEX.is_integer(value_index)
-        if is_integer and value_repr == typedefs.VALUE_REPR.SIGNED:
+        if is_integer and is_signed:
             data_type = data_type.lower()
         result = struct.unpack_from(data_type, data_read)[0]
-        if is_integer and value_repr == typedefs.VALUE_REPR.HEX:
-            return hex(result)
-        return result
+    if is_integer and value_repr == typedefs.VALUE_REPR.HEX:
+        return hex(result)
+    return result
 
 
 def write_memory(
@@ -1808,6 +1836,8 @@ def write_memory(
     value: str | int | float | list[int],
     zero_terminate: bool = True,
     endian: int = typedefs.ENDIANNESS.HOST,
+    length: int = 0,
+    start_index: int = 0,
 ) -> None:
     """Sets the given value to the given address
 
@@ -1820,6 +1850,8 @@ def write_memory(
         value (str, int, float, list): The value that'll be written to the given address
         zero_terminate (bool): If True, appends a null byte to the value. Only used when value_index is STRING
         endian (int): Can be a member of typedefs.ENDIANNESS
+        length (int): The length in bits of the value. Only used when value_index is BINARY
+        start_index (int): The start index in bits of the value. Only used when value_index is BINARY
 
     Notes:
         TODO: Implement a mem_handle parameter for optimization, check read_memory for an example
@@ -1845,6 +1877,21 @@ def write_memory(
     else:
         if value_index == typedefs.VALUE_INDEX.AOB:
             write_data = bytearray(write_data)
+        elif value_index == typedefs.VALUE_INDEX.BINARY:
+            if length <= 0:
+                print(f"Length of a binary value should be greater than zero, but was {length}")
+                return
+            if start_index < 0 or start_index > 7:
+                print(f"Binary start index should be between 0 and 7, but was {start_index}")
+                return
+
+            # Chop off any bits above the length (also converts to an unsigned integer), then shift left to align with start_index
+            mask = (1 << length) - 1
+            write_data = (write_data & mask) << start_index
+
+            byte_length = (length + start_index + 7) // 8
+            read_data: int = int.from_bytes(read_memory_bytes(address, typedefs.VALUE_INDEX.BINARY, byte_length, endian), sys.byteorder)
+            write_data = (write_data | (read_data & ~mask)).to_bytes()
         else:
             data_type = typedefs.index_to_struct_pack_dict.get(value_index, -1)
             if typedefs.VALUE_INDEX.is_integer(value_index) and isinstance(write_data, int):

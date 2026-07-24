@@ -16,23 +16,19 @@ class EditTypeDialog(QDialog, Ui_Dialog):
         self.lineEdit_Length.setFixedWidth(40)
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt.value_index)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, vt.endian)
-        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)):
+        value_index = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
+        if typedefs.VALUE_INDEX.has_length(value_index):
             self.widget_Length.show()
             try:
                 length = str(vt.length)
             except:
                 length = "10"
             self.lineEdit_Length.setText(length)
-            self.checkBox_ZeroTerminate.show()
-            self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
-        elif self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole) == typedefs.VALUE_INDEX.AOB:
-            self.widget_Length.show()
-            try:
-                length = str(vt.length)
-            except:
-                length = "10"
-            self.lineEdit_Length.setText(length)
-            self.checkBox_ZeroTerminate.hide()
+            if typedefs.VALUE_INDEX.is_string(value_index):
+                self.checkBox_ZeroTerminate.show()
+                self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
+            else:
+                self.checkBox_ZeroTerminate.hide()
         else:
             self.widget_Length.hide()
         if vt.value_repr == typedefs.VALUE_REPR.HEX:
@@ -49,12 +45,13 @@ class EditTypeDialog(QDialog, Ui_Dialog):
         guiutils.center_to_parent(self)
 
     def comboBox_ValueType_current_index_changed(self) -> None:
-        if typedefs.VALUE_INDEX.is_string(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)):
+        value_index = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
+        if typedefs.VALUE_INDEX.has_length(value_index):
             self.widget_Length.show()
-            self.checkBox_ZeroTerminate.show()
-        elif self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole) == typedefs.VALUE_INDEX.AOB:
-            self.widget_Length.show()
-            self.checkBox_ZeroTerminate.hide()
+            if typedefs.VALUE_INDEX.is_string(value_index):
+                self.checkBox_ZeroTerminate.show()
+            else:
+                self.checkBox_ZeroTerminate.hide()
         else:
             self.widget_Length.hide()
         QApplication.processEvents()
