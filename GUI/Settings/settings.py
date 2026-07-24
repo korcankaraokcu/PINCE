@@ -12,7 +12,6 @@ current_settings_version = "37"  # Increase version by one if you change setting
 CHECK_UPDATES_ON_STARTUP = "General/check_updates_on_startup"
 SAVE_SESSION_ON_EXIT = "General/save_session_on_exit"
 
-
 # Due to community feedback, these signals are disabled by default: SIGUSR1, SIGUSR2, SIGPWR, SIGXCPU, SIGXFSZ, SIGSYS
 default_signals = [
     ["SIGHUP", True, True],
