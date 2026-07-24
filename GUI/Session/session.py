@@ -169,7 +169,7 @@ class Session:
         self.data_changed = SessionDataChanged.NONE
         self.file_path: str = os.path.expanduser("~")
         self.last_file_name: str = ""  # process name or file name
-        self.file_backed: bool = False
+        self.file_backed: bool = False  # True when the session was loaded from or saved to a file
 
     def save_session(self) -> bool:
         """
