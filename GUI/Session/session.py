@@ -408,6 +408,7 @@ class SessionManager:
             )
             if keep_session_result == QMessageBox.StandardButton.Yes:
                 session.pct_process_name = process_name
+                session.data_changed |= SessionDataChanged.PROCESS_NAME
             else:
                 SessionManager.reset_session()
                 session = SessionManager.get_session()

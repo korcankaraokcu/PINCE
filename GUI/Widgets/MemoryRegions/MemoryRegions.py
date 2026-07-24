@@ -30,6 +30,7 @@ class MemoryRegionsWidget(QWidget, Ui_Form):
     def refresh_table(self) -> None:
         memory_regions = utils.get_regions(debugcore.currentpid)
         region_dict = utils.get_region_dict(debugcore.currentpid)
+        self.tableWidget_MemoryRegions.setSortingEnabled(False)
         self.tableWidget_MemoryRegions.setRowCount(0)
         self.tableWidget_MemoryRegions.setRowCount(len(memory_regions))
         # The shown [index] is this region's position within get_region_dict's per name list, matching
@@ -47,6 +48,7 @@ class MemoryRegionsWidget(QWidget, Ui_Form):
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_OFFSET_COL, QTableWidgetItem(offset))
             self.tableWidget_MemoryRegions.setItem(row, MEMORY_REGIONS_PATH_COL, QTableWidgetItem(path + f"[{region_index}]"))
 
+        self.tableWidget_MemoryRegions.setSortingEnabled(True)
         guiutils.resize_to_contents(self.tableWidget_MemoryRegions)
         self.filter_table()
 

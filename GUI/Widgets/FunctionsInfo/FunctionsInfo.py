@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QWidget, QTableWidgetItem, QMenu, QApplication
 from PyQt6.QtGui import QShortcut, QKeySequence, QIcon, QPixmap, QColor, QColorConstants, QContextMenuEvent
 from PyQt6.QtCore import Qt, QModelIndex
+from GUI.States import states
 from GUI.Utils import guiutils, utilwidgets
 from GUI.Widgets.FunctionsInfo.Form.FunctionsInfoWidget import Ui_Form
 from GUI.Widgets.LoadingDialog.LoadingDialog import LoadingDialog
@@ -24,18 +25,27 @@ class FunctionsInfoWidget(QWidget, Ui_Form):
         self.tableWidget_SymbolInfo.selectionModel().currentChanged.connect(self.tableWidget_SymbolInfo_current_changed)
         self.tableWidget_SymbolInfo.itemDoubleClicked.connect(self.tableWidget_SymbolInfo_item_double_clicked)
         self.tableWidget_SymbolInfo.contextMenuEvent = self.tableWidget_SymbolInfo_context_menu_event
+        states.process_signals.attach.connect(self._clear_results)
+        states.process_signals.exit.connect(self._clear_results)
         icons_directory = guiutils.get_icons_directory()
         self.pushButton_Help.setIcon(QIcon(QPixmap(icons_directory + "/help.png")))
         self.pushButton_Help.clicked.connect(self.pushButton_Help_clicked)
         guiutils.center_to_parent(self)
 
+    def _clear_results(self) -> None:
+        self.tableWidget_SymbolInfo.setRowCount(0)
+        self.textBrowser_AddressInfo.clear()
+
     def refresh_table(self) -> None:
         input_text = self.lineEdit_SearchInput.text()
         case_sensitive = self.checkBox_CaseSensitive.isChecked()
+        process_identity = debugcore.current_process_identity
         self.loading_dialog = LoadingDialog(self)
         self.background_thread = self.loading_dialog.background_thread
         self.background_thread.overrided_func = lambda: self.process_data(input_text, case_sensitive)
-        self.background_thread.output_ready.connect(self.apply_data)
+        self.background_thread.output_ready.connect(
+            lambda output: self.apply_data(output) if process_identity == debugcore.current_process_identity else None
+        )
         self.loading_dialog.exec()
 
     def process_data(self, gdb_input: str, case_sensitive: bool) -> list:

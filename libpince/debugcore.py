@@ -590,22 +590,26 @@ def init_gdb(gdb_path: str = utils.get_default_gdb_path()) -> bool:
     last_stop_was_tracking = False
 
     libpince_dir = utils.get_libpince_directory()
-    child = pexpect.spawn(
-        f"{gdb_path} --nx --interpreter=mi",
-        cwd=libpince_dir,
-        env=os.environ | {"LC_NUMERIC": "C"},
-        encoding="utf-8",
-        codec_errors="replace",
-    )
-    child.setecho(False)
-    child.delaybeforesend = 0
-    child.timeout = None
+    new_child = None
     try:
-        child.expect_exact("(gdb)")
-    except pexpect.EOF:
-        logger.exception(f"EOF exception caught within pexpect, here's the contents of child.before:\n{child.before}")
-        child.close()
+        new_child = pexpect.spawn(
+            gdb_path,
+            ["--nx", "--interpreter=mi"],
+            cwd=libpince_dir,
+            env=os.environ | {"LC_NUMERIC": "C"},
+            encoding="utf-8",
+            codec_errors="replace",
+        )
+        new_child.setecho(False)
+        new_child.delaybeforesend = 0
+        new_child.expect_exact("(gdb)")
+    except (pexpect.ExceptionPexpect, OSError):
+        logger.exception(f"Failed to start GDB: {gdb_path}")
+        if new_child is not None:
+            new_child.close()
         return False
+    child = new_child
+    child.timeout = None
     status_thread = Thread(target=state_observe_thread)
     status_thread.daemon = True
     status_thread.start()
@@ -662,7 +666,7 @@ def init_referenced_dicts(pid: int | str) -> None:
         pass
 
 
-def attach(pid: int | str, gdb_path: str = utils.get_default_gdb_path()) -> int:
+def attach(pid: int | str, gdb_path: str = utils.get_default_gdb_path()) -> int | None:
     """Attaches gdb to the target and initializes some of the global variables
 
     Args:
@@ -670,7 +674,7 @@ def attach(pid: int | str, gdb_path: str = utils.get_default_gdb_path()) -> int:
         gdb_path (str): Path of the gdb binary
 
     Returns:
-        int: A member of typedefs.ATTACH_RESULT
+        int | None: A member of typedefs.ATTACH_RESULT or None if GDB initialization fails
 
     Note:
         If gdb is already initialized, gdb_path will be ignored
@@ -690,7 +694,8 @@ def attach(pid: int | str, gdb_path: str = utils.get_default_gdb_path()) -> int:
         if control_func():
             return attach_result
     if currentpid != -1 or not gdb_initialized:
-        init_gdb(gdb_path)
+        if not init_gdb(gdb_path):
+            return
     global inferior_arch
     global effective_arch
     global mem_file
@@ -739,7 +744,8 @@ def create_process(process_path: str, args: str = "", ld_preload_path: str = "",
     global current_process_identity
     global _wow64_inject_buffer
     if currentpid != -1 or not gdb_initialized:
-        init_gdb(gdb_path)
+        if not init_gdb(gdb_path):
+            return False
     output = send_command(f'file "{process_path}"')
     if regexes.gdb_error.search(output):
         logger.error(f"An error occurred while trying to create process from the file at {process_path}")
@@ -866,7 +872,8 @@ def inject_so(library_path: str) -> bool:
     # Try using GDB to resolve the symbols.
     for func in ("dlopen", "__libc_dlopen_mode"):
         result = call_function_from_inferior(f"{func}({quoted}, 2)")[1]
-        if result and result != "0":
+        address = regexes.hex_number.search(result) if result else None
+        if address and int(address.group(), 16):
             return True
     # Fallback to manual address resolution if GDB failed.
     _lib_regexes = [

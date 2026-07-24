@@ -38,6 +38,7 @@ class SelectProcessWindow(QMainWindow, Ui_MainWindow):
 
     # lists currently working processes to table
     def refresh_process_table(self, tablewidget: QTableWidget, processlist: list[tuple[str, str, str]]) -> None:
+        tablewidget.setSortingEnabled(False)
         tablewidget.setRowCount(0)
         for pid, user, name in processlist:
             current_row = tablewidget.rowCount()
@@ -45,6 +46,7 @@ class SelectProcessWindow(QMainWindow, Ui_MainWindow):
             tablewidget.setItem(current_row, 0, QTableWidgetItem(pid))
             tablewidget.setItem(current_row, 1, QTableWidgetItem(user))
             tablewidget.setItem(current_row, 2, QTableWidgetItem(name))
+        tablewidget.setSortingEnabled(True)
 
     # gets the pid out of the selection to attach
     def pushButton_Open_clicked(self) -> None:

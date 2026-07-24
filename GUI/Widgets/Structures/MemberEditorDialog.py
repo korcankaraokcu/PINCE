@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QDialog, QWidget
+from PyQt6.QtWidgets import QDialog, QMessageBox, QWidget
 
 from GUI.Utils import guiutils
 from GUI.Session.session import StructureManager
@@ -105,6 +105,23 @@ class MemberEditorDialog(QDialog, Ui_Dialog):
         is_int = typedefs.VALUE_INDEX.is_integer(self.comboBox_Type.currentData(Qt.ItemDataRole.UserRole))
         self.label_Repr.setVisible(is_int)
         self.comboBox_Repr.setVisible(is_int)
+
+    def accept(self) -> None:
+        try:
+            int(self.lineEdit_Offset.text(), 16)
+        except ValueError:
+            QMessageBox.warning(self, tr.ERROR, tr.PARSE_ERROR)
+            return
+        if self.lineEdit_Length.isVisible():
+            try:
+                length = int(self.lineEdit_Length.text(), 0)
+            except ValueError:
+                QMessageBox.warning(self, tr.ERROR, tr.LENGTH_NOT_VALID)
+                return
+            if length <= 0:
+                QMessageBox.warning(self, tr.ERROR, tr.LENGTH_GT)
+                return
+        super().accept()
 
     def get_member(self) -> typedefs.StructureMember:
         name = self.lineEdit_Name.text().strip()

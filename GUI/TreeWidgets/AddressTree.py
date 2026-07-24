@@ -23,8 +23,7 @@ class AddressTree(QTreeWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-    # TODO: If the auto-update is enabled, address table will be updated with a delay after a drop event
-    # This probably happens because of the QTimers. It's not critical but a fix would be nice
     def dropEvent(self, event: QDropEvent | None) -> None:
-        self.parent().parent().update_address_table()
         super().dropEvent(event)
+        self.parent().parent().update_address_table()
+        self.parent().parent().mark_address_tree_changed()

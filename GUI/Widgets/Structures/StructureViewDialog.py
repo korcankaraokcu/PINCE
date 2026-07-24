@@ -26,6 +26,8 @@ class StructureViewDialog(QDialog, Ui_Dialog):
         super().__init__(parent)
         self.setupUi(self)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        states.process_signals.attach.connect(self.close)
+        states.process_signals.exit.connect(self.close)
 
         self.structure_name = structure_name
         base_address = base_address.strip()

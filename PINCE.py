@@ -445,7 +445,7 @@ class MainForm(QMainWindow, MainWindow):
                     self.attach_to_pid(int(pid))
                     return
         else:
-            for target in states.auto_attach.split(";"):
+            for target in filter(None, map(str.strip, states.auto_attach.split(";"))):
                 for pid, _, name in utils.get_process_list():
                     if name.find(target) != -1:
                         self.attach_to_pid(int(pid))
@@ -763,8 +763,9 @@ class MainForm(QMainWindow, MainWindow):
         TrackWatchpointWidget(self, address, byte_len, watchpoint_type)
 
     def browse_region_for_address(self, address: str) -> None:
+        address = safe_str_to_int((address or "").removeprefix("P->"), 16)
         if address:
-            self.memory_view_window.hex_dump_address(int(address.removeprefix("P->"), 16))
+            self.memory_view_window.hex_dump_address(address)
             self.memory_view_window.show()
             self.memory_view_window.activateWindow()
 
@@ -946,9 +947,8 @@ class MainForm(QMainWindow, MainWindow):
                     selected_items.remove(item)
                     break
                 parent = parent.parent()
-        if self.create_group():
-            item_count = self.treeWidget_AddressTable.topLevelItemCount()
-            last_item = self.treeWidget_AddressTable.topLevelItem(item_count - 1)
+        group = self.create_group()
+        if group:
             for item in selected_items:
                 parent = item.parent()
                 if parent:
@@ -956,17 +956,16 @@ class MainForm(QMainWindow, MainWindow):
                 else:
                     index = self.treeWidget_AddressTable.indexOfTopLevelItem(item)
                     self.treeWidget_AddressTable.takeTopLevelItem(index)
-                last_item.addChild(item)
-            self.treeWidget_AddressTable.setCurrentItem(last_item)
-            last_item.setExpanded(True)
+                group.addChild(item)
+            self.treeWidget_AddressTable.setCurrentItem(group)
+            group.setExpanded(True)
 
-    def create_group(self) -> bool:
+    def create_group(self) -> QTreeWidgetItem | None:
         dialog = utilwidgets.InputDialog(self, [(tr.ENTER_DESCRIPTION, tr.GROUP)])
         if dialog.exec():
             desc = dialog.get_values()[0]
-            self.add_entry_to_addresstable(desc, "0x0")
-            return True
-        return False
+            return self.add_entry_to_addresstable(desc, "0x0")
+        return None
 
     def script_entries_in(self, item: QTreeWidgetItem):
         # Yields the script entries of item and all its descendants
@@ -1593,7 +1592,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def _scan_to_length(self, type_index: int) -> int:
         if type_index == typedefs.SCAN_INDEX.AOB:
-            return self.lineEdit_Scan.text().count(" ") + 1
+            return len(self.lineEdit_Scan.text().split())
         if type_index == typedefs.SCAN_INDEX.STRING:
             return len(self.lineEdit_Scan.text())
         return 0
@@ -1795,7 +1794,7 @@ class MainForm(QMainWindow, MainWindow):
                     typedefs.ATTACH_RESULT.ALREADY_DEBUGGING: tr.ALREADY_DEBUGGING,
                     typedefs.ATTACH_RESULT.PERM_DENIED: tr.PERM_DENIED,
                 }
-                message = messages.get(attach_result, tr.ERROR)
+                message = messages.get(attach_result, tr.GDB_INIT_ERROR)
             QMessageBox.information(app.focusWidget(), tr.ERROR, message)
             return False
 
@@ -1839,6 +1838,7 @@ class MainForm(QMainWindow, MainWindow):
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
         self.treeWidget_AddressTable.clear()
+        self.mark_address_tree_changed()
 
     def copy_to_address_table(self) -> None:
         length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
@@ -1886,8 +1886,8 @@ class MainForm(QMainWindow, MainWindow):
             gdb_path = utils.get_default_gdb_path()
         else:
             gdb_path = states.gdb_path
-        debugcore.init_gdb(gdb_path)
-        settings.apply_after_init()
+        if debugcore.init_gdb(gdb_path):
+            settings.apply_after_init()
         SessionManager.on_process_changed()
         states.process_signals.exit.emit()
 
@@ -1932,7 +1932,7 @@ class MainForm(QMainWindow, MainWindow):
         description: str,
         address_expr: str | typedefs.PointerChainRequest,
         value_type: typedefs.ValueType | None = None,
-    ) -> None:
+    ) -> QTreeWidgetItem:
         current_row = QTreeWidgetItem()
         current_row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
         frozen = typedefs.Frozen("", typedefs.FREEZE_TYPE.DEFAULT)
@@ -1943,6 +1943,7 @@ class MainForm(QMainWindow, MainWindow):
         self.show()  # In case of getting called from elsewhere
         self.activateWindow()
         self.mark_address_tree_changed()
+        return current_row
 
     def get_script_entry(self, row: QTreeWidgetItem | None) -> typedefs.ScriptEntry | None:
         # A row is a script entry when its frozen slot holds a ScriptEntry instead of a Frozen.

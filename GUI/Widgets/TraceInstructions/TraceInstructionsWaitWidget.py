@@ -52,7 +52,7 @@ class TraceInstructionsWaitWidget(QWidget, Ui_Form):
         self.pushButton_Cancel.setVisible(False)
         self.adjustSize()
         QApplication.processEvents()
-        if self.tracer.trace_status == typedefs.TRACE_STATUS.TRACING:
+        if self.tracer.trace_status != typedefs.TRACE_STATUS.FINISHED:
             self.tracer.cancel_trace()
             while self.tracer.trace_status != typedefs.TRACE_STATUS.FINISHED:
                 sleep(0.1)

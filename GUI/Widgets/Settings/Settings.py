@@ -57,6 +57,19 @@ class SettingsDialog(QDialog, Ui_Dialog):
         guiutils.center_to_parent(self)
 
     def accept(self) -> None:
+        if self.checkBox_AutoAttachRegex.isChecked():
+            try:
+                re.compile(self.lineEdit_AutoAttach.text())
+            except re.error:
+                QMessageBox.information(self, tr.ERROR, tr.IS_INVALID_REGEX.format(self.lineEdit_AutoAttach.text()))
+                return
+        if not os.environ.get("APPDIR"):
+            selected_gdb_path = self.lineEdit_GDBPath.text()
+            if selected_gdb_path != states.gdb_path and utilwidgets.InputDialog(self, tr.GDB_RESET).exec():
+                if not debugcore.init_gdb(selected_gdb_path):
+                    QMessageBox.information(self, tr.ERROR, tr.GDB_INIT_ERROR)
+                    return
+            self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("General/auto_update_address_table", self.checkBox_AutoUpdateAddressTable.isChecked())
         if os.environ.get("APPDIR"):
             self.settings.setValue(settings.CHECK_UPDATES_ON_STARTUP, self.checkBox_CheckUpdatesOnStartup.isChecked())
@@ -69,12 +82,6 @@ class SettingsDialog(QDialog, Ui_Dialog):
             self.checkBox_OutputModeCommandInfo.isChecked(),
         ]
         self.settings.setValue("General/gdb_output_mode", json.dumps(output_mode))
-        if self.checkBox_AutoAttachRegex.isChecked():
-            try:
-                re.compile(self.lineEdit_AutoAttach.text())
-            except:
-                QMessageBox.information(self, tr.ERROR, tr.IS_INVALID_REGEX.format(self.lineEdit_AutoAttach.text()))
-                return
         self.settings.setValue("General/auto_attach", self.lineEdit_AutoAttach.text())
         self.settings.setValue("General/auto_attach_regex", self.checkBox_AutoAttachRegex.isChecked())
         new_locale = self.comboBox_Language.currentData(Qt.ItemDataRole.UserRole)
@@ -89,12 +96,6 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.settings.setValue("MemoryView/show_memory_view_on_stop", self.checkBox_ShowMemoryViewOnStop.isChecked())
         self.settings.setValue("MemoryView/instructions_per_scroll", self.spinBox_InstructionsPerScroll.value())
         self.settings.setValue("MemoryView/bytes_per_scroll", self.spinBox_BytesPerScroll.value())
-        if not os.environ.get("APPDIR"):
-            selected_gdb_path = self.lineEdit_GDBPath.text()
-            if selected_gdb_path != states.gdb_path:
-                if utilwidgets.InputDialog(self, tr.GDB_RESET).exec():
-                    debugcore.init_gdb(selected_gdb_path)
-            self.settings.setValue("Debug/gdb_path", selected_gdb_path)
         self.settings.setValue("Debug/gdb_logging", self.checkBox_GDBLogging.isChecked())
         self.settings.setValue("Debug/interrupt_signal", self.comboBox_InterruptSignal.currentText())
         self.settings.setValue("Java/ignore_segfault", self.checkBox_JavaSegfault.isChecked())
