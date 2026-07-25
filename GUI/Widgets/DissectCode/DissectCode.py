@@ -125,7 +125,6 @@ class DissectCodeDialog(QDialog, Ui_Dialog):
             self.refresh_timer.stop()
             self.update_dissect_results()
             self.label_ScanInfo.setText(tr.SCAN_CANCELED)
-            self.init_pre_scan_gui()
         else:
             selected_rows = self.tableWidget_ExecutableMemoryRegions.selectionModel().selectedRows()
             if not selected_rows:
@@ -135,6 +134,7 @@ class DissectCodeDialog(QDialog, Ui_Dialog):
             selected_regions = [self.region_list[selected_index] for selected_index in selected_indexes]
             self.background_thread = self.BackgroundThread(selected_regions, self.checkBox_DiscardInvalidStrings.isChecked())
             self.background_thread.output_ready.connect(self.scan_finished)
+            self.background_thread.finished.connect(self.init_pre_scan_gui)
             self.init_after_scan_gui()
             self.refresh_timer.start()
             self.background_thread.start()

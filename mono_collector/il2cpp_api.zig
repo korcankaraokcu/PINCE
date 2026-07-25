@@ -572,6 +572,8 @@ fn il2cppInvoke(ctx: *anyopaque, method_u: u64, obj_u: u64, args: []const rt.Arg
                 const src: [*]const u8 = @ptrCast(vp);
                 try e.bin(src[0..@intCast(si.size)]);
             }
+        } else if (eql(rtag, "unsupported")) {
+            return error.Unsupported;
         } else { // primitive value type: unbox and read its bytes
             const ub = m.object_unbox orelse return error.Unsupported;
             const vp = ub(ret);

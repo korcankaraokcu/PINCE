@@ -451,7 +451,7 @@ class DissectCode(gdb.Command):
                     code = self.memory.read(buffer_size)
                     next_status_addr = start_addr
                     try:
-                        for instruction_addr, _, mnemonic, operands in disassembler.disasm_lite(code, start_addr):
+                        for instruction_addr, instruction_size, mnemonic, operands in disassembler.disasm_lite(code, start_addr):
                             if instruction_addr >= next_status_addr:
                                 status_info = region_info + (
                                     hex(instruction_addr)[2:] + "-" + hex(end_addr)[2:],
@@ -463,12 +463,19 @@ class DissectCode(gdb.Command):
                                     pickle.dump(status_info, dissect_code_status_handle)
                                 next_status_addr = instruction_addr + status_update_range
                             instruction = f"{mnemonic} {operands}" if operands != "" else mnemonic
-                            found = regexes.dissect_code_valid_address.search(instruction)
-                            if not found:
+                            if ":[rip" in operands:
                                 continue
-                            if instruction.startswith("j") or instruction.startswith("loop"):
+                            if "[rip" in operands and not instruction.startswith(("j", "loop", "call")):
+                                offset = operands.partition("[rip")[2].partition("]")[0].replace(" ", "")
+                                referenced_address_int = instruction_addr + instruction_size + int(offset or "0", 0)
+                                referenced_address_str = hex(referenced_address_int)
+                            else:
+                                found = regexes.dissect_code_valid_address.search(instruction)
+                                if not found:
+                                    continue
                                 referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
                                 referenced_address_int = int(referenced_address_str, 16)
+                            if instruction.startswith("j") or instruction.startswith("loop"):
                                 if self.is_memory_valid(referenced_address_int):
                                     instruction_only = regexes.alphanumerics.search(instruction).group(0).casefold()
                                     try:
@@ -478,8 +485,6 @@ class DissectCode(gdb.Command):
                                         referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
                                         ref_jmp_count += 1
                             elif instruction.startswith("call"):
-                                referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
-                                referenced_address_int = int(referenced_address_str, 16)
                                 if self.is_memory_valid(referenced_address_int):
                                     try:
                                         referenced_calls_dict[referenced_address_str].add(instruction_addr)
@@ -488,8 +493,6 @@ class DissectCode(gdb.Command):
                                         referenced_calls_dict[referenced_address_str].add(instruction_addr)
                                         ref_call_count += 1
                             else:
-                                referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
-                                referenced_address_int = int(referenced_address_str, 16)
                                 if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
                                     try:
                                         referenced_strings_dict[referenced_address_str].add(instruction_addr)

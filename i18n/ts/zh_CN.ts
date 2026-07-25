@@ -3335,6 +3335,11 @@ Do you want to save the current session?</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
+        <source>The session reset was cancelled because the current session was not saved.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../tr/tr.py" line="0" />
         <source>Session - Process changed</source>
         <translation>会话 - 进程变动</translation>
     </message>

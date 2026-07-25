@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QWidget, QTableWidgetItem, QMessageBox
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtCore import Qt, QTimer, QModelIndex
+from GUI.States import states
 from GUI.Utils import guiutils
 from GUI.Widgets.TrackBreakpoint.Form.TrackBreakpointWidget import Ui_Form
 from libpince import debugcore, typedefs, utils
@@ -22,6 +23,7 @@ class TrackBreakpointWidget(QWidget, Ui_Form):
         self.update_values_timer = QTimer(self, timeout=self.update_values)
         self.stopped = False
         self.address = address
+        self.pid = debugcore.currentpid
         self.info = {}
         self.last_selected_row = 0
         self.setWindowFlags(Qt.WindowType.Window)
@@ -32,6 +34,8 @@ class TrackBreakpointWidget(QWidget, Ui_Form):
             QMessageBox.information(self, tr.ERROR, tr.TRACK_BREAKPOINT_FAILED.format(address))
             self.close()
             return
+        states.process_signals.attach.connect(self.close)
+        states.process_signals.exit.connect(self.close)
         guiutils.fill_value_combobox(self.comboBox_ValueType)
         self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
         self.tableWidget_TrackInfo.itemDoubleClicked.connect(self.tableWidget_TrackInfo_item_double_clicked)
@@ -43,6 +47,8 @@ class TrackBreakpointWidget(QWidget, Ui_Form):
         self.show()
 
     def update_list(self) -> None:
+        if self.pid != debugcore.currentpid:
+            return
         info = debugcore.get_track_breakpoint_info(self.breakpoint)
         if not info:
             return
@@ -61,6 +67,8 @@ class TrackBreakpointWidget(QWidget, Ui_Form):
         self.update_values()
 
     def update_values(self) -> None:
+        if self.pid != debugcore.currentpid:
+            return
         with debugcore.memory_handle() as mem_handle:
             value_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
             for row in range(self.tableWidget_TrackInfo.rowCount()):
@@ -97,9 +105,9 @@ class TrackBreakpointWidget(QWidget, Ui_Form):
         self.update_list_timer.stop()
         self.update_values_timer.stop()
         if self.breakpoint:
-            if not self.stopped:
+            if not self.stopped and self.pid == debugcore.currentpid:
                 debugcore.delete_breakpoint(utils.safe_int_cast(self.breakpoint))
-            breakpoint_file = utils.get_track_breakpoint_file(debugcore.currentpid, self.breakpoint)
+            breakpoint_file = utils.get_track_breakpoint_file(self.pid, self.breakpoint)
             if os.path.exists(breakpoint_file):
                 os.remove(breakpoint_file)
         self.parent().refresh_disassemble_view()

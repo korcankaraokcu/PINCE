@@ -198,15 +198,18 @@ class Session:
             self.data_changed = SessionDataChanged.NONE
             return True
 
-    def check_unsaved_changes(self) -> QMessageBox.StandardButton:
+    def check_unsaved_changes(self, allow_cancel: bool = True) -> QMessageBox.StandardButton:
         if self.data_changed == SessionDataChanged.NONE:
             return QMessageBox.StandardButton.No
 
+        buttons = QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        if allow_cancel:
+            buttons |= QMessageBox.StandardButton.Cancel
         unsaved_changes_result = QMessageBox.question(
             None,
             tr.SAVE_SESSION_QUESTION_TITLE,
             tr.SAVE_SESSION_QUESTION_PROMPT,
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
+            buttons,
         )
         return unsaved_changes_result
 
@@ -355,17 +358,16 @@ class SessionManager:
         return SessionManager.session
 
     @staticmethod
-    def reset_session() -> None:
+    def reset_session() -> bool:
         session = SessionManager.get_session()
-        unsaved_changes_result = session.check_unsaved_changes()
-        if unsaved_changes_result == QMessageBox.StandardButton.Cancel:
-            return
-        if unsaved_changes_result == QMessageBox.StandardButton.Yes:
-            if not session.save_session():
-                return
+        unsaved_changes_result = session.check_unsaved_changes(allow_cancel=False)
+        if unsaved_changes_result == QMessageBox.StandardButton.Yes and not session.save_session():
+            QMessageBox.information(None, tr.INFO, tr.SESSION_RESET_CANCELLED)
+            return False
         SessionManager.session = Session()
         states.session_signals.new_session.emit()
         SessionManager.session.data_changed = SessionDataChanged.NONE
+        return True
 
     @staticmethod
     def save_session() -> None:
@@ -410,7 +412,8 @@ class SessionManager:
                 session.pct_process_name = process_name
                 session.data_changed |= SessionDataChanged.PROCESS_NAME
             else:
-                SessionManager.reset_session()
+                if not SessionManager.reset_session():
+                    return
                 session = SessionManager.get_session()
                 session.pct_process_name = process_name
                 session.last_file_name = utils.append_file_extension(process_name, "pct")

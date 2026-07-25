@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QWidget, QTableWidgetItem, QMessageBox
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtCore import Qt, QTimer, QModelIndex
+from GUI.States import states
 from GUI.Utils import guiutils
 from GUI.Widgets.TrackWatchpoint.Form.TrackWatchpointWidget import Ui_Form
 from libpince import debugcore, typedefs, utils
@@ -20,6 +21,7 @@ class TrackWatchpointWidget(QWidget, Ui_Form):
         self.update_timer = QTimer(self, timeout=self.update_list)
         self.stopped = False
         self.address = address
+        self.pid = debugcore.currentpid
         self.info = {}
         self.last_selected_row = 0
         if watchpoint_type == typedefs.WATCHPOINT_TYPE.WRITE_ONLY:
@@ -37,6 +39,8 @@ class TrackWatchpointWidget(QWidget, Ui_Form):
             QMessageBox.information(self, tr.ERROR, tr.TRACK_WATCHPOINT_FAILED.format(address))
             self.close()
             return
+        states.process_signals.attach.connect(self.close)
+        states.process_signals.exit.connect(self.close)
         self.pushButton_Stop.clicked.connect(self.pushButton_Stop_clicked)
         self.pushButton_Refresh.clicked.connect(self.update_list)
         self.tableWidget_Addresses.itemDoubleClicked.connect(self.tableWidget_Addresses_item_double_clicked)
@@ -45,6 +49,8 @@ class TrackWatchpointWidget(QWidget, Ui_Form):
         self.show()
 
     def update_list(self) -> None:
+        if self.pid != debugcore.currentpid:
+            return
         info = debugcore.get_track_watchpoint_info(self.breakpoints)
         if not info or self.info == info:
             return
@@ -97,10 +103,10 @@ class TrackWatchpointWidget(QWidget, Ui_Form):
     def closeEvent(self, event: QCloseEvent) -> None:
         self.update_timer.stop()
         if self.breakpoints:
-            if not self.stopped:
+            if not self.stopped and self.pid == debugcore.currentpid:
                 # Internal chained breakpoints check will delete the rest from self.breakpoints
                 debugcore.delete_breakpoint(utils.safe_int_cast(self.breakpoints[0]))
-            watchpoint_file = utils.get_track_watchpoint_file(debugcore.currentpid, self.breakpoints)
+            watchpoint_file = utils.get_track_watchpoint_file(self.pid, self.breakpoints)
             if os.path.exists(watchpoint_file):
                 os.remove(watchpoint_file)
         super().closeEvent(event)

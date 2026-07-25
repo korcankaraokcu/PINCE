@@ -1573,7 +1573,7 @@ class MainForm(QMainWindow, MainWindow):
                     value_repr = typedefs.VALUE_REPR.SIGNED if match.match_info.is_signed_integer_only() else typedefs.VALUE_REPR.UNSIGNED
                 endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
                 current_item = QTableWidgetItem(address)
-                current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian))
+                current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian, length))
                 # TODO: Change GDB reading to memscan
                 value = debugcore.read_memory(address, value_index, length, True, value_repr, endian, mem_handle)
                 value = "" if value is None else str(value)
@@ -1606,8 +1606,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def tableWidget_valuesearchtable_cell_double_clicked(self, row: int, col: int) -> None:
         current_item = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL)
-        value_index, value_repr, endian = current_item.data(Qt.ItemDataRole.UserRole)
-        length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
+        value_index, value_repr, endian, length = current_item.data(Qt.ItemDataRole.UserRole)
         vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
         self.add_entry_to_addresstable(tr.NO_DESCRIPTION, current_item.text(), vt)
         self.update_address_table()
@@ -1837,15 +1836,17 @@ class MainForm(QMainWindow, MainWindow):
     def clear_address_table(self) -> None:
         if self.treeWidget_AddressTable.topLevelItemCount() == 0:
             return
+        if self.libpince_engine_window:
+            for entry in self.script_entries_in(self.treeWidget_AddressTable.invisibleRootItem()):
+                self.libpince_engine_window.close_script_entry(entry)
         self.treeWidget_AddressTable.clear()
         self.mark_address_tree_changed()
 
     def copy_to_address_table(self) -> None:
-        length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
         selected_indexes = self.tableWidget_valuesearchtable.selectionModel().selectedRows()
         for index in selected_indexes:
             address_item = self.tableWidget_valuesearchtable.item(index.row(), SEARCH_TABLE_ADDRESS_COL)
-            value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
+            value_index, value_repr, endian, length = address_item.data(Qt.ItemDataRole.UserRole)
             vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
             self.add_entry_to_addresstable(tr.NO_DESCRIPTION, address_item.text(), vt)
         self.update_address_table()
@@ -2064,7 +2065,6 @@ class MainForm(QMainWindow, MainWindow):
             return
         row_count = self.tableWidget_valuesearchtable.rowCount()
         if row_count > 0:
-            length = self._scan_to_length(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
             self.tableWidget_valuesearchtable.setSortingEnabled(False)
             try:
                 with debugcore.memory_handle() as mem_handle:
@@ -2072,7 +2072,7 @@ class MainForm(QMainWindow, MainWindow):
                         address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
                         value_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_VALUE_COL)
                         previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
-                        value_index, value_repr, endian = address_item.data(Qt.ItemDataRole.UserRole)
+                        value_index, value_repr, endian, length = address_item.data(Qt.ItemDataRole.UserRole)
                         address = address_item.text()
                         new_value = debugcore.read_memory(
                             address,
@@ -2181,21 +2181,22 @@ class MainForm(QMainWindow, MainWindow):
         if not row or self.get_script_entry(row) is not None or self._is_struct_row(row):
             return
         value = row.text(VALUE_COL)
-        value_index = row.data(TYPE_COL, Qt.ItemDataRole.UserRole).value_index
         dialog = utilwidgets.InputDialog(self, [(tr.ENTER_VALUE, value)])
         if dialog.exec():
             new_value = dialog.get_values()[0]
-            if utils.parse_string(new_value, value_index) is None:
+            parsed_rows = [
+                (row, utils.parse_string(new_value, row.data(TYPE_COL, Qt.ItemDataRole.UserRole).value_index))
+                for row in self.treeWidget_AddressTable.selectedItems()
+                if self.get_script_entry(row) is None and not self._is_struct_row(row)
+            ]
+            if any(parsed_value is None for _, parsed_value in parsed_rows):
                 QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
                 return
             length_changed = False
-            for row in self.treeWidget_AddressTable.selectedItems():
-                if self.get_script_entry(row) is not None or self._is_struct_row(row):
-                    continue
+            for row, parsed_value in parsed_rows:
                 address = self._resolved_address(row)
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-                parsed_value = utils.parse_string(new_value, vt.value_index)
-                if typedefs.VALUE_INDEX.has_length(vt.value_index) and parsed_value is not None:
+                if typedefs.VALUE_INDEX.has_length(vt.value_index):
                     if vt.length != len(parsed_value):
                         length_changed = True
                     vt.length = len(parsed_value)

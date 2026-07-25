@@ -32,9 +32,9 @@ def _read_string_length(base_addr: int, structure: typedefs.Structure) -> int | 
 
 
 def structure_to_records(
-    structure: typedefs.Structure, _depth: int = 0, base_addr: int = 0
+    structure: typedefs.Structure, base_addr: int = 0, _depth: int = 0, _parents: tuple[str, ...] = ()
 ) -> list[tuple[str, str | tuple[str | int, list[int]], tuple[int, int, bool, int, int], list]]:
-    if _depth > _MAX_DEPTH:
+    if _depth > _MAX_DEPTH or structure.name in _parents:
         return []
     length_overrides = {}
     if structure.name == "System.String" and base_addr > 0:
@@ -61,7 +61,7 @@ def structure_to_records(
                 ptr_val = debugcore.read_memory(base_addr + member.offset, ptr_index)
                 if ptr_val is not None:
                     child_base = ptr_val
-            children = structure_to_records(child, _depth + 1, child_base)
+            children = structure_to_records(child, child_base, _depth + 1, _parents + (structure.name,))
             group_expr = typedefs.PointerChainRequest(off, [0]).serialize() if member.is_pointer else off
             records.append((member.name, group_expr, _struct_vt(), children))
     return records
@@ -70,5 +70,5 @@ def structure_to_records(
 def structure_to_group_record(structure: typedefs.Structure, base_expr: str) -> tuple[str, str, tuple[int, int, bool, int, int], list]:
     address = debugcore.examine_expression(base_expr).address if base_expr else None
     base_addr = int(address, 0) if address else 0
-    members = structure_to_records(structure, 0, base_addr)
+    members = structure_to_records(structure, base_addr)
     return structure.name, base_expr, _struct_vt(), members
