@@ -17,7 +17,7 @@ class ReferencedStringsWidget(QWidget, Ui_Form):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        guiutils.fill_value_combobox(self.comboBox_ValueType, typedefs.VALUE_INDEX.STRING_UTF8)
+        guiutils.fill_value_combobox(self.comboBox_ValueType, typedefs.StringValueType("utf-8"))
         self.setWindowFlags(Qt.WindowType.Window)
         self.tableWidget_References.setColumnWidth(REF_STR_ADDR_COL, 150)
         self.tableWidget_References.setColumnWidth(REF_STR_COUNT_COL, 80)
@@ -58,9 +58,13 @@ class ReferencedStringsWidget(QWidget, Ui_Form):
         return "0x" + hex_str[2:].zfill(self.hex_len + self_len)
 
     def refresh_table(self) -> None:
+        value_type = guiutils.configure_value_type(
+            self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole),
+            length=100,
+        )
         item_list = debugcore.search_referenced_strings(
             self.lineEdit_Regex.text(),
-            self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole),
+            value_type,
             self.checkBox_CaseSensitive.isChecked(),
             self.checkBox_Regex.isChecked(),
         )

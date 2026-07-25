@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt, QTimer, QModelIndex
 from GUI.States import states
 from GUI.Utils import guiutils
 from GUI.Widgets.TrackBreakpoint.Form.TrackBreakpointWidget import Ui_Form
-from libpince import debugcore, typedefs, utils
+from libpince import debugcore, utils
 from tr.tr import TranslationConstants as tr
 import os
 
@@ -73,7 +73,7 @@ class TrackBreakpointWidget(QWidget, Ui_Form):
             value_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
             for row in range(self.tableWidget_TrackInfo.rowCount()):
                 address = self.tableWidget_TrackInfo.item(row, TRACK_BREAKPOINT_ADDR_COL).text()
-                value = debugcore.read_memory(address, value_type, 10, mem_handle=mem_handle)
+                value = debugcore.read_memory(address, value_type, mem_handle=mem_handle)
                 value = "" if value is None else str(value)
                 self.tableWidget_TrackInfo.setItem(row, TRACK_BREAKPOINT_VALUE_COL, QTableWidgetItem(value))
         guiutils.resize_to_contents(self.tableWidget_TrackInfo)
@@ -86,7 +86,7 @@ class TrackBreakpointWidget(QWidget, Ui_Form):
 
     def tableWidget_TrackInfo_item_double_clicked(self, index: QTableWidgetItem) -> None:
         address = self.tableWidget_TrackInfo.item(index.row(), TRACK_BREAKPOINT_ADDR_COL).text()
-        vt = typedefs.ValueType(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
+        vt = guiutils.configure_value_type(self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole))
         self.parent().parent().add_entry_to_addresstable(tr.ACCESSED_BY.format(self.address), address, vt)
         self.parent().parent().update_address_table()
 

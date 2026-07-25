@@ -1,4 +1,3 @@
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QDialog, QMessageBox, QWidget
 
 from GUI.Utils import guiutils
@@ -21,7 +20,7 @@ class MemberEditorDialog(QDialog, Ui_Dialog):
         self.comboBox_Kind.addItem(tr.POINTER_MEMBER, KIND_POINTER)
         self.comboBox_Kind.addItem(tr.INLINE_MEMBER, KIND_INLINE)
 
-        guiutils.fill_value_combobox(self.comboBox_Type)
+        guiutils.fill_value_combobox(self.comboBox_Type, member.value_type if member else None)
         guiutils.fill_endianness_combobox(self.comboBox_Endian)
 
         self.comboBox_Repr.addItem(tr.REPR_UNSIGNED, typedefs.VALUE_REPR.UNSIGNED)
@@ -53,19 +52,14 @@ class MemberEditorDialog(QDialog, Ui_Dialog):
         self.lineEdit_Offset.setText(hex(member.offset))
         if member.value_type is not None:
             self.comboBox_Kind.setCurrentIndex(self.comboBox_Kind.findData(KIND_VALUE))
-            idx = self.comboBox_Type.findData(member.value_type.value_index)
-            if idx >= 0:
-                self.comboBox_Type.setCurrentIndex(idx)
-            else:
-                self.comboBox_Type.setCurrentIndex(0)
-            if typedefs.VALUE_INDEX.has_length(member.value_type.value_index):
+            if isinstance(member.value_type, (typedefs.StringValueType, typedefs.ByteArrayValueType)):
                 self.lineEdit_Length.setText(str(member.value_type.length))
-            idx = self.comboBox_Repr.findData(member.value_type.value_repr)
+            idx = self.comboBox_Repr.findData(getattr(member.value_type, "value_repr", typedefs.VALUE_REPR.UNSIGNED))
             if idx >= 0:
                 self.comboBox_Repr.setCurrentIndex(idx)
             else:
                 self.comboBox_Repr.setCurrentIndex(0)
-            idx = self.comboBox_Endian.findData(member.value_type.endian)
+            idx = self.comboBox_Endian.findData(getattr(member.value_type, "endian", typedefs.ENDIANNESS.HOST))
             if idx >= 0:
                 self.comboBox_Endian.setCurrentIndex(idx)
             else:
@@ -99,10 +93,11 @@ class MemberEditorDialog(QDialog, Ui_Dialog):
         self._type_changed()
 
     def _type_changed(self) -> None:
-        has_len = typedefs.VALUE_INDEX.has_length(self.comboBox_Type.currentData(Qt.ItemDataRole.UserRole))
+        value_type = self.comboBox_Type.currentData()
+        has_len = isinstance(value_type, (typedefs.StringValueType, typedefs.ByteArrayValueType))
         self.label_Length.setVisible(has_len)
         self.lineEdit_Length.setVisible(has_len)
-        is_int = typedefs.VALUE_INDEX.is_integer(self.comboBox_Type.currentData(Qt.ItemDataRole.UserRole))
+        is_int = isinstance(value_type, typedefs.IntegerValueType)
         self.label_Repr.setVisible(is_int)
         self.comboBox_Repr.setVisible(is_int)
 
@@ -128,12 +123,18 @@ class MemberEditorDialog(QDialog, Ui_Dialog):
         offset = utils.safe_str_to_int(self.lineEdit_Offset.text(), 16)
         kind = self.comboBox_Kind.currentData()
         if kind == KIND_VALUE:
-            value_index = self.comboBox_Type.currentData(Qt.ItemDataRole.UserRole)
-            has_length = typedefs.VALUE_INDEX.has_length(value_index)
+            value_type = self.comboBox_Type.currentData()
+            has_length = isinstance(value_type, (typedefs.StringValueType, typedefs.ByteArrayValueType))
             length = utils.safe_str_to_int(self.lineEdit_Length.text(), 0) if has_length else 10
-            value_repr = self.comboBox_Repr.currentData() if typedefs.VALUE_INDEX.is_integer(value_index) else typedefs.VALUE_REPR.UNSIGNED
+            value_repr = self.comboBox_Repr.currentData() if isinstance(value_type, typedefs.IntegerValueType) else typedefs.VALUE_REPR.UNSIGNED
             endian = self.comboBox_Endian.currentData()
-            vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
+            vt = guiutils.configure_value_type(
+                value_type,
+                length=length,
+                zero_terminate=True,
+                value_repr=value_repr,
+                endian=endian,
+            )
             return typedefs.StructureMember(name, offset, value_type=vt)
         else:
             struct_ref = self.comboBox_StructRef.currentText()

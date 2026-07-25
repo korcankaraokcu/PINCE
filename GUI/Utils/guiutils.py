@@ -38,7 +38,7 @@ from libpince.libmemscan.memscan import ScanLevel
 from tr.tr import TranslationConstants as tr
 from typing import overload
 from contextlib import contextmanager
-import os
+import copy, os
 
 validator_map: dict[str, QRegularExpressionValidator | None] = {
     "int": QRegularExpressionValidator(QRegularExpression(regexes.decimal_number.pattern)),  # integers
@@ -139,18 +139,37 @@ def resize_to_contents(tablewidget: QTableWidget) -> None:
     tablewidget.horizontalHeader().resizeSection(tablewidget.columnCount() - 1, default_size)
 
 
-def fill_value_combobox(combobox: QComboBox, current_index: int = typedefs.VALUE_INDEX.INT32) -> None:
-    """Fills the given QComboBox with value_index strings
+def fill_value_combobox(combobox: QComboBox, current_type: typedefs.ValueType | None = None) -> None:
+    """Fill a combobox with value-type prototypes."""
+    target = current_type or typedefs.IntegerValueType()
+    target_key = (type(target), getattr(target, "bits", None), getattr(target, "encoding", None))
+    choices = (
+        [typedefs.IntegerValueType(bits) for bits in (8, 16, 32, 64)]
+        + [typedefs.FloatValueType(bits) for bits in (32, 64)]
+        + [typedefs.StringValueType(encoding) for encoding in ("ascii", "utf-8", "utf-16", "utf-32")]
+        + [typedefs.ByteArrayValueType()]
+    )
+    combobox.setCurrentIndex(0)
+    for value_type in choices:
+        combobox.addItem(value_type.text().split("[", 1)[0], value_type)
+        if (type(value_type), getattr(value_type, "bits", None), getattr(value_type, "encoding", None)) == target_key:
+            combobox.setCurrentIndex(combobox.count() - 1)
 
-    Args:
-        combobox (QComboBox): The combobox that'll be filled
-        current_index (int): Can be a member of typedefs.VALUE_INDEX
-    """
-    for key in typedefs.index_to_text_dict:
-        combobox.addItem(typedefs.index_to_text_dict[key], key)
-    idx = combobox.findData(current_index)
-    if idx >= 0:
-        combobox.setCurrentIndex(idx)
+
+def configure_value_type(
+    value_type: typedefs.ValueType,
+    *,
+    length: int | None = None,
+    zero_terminate: bool | None = None,
+    value_repr: int | None = None,
+    endian: int | None = None,
+) -> typedefs.ValueType:
+    """Copy a combobox prototype and apply the options controlled by its dialog."""
+    configured = copy.copy(value_type)
+    for name, value in (("length", length), ("zero_terminate", zero_terminate), ("value_repr", value_repr), ("endian", endian)):
+        if value is not None and hasattr(configured, name):
+            setattr(configured, name, value)
+    return configured
 
 
 def fill_endianness_combobox(combobox: QComboBox, current_index: int = typedefs.ENDIANNESS.HOST) -> None:

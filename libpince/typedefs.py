@@ -18,8 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # IMPORTANT: Any constant involving only PINCE.py should be declared in PINCE.py
 
-import collections.abc, queue
-from typing import Any, Callable
+import collections.abc, logging, queue, struct, sys
+from typing import Any, Callable, Literal
+
+_logger = logging.getLogger("PINCE")
 
 
 class PATHS:
@@ -158,49 +160,6 @@ class VALUE_REPR:
     HEX = 2
 
 
-class VALUE_INDEX:
-    # Beginning of the integer indexes, new integer indexes should be added between 0 and 3
-    INT8 = 0
-    INT16 = 1
-    INT32 = 2
-    INT64 = 3
-    # Ending of the integer indexes
-
-    FLOAT32 = 4
-    FLOAT64 = 5
-
-    # Beginning of the string indexes, new string indexes should be added between 6 and 9
-    STRING_ASCII = 6
-    STRING_UTF8 = 7
-    STRING_UTF16 = 8
-    STRING_UTF32 = 9
-    # Ending of the string indexes
-
-    AOB = 10  # Array of Bytes
-
-    STRUCT = 11  # Only used to represent a grouping of Struct offsets/variables, not readable directly.
-
-    @staticmethod
-    def is_integer(value_index: int) -> bool:
-        return VALUE_INDEX.INT8 <= value_index <= VALUE_INDEX.INT64
-
-    @staticmethod
-    def is_float(value_index: int) -> bool:
-        return VALUE_INDEX.FLOAT32 <= value_index <= VALUE_INDEX.FLOAT64
-
-    @staticmethod
-    def is_number(value_index: int) -> bool:
-        return VALUE_INDEX.INT8 <= value_index <= VALUE_INDEX.FLOAT64
-
-    @staticmethod
-    def is_string(value_index: int) -> bool:
-        return VALUE_INDEX.STRING_ASCII <= value_index <= VALUE_INDEX.STRING_UTF32
-
-    @staticmethod
-    def has_length(value_index: int) -> bool:
-        return VALUE_INDEX.STRING_ASCII <= value_index <= VALUE_INDEX.AOB
-
-
 class SCAN_INDEX:
     INT_ANY = 0
     INT8 = 1
@@ -223,30 +182,8 @@ on_hit_to_text_dict = {
     BREAKPOINT_ON_HIT.TRACE: "Trace",
 }
 
-# Represents the texts at indexes in the address table
-# TODO: This class is mostly an UI helper, maybe integrate it into the the UI completely in the future?
-index_to_text_dict = collections.OrderedDict(
-    [
-        (VALUE_INDEX.INT8, "Int8"),
-        (VALUE_INDEX.INT16, "Int16"),
-        (VALUE_INDEX.INT32, "Int32"),
-        (VALUE_INDEX.INT64, "Int64"),
-        (VALUE_INDEX.FLOAT32, "Float32"),
-        (VALUE_INDEX.FLOAT64, "Float64"),
-        (VALUE_INDEX.STRING_ASCII, "String_ASCII"),
-        (VALUE_INDEX.STRING_UTF8, "String_UTF8"),
-        (VALUE_INDEX.STRING_UTF16, "String_UTF16"),
-        (VALUE_INDEX.STRING_UTF32, "String_UTF32"),
-        (VALUE_INDEX.AOB, "ByteArray"),
-    ]
-)
-
-text_to_index_dict = collections.OrderedDict()
-for key in index_to_text_dict:
-    text_to_index_dict[index_to_text_dict[key]] = key
-
 # Represents the texts at indexes in scan combobox
-# TODO: Same as index_to_text_dict, consider integrating into UI completely
+# TODO: Consider integrating this UI helper into the UI completely
 scan_index_to_text_dict = collections.OrderedDict(
     [
         (SCAN_INDEX.INT_ANY, "Int(any)"),
@@ -264,7 +201,7 @@ scan_index_to_text_dict = collections.OrderedDict(
 )
 
 
-# TODO: Same as index_to_text_dict, consider integrating into UI completely
+# TODO: Consider integrating this UI helper into the UI completely
 class SCAN_TYPE:
     EXACT = 0
     NOT = 1
@@ -328,58 +265,7 @@ class ENDIANNESS:
     BIG = 2
 
 
-string_index_to_encoding_dict = {
-    VALUE_INDEX.STRING_UTF8: ["utf-8", "surrogateescape"],
-    VALUE_INDEX.STRING_UTF16: ["utf-16", "replace"],
-    VALUE_INDEX.STRING_UTF32: ["utf-32", "replace"],
-    VALUE_INDEX.STRING_ASCII: ["ascii", "replace"],
-}
-
-
-def resolve_string_encoding(value_index: int, endian: int, host_endianness: int) -> tuple[str, str]:
-    """Return (encoding, option) for a string value_index with byte order baked in.
-
-    UTF-16/UTF-32 get an explicit little/big-endian codec.
-    Single-byte codecs (ascii/utf-8) ignore endianness.
-    """
-    encoding, option = string_index_to_encoding_dict[value_index]
-    if value_index in (VALUE_INDEX.STRING_UTF16, VALUE_INDEX.STRING_UTF32):
-        target_endian = host_endianness if endian == ENDIANNESS.HOST else endian
-        encoding += "-le" if target_endian == ENDIANNESS.LITTLE else "-be"
-    return encoding, option
-
-
-string_index_to_multiplier_dict = {
-    VALUE_INDEX.STRING_UTF8: 4,
-    VALUE_INDEX.STRING_UTF16: 4,
-    VALUE_INDEX.STRING_UTF32: 4,
-}
-
-# first value is the length and the second one is the type
-# Check gdbutils for an exemplary usage
-index_to_valuetype_dict = {
-    VALUE_INDEX.INT8: [1, "B"],
-    VALUE_INDEX.INT16: [2, "H"],
-    VALUE_INDEX.INT32: [4, "I"],
-    VALUE_INDEX.INT64: [8, "Q"],
-    VALUE_INDEX.FLOAT32: [4, "f"],
-    VALUE_INDEX.FLOAT64: [8, "d"],
-    VALUE_INDEX.STRING_ASCII: [None, None],
-    VALUE_INDEX.STRING_UTF8: [None, None],
-    VALUE_INDEX.STRING_UTF16: [None, None],
-    VALUE_INDEX.STRING_UTF32: [None, None],
-    VALUE_INDEX.AOB: [None, None],
-}
-
-# Check gdbutils for an exemplary usage
-index_to_struct_pack_dict = {
-    VALUE_INDEX.INT8: "B",
-    VALUE_INDEX.INT16: "H",
-    VALUE_INDEX.INT32: "I",
-    VALUE_INDEX.INT64: "Q",
-    VALUE_INDEX.FLOAT32: "f",
-    VALUE_INDEX.FLOAT64: "d",
-}
+_HOST_ENDIANNESS = ENDIANNESS.LITTLE if sys.byteorder == "little" else ENDIANNESS.BIG
 
 # size-->int, any other field-->str
 tuple_breakpoint_info = collections.namedtuple(
@@ -423,68 +309,316 @@ class ScriptEntry:
 
 
 class ValueType:
-    def __init__(
-        self,
-        value_index: int = VALUE_INDEX.INT32,
-        length: int = 10,
-        zero_terminate: bool = True,
-        value_repr: int = VALUE_REPR.UNSIGNED,
-        endian: int = ENDIANNESS.HOST,
-    ) -> None:
-        """
-        Args:
-            value_index (int): Determines the type of data. Can be a member of VALUE_INDEX
-            length (int): Length of the data. Only used when the value_index is STRING or AOB
-            zero_terminate (bool): If False, ",NZT" will be appended to the text representation
-            Only used when value_index is STRING. Ignored otherwise. "NZT" stands for "Non-Zero Terminate"
-            value_repr (int): Determines how the data is represented. Can be a member of VALUE_REPR
-            endian (int): Determines the endianness. Can be a member of ENDIANNESS
-        """
-        self.value_index = value_index
-        self.length = length
-        self.zero_terminate = zero_terminate
-        self.value_repr = value_repr
-        self.endian = endian
+    def __init__(self) -> None:
+        if type(self) is ValueType:
+            raise TypeError("ValueType is a base class. Construct a concrete value type")
 
     def serialize(self) -> tuple[int, int, bool, int, int]:
         return (
-            self.value_index,
-            self.length,
-            self.zero_terminate,
-            self.value_repr,
-            self.endian,
+            _SERIALIZED_IDS_BY_TYPE[type(self), self._serialization_args()],
+            getattr(self, "length", 10),
+            getattr(self, "zero_terminate", True),
+            getattr(self, "value_repr", VALUE_REPR.UNSIGNED),
+            getattr(self, "endian", ENDIANNESS.HOST),
         )
 
-    def text(self) -> str:
-        """Returns the text representation according to its members
+    @staticmethod
+    def deserialize(data: tuple | list) -> "ValueType":
+        if len(data) == 4:
+            data = (*data, ENDIANNESS.HOST)
+        elif len(data) != 5:
+            raise TypeError("Serialized value types must contain four or five fields")
+        serialized_id, length, zero_terminate, value_repr, endian = data
+        value_type_class, constructor_args = _SERIALIZED_TYPE_IDS[serialized_id]
+        value_type = value_type_class(*constructor_args)
+        for name, value in (("length", length), ("zero_terminate", zero_terminate), ("value_repr", value_repr), ("endian", endian)):
+            if hasattr(value_type, name):
+                setattr(value_type, name, value)
+        return value_type
 
-        Returns:
-            str: A str generated by given parameters
+    def _serialization_args(self) -> tuple[Any, ...]:
+        return ()
 
-        Examples:
-            value_index=VALUE_INDEX.STRING_UTF16, length=15, zero_terminate=False--▼
-            returned str="String_UTF16[15],NZT"
-            value_index=VALUE_INDEX.AOB, length=42-->returned str="AoB[42]"
-        """
-        if self.value_index == VALUE_INDEX.STRUCT:
-            return "Struct"
-        returned_string = index_to_text_dict[self.value_index]
-        if VALUE_INDEX.is_string(self.value_index):
-            returned_string += f"[{self.length}]"
-            if not self.zero_terminate:
-                returned_string += ",NZT"
-        elif self.value_index == VALUE_INDEX.AOB:
-            returned_string += f"[{self.length}]"
-        if VALUE_INDEX.is_integer(self.value_index):
-            if self.value_repr == VALUE_REPR.SIGNED:
-                returned_string += "(s)"
-            elif self.value_repr == VALUE_REPR.HEX:
-                returned_string += "(h)"
+    def _endian_suffix(self) -> str:
         if self.endian == ENDIANNESS.LITTLE:
-            returned_string += "<L>"
-        elif self.endian == ENDIANNESS.BIG:
-            returned_string += "<B>"
-        return returned_string
+            return "<L>"
+        if self.endian == ENDIANNESS.BIG:
+            return "<B>"
+        return ""
+
+    def _apply_endian(self, data: bytes) -> bytes:
+        if self.endian != ENDIANNESS.HOST and self.endian != _HOST_ENDIANNESS:
+            return data[::-1]
+        return data
+
+    @property
+    def read_size(self) -> int | None:
+        """Number of bytes required for a memory read."""
+        raise NotImplementedError
+
+    def parse(self, text: str) -> Any | None:
+        raise NotImplementedError
+
+    def decode(self, data: bytes) -> Any:
+        raise NotImplementedError
+
+    def encode(self, value: Any) -> bytes | None:
+        raise NotImplementedError
+
+    def text(self) -> str:
+        raise NotImplementedError
+
+
+class IntegerValueType(ValueType):
+    _struct_code_by_bits = {8: "B", 16: "H", 32: "I", 64: "Q"}
+
+    def __init__(
+        self,
+        bits: Literal[8, 16, 32, 64] = 32,
+        *,
+        value_repr: int = VALUE_REPR.UNSIGNED,
+        endian: int = ENDIANNESS.HOST,
+    ) -> None:
+        if type(bits) is not int or bits not in self._struct_code_by_bits:
+            raise ValueError("Integer bits must be 8, 16, 32, or 64")
+        self.bits = bits
+        self.value_repr = value_repr
+        self.endian = endian
+
+    def _serialization_args(self) -> tuple[int]:
+        return (self.bits,)
+
+    @property
+    def read_size(self) -> int:
+        return self.bits // 8
+
+    def parse(self, text: str) -> int | None:
+        if not text:
+            _logger.error("Missing string parameter")
+            return None
+        text = text.strip()
+        try:
+            value = int(text, 0)
+        except ValueError:
+            try:
+                value = int(float(text))
+            except (ValueError, TypeError, OverflowError):
+                _logger.exception(f"{text} can't be parsed as integer or hexadecimal")
+                return None
+        return value % (1 << self.bits)
+
+    def decode(self, data: bytes) -> str | int:
+        data_type = self._struct_code_by_bits[self.bits]
+        if self.value_repr == VALUE_REPR.SIGNED:
+            data_type = data_type.lower()
+        result = struct.unpack_from(data_type, self._apply_endian(data))[0]
+        return hex(result) if self.value_repr == VALUE_REPR.HEX else result
+
+    def encode(self, value: Any) -> bytes | None:
+        if isinstance(value, str):
+            value = self.parse(value)
+            if value is None:
+                return None
+        elif isinstance(value, int):
+            value %= 1 << self.bits
+        return self._apply_endian(struct.pack(self._struct_code_by_bits[self.bits], value))
+
+    def text(self) -> str:
+        returned_string = f"Int{self.bits}"
+        if self.value_repr == VALUE_REPR.SIGNED:
+            returned_string += "(s)"
+        elif self.value_repr == VALUE_REPR.HEX:
+            returned_string += "(h)"
+        return returned_string + self._endian_suffix()
+
+
+class FloatValueType(ValueType):
+    _struct_code_by_bits = {32: "f", 64: "d"}
+
+    def __init__(
+        self,
+        bits: Literal[32, 64] = 32,
+        *,
+        endian: int = ENDIANNESS.HOST,
+    ) -> None:
+        if type(bits) is not int or bits not in self._struct_code_by_bits:
+            raise ValueError("Float bits must be 32 or 64")
+        self.bits = bits
+        self.endian = endian
+
+    def _serialization_args(self) -> tuple[int]:
+        return (self.bits,)
+
+    @property
+    def read_size(self) -> int:
+        return self.bits // 8
+
+    def parse(self, text: str) -> float | None:
+        if not text:
+            _logger.error("Missing string parameter")
+            return None
+        text = text.strip().replace(",", ".")
+        try:
+            return float(text)
+        except ValueError:
+            try:
+                return float(int(text, 0))
+            except (ValueError, TypeError, OverflowError):
+                _logger.exception(f"{text} can't be parsed as floating point variable")
+                return None
+
+    def decode(self, data: bytes) -> float:
+        return struct.unpack_from(self._struct_code_by_bits[self.bits], self._apply_endian(data))[0]
+
+    def encode(self, value: Any) -> bytes | None:
+        if isinstance(value, str):
+            value = self.parse(value)
+            if value is None:
+                return None
+        return self._apply_endian(struct.pack(self._struct_code_by_bits[self.bits], value))
+
+    def text(self) -> str:
+        return f"Float{self.bits}" + self._endian_suffix()
+
+
+class StringValueType(ValueType):
+    def __init__(
+        self,
+        encoding: Literal["ascii", "utf-8", "utf-16", "utf-32"],
+        *,
+        length: int = 10,
+        zero_terminate: bool = True,
+        endian: int = ENDIANNESS.HOST,
+    ) -> None:
+        if encoding not in ("ascii", "utf-8", "utf-16", "utf-32"):
+            raise ValueError(f"Unsupported string encoding: {encoding}")
+        self.encoding = encoding
+        self.length = length
+        self.zero_terminate = zero_terminate
+        self.endian = endian
+
+    def _serialization_args(self) -> tuple[str]:
+        return (self.encoding,)
+
+    @property
+    def read_size(self) -> int | None:
+        try:
+            length = int(self.length)
+        except (TypeError, ValueError, OverflowError):
+            return None
+        if length <= 0:
+            return None
+        return length * (1 if self.encoding == "ascii" else 4)
+
+    def parse(self, text: str) -> str | None:
+        if not text:
+            _logger.error("Missing string parameter")
+            return None
+        return text
+
+    def _codec(self) -> tuple[str, str]:
+        encoding = self.encoding
+        if encoding in ("utf-16", "utf-32"):
+            target_endian = _HOST_ENDIANNESS if self.endian == ENDIANNESS.HOST else self.endian
+            encoding += "-le" if target_endian == ENDIANNESS.LITTLE else "-be"
+        errors = "surrogateescape" if self.encoding == "utf-8" else "replace"
+        return encoding, errors
+
+    def decode(self, data: bytes) -> str:
+        encoding, errors = self._codec()
+        result = data.decode(encoding, errors)
+        if self.zero_terminate:
+            result = "\x00" if result.startswith("\x00") else result.split("\x00")[0]
+        return result[: int(self.length)]
+
+    def encode(self, value: Any) -> bytes | None:
+        if not isinstance(value, str) or self.parse(value) is None:
+            return None
+        encoding, errors = self._codec()
+        result = value.encode(encoding, errors)
+        if self.zero_terminate:
+            result += "\x00".encode(encoding, errors)
+        return result
+
+    def text(self) -> str:
+        returned_string = f"String_{self.encoding.replace('-', '').upper()}[{self.length}]"
+        if not self.zero_terminate:
+            returned_string += ",NZT"
+        return returned_string + self._endian_suffix()
+
+
+class ByteArrayValueType(ValueType):
+    def __init__(self, length: int = 10) -> None:
+        self.length = length
+
+    @property
+    def read_size(self) -> int | None:
+        try:
+            length = int(self.length)
+        except (TypeError, ValueError, OverflowError):
+            return None
+        return length if length > 0 else None
+
+    def parse(self, text: str) -> list[int] | None:
+        if not text:
+            _logger.error("Missing string parameter")
+            return None
+        tokens = text.split()
+        if not tokens or any(len(token) > 2 or any(char not in "0123456789abcdefABCDEF" for char in token) for token in tokens):
+            _logger.error(f"{text.strip()} can't be parsed as array of bytes")
+            return None
+        return [int(token, 16) for token in tokens]
+
+    def decode(self, data: bytes) -> str:
+        return data.hex(" ")
+
+    def encode(self, value: Any) -> bytes | None:
+        if isinstance(value, str):
+            value = self.parse(value)
+            if value is None:
+                return None
+        return bytes(value)
+
+    def text(self) -> str:
+        return f"ByteArray[{self.length}]"
+
+
+class StructValueType(ValueType):
+    @property
+    def read_size(self) -> None:
+        return None
+
+    def parse(self, text: str) -> None:
+        return None
+
+    def decode(self, data: bytes) -> None:
+        return None
+
+    def encode(self, value: Any) -> None:
+        return None
+
+    def text(self) -> str:
+        return "Struct"
+
+
+# These numeric IDs are stored by existing .pct files.
+# Runtime code should use the concrete ValueType families instead.
+# NEVER renumber these entries while old tables are supported.
+_SERIALIZED_TYPE_IDS: dict[int, tuple[type[ValueType], tuple[Any, ...]]] = {
+    0: (IntegerValueType, (8,)),
+    1: (IntegerValueType, (16,)),
+    2: (IntegerValueType, (32,)),
+    3: (IntegerValueType, (64,)),
+    4: (FloatValueType, (32,)),
+    5: (FloatValueType, (64,)),
+    6: (StringValueType, ("ascii",)),
+    7: (StringValueType, ("utf-8",)),
+    8: (StringValueType, ("utf-16",)),
+    9: (StringValueType, ("utf-32",)),
+    10: (ByteArrayValueType, ()),
+    11: (StructValueType, ()),
+}
+_SERIALIZED_IDS_BY_TYPE = {value: key for key, value in _SERIALIZED_TYPE_IDS.items()}
 
 
 class StructureMember:
@@ -517,7 +651,7 @@ class StructureMember:
     @classmethod
     def deserialize(cls, data: tuple) -> "StructureMember":
         name, offset, vt, struct_ref, is_pointer = data
-        return cls(name, offset, ValueType(*vt) if vt is not None else None, struct_ref, is_pointer)
+        return cls(name, offset, ValueType.deserialize(vt) if vt is not None else None, struct_ref, is_pointer)
 
 
 class Structure:

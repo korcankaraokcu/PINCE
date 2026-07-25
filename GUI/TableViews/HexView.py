@@ -37,7 +37,7 @@ class HexView(QTableView):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setAutoScroll(False)
-        self.write_type = typedefs.VALUE_INDEX.AOB
+        self.write_type = typedefs.ByteArrayValueType(1)
         self.delegate = HexDelegate()
         self.delegate.closeEditor.connect(self.on_editor_close)
         self.setItemDelegate(self.delegate)
@@ -92,11 +92,11 @@ class HexView(QTableView):
         index = cell.row() * model.columnCount() + cell.column()
         address = utils.modulo_address(model.current_address + index, debugcore.inferior_arch)
         data = self.delegate.editor.text()
-        if self.write_type == typedefs.VALUE_INDEX.AOB:
+        if isinstance(self.write_type, typedefs.ByteArrayValueType):
             data = data.upper()
             if len(data) == 1:  # pad a single nibble with zero so it matches hex_dump's "0A" formatting.
                 data = "0" + data
         elif len(data.encode("utf-8")) != 1:  # an ASCII cell holds one byte so we ignore multi-byte input.
             return
-        debugcore.write_memory(address, self.write_type, data, False)
+        debugcore.write_memory(address, self.write_type, data)
         model.update_index(index, data)

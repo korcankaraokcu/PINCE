@@ -19,14 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from threading import Lock, Thread, Condition
 from time import sleep, time
 from collections import OrderedDict, defaultdict
-import pexpect, os, sys, ctypes, pickle, shelve, re, struct, io, traceback
+import pexpect, os, ctypes, pickle, shelve, re, struct, io, traceback
 from . import utils, typedefs, regexes
 from .utils import safe_str_to_int, safe_int_cast, logger
 from typing import Any, Callable
 
 self_pid = os.getpid()
 libc = ctypes.CDLL("libc.so.6")
-system_endianness = typedefs.ENDIANNESS.LITTLE if sys.byteorder == "little" else typedefs.ENDIANNESS.BIG
 
 # A boolean value. True if gdb is initialized, False if not
 gdb_initialized = False
@@ -923,7 +922,7 @@ def inject_so(library_path: str) -> bool:
                 if not buf:
                     continue
                 try:
-                    write_memory(buf, typedefs.VALUE_INDEX.AOB, list(path_bytes), zero_terminate=False)
+                    write_memory(buf, typedefs.ByteArrayValueType(len(path_bytes)), path_bytes)
                     out = send_command(f"call ((void *(*)(char *, int)) {hex(addr)})((char *){hex(buf)}, 2)")
                     m = regexes.convenience_variable.search(out)
                     hex_m = regexes.hex_number_grouped.search(m.group(2)) if m else None
@@ -1410,10 +1409,7 @@ def read_pointer_chain(pointer_request: typedefs.PointerChainRequest) -> typedef
     if not isinstance(pointer_request, typedefs.PointerChainRequest):
         raise TypeError("Passed non-PointerChainRequest type to read_pointer_chain!")
 
-    if effective_arch == typedefs.INFERIOR_ARCH.ARCH_32:
-        value_index = typedefs.VALUE_INDEX.INT32
-    else:
-        value_index = typedefs.VALUE_INDEX.INT64
+    pointer_type = typedefs.IntegerValueType(32 if effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 64)
 
     # Simple addresses first, examine_expression takes much longer time, especially for larger tables
     try:
@@ -1425,7 +1421,7 @@ def read_pointer_chain(pointer_request: typedefs.PointerChainRequest) -> typedef
     try:
         with memory_handle() as mem_handle:
             # Dereference the first address which is the base or (base + offset)
-            deref_address = read_memory(start_address, value_index, mem_handle=mem_handle)
+            deref_address = read_memory(start_address, pointer_type, mem_handle=mem_handle)
             if deref_address is None:
                 # Simply return None because no point reading further if base is not valid
                 return None
@@ -1439,7 +1435,7 @@ def read_pointer_chain(pointer_request: typedefs.PointerChainRequest) -> typedef
                     continue
                 offset_address = deref_address + offset
                 if index != len(pointer_request.offsets_list) - 1:  # CE derefs every offset except for the last one
-                    deref_address = read_memory(offset_address, value_index, mem_handle=mem_handle)
+                    deref_address = read_memory(offset_address, pointer_type, mem_handle=mem_handle)
                     if deref_address is None:
                         deref_address = 0
                 else:
@@ -1710,77 +1706,43 @@ def free_cave(name: str) -> bool:
 
 def read_memory(
     address: str | int,
-    value_index: int,
-    length: int = 0,
-    zero_terminate: bool = True,
-    value_repr: int = typedefs.VALUE_REPR.UNSIGNED,
-    endian: int = typedefs.ENDIANNESS.HOST,
+    value_type: typedefs.ValueType,
     mem_handle: io.BufferedReader | None = None,
 ) -> str | float | int | None:
     """Reads value from the given address
 
     Args:
         address (str, int): Can be a hex string or an integer.
-        value_index (int): Determines the type of data read. Can be a member of typedefs.VALUE_INDEX
-        length (int): Length of the data that'll be read. Must be greater than 0. Only used when the value_index is
-        STRING or AOB. Ignored otherwise
-        zero_terminate (bool): If True, data will be split when a null character has been read. Only used when
-        value_index is STRING. Ignored otherwise
-        value_repr (int): Can be a member of typedefs.VALUE_REPR. Only usable with integer types
-        endian (int): Can be a member of typedefs.ENDIANNESS
+        value_type (typedefs.ValueType): Determines how many bytes to read and how to decode them.
         mem_handle (io.BufferedReader, None): A file handle that points to the memory file of the current process
         This parameter is used for optimization, See memory_handle
         Don't forget to close the handle after you're done if you use this parameter manually
 
     Returns:
-        str: If the value_index is STRING or AOB, also when value_repr is HEX
-        float: If the value_index is FLOAT32 or FLOAT64
-        int: If the value_index is anything else
+        str: For string and byte-array types, also for hexadecimal integers
+        float: For float types
+        int: For integer types
         None: If an error occurs while reading the given address
     """
-    try:
-        value_index = int(value_index)
-    except Exception:
+    if not isinstance(value_type, typedefs.ValueType):
         return
     if not type(address) == int:
         try:
             address = int(address, 0)
         except Exception:
             return
-    packed_data = typedefs.index_to_valuetype_dict.get(value_index, -1)
-    if typedefs.VALUE_INDEX.is_string(value_index):
-        try:
-            length = int(length)
-        except Exception:
-            return
-        if not length > 0:
-            return
-        expected_length = length * typedefs.string_index_to_multiplier_dict.get(value_index, 1)
-    elif value_index == typedefs.VALUE_INDEX.AOB:
-        try:
-            expected_length = int(length)
-        except Exception:
-            return
-        if not expected_length > 0:
-            return
-    else:
-        if packed_data == -1:
-            return
-        expected_length = packed_data[0]
-        data_type = packed_data[1]
+    expected_length = value_type.read_size
+    if expected_length is None:
+        return
     own_mem_handle = mem_handle is None
     try:
         if own_mem_handle:
             mem_handle = memory_handle()
         mem_handle.seek(address)
         data_read = mem_handle.read(expected_length)
-        if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian and typedefs.VALUE_INDEX.is_number(value_index):
-            data_read = data_read[::-1]
     except (OSError, ValueError):
         # TODO (read/write error output)
         # Disabled read error printing. If needed, find a way to implement error logging with this function
-        # I've initially thought about enabling it on demand via a parameter but this function already has too many
-        # Maybe creating a function that toggles logging on and off? Other functions could use it too
         # print("Can't access the memory at address " + hex(address) + " or offset " + hex(address + expected_length))
         return
     finally:
@@ -1788,33 +1750,13 @@ def read_memory(
             mem_handle.close()
     if len(data_read) < expected_length:
         return
-    if typedefs.VALUE_INDEX.is_string(value_index):
-        encoding, option = typedefs.resolve_string_encoding(value_index, endian, system_endianness)
-        returned_string = data_read.decode(encoding, option)
-        if zero_terminate:
-            if returned_string.startswith("\x00"):
-                returned_string = "\x00"
-            else:
-                returned_string = returned_string.split("\x00")[0]
-        return returned_string[0:length]
-    elif value_index == typedefs.VALUE_INDEX.AOB:
-        return " ".join(format(n, "02x") for n in data_read)
-    else:
-        is_integer = typedefs.VALUE_INDEX.is_integer(value_index)
-        if is_integer and value_repr == typedefs.VALUE_REPR.SIGNED:
-            data_type = data_type.lower()
-        result = struct.unpack_from(data_type, data_read)[0]
-        if is_integer and value_repr == typedefs.VALUE_REPR.HEX:
-            return hex(result)
-        return result
+    return value_type.decode(data_read)
 
 
 def write_memory(
     address: str | int,
-    value_index: int,
-    value: str | int | float | list[int],
-    zero_terminate: bool = True,
-    endian: int = typedefs.ENDIANNESS.HOST,
+    value_type: typedefs.ValueType,
+    value: str | int | float | bytes | bytearray | memoryview | list[int],
 ) -> None:
     """Sets the given value to the given address
 
@@ -1823,46 +1765,28 @@ def write_memory(
 
     Args:
         address (str, int): Can be a hex string or an integer
-        value_index (int): Can be a member of typedefs.VALUE_INDEX
-        value (str, int, float, list): The value that'll be written to the given address
-        zero_terminate (bool): If True, appends a null byte to the value. Only used when value_index is STRING
-        endian (int): Can be a member of typedefs.ENDIANNESS
+        value_type (typedefs.ValueType): Determines how the value is encoded
+        value (str, int, float, bytes, bytearray, memoryview, list): The value that'll be written to the given address
 
     Notes:
         TODO: Implement a mem_handle parameter for optimization, check read_memory for an example
         If a file handle fails to write to an address, it becomes unusable
         You have to reopen the file to continue writing
     """
+    if not isinstance(value_type, typedefs.ValueType):
+        return
     if not type(address) == int:
         try:
             address = int(address, 0)
         except Exception:
             return
-    if isinstance(value, str):
-        write_data = utils.parse_string(value, value_index)
-        if write_data is None:
-            return
-    else:
-        write_data = value
-    if typedefs.VALUE_INDEX.is_string(value_index):
-        encoding, option = typedefs.resolve_string_encoding(value_index, endian, system_endianness)
-        write_data = write_data.encode(encoding, option)
-        if zero_terminate:
-            write_data += "\x00".encode(encoding, option)
-    else:
-        if value_index == typedefs.VALUE_INDEX.AOB:
-            write_data = bytearray(write_data)
-        else:
-            data_type = typedefs.index_to_struct_pack_dict.get(value_index, -1)
-            if typedefs.VALUE_INDEX.is_integer(value_index) and isinstance(write_data, int):
-                write_data = utils.wrap_integer(write_data, value_index)
-            try:
-                write_data = struct.pack(data_type, write_data)
-            except (struct.error, OverflowError, TypeError):
-                logger.error(f"Failed to pack value {write_data!r} for value_index {value_index}")
-                return
-        if endian != typedefs.ENDIANNESS.HOST and system_endianness != endian and typedefs.VALUE_INDEX.is_number(value_index):
-            write_data = write_data[::-1]
+    try:
+        write_data = value_type.encode(value)
+    except (struct.error, OverflowError, TypeError, ValueError):
+        logger.error(f"Failed to encode value {value!r} as {value_type.text()}")
+        return
+    if write_data is None:
+        return
     try:
         with memory_handle("rb+") as mem_handle:
             mem_handle.seek(address)
@@ -2446,7 +2370,7 @@ def nop_instruction(start_address: int, length: int) -> None:
         table[start_address] = old_aob
 
     nop_aob = " ".join(["90"] * length)
-    write_memory(start_address, typedefs.VALUE_INDEX.AOB, nop_aob)
+    write_memory(start_address, typedefs.ByteArrayValueType(length), nop_aob)
     instructions_changed.emit()
 
 
@@ -2469,7 +2393,7 @@ def modify_instruction(start_address: int, array_of_bytes: str) -> None:
     table = modified_instructions_dict.setdefault(current_process_identity, {})
     if start_address not in table:
         table[start_address] = old_aob
-    write_memory(start_address, typedefs.VALUE_INDEX.AOB, array_of_bytes)
+    write_memory(start_address, typedefs.ByteArrayValueType(length), array_of_bytes)
     instructions_changed.emit()
 
 
@@ -2486,7 +2410,7 @@ def restore_instruction(start_address: int) -> None:
     if not table or start_address not in table:
         return
     array_of_bytes = table.pop(start_address)
-    write_memory(start_address, typedefs.VALUE_INDEX.AOB, array_of_bytes)
+    write_memory(start_address, typedefs.ByteArrayValueType(len(array_of_bytes.split())), array_of_bytes)
     instructions_changed.emit()
 
 
@@ -3252,7 +3176,7 @@ def get_dissect_code_data(referenced_strings: bool = True, referenced_jumps: boo
 
 def search_referenced_strings(
     searched_str: str,
-    value_index: int = typedefs.VALUE_INDEX.STRING_UTF8,
+    value_type: typedefs.ValueType | None = None,
     case_sensitive: bool = False,
     enable_regex: bool = False,
 ) -> list | None:
@@ -3260,7 +3184,7 @@ def search_referenced_strings(
 
     Args:
         searched_str (str): String that will be searched
-        value_index (int): Can be a member of typedefs.VALUE_INDEX
+        value_type (typedefs.ValueType, None): Type used to read candidate values. Defaults to UTF-8.
         case_sensitive (bool): If True, search will be case sensitive
         enable_regex (bool): If True, searched_str will be treated as a regex expression
 
@@ -3277,12 +3201,16 @@ def search_referenced_strings(
         except Exception:
             logger.exception(f"An exception occurred while trying to compile the given regex '{searched_str}'")
             return
+    if value_type is None:
+        value_type = typedefs.StringValueType("utf-8", length=100)
+    elif not isinstance(value_type, typedefs.ValueType):
+        return []
     str_dict = get_dissect_code_data(True, False, False)[0]
     try:
         returned_list = []
         with memory_handle() as mem_handle:
             for address, refs in str_dict.items():
-                value = read_memory(int(address, 16), value_index, 100, mem_handle=mem_handle)
+                value = read_memory(int(address, 16), value_type, mem_handle=mem_handle)
                 value_str = "" if value is None else str(value)
                 if not value_str:
                     continue

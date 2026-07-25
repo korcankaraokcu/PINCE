@@ -60,10 +60,13 @@ def migrate_version(content: Any) -> dict[str, Any]:
 def _valid_value_type(data: Any) -> bool:
     if not isinstance(data, list) or len(data) not in (4, 5):
         return False
-    value_index, length, zero_terminate, value_repr = data[:4]
+    try:
+        typedefs.ValueType.deserialize(data)
+    except (KeyError, TypeError, ValueError):
+        return False
+    type_id, length, zero_terminate, value_repr = data[:4]
     return (
-        all(type(value) is int for value in (value_index, length, value_repr, *data[4:]))
-        and typedefs.VALUE_INDEX.INT8 <= value_index <= typedefs.VALUE_INDEX.STRUCT
+        all(type(value) is int for value in (type_id, length, value_repr, *data[4:]))
         and type(zero_terminate) is bool
         and typedefs.VALUE_REPR.UNSIGNED <= value_repr <= typedefs.VALUE_REPR.HEX
         and (len(data) == 4 or typedefs.ENDIANNESS.HOST <= data[4] <= typedefs.ENDIANNESS.BIG)

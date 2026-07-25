@@ -12,6 +12,7 @@ class HexEditDialog(QDialog, Ui_Dialog):
     def __init__(self, parent: QWidget, address: int, length: int = 20) -> None:
         super().__init__(parent)
         self.setupUi(self)
+        self._byte_array_type = typedefs.ByteArrayValueType()
         # Guards against the AsciiView<->HexView selection sync recursing into itself, since both
         # setSelection() and deselect() re-emit selectionChanged while we mirror the selection
         self.is_syncing_selection = False
@@ -86,7 +87,7 @@ class HexEditDialog(QDialog, Ui_Dialog):
 
     def lineEdit_HexView_text_edited(self) -> None:
         aob_string = self.lineEdit_HexView.text()
-        if not utils.parse_string(aob_string, typedefs.VALUE_INDEX.AOB):
+        if not self._byte_array_type.parse(aob_string):
             self.lineEdit_HexView.setStyleSheet("QLineEdit {background-color: rgba(255, 0, 0, 96);}")
             return
         aob_array = aob_string.split()
@@ -132,9 +133,9 @@ class HexEditDialog(QDialog, Ui_Dialog):
             QMessageBox.information(self, tr.ERROR, tr.IS_INVALID_EXPRESSION.format(expression))
             return
         value = self.lineEdit_HexView.text()
-        parsed = utils.parse_string(value, typedefs.VALUE_INDEX.AOB)
+        parsed = self._byte_array_type.parse(value)
         if parsed is None:
             QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
             return
-        debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, value)
+        debugcore.write_memory(address, self._byte_array_type, parsed)
         super().accept()

@@ -133,7 +133,7 @@ from GUI.Widgets.TrackBreakpoint.TrackBreakpoint import TrackBreakpointWidget
 from GUI.Widgets.TrackSelector.TrackSelector import TrackSelectorDialog
 from GUI.Widgets.TrackWatchpoint.TrackWatchpoint import TrackWatchpointWidget
 from libpince import debugcore, monocore, scancore, speedhack, typedefs, utils
-from libpince.libmemscan.memscan import DataType, MatchView, BytePattern
+from libpince.libmemscan.memscan import DataType, BytePattern
 from libpince.scancore import memscan
 from libpince.utils import logger, safe_str_to_int, safe_int_cast
 from tr.tr import TranslationConstants as tr
@@ -658,7 +658,7 @@ class MainForm(QMainWindow, MainWindow):
                     menu,
                     [edit_value, edit_type, view_as_struct_menu.menuAction(), what_writes, what_reads, what_accesses],
                 )
-            if typedefs.VALUE_INDEX.is_integer(value_type.value_index):
+            if isinstance(value_type, typedefs.IntegerValueType):
                 if value_type.value_repr is typedefs.VALUE_REPR.HEX:
                     guiutils.delete_menu_entries(menu, [show_unsigned, show_signed, show_hex])
                 elif value_type.value_repr is typedefs.VALUE_REPR.UNSIGNED:
@@ -752,14 +752,12 @@ class MainForm(QMainWindow, MainWindow):
             if selection_dialog.selection == "pointer":
                 address = address_data.get_base_address_as_str()
         value_type = selected_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-        if typedefs.VALUE_INDEX.is_string(value_type.value_index):
+        if isinstance(value_type, typedefs.StringValueType):
             value_text = selected_row.text(VALUE_COL)
-            encoding, option = typedefs.string_index_to_encoding_dict[value_type.value_index]
-            byte_len = len(value_text.encode(encoding, option))
-        elif value_type.value_index == typedefs.VALUE_INDEX.AOB:
-            byte_len = value_type.length
+            errors = "surrogateescape" if value_type.encoding == "utf-8" else "replace"
+            byte_len = len(value_text.encode(value_type.encoding, errors))
         else:
-            byte_len = typedefs.index_to_valuetype_dict[value_type.value_index][0]
+            byte_len = value_type.read_size
         TrackWatchpointWidget(self, address, byte_len, watchpoint_type)
 
     def browse_region_for_address(self, address: str) -> None:
@@ -902,7 +900,7 @@ class MainForm(QMainWindow, MainWindow):
                     address_expr = typedefs.PointerChainRequest(*rec[1])
                 else:
                     address_expr = rec[1]
-                value_type = typedefs.ValueType(*rec[2])
+                value_type = typedefs.ValueType.deserialize(rec[2])
                 self.change_address_table_entries(row, rec[0], address_expr, value_type)
 
             # Insert the row at the current insert_index
@@ -1139,15 +1137,7 @@ class MainForm(QMainWindow, MainWindow):
                         row.setText(ADDR_COL, address_data)
                 address = "" if not address else address
                 row.setData(ADDR_COL, Qt.ItemDataRole.UserRole + 1, address)
-                value = debugcore.read_memory(
-                    address,
-                    vt.value_index,
-                    vt.length,
-                    vt.zero_terminate,
-                    vt.value_repr,
-                    vt.endian,
-                    mem_handle=mem_handle,
-                )
+                value = debugcore.read_memory(address, vt, mem_handle=mem_handle)
                 value = "" if value is None else str(value)
                 row.setText(VALUE_COL, value)
 
@@ -1481,58 +1471,6 @@ class MainForm(QMainWindow, MainWindow):
         if scan_regions_dialog.exec():
             self.deleted_regions.extend(scan_regions_dialog.get_values())
 
-    def get_value_index_for_match(self, match: MatchView) -> int:
-        if match.is_string_match():
-            return typedefs.VALUE_INDEX.STRING_UTF8
-        elif match.is_bytearray_match():
-            return typedefs.VALUE_INDEX.AOB
-        else:
-            if match.match_info.has_int8() or match.match_info.has_uint8():
-                return typedefs.VALUE_INDEX.INT8
-            if match.match_info.has_int16() or match.match_info.has_uint16():
-                return typedefs.VALUE_INDEX.INT16
-            if match.match_info.has_int32() or match.match_info.has_uint32():
-                return typedefs.VALUE_INDEX.INT32
-            if match.match_info.has_int64() or match.match_info.has_uint64():
-                return typedefs.VALUE_INDEX.INT64
-            if match.match_info.has_float32():
-                return typedefs.VALUE_INDEX.FLOAT32
-            if match.match_info.has_float64():
-                return typedefs.VALUE_INDEX.FLOAT64
-            logger.error("Passed invalid match to value_index retrieval! Shouldn't be possible!")
-            return -1
-
-    def stored_match_value_to_text(self, match: MatchView, value_index: int, value_repr: int, endian: int, length: int) -> str:
-        value = match.stored_value
-        if value is None:
-            return ""
-        if value_index == typedefs.VALUE_INDEX.AOB:
-            return bytes(value).hex(" ")
-        if typedefs.VALUE_INDEX.is_string(value_index):
-            encoding, option = typedefs.resolve_string_encoding(value_index, endian, debugcore.system_endianness)
-            text = bytes(value).decode(encoding, option)
-            if text.startswith("\x00"):
-                text = "\x00"
-            else:
-                text = text.split("\x00")[0]
-            return text[0:length]
-        if typedefs.VALUE_INDEX.is_integer(value_index):
-            unsigned_field, signed_field = {
-                typedefs.VALUE_INDEX.INT8: ("uint8_value", "int8_value"),
-                typedefs.VALUE_INDEX.INT16: ("uint16_value", "int16_value"),
-                typedefs.VALUE_INDEX.INT32: ("uint32_value", "int32_value"),
-                typedefs.VALUE_INDEX.INT64: ("uint64_value", "int64_value"),
-            }[value_index]
-            field = signed_field if value_repr == typedefs.VALUE_REPR.SIGNED else unsigned_field
-            number = getattr(value.data, field)
-            return hex(number) if value_repr == typedefs.VALUE_REPR.HEX else str(number)
-        data = value.data
-        if value_index == typedefs.VALUE_INDEX.FLOAT32:
-            return str(data.float32_value)
-        if value_index == typedefs.VALUE_INDEX.FLOAT64:
-            return str(data.float64_value)
-        return ""
-
     def scan_error(self, error: Exception, first_scan: bool = False) -> None:
         self.is_scanning = False
         self.undo_scan_available = False
@@ -1554,30 +1492,65 @@ class MainForm(QMainWindow, MainWindow):
         self.update_match_count()
         self.tableWidget_valuesearchtable.setRowCount(0)
         current_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
-        length = self._scan_to_length(current_type)
+        scan_text = self.lineEdit_Scan.text()
+        length = (
+            len(scan_text.split()) if current_type == typedefs.SCAN_INDEX.AOB else len(scan_text) if current_type == typedefs.SCAN_INDEX.STRING else 0
+        )
+        hex_values = self.checkBox_Hex.isChecked()
+        endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
         with debugcore.memory_handle() as mem_handle:
             row = 0
             self.tableWidget_valuesearchtable.setSortingEnabled(False)
             for match in matches:
                 address = hex(match.address)
-                if match.match_info.raw_bits == 0:
+                match_info = match.match_info
+                if match_info.raw_bits == 0:
                     # Ignore unknown entries (no match flags), should not happen as every received match is valid
                     logger.error("Found invalid/unknown match! Skipping...")
                     continue
                 # This is technically wrong because we can have multiple possible value types through a match
                 # but we'll go with the lowest matching value type
-                value_index = self.get_value_index_for_match(match)
-                if self.checkBox_Hex.isChecked():
+                if hex_values:
                     value_repr = typedefs.VALUE_REPR.HEX
                 else:
-                    value_repr = typedefs.VALUE_REPR.SIGNED if match.match_info.is_signed_integer_only() else typedefs.VALUE_REPR.UNSIGNED
-                endian = self.comboBox_Endianness.currentData(Qt.ItemDataRole.UserRole)
+                    value_repr = typedefs.VALUE_REPR.SIGNED if match_info.is_signed_integer_only() else typedefs.VALUE_REPR.UNSIGNED
+                if match.is_string_match():
+                    value_type = typedefs.StringValueType("utf-8", length=length, endian=endian)
+                elif match.is_bytearray_match():
+                    value_type = typedefs.ByteArrayValueType(length)
+                elif match_info.has_int8() or match_info.has_uint8():
+                    value_type = typedefs.IntegerValueType(8, value_repr=value_repr, endian=endian)
+                elif match_info.has_int16() or match_info.has_uint16():
+                    value_type = typedefs.IntegerValueType(16, value_repr=value_repr, endian=endian)
+                elif match_info.has_int32() or match_info.has_uint32():
+                    value_type = typedefs.IntegerValueType(32, value_repr=value_repr, endian=endian)
+                elif match_info.has_int64() or match_info.has_uint64():
+                    value_type = typedefs.IntegerValueType(64, value_repr=value_repr, endian=endian)
+                elif match_info.has_float32():
+                    value_type = typedefs.FloatValueType(32, endian=endian)
+                elif match_info.has_float64():
+                    value_type = typedefs.FloatValueType(64, endian=endian)
+                else:
+                    logger.error("Passed invalid match to value type retrieval! Shouldn't be possible!")
+                    continue
                 current_item = QTableWidgetItem(address)
-                current_item.setData(Qt.ItemDataRole.UserRole, (value_index, value_repr, endian, length))
+                current_item.setData(Qt.ItemDataRole.UserRole, value_type)
                 # TODO: Change GDB reading to memscan
-                value = debugcore.read_memory(address, value_index, length, True, value_repr, endian, mem_handle)
+                value = debugcore.read_memory(address, value_type, mem_handle=mem_handle)
                 value = "" if value is None else str(value)
-                previous_value = self.stored_match_value_to_text(match, value_index, value_repr, endian, length)
+                stored_value = match.stored_value
+                if stored_value is None:
+                    previous_value = ""
+                elif isinstance(value_type, (typedefs.ByteArrayValueType, typedefs.StringValueType)):
+                    previous_value = value_type.decode(bytes(stored_value))
+                elif isinstance(value_type, typedefs.IntegerValueType):
+                    prefix = "int" if value_type.value_repr == typedefs.VALUE_REPR.SIGNED else "uint"
+                    number = getattr(stored_value.data, f"{prefix}{value_type.bits}_value")
+                    previous_value = hex(number) if value_type.value_repr == typedefs.VALUE_REPR.HEX else str(number)
+                elif isinstance(value_type, typedefs.FloatValueType):
+                    previous_value = str(getattr(stored_value.data, f"float{value_type.bits}_value"))
+                else:
+                    previous_value = ""
                 if debugcore.is_address_static(address):
                     current_item.setForeground(QColor(0, 136, 85))
                 self.tableWidget_valuesearchtable.insertRow(row)
@@ -1590,13 +1563,6 @@ class MainForm(QMainWindow, MainWindow):
         self.tableWidget_valuesearchtable.resizeColumnsToContents()
         self.tableWidget_valuesearchtable.setSortingEnabled(True)
 
-    def _scan_to_length(self, type_index: int) -> int:
-        if type_index == typedefs.SCAN_INDEX.AOB:
-            return len(self.lineEdit_Scan.text().split())
-        if type_index == typedefs.SCAN_INDEX.STRING:
-            return len(self.lineEdit_Scan.text())
-        return 0
-
     def update_match_count(self) -> None:
         match_count = memscan.get_match_count()
         if match_count > 5000:
@@ -1606,8 +1572,7 @@ class MainForm(QMainWindow, MainWindow):
 
     def tableWidget_valuesearchtable_cell_double_clicked(self, row: int, col: int) -> None:
         current_item = self.tableWidget_valuesearchtable.item(row, SEARCH_TABLE_ADDRESS_COL)
-        value_index, value_repr, endian, length = current_item.data(Qt.ItemDataRole.UserRole)
-        vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
+        vt = copy.copy(current_item.data(Qt.ItemDataRole.UserRole))
         self.add_entry_to_addresstable(tr.NO_DESCRIPTION, current_item.text(), vt)
         self.update_address_table()
 
@@ -1846,8 +1811,7 @@ class MainForm(QMainWindow, MainWindow):
         selected_indexes = self.tableWidget_valuesearchtable.selectionModel().selectedRows()
         for index in selected_indexes:
             address_item = self.tableWidget_valuesearchtable.item(index.row(), SEARCH_TABLE_ADDRESS_COL)
-            value_index, value_repr, endian, length = address_item.data(Qt.ItemDataRole.UserRole)
-            vt = typedefs.ValueType(value_index, length, True, value_repr, endian)
+            vt = copy.copy(address_item.data(Qt.ItemDataRole.UserRole))
             self.add_entry_to_addresstable(tr.NO_DESCRIPTION, address_item.text(), vt)
         self.update_address_table()
         self.mark_address_tree_changed()
@@ -1938,7 +1902,7 @@ class MainForm(QMainWindow, MainWindow):
         current_row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
         frozen = typedefs.Frozen("", typedefs.FREEZE_TYPE.DEFAULT)
         current_row.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, frozen)
-        value_type = typedefs.ValueType() if not value_type else value_type
+        value_type = typedefs.IntegerValueType() if not value_type else value_type
         self.treeWidget_AddressTable.addTopLevelItem(current_row)
         self.change_address_table_entries(current_row, description, address_expr, value_type)
         self.show()  # In case of getting called from elsewhere
@@ -2072,16 +2036,9 @@ class MainForm(QMainWindow, MainWindow):
                         address_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_ADDRESS_COL)
                         value_item = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_VALUE_COL)
                         previous_text = self.tableWidget_valuesearchtable.item(row_index, SEARCH_TABLE_PREVIOUS_COL).text()
-                        value_index, value_repr, endian, length = address_item.data(Qt.ItemDataRole.UserRole)
                         address = address_item.text()
-                        new_value = debugcore.read_memory(
-                            address,
-                            value_index,
-                            length,
-                            value_repr=value_repr,
-                            endian=endian,
-                            mem_handle=mem_handle,
-                        )
+                        value_type = address_item.data(Qt.ItemDataRole.UserRole)
+                        new_value = debugcore.read_memory(address, value_type, mem_handle=mem_handle)
                         new_value = "" if new_value is None else str(new_value)
                         if new_value != previous_text:
                             value_item.setForeground(QBrush(QColor(255, 0, 0)))
@@ -2108,13 +2065,15 @@ class MainForm(QMainWindow, MainWindow):
                 if value is None:  # nothing valid was captured (e.g. frozen while unreadable) so we skip.
                     continue
                 freeze_type = frozen.freeze_type
-                if typedefs.VALUE_INDEX.is_number(vt.value_index):
-                    new_value = debugcore.read_memory(address, vt.value_index, endian=vt.endian)
+                if isinstance(vt, (typedefs.IntegerValueType, typedefs.FloatValueType)):
+                    # Freeze comparisons need the stored number, not a signed/hex display value.
+                    read_type = typedefs.IntegerValueType(vt.bits, endian=vt.endian) if isinstance(vt, typedefs.IntegerValueType) else vt
+                    new_value = debugcore.read_memory(address, read_type)
                     if new_value is None:
                         continue
                     compare_value, compare_new_value = value, new_value
-                    if typedefs.VALUE_INDEX.is_integer(vt.value_index) and vt.value_repr == typedefs.VALUE_REPR.SIGNED:
-                        limit = 1 << (typedefs.index_to_valuetype_dict[vt.value_index][0] * 8)
+                    if isinstance(vt, typedefs.IntegerValueType) and vt.value_repr == typedefs.VALUE_REPR.SIGNED:
+                        limit = 1 << vt.bits
                         compare_value -= limit if compare_value >= limit // 2 else 0
                         compare_new_value -= limit if compare_new_value >= limit // 2 else 0
                     if (
@@ -2124,9 +2083,9 @@ class MainForm(QMainWindow, MainWindow):
                         and compare_new_value < compare_value
                     ):
                         frozen.value = new_value
-                        debugcore.write_memory(address, vt.value_index, new_value, endian=vt.endian)
+                        debugcore.write_memory(address, vt, new_value)
                         continue
-                debugcore.write_memory(address, vt.value_index, value, vt.zero_terminate, vt.endian)
+                debugcore.write_memory(address, vt, value)
 
     def handle_freeze_change(self, row: QTreeWidgetItem, check_state: Qt.CheckState) -> None:
         entry = self.get_script_entry(row)
@@ -2150,7 +2109,7 @@ class MainForm(QMainWindow, MainWindow):
                 # otherwise the UI will show DEFAULT freeze type after enabling instead of the actual type
                 self.change_freeze_type(frozen.freeze_type, row)
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-                frozen.value = utils.parse_string(row.text(VALUE_COL), vt.value_index)
+                frozen.value = vt.parse(row.text(VALUE_COL))
             else:
                 frozen.enabled = False  # it has just been toggled off
                 self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT, row)
@@ -2160,15 +2119,16 @@ class MainForm(QMainWindow, MainWindow):
             if self.get_script_entry(row) is not None:
                 continue
             value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-            value_type.value_repr = new_repr
-            row.setText(TYPE_COL, value_type.text())
+            if isinstance(value_type, typedefs.IntegerValueType):
+                value_type.value_repr = new_repr
+                row.setText(TYPE_COL, value_type.text())
         self.update_address_table()
         self.mark_address_tree_changed()
 
     def _is_struct_row(self, row: QTreeWidgetItem) -> bool:
         # Only carries an address, has no readable value or editable type.
         vt = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-        return vt is not None and vt.value_index == typedefs.VALUE_INDEX.STRUCT
+        return isinstance(vt, typedefs.StructValueType)
 
     def _resolved_address(self, row: QTreeWidgetItem) -> str:
         # The displayed address can be relative (struct children show "+0x4") or "P->…" for pointers,
@@ -2185,7 +2145,7 @@ class MainForm(QMainWindow, MainWindow):
         if dialog.exec():
             new_value = dialog.get_values()[0]
             parsed_rows = [
-                (row, utils.parse_string(new_value, row.data(TYPE_COL, Qt.ItemDataRole.UserRole).value_index))
+                (row, row.data(TYPE_COL, Qt.ItemDataRole.UserRole).parse(new_value))
                 for row in self.treeWidget_AddressTable.selectedItems()
                 if self.get_script_entry(row) is None and not self._is_struct_row(row)
             ]
@@ -2196,14 +2156,14 @@ class MainForm(QMainWindow, MainWindow):
             for row, parsed_value in parsed_rows:
                 address = self._resolved_address(row)
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-                if typedefs.VALUE_INDEX.has_length(vt.value_index):
+                if isinstance(vt, (typedefs.StringValueType, typedefs.ByteArrayValueType)):
                     if vt.length != len(parsed_value):
                         length_changed = True
                     vt.length = len(parsed_value)
                     row.setText(TYPE_COL, vt.text())
                 frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
                 frozen.value = parsed_value
-                debugcore.write_memory(address, vt.value_index, parsed_value, vt.zero_terminate, vt.endian)
+                debugcore.write_memory(address, vt, parsed_value)
             self.update_address_table()
             if length_changed:
                 self.mark_address_tree_changed()
@@ -2318,7 +2278,7 @@ class MainForm(QMainWindow, MainWindow):
         children = [self.read_address_table_recursively(row.child(i)) for i in range(row.childCount())]
         entry = self.get_script_entry(row)
         if entry is not None:
-            return row.text(DESC_COL), "", typedefs.ValueType().serialize(), {"script": entry.script}, children
+            return row.text(DESC_COL), "", typedefs.IntegerValueType().serialize(), {"script": entry.script}, children
         return self.read_address_table_entries(row, True) + (children,)
 
     # Flashing Attach Button when the process is not attached
@@ -2735,7 +2695,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def exec_hex_view_add_address_dialog(self) -> None:
         if debugcore.currentpid == -1:
             return
-        vt = typedefs.ValueType(typedefs.VALUE_INDEX.AOB, self.get_hex_selection_length())
+        vt = typedefs.ByteArrayValueType(self.get_hex_selection_length())
         address_dialog = ManualAddressDialog(self, address=hex(self.hex_selection_address_begin), value_type=vt)
         if address_dialog.exec():
             desc, address, vt = address_dialog.get_values()

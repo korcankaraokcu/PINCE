@@ -72,14 +72,7 @@ class StructureViewDialog(QDialog, Ui_Dialog):
             addr = base_addr + member.offset
             offset_text = utils.upper_hex(hex(member.offset))
             if member.value_type is not None:
-                value = debugcore.read_memory(
-                    addr,
-                    member.value_type.value_index,
-                    member.value_type.length,
-                    member.value_type.zero_terminate,
-                    member.value_type.value_repr,
-                    member.value_type.endian,
-                )
+                value = debugcore.read_memory(addr, member.value_type)
                 value_text = str(value) if value is not None else "??"
                 type_text = member.value_type.text()
                 item = QTreeWidgetItem([offset_text, member.name, type_text, value_text])
@@ -100,8 +93,9 @@ class StructureViewDialog(QDialog, Ui_Dialog):
             return
         child_base = item.data(0, ROLE_ADDR)  # already base + member.offset
         if member.is_pointer:
-            ptr_index = typedefs.VALUE_INDEX.INT32 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
-            child_base = debugcore.read_memory(child_base, ptr_index, mem_handle=mem_handle)  # one hop deref at the member's address
+            pointer_bits = 32 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 64
+            # One hop deref at the member's address.
+            child_base = debugcore.read_memory(child_base, typedefs.IntegerValueType(pointer_bits), mem_handle=mem_handle)
         if child_base == item.data(0, ROLE_CHILD_BASE):
             return
         item.takeChildren()
@@ -129,28 +123,15 @@ class StructureViewDialog(QDialog, Ui_Dialog):
         dialog = utilwidgets.InputDialog(self, [(tr.ENTER_VALUE, current_value)])
         if dialog.exec():
             new_value = dialog.get_values()[0]
-            parsed = utils.parse_string(new_value, member.value_type.value_index)
+            parsed = member.value_type.parse(new_value)
             if parsed is None:
                 QMessageBox.warning(self, tr.ERROR, tr.PARSE_ERROR)
                 return
-            debugcore.write_memory(
-                addr,
-                member.value_type.value_index,
-                parsed,
-                member.value_type.zero_terminate,
-                member.value_type.endian,
-            )
+            debugcore.write_memory(addr, member.value_type, parsed)
             self._refresh_single(item, member, addr)
 
     def _refresh_single(self, item: QTreeWidgetItem, member: typedefs.StructureMember, addr: int) -> None:
-        value = debugcore.read_memory(
-            addr,
-            member.value_type.value_index,
-            member.value_type.length,
-            member.value_type.zero_terminate,
-            member.value_type.value_repr,
-            member.value_type.endian,
-        )
+        value = debugcore.read_memory(addr, member.value_type)
         item.setText(3, str(value) if value is not None else "??")
 
     def _start_refresh(self) -> None:
@@ -179,15 +160,7 @@ class StructureViewDialog(QDialog, Ui_Dialog):
             member: typedefs.StructureMember = child.data(0, ROLE_MEMBER)
             if member is not None and member.value_type is not None:
                 addr = child.data(0, ROLE_ADDR)
-                value = debugcore.read_memory(
-                    addr,
-                    member.value_type.value_index,
-                    member.value_type.length,
-                    member.value_type.zero_terminate,
-                    member.value_type.value_repr,
-                    member.value_type.endian,
-                    mem_handle=mem_handle,
-                )
+                value = debugcore.read_memory(addr, member.value_type, mem_handle=mem_handle)
                 child.setText(3, str(value) if value is not None else "??")
             if child.isExpanded():
                 if member is not None and member.is_pointer:

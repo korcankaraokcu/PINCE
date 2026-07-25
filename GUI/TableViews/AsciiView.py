@@ -24,7 +24,7 @@ from libpince import typedefs
 class AsciiView(HexView):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.write_type = typedefs.VALUE_INDEX.STRING_UTF8
+        self.write_type = typedefs.StringValueType("utf-8", length=1, zero_terminate=False)
         self.delegate = HexDelegate(1, ".+")
         self.delegate.closeEditor.connect(self.on_editor_close)
         self.setItemDelegate(self.delegate)

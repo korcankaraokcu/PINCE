@@ -2,10 +2,7 @@ from libpince import debugcore, typedefs
 from GUI.Session.session import StructureManager
 
 _MAX_DEPTH = 16
-
-
-def _struct_vt() -> tuple[int, int, bool, int, int]:
-    return typedefs.ValueType(typedefs.VALUE_INDEX.STRUCT).serialize()
+_STRUCT_VT = typedefs.StructValueType().serialize()
 
 
 def _rel_off(offset: int) -> str:
@@ -17,14 +14,7 @@ def _read_string_length(base_addr: int, structure: typedefs.Structure) -> int | 
         return None
     for m in structure.members:
         if m.name == "length" and m.value_type is not None:
-            raw_len = debugcore.read_memory(
-                base_addr + m.offset,
-                m.value_type.value_index,
-                m.value_type.length,
-                m.value_type.zero_terminate,
-                m.value_type.value_repr,
-                m.value_type.endian,
-            )
+            raw_len = debugcore.read_memory(base_addr + m.offset, m.value_type)
             if raw_len is not None and 0 <= raw_len <= 4096:
                 return raw_len
             break
@@ -53,17 +43,17 @@ def structure_to_records(
             off = _rel_off(member.offset)
             if child is None:
                 group_expr = typedefs.PointerChainRequest(off, [0]).serialize() if member.is_pointer else off
-                records.append((member.name, group_expr, _struct_vt(), []))
+                records.append((member.name, group_expr, _STRUCT_VT, []))
                 continue
             child_base = base_addr + member.offset
             if member.is_pointer and base_addr > 0:
-                ptr_index = typedefs.VALUE_INDEX.INT32 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else typedefs.VALUE_INDEX.INT64
-                ptr_val = debugcore.read_memory(base_addr + member.offset, ptr_index)
+                pointer_bits = 32 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 64
+                ptr_val = debugcore.read_memory(base_addr + member.offset, typedefs.IntegerValueType(pointer_bits))
                 if ptr_val is not None:
                     child_base = ptr_val
             children = structure_to_records(child, child_base, _depth + 1, _parents + (structure.name,))
             group_expr = typedefs.PointerChainRequest(off, [0]).serialize() if member.is_pointer else off
-            records.append((member.name, group_expr, _struct_vt(), children))
+            records.append((member.name, group_expr, _STRUCT_VT, children))
     return records
 
 
@@ -71,4 +61,4 @@ def structure_to_group_record(structure: typedefs.Structure, base_expr: str) -> 
     address = debugcore.examine_expression(base_expr).address if base_expr else None
     base_addr = int(address, 0) if address else 0
     members = structure_to_records(structure, base_addr)
-    return structure.name, base_expr, _struct_vt(), members
+    return structure.name, base_expr, _STRUCT_VT, members

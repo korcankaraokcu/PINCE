@@ -1,4 +1,4 @@
-import builtins, contextlib, io, os, traceback
+import builtins, codecs, contextlib, io, os, traceback
 from typing import Any
 
 from PyQt6.QtCore import pyqtSignal
@@ -53,22 +53,6 @@ def parse_script_sections(script: str) -> tuple[str, str | None]:
 class LibpinceScriptApi:
     """Class to 'alias' certain libpince functions for easier user experience."""
 
-    int_index_by_size = {
-        1: typedefs.VALUE_INDEX.INT8,
-        2: typedefs.VALUE_INDEX.INT16,
-        4: typedefs.VALUE_INDEX.INT32,
-        8: typedefs.VALUE_INDEX.INT64,
-    }
-    string_index_by_encoding = {
-        "ascii": typedefs.VALUE_INDEX.STRING_ASCII,
-        "utf8": typedefs.VALUE_INDEX.STRING_UTF8,
-        "utf-8": typedefs.VALUE_INDEX.STRING_UTF8,
-        "utf16": typedefs.VALUE_INDEX.STRING_UTF16,
-        "utf-16": typedefs.VALUE_INDEX.STRING_UTF16,
-        "utf32": typedefs.VALUE_INDEX.STRING_UTF32,
-        "utf-32": typedefs.VALUE_INDEX.STRING_UTF32,
-    }
-
     def address(self, expression: int | str) -> int:
         """Return an integer address from an int, hex string, register, symbol, or GDB expression."""
         if isinstance(expression, int):
@@ -94,44 +78,47 @@ class LibpinceScriptApi:
 
     def read_int(self, address: int | str, size: int = 4, signed: bool = False) -> int | None:
         """Read an integer. size can be 1, 2, 4, or 8."""
-        value_index = self.int_index_by_size[int(size)]
         value_repr = typedefs.VALUE_REPR.SIGNED if signed else typedefs.VALUE_REPR.UNSIGNED
-        return debugcore.read_memory(self.address(address), value_index, value_repr=value_repr)
+        return debugcore.read_memory(self.address(address), typedefs.IntegerValueType(int(size) * 8, value_repr=value_repr))
 
     def write_int(self, value: int, address: int | str, size: int = 4) -> None:
         """Write an integer. size can be 1, 2, 4, or 8."""
-        value_index = self.int_index_by_size[int(size)]
-        debugcore.write_memory(self.address(address), value_index, int(value))
+        debugcore.write_memory(self.address(address), typedefs.IntegerValueType(int(size) * 8), int(value))
 
     def read_float(self, address: int | str, double: bool = False) -> float | None:
         """Read a 32-bit float, or a 64-bit float when double=True."""
-        value_index = typedefs.VALUE_INDEX.FLOAT64 if double else typedefs.VALUE_INDEX.FLOAT32
-        return debugcore.read_memory(self.address(address), value_index)
+        return debugcore.read_memory(self.address(address), typedefs.FloatValueType(64 if double else 32))
 
     def write_float(self, value: float, address: int | str, double: bool = False) -> None:
         """Write a 32-bit float, or a 64-bit float when double=True."""
-        value_index = typedefs.VALUE_INDEX.FLOAT64 if double else typedefs.VALUE_INDEX.FLOAT32
-        debugcore.write_memory(self.address(address), value_index, float(value))
+        debugcore.write_memory(self.address(address), typedefs.FloatValueType(64 if double else 32), float(value))
 
     def read_string(self, address: int | str, length: int = 128, encoding: str = "utf8", zero_terminate: bool = True) -> str | None:
         """Read a string using ascii, utf8, utf16, or utf32."""
-        value_index = self.string_index_by_encoding[encoding.lower()]
-        return debugcore.read_memory(self.address(address), value_index, int(length), zero_terminate=zero_terminate)
+        value_type = typedefs.StringValueType(
+            codecs.lookup(encoding).name,
+            length=int(length),
+            zero_terminate=zero_terminate,
+        )
+        return debugcore.read_memory(self.address(address), value_type)
 
     def write_string(self, value: str, address: int | str, encoding: str = "utf8", zero_terminate: bool = True) -> None:
         """Write a string using ascii, utf8, utf16, or utf32."""
-        value_index = self.string_index_by_encoding[encoding.lower()]
-        debugcore.write_memory(self.address(address), value_index, str(value), zero_terminate=zero_terminate)
+        value_type = typedefs.StringValueType(
+            codecs.lookup(encoding).name,
+            zero_terminate=zero_terminate,
+        )
+        debugcore.write_memory(self.address(address), value_type, str(value))
 
     def read_bytes(self, address: int | str, length: int) -> bytes:
         """Read bytes from the inferior and return a bytes object."""
-        aob = debugcore.read_memory(self.address(address), typedefs.VALUE_INDEX.AOB, int(length))
+        aob = debugcore.read_memory(self.address(address), typedefs.ByteArrayValueType(int(length)))
         return bytes.fromhex(aob) if aob else b""
 
     def write_bytes(self, data: BytesLike, address: int | str) -> None:
         """Write bytes where data can be bytes, bytearray, list[int], or a hex string."""
         data = self._bytes(data)
-        debugcore.write_memory(self.address(address), typedefs.VALUE_INDEX.AOB, data.hex(" "))
+        debugcore.write_memory(self.address(address), typedefs.ByteArrayValueType(len(data)), data)
 
     def patch(self, data: BytesLike, address: int | str, expected: BytesLike | None = None) -> None:
         """Patch instruction bytes, optionally verifying the original bytes first.
@@ -242,7 +229,6 @@ def create_script_namespace() -> dict[str, Any]:
         "debugcore": debugcore,
         "typedefs": typedefs,
         "utils": utils,
-        "VALUE_INDEX": typedefs.VALUE_INDEX,
         "VALUE_REPR": typedefs.VALUE_REPR,
     }
     for name in dir(api):

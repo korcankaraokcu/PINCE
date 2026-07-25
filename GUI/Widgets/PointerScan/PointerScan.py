@@ -115,7 +115,7 @@ class PointerScanWindow(QMainWindow, Ui_MainWindow):
         main_window = self.parent()
         for row in rows:
             request = self.model.pointer_chain_request(row)
-            main_window.add_entry_to_addresstable(tr.NO_DESCRIPTION, request, typedefs.ValueType())
+            main_window.add_entry_to_addresstable(tr.NO_DESCRIPTION, request, typedefs.IntegerValueType())
         main_window.update_address_table()
 
     def scan_triggered(self) -> None:

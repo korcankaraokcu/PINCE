@@ -50,7 +50,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         self.function_format = make_format("#61afef")
         self.keywords = set(keyword.kwlist)
         self.builtins = set(dir(builtins))
-        self.namespaces = {"api", "debugcore", "libpince", "scancore", "typedefs", "utils", "VALUE_INDEX", "VALUE_REPR"}
+        self.namespaces = {"api", "debugcore", "libpince", "scancore", "typedefs", "utils", "VALUE_REPR"}
         self.reserved = self.keywords | self.builtins | self.namespaces
         self.identifier_regex = re.compile(r"\b[A-Za-z_]\w*\b")
         self.function_regex = re.compile(r"\b([A-Za-z_]\w*)\s*(?=\()")

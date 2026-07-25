@@ -27,7 +27,7 @@ class EditInstructionDialog(QDialog, Ui_Dialog):
 
     def lineEdit_Bytes_text_edited(self) -> None:
         bytes_aob = self.lineEdit_Bytes.text()
-        if utils.parse_string(bytes_aob, typedefs.VALUE_INDEX.AOB):
+        if typedefs.ByteArrayValueType().parse(bytes_aob):
             address = utils.safe_str_to_int(self.lineEdit_Address.text(), 0)
             instruction = utils.disassemble(bytes_aob, address, debugcore.inferior_arch)
             if instruction:

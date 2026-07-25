@@ -37,6 +37,7 @@ CAVE_SIZE = 0x1000
 CAVE_MARKER = b"PINCE_SPEEDHACK\0"
 STEP = 0.1
 DEFAULT_SPEED = 1.0
+_U64_LE = typedefs.IntegerValueType(64, endian=typedefs.ENDIANNESS.LITTLE)
 
 # Only the four wall/uptime clocks are scaled.
 # CPU clocks (2, 3) and coarse clocks (5, 6) are passed through.
@@ -295,8 +296,8 @@ class LinuxSpeedhack(_Speedhack):
             new_fake = fake_base + delta * old_num // old_den
             offset = clk * CLOCK_SLOT_SIZE
             struct.pack_into("<QQ", blob, offset, now & 0xFFFFFFFFFFFFFFFF, new_fake & 0xFFFFFFFFFFFFFFFF)
-        debugcore.write_memory(inactive_base, typedefs.VALUE_INDEX.AOB, list(blob))
-        debugcore.write_memory(state_addr + ACTIVE_OFFSET, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", inactive)))
+        debugcore.write_memory(inactive_base, typedefs.ByteArrayValueType(len(blob)), blob)
+        debugcore.write_memory(state_addr + ACTIVE_OFFSET, _U64_LE, inactive)
         self._session.num, self._session.den = new_num, new_den
 
 
@@ -1107,7 +1108,7 @@ def _build_nanosleep_hook_32(state_addr: int) -> bytes:
 def _write_verified(address: int, aob: str) -> None:
     """write_memory swallows OSError/ValueError, so confirm the patch actually landed.
     Raises RuntimeError on mismatch so install/restore can detect a failed write."""
-    debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, aob)
+    debugcore.write_memory(address, typedefs.ByteArrayValueType(len(aob.split())), aob)
     expected = aob.split()
     readback = debugcore.hex_dump(address, len(expected))
     if [b.lower() for b in readback] != [b.lower() for b in expected]:
@@ -1133,7 +1134,7 @@ def _bytes_to_aob(data: bytes) -> str:
 
 
 def _read_u64(address: int) -> int:
-    result = debugcore.read_memory(address, typedefs.VALUE_INDEX.INT64)
+    result = debugcore.read_memory(address, _U64_LE)
     return int(result) if result is not None else 0
 
 
@@ -1291,7 +1292,7 @@ def _build_qpc_wrapper_32(state_addr: int, tramp_addr: int) -> bytes:
 
 
 def _write_u64(address: int, value: int) -> None:
-    debugcore.write_memory(address, typedefs.VALUE_INDEX.AOB, list(struct.pack("<Q", value & 0xFFFFFFFFFFFFFFFF)))
+    debugcore.write_memory(address, _U64_LE, value)
 
 
 def _resolve_ntdll_export(pid: int, symbol: str, arch64: bool = True) -> int | None:
