@@ -85,6 +85,23 @@ class LibpinceScriptApi:
         """Write an integer. size can be 1, 2, 4, or 8."""
         debugcore.write_memory(self.address(address), typedefs.IntegerValueType(int(size) * 8), int(value))
 
+    def read_bitfield(self, address: int | str, bits: int = 1, start_bit: int = 0, signed: bool = False) -> int | None:
+        """Read a bit field of "bits" bits beginning at "start_bit"."""
+        value_repr = typedefs.VALUE_REPR.SIGNED if signed else typedefs.VALUE_REPR.UNSIGNED
+        return debugcore.read_memory(
+            self.address(address),
+            typedefs.BitFieldValueType(int(bits), int(start_bit), value_repr=value_repr),
+        )
+
+    def write_bitfield(self, value: int, address: int | str, bits: int = 1, start_bit: int = 0, signed: bool = False) -> None:
+        """Write a bit field of "bits" bits beginning at "start_bit" without changing surrounding bits."""
+        value_repr = typedefs.VALUE_REPR.SIGNED if signed else typedefs.VALUE_REPR.UNSIGNED
+        debugcore.write_memory(
+            self.address(address),
+            typedefs.BitFieldValueType(int(bits), int(start_bit), value_repr=value_repr),
+            int(value),
+        )
+
     def read_float(self, address: int | str, double: bool = False) -> float | None:
         """Read a 32-bit float, or a 64-bit float when double=True."""
         return debugcore.read_memory(self.address(address), typedefs.FloatValueType(64 if double else 32))

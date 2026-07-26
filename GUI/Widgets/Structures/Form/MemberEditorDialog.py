@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'GUI/Widgets/Structures/Form/MemberEditorDialog.ui'
+# Form implementation generated from reading ui file 'Widgets/Structures/Form/MemberEditorDialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #
