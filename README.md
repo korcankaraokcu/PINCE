@@ -25,8 +25,9 @@ Read [Features](#features) part of the project to see what is done and [Roadmap]
 - **Speedhack:** Both Linux native and WINE/Proton compatible speedhack built-in. No **`LD_PRELOAD`** or other libraries necessary
 - **Libpince Engine:** Powerful scripting engine built-in that allows you to perform advanced tasks such as code injection
 - **Background Execution:** PINCE uses background execution by default, allowing users to run GDB commands while process is running
-- **Variable Inspection&Modification**
+- **Variable Inspection & Modification**
   * **CheatEngine-like value type support:** Currently supports all types of CE and memscan along with extended strings(utf-8, utf-16, utf-32)
+  * **BitField support:** Similarly to CE's `Binary`, read and edit 1–64 bit fields at any bit offset as signed, unsigned or hexadecimal values without altering surrounding bits
   * **Symbol Recognition:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/GDB-Expressions)
   * **Automatic Variable Allocation:** See [here](https://github.com/korcankaraokcu/PINCE/wiki/GDB-Expressions#allocation-using-expressions)
   * **Dynamic Address Table:** Supports drag&drop, recursive copy&pasting&inserting and many more

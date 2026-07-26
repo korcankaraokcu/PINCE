@@ -16,7 +16,7 @@
   - [monocore.py](./libpince/monocore.py) - Everything related to dissecting the Mono/IL2CPP managed runtime
   - [speedhack.py](./libpince/speedhack.py) - Everything related to speedhack functionality for Linux native and WINE/Proton processes
   - [utils.py](./libpince/utils.py) - Contains generic utility functions such as parsing, file creation, process querying etc
-  - [typedefs.py](./libpince/typedefs.py) - Contains all constants and variable definitions
+  - [typedefs.py](./libpince/typedefs.py) - Contains shared constants and data types, including the self-contained value type classes and their serialization
   - [regexes.py](./libpince/regexes.py) - Contains regexes for parsing GDB output and other things
   - ### **[gdb_python_scripts](./libpince/gdb_python_scripts)**
     - [gdbextensions.py](./libpince/gdb_python_scripts/gdbextensions.py) - Contains custom GDB commands
@@ -193,7 +193,6 @@ These tasks are ordered by importance but feel free to pick any of them. Further
   - ReferencedStringsWidget refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k.
   Only update the visible rows to prevent this(check ```disassemble_check_viewport``` for an example)
   - Implement same system for the TrackBreakpointWidget if necessary. Do performance tests
-  - Consider using a class instead of primitive return types to store the raw bytes. This class should also include a method to display None type as red '??' text for Qt
   - Put a warning for users about replacement bytes for non UTF-8 types
 - Implement "Investigate Registers" button to gather information about the addresses registers point to
 - Add the ability to track down registers and addresses in tracer(unsure)
