@@ -139,7 +139,7 @@ def resize_to_contents(tablewidget: QTableWidget) -> None:
     tablewidget.horizontalHeader().resizeSection(tablewidget.columnCount() - 1, default_size)
 
 
-def fill_value_combobox(combobox: QComboBox, current_type: typedefs.ValueType | None = None) -> None:
+def fill_value_combobox(combobox: QComboBox, current_type: typedefs.ValueType | None = None, *, include_bit_field: bool = False) -> None:
     """Fill a combobox with value-type prototypes."""
     target = current_type or typedefs.IntegerValueType()
     target_key = (type(target), getattr(target, "bits", None), getattr(target, "encoding", None))
@@ -149,6 +149,8 @@ def fill_value_combobox(combobox: QComboBox, current_type: typedefs.ValueType | 
         + [typedefs.StringValueType(encoding) for encoding in ("ascii", "utf-8", "utf-16", "utf-32")]
         + [typedefs.ByteArrayValueType()]
     )
+    if include_bit_field:
+        choices.append(copy.copy(target) if isinstance(target, typedefs.BitFieldValueType) else typedefs.BitFieldValueType())
     combobox.setCurrentIndex(0)
     for value_type in choices:
         combobox.addItem(value_type.text().split("[", 1)[0], value_type)

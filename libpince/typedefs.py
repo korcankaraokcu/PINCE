@@ -313,7 +313,7 @@ class ValueType:
         if type(self) is ValueType:
             raise TypeError("ValueType is a base class. Construct a concrete value type")
 
-    def serialize(self) -> tuple[int, int, bool, int, int]:
+    def serialize(self) -> tuple[int, ...]:
         return (
             _SERIALIZED_IDS_BY_TYPE[type(self), self._serialization_args()],
             getattr(self, "length", 10),
@@ -324,12 +324,20 @@ class ValueType:
 
     @staticmethod
     def deserialize(data: tuple | list) -> "ValueType":
+        if not data or type(data[0]) is not int:
+            raise TypeError("Serialized value types must start with an integer ID")
+        serialized_id = data[0]
+        value_type_class, constructor_args = _SERIALIZED_TYPE_IDS[serialized_id]
+        if value_type_class is BitFieldValueType:
+            if len(data) != 4:
+                raise TypeError("Serialized BitField types must contain four fields")
+            _, bits, start_bit, value_repr = data
+            return value_type_class(bits, start_bit, value_repr=value_repr)
         if len(data) == 4:
             data = (*data, ENDIANNESS.HOST)
         elif len(data) != 5:
             raise TypeError("Serialized value types must contain four or five fields")
         serialized_id, length, zero_terminate, value_repr, endian = data
-        value_type_class, constructor_args = _SERIALIZED_TYPE_IDS[serialized_id]
         value_type = value_type_class(*constructor_args)
         for name, value in (("length", length), ("zero_terminate", zero_terminate), ("value_repr", value_repr), ("endian", endian)):
             if hasattr(value_type, name):
@@ -344,6 +352,13 @@ class ValueType:
             return "<L>"
         if self.endian == ENDIANNESS.BIG:
             return "<B>"
+        return ""
+
+    def _repr_suffix(self) -> str:
+        if self.value_repr == VALUE_REPR.SIGNED:
+            return "(s)"
+        if self.value_repr == VALUE_REPR.HEX:
+            return "(h)"
         return ""
 
     def _apply_endian(self, data: bytes) -> bytes:
@@ -424,12 +439,76 @@ class IntegerValueType(ValueType):
         return self._apply_endian(struct.pack(self._struct_code_by_bits[self.bits], value))
 
     def text(self) -> str:
-        returned_string = f"Int{self.bits}"
-        if self.value_repr == VALUE_REPR.SIGNED:
-            returned_string += "(s)"
-        elif self.value_repr == VALUE_REPR.HEX:
-            returned_string += "(h)"
-        return returned_string + self._endian_suffix()
+        return f"Int{self.bits}{self._repr_suffix()}{self._endian_suffix()}"
+
+
+class BitFieldValueType(ValueType):
+    def __init__(
+        self,
+        bits: int = 1,
+        start_bit: int = 0,
+        *,
+        value_repr: int = VALUE_REPR.UNSIGNED,
+    ) -> None:
+        if type(bits) is not int or not 1 <= bits <= 64:
+            raise ValueError("BitField bits must be between 1 and 64")
+        if type(start_bit) is not int or not 0 <= start_bit <= 7:
+            raise ValueError("BitField start bit must be between 0 and 7")
+        if type(value_repr) is not int or value_repr not in (VALUE_REPR.UNSIGNED, VALUE_REPR.SIGNED, VALUE_REPR.HEX):
+            raise ValueError("Invalid BitField representation")
+        self.bits = bits
+        self.start_bit = start_bit
+        self.value_repr = value_repr
+
+    def serialize(self) -> tuple[int, int, int, int]:
+        return _SERIALIZED_IDS_BY_TYPE[type(self), self._serialization_args()], self.bits, self.start_bit, self.value_repr
+
+    @property
+    def read_size(self) -> int:
+        return (self.start_bit + self.bits + 7) // 8
+
+    def _validated(self, value: Any) -> int | None:
+        limit = 1 << self.bits
+        minimum, maximum = (-limit // 2, limit // 2 - 1) if self.value_repr == VALUE_REPR.SIGNED else (0, limit - 1)
+        if type(value) is not int or not minimum <= value <= maximum:
+            _logger.error(f"{value!r} is outside the range [{minimum}, {maximum}] for {self.text()}")
+            return None
+        return value
+
+    def parse(self, text: str) -> int | None:
+        if not text:
+            _logger.error("Missing string parameter")
+            return None
+        try:
+            value = int(text, 0)
+        except ValueError:
+            _logger.error(f"{text!r} can't be parsed as BitField value")
+            return None
+        return self._validated(value)
+
+    def decode(self, data: bytes) -> str | int:
+        result = (int.from_bytes(data, "little") >> self.start_bit) & ((1 << self.bits) - 1)
+        if self.value_repr == VALUE_REPR.SIGNED and result >= 1 << (self.bits - 1):
+            result -= 1 << self.bits
+        return hex(result) if self.value_repr == VALUE_REPR.HEX else result
+
+    def encode(self, value: Any) -> bytes | None:
+        raise TypeError("BitField values require existing bytes, use encode_into()")
+
+    def encode_into(self, current: bytes, value: Any) -> bytes | None:
+        if len(current) != self.read_size:
+            raise ValueError(f"{self.text()} requires exactly {self.read_size} existing bytes")
+        value = self.parse(value) if isinstance(value, str) else self._validated(value)
+        if value is None:
+            return None
+        value_mask = (1 << self.bits) - 1
+        field_mask = value_mask << self.start_bit
+        current_value = int.from_bytes(current, "little")
+        result = (current_value & ~field_mask) | ((value & value_mask) << self.start_bit)
+        return result.to_bytes(self.read_size, "little")
+
+    def text(self) -> str:
+        return f"BitField[{self.bits}]@{self.start_bit}{self._repr_suffix()}"
 
 
 class FloatValueType(ValueType):
@@ -617,6 +696,7 @@ _SERIALIZED_TYPE_IDS: dict[int, tuple[type[ValueType], tuple[Any, ...]]] = {
     9: (StringValueType, ("utf-32",)),
     10: (ByteArrayValueType, ()),
     11: (StructValueType, ()),
+    12: (BitFieldValueType, ()),
 }
 _SERIALIZED_IDS_BY_TYPE = {value: key for key, value in _SERIALIZED_TYPE_IDS.items()}
 

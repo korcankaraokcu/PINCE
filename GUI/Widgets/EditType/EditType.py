@@ -1,3 +1,4 @@
+from PyQt6.QtCore import QCoreApplication
 from PyQt6.QtWidgets import QDialog, QWidget, QMessageBox, QApplication
 from GUI.Utils import guiutils
 from GUI.Validators.HexValidator import HexValidator
@@ -13,10 +14,13 @@ class EditTypeDialog(QDialog, Ui_Dialog):
         vt = typedefs.IntegerValueType() if not value_type else value_type
         self.lineEdit_Length.setValidator(HexValidator(99, self))
         self.lineEdit_Length.setFixedWidth(40)
-        guiutils.fill_value_combobox(self.comboBox_ValueType, vt)
+        guiutils.fill_value_combobox(self.comboBox_ValueType, vt, include_bit_field=True)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, getattr(vt, "endian", typedefs.ENDIANNESS.HOST))
         if isinstance(vt, (typedefs.StringValueType, typedefs.ByteArrayValueType)):
             self.lineEdit_Length.setText(str(vt.length))
+        elif isinstance(vt, typedefs.BitFieldValueType):
+            self.lineEdit_Length.setText(str(vt.bits))
+            self.spinBox_StartBit.setValue(vt.start_bit)
         if isinstance(vt, typedefs.StringValueType):
             self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
         value_repr = getattr(vt, "value_repr", typedefs.VALUE_REPR.UNSIGNED)
@@ -34,8 +38,16 @@ class EditTypeDialog(QDialog, Ui_Dialog):
 
     def comboBox_ValueType_current_index_changed(self) -> None:
         value_type = self.comboBox_ValueType.currentData()
-        self.widget_Length.setVisible(isinstance(value_type, (typedefs.StringValueType, typedefs.ByteArrayValueType)))
+        is_bit_field = isinstance(value_type, typedefs.BitFieldValueType)
+        self.widget_Length.setVisible(isinstance(value_type, (typedefs.StringValueType, typedefs.ByteArrayValueType)) or is_bit_field)
+        self.label_Length.setText(
+            QCoreApplication.translate("Dialog", "Bit length") if is_bit_field else QCoreApplication.translate("Dialog", "Length")
+        )
+        self.label_StartBit.setVisible(is_bit_field)
+        self.spinBox_StartBit.setVisible(is_bit_field)
         self.checkBox_ZeroTerminate.setVisible(isinstance(value_type, typedefs.StringValueType))
+        self.label_Endianness.setVisible(not is_bit_field)
+        self.comboBox_Endianness.setVisible(not is_bit_field)
         QApplication.processEvents()
         self.adjustSize()
 
@@ -59,6 +71,9 @@ class EditTypeDialog(QDialog, Ui_Dialog):
             if not length > 0:
                 QMessageBox.information(self, tr.ERROR, tr.LENGTH_GT)
                 return
+            if isinstance(self.comboBox_ValueType.currentData(), typedefs.BitFieldValueType) and length > 64:
+                QMessageBox.information(self, tr.ERROR, tr.LENGTH_NOT_VALID)
+                return
         super().accept()
 
     def get_values(self) -> typedefs.ValueType:
@@ -72,6 +87,8 @@ class EditTypeDialog(QDialog, Ui_Dialog):
             value_repr = typedefs.VALUE_REPR.SIGNED
         else:
             value_repr = typedefs.VALUE_REPR.UNSIGNED
+        if isinstance(value_type, typedefs.BitFieldValueType):
+            return typedefs.BitFieldValueType(length, self.spinBox_StartBit.value(), value_repr=value_repr)
         endian = self.comboBox_Endianness.currentData()
         return guiutils.configure_value_type(
             value_type,

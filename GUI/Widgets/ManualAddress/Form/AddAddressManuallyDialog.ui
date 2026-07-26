@@ -49,7 +49,7 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_6">
        <item>
-        <widget class="QLabel" name="label_3">
+        <widget class="QLabel" name="label_Endianness">
          <property name="text">
           <string>Endianness:</string>
          </property>
@@ -163,6 +163,20 @@
           </property>
           <property name="checked">
            <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_StartBit">
+          <property name="text">
+           <string>Start bit:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="spinBox_StartBit">
+          <property name="maximum">
+           <number>7</number>
           </property>
          </widget>
         </item>

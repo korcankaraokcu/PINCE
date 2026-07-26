@@ -1780,6 +1780,19 @@ def write_memory(
             address = int(address, 0)
         except Exception:
             return
+    if isinstance(value_type, typedefs.BitFieldValueType):
+        value = value_type.parse(str(value))
+        if value is None:
+            return
+        try:
+            with memory_handle("rb+") as mem_handle:
+                mem_handle.seek(address)
+                write_data = value_type.encode_into(mem_handle.read(value_type.read_size), value)
+                mem_handle.seek(address)
+                mem_handle.write(write_data)
+        except (OSError, ValueError):
+            return
+        return
     try:
         write_data = value_type.encode(value)
     except (struct.error, OverflowError, TypeError, ValueError):
@@ -2511,16 +2524,16 @@ def get_breakpoints_in_range(address: str | int, length: int = 1) -> list[typede
     return breakpoint_list
 
 
-def _get_watchpoint_slot_count(address: int, length: int, max_length: int) -> int:
-    slot_count = 0
+def _get_watchpoint_ranges(address: int, length: int, max_length: int) -> list[tuple[int, int]]:
+    ranges = []
     while length > 0:
         slot_length = min(max_length, 1 << (length.bit_length() - 1))
         while address % slot_length:
             slot_length //= 2
+        ranges.append((address, slot_length))
         address += slot_length
         length -= slot_length
-        slot_count += 1
-    return slot_count
+    return ranges
 
 
 def hardware_breakpoint_available(required_slots: int = 1) -> bool:
@@ -2543,7 +2556,7 @@ def hardware_breakpoint_available(required_slots: int = 1) -> bool:
             if "breakpoint" in item.breakpoint_type:
                 hw_bp_total += 1
             else:
-                hw_bp_total += _get_watchpoint_slot_count(safe_str_to_int(item.address, 16), item.size, max_length)
+                hw_bp_total += len(_get_watchpoint_ranges(safe_str_to_int(item.address, 16), item.size, max_length))
 
     # Maximum number of hardware breakpoints is limited to 4 in x86 architecture
     return hw_bp_total + required_slots <= 4
@@ -2626,15 +2639,13 @@ def add_watchpoint(
     elif watchpoint_type == typedefs.WATCHPOINT_TYPE.BOTH:
         watch_command = "awatch"
     str_address_int = int(str_address, 16)
-    max_length = 8 if get_inferior_arch() == typedefs.INFERIOR_ARCH.ARCH_64 else 4
-    watchpoints = [(str_address_int + offset, min(max_length, length - offset)) for offset in range(0, length, max_length)]
+    watchpoints = _get_watchpoint_ranges(str_address_int, length, 8 if get_inferior_arch() == typedefs.INFERIOR_ARCH.ARCH_64 else 4)
     if not watchpoints:
         return []
     if get_breakpoints_in_range(str_address_int, length):
         logger.error(f"Breakpoint/Watchpoint for address {hex(str_address_int)} is already set. Bailing out...")
         return
-    required_slots = sum(_get_watchpoint_slot_count(address, size, max_length) for address, size in watchpoints)
-    if not hardware_breakpoint_available(required_slots):
+    if not hardware_breakpoint_available(len(watchpoints)):
         logger.error("All hardware breakpoint slots are being used, unable to set a new watchpoint. Bailing out...")
         return
     breakpoints_set = []

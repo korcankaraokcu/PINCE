@@ -61,7 +61,8 @@ def _valid_value_type(data: Any) -> bool:
     if not isinstance(data, list) or len(data) not in (4, 5):
         return False
     try:
-        typedefs.ValueType.deserialize(data)
+        if isinstance(typedefs.ValueType.deserialize(data), typedefs.BitFieldValueType):
+            return True
     except (KeyError, TypeError, ValueError):
         return False
     type_id, length, zero_terminate, value_repr = data[:4]

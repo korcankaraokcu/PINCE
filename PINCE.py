@@ -658,7 +658,7 @@ class MainForm(QMainWindow, MainWindow):
                     menu,
                     [edit_value, edit_type, view_as_struct_menu.menuAction(), what_writes, what_reads, what_accesses],
                 )
-            if isinstance(value_type, typedefs.IntegerValueType):
+            if isinstance(value_type, (typedefs.IntegerValueType, typedefs.BitFieldValueType)):
                 if value_type.value_repr is typedefs.VALUE_REPR.HEX:
                     guiutils.delete_menu_entries(menu, [show_unsigned, show_signed, show_hex])
                 elif value_type.value_repr is typedefs.VALUE_REPR.UNSIGNED:
@@ -743,6 +743,13 @@ class MainForm(QMainWindow, MainWindow):
         if not selected_row:
             return
         address = self._resolved_address(selected_row)
+        value_type = selected_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+        if isinstance(value_type, typedefs.StringValueType):
+            value_text = selected_row.text(VALUE_COL)
+            errors = "surrogateescape" if value_type.encoding == "utf-8" else "replace"
+            byte_len = len(value_text.encode(value_type.encoding, errors))
+        else:
+            byte_len = value_type.read_size
         address_data = selected_row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
         if isinstance(address_data, typedefs.PointerChainRequest):
             selection_dialog = TrackSelectorDialog(self)
@@ -751,13 +758,10 @@ class MainForm(QMainWindow, MainWindow):
                 return
             if selection_dialog.selection == "pointer":
                 address = address_data.get_base_address_as_str()
-        value_type = selected_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-        if isinstance(value_type, typedefs.StringValueType):
-            value_text = selected_row.text(VALUE_COL)
-            errors = "surrogateescape" if value_type.encoding == "utf-8" else "replace"
-            byte_len = len(value_text.encode(value_type.encoding, errors))
-        else:
-            byte_len = value_type.read_size
+                parent = selected_row.parent()
+                if address.startswith(("+", "-")) and parent:
+                    address = (parent.data(ADDR_COL, Qt.ItemDataRole.UserRole + 1) or "") + address
+                byte_len = 4 if debugcore.effective_arch == typedefs.INFERIOR_ARCH.ARCH_32 else 8
         TrackWatchpointWidget(self, address, byte_len, watchpoint_type)
 
     def browse_region_for_address(self, address: str) -> None:
@@ -931,7 +935,7 @@ class MainForm(QMainWindow, MainWindow):
             else:
                 parent = insert_row.parent() or root
                 self.insert_records(records, parent, parent.indexOfChild(insert_row) + 1)
-        except (TypeError, IndexError, KeyError, AttributeError):
+        except (TypeError, ValueError, IndexError, KeyError, AttributeError):
             QMessageBox.information(self, tr.ERROR, tr.INVALID_CLIPBOARD)
             return
         self.update_address_table()
@@ -2065,9 +2069,11 @@ class MainForm(QMainWindow, MainWindow):
                 if value is None:  # nothing valid was captured (e.g. frozen while unreadable) so we skip.
                     continue
                 freeze_type = frozen.freeze_type
-                if isinstance(vt, (typedefs.IntegerValueType, typedefs.FloatValueType)):
+                if isinstance(vt, (typedefs.IntegerValueType, typedefs.FloatValueType, typedefs.BitFieldValueType)):
                     # Freeze comparisons need the stored number, not a signed/hex display value.
-                    read_type = typedefs.IntegerValueType(vt.bits, endian=vt.endian) if isinstance(vt, typedefs.IntegerValueType) else vt
+                    read_type = copy.copy(vt)
+                    if isinstance(vt, typedefs.IntegerValueType) or getattr(vt, "value_repr", None) == typedefs.VALUE_REPR.HEX:
+                        read_type.value_repr = typedefs.VALUE_REPR.UNSIGNED
                     new_value = debugcore.read_memory(address, read_type)
                     if new_value is None:
                         continue
@@ -2086,6 +2092,32 @@ class MainForm(QMainWindow, MainWindow):
                         debugcore.write_memory(address, vt, new_value)
                         continue
                 debugcore.write_memory(address, vt, value)
+
+    def _frozen_value_for_type(self, row: QTreeWidgetItem, frozen: typedefs.Frozen, new_type: typedefs.ValueType) -> Any | None:
+        old_type: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
+        value = frozen.value
+        if not frozen.enabled or value is None:
+            return value
+        if not isinstance(old_type, typedefs.BitFieldValueType) and not isinstance(new_type, typedefs.BitFieldValueType):
+            return value
+        numeric_types = (typedefs.IntegerValueType, typedefs.FloatValueType, typedefs.BitFieldValueType)
+        if not isinstance(old_type, numeric_types) or not isinstance(new_type, numeric_types):
+            return
+        if (
+            isinstance(old_type, typedefs.BitFieldValueType)
+            and isinstance(new_type, typedefs.BitFieldValueType)
+            and (old_type.bits, old_type.start_bit) == (new_type.bits, new_type.start_bit)
+        ):
+            limit = 1 << new_type.bits
+            value %= limit
+            return value - limit if new_type.value_repr == typedefs.VALUE_REPR.SIGNED and value >= limit // 2 else value
+        if isinstance(old_type, typedefs.IntegerValueType):
+            value = old_type.parse(str(value))
+            if value is None:
+                return
+            if old_type.value_repr == typedefs.VALUE_REPR.SIGNED and value >= 1 << (old_type.bits - 1):
+                value -= 1 << old_type.bits
+        return new_type.parse(str(value))
 
     def handle_freeze_change(self, row: QTreeWidgetItem, check_state: Qt.CheckState) -> None:
         entry = self.get_script_entry(row)
@@ -2119,8 +2151,11 @@ class MainForm(QMainWindow, MainWindow):
             if self.get_script_entry(row) is not None:
                 continue
             value_type = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-            if isinstance(value_type, typedefs.IntegerValueType):
+            if isinstance(value_type, (typedefs.IntegerValueType, typedefs.BitFieldValueType)):
                 value_type.value_repr = new_repr
+                if isinstance(value_type, typedefs.BitFieldValueType):
+                    frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+                    frozen.value = self._frozen_value_for_type(row, frozen, value_type)
                 row.setText(TYPE_COL, value_type.text())
         self.update_address_table()
         self.mark_address_tree_changed()
@@ -2197,8 +2232,14 @@ class MainForm(QMainWindow, MainWindow):
         manual_address_dialog = ManualAddressDialog(self, desc, address_expr, vt, relative_base)
         manual_address_dialog.setWindowTitle(tr.EDIT_ADDRESS)
         if manual_address_dialog.exec():
-            desc, address_expr, vt = manual_address_dialog.get_values()
-            self.change_address_table_entries(row, desc, address_expr, vt)
+            desc, address_expr, new_type = manual_address_dialog.get_values()
+            frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+            frozen_value = self._frozen_value_for_type(row, frozen, new_type)
+            if frozen_value is None and frozen.value is not None:
+                QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
+                return
+            self.change_address_table_entries(row, desc, address_expr, new_type)
+            frozen.value = frozen_value
             self.update_address_table()
             self.mark_address_tree_changed()
 
@@ -2229,11 +2270,20 @@ class MainForm(QMainWindow, MainWindow):
         if dialog.exec():
             vt = dialog.get_values()
             type_text = vt.text()
+            changes = []
             for row in self.treeWidget_AddressTable.selectedItems():
                 if self.get_script_entry(row) is not None or self._is_struct_row(row):
                     continue
+                frozen: typedefs.Frozen = row.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+                frozen_value = self._frozen_value_for_type(row, frozen, vt)
+                if frozen_value is None and frozen.value is not None:
+                    QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
+                    return
+                changes.append((row, frozen, frozen_value))
+            for row, frozen, frozen_value in changes:
                 row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, copy.copy(vt))
                 row.setText(TYPE_COL, type_text)
+                frozen.value = frozen_value
             self.update_address_table()
             self.mark_address_tree_changed()
 

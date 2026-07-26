@@ -1,3 +1,4 @@
+from PyQt6.QtCore import QCoreApplication
 from PyQt6.QtWidgets import QDialog, QWidget, QMenu, QMessageBox
 from PyQt6.QtGui import QContextMenuEvent
 from GUI.Utils import guiutils
@@ -24,7 +25,7 @@ class ManualAddressDialog(QDialog, Ui_Dialog):
         self.lineEdit_Address.setFixedWidth(180)
         vt = typedefs.IntegerValueType() if not value_type else value_type
         self.lineEdit_Length.setValidator(HexValidator(99, self))
-        guiutils.fill_value_combobox(self.comboBox_ValueType, vt)
+        guiutils.fill_value_combobox(self.comboBox_ValueType, vt, include_bit_field=True)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, getattr(vt, "endian", typedefs.ENDIANNESS.HOST))
         self.lineEdit_Description.setText(description)
         self.lineEdit_Description.setFixedWidth(180)
@@ -40,6 +41,9 @@ class ManualAddressDialog(QDialog, Ui_Dialog):
             self.widget_Pointer.show()
         if isinstance(vt, (typedefs.StringValueType, typedefs.ByteArrayValueType)):
             self.lineEdit_Length.setText(str(vt.length))
+        elif isinstance(vt, typedefs.BitFieldValueType):
+            self.lineEdit_Length.setText(str(vt.bits))
+            self.spinBox_StartBit.setValue(vt.start_bit)
         if isinstance(vt, typedefs.StringValueType):
             self.checkBox_ZeroTerminate.setChecked(vt.zero_terminate)
         value_repr = getattr(vt, "value_repr", typedefs.VALUE_REPR.UNSIGNED)
@@ -53,6 +57,7 @@ class ManualAddressDialog(QDialog, Ui_Dialog):
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.comboBox_Endianness.currentIndexChanged.connect(self.update_value)
         self.lineEdit_Length.textChanged.connect(self.update_value)
+        self.spinBox_StartBit.valueChanged.connect(self.update_value)
         self.checkBox_Hex.stateChanged.connect(self.repr_changed)
         self.checkBox_Signed.stateChanged.connect(self.repr_changed)
         self.checkBox_ZeroTerminate.stateChanged.connect(self.update_value)
@@ -146,7 +151,10 @@ class ManualAddressDialog(QDialog, Ui_Dialog):
         else:
             hex_converted_expr = debugcore.convert_to_hex(self._apply_relative_base(self.lineEdit_Address.text()))
             address = debugcore.examine_expression(hex_converted_expr).address
-        value = debugcore.read_memory(address, self._get_value_type())
+        try:
+            value = debugcore.read_memory(address, self._get_value_type())
+        except ValueError:
+            value = None
         self.label_Value.setText("<font color=red>??</font>" if value is None else str(value))
 
     def _get_value_type(self) -> typedefs.ValueType:
@@ -156,8 +164,15 @@ class ManualAddressDialog(QDialog, Ui_Dialog):
             value_repr = typedefs.VALUE_REPR.SIGNED
         else:
             value_repr = typedefs.VALUE_REPR.UNSIGNED
+        value_type = self.comboBox_ValueType.currentData()
+        if isinstance(value_type, typedefs.BitFieldValueType):
+            return typedefs.BitFieldValueType(
+                utils.safe_str_to_int(self.lineEdit_Length.text(), 0),
+                self.spinBox_StartBit.value(),
+                value_repr=value_repr,
+            )
         return guiutils.configure_value_type(
-            self.comboBox_ValueType.currentData(),
+            value_type,
             length=utils.safe_str_to_int(self.lineEdit_Length.text(), 0),
             zero_terminate=self.checkBox_ZeroTerminate.isChecked(),
             value_repr=value_repr,
@@ -166,8 +181,16 @@ class ManualAddressDialog(QDialog, Ui_Dialog):
 
     def comboBox_ValueType_current_index_changed(self) -> None:
         value_type = self.comboBox_ValueType.currentData()
-        self.widget_Length.setVisible(isinstance(value_type, (typedefs.StringValueType, typedefs.ByteArrayValueType)))
+        is_bit_field = isinstance(value_type, typedefs.BitFieldValueType)
+        self.widget_Length.setVisible(isinstance(value_type, (typedefs.StringValueType, typedefs.ByteArrayValueType)) or is_bit_field)
+        self.label_Length.setText(
+            QCoreApplication.translate("Dialog", "Bit length:") if is_bit_field else QCoreApplication.translate("Dialog", "Length:")
+        )
+        self.label_StartBit.setVisible(is_bit_field)
+        self.spinBox_StartBit.setVisible(is_bit_field)
         self.checkBox_ZeroTerminate.setVisible(isinstance(value_type, typedefs.StringValueType))
+        self.label_Endianness.setVisible(not is_bit_field)
+        self.comboBox_Endianness.setVisible(not is_bit_field)
         self.update_value()
 
     def repr_changed(self) -> None:
@@ -205,6 +228,9 @@ class ManualAddressDialog(QDialog, Ui_Dialog):
             if not length > 0:
                 QMessageBox.information(self, tr.ERROR, tr.LENGTH_GT)
                 return
+            if isinstance(self.comboBox_ValueType.currentData(), typedefs.BitFieldValueType) and length > 64:
+                QMessageBox.information(self, tr.ERROR, tr.LENGTH_NOT_VALID)
+                return
         super().accept()
 
     def get_values(self) -> tuple[str, str | typedefs.PointerChainRequest, typedefs.ValueType]:
@@ -237,5 +263,9 @@ class ManualAddressDialog(QDialog, Ui_Dialog):
             frame.layout().itemAt(1).widget().setText(hex(offset))
 
     def get_type_size(self) -> int | None:
-        value_type = self.comboBox_ValueType.currentData()
-        return value_type.read_size if isinstance(value_type, (typedefs.IntegerValueType, typedefs.FloatValueType)) else None
+        try:
+            value_type = self._get_value_type()
+        except ValueError:
+            return
+        if isinstance(value_type, (typedefs.IntegerValueType, typedefs.FloatValueType, typedefs.BitFieldValueType)):
+            return value_type.read_size
