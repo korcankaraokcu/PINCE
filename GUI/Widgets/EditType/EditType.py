@@ -1,4 +1,3 @@
-from PyQt6.QtCore import QCoreApplication
 from PyQt6.QtWidgets import QDialog, QWidget, QMessageBox, QApplication
 from GUI.Utils import guiutils
 from GUI.Validators.HexValidator import HexValidator
@@ -40,9 +39,6 @@ class EditTypeDialog(QDialog, Ui_Dialog):
         value_type = self.comboBox_ValueType.currentData()
         is_bit_field = isinstance(value_type, typedefs.BitFieldValueType)
         self.widget_Length.setVisible(isinstance(value_type, (typedefs.StringValueType, typedefs.ByteArrayValueType)) or is_bit_field)
-        self.label_Length.setText(
-            QCoreApplication.translate("Dialog", "Bit length") if is_bit_field else QCoreApplication.translate("Dialog", "Length")
-        )
         self.label_StartBit.setVisible(is_bit_field)
         self.spinBox_StartBit.setVisible(is_bit_field)
         self.checkBox_ZeroTerminate.setVisible(isinstance(value_type, typedefs.StringValueType))

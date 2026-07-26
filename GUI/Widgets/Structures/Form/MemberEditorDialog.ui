@@ -55,7 +55,7 @@
     <widget class="QComboBox" name="comboBox_Type"/>
    </item>
    <item row="4" column="0">
-    <widget class="QLabel" name="label_Length">
+   <widget class="QLabel" name="label_Length">
      <property name="text">
       <string>Length</string>
      </property>
@@ -65,36 +65,50 @@
     <widget class="QLineEdit" name="lineEdit_Length"/>
    </item>
    <item row="5" column="0">
+    <widget class="QLabel" name="label_StartBit">
+     <property name="text">
+      <string>Start bit</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QSpinBox" name="spinBox_StartBit">
+     <property name="maximum">
+      <number>7</number>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
     <widget class="QLabel" name="label_Repr">
      <property name="text">
       <string>Repr</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="1">
+   <item row="6" column="1">
     <widget class="QComboBox" name="comboBox_Repr"/>
    </item>
-   <item row="6" column="0">
+   <item row="7" column="0">
     <widget class="QLabel" name="label_Endian">
      <property name="text">
       <string>Endianness</string>
      </property>
     </widget>
    </item>
-   <item row="6" column="1">
+   <item row="7" column="1">
     <widget class="QComboBox" name="comboBox_Endian"/>
    </item>
-   <item row="7" column="0">
+   <item row="8" column="0">
     <widget class="QLabel" name="label_StructRef">
      <property name="text">
       <string>Structure</string>
      </property>
     </widget>
    </item>
-   <item row="7" column="1">
+   <item row="8" column="1">
     <widget class="QComboBox" name="comboBox_StructRef"/>
    </item>
-   <item row="8" column="0" colspan="2">
+   <item row="9" column="0" colspan="2">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Orientation::Horizontal</enum>

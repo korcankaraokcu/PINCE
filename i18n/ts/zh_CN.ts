@@ -117,6 +117,12 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <translation>以零终止</translation>
     </message>
     <message>
+        <location filename="../../GUI/Widgets/Structures/Form/MemberEditorDialog.ui" line="0" />
+        <location filename="../../GUI/Widgets/EditType/Form/EditTypeDialog.ui" line="0" />
+        <source>Start bit</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <location filename="../../GUI/Widgets/HandleSignals/Form/HandleSignalsDialog.ui" line="0" />
         <source>Handle Signals</source>
@@ -228,6 +234,11 @@ Unchecking it makes ReferencedStringsWidget load slower but allows you to examin
         <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
         <source>Endianness:</source>
         <translation>字节序：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />
+        <source>Start bit:</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <location filename="../../GUI/Widgets/ManualAddress/Form/AddAddressManuallyDialog.ui" line="0" />

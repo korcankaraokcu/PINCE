@@ -23,7 +23,7 @@ def _read_string_length(base_addr: int, structure: typedefs.Structure) -> int | 
 
 def structure_to_records(
     structure: typedefs.Structure, base_addr: int = 0, _depth: int = 0, _parents: tuple[str, ...] = ()
-) -> list[tuple[str, str | tuple[str | int, list[int]], tuple[int, int, bool, int, int], list]]:
+) -> list[tuple[str, str | tuple[str | int, list[int]], tuple[int, ...], list]]:
     if _depth > _MAX_DEPTH or structure.name in _parents:
         return []
     length_overrides = {}
@@ -35,7 +35,7 @@ def structure_to_records(
     for member in structure.members:
         if member.value_type is not None:
             vt = member.value_type.serialize()
-            if member.name in length_overrides:
+            if member.name in length_overrides and isinstance(member.value_type, typedefs.StringValueType):
                 vt = (vt[0], length_overrides[member.name], vt[2], vt[3], vt[4])
             records.append((member.name, _rel_off(member.offset), vt, []))
         else:
@@ -57,7 +57,7 @@ def structure_to_records(
     return records
 
 
-def structure_to_group_record(structure: typedefs.Structure, base_expr: str) -> tuple[str, str, tuple[int, int, bool, int, int], list]:
+def structure_to_group_record(structure: typedefs.Structure, base_expr: str) -> tuple[str, str, tuple[int, ...], list]:
     address = debugcore.examine_expression(base_expr).address if base_expr else None
     base_addr = int(address, 0) if address else 0
     members = structure_to_records(structure, base_addr)

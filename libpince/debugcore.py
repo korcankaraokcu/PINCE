@@ -1721,7 +1721,7 @@ def read_memory(
     Returns:
         str: For string and byte-array types, also for hexadecimal integers
         float: For float types
-        int: For integer types
+        int: For integer and BitField types
         None: If an error occurs while reading the given address
     """
     if not isinstance(value_type, typedefs.ValueType):

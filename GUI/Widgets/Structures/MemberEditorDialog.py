@@ -20,7 +20,7 @@ class MemberEditorDialog(QDialog, Ui_Dialog):
         self.comboBox_Kind.addItem(tr.POINTER_MEMBER, KIND_POINTER)
         self.comboBox_Kind.addItem(tr.INLINE_MEMBER, KIND_INLINE)
 
-        guiutils.fill_value_combobox(self.comboBox_Type, member.value_type if member else None)
+        guiutils.fill_value_combobox(self.comboBox_Type, member.value_type if member else None, include_bit_field=True)
         guiutils.fill_endianness_combobox(self.comboBox_Endian)
 
         self.comboBox_Repr.addItem(tr.REPR_UNSIGNED, typedefs.VALUE_REPR.UNSIGNED)
@@ -52,8 +52,11 @@ class MemberEditorDialog(QDialog, Ui_Dialog):
         self.lineEdit_Offset.setText(hex(member.offset))
         if member.value_type is not None:
             self.comboBox_Kind.setCurrentIndex(self.comboBox_Kind.findData(KIND_VALUE))
-            if isinstance(member.value_type, (typedefs.StringValueType, typedefs.ByteArrayValueType)):
+            if hasattr(member.value_type, "length"):
                 self.lineEdit_Length.setText(str(member.value_type.length))
+            elif isinstance(member.value_type, typedefs.BitFieldValueType):
+                self.lineEdit_Length.setText(str(member.value_type.bits))
+                self.spinBox_StartBit.setValue(member.value_type.start_bit)
             idx = self.comboBox_Repr.findData(getattr(member.value_type, "value_repr", typedefs.VALUE_REPR.UNSIGNED))
             if idx >= 0:
                 self.comboBox_Repr.setCurrentIndex(idx)
@@ -82,24 +85,24 @@ class MemberEditorDialog(QDialog, Ui_Dialog):
         is_value = kind == KIND_VALUE
         self.label_Type.setVisible(is_value)
         self.comboBox_Type.setVisible(is_value)
-        self.label_Length.setVisible(is_value)
-        self.lineEdit_Length.setVisible(is_value)
-        self.label_Repr.setVisible(is_value)
-        self.comboBox_Repr.setVisible(is_value)
-        self.label_Endian.setVisible(is_value)
-        self.comboBox_Endian.setVisible(is_value)
         self.label_StructRef.setVisible(not is_value)
         self.comboBox_StructRef.setVisible(not is_value)
         self._type_changed()
 
     def _type_changed(self) -> None:
         value_type = self.comboBox_Type.currentData()
-        has_len = isinstance(value_type, (typedefs.StringValueType, typedefs.ByteArrayValueType))
+        is_value = self.comboBox_Kind.currentData() == KIND_VALUE
+        is_bit_field = isinstance(value_type, typedefs.BitFieldValueType)
+        has_len = is_value and (hasattr(value_type, "length") or is_bit_field)
         self.label_Length.setVisible(has_len)
         self.lineEdit_Length.setVisible(has_len)
-        is_int = isinstance(value_type, typedefs.IntegerValueType)
-        self.label_Repr.setVisible(is_int)
-        self.comboBox_Repr.setVisible(is_int)
+        self.label_StartBit.setVisible(is_value and is_bit_field)
+        self.spinBox_StartBit.setVisible(is_value and is_bit_field)
+        has_repr = is_value and hasattr(value_type, "value_repr")
+        self.label_Repr.setVisible(has_repr)
+        self.comboBox_Repr.setVisible(has_repr)
+        self.label_Endian.setVisible(is_value and not is_bit_field)
+        self.comboBox_Endian.setVisible(is_value and not is_bit_field)
 
     def accept(self) -> None:
         try:
@@ -116,6 +119,9 @@ class MemberEditorDialog(QDialog, Ui_Dialog):
             if length <= 0:
                 QMessageBox.warning(self, tr.ERROR, tr.LENGTH_GT)
                 return
+            if isinstance(self.comboBox_Type.currentData(), typedefs.BitFieldValueType) and length > 64:
+                QMessageBox.warning(self, tr.ERROR, tr.LENGTH_NOT_VALID)
+                return
         super().accept()
 
     def get_member(self) -> typedefs.StructureMember:
@@ -124,9 +130,12 @@ class MemberEditorDialog(QDialog, Ui_Dialog):
         kind = self.comboBox_Kind.currentData()
         if kind == KIND_VALUE:
             value_type = self.comboBox_Type.currentData()
-            has_length = isinstance(value_type, (typedefs.StringValueType, typedefs.ByteArrayValueType))
+            has_length = hasattr(value_type, "length") or isinstance(value_type, typedefs.BitFieldValueType)
             length = utils.safe_str_to_int(self.lineEdit_Length.text(), 0) if has_length else 10
-            value_repr = self.comboBox_Repr.currentData() if isinstance(value_type, typedefs.IntegerValueType) else typedefs.VALUE_REPR.UNSIGNED
+            value_repr = self.comboBox_Repr.currentData() if hasattr(value_type, "value_repr") else typedefs.VALUE_REPR.UNSIGNED
+            if isinstance(value_type, typedefs.BitFieldValueType):
+                vt = typedefs.BitFieldValueType(length, self.spinBox_StartBit.value(), value_repr=value_repr)
+                return typedefs.StructureMember(name, offset, value_type=vt)
             endian = self.comboBox_Endian.currentData()
             vt = guiutils.configure_value_type(
                 value_type,
