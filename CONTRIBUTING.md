@@ -25,16 +25,24 @@
 **About GUI file structure refactoring**: PINCE.py currently still holds some of the GUI logic classes and this makes PINCE.py larger than it needs to be. To deal with this, all GUI logic will be carried to their respective folders and the GUI folder will follow this structure:
 ```
 GUI/
-|-- Settings/
-|-- States/
-|-- Utils/
+|-- AbstractTableModels/ (QAbstractTableModel classes, used by views that hold large amounts of data)
+|-- ItemDelegates/ (QStyledItemDelegate classes)
+|-- Labels/ (QLabel classes)
+|-- Overlays/ (Classes that paint on top of existing widgets)
+|-- Session/ (Session saving, loading and its data structures)
+|-- Settings/ (Settings and theme handling)
+|-- States/ (Globally shared GUI state such as signals and thread pools)
+|-- TableViews/ (QTableView classes)
+|-- TreeWidgets/ (QTreeWidget classes)
+|-- Utils/ (Utility functions, shared types and custom Qt classes)
+|-- Validators/ (QValidator classes)
 |-- Widgets/
 |   |-- Example/
-│   |   |-- Form/
-│   |   │   |-- ExampleWidget.ui (Designer UI file)
-│   |   │   |-- ExampleWidget.py (Auto-generated from the UI file)
-│   |   |-- Example.py (Form logic)
-│   |   |-- CustomClass.py (Helper class)
+|   |   |-- Form/
+|   |   |   |-- ExampleWidget.ui (Designer UI file)
+|   |   |   |-- ExampleWidget.py (Auto-generated from the UI file)
+|   |   |-- Example.py (Form logic)
+|   |   |-- CustomClass.py (Helper class)
 ```
 A good example of the structure above can be seen in [ManageScanRegions](./GUI/Widgets/ManageScanRegions)
 
@@ -70,12 +78,12 @@ Formatting style is [Black](https://github.com/psf/black) defaults, except line 
   - Class members:
     - non-Qt: snake_case
     - Qt: objectType + PascalCase
-    For example: `keySequenceEdit_Hotkey` in [PINCE.py](./PINCE.py)
+    For example: `lineEdit_Hotkey` in [Settings.py](./GUI/Widgets/Settings/Settings.py)
   - Variables: snake_case
   - Functions:
     - non-Qt: snake_case
     - Qt: objectName + snake_case
-    Here's an example: `keySequenceEdit_Hotkey_key_sequence_changed` in [PINCE.py](./PINCE.py)
+    Here's an example: `lineEdit_Hotkey_key_pressed_event` in [Settings.py](./GUI/Widgets/Settings/Settings.py)
   - Constants: SCREAMING_SNAKE_CASE
   - Modules: PascalCase
   - Standalone scripts: snake_case
