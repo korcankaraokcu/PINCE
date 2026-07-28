@@ -108,12 +108,12 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.settings.setValue("Java/ignore_segfault", self.checkBox_JavaSegfault.isChecked())
         if self.handle_signals_data:
             self.settings.setValue("Debug/handle_signals", self.handle_signals_data)
-        settings.apply_settings()
-        result: bool | None = self.comboBox_SaveSessionOnExit.currentData()
-        if result is None:
+        save_on_exit: bool | None = self.comboBox_SaveSessionOnExit.currentData()
+        if save_on_exit is None:
             self.settings.remove(settings.SAVE_SESSION_ON_EXIT)
         else:
-            self.settings.setValue(settings.SAVE_SESSION_ON_EXIT, result)
+            self.settings.setValue(settings.SAVE_SESSION_ON_EXIT, save_on_exit)
+        settings.apply_settings()
         super().accept()
 
     def reject(self) -> None:
