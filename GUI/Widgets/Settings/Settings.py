@@ -161,7 +161,9 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.checkBox_GDBLogging.setChecked(self.settings.value("Debug/gdb_logging", type=bool))
         self.comboBox_InterruptSignal.setCurrentText(self.settings.value("Debug/interrupt_signal", type=str))
         self.checkBox_JavaSegfault.setChecked(self.settings.value("Java/ignore_segfault", type=bool))
-        save_on_exit: bool | None = self.settings.value(settings.SAVE_SESSION_ON_EXIT, type=bool) if self.settings.contains(settings.SAVE_SESSION_ON_EXIT) else None
+        save_on_exit: bool | None = (
+            self.settings.value(settings.SAVE_SESSION_ON_EXIT, type=bool) if self.settings.contains(settings.SAVE_SESSION_ON_EXIT) else None
+        )
         self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(save_on_exit))
 
     def change_display(self, index: int) -> None:
