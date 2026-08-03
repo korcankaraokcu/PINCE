@@ -44,8 +44,10 @@ PINCE_LIB_ONLY=1
 
 if [ -r /etc/os-release ]; then
 	. /etc/os-release
-	case "$ID $ID_LIKE" in *arch*) export NO_STRIP=1 ;; esac # skip strip on Arch for linuxdeploy
+	OS_NAME="$ID $ID_LIKE"
 fi
+set_install_vars "$OS_NAME" || LRELEASE_CMD="$(command -v lrelease6)" # fallback for unsupported distros
+case $OS_NAME in *arch*) export NO_STRIP=1 ;; esac # skip strip on Arch for linuxdeploy
 export ARCH=x86_64
 
 # Download necessary tools
@@ -54,29 +56,47 @@ curl -fLO https://github.com/linuxdeploy/linuxdeploy/releases/download/continuou
 curl -fLO https://raw.githubusercontent.com/TheAssassin/linuxdeploy-plugin-conda/master/linuxdeploy-plugin-conda.sh || exit_on_failure
 chmod +x "$DEPLOYTOOL" linuxdeploy-plugin-conda.sh || exit_on_failure
 
-# Bundle Python, GDB and Qt from conda-forge, with the remaining requirements from PyPI
-sed '/^[[:space:]]*PyQt6/d' ../requirements.txt > requirements-appimage.txt || exit_on_failure
+# Create AppImage's AppDir with a Conda environment pre-baked containing Python, GDB and our pip packages.
+# Need xcb-util-cursor for Debian family and a CA bundle for Python HTTPS requests inside the AppImage.
+# Qt intentionally stays on the PyQt6 wheels instead of conda because the wheels bundle no glib/pango/cairo,
+# so the entire GTK stack comes from the host and stays self-consistent.
+# Conda ships its own copies of those and wins some SONAMEs while the host wins others, breaking the GTK platform theme when the versions differ.
 printf '%s\n' 'channels: [conda-forge]' 'default_channels: []' > conda-appimage.yml || exit_on_failure
-CONDARC="$PWD/conda-appimage.yml" PIP_REQUIREMENTS="--only-binary=:all: -r requirements-appimage.txt" \
-	CONDA_PACKAGES="python=3.14.6;gdb=17.2;qt6-main=6.11.1;pyqt6=6.11.0" "$DEPLOYTOOL" --appdir AppDir -pconda || exit_on_failure
+CONDARC="$PWD/conda-appimage.yml" PIP_REQUIREMENTS="--only-binary=:all: -r ../requirements.txt" \
+	CONDA_PACKAGES="python=3.14.6;gdb=17.2;xcb-util-cursor;ca-certificates" "$DEPLOYTOOL" --appdir AppDir -pconda || exit_on_failure
 
-# Make Conda's Qt and Fontconfig paths relocatable
-CONDA_DIR="$PWD/AppDir/usr/conda"
-sed -i -e 's|^Prefix = .*/AppDir/usr/conda$|Prefix = ..|' -e 's| = .*/AppDir/usr/conda/| = |' "$CONDA_DIR/bin/qt6.conf" || exit_on_failure
-sed -i -e 's|<dir>.*/AppDir/usr/conda/|<dir prefix="relative">../../|' -e '\|.*/AppDir/usr/conda/var/cache/fontconfig|d' "$CONDA_DIR/etc/fonts/fonts.conf" || exit_on_failure
+# The wheels ship the whole of Qt, so walk the ELF dependencies of the modules a widgets app actually loads and delete everything unreachable,
+# dropping Quick, QML, 3D, Multimedia/ffmpeg and Designer.
+AppDir/usr/conda/bin/python3 - AppDir/usr/conda/lib/python3.14/site-packages/PyQt6/Qt6 <<'PRUNE_EOF' || exit_on_failure
+import glob, os, shutil, subprocess, sys
+qt_dir, lib = sys.argv[1], sys.argv[1] + "/lib"
+keep = ["platforms", "platformthemes", "platforminputcontexts", "iconengines", "imageformats", "printsupport",
+	"xcbglintegrations", "tls", "networkinformation", "generic", "wayland-decoration-client",
+	"wayland-graphics-integration-client", "wayland-shell-integration"]
+todo = [f"{lib}/libQt6{m}.so.6" for m in ("Core", "Gui", "Widgets", "DBus", "Svg", "PrintSupport", "Network")]
+todo += [p for name in keep for p in glob.glob(f"{qt_dir}/plugins/{name}/*.so")]
+alive = set()
+while todo:
+	path = os.path.realpath(todo.pop())
+	if path in alive or not os.path.isfile(path):
+		continue
+	alive.add(path)
+	needed = subprocess.run(["patchelf", "--print-needed", path], capture_output=True, text=True).stdout
+	todo += [f"{lib}/{so}" for so in needed.split()]
+for path in glob.glob(f"{lib}/*.so*"):
+	if os.path.isfile(path) and os.path.realpath(path) not in alive:
+		os.remove(path)
+for name in os.listdir(f"{qt_dir}/plugins"):
+	if name not in keep:
+		shutil.rmtree(f"{qt_dir}/plugins/{name}")
+shutil.rmtree(f"{qt_dir}/qml", ignore_errors=True)
+PRUNE_EOF
 
 # Keep AppImage paths out of programs launched by GDB
 rm AppDir/usr/bin/gdb || exit_on_failure
 cat > AppDir/usr/bin/gdb <<'GDB_WRAPPER_EOF' || exit_on_failure
 #!/bin/sh
-exec "$(dirname "$0")/../conda/bin/gdb" \
-	-iex 'unset environment PYTHONHOME' \
-	-iex 'unset environment FONTCONFIG_PATH' \
-	-iex 'unset environment FONTCONFIG_FILE' \
-	-iex 'unset environment XKB_CONFIG_ROOT' \
-	-iex 'unset environment SSL_CERT_FILE' \
-	-iex 'unset environment OPENSSL_CONF' \
-	"$@"
+exec "$(dirname "$0")/../conda/bin/gdb" -iex 'unset environment PYTHONHOME' -iex 'unset environment APPDIR' "$@"
 GDB_WRAPPER_EOF
 chmod +x AppDir/usr/bin/gdb || exit_on_failure
 
@@ -91,7 +111,7 @@ SCRIPTDIR="$PWD"
 LIBMEMSCAN_CPU="-Dtarget=x86_64-linux-gnu.2.35 -Dcpu=x86_64_v2"
 build_libmemscan || exit_on_failure
 build_mono_collector || exit_on_failure
-LRELEASE_CMD="$CONDA_DIR/bin/lrelease6" compile_translations || exit_on_failure
+compile_translations || exit_on_failure
 
 # Copy necessary PINCE folders/files to inside AppDir
 cp -r GUI i18n libpince media tr AUTHORS COPYING COPYING.CC-BY PINCE.py THANKS ci/AppDir/opt/PINCE/ || exit_on_failure
@@ -173,12 +193,13 @@ EOFENV
 fi
 APPDIR="$(dirname "$0")"
 export APPDIR
-RUNTIME="$APPDIR/usr/conda"
-export PYTHONHOME="$RUNTIME" FONTCONFIG_PATH="$RUNTIME/etc/fonts" FONTCONFIG_FILE="$RUNTIME/etc/fonts/fonts.conf" \
-	XKB_CONFIG_ROOT="$RUNTIME/share/X11/xkb" SSL_CERT_FILE="$RUNTIME/ssl/cacert.pem" OPENSSL_CONF="$RUNTIME/ssl/openssl.cnf"
-exec "$RUNTIME/bin/python3" "$APPDIR/opt/PINCE/PINCE.py" "$PCT_FILE"
+export PYTHONHOME="$APPDIR/usr/conda"
+exec "$APPDIR/usr/conda/bin/python3" "$APPDIR/opt/PINCE/PINCE.py" "$PCT_FILE"
 APPRUN_EOF
 chmod +x AppRun.sh || exit_on_failure
+
+# Patch libqxcb's runpath (not rpath) to point to our packaged libxcb-cursor to fix X11 issues
+patchelf --add-rpath "\$ORIGIN/../../../../../../" AppDir/usr/conda/lib/python3.14/site-packages/PyQt6/Qt6/plugins/platforms/libqxcb.so || exit_on_failure
 
 # Package AppDir into AppImage
 export LDAI_UPDATE_INFORMATION="gh-releases-zsync|korcankaraokcu|PINCE|latest|PINCE-x86_64.AppImage.zsync"
