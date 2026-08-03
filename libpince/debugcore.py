@@ -534,7 +534,7 @@ def set_interrupt_signal(signal_name: str) -> None:
 
 
 def handle_signal(signal_name: str, stop: bool, pass_to_program: bool) -> None:
-    """Decides on what will GDB do when the process recieves a signal
+    """Decides on what will GDB do when the process receives a signal
 
     Args:
         signal_name (str): Name of the signal

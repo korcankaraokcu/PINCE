@@ -33,7 +33,7 @@ trap cleanup EXIT
 # Error checking function
 exit_on_failure() {
 	echo
-	echo "Error occured while creating AppImage! Check the log above!"
+	echo "Error occurred while creating AppImage! Check the log above!"
 	exit 1
 }
 cleanup || exit_on_failure

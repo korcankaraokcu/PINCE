@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 exit_on_error() {
 	echo
-	echo "Error occured while installing PINCE, check the output above for more information"
+	echo "Error occurred while installing PINCE, check the output above for more information"
 	echo "Installation failed."
 	exit 1
 }
