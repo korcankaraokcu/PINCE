@@ -385,7 +385,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_About.clicked.connect(self.pushButton_About_clicked)
         self.pushButton_AddAddressManually.clicked.connect(self.pushButton_AddAddressManually_clicked)
         self.pushButton_MemoryView.clicked.connect(self.pushButton_MemoryView_clicked)
-        self.pushButton_RefreshAdressTable.clicked.connect(self.pushButton_RefreshAdressTable_clicked)
+        self.pushButton_RefreshAddressTable.clicked.connect(self.pushButton_RefreshAddressTable_clicked)
         self.pushButton_CopyToAddressTable.clicked.connect(self.copy_to_address_table)
         self.pushButton_CleanAddressTable.clicked.connect(self.clear_address_table)
         self.tableWidget_valuesearchtable.cellDoubleClicked.connect(self.tableWidget_valuesearchtable_cell_double_clicked)
@@ -405,7 +405,7 @@ class MainForm(QMainWindow, MainWindow):
         self.pushButton_Settings.setIcon(QIcon(QPixmap(icons_directory + "/wrench.png")))
         self.pushButton_CopyToAddressTable.setIcon(QIcon(QPixmap(icons_directory + "/arrow_down.png")))
         self.pushButton_CleanAddressTable.setIcon(QIcon(QPixmap(icons_directory + "/bin_closed.png")))
-        self.pushButton_RefreshAdressTable.setIcon(QIcon(QPixmap(icons_directory + "/table_refresh.png")))
+        self.pushButton_RefreshAddressTable.setIcon(QIcon(QPixmap(icons_directory + "/table_refresh.png")))
         self.pushButton_Console.setIcon(QIcon(QPixmap(icons_directory + "/application_xp_terminal.png")))
         self.pushButton_Wiki.setIcon(QIcon(QPixmap(icons_directory + "/book_open.png")))
         self.pushButton_About.setIcon(QIcon(QPixmap(icons_directory + "/information.png")))
@@ -415,7 +415,7 @@ class MainForm(QMainWindow, MainWindow):
         self.flashAttachButton = True
         self.flashAttachButtonTimer = QTimer(self)
         self.flashAttachButtonTimer.timeout.connect(self.flash_attach_button)
-        self.flashAttachButton_gradiantState = 0
+        self.flashAttachButton_gradientState = 0
         self.flashAttachButtonTimer.start(100)
         self.is_scanning = False
         self.undo_scan_available = False
@@ -1022,7 +1022,7 @@ class MainForm(QMainWindow, MainWindow):
                 ),
                 (
                     QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R),
-                    self.pushButton_RefreshAdressTable_clicked,
+                    self.pushButton_RefreshAddressTable_clicked,
                 ),
                 (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space), self.toggle_records),
                 (QKeyCombination(Qt.KeyboardModifier.ShiftModifier, Qt.Key.Key_Space), self.toggle_records),
@@ -1255,7 +1255,7 @@ class MainForm(QMainWindow, MainWindow):
             self.add_entry_to_addresstable(desc, address_expr, vt)
             self.update_address_table()
 
-    def pushButton_RefreshAdressTable_clicked(self) -> None:
+    def pushButton_RefreshAddressTable_clicked(self) -> None:
         self.invalidate_address_expression_cache(refresh=True)
 
     def pushButton_MemoryView_clicked(self) -> None:
@@ -2338,7 +2338,7 @@ class MainForm(QMainWindow, MainWindow):
             self.pushButton_AttachProcess.setStyleSheet("")
             return
 
-        case = self.flashAttachButton_gradiantState % 32
+        case = self.flashAttachButton_gradientState % 32
 
         if case < 16:
             borderstring = "QPushButton {border: 3px solid rgba(0,255,0," + str(case / 16) + ");}"
@@ -2346,9 +2346,9 @@ class MainForm(QMainWindow, MainWindow):
             borderstring = "QPushButton {border: 3px solid rgba(0,255,0," + str((32 - case) / 16) + ");}"
 
         self.pushButton_AttachProcess.setStyleSheet(borderstring)
-        self.flashAttachButton_gradiantState += 1
-        if self.flashAttachButton_gradiantState > 768:  # 32*24
-            self.flashAttachButton_gradiantState = 0
+        self.flashAttachButton_gradientState += 1
+        if self.flashAttachButton_gradientState > 768:  # 32*24
+            self.flashAttachButton_gradientState = 0
 
 
 class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):

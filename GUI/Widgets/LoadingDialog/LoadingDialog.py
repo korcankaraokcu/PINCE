@@ -17,8 +17,8 @@ class LoadingDialog(QDialog, Ui_Dialog):
         self.keyPressEvent = QEvent.ignore
 
         # Make use of this background_thread when you spawn a LoadingDialog
-        # Warning: overrided_func() can only return one value, so if your overridden function returns more than one
-        # value, refactor your overriden function to return only one object(convert tuple to list etc.)
+        # Warning: overridden_func() can only return one value, so if your overridden function returns more than one
+        # value, refactor your overridden function to return only one object(convert tuple to list etc.)
         # Check refresh_table method of FunctionsInfoWidget for exemplary usage
         self.background_thread = self.BackgroundThread()
         self.background_thread.output_ready.connect(self.accept)
@@ -54,12 +54,12 @@ class LoadingDialog(QDialog, Ui_Dialog):
         # Unhandled exceptions in this thread freezes PINCE
         def run(self) -> None:
             try:
-                output = self.overrided_func()
+                output = self.overridden_func()
             except:
                 traceback.print_exc()
                 output = None
             self.output_ready.emit(output)
 
-        def overrided_func(self) -> Any:
+        def overridden_func(self) -> Any:
             logger.debug("Override this function")
             return 0

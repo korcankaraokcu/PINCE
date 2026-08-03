@@ -205,7 +205,7 @@ class GetStackInfo(gdb.Command):
             try:
                 old_position = FILE.seek(sp_address)
             except (OSError, ValueError):
-                logger.exception(f"Cannot accesss the memory at {hex(sp_address)}")
+                logger.exception(f"Cannot access the memory at {hex(sp_address)}")
                 send_to_pince(stack_info_list)
                 return
             for index in range(int(4096 / chunk_size)):

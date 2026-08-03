@@ -42,7 +42,7 @@ class FunctionsInfoWidget(QWidget, Ui_Form):
         process_identity = debugcore.current_process_identity
         self.loading_dialog = LoadingDialog(self)
         self.background_thread = self.loading_dialog.background_thread
-        self.background_thread.overrided_func = lambda: self.process_data(input_text, case_sensitive)
+        self.background_thread.overridden_func = lambda: self.process_data(input_text, case_sensitive)
         self.background_thread.output_ready.connect(
             lambda output: self.apply_data(output) if process_identity == debugcore.current_process_identity else None
         )

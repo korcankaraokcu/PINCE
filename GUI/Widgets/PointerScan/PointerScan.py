@@ -40,7 +40,7 @@ class PointerScanWindow(QMainWindow, Ui_MainWindow):
         self.path_count_label.setContentsMargins(0, 0, 6, 0)
         self.menubar.setCornerWidget(self.path_count_label, Qt.Corner.TopRightCorner)
         self.default_scan_address = default_scan_address
-        self.load_thread: guitypedefs.InterruptableWorker | None = None
+        self.load_thread: guitypedefs.InterruptibleWorker | None = None
         if debugcore.currentpid == -1:
             self.actionScan.setEnabled(False)
         guiutils.center_to_parent(self)
@@ -66,7 +66,7 @@ class PointerScanWindow(QMainWindow, Ui_MainWindow):
             self.load_thread.wait()
         self.model.clear()
         self.tableView.horizontalHeader().setSortIndicator(-1, Qt.SortOrder.AscendingOrder)
-        self.load_thread = guitypedefs.InterruptableWorker(self._read_pointer_map, file_path)
+        self.load_thread = guitypedefs.InterruptibleWorker(self._read_pointer_map, file_path)
         self.load_thread.signals.finished.connect(self._on_map_loaded)
         self.load_thread.signals.error.connect(self._on_map_error)
         self.load_thread.start()

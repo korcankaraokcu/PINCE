@@ -35,7 +35,7 @@ def parse_hotkey(hotkey: str | int | list | tuple) -> tuple | list:
         return hotkey
 
     steps = []
-    # since we dont have spaces in hotkey strings, we can ignore whitespace in the regex
+    # since we don't have spaces in hotkey strings, we can ignore whitespace in the regex
     for step in _re.split(r"(?<!keypad ),(?!$|,)", hotkey):
         keys = _re.split(r"(?<=\+)\+(?=(?:(?:\+\+\w))|[\w ])|(?:(?<!keypad )(?<= |[\w,/*\-÷])\+)|\+(?=\+$)", step)
         steps.append(tuple(key_to_scan_codes(key) for key in keys))

@@ -1006,13 +1006,13 @@ def str_to_aob(string: str, encoding: str = "ascii") -> str:
 
 def split_symbol(symbol_string: str) -> list[str]:
     """Splits symbol part of typedefs.tuple_function_info into smaller fractions
-    Fraction count depends on the the symbol_string. See Examples section for demonstration
+    Fraction count depends on the symbol_string. See Examples section for demonstration
 
     Args:
         symbol_string (str): symbol part of typedefs.tuple_function_info
 
     Returns:
-        list: A list containing parts of the splitted symbol
+        list: A list containing parts of the split symbol
 
     Examples:
         symbol_string-->"func(param)@plt"

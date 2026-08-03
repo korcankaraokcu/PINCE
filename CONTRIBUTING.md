@@ -198,7 +198,7 @@ These tasks are ordered by importance but feel free to pick any of them. Further
 - Implement thread info widget
 - Write at least one test for each function in libpince
 - Refactorize memory write/read functions
-  - ReferencedStringsWidget refreshes the cache everytime the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k.
+  - ReferencedStringsWidget refreshes the cache every time the comboBox_ValueType changes, this creates serious performance issues if total results are more than 800k.
   Only update the visible rows to prevent this(check ```disassemble_check_viewport``` for an example)
   - Implement same system for the TrackBreakpointWidget if necessary. Do performance tests
   - Put a warning for users about replacement bytes for non UTF-8 types
@@ -210,7 +210,7 @@ Implement a flexible input field for the execution count. For instance, 2^x only
 ([CE#358](https://github.com/cheat-engine/cheat-engine/issues/358))
 - Extend search_referenced_strings with relative search
 - Consider adding type guessing for the StackView
-- Implement a psuedo-terminal for the inferior like edb does(idk if necessary, we don't usually target CLI games, up to debate)
+- Implement a pseudo-terminal for the inferior like edb does(idk if necessary, we don't usually target CLI games, up to debate)
 - Try to optimize TrackBreakpoint and TrackWatchpoint return data structures further, adding an id field might simplify traversing of the tree, performance tests are required
 - Implement extra MemoryViewerWindow tabs(not really critical right now, up to debate)
 - ~~Consider removing the command file layer of IPC system for debugcore.send_command to speed up things~~

@@ -45,7 +45,7 @@ class SearchInstructionsWidget(QWidget, Ui_Form):
                 return
         self.loading_dialog = LoadingDialog(self)
         self.background_thread = self.loading_dialog.background_thread
-        self.background_thread.overrided_func = lambda: self.process_data(regex, start_address, end_address, case_sensitive, enable_regex)
+        self.background_thread.overridden_func = lambda: self.process_data(regex, start_address, end_address, case_sensitive, enable_regex)
         self.background_thread.output_ready.connect(self.apply_data)
         self.loading_dialog.exec()
 

@@ -41,7 +41,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         if self.scan_button:
             self.scan_button.clicked.connect(self.scan_button_clicked)
         self.cancel_button: QPushButton | None = self.buttonBox.button(QDialogButtonBox.StandardButton.Cancel)
-        self.memscan_thread: guitypedefs.InterruptableWorker | None = None
+        self.memscan_thread: guitypedefs.InterruptibleWorker | None = None
         self.memscan: Libmemscan | None = None
         self.progress_bar_timer: QTimer | None = None
         self.started_path_resolve = False
@@ -111,7 +111,7 @@ class PointerScanSearchDialog(QDialog, Ui_Dialog):
         self.pushButton_Path.setEnabled(False)
         if self.cancel_button:
             self.cancel_button.setText(tr.STOP)
-        self.memscan_thread = guitypedefs.InterruptableWorker(self.memscan.pointer_scan, addr_val, ptrmap_file_path, ptr_opts)
+        self.memscan_thread = guitypedefs.InterruptibleWorker(self.memscan.pointer_scan, addr_val, ptrmap_file_path, ptr_opts)
         self.memscan_thread.signals.finished.connect(self.memscan_callback)
         self.memscan_thread.signals.error.connect(self.memscan_error)
         self.memscan_thread.start()

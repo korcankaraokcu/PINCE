@@ -18,7 +18,7 @@ class PointerScanFilterDialog(QDialog, Ui_Dialog):
         self.filter_button: QPushButton = self.buttonBox.addButton(tr.FILTER, QDialogButtonBox.ButtonRole.ActionRole)
         self.filter_button.clicked.connect(self.filter_button_clicked)
         self.filter_button.setEnabled(False)
-        self.filter_thread: guitypedefs.InterruptableWorker | None = None
+        self.filter_thread: guitypedefs.InterruptibleWorker | None = None
         self.result_map_path = ""
 
     def pointer_map_file_prompt(self, file_path_field: QLineEdit, is_open: bool) -> None:
@@ -57,7 +57,7 @@ class PointerScanFilterDialog(QDialog, Ui_Dialog):
             return
         self.filter_button.setEnabled(False)
         self.filter_button.setText(tr.FILTERING)
-        self.filter_thread = guitypedefs.InterruptableWorker(
+        self.filter_thread = guitypedefs.InterruptibleWorker(
             memscan.compare_pointer_maps,
             self.lineEdit_PrevFile.text(),
             self.lineEdit_CurrentFile.text(),

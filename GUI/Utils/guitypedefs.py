@@ -61,7 +61,7 @@ class Worker(QRunnable):
         self.signals.finished.emit(result)
 
 
-class InterruptableWorker(QThread):
+class InterruptibleWorker(QThread):
     def __init__(self, fn: Callable, *args: Any, **kwargs: Any) -> None:
         super().__init__()
         self.fn = fn

@@ -80,7 +80,7 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_RefreshAdressTable">
+       <widget class="QPushButton" name="pushButton_RefreshAddressTable">
         <property name="toolTip">
          <string>Refresh the address table[R]</string>
         </property>

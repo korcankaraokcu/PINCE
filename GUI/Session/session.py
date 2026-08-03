@@ -158,7 +158,7 @@ def is_valid_session_data(content: dict[str, Any]) -> bool:
 
 class Session:
     def __init__(self) -> None:
-        # Anything labled with pct should be saved to the session file
+        # Anything labeled with pct should be saved to the session file
         self.pct_notes: str = ""
         self.pct_bookmarks: dict[int, dict] = {}
         self.pct_version: int = LATEST_VERSION

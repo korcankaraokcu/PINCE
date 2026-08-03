@@ -174,7 +174,7 @@ class SCAN_INDEX:
     AOB = 10  # Array of Bytes
 
 
-# GDB already provides breakpoint info in english, no need to make these translatable
+# GDB already provides breakpoint info in English, no need to make these translatable
 on_hit_to_text_dict = {
     BREAKPOINT_ON_HIT.BREAK: "Break",
     BREAKPOINT_ON_HIT.FIND_CODE: "Find Code",
