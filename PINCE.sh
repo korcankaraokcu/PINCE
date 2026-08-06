@@ -41,6 +41,11 @@ else
 		set --
 		while IFS= read -r line
 		do
+			case "$line" in
+				BASH_FUNC_*%%=*) continue ;;
+				*=*) ;;
+				*) continue ;;
+			esac
 			set -- "$@" "$line"
 		done <<EOFENV
 $(printenv)
