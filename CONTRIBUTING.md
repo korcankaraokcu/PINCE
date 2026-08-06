@@ -58,6 +58,8 @@ Failure to respect any of the rules laid above will result in an instant PR clos
 # Code Checking
 Make good use of `python -m compileall -q .` to ensure all of the Python files do not have syntax or parsing errors before you submit a commit or PR that contains Python files changes.
 
+Same goes for shell scripts: run `sh -n yourscript.sh` to catch syntax errors and `shellcheck -s sh yourscript.sh` to catch portability problems before you submit. Keep in mind that `shellcheck` only sees the file you hand it, so scripts that get generated inside heredocs (such as the gdb wrapper and `AppRun.sh` in [ci/package.sh](./ci/package.sh)) need to be extracted and checked separately.
+
 # Code Style
 ***Make sure that you add type hints to all of the functions that you add or modify in .py files.*** You can follow the rest of the codebase as an example of how they should look like.
 
@@ -95,6 +97,22 @@ If you feel unsure to which naming convention you should use, try to check out s
 The reason behind Qt class member naming convention is that when this project first started, supported python version didn't have type hints.
 So, to have an idea about the type of the variable we are working with, I've come up with that naming idea. It's an old habit if anything.
 It could maybe replaced with something else after a refactorization
+
+# Shell Scripts
+***All `.sh` files must be POSIX shell compatible.*** Every script in the repository uses `#!/bin/sh`, which is not guaranteed to be bash. It's [dash](https://wiki.ubuntu.com/DashAsBinSh) on Debian and Ubuntu and busybox `ash` on some minimal systems, so bash-only syntax will break PINCE for those users even when it runs fine on your machine.
+
+These do not work in a POSIX shell, so don't use them:
+- `mapfile`/`readarray`, arrays and `"${array[@]}"`
+- `read -d`, here-strings (`<<< word`), `${var^^}`/`${var,,}`, `var+=value`
+- `[[ ]]` tests, `==` inside `[ ]`, `function name {}`
+- Process substitution (`< <(...)`), and `source` (use `.` instead)
+
+Watch out for these in particular, because they fail *silently* rather than erroring out:
+- `&>` - dash parses it as `command &` followed by `> file`, so the command gets backgrounded and its output isn't redirected at all
+- `echo -e` - dash's `echo` has no `-e` flag and prints it as part of the output. It already expands escapes, so just drop the flag
+- `$'...'` - dash prints the string literally instead of expanding the escapes
+
+Utilities matter too, not just syntax. Not every system ships GNU coreutils, so prefer POSIX utilities and options. For example, use `env` instead of `printenv` and avoid non-POSIX flags such as `env -0`.
 
 # Documentation
 We use Google style documentation and type hints. A good example would be `get_breakpoints_in_range` function in [debugcore.py](./libpince/debugcore.py). Root folder of libpince has 100% documentation coverage so a pull request regarding libpince has to be documented. For other places, it's enough to document the parts you think that'd be confusing to read later on. You are not obliged to document everything in other places as we are also quite lax with it
