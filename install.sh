@@ -111,6 +111,20 @@ ask_pkg_mgr() {
 	return 0
 }
 
+detect_sudo() {
+	# prefer `doas` if available
+	if type doas &>/dev/null; then
+		SUDO="doas"
+		echo "Using doas for installation"
+	elif type sudo &>/dev/null; then
+		SUDO="sudo"
+	else
+		return 1
+	fi
+
+	return 0
+}
+
 # About xcb packages -> https://github.com/cdgriffith/FastFlix/wiki/Common-questions-and-problems
 PKG_NAMES_ALL="python3-pip gdb"
 PKG_NAMES_DEBIAN="$PKG_NAMES_ALL python3-dev python3-venv qt6-l10n-tools libxcb-randr0 libxcb-shape0 libxcb-xkb1 libxcb-cursor0"
@@ -175,6 +189,12 @@ main() {
 		exit 1
 	fi
 
+	if ! detect_sudo; then
+		echo
+		echo "No supported privelege escalation tool like sudo or doas found!"
+		exit 1
+	fi
+
 	if [ -r /etc/os-release ]; then
 		. /etc/os-release
 		OS_NAME="$ID $ID_LIKE"
@@ -190,7 +210,7 @@ main() {
 		set_install_vars "$OS_NAME"
 	fi
 
-	sudo ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES} || exit_on_error
+	$SUDO ${PKG_MGR} ${INSTALL_COMMAND} ${PKG_NAMES} || exit_on_error
 
 	# Prepare Python virtual environment
 	if [ ! -d ".venv/bin" ]; then
