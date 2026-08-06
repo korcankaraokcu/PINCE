@@ -113,10 +113,10 @@ ask_pkg_mgr() {
 
 detect_sudo() {
 	# prefer `doas` if available
-	if type doas &>/dev/null; then
+	if command -v doas > /dev/null 2>&1; then
 		SUDO="doas"
 		echo "Using doas for installation"
-	elif type sudo &>/dev/null; then
+	elif command -v sudo > /dev/null 2>&1; then
 		SUDO="sudo"
 	else
 		return 1
