@@ -38,18 +38,10 @@ else
 		# Preserve env vars to keep settings like theme preferences.
 		# Pkexec does not support passing all of env via a flag like "-E",
 		# so we need to rebuild the env and then pass it through.
-		set --
-		while IFS= read -r line
-		do
-			case "$line" in
-				BASH_FUNC_*%%=*) continue ;;
-				*=*) ;;
-				*) continue ;;
-			esac
-			set -- "$@" "$line"
-		done <<EOFENV
-$(printenv)
-EOFENV
+
+		# copy env to $envv. < <() is like piping but keeps mapfile in the main env
+		mapfile -d '' envv < <(printenv --null)
+		set -- "${envv[@]}"
 
 		pince_stdout=/dev/null
 		pince_stderr=/dev/null
