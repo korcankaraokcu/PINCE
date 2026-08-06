@@ -41,6 +41,13 @@ class SettingsDialog(QDialog, Ui_Dialog):
             self.comboBox_Logo.addItem(QIcon(os.path.join(logo_directory, logo)), logo)
         for hotkey in states.hotkeys.get_hotkeys():
             self.listWidget_Functions.addItem(hotkey.desc)
+        save_on_exit_combobox_items = (
+            (tr.ALWAYS_ASK, None),
+            (tr.ALWAYS_SAVE, True),
+            (tr.ALWAYS_DISCARD, False),
+        )
+        for translation, data in save_on_exit_combobox_items:
+            self.comboBox_SaveSessionOnExit.addItem(translation, data)
         self.config_gui()
 
         self.listWidget_Options.currentRowChanged.connect(self.change_display)
@@ -101,6 +108,11 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.settings.setValue("Java/ignore_segfault", self.checkBox_JavaSegfault.isChecked())
         if self.handle_signals_data:
             self.settings.setValue("Debug/handle_signals", self.handle_signals_data)
+        save_on_exit: bool | None = self.comboBox_SaveSessionOnExit.currentData()
+        if save_on_exit is None:
+            self.settings.remove(settings.SAVE_SESSION_ON_EXIT)
+        else:
+            self.settings.setValue(settings.SAVE_SESSION_ON_EXIT, save_on_exit)
         settings.apply_settings()
         super().accept()
 
@@ -149,6 +161,10 @@ class SettingsDialog(QDialog, Ui_Dialog):
         self.checkBox_GDBLogging.setChecked(self.settings.value("Debug/gdb_logging", type=bool))
         self.comboBox_InterruptSignal.setCurrentText(self.settings.value("Debug/interrupt_signal", type=str))
         self.checkBox_JavaSegfault.setChecked(self.settings.value("Java/ignore_segfault", type=bool))
+        save_on_exit: bool | None = (
+            self.settings.value(settings.SAVE_SESSION_ON_EXIT, type=bool) if self.settings.contains(settings.SAVE_SESSION_ON_EXIT) else None
+        )
+        self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(save_on_exit))
 
     def change_display(self, index: int) -> None:
         self.stackedWidget.setCurrentIndex(index)
