@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>libpince.regexes &#8212; PINCE  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for libpince.regexes</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Copyright (C) 2016-2017 Korcan Karaokçu &lt;korcankaraokcu@gmail.com&gt;</span>
+
+<span class="sd">This program is free software: you can redistribute it and/or modify</span>
+<span class="sd">it under the terms of the GNU General Public License as published by</span>
+<span class="sd">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="sd">(at your option) any later version.</span>
+
+<span class="sd">This program is distributed in the hope that it will be useful,</span>
+<span class="sd">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="sd">GNU General Public License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU General Public License</span>
+<span class="sd">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">re</span><span class="w"> </span><span class="kn">import</span> <span class="nb">compile</span><span class="p">,</span> <span class="n">VERBOSE</span><span class="p">,</span> <span class="n">MULTILINE</span><span class="p">,</span> <span class="n">Pattern</span>
+
+<span class="c1"># The comments near regular expressions shows the expected gdb output, hope it helps to the future developers</span>
+
+<span class="c1"># --------------------------------------------debugcore----------------------------------------------------------------</span>
+
+<span class="n">gdb_state_observe</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^\*(stopped.+)|^\*(running)&quot;</span><span class="p">,</span> <span class="n">MULTILINE</span><span class="p">)</span>
+<span class="n">gdb_error</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\^error&quot;</span><span class="p">)</span>
+<span class="n">hex_plain</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[0-9a-fA-F]+&quot;</span><span class="p">)</span>
+<span class="n">hex_number</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;0x&quot;</span> <span class="o">+</span> <span class="n">hex_plain</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
+<span class="n">hex_number_grouped</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(&quot;</span> <span class="o">+</span> <span class="n">hex_number</span><span class="o">.</span><span class="n">pattern</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;)&quot;</span><span class="p">)</span>
+<span class="n">symbol</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;&lt;(.+?)&gt;&quot;</span><span class="p">)</span>
+<span class="n">address_with_symbol</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(&quot;</span> <span class="o">+</span> <span class="n">hex_number_grouped</span><span class="o">.</span><span class="n">pattern</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\s*(&lt;.+&gt;)?)&quot;</span><span class="p">)</span>  <span class="c1"># 0x7f3067f1174d &lt;poll+45&gt;\n</span>
+<span class="n">thread_info</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\*\s+\d+\s+(.*)</span><span class="se">\\</span><span class="s2">n&quot;</span><span class="p">)</span>
+<span class="n">inferior_pid</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;process\s+(\d+)&quot;</span><span class="p">)</span>
+<span class="n">hw_breakpoint_count</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(hw|read|acc)&quot;</span><span class="p">)</span>
+<span class="n">breakpoint_size</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;char\[(\d+)\]&quot;</span><span class="p">)</span>
+<span class="n">breakpoint_created</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;breakpoint-created&quot;</span><span class="p">)</span>
+<span class="n">breakpoint_number</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?:number|bkptno)=</span><span class="se">\&quot;</span><span class="s2">(\d+)</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">convenience_variable</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&quot;(\$\d+)\s+=\s+(.*)&quot;&#39;</span><span class="p">)</span>  <span class="c1"># &quot;$26 = 3&quot;</span>
+<span class="n">entry_point</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Entry\s+point:\s+&quot;</span> <span class="o">+</span> <span class="n">hex_number_grouped</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
+
+
+<span class="c1"># The command will always start with the word &quot;source&quot;, check debugcore.send_command function for the cause</span>
+<div class="viewcode-block" id="gdb_command_source">
+<a class="viewcode-back" href="../../libpince.html#libpince.regexes.gdb_command_source">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gdb_command_source</span><span class="p">(</span><span class="n">command_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pattern</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;&amp;</span><span class="se">\&quot;</span><span class="s2">.*source\s&quot;</span> <span class="o">+</span> <span class="n">command_file</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">n</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># &amp;&quot;command\n&quot;</span></div>
+
+
+
+<span class="c1"># This will only match hex patterns without 0x and ignore the ones below:</span>
+<span class="c1"># Hex patterns with 0x such as 0x5123</span>
+<span class="c1"># Map symbols of PINCE, such as kmines[2]</span>
+<span class="c1"># Dotted map symbols without explicit indices, such as d3d11.dll</span>
+<span class="n">expression_with_hex</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\b0x[0-9a-fA-F]+|[\w.]*\[\d+\]|\b(?&lt;!\.)([0-9a-fA-F]+)\b(?!\.)&quot;</span><span class="p">)</span>
+<span class="c1"># 0x00007fd81d4c7400 &lt;__printf+0&gt;:\t48 81 ec d8 00 00 00\tsub    rsp,0xd8\n</span>
+<span class="n">disassemble_output</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ([0-9a-fA-F]+.*)\\t                     # Address with symbol</span>
+<span class="sd">    (.*?[0-9a-fA-F]{2})\s*\\t               # Bytes, ignore padding</span>
+<span class="sd">    (.+)\\n                                 # Instruction</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">VERBOSE</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">info_functions_non_debugging</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="n">hex_number_grouped</span><span class="o">.</span><span class="n">pattern</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\s+(.*)&quot;</span><span class="p">)</span>
+<span class="n">max_completions_reached</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\*\*\*\s+List\s+may\s+be\s+truncated,\s+max-completions\s+reached\.\s+\*\*\*&quot;</span><span class="p">)</span>
+
+<span class="c1"># --------------------------------------------utils------------------------------------------------------------------</span>
+
+<span class="n">instruction_follow</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(j|call|loop).*\s+&quot;</span> <span class="o">+</span> <span class="n">hex_number_grouped</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
+<span class="n">docstring_variable</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+)\s*=&quot;</span><span class="p">)</span>
+<span class="n">docstring_function_or_variable</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;def\s+(\w+)|&quot;</span> <span class="o">+</span> <span class="n">docstring_variable</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
+<span class="n">whitespaces</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">)</span>
+<span class="n">ps</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    \s+(\d+)\s+                             # PID</span>
+<span class="sd">    (\S+)\s+                                # Username</span>
+<span class="sd">    (.*)$                                   # Process name</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">VERBOSE</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">maps</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ([0-9a-f]+)-([0-9a-f]+)\s+              # Address (start-end)</span>
+<span class="sd">    (\S+)\s+                                # Permissions</span>
+<span class="sd">    ([0-9a-f]+)\s+                          # Map offset</span>
+<span class="sd">    (\S+)\s+                                # Device node</span>
+<span class="sd">    (\d+)\s*                                # Inode</span>
+<span class="sd">    (.*)$                                   # Pathname</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">VERBOSE</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --------------------------------------------guiutils------------------------------------------------------------------</span>
+
+<span class="n">reference_mark</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\{\d*\}&quot;</span><span class="p">)</span>
+<span class="n">float_number</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;-?(?:\d+[.,]?\d*|[.,]\d+)(?:[eE][-+]?\d+)?&quot;</span><span class="p">)</span>
+<span class="n">bytearray_input</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^[A-Fa-f0-9?]</span><span class="si">{2}</span><span class="s2">(\s+[A-Fa-f0-9?]</span><span class="si">{2}</span><span class="s2">)*\s*$&quot;</span><span class="p">)</span>
+<span class="n">decimal_number</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;-?\d+&quot;</span><span class="p">)</span>
+<span class="n">hex_number_gui</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^-?(?:0x)?[0-9a-fA-F]+$&quot;</span><span class="p">)</span>  <span class="c1"># contains optional 0x prefix</span>
+
+<span class="c1"># --------------------------------------------gdbextensions------------------------------------------------------</span>
+
+<span class="n">max_frame_count</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;#(\d+)\s+.*&quot;</span><span class="p">)</span>
+<span class="n">frame_address</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;frame\s+at\s+&quot;</span> <span class="o">+</span> <span class="n">hex_number_grouped</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>  <span class="c1"># frame at 0x7ffe1e989950</span>
+<span class="n">return_address</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;saved.*=\s+&quot;</span> <span class="o">+</span> <span class="n">hex_number_grouped</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>  <span class="c1"># saved rip = 0x7f633a853fe4</span>
+<span class="n">trace_instructions_ret</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;:\s+ret&quot;</span><span class="p">)</span>  <span class="c1"># 0x7f71a4dc5ff8 &lt;poll+72&gt;:	ret</span>
+<span class="n">trace_instructions_call</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;:\s+call&quot;</span><span class="p">)</span>  <span class="c1"># 0x7f71a4dc5fe4 &lt;poll+52&gt;:	call   0x7f71a4de1100</span>
+<span class="n">dissect_code_valid_address</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\s+|\[|,)&quot;</span> <span class="o">+</span> <span class="n">hex_number</span><span class="o">.</span><span class="n">pattern</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;(\s+|\]|,|$)&quot;</span><span class="p">)</span>
+<span class="n">alphanumerics</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">)</span>
+<span class="n">file_with_extension</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;.+?\.\w+&quot;</span><span class="p">)</span>
+<span class="n">module_reference</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(?&lt;![\w.])(</span><span class="si">{}</span><span class="s2">)(?:\[(\d+)\])?(?![\w.])&quot;</span>
+<span class="n">hex_arithmetic</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[0-9a-fA-FxX+\-*/() ]+&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PINCE</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">libpince</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#gui-utils">GUI.Utils</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, PINCE Contributors.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
