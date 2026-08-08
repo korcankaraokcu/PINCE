@@ -171,12 +171,12 @@ class Session:
         self.last_file_name: str = ""  # process name or file name
         self.file_backed: bool = False  # True when the session was loaded from or saved to a file
 
-    def save_session(self) -> bool:
+    def save_session(self, *, ask_for_path: bool = True) -> bool:
         """
         Save the current session to a file.
 
         Args:
-            None
+            ask_for_path (bool): Always ask for a path, even if the session already has a file of its own
         Returns:
             bool: True if the session was saved successfully, False otherwise.
         """
@@ -192,14 +192,13 @@ class Session:
             "process_name": self.pct_process_name,
             "structures": self.pct_structures,
         }
-        if self.file_backed:
+        if not ask_for_path and self.file_backed:
             file_path = os.path.join(self.file_path, self.last_file_name)
-            if not utils.save_file(session, file_path):
-                QMessageBox.information(None, tr.ERROR, tr.FILE_SAVE_ERROR)
-                return False
-            guiutils.own_path_as_user(file_path)
-            self.data_changed = SessionDataChanged.NONE
-            return True
+            if utils.save_file(session, file_path):
+                guiutils.own_path_as_user(file_path)
+                self.data_changed = SessionDataChanged.NONE
+                return True
+            QMessageBox.information(None, tr.ERROR, tr.FILE_SAVE_ERROR)
 
         with guiutils.save_dialog_as_user(None, tr.SAVE_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT, "pct") as file_path:
             if not file_path:
@@ -288,8 +287,8 @@ class Session:
     def pre_exit(self, close_event: QCloseEvent) -> None:
         """
         Event handler for the close event of the application.
-        If there are unsaved changes, prompt the user to save them.
-        Accepts or ignores the close event based on the user's choice.
+        If there are unsaved changes, prompt the user to save them unless their decision was remembered.
+        Accepts or ignores the close event based on the outcome.
 
         Args:
             close_event (QCloseEvent): The close event to be handled.
@@ -302,12 +301,14 @@ class Session:
             return
 
         settings_instance = QSettings()
-        if settings_instance.contains(settings.SAVE_SESSION_ON_EXIT):
+        remembered = settings_instance.contains(settings.SAVE_SESSION_ON_EXIT)
+        if remembered:
             save = settings_instance.value(settings.SAVE_SESSION_ON_EXIT, type=bool)
         else:
             unsaved_changes = QMessageBox()
             remember_choice = QCheckBox(tr.REMEMBER_MY_DECISION)
             unsaved_changes.setCheckBox(remember_choice)
+            unsaved_changes.setIcon(QMessageBox.Icon.Question)
             unsaved_changes.setWindowTitle(tr.SAVE_SESSION_QUESTION_TITLE)
             unsaved_changes.setText(tr.SAVE_SESSION_QUESTION_PROMPT)
             unsaved_changes.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel)
@@ -319,8 +320,7 @@ class Session:
             if remember_choice.isChecked():
                 settings_instance.setValue(settings.SAVE_SESSION_ON_EXIT, save)
                 settings_instance.sync()
-
-        if save and not self.save_session():
+        if save and not self.save_session(ask_for_path=False) and not remembered:
             close_event.ignore()
         else:
             close_event.accept()

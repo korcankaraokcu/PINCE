@@ -368,7 +368,7 @@ Patterns at former positions have higher priority if regex is off</string>
                <item>
                 <widget class="QLabel" name="label_5">
                  <property name="text">
-                  <string>Save session when closing</string>
+                  <string>Save session when exiting PINCE</string>
                  </property>
                 </widget>
                </item>

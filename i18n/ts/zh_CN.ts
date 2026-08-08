@@ -512,7 +512,7 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
-        <source>Save session when closing</source>
+        <source>Save session when exiting PINCE</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -2217,7 +2217,7 @@ To change the current GDB path, check Settings-&gt;Debug</source>
     </message>
     <message>
         <location filename="../../tr/tr.py" line="0" />
-        <source>Remember my decision</source>
+        <source>Remember my decision for all sessions</source>
         <translation type="unfinished" />
     </message>
     <message>

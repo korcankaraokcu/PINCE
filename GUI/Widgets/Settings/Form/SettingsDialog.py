@@ -379,7 +379,7 @@ class Ui_Dialog(object):
         self.label_13.setText(_translate("Dialog", "Language"))
         self.label_11.setText(_translate("Dialog", "Logo"))
         self.label_14.setText(_translate("Dialog", "Theme"))
-        self.label_5.setText(_translate("Dialog", "Save session when closing"))
+        self.label_5.setText(_translate("Dialog", "Save session when exiting PINCE"))
         self.label_3.setText(_translate("Dialog", "Functions"))
         self.label_4.setText(_translate("Dialog", "Hotkey"))
         self.lineEdit_Hotkey.setPlaceholderText(_translate("Dialog", "Press shortcut"))
