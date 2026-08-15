@@ -477,9 +477,18 @@ class MainForm(QMainWindow, MainWindow):
 
     @utils.ignore_exceptions
     def toggle_attach_hotkey_pressed(self) -> None:
-        if debugcore.currentpid != -1 and debugcore.is_attached():
-            self.cleanup_speedhack()
+        self.prepare_detach()
         self.attach_toggled.emit(debugcore.toggle_attach())
+
+    def prepare_detach(self) -> None:
+        if debugcore.currentpid == -1 or not debugcore.is_attached():
+            return
+        self.cleanup_speedhack()
+
+    def sync_attach_state(self) -> None:
+        if debugcore.currentpid == -1:
+            return
+        self.on_attach_toggled(typedefs.TOGGLE_ATTACH.ATTACHED if debugcore.is_attached() else typedefs.TOGGLE_ATTACH.DETACHED)
 
     def on_attach_toggled(self, result: int | None) -> None:
         if not result:
@@ -1325,6 +1334,8 @@ class MainForm(QMainWindow, MainWindow):
     def pushButton_Console_clicked(self) -> None:
         console_widget = ConsoleWidget(self)
         console_widget.gdb_command_sent.connect(lambda: self.invalidate_address_expression_cache(refresh=True))
+        console_widget.phase_out_request.connect(self.prepare_detach)
+        console_widget.attach_state_changed.connect(self.sync_attach_state)
         console_widget.showMaximized()
 
     def checkBox_Hex_stateChanged(self, state: int) -> None:

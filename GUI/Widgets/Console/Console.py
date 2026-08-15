@@ -10,6 +10,8 @@ from tr.tr import TranslationConstants as tr
 
 class ConsoleWidget(QWidget, Ui_Form):
     gdb_command_sent = pyqtSignal()
+    phase_out_request = pyqtSignal()
+    attach_state_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
@@ -56,22 +58,24 @@ class ConsoleWidget(QWidget, Ui_Form):
             self.reset_console_text()
             return
         self.lineEdit.clear()
-        stripped = console_input.strip().lower()
+        command = console_input.strip()
+        command_lower = command.lower()
         gdb_command_sent = False
-        if stripped in self.quit_commands:
+        if command_lower in self.quit_commands:
             console_output = tr.QUIT_SESSION_CRASH
-        elif stripped in self.continue_commands:
+        elif command_lower in self.continue_commands:
             console_output = tr.CONT_SESSION_CRASH
-        elif self.radioButton_CLI.isChecked():
-            console_output = debugcore.send_command(console_input, cli_output=True)
-            gdb_command_sent = bool(console_input.strip())
         else:
-            console_output = debugcore.send_command(console_input)
-            gdb_command_sent = bool(console_input.strip())
+            if command == "phase-out":
+                self.phase_out_request.emit()
+            console_output = debugcore.send_command(console_input, cli_output=self.radioButton_CLI.isChecked())
+            gdb_command_sent = bool(command)
         self.textBrowser.append("-->" + console_input)
         if console_output:
             self.textBrowser.append(console_output)
         self.scroll_to_bottom()
+        if command in ("phase-out", "phase-in"):
+            self.attach_state_changed.emit()
         if gdb_command_sent:
             self.gdb_command_sent.emit()
 
