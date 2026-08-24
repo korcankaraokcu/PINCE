@@ -89,6 +89,9 @@ class DisassembleArrowOverlay(QObject):
         # Geometry of the arrows drawn in the last paint, used for hover hit-testing without recomputing.
         self._geometry: list[dict] = []
         self._hovered: tuple[int, int, str] | None = None  # (source, target, kind) of the hovered arrow
+        # Lane (x offset) chosen for each arrow last paint, keyed by (source, target, kind).
+        # An arrow already on screen keeps this column when new arrows appear rather than being fanned wider.
+        self._lane_memory: dict[tuple[int, int, str], int] = {}
 
         # Wrap the table's paintEvent to draw on top of the freshly painted cells.
         # Follow its mouse and resize events through an event filter on the viewport.
@@ -159,33 +162,58 @@ class DisassembleArrowOverlay(QObject):
         return hash((source, target))
 
     def _assign_lanes(self, resolved: list[tuple]) -> list[int]:
-        """Greedily packs arrows into vertical lanes so overlapping ones don't share a column
+        """Packs arrows into vertical lanes, keeping every arrow already on screen in the lane it first got
 
-        Shorter arrows are placed on the inner lanes (closest to the code) so nested branches read
-        naturally, the way IDA/Cheat Engine lay them out.
+        A surviving arrow reclaims its previous lane and only brand-new arrows are placed fresh, shortest
+        first, into the lanes the survivors leave open. Shortest first puts nested branches on the inner
+        lanes (closest to the code) the way IDA/Cheat Engine lay them out.
 
         Args:
-            resolved (list): Arrow geometry tuples whose first two items are the endpoint y values
+            resolved (list): Arrow geometry tuples of (y0, y1, src_dir, tgt_dir, kind, source, target)
 
         Returns:
             list: The lane index chosen for each arrow, in the same order as resolved
         """
         intervals = [(min(item[0], item[1]), max(item[0], item[1])) for item in resolved]
-        order = sorted(range(len(resolved)), key=lambda i: intervals[i][1] - intervals[i][0])
+        keys = [(item[5], item[6], item[4]) for item in resolved]
         lanes: list[list[tuple[int, int]]] = []  # each lane holds the y intervals already occupying it
         result = [0] * len(resolved)
-        for i in order:
-            top_y, bottom_y = intervals[i]
-            chosen = None
-            for lane_index, occupied in enumerate(lanes):
-                if all(bottom_y < lo or top_y > hi for lo, hi in occupied):
-                    chosen = lane_index
-                    break
-            if chosen is None:
-                chosen = len(lanes)
+
+        def lane_is_free(lane_index: int, top: int, bottom: int) -> bool:
+            return lane_index >= len(lanes) or all(bottom < lo or top > hi for lo, hi in lanes[lane_index])
+
+        def occupy(index: int, lane_index: int) -> None:
+            while len(lanes) <= lane_index:
                 lanes.append([])
-            lanes[chosen].append((top_y, bottom_y))
-            result[i] = chosen
+            lanes[lane_index].append(intervals[index])
+            result[index] = lane_index
+
+        def lowest_free(top: int, bottom: int) -> int:
+            lane_index = 0
+            while not lane_is_free(lane_index, top, bottom):
+                lane_index += 1
+            return lane_index
+
+        # Reclaim remembered lanes first, innermost outwards, so a surviving arrow holds its column.
+        remembered = sorted((i for i in range(len(resolved)) if keys[i] in self._lane_memory), key=lambda i: self._lane_memory[keys[i]])
+        for i in remembered:
+            top, bottom = intervals[i]
+            desired = self._lane_memory[keys[i]]
+            occupy(i, desired if lane_is_free(desired, top, bottom) else lowest_free(top, bottom))
+
+        # Place the arrows that just appeared, shortest first, into whatever lanes the survivors left open.
+        fresh = sorted(
+            (i for i in range(len(resolved)) if keys[i] not in self._lane_memory),
+            key=lambda i: intervals[i][1] - intervals[i][0],
+        )
+        for i in fresh:
+            top, bottom = intervals[i]
+            occupy(i, lowest_free(top, bottom))
+
+        # Keep only the arrows on screen now so the map can't grow, while a returning arrow still finds its lane.
+        # An empty frame (every arrow off the same edge) is left alone so a brief full scroll-off keeps the columns.
+        if resolved:
+            self._lane_memory = {keys[i]: result[i] for i in range(len(resolved))}
         return result
 
     def _arrow_points(self, y0: int, y1: int, src_dir: int, tgt_dir: int, lane_x: int, anchor_x: int) -> list[QPointF]:
