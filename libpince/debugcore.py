@@ -24,6 +24,8 @@ from . import utils, typedefs, regexes
 from .utils import safe_str_to_int, safe_int_cast, logger
 from typing import Any, Callable
 
+utils.clear_log()
+utils.init_logging()
 self_pid = os.getpid()
 libc = ctypes.CDLL("libc.so.6")
 
@@ -806,7 +808,7 @@ def detach() -> None:
         child.close()
     if old_pid != -1:
         utils.delete_ipc_path(old_pid)
-    logger.info(f"Detached from the process with PID: {str(old_pid)}")
+        logger.info(f"Detached from the process with PID: {str(old_pid)}")
 
 
 def toggle_attach() -> int | None:

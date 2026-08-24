@@ -28,6 +28,8 @@ from libpince.gdb_python_scripts import gdbutils
 from libpince import utils, typedefs, regexes
 from libpince.utils import logger
 
+utils.init_logging()
+
 importlib.reload(gdbutils)
 pid = gdbutils.pid
 recv_file = utils.get_from_pince_file(pid)

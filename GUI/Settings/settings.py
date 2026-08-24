@@ -180,7 +180,7 @@ def apply_after_init() -> None:
         debugcore.set_interrupt_signal(interrupt_signal)  # Needs to be called after handle_signals
 
     # gdb init/attach has just created root-owned files so we'll chown them as the real user.
-    guiutils.own_path_as_user("/var/log/pince.log")  # mirrors utils.__init_logging
+    guiutils.own_path_as_user("/var/log/pince.log")  # mirrors utils.init_logging
     guiutils.own_path_as_user(utils.get_user_path(typedefs.USER_PATHS.ROOT), recursive=True)
     guiutils.own_path_as_user(typedefs.PATHS.TMP, recursive=True)
     guiutils.own_path_as_user(typedefs.PATHS.IPC, recursive=True)

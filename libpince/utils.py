@@ -38,14 +38,14 @@ ks_64 = Ks(KS_ARCH_X86, KS_MODE_64)
 logger = logging.getLogger("PINCE")
 
 
-def __init_logging() -> None:
+def init_logging() -> None:
     global logger
     if len(logger.handlers) != 0:
         return
     logger.setLevel(logging.DEBUG)
     log_format = logging.Formatter("[%(levelname)s][%(funcName)s] %(message)s")
     # File logging
-    file_handler = logging.FileHandler("/var/log/pince.log", mode="w")  # Maybe change this to be per-process
+    file_handler = logging.FileHandler("/var/log/pince.log", mode="a")  # Maybe change this to be per-process
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(log_format)
     # Terminal logging
@@ -57,7 +57,8 @@ def __init_logging() -> None:
     logger.addHandler(terminal_handler)
 
 
-__init_logging()
+def clear_log() -> None:
+    open("/var/log/pince.log", "w").close()
 
 
 def get_process_list() -> list[tuple[str, str, str]]:
