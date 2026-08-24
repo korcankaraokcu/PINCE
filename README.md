@@ -15,10 +15,10 @@ Read [Features](#features) part of the project to see what is done and [Roadmap]
 
 *Disclaimer: **YOU** are responsible for your actions. PINCE does **NOT** take any responsibility for the damage caused by the users*
 
-![pince1](https://github.com/user-attachments/assets/7344c33d-3ea7-408a-8a5b-793f0b4c78ec)
-![pince2](https://github.com/user-attachments/assets/271cbbe7-b588-48e0-b939-f59e82f36812)
-![pince3](https://github.com/user-attachments/assets/479b4f56-7b62-4100-a3d9-3f9cd11ff5b8)
-![pince4](https://github.com/user-attachments/assets/08d8a6fe-6960-481b-9b55-aa550f860dc7)
+![pince1](https://github.com/user-attachments/assets/7894b8da-160b-437f-9d02-a2ba6ebbcc02)
+![pince2](https://github.com/user-attachments/assets/5184628d-084e-4e92-bae9-a2ff34bbeaef)
+![pince3](https://github.com/user-attachments/assets/1fb6777b-2a07-40de-9bdd-89db6c7da822)
+![pince4](https://github.com/user-attachments/assets/68b2ef52-9d64-4687-9c28-0573c1a3aa15)
 
 # Features  
 - **Memory and pointer scanning:** PINCE uses [libmemscan](https://github.com/brkzlr/libmemscan) to scan the memory efficiently
