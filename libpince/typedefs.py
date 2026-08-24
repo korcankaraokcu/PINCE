@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import collections.abc, logging, queue, struct, sys
 from typing import Any, Callable, Literal
+from libpince import regexes
 
 _logger = logging.getLogger("PINCE")
 
@@ -418,7 +419,12 @@ class IntegerValueType(ValueType):
             try:
                 value = int(float(text))
             except (ValueError, TypeError, OverflowError):
-                _logger.exception(f"{text} can't be parsed as integer or hexadecimal")
+                try:
+                    if regexes.hex_arithmetic.fullmatch(text) and "**" not in text:
+                        return int(eval(text)) % (1 << self.bits)
+                except Exception:
+                    pass
+                _logger.error(f"{text} can't be parsed as integer or hexadecimal")
                 return None
         return value % (1 << self.bits)
 
@@ -482,6 +488,11 @@ class BitFieldValueType(ValueType):
         try:
             value = int(text, 0)
         except ValueError:
+            try:
+                if any(op in text for op in "+-*/") and regexes.hex_arithmetic.fullmatch(text) and "**" not in text:
+                    return self._validated(int(eval(text)))
+            except Exception:
+                pass
             _logger.error(f"{text!r} can't be parsed as BitField value")
             return None
         return self._validated(value)
@@ -543,7 +554,12 @@ class FloatValueType(ValueType):
             try:
                 return float(int(text, 0))
             except (ValueError, TypeError, OverflowError):
-                _logger.exception(f"{text} can't be parsed as floating point variable")
+                try:
+                    if regexes.hex_arithmetic.fullmatch(text) and "**" not in text:
+                        return float(eval(text))
+                except Exception:
+                    pass
+                _logger.error(f"{text} can't be parsed as floating point variable")
                 return None
 
     def decode(self, data: bytes) -> float:

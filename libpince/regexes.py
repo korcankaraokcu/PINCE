@@ -106,4 +106,4 @@ dissect_code_valid_address = compile(r"(\s+|\[|,)" + hex_number.pattern + r"(\s+
 alphanumerics = compile(r"\w+")
 file_with_extension = compile(r".+?\.\w+")
 module_reference = r"(?<![\w.])({})(?:\[(\d+)\])?(?![\w.])"
-hex_arithmetic = compile(r"[0-9a-fA-FxX+\-*/() ]+")
+hex_arithmetic = compile(r"[0-9a-fA-FxX+\-*/(). ]+")
