@@ -189,6 +189,14 @@ ADDR_COL = 2  # Address
 TYPE_COL = 3  # Type
 VALUE_COL = 4  # Value
 
+# Roles for script-defined child rows, stored on FROZEN_COL (where the row state lives).
+# ADDR_COL already uses UserRole+1 for the resolved address, so keep these on FROZEN_COL.
+# SCRIPT_CHILD_ROLE marks a row as created by a script entry (ephemeral, not serialized).
+# SCRIPT_CHILD_ADDR_GETTER_ROLE holds an optional 0-arg callable returning the child's
+# current address expression, polled by update_address_table.
+SCRIPT_CHILD_ROLE = Qt.ItemDataRole.UserRole + 1
+SCRIPT_CHILD_ADDR_GETTER_ROLE = Qt.ItemDataRole.UserRole + 2
+
 # represents the index of columns in search results table
 SEARCH_TABLE_ADDRESS_COL = 0
 SEARCH_TABLE_VALUE_COL = 1
@@ -1088,6 +1096,20 @@ class MainForm(QMainWindow, MainWindow):
                 it += 1
                 if self.get_script_entry(row) is not None:  # script entries have no address/value to refresh
                     continue
+                # A script-defined child may carry a runtime address getter. Poll it (cheaply)
+                # and update the row's address expression when it changes, so an address that
+                # only becomes known later (e.g. after a breakpoint hit) is picked up here.
+                address_getter = row.data(SCRIPT_CHILD_ADDR_GETTER_ROLE, Qt.ItemDataRole.UserRole)
+                if address_getter is not None:
+                    try:
+                        new_expression = address_getter()
+                    except Exception:
+                        new_expression = None
+                    if new_expression:
+                        new_expression = str(new_expression)
+                        if new_expression != row.data(ADDR_COL, Qt.ItemDataRole.UserRole):
+                            row.setData(ADDR_COL, Qt.ItemDataRole.UserRole, new_expression)
+                            states.exp_cache.pop(new_expression, None)  # force a fresh resolution
                 address_data = row.data(ADDR_COL, Qt.ItemDataRole.UserRole)
                 if isinstance(address_data, typedefs.PointerChainRequest):
                     expression = address_data.get_base_address_as_str()
@@ -1937,6 +1959,90 @@ class MainForm(QMainWindow, MainWindow):
         row.setText(DESC_COL, description or tr.SCRIPT)
         row.setText(TYPE_COL, tr.SCRIPT)
 
+    # Maximum nesting depth for script-defined children. Well below the session
+    # validation limit (900); a small value is enough and guards against runaway recursion.
+    SCRIPT_CHILD_MAX_DEPTH = 4
+
+    def _script_child_value_type(self, definition: dict) -> typedefs.ValueType:
+        # Explicit value_type wins; otherwise build an integer type from size (default 4 bytes).
+        vt = definition.get("value_type")
+        if isinstance(vt, typedefs.ValueType):
+            return vt
+        try:
+            size = int(definition.get("size", 4))
+        except (TypeError, ValueError):
+            size = 4
+        if size not in (1, 2, 4, 8):
+            size = 4
+        return typedefs.IntegerValueType(size * 8)
+
+    def _build_script_children(self, row: QTreeWidgetItem, entry: typedefs.ScriptEntry, depth: int = 0) -> None:
+        # Reads the optional `children` list a script filled during [ENABLE] and builds
+        # the corresponding rows under `row`. Tolerant by design: anything missing or
+        # malformed is skipped so a plain script entry keeps behaving like today.
+        self._clear_script_children(row)
+        if depth >= self.SCRIPT_CHILD_MAX_DEPTH:
+            return
+        namespace = entry.namespace or {}
+        definitions = namespace.get("children")
+        if not isinstance(definitions, list):
+            return
+        for definition in definitions:
+            if not isinstance(definition, dict):
+                continue
+            name = definition.get("name")
+            if not name or not isinstance(name, str):
+                continue
+            child = QTreeWidgetItem()
+            child.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
+            child.setData(SCRIPT_CHILD_ROLE, Qt.ItemDataRole.UserRole, True)
+            sub_script = definition.get("script")
+            if isinstance(sub_script, str):
+                # A child that is itself a script entry (variant b: its [ENABLE] runs
+                # only when the user checks it manually, via toggle_script_entry).
+                self.init_script_row(child, name, typedefs.ScriptEntry(sub_script))
+                row.addChild(child)
+            else:
+                # A plain address/pointer child row.
+                child.setData(FROZEN_COL, Qt.ItemDataRole.UserRole, typedefs.Frozen("", typedefs.FREEZE_TYPE.DEFAULT))
+                value_type = self._script_child_value_type(definition)
+                address = definition.get("address")
+                # A callable address defers resolution to runtime; it's polled in update_address_table.
+                if callable(address):
+                    child.setData(SCRIPT_CHILD_ADDR_GETTER_ROLE, Qt.ItemDataRole.UserRole, address)
+                    try:
+                        expression = address()
+                    except Exception:
+                        expression = None
+                else:
+                    expression = address
+                row.addChild(child)
+                self.change_address_table_entries(child, name, "" if not expression else str(expression), value_type)
+        row.setExpanded(True)
+        self.mark_address_tree_changed()
+
+    def _clear_script_children(self, row: QTreeWidgetItem) -> None:
+        # Removes rows previously created by _build_script_children. Idempotent.
+        for index in reversed(range(row.childCount())):
+            child = row.child(index)
+            if not child.data(SCRIPT_CHILD_ROLE, Qt.ItemDataRole.UserRole):
+                continue
+            child_entry = self.get_script_entry(child)
+            if child_entry is not None:
+                # A child that is itself a script entry: if it is active, run its [DISABLE]
+                # so it can tear down its own state (breakpoints, poller threads) before we
+                # drop the row. Guard so a failure here never blocks removal.
+                if child.checkState(FROZEN_COL) == Qt.CheckState.Checked:
+                    try:
+                        self.toggle_script_entry(child, child_entry, Qt.CheckState.Unchecked)
+                    except Exception:
+                        traceback.print_exc()
+                # Close any engine tabs bound to this child (and its descendants).
+                if self.libpince_engine_window:
+                    for entry in self.script_entries_in(child):
+                        self.libpince_engine_window.close_script_entry(entry)
+            row.removeChild(child)
+
     def add_script_entry_to_table(self, title: str, entry: typedefs.ScriptEntry) -> None:
         # entry comes from the engine already bound to its tab so the row and tab share one object.
         row = QTreeWidgetItem()
@@ -1978,6 +2084,10 @@ class MainForm(QMainWindow, MainWindow):
     def toggle_script_entry(self, row: QTreeWidgetItem, entry: typedefs.ScriptEntry, check_state: Qt.CheckState) -> None:
         is_enable = check_state == Qt.CheckState.Checked
         row.setCheckState(FROZEN_COL, check_state)
+        if not is_enable:
+            # Toggling off always removes the script's runtime children, even for a
+            # tagless script or one without a [DISABLE] section (which returns early below).
+            self._clear_script_children(row)
         enable_code, disable_code = parse_script_sections(entry.script)
         code = enable_code if is_enable else disable_code
         if code is None:  # tagless script or no [DISABLE]: nothing to run when toggling off.
@@ -1986,6 +2096,9 @@ class MainForm(QMainWindow, MainWindow):
         succeeded, output = run_script_code(code, entry.namespace, f"<{row.text(DESC_COL) or tr.SCRIPT}>")
         if not succeeded and is_enable:  # don't leave a failed enable looking active
             row.setCheckState(FROZEN_COL, Qt.CheckState.Unchecked)
+        if is_enable and succeeded:
+            # Build any children the script declared during a successful [ENABLE].
+            self._build_script_children(row, entry)
         self.invalidate_address_expression_cache(refresh=True)
         if succeeded:
             return
@@ -2336,7 +2449,13 @@ class MainForm(QMainWindow, MainWindow):
     # A script entry adds an extra dict before them so it stays backward compatible with plain rows,
     # which insert_records tells apart by length.
     def read_address_table_recursively(self, row: QTreeWidgetItem) -> tuple:
-        children = [self.read_address_table_recursively(row.child(i)) for i in range(row.childCount())]
+        # Script-defined children are ephemeral (rebuilt on [ENABLE]); never serialize them,
+        # so a saved .pct doesn't carry stale runtime addresses. Filter them out by their marker.
+        children = [
+            self.read_address_table_recursively(row.child(i))
+            for i in range(row.childCount())
+            if not row.child(i).data(SCRIPT_CHILD_ROLE, Qt.ItemDataRole.UserRole)
+        ]
         entry = self.get_script_entry(row)
         if entry is not None:
             return row.text(DESC_COL), "", typedefs.IntegerValueType().serialize(), {"script": entry.script}, children

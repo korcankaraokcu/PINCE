@@ -9,6 +9,7 @@ Welcome to PINCE's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   script_entries
    modules
 
 Indices and tables
