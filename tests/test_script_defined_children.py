@@ -84,12 +84,14 @@ def test_children_not_a_list_is_ignored(qapp):
 def test_malformed_elements_are_skipped(qapp):
     mw = FakeMainWindow()
     row, entry = make_script_row()
-    entry.namespace = {"children": [
-        "not a dict",
-        {},                      # no name
-        {"name": ""},            # empty name
-        {"name": "LP"},          # valid
-    ]}
+    entry.namespace = {
+        "children": [
+            "not a dict",
+            {},  # no name
+            {"name": ""},  # empty name
+            {"name": "LP"},  # valid
+        ]
+    }
     mw._build_script_children(row, entry)
     assert row.childCount() == 1
     assert row.child(0).text(PINCE.DESC_COL) == "LP"
