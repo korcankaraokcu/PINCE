@@ -1238,9 +1238,15 @@ class MainForm(QMainWindow, MainWindow):
         if type_index == typedefs.SCAN_TYPE.UNKNOWN:
             scan_thread = guitypedefs.Worker(memscan.snapshot)
         else:
-            value_1, value_2 = self.validate_search_values(self.lineEdit_Scan.text(), self.lineEdit_Scan2.text())
-            if self.widget_ScanFields.isEnabled() and value_1 == None:
-                return
+            value_1, value_2 = None, None
+            if self.widget_ScanFields.isEnabled():
+                search_for2 = self.lineEdit_Scan2.text() if type_index == typedefs.SCAN_TYPE.BETWEEN else ""
+                try:
+                    value_1, value_2 = self.validate_search_values(self.lineEdit_Scan.text(), search_for2)
+                except ValueError:
+                    return
+                if value_1 == None:
+                    return
             scan_type = scancore.scan_type_to_memscan_dict[type_index]
             scan_thread = guitypedefs.Worker(memscan.scan, scan_type, value_1, value_2)
         self.progressBar.setValue(0)
@@ -1343,10 +1349,18 @@ class MainForm(QMainWindow, MainWindow):
             # allows only things that are hex, can also start with 0x
             self.lineEdit_Scan.setValidator(guiutils.validator_map.get("int_hex"))
             self.lineEdit_Scan2.setValidator(guiutils.validator_map.get("int_hex"))
+            base, converter = 10, hex
         else:
             # sets it back to integers only
             self.lineEdit_Scan.setValidator(guiutils.validator_map.get("int"))
             self.lineEdit_Scan2.setValidator(guiutils.validator_map.get("int"))
+            base, converter = 16, str
+        if self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole) <= typedefs.SCAN_INDEX.INT64:
+            for line_edit in (self.lineEdit_Scan, self.lineEdit_Scan2):
+                try:
+                    line_edit.setText(converter(int(line_edit.text(), base)))
+                except ValueError:
+                    pass
 
     def pushButton_NewFirstScan_clicked(self) -> None:
         if debugcore.currentpid == -1:
