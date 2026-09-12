@@ -91,7 +91,7 @@
             <bool>true</bool>
            </property>
            <property name="selectionMode">
-            <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+            <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
            </property>
            <property name="selectionBehavior">
             <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>

@@ -44,7 +44,7 @@ class Ui_MainWindow_MemoryView(object):
         self.tableWidget_Disassemble.setAutoScroll(False)
         self.tableWidget_Disassemble.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tableWidget_Disassemble.setAlternatingRowColors(True)
-        self.tableWidget_Disassemble.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        self.tableWidget_Disassemble.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.tableWidget_Disassemble.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.tableWidget_Disassemble.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.tableWidget_Disassemble.setShowGrid(False)

@@ -2511,6 +2511,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.disassemble_screen_rows = max(20, screen_height // row_height)
 
         self.disassemble_last_selected_address_int = 0
+        self.disassemble_selected_addresses: set[int] = set()
         self.disassemble_currently_displayed_address = "0"
         self.widget_Disassemble.wheelEvent = self.widget_Disassemble_wheel_event
 
@@ -2616,10 +2617,16 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         ):
             debugcore.execute_till_return()
 
+    def get_disassemble_row(self, no_selection_row: int = -1) -> int:
+        selected_rows = self.tableWidget_Disassemble.selectionModel().selectedRows()
+        if not selected_rows:
+            return no_selection_row
+        return selected_rows[0].row() if len(selected_rows) == 1 else -1
+
     def set_address(self) -> None:
         if guiutils.check_inferior_running(self):
             return
-        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = self.get_disassemble_row()
         if selected_row == -1:
             return
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -2628,7 +2635,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         self.refresh_disassemble_view()
 
     def edit_instruction(self) -> None:
-        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = self.get_disassemble_row()
         if selected_row == -1:
             return
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -2639,7 +2646,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def nop_instruction(self) -> None:
         if debugcore.currentpid == -1:
             return
-        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = self.get_disassemble_row()
         if selected_row == -1:
             return
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -2654,7 +2661,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def toggle_breakpoint(self) -> None:
         if debugcore.currentpid == -1:
             return
-        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = self.get_disassemble_row()
         if selected_row == -1:
             return
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
@@ -3055,8 +3062,6 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         except AttributeError:
             previous_first_address = current_first_address
 
-        self.tableWidget_Disassemble.setRowCount(0)
-        self.tableWidget_Disassemble.setRowCount(len(disas_data))
         jmp_dict, call_dict = debugcore.get_dissect_code_data(False, True, True)
         # Reference arrows are only meaningful within a local range, so we bound the endpoints to the displayed window
         # and let DisassembleArrowOverlay clamp what's off-screen.
@@ -3067,7 +3072,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         near_hi = window_last_int + arrow_span + 1
         arrows: set[tuple[int, int, str]] = set()  # (source_address, target_address, kind)
         address_to_row: dict[int, int] = {}
+        self.tableWidget_Disassemble.blockSignals(True)
         try:
+            self.tableWidget_Disassemble.setRowCount(0)
+            self.tableWidget_Disassemble.setRowCount(len(disas_data))
+            self.tableWidget_Disassemble.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
             for row, (address_info, bytes_aob, instruction) in enumerate(disas_data):
                 comment = ""
                 current_address_str = utils.extract_hex_address(address_info)
@@ -3172,7 +3181,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
                         breakpoint_mark += ")"
                         address_info = breakpoint_mark + address_info
                         break
-                if current_address == self.disassemble_last_selected_address_int:
+                if current_address in self.disassemble_selected_addresses:
                     self.tableWidget_Disassemble.selectRow(row)
                 addr_item = QTableWidgetItem(address_info)
                 bytes_item = QTableWidgetItem(bytes_aob)
@@ -3190,6 +3199,8 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         finally:
             jmp_dict.close()
             call_dict.close()
+            self.tableWidget_Disassemble.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+            self.tableWidget_Disassemble.blockSignals(False)
         self.handle_colors(row_color)
         # Sorting keeps the per-arrow shade assignment stable across repaints and groups nearby paths.
         sorted_arrows = sorted(arrows)[:DISAS_MAX_ARROWS]
@@ -3627,9 +3638,17 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         if not self.tableWidget_Disassemble.rowCount():
             return
-        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        if event.matches(QKeySequence.StandardKey.SelectAll):
+            last_row = self.tableWidget_Disassemble.rowAt(self.tableWidget_Disassemble.viewport().height() - 1)
+            if last_row == -1:
+                last_row = self.tableWidget_Disassemble.rowCount() - 1
+            model = self.tableWidget_Disassemble.model()
+            selection = QItemSelection(model.index(0, 0), model.index(last_row, self.tableWidget_Disassemble.columnCount() - 1))
+            self.tableWidget_Disassemble.selectionModel().select(selection, QItemSelectionModel.SelectionFlag.ClearAndSelect)
+            return
+        selected_row = self.get_disassemble_row(no_selection_row=0)
         if selected_row == -1:
-            selected_row = 0
+            return self.tableWidget_Disassemble.keyPressEvent_original(event)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
         current_address_int = safe_str_to_int(current_address, 16)
@@ -3698,6 +3717,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         if debugcore.currentpid == -1:
             return
         try:
+            selected_rows = self.tableWidget_Disassemble.selectionModel().selectedRows()
+            address_texts = [self.tableWidget_Disassemble.item(index.row(), DISAS_ADDR_COL).text() for index in selected_rows]
+            self.disassemble_selected_addresses = {safe_str_to_int(utils.extract_hex_address(text), 16) for text in address_texts}
             selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
             selected_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
             self.disassemble_last_selected_address_int = int(utils.extract_hex_address(selected_address_text), 16)
@@ -3721,6 +3743,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         follow_address = source if self.disassemble_last_selected_address_int == target else target
         # Select the followed address so repeated clicks keep toggling between caller and target.
         self.disassemble_last_selected_address_int = follow_address
+        self.disassemble_selected_addresses = {follow_address}
         self.disassemble_expression(hex(follow_address))
 
     def disassemble_go_back(self) -> None:
@@ -3732,23 +3755,14 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             self.tableWidget_Disassemble.travel_history.pop()
 
     def tableWidget_Disassemble_context_menu_event(self, event: QContextMenuEvent) -> None:
-        def copy_to_clipboard(row: int, column: int) -> None:
-            item = self.tableWidget_Disassemble.item(row, column)
-            if item is None:
-                return
-            app.clipboard().setText(item.text())
+        def copy_to_clipboard(*columns: int, extract_address: bool = False) -> None:
+            rows = ["\t".join(self.tableWidget_Disassemble.item(row, column).text() for column in columns) for row in selected_rows]
+            app.clipboard().setText("\n".join(utils.extract_hex_address(text) if extract_address else text for text in rows))
 
-        def copy_all_columns(row: int) -> None:
-            copied_string = ""
-            for column in range(self.tableWidget_Disassemble.columnCount()):
-                item = self.tableWidget_Disassemble.item(row, column)
-                if item is not None:
-                    copied_string += item.text() + "\t"
-            app.clipboard().setText(copied_string)
-
-        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
-        if selected_row == -1:
+        selected_rows = sorted({index.row() for index in self.tableWidget_Disassemble.selectionModel().selectedRows()})
+        if not selected_rows:
             return
+        selected_row = selected_rows[0]
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
         current_address_int = safe_str_to_int(current_address, 16)
@@ -3801,6 +3815,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
         copy_instr = clipboard_menu.addAction(tr.COPY_INSTR)
         copy_comment = clipboard_menu.addAction(tr.COPY_COMMENT)
         copy_all = clipboard_menu.addAction(tr.COPY_ALL)
+        if len(selected_rows) > 1:
+            for entry in menu.actions():
+                entry.setEnabled(entry.menu() is not None or entry in (go_to, back, dissect_region, refresh))
         font_size = self.tableWidget_Disassemble.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
@@ -3821,11 +3838,11 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             trace_instructions: self.exec_trace_instructions_dialog,
             dissect_region: self.dissect_current_region,
             refresh: self.refresh_disassemble_view,
-            copy_address: lambda: copy_to_clipboard(selected_row, DISAS_ADDR_COL),
-            copy_bytes: lambda: copy_to_clipboard(selected_row, DISAS_OPCODES_COL),
-            copy_instr: lambda: copy_to_clipboard(selected_row, DISAS_INSTR_COL),
-            copy_comment: lambda: copy_to_clipboard(selected_row, DISAS_COMMENT_COL),
-            copy_all: lambda: copy_all_columns(selected_row),
+            copy_address: lambda: copy_to_clipboard(DISAS_ADDR_COL, extract_address=True),
+            copy_bytes: lambda: copy_to_clipboard(DISAS_OPCODES_COL),
+            copy_instr: lambda: copy_to_clipboard(DISAS_INSTR_COL),
+            copy_comment: lambda: copy_to_clipboard(DISAS_COMMENT_COL),
+            copy_all: lambda: copy_to_clipboard(*range(self.tableWidget_Disassemble.columnCount())),
         }
         try:
             actions[action]()
@@ -3864,9 +3881,9 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
             return
         if not self.tableWidget_Disassemble.rowCount():
             return
-        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = self.get_disassemble_row(no_selection_row=0)
         if selected_row == -1:
-            selected_row = 0
+            return
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
         TraceInstructionsWindow(self, current_address)
@@ -3874,7 +3891,7 @@ class MemoryViewWindowForm(QMainWindow, MemoryViewWindow):
     def exec_track_breakpoint_dialog(self) -> None:
         if debugcore.currentpid == -1:
             return
-        selected_row = guiutils.get_current_row(self.tableWidget_Disassemble)
+        selected_row = self.get_disassemble_row()
         if selected_row == -1:
             return
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
