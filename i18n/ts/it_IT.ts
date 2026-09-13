@@ -1446,229 +1446,229 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>MainWindow_MemoryView</name>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Memory Viewer</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Address</source>
         <translation type="unfinished">Indirizzo</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Opcodes</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Instruction</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Comment</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Registers</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Flags</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Segment Registers</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Show Float Registers</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Return Address</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Frame Address</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Value</source>
         <translation type="unfinished">Valore</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Points to</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>V&amp;iew</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Debug</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Tools</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Fi&amp;le</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Help</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Bookmarks</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;StackTrace Info</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Inject .so file</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Inject D&amp;LL file</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Break</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Run</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Step[F7]</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Step &amp;Over[F8]</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Execute Till Return[Shift+F8]</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Toggle Breakpoint[F5]</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>B&amp;reakpoints</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Functions</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Set Address[Shift+F4]</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Call Function</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Load Trace</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Libpince</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;GDB Log File</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Search Instructions</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Memory Regions</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Dissect Code</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Dissect &amp;Mono/IL2CPP</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>R&amp;eferenced Strings</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Referenced &amp;Calls</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>To&amp;ggle Attach</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Restore Instructions</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Libpince Engine</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Structures</source>
         <translation type="unfinished" />
     </message>

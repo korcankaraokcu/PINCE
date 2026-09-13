@@ -1451,229 +1451,229 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>MainWindow_MemoryView</name>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Memory Viewer</source>
         <translation>内存查看器</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Address</source>
         <translation>地址</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Opcodes</source>
         <translation>操作码</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Instruction</source>
         <translation>指令</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Comment</source>
         <translation>注解</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Registers</source>
         <translation>寄存器（Registers）</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Flags</source>
         <translation>状态标志（Flags）</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Segment Registers</source>
         <translation>段（Segment）寄存器</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Show Float Registers</source>
         <translation>显示浮点（Float）寄存器</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Return Address</source>
         <translation>返回地址</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Frame Address</source>
         <translation>帧地址</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Value</source>
         <translation>值</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Points to</source>
         <translation>指向</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>V&amp;iew</source>
         <translation>视图[&amp;i]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Debug</source>
         <translation>调试[&amp;D]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Tools</source>
         <translation>工具[&amp;T]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Fi&amp;le</source>
         <translation>文件[&amp;l]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Help</source>
         <translation>帮助</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Bookmarks</source>
         <translation>书签[&amp;B]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;StackTrace Info</source>
         <translation>堆栈跟踪信息[&amp;S]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Inject .so file</source>
         <translation>注入 .so 文件[&amp;I]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Inject D&amp;LL file</source>
         <translation>注入 DLL 文件[&amp;L]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Break</source>
         <translation>中断[&amp;B]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Run</source>
         <translation>运行[&amp;R]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Step[F7]</source>
         <translation>步进[&amp;S][F7]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Step &amp;Over[F8]</source>
         <translation>步过[&amp;O][F8]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Execute Till Return[Shift+F8]</source>
         <translation>执行直到返回[&amp;E][Shift+F8]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Toggle Breakpoint[F5]</source>
         <translation>切换断点[&amp;T][F5]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>B&amp;reakpoints</source>
         <translation>断点[&amp;r]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Functions</source>
         <translation>函数[&amp;F]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Set Address[Shift+F4]</source>
         <translation>设置地址[Shift+F4]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Call Function</source>
         <translation>调用函数[&amp;C]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Load Trace</source>
         <translation>加载追踪[&amp;L]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Libpince</source>
         <translation>&amp;Libpince</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;GDB Log File</source>
         <translation>&amp;GDB 日志文件</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Search Instructions</source>
         <translation>搜索指令[&amp;S]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Memory Regions</source>
         <translation>内存区域[&amp;M]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>&amp;Dissect Code</source>
         <translation>分析代码[&amp;D]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Dissect &amp;Mono/IL2CPP</source>
         <translation>分析 Mono/IL2CPP[&amp;M]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>R&amp;eferenced Strings</source>
         <translation>引用的字符串[&amp;e]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Referenced &amp;Calls</source>
         <translation>引用的调用[&amp;C]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>To&amp;ggle Attach</source>
         <translation>切换附加​​[&amp;g]</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Restore Instructions</source>
         <translation>还原指令</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Libpince Engine</source>
         <translation>Libpince 引擎</translation>
     </message>
     <message>
-        <location filename="../../GUI/MemoryViewerWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MemoryView/Form/MemoryViewerWindow.ui" line="0" />
         <source>Structures</source>
         <translation>结构体</translation>
     </message>

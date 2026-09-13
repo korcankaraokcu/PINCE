@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'MemoryViewerWindow.ui'
+# Form implementation generated from reading ui file 'Widgets/MemoryView/Form/MemoryViewerWindow.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #
