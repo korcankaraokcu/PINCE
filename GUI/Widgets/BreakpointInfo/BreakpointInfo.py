@@ -27,7 +27,7 @@ class BreakpointInfoWidget(QTabWidget, Ui_TabWidget):
         self.tableWidget_BreakpointInfo.contextMenuEvent = self.tableWidget_BreakpointInfo_context_menu_event
 
         # Saving the original function because super() doesn't work when we override functions like this
-        self.tableWidget_BreakpointInfo.keyPressEvent_original = self.tableWidget_BreakpointInfo.keyPressEvent
+        self.tableWidget_BreakpointInfo_keyPressEvent_original = self.tableWidget_BreakpointInfo.keyPressEvent
         self.tableWidget_BreakpointInfo.keyPressEvent = self.tableWidget_BreakpointInfo_key_press_event
         self.tableWidget_BreakpointInfo.itemDoubleClicked.connect(self.tableWidget_BreakpointInfo_double_clicked)
         self.refresh()
@@ -77,7 +77,7 @@ class BreakpointInfoWidget(QTabWidget, Ui_TabWidget):
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             pass
-        self.tableWidget_BreakpointInfo.keyPressEvent_original(event)
+        self.tableWidget_BreakpointInfo_keyPressEvent_original(event)
 
     def exec_enable_count_dialog(self, breakpoint_number: int) -> None:
         hit_count_dialog = utilwidgets.InputDialog(self, [(tr.ENTER_HIT_COUNT.format(1), "")])

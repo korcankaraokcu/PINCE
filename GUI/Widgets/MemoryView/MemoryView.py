@@ -179,11 +179,11 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
         self.tableWidget_StackTrace.itemDoubleClicked.connect(self.tableWidget_StackTrace_double_click)
 
         # Saving the original function because super() doesn't work when we override functions like this
-        self.tableWidget_Stack.keyPressEvent_original = self.tableWidget_Stack.keyPressEvent
+        self.tableWidget_Stack_keyPressEvent_original = self.tableWidget_Stack.keyPressEvent
         self.tableWidget_Stack.keyPressEvent = self.tableWidget_Stack_key_press_event
 
         # Saving the original function because super() doesn't work when we override functions like this
-        self.tableWidget_StackTrace.keyPressEvent_original = self.tableWidget_StackTrace.keyPressEvent
+        self.tableWidget_StackTrace_keyPressEvent_original = self.tableWidget_StackTrace.keyPressEvent
         self.tableWidget_StackTrace.keyPressEvent = self.tableWidget_StackTrace_key_press_event
 
     def initialize_disassemble_view(self) -> None:
@@ -216,7 +216,7 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
         self.tableWidget_Disassemble.travel_history = []
 
         # Saving the original function because super() doesn't work when we override functions like this
-        self.tableWidget_Disassemble.keyPressEvent_original = self.tableWidget_Disassemble.keyPressEvent
+        self.tableWidget_Disassemble_keyPressEvent_original = self.tableWidget_Disassemble.keyPressEvent
         self.tableWidget_Disassemble.keyPressEvent = self.tableWidget_Disassemble_key_press_event
         self.tableWidget_Disassemble.contextMenuEvent = self.tableWidget_Disassemble_context_menu_event
 
@@ -243,7 +243,7 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
 
         self.widget_HexView.wheelEvent = self.widget_HexView_wheel_event
         # Saving the original function because super() doesn't work when we override functions like this
-        self.widget_HexView.keyPressEvent_original = self.widget_HexView.keyPressEvent
+        self.widget_HexView_keyPressEvent_original = self.widget_HexView.keyPressEvent
         self.widget_HexView.keyPressEvent = self.widget_HexView_key_press_event
 
         self.tableView_HexView_Hex.contextMenuEvent = self.widget_HexView_context_menu_event
@@ -1147,7 +1147,7 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             pass
-        self.tableWidget_Stack.keyPressEvent_original(event)
+        self.tableWidget_Stack_keyPressEvent_original(event)
 
     def tableWidget_Stack_context_menu_event(self, event: QContextMenuEvent) -> None:
         def copy_to_clipboard(row: int, column: int) -> None:
@@ -1239,7 +1239,7 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             pass
-        self.tableWidget_StackTrace.keyPressEvent_original(event)
+        self.tableWidget_StackTrace_keyPressEvent_original(event)
 
     def widget_Disassemble_wheel_event(self, event: QWheelEvent) -> None:
         steps = event.angleDelta()
@@ -1321,7 +1321,7 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             pass
-        self.widget_HexView.keyPressEvent_original(event)
+        self.widget_HexView_keyPressEvent_original(event)
 
     def tableWidget_Disassemble_key_press_event(self, event: QKeyEvent) -> None:
         if debugcore.currentpid == -1:
@@ -1338,7 +1338,7 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
             return
         selected_row = self.get_disassemble_row(no_selection_row=0)
         if selected_row == -1:
-            return self.tableWidget_Disassemble.keyPressEvent_original(event)
+            return self.tableWidget_Disassemble_keyPressEvent_original(event)
         current_address_text = self.tableWidget_Disassemble.item(selected_row, DISAS_ADDR_COL).text()
         current_address = utils.extract_hex_address(current_address_text)
         current_address_int = utils.safe_str_to_int(current_address, 16)
@@ -1387,7 +1387,7 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
             pass
-        self.tableWidget_Disassemble.keyPressEvent_original(event)
+        self.tableWidget_Disassemble_keyPressEvent_original(event)
 
     def tableWidget_Disassemble_item_double_clicked(self, index: QTableWidgetItem) -> None:
         if debugcore.currentpid == -1:

@@ -1,10 +1,10 @@
-from GUI.Widgets.SessionNotes.Form.SessionNotes import Ui_SessionNotes as SessionNotesForm
+from GUI.Widgets.SessionNotes.Form.SessionNotes import Ui_SessionNotes
 from GUI.Session.session import SessionManager, SessionDataChanged
 from PyQt6.QtWidgets import QWidget
 from GUI.States import states
 
 
-class SessionNotesWidget(QWidget, SessionNotesForm):
+class SessionNotesWidget(QWidget, Ui_SessionNotes):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setupUi(self)

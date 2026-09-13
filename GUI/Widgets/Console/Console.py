@@ -40,7 +40,7 @@ class ConsoleWidget(QWidget, Ui_Form):
         self.lineEdit.textEdited.connect(self.finish_completion)
 
         # Saving the original function because super() doesn't work when we override functions like this
-        self.lineEdit.keyPressEvent_original = self.lineEdit.keyPressEvent
+        self.lineEdit_keyPressEvent_original = self.lineEdit.keyPressEvent
         self.lineEdit.keyPressEvent = self.lineEdit_key_press_event
         self.reset_console_text()
         guiutils.center_to_parent(self)
@@ -124,7 +124,7 @@ class ConsoleWidget(QWidget, Ui_Form):
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
-            self.lineEdit.keyPressEvent_original(event)
+            self.lineEdit_keyPressEvent_original(event)
 
     def finish_completion(self) -> None:
         self.completion_model.setStringList([])

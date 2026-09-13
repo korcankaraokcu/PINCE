@@ -134,9 +134,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         guiutils.append_shortcut_to_tooltip(self.pushButton_Save, self.shortcut_save_file)
 
         # Saving the original function because super() doesn't work when we override functions like this
-        self.treeWidget_AddressTable.mouseReleaseEvent_original = self.treeWidget_AddressTable.mouseReleaseEvent
+        self.treeWidget_AddressTable_mouseReleaseEvent_original = self.treeWidget_AddressTable.mouseReleaseEvent
         self.treeWidget_AddressTable.mouseReleaseEvent = self.treeWidget_AddressTable_mouse_release_event
-        self.treeWidget_AddressTable.keyPressEvent_original = self.treeWidget_AddressTable.keyPressEvent
+        self.treeWidget_AddressTable_keyPressEvent_original = self.treeWidget_AddressTable.keyPressEvent
         self.treeWidget_AddressTable.keyPressEvent = self.treeWidget_AddressTable_key_press_event
         self.treeWidget_AddressTable.contextMenuEvent = self.treeWidget_AddressTable_context_menu_event
         self.pushButton_AttachProcess.clicked.connect(self.pushButton_AttachProcess_clicked)
@@ -172,8 +172,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.comboBox_ValueType.currentIndexChanged.connect(self.comboBox_ValueType_current_index_changed)
         self.lineEdit_Scan.setValidator(guiutils.validator_map.get("int"))
         self.lineEdit_Scan2.setValidator(guiutils.validator_map.get("int"))
-        self.lineEdit_Scan.keyPressEvent_original = self.lineEdit_Scan.keyPressEvent
-        self.lineEdit_Scan2.keyPressEvent_original = self.lineEdit_Scan2.keyPressEvent
+        self.lineEdit_Scan_keyPressEvent_original = self.lineEdit_Scan.keyPressEvent
+        self.lineEdit_Scan2_keyPressEvent_original = self.lineEdit_Scan2.keyPressEvent
         self.lineEdit_Scan.keyPressEvent = self.lineEdit_Scan_on_key_press_event
         self.lineEdit_Scan2.keyPressEvent = self.lineEdit_Scan2_on_key_press_event
         self.comboBox_ScanType.currentIndexChanged.connect(self.comboBox_ScanType_current_index_changed)
@@ -188,7 +188,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_CopyToAddressTable.clicked.connect(self.copy_to_address_table)
         self.pushButton_CleanAddressTable.clicked.connect(self.clear_address_table)
         self.tableWidget_valuesearchtable.cellDoubleClicked.connect(self.tableWidget_valuesearchtable_cell_double_clicked)
-        self.tableWidget_valuesearchtable.keyPressEvent_original = self.tableWidget_valuesearchtable.keyPressEvent
+        self.tableWidget_valuesearchtable_keyPressEvent_original = self.tableWidget_valuesearchtable.keyPressEvent
         self.tableWidget_valuesearchtable.keyPressEvent = self.tableWidget_valuesearchtable_key_press_event
         self.tableWidget_valuesearchtable.contextMenuEvent = self.tableWidget_valuesearchtable_context_menu_event
         self.treeWidget_AddressTable.itemDoubleClicked.connect(self.treeWidget_AddressTable_item_double_clicked)
@@ -802,7 +802,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         column = self.treeWidget_AddressTable.columnAt(event.pos().x())
         if item and column == FROZEN_COL:
             old_state = item.checkState(FROZEN_COL)
-            self.treeWidget_AddressTable.mouseReleaseEvent_original(event)
+            self.treeWidget_AddressTable_mouseReleaseEvent_original(event)
             new_state = item.checkState(FROZEN_COL)
             if old_state != new_state:
                 self.handle_freeze_change(item, new_state)
@@ -812,7 +812,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if isinstance(frozen, typedefs.Frozen):
                     self.change_freeze_type(frozen.freeze_type, item)
         else:
-            self.treeWidget_AddressTable.mouseReleaseEvent_original(event)
+            self.treeWidget_AddressTable_mouseReleaseEvent_original(event)
 
     def treeWidget_AddressTable_key_press_event(self, event: QKeyEvent) -> None:
         current_row = guiutils.get_current_item(self.treeWidget_AddressTable)
@@ -867,7 +867,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
-            self.treeWidget_AddressTable.keyPressEvent_original(event)
+            self.treeWidget_AddressTable_keyPressEvent_original(event)
 
     def invalidate_address_expression_cache(self, refresh: bool = False) -> None:
         states.exp_cache.clear()
@@ -1191,11 +1191,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def lineEdit_Scan_on_key_press_event(self, event: QKeyEvent) -> None:
         self.handle_line_edit_scan_key_press_event(event)
-        self.lineEdit_Scan.keyPressEvent_original(event)
+        self.lineEdit_Scan_keyPressEvent_original(event)
 
     def lineEdit_Scan2_on_key_press_event(self, event: QKeyEvent) -> None:
         self.handle_line_edit_scan_key_press_event(event)
-        self.lineEdit_Scan2.keyPressEvent_original(event)
+        self.lineEdit_Scan2_keyPressEvent_original(event)
 
     def pushButton_UndoScan_clicked(self) -> None:
         if debugcore.currentpid == -1:
@@ -1440,7 +1440,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
-            self.tableWidget_valuesearchtable.keyPressEvent_original(event)
+            self.tableWidget_valuesearchtable_keyPressEvent_original(event)
 
     def tableWidget_valuesearchtable_context_menu_event(self, event: QContextMenuEvent) -> None:
         selected_indexes = self.tableWidget_valuesearchtable.selectionModel().selectedRows()
