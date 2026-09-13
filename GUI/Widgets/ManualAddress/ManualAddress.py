@@ -12,7 +12,7 @@ class ManualAddressDialog(QDialog, Ui_Dialog):
     def __init__(
         self,
         parent: QWidget,
-        description: str = tr.NO_DESCRIPTION,
+        description: str | None = None,
         address: str | typedefs.PointerChainRequest = "0x",
         value_type: typedefs.ValueType | None = None,
         relative_base: str = "",
@@ -26,7 +26,8 @@ class ManualAddressDialog(QDialog, Ui_Dialog):
         self.lineEdit_Length.setValidator(HexValidator(99, self))
         guiutils.fill_value_combobox(self.comboBox_ValueType, vt, include_bit_field=True)
         guiutils.fill_endianness_combobox(self.comboBox_Endianness, getattr(vt, "endian", typedefs.ENDIANNESS.HOST))
-        self.lineEdit_Description.setText(description)
+        # Resolved here instead of in the signature because default arguments are evaluated on import, which is before tr.translate() runs.
+        self.lineEdit_Description.setText(tr.NO_DESCRIPTION if description is None else description)
         self.lineEdit_Description.setFixedWidth(180)
         self.offsetsList: list[PointerChainOffset] = []
         if not isinstance(address, typedefs.PointerChainRequest):
