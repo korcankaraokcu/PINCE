@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# IMPORTANT: Any constant involving only PINCE.py should be declared in PINCE.py
+# IMPORTANT: Any constant involving only the GUI should be declared within the GUI folder
 
 import collections.abc, logging, queue, struct, sys
 from typing import Any, Callable, Literal

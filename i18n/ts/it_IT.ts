@@ -1035,191 +1035,6 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Memory View</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Copy selected items to the address table</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Erase all the table contents</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Refresh the address table[R]</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Add Address Manually</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Freeze</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Freeze the value. Click just to the right of checkbox to cycle between freeze types:
-- No arrow: Frozen at current value
-- ▲: Allow increments only
-- ▼: Allow decrements only</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Description</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Address</source>
-        <translation>Indirizzo</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Type</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Value</source>
-        <translation>Valore</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Match count: 0</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Previous</source>
-        <translation>Precedente</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>First Scan</source>
-        <translation>Prima Ricerca</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Next Scan</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Cancel Scan</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Undo Scan</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Hex</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Scan Type:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Value Type:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Scan Scope:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Endianness:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Alignment:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Manage Scan Regions</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Enable Speedhack</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Open session notes</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Notes</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Create or attach to a process</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Open a cheat table</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Save current table to a file</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Wiki</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>About</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>No Process Selected</source>
-        <translation type="unfinished">Nessun Processo Selezionato</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Open a gdb console</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Check for updates</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Configure options</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Libpince Engine</source>
         <translation type="unfinished" />
@@ -1351,6 +1166,191 @@ Patterns at former positions have higher priority if regex is off</source>
     <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Read/write address</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Memory View</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Copy selected items to the address table</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Erase all the table contents</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Refresh the address table[R]</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Add Address Manually</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Freeze</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Freeze the value. Click just to the right of checkbox to cycle between freeze types:
+- No arrow: Frozen at current value
+- ▲: Allow increments only
+- ▼: Allow decrements only</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Description</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Address</source>
+        <translation>Indirizzo</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Type</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Value</source>
+        <translation>Valore</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Match count: 0</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Previous</source>
+        <translation>Precedente</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>First Scan</source>
+        <translation>Prima Ricerca</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Next Scan</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Cancel Scan</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Undo Scan</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Hex</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Scan Type:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Value Type:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Scan Scope:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Endianness:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Alignment:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Manage Scan Regions</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Enable Speedhack</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Open session notes</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Notes</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Create or attach to a process</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Open a cheat table</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Save current table to a file</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Wiki</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>About</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>No Process Selected</source>
+        <translation type="unfinished">Nessun Processo Selezionato</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Open a gdb console</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Check for updates</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Configure options</source>
         <translation type="unfinished" />
     </message>
     <message>

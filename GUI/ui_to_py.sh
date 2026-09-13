@@ -10,7 +10,7 @@ else
 	exit
 fi
 
-for uifile in *.ui Widgets/*/Form/*.ui
+for uifile in Widgets/*/Form/*.ui
 do
 	pyfile="${uifile%.ui}.py"
 	pyuic6 "$uifile" -o "$pyfile"

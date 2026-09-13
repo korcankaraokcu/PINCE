@@ -1037,194 +1037,6 @@ Patterns at former positions have higher priority if regex is off</source>
 </context><context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Memory View</source>
-        <translation>内存查看器</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Copy selected items to the address table</source>
-        <translation>将所选项目复制到地址表</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Erase all the table contents</source>
-        <translation>删除地址表中所有内容</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Refresh the address table[R]</source>
-        <translation>刷新地址表[R]</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Add Address Manually</source>
-        <translation>手动添加地址</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Freeze</source>
-        <translation>冻结</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Freeze the value. Click just to the right of checkbox to cycle between freeze types:
-- No arrow: Frozen at current value
-- ▲: Allow increments only
-- ▼: Allow decrements only</source>
-        <translation>冻结该值。点击复选框右侧区域可在不同冻结模式之间切换：
-无箭头：冻结为当前值
-▲：只允许值增加
-▼：只允许值减少</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Description</source>
-        <translation>备注</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Address</source>
-        <translation>地址</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Type</source>
-        <translation>类型</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Value</source>
-        <translation>值</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Match count: 0</source>
-        <translation>匹配次数：0</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Previous</source>
-        <translation>先前的值</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>First Scan</source>
-        <translation>首次扫描</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Next Scan</source>
-        <translation>再次扫描</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Cancel Scan</source>
-        <translation>终止扫描</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Undo Scan</source>
-        <translation>撤销扫描</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Hex</source>
-        <translation>十六进制</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Scan Type:</source>
-        <translation>扫描类型：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Value Type:</source>
-        <translation>值类型：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Scan Scope:</source>
-        <translation>扫描范围：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Endianness:</source>
-        <translation>字节序：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Alignment:</source>
-        <translation>对齐：</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Manage Scan Regions</source>
-        <translation>管理扫描区域</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Enable Speedhack</source>
-        <translation>启用速度修改</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Open session notes</source>
-        <translation>打开会话笔记</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Notes</source>
-        <translation>笔记</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Create or attach to a process</source>
-        <translation>创建或附加到进程</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Open a cheat table</source>
-        <translation>打开一个作弊表</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Save current table to a file</source>
-        <translation>将当前表保存到文件</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Wiki</source>
-        <translation>文档</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>About</source>
-        <translation>关于</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>No Process Selected</source>
-        <translation>未附加到任何进程</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Open a gdb console</source>
-        <translation>打开一个 GDB 控制台</translation>
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Check for updates</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <location filename="../../GUI/MainWindow.ui" line="0" />
-        <source>Configure options</source>
-        <translation>配置选项</translation>
-    </message>
-    <message>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Libpince Engine</source>
         <translation>Libpince 引擎</translation>
@@ -1357,6 +1169,194 @@ Patterns at former positions have higher priority if regex is off</source>
         <location filename="../../GUI/Widgets/LibpinceEngine/Form/LibpinceEngineWindow.ui" line="0" />
         <source>Read/write address</source>
         <translation>读/写 地址</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Memory View</source>
+        <translation>内存查看器</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Copy selected items to the address table</source>
+        <translation>将所选项目复制到地址表</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Erase all the table contents</source>
+        <translation>删除地址表中所有内容</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Refresh the address table[R]</source>
+        <translation>刷新地址表[R]</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Add Address Manually</source>
+        <translation>手动添加地址</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Freeze</source>
+        <translation>冻结</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Freeze the value. Click just to the right of checkbox to cycle between freeze types:
+- No arrow: Frozen at current value
+- ▲: Allow increments only
+- ▼: Allow decrements only</source>
+        <translation>冻结该值。点击复选框右侧区域可在不同冻结模式之间切换：
+无箭头：冻结为当前值
+▲：只允许值增加
+▼：只允许值减少</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Description</source>
+        <translation>备注</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Address</source>
+        <translation>地址</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Type</source>
+        <translation>类型</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Value</source>
+        <translation>值</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Match count: 0</source>
+        <translation>匹配次数：0</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Previous</source>
+        <translation>先前的值</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>First Scan</source>
+        <translation>首次扫描</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Next Scan</source>
+        <translation>再次扫描</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Cancel Scan</source>
+        <translation>终止扫描</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Undo Scan</source>
+        <translation>撤销扫描</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Hex</source>
+        <translation>十六进制</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Scan Type:</source>
+        <translation>扫描类型：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Value Type:</source>
+        <translation>值类型：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Scan Scope:</source>
+        <translation>扫描范围：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Endianness:</source>
+        <translation>字节序：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Alignment:</source>
+        <translation>对齐：</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Manage Scan Regions</source>
+        <translation>管理扫描区域</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Enable Speedhack</source>
+        <translation>启用速度修改</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Open session notes</source>
+        <translation>打开会话笔记</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Notes</source>
+        <translation>笔记</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Create or attach to a process</source>
+        <translation>创建或附加到进程</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Open a cheat table</source>
+        <translation>打开一个作弊表</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Save current table to a file</source>
+        <translation>将当前表保存到文件</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Wiki</source>
+        <translation>文档</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>About</source>
+        <translation>关于</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>No Process Selected</source>
+        <translation>未附加到任何进程</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Open a gdb console</source>
+        <translation>打开一个 GDB 控制台</translation>
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Check for updates</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/MainWindow/Form/MainWindow.ui" line="0" />
+        <source>Configure options</source>
+        <translation>配置选项</translation>
     </message>
     <message>
         <location filename="../../GUI/Widgets/PointerScan/Form/PointerScanWindow.ui" line="0" />

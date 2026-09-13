@@ -1,5 +1,5 @@
 # Code Structure
-- [PINCE.py](./PINCE.py) - The main file, it contains everything from GUI logic to libpince communication. A chonky boi on a diet, see below for information about ongoing refactoring
+- [PINCE.py](./PINCE.py) - The main file, it sets up the application along with its translations and launches the [MainWindow](./GUI/Widgets/MainWindow)
 - [PINCE.sh](./PINCE.sh) - Launch script
 - [install.sh](./install.sh) - Installation script
 - [compile_ts.sh](./compile_ts.sh) - Gathers translation information from various sources and compiles them into ts files
@@ -22,7 +22,7 @@
     - [gdbextensions.py](./libpince/gdb_python_scripts/gdbextensions.py) - Contains custom GDB commands
     - [gdbutils.py](./libpince/gdb_python_scripts/gdbutils.py) - Contains utility functions for GDB commands
 
-**About GUI file structure refactoring**: PINCE.py currently still holds some of the GUI logic classes and this makes PINCE.py larger than it needs to be. To deal with this, all GUI logic will be carried to their respective folders and the GUI folder will follow this structure:
+**About GUI file structure**: All GUI logic is kept in its respective folder and the GUI folder follows this structure:
 ```
 GUI/
 |-- AbstractTableModels/ (QAbstractTableModel classes, used by views that hold large amounts of data)
@@ -117,7 +117,7 @@ Utilities matter too, not just syntax. Not every system ships GNU coreutils, so 
 # Documentation
 We use Google style documentation and type hints. A good example would be `get_breakpoints_in_range` function in [debugcore.py](./libpince/debugcore.py). Root folder of libpince has 100% documentation coverage so a pull request regarding libpince has to be documented. For other places, it's enough to document the parts you think that'd be confusing to read later on. You are not obliged to document everything in other places as we are also quite lax with it
 
-We use Sphinx to automatically generate html files from the docs and napoleon extension to convert Google style docs to reStructuredText. To test locally, `cd` into the [docs](./docs) directory and execute `sh install_sphinx.sh`. This will install Sphinx and its extensions within the venv. After this, You can modify [source files](./docs/source) and then build html files with `sh build_html.sh` to test your changes. To create source files for multiple modules automatically, `sphinx-apidoc` can be used. For single modules, you can edit the source files manually (like I did with `guiutils`)
+We use Sphinx to automatically generate html files from the docs and napoleon extension to convert Google style docs to reStructuredText. To test locally, `cd` into the [docs](./docs) directory and execute `sh install_sphinx.sh`. This will install Sphinx and its extensions within the venv. After this, You can modify [source files](./docs/source) and then build html files with `sh build_html.sh` to test your changes. To create source files for multiple modules automatically, `sphinx-apidoc` can be used. For single modules, you can edit the source files manually
 
 [build_docs.yml](.github/workflows/build_docs.yml) workflow is responsible for automatic html generation, it gets triggered automatically whenever there's a new release or manually whenever necessary. The workflow generates files within the `gh-pages` branch. It's an orphaned branch so it can be deleted without affecting the history
 
@@ -206,7 +206,6 @@ forcing me to use magic numbers for adjusting, which is a bit hackish
 So, after learning how to contribute, you are wondering where to start now. You can either search for `TODO` within the code or pick up any task from the roadmap below.
 These tasks are ordered by importance but feel free to pick any of them. Further details can be discussed in the PINCE discord server
 - Libpince support for Java (symbol recognition, calling functions, dissect obj tree etc.)
-- Move GUI classes of PINCE.py to their own files
 - Extend documentation to GUI parts. Libpince has 100% documentation coverage but GUI doesn't
 - Flowcharts based on disassembled output
 - Consider implementing a GUI for catchpoints(syscall, fork, exec etc.). Signal handling already has a GUI(HandleSignals widget), but the remaining catchpoint types are still done via the GDB Console
