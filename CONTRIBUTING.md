@@ -198,7 +198,7 @@ OSError handles I/O related errors and ValueError handles the off_t limit error 
 ```python
     tuple_examine_expression = collections.namedtuple("tuple_examine_expression", "all address symbol")
 ```
-- 06/10/2016 - HexView section of MemoryViewerWindow.ui: Changed listWidget_HexView_Address to tableWidget_HexView_Address in order to prevent possible future visual bugs.
+- 06/10/2016 - HexView section of MemoryViewWindow.ui: Changed listWidget_HexView_Address to tableWidget_HexView_Address in order to prevent possible future visual bugs.
 Logically, it should stay as a listwidget considering its functionality. But it doesn't play nice with the other neighboring tablewidgets in different pyqt versions,
 forcing me to use magic numbers for adjusting, which is a bit hackish
 
@@ -229,7 +229,7 @@ Implement a flexible input field for the execution count. For instance, 2^x only
 - Consider adding type guessing for the StackView
 - Implement a pseudo-terminal for the inferior like edb does(idk if necessary, we don't usually target CLI games, up to debate)
 - Try to optimize TrackBreakpoint and TrackWatchpoint return data structures further, adding an id field might simplify traversing of the tree, performance tests are required
-- Implement extra MemoryViewerWindow tabs(not really critical right now, up to debate)
+- Implement extra MemoryViewWindow tabs(not really critical right now, up to debate)
 - ~~Consider removing the command file layer of IPC system for debugcore.send_command to speed up things~~
 [Update-29/04/2018 : Delaying this until GDB/MI implements a native multiline command feature or improves ```interpreter-exec``` command to cover every single multiline command type(including ```define``` commands)]
 - Implement developer mode in settings. Developer mode will include features like dissection of GUI elements on events such as mouse-over

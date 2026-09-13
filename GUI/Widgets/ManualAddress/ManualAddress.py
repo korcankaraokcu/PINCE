@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QDialog, QWidget, QMenu, QMessageBox
 from PyQt6.QtGui import QContextMenuEvent
 from GUI.Utils import guiutils
 from GUI.Validators.HexValidator import HexValidator
-from GUI.Widgets.ManualAddress.Form.AddAddressManuallyDialog import Ui_Dialog
+from GUI.Widgets.ManualAddress.Form.ManualAddressDialog import Ui_Dialog
 from GUI.Widgets.ManualAddress.PointerChainOffset import PointerChainOffset
 from libpince import debugcore, typedefs, utils
 from tr.tr import TranslationConstants as tr

@@ -18,7 +18,7 @@ from GUI.Widgets.HexEdit.HexEdit import HexEditDialog
 from GUI.Widgets.LogFile.LogFile import LogFileWidget
 from GUI.Widgets.ManualAddress.ManualAddress import ManualAddressDialog
 from GUI.Widgets.MemoryRegions.MemoryRegions import MemoryRegionsWidget
-from GUI.Widgets.MemoryView.Form.MemoryViewerWindow import Ui_MainWindow_MemoryView
+from GUI.Widgets.MemoryView.Form.MemoryViewWindow import Ui_MainWindow_MemoryView
 from GUI.Widgets.MonoDissect.MonoDissect import MonoDissectDialog
 from GUI.Widgets.ReferencedCalls.ReferencedCalls import ReferencedCallsWidget
 from GUI.Widgets.ReferencedStrings.ReferencedStrings import ReferencedStringsWidget
