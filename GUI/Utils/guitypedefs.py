@@ -42,6 +42,7 @@ class SessionSignals(QObject):
 class BackendSignals(QObject):
     breakpoints_changed = pyqtSignal()
     instructions_changed = pyqtSignal()
+    dissect_code_status_changed = pyqtSignal()
 
 
 class Worker(QRunnable):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright (C) 2016-2017 Korcan Karaokçu <korcankaraokcu@gmail.com>
+Copyright (C) Korcan Karaokçu <korcankaraokcu@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ from threading import Lock, Thread, Condition
 from time import sleep, time
 from collections import OrderedDict, defaultdict
 import pexpect, os, ctypes, pickle, shelve, re, struct, io, traceback
+from capstone import Cs, CsError, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
 from . import utils, typedefs, regexes
 from .utils import safe_str_to_int, safe_int_cast, logger
 from typing import Any, Callable
@@ -106,6 +107,15 @@ driving_inferior = False
 
 # A boolean value. Used by dissect_code() to mark an ongoing code dissection.
 dissect_code_active = False
+
+# A boolean value. Set by cancel_dissect_code() to stop the ongoing code dissection early
+dissect_code_cancelled = False
+
+# Current state of the ongoing code dissection, see get_dissect_code_status for its format
+dissect_code_status = "", "", "", 0, 0, 0
+
+# Emitted whenever dissect_code() advances, read the new state with get_dissect_code_status()
+dissect_code_status_changed = typedefs.Signal()
 
 # A boolean value. Set to True when a tracking breakpoint (on_hit != BREAK) was the last stop
 # This prevents the subsequent *running event from notifying the UI
@@ -3097,9 +3107,39 @@ def search_instr(
     return returned_list
 
 
+def _is_dissect_address_valid(memory: io.BufferedReader, int_address: int, discard_invalid_strings: bool = False) -> bool:
+    """Checks if the address referenced by a dissected instruction points to readable memory
+
+    Args:
+        memory (BufferedReader): Memory handle of the currently attached process
+        int_address (int): Address that'll be checked
+        discard_invalid_strings (bool): If True, the address also has to hold a string that can be decoded as utf-8
+
+    Returns:
+        bool: True if the address is valid, False otherwise
+    """
+    try:
+        memory.seek(int_address)
+    except (OSError, ValueError):
+        return False  # vsyscall is ignored if vDSO is present, so we can safely ignore vsyscall
+    try:
+        if discard_invalid_strings:
+            data_read = memory.read(32)
+            if data_read.startswith(b"\0"):
+                return False
+            data_read = data_read.split(b"\0", maxsplit=1)[0]
+            data_read.decode("utf-8")
+        else:
+            memory.read(1)
+    except Exception:
+        return False
+    return True
+
+
 def dissect_code(region_list: list, discard_invalid_strings: bool = True) -> None:
     """Searches given regions for jumps, calls and string references
     Use function get_dissect_code_data() to gather the results
+    Use function cancel_dissect_code() to stop the search early
 
     Args:
         region_list (list): A list of (start_address, end_address) -> (str, str)
@@ -3107,10 +3147,104 @@ def dissect_code(region_list: list, discard_invalid_strings: bool = True) -> Non
         discard_invalid_strings (bool): Entries that can't be decoded as utf-8 won't be included in referenced strings
     """
     global dissect_code_active
+    global dissect_code_cancelled
+    global dissect_code_status
+    # Dissection has its own disassembler instead of the shared ones in utils because it runs in its own thread
+    if inferior_arch == typedefs.INFERIOR_ARCH.ARCH_64:
+        disassembler = Cs(CS_ARCH_X86, CS_MODE_64)
+    else:
+        disassembler = Cs(CS_ARCH_X86, CS_MODE_32)
+    disassembler.skipdata = True
     dissect_code_active = True
+    dissect_code_cancelled = False
+    referenced_strings_dict = None
+    referenced_jumps_dict = None
+    referenced_calls_dict = None
     try:
-        send_command("pince-dissect-code", send_with_file=True, file_contents_send=(region_list, discard_invalid_strings))
+        referenced_strings_dict = shelve.open(utils.get_referenced_strings_file(currentpid), writeback=True)
+        referenced_jumps_dict = shelve.open(utils.get_referenced_jumps_file(currentpid), writeback=True)
+        referenced_calls_dict = shelve.open(utils.get_referenced_calls_file(currentpid), writeback=True)
+        region_count = len(region_list)
+        with memory_handle() as memory:
+            ref_str_count = len(referenced_strings_dict)
+            ref_jmp_count = len(referenced_jumps_dict)
+            ref_call_count = len(referenced_calls_dict)
+            # Refresh the status every time we advance this many bytes through a region so the GUI
+            # can report live progress and reference counts instead of freezing until the region is done
+            status_update_range = 0x100000
+            for region_index, (start_addr, end_addr) in enumerate(region_list):
+                if dissect_code_cancelled:
+                    break
+                region_info = start_addr + "-" + end_addr, str(region_index + 1) + " / " + str(region_count)
+                start_addr = int(start_addr, 16)
+                end_addr = int(end_addr, 16)
+                try:
+                    memory.seek(start_addr)
+                except (OSError, ValueError):
+                    continue
+                buffer_size = end_addr - start_addr
+                code = memory.read(buffer_size)
+                next_status_addr = start_addr
+                try:
+                    for instruction_addr, instruction_size, mnemonic, operands in disassembler.disasm_lite(code, start_addr):
+                        if dissect_code_cancelled:
+                            break
+                        if instruction_addr >= next_status_addr:
+                            dissect_code_status = region_info + (
+                                hex(instruction_addr)[2:] + "-" + hex(end_addr)[2:],
+                                ref_str_count,
+                                ref_jmp_count,
+                                ref_call_count,
+                            )
+                            next_status_addr = instruction_addr + status_update_range
+                            dissect_code_status_changed.emit()
+                        instruction = f"{mnemonic} {operands}" if operands != "" else mnemonic
+                        if ":[rip" in operands:
+                            continue
+                        if "[rip" in operands and not instruction.startswith(("j", "loop", "call")):
+                            offset = operands.partition("[rip")[2].partition("]")[0].replace(" ", "")
+                            referenced_address_int = instruction_addr + instruction_size + int(offset or "0", 0)
+                            referenced_address_str = hex(referenced_address_int)
+                        else:
+                            found = regexes.dissect_code_valid_address.search(instruction)
+                            if not found:
+                                continue
+                            referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
+                            referenced_address_int = int(referenced_address_str, 16)
+                        if instruction.startswith("j") or instruction.startswith("loop"):
+                            if _is_dissect_address_valid(memory, referenced_address_int):
+                                instruction_only = regexes.alphanumerics.search(instruction).group(0).casefold()
+                                try:
+                                    referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
+                                except KeyError:
+                                    referenced_jumps_dict[referenced_address_str] = {}
+                                    referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
+                                    ref_jmp_count += 1
+                        elif instruction.startswith("call"):
+                            if _is_dissect_address_valid(memory, referenced_address_int):
+                                try:
+                                    referenced_calls_dict[referenced_address_str].add(instruction_addr)
+                                except KeyError:
+                                    referenced_calls_dict[referenced_address_str] = set()
+                                    referenced_calls_dict[referenced_address_str].add(instruction_addr)
+                                    ref_call_count += 1
+                        else:
+                            if _is_dissect_address_valid(memory, referenced_address_int, discard_invalid_strings):
+                                try:
+                                    referenced_strings_dict[referenced_address_str].add(instruction_addr)
+                                except KeyError:
+                                    referenced_strings_dict[referenced_address_str] = set()
+                                    referenced_strings_dict[referenced_address_str].add(instruction_addr)
+                                    ref_str_count += 1
+                except CsError:
+                    logger.exception("An exception occurred while trying to dissect code")
+                    continue
+    except Exception:
+        logger.exception("An exception occurred while trying to dissect code")
     finally:
+        for db in (referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict):
+            if db is not None:
+                db.close()
         dissect_code_active = False
 
 
@@ -3128,21 +3262,16 @@ def get_dissect_code_status() -> tuple:
         referenced_jumps_count-->(int) Count of referenced jumps
         referenced_calls_count-->(int) Count of referenced calls
 
-        Returns a tuple of ("", "", "", 0, 0, 0) if fails to gather info
+        Returns a tuple of ("", "", "", 0, 0, 0) if dissect_code() hasn't advanced far enough to report any progress
     """
-    dissect_code_status_file = utils.get_dissect_code_status_file(currentpid)
-    try:
-        with open(dissect_code_status_file, "rb") as dissect_code_status_handle:
-            output = pickle.load(dissect_code_status_handle)
-    except Exception:
-        output = "", "", "", 0, 0, 0
-    return output
+    return dissect_code_status
 
 
 def cancel_dissect_code() -> None:
     """Finishes the current dissect code process early on"""
+    global dissect_code_cancelled
     if dissect_code_active:
-        cancel_ongoing_command()
+        dissect_code_cancelled = True
 
 
 def get_dissect_code_data(referenced_strings: bool = True, referenced_jumps: bool = True, referenced_calls: bool = True) -> list[shelve.Shelf]:
@@ -3255,12 +3384,40 @@ def search_referenced_calls(searched_str: str, case_sensitive: bool = True, enab
         list: [[referenced_address1, found_string1], ...]
         None: If enable_regex is True and searched_str isn't a valid regex expression
     """
-    return send_command(
-        "pince-search-referenced-calls",
-        send_with_file=True,
-        file_contents_send=(searched_str, case_sensitive, enable_regex),
-        recv_with_file=True,
-    )
+    if enable_regex:
+        try:
+            if case_sensitive:
+                regex = re.compile(searched_str)
+            else:
+                regex = re.compile(searched_str, re.IGNORECASE)
+        except Exception:
+            logger.exception(f"An exception occurred while trying to compile the given regex '{searched_str}'")
+            return
+    call_dict = get_dissect_code_data(False, False, True)[0]
+    returned_list = []
+    try:
+        addresses = list(call_dict)
+        # Resolved in one batch because each symbol lookup is a gdb evaluation
+        for address, examine_result in zip(addresses, examine_expressions(addresses)):
+            symbol = examine_result.all
+            if not symbol:
+                continue
+            if enable_regex:
+                if not regex.search(symbol):
+                    continue
+            else:
+                if case_sensitive:
+                    if symbol.find(searched_str) == -1:
+                        continue
+                else:
+                    if symbol.lower().find(searched_str.lower()) == -1:
+                        continue
+            returned_list.append((symbol, len(call_dict[address])))
+    except Exception:
+        logger.exception("Caught exception while searching referenced calls!")
+    finally:
+        call_dict.close()
+    return returned_list
 
 
 def complete_command(gdb_command: str) -> list[str]:

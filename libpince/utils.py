@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright (C) 2016-2017 Korcan Karaokçu <korcankaraokcu@gmail.com>
+Copyright (C) Korcan Karaokçu <korcankaraokcu@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -752,18 +752,6 @@ def change_trace_status(pid: int | str, trace_status: int) -> None:
     trace_status_file = get_trace_status_file(pid)
     with open(trace_status_file, "w") as trace_file:
         trace_file.write(str(trace_status))
-
-
-def get_dissect_code_status_file(pid: int | str) -> str:
-    """Get the path of dissect code status file for given pid
-
-    Args:
-        pid (int,str): PID of the process
-
-    Returns:
-        str: Path of dissect code status file
-    """
-    return get_ipc_path(pid) + "/dissect_code_status.txt"
 
 
 def get_referenced_strings_file(pid: int | str) -> str:

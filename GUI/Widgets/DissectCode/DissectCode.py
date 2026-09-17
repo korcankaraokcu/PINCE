@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QDialog, QWidget, QTableWidgetItem, QMessageBox
 from PyQt6.QtGui import QCloseEvent
-from PyQt6.QtCore import QTimer, QThread, pyqtSignal
+from PyQt6.QtCore import QThread, pyqtSignal
+from GUI.States import states
 from GUI.Utils import guiutils
 from GUI.Widgets.DissectCode.Form.DissectCodeDialog import Ui_Dialog
 from libpince import debugcore, utils
@@ -22,9 +23,7 @@ class DissectCodeDialog(QDialog, Ui_Dialog):
         self.show_memory_regions()
         self.splitter.setStretchFactor(0, 1)
         self.pushButton_StartCancel.clicked.connect(self.pushButton_StartCancel_clicked)
-        self.refresh_timer = QTimer(self)
-        self.refresh_timer.setInterval(100)
-        self.refresh_timer.timeout.connect(self.refresh_dissect_status)
+        states.backend_signals.dissect_code_status_changed.connect(self.refresh_dissect_status)
         if int_address != -1:
             for row in range(self.tableWidget_ExecutableMemoryRegions.rowCount()):
                 item = self.tableWidget_ExecutableMemoryRegions.item(row, DISSECT_CODE_ADDR_COL).text()
@@ -112,7 +111,6 @@ class DissectCodeDialog(QDialog, Ui_Dialog):
         if not self.is_canceled:
             self.label_ScanInfo.setText(tr.SCAN_FINISHED)
         self.is_canceled = False
-        self.refresh_timer.stop()
         self.refresh_dissect_status()
         self.update_dissect_results()
         self.scan_finished_signal.emit()
@@ -122,7 +120,6 @@ class DissectCodeDialog(QDialog, Ui_Dialog):
             self.is_canceled = True
             self.background_thread.is_canceled = True
             debugcore.cancel_dissect_code()
-            self.refresh_timer.stop()
             self.update_dissect_results()
             self.label_ScanInfo.setText(tr.SCAN_CANCELED)
         else:
@@ -136,12 +133,10 @@ class DissectCodeDialog(QDialog, Ui_Dialog):
             self.background_thread.output_ready.connect(self.scan_finished)
             self.background_thread.finished.connect(self.init_pre_scan_gui)
             self.init_after_scan_gui()
-            self.refresh_timer.start()
             self.background_thread.start()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         debugcore.cancel_dissect_code()
-        self.refresh_timer.stop()
         if hasattr(self, "background_thread"):
             self.is_canceled = True
             self.background_thread.is_canceled = True

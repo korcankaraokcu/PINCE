@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright (C) 2016-2017 Korcan Karaokçu <korcankaraokcu@gmail.com>
+Copyright (C) Korcan Karaokçu <korcankaraokcu@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,8 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import gdb, pickle, sys, re, struct, shelve, importlib
-from capstone import Cs, CsError, CS_ARCH_X86, CS_MODE_32, CS_MODE_64
+import gdb, pickle, sys, struct, importlib
 from collections import OrderedDict
 from typing import Any
 
@@ -395,166 +394,6 @@ class TraceInstructions(gdb.Command):
         utils.change_trace_status(pid, typedefs.TRACE_STATUS.TRACING)
 
 
-class DissectCode(gdb.Command):
-    def __init__(self) -> None:
-        super(DissectCode, self).__init__("pince-dissect-code", gdb.COMMAND_USER)
-
-    def is_memory_valid(self, int_address: int, discard_invalid_strings: bool = False) -> bool:
-        try:
-            self.memory.seek(int_address)
-        except (OSError, ValueError):
-            return False  # vsyscall is ignored if vDSO is present, so we can safely ignore vsyscall
-        try:
-            if discard_invalid_strings:
-                data_read = self.memory.read(32)
-                if data_read.startswith(b"\0"):
-                    return False
-                data_read = data_read.split(b"\0", maxsplit=1)[0]
-                data_read.decode("utf-8")
-            else:
-                self.memory.read(1)
-        except Exception:
-            return False
-        return True
-
-    def invoke(self, argument: str, from_tty: bool) -> None:
-        if gdbutils.current_arch == typedefs.INFERIOR_ARCH.ARCH_64:
-            disassembler = Cs(CS_ARCH_X86, CS_MODE_64)
-        else:
-            disassembler = Cs(CS_ARCH_X86, CS_MODE_32)
-        disassembler.skipdata = True
-        referenced_strings_dict = None
-        referenced_jumps_dict = None
-        referenced_calls_dict = None
-        try:
-            referenced_strings_dict = shelve.open(utils.get_referenced_strings_file(pid), writeback=True)
-            referenced_jumps_dict = shelve.open(utils.get_referenced_jumps_file(pid), writeback=True)
-            referenced_calls_dict = shelve.open(utils.get_referenced_calls_file(pid), writeback=True)
-            region_list, discard_invalid_strings = receive_from_pince()
-            dissect_code_status_file = utils.get_dissect_code_status_file(pid)
-            region_count = len(region_list)
-            with open(gdbutils.mem_file, "rb") as memory:
-                self.memory = memory
-                ref_str_count = len(referenced_strings_dict)
-                ref_jmp_count = len(referenced_jumps_dict)
-                ref_call_count = len(referenced_calls_dict)
-                # Refresh the status file every time we advance this many bytes through a region so the GUI
-                # can report live progress and reference counts instead of freezing until the region is done
-                status_update_range = 0x100000
-                for region_index, (start_addr, end_addr) in enumerate(region_list):
-                    region_info = start_addr + "-" + end_addr, str(region_index + 1) + " / " + str(region_count)
-                    start_addr = int(start_addr, 16)
-                    end_addr = int(end_addr, 16)
-                    try:
-                        self.memory.seek(start_addr)
-                    except (OSError, ValueError):
-                        continue
-                    buffer_size = end_addr - start_addr
-                    code = self.memory.read(buffer_size)
-                    next_status_addr = start_addr
-                    try:
-                        for instruction_addr, instruction_size, mnemonic, operands in disassembler.disasm_lite(code, start_addr):
-                            if instruction_addr >= next_status_addr:
-                                status_info = region_info + (
-                                    hex(instruction_addr)[2:] + "-" + hex(end_addr)[2:],
-                                    ref_str_count,
-                                    ref_jmp_count,
-                                    ref_call_count,
-                                )
-                                with open(dissect_code_status_file, "wb") as dissect_code_status_handle:
-                                    pickle.dump(status_info, dissect_code_status_handle)
-                                next_status_addr = instruction_addr + status_update_range
-                            instruction = f"{mnemonic} {operands}" if operands != "" else mnemonic
-                            if ":[rip" in operands:
-                                continue
-                            if "[rip" in operands and not instruction.startswith(("j", "loop", "call")):
-                                offset = operands.partition("[rip")[2].partition("]")[0].replace(" ", "")
-                                referenced_address_int = instruction_addr + instruction_size + int(offset or "0", 0)
-                                referenced_address_str = hex(referenced_address_int)
-                            else:
-                                found = regexes.dissect_code_valid_address.search(instruction)
-                                if not found:
-                                    continue
-                                referenced_address_str = regexes.hex_number.search(found.group(0)).group(0).lower()
-                                referenced_address_int = int(referenced_address_str, 16)
-                            if instruction.startswith("j") or instruction.startswith("loop"):
-                                if self.is_memory_valid(referenced_address_int):
-                                    instruction_only = regexes.alphanumerics.search(instruction).group(0).casefold()
-                                    try:
-                                        referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
-                                    except KeyError:
-                                        referenced_jumps_dict[referenced_address_str] = {}
-                                        referenced_jumps_dict[referenced_address_str][instruction_addr] = instruction_only
-                                        ref_jmp_count += 1
-                            elif instruction.startswith("call"):
-                                if self.is_memory_valid(referenced_address_int):
-                                    try:
-                                        referenced_calls_dict[referenced_address_str].add(instruction_addr)
-                                    except KeyError:
-                                        referenced_calls_dict[referenced_address_str] = set()
-                                        referenced_calls_dict[referenced_address_str].add(instruction_addr)
-                                        ref_call_count += 1
-                            else:
-                                if self.is_memory_valid(referenced_address_int, discard_invalid_strings):
-                                    try:
-                                        referenced_strings_dict[referenced_address_str].add(instruction_addr)
-                                    except KeyError:
-                                        referenced_strings_dict[referenced_address_str] = set()
-                                        referenced_strings_dict[referenced_address_str].add(instruction_addr)
-                                        ref_str_count += 1
-                    except CsError:
-                        logger.exception("An exception occurred while trying to dissect code")
-                        continue
-        finally:
-            self.memory = None
-            for db in (referenced_strings_dict, referenced_jumps_dict, referenced_calls_dict):
-                if db is not None:
-                    db.close()
-
-
-class SearchReferencedCalls(gdb.Command):
-    def __init__(self) -> None:
-        super(SearchReferencedCalls, self).__init__("pince-search-referenced-calls", gdb.COMMAND_USER)
-
-    def invoke(self, argument: str, from_tty: bool) -> None:
-        searched_str, case_sensitive, enable_regex = receive_from_pince()
-        if enable_regex:
-            try:
-                if case_sensitive:
-                    regex = re.compile(searched_str)
-                else:
-                    regex = re.compile(searched_str, re.IGNORECASE)
-            except Exception:
-                logger.exception(f"An exception occurred while trying to compile the given regex '{searched_str}'")
-                send_to_pince(None)
-                return
-        str_dict = None
-        returned_list = []
-        try:
-            str_dict = shelve.open(utils.get_referenced_calls_file(pid), "r")
-            for item in str_dict:
-                symbol = gdbutils.examine_expression(item).all
-                if not symbol:
-                    continue
-                if enable_regex:
-                    if not regex.search(symbol):
-                        continue
-                else:
-                    if case_sensitive:
-                        if symbol.find(searched_str) == -1:
-                            continue
-                    else:
-                        if symbol.lower().find(searched_str.lower()) == -1:
-                            continue
-                returned_list.append((symbol, len(str_dict[item])))
-        except Exception:
-            logger.exception("Caught exception while searching referenced calls!")
-        finally:
-            if str_dict is not None:
-                str_dict.close()
-        send_to_pince(returned_list)
-
-
 class ExamineExpressions(gdb.Command):
     def __init__(self) -> None:
         super(ExamineExpressions, self).__init__("pince-examine-expressions", gdb.COMMAND_USER)
@@ -615,7 +454,5 @@ GetTrackBreakpointInfo()
 PhaseOut()
 PhaseIn()
 TraceInstructions()
-DissectCode()
-SearchReferencedCalls()
 ExamineExpressions()
 SearchFunctions()

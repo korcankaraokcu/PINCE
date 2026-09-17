@@ -11,6 +11,8 @@ debugcore.breakpoints_changed.connect(lambda: backend_signals.breakpoints_change
 
 debugcore.instructions_changed.connect(lambda: backend_signals.instructions_changed.emit())
 
+debugcore.dissect_code_status_changed.connect(lambda: backend_signals.dissect_code_status_changed.emit())
+
 status_thread = guitypedefs.CheckInferiorStatus()
 status_thread.start()
 
