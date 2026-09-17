@@ -33,7 +33,6 @@ importlib.reload(gdbutils)
 pid = gdbutils.pid
 recv_file = utils.get_from_pince_file(pid)
 send_file = utils.get_to_pince_file(pid)
-lib = None
 
 # Format of info_list: [count, previous_pc_address, register_info, float_info, disas_info]
 # Format of watchpoint_dict: {address1:info_list1, address2:info_list2, ...}
@@ -58,17 +57,6 @@ def send_to_pince(contents_send: Any) -> None:
 
 
 gdbutils.gdbinit()
-
-
-class IgnoreErrors(gdb.Command):
-    def __init__(self) -> None:
-        super(IgnoreErrors, self).__init__("ignore-errors", gdb.COMMAND_USER)
-
-    def invoke(self, argument: str, from_tty: bool) -> None:
-        try:
-            gdb.execute(argument, from_tty)
-        except Exception:
-            pass
 
 
 class CLIOutput(gdb.Command):
@@ -439,7 +427,6 @@ class SearchFunctions(gdb.Command):
         send_to_pince(function_list)
 
 
-IgnoreErrors()
 CLIOutput()
 HandleSignals()
 ParseAndEval()

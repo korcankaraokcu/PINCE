@@ -16,9 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import gdb, sys, traceback, functools, re
+import gdb, sys, re
 from collections import OrderedDict
-from typing import Any, Callable
 
 PINCE_PATH = gdb.parse_and_eval("$PINCE_PATH").string()
 GDBINIT_AA_PATH = gdb.parse_and_eval("$GDBINIT_AA_PATH").string()
@@ -70,19 +69,6 @@ def gdbinit() -> None:
     gdb.execute("set case-sensitive auto")
     gdb.execute("set code-cache off")
     gdb.execute("set stack-cache off")
-
-
-# A decorator for printing exception information because GDB doesn't give proper information about exceptions
-# GDB also overrides sys.excepthook apparently. So this is a proper solution to the exception problem
-def print_exception(func: Callable) -> Callable:
-    @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> None:
-        try:
-            func(*args, **kwargs)
-        except Exception as e:
-            traceback.print_exception(type(e), e, e.__traceback__)
-
-    return wrapper
 
 
 def get_general_registers() -> OrderedDict[str, str | None]:
