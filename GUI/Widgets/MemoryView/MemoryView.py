@@ -1125,24 +1125,18 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
             return
         selected_row = guiutils.get_current_row(self.tableWidget_Stack)
         if selected_row == -1:
-            actions = typedefs.KeyboardModifiersTupleDict([(QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack)])
+            actions = {QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R): self.update_stack}
         else:
             current_address_text = self.tableWidget_Stack.item(selected_row, STACK_VALUE_COL).text()
             current_address = utils.extract_hex_address(current_address_text)
 
-            actions = typedefs.KeyboardModifiersTupleDict(
-                [
-                    (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stack),
-                    (
-                        QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
-                        lambda: self.disassemble_expression(current_address),
-                    ),
-                    (
-                        QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H),
-                        lambda: self.hex_dump_address(utils.safe_str_to_int(current_address, 16)),
-                    ),
-                ]
-            )
+            actions = {
+                QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R): self.update_stack,
+                QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D): lambda: self.disassemble_expression(current_address),
+                QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H): lambda: self.hex_dump_address(
+                    utils.safe_str_to_int(current_address, 16)
+                ),
+            }
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
@@ -1234,7 +1228,7 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
     def tableWidget_StackTrace_key_press_event(self, event: QKeyEvent) -> None:
         if debugcore.currentpid == -1:
             return
-        actions = typedefs.KeyboardModifiersTupleDict([(QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.update_stacktrace)])
+        actions = {QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R): self.update_stacktrace}
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
@@ -1300,23 +1294,17 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
     def widget_HexView_key_press_event(self, event: QKeyEvent) -> None:
         if debugcore.currentpid == -1:
             return
-        actions = typedefs.KeyboardModifiersTupleDict(
-            [
-                (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_G), self.exec_hex_view_go_to_dialog),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
-                    lambda: self.disassemble_expression(hex(self.hex_selection_address_begin)),
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_A),
-                    self.exec_hex_view_add_address_dialog,
-                ),
-                (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C), self.copy_hex_view_selection),
-                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh_hex_view),
-                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageUp), self.hex_view_scroll_up),
-                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageDown), self.hex_view_scroll_down),
-            ]
-        )
+        actions = {
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_G): self.exec_hex_view_go_to_dialog,
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D): lambda: self.disassemble_expression(
+                hex(self.hex_selection_address_begin)
+            ),
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_A): self.exec_hex_view_add_address_dialog,
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C): self.copy_hex_view_selection,
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R): self.refresh_hex_view,
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageUp): self.hex_view_scroll_up,
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageDown): self.hex_view_scroll_down,
+        }
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
@@ -1343,46 +1331,20 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
         current_address = utils.extract_hex_address(current_address_text)
         current_address_int = utils.safe_str_to_int(current_address, 16)
 
-        actions = typedefs.KeyboardModifiersTupleDict(
-            [
-                (
-                    QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space),
-                    lambda: self.follow_instruction(selected_row),
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_E),
-                    lambda: self.exec_examine_referrers_widget(current_address_text),
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_G),
-                    self.exec_disassemble_go_to_dialog,
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H),
-                    lambda: self.hex_dump_address(current_address_int),
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B),
-                    lambda: self.bookmark_address(current_address_int),
-                ),
-                (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D), self.dissect_current_region),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_T),
-                    self.exec_trace_instructions_dialog,
-                ),
-                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R), self.refresh_disassemble_view),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Down),
-                    lambda: self.disassemble_check_viewport("next", 1),
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Up),
-                    lambda: self.disassemble_check_viewport("previous", 1),
-                ),
-                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageUp), self.disassemble_scroll_up),
-                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageDown), self.disassemble_scroll_down),
-            ]
-        )
+        actions = {
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space): lambda: self.follow_instruction(selected_row),
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_E): lambda: self.exec_examine_referrers_widget(current_address_text),
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_G): self.exec_disassemble_go_to_dialog,
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_H): lambda: self.hex_dump_address(current_address_int),
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B): lambda: self.bookmark_address(current_address_int),
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D): self.dissect_current_region,
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_T): self.exec_trace_instructions_dialog,
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R): self.refresh_disassemble_view,
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Down): lambda: self.disassemble_check_viewport("next", 1),
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Up): lambda: self.disassemble_check_viewport("previous", 1),
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageUp): self.disassemble_scroll_up,
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_PageDown): self.disassemble_scroll_down,
+        }
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:

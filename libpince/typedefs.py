@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # IMPORTANT: Any constant involving only the GUI should be declared within the GUI folder
 
-import collections.abc, logging, queue, struct, sys
+import collections, logging, queue, struct, sys
 from typing import Any, Callable, Literal
 from libpince import regexes
 
@@ -843,23 +843,6 @@ class Signal:
     def emit(self, *args: Any, **kwargs: Any) -> None:
         for callback in self.callbacks.copy():
             callback(*args, **kwargs)
-
-
-class KeyboardModifiersTupleDict(collections.abc.Mapping):
-    def __init__(self, OrderedDict_like_list: collections.abc.Iterable[tuple[Any, Any]]) -> None:
-        new_dict = {}
-        for keycomb, value in OrderedDict_like_list:
-            new_dict[keycomb] = value
-        self._storage = new_dict
-
-    def __getitem__(self, keycomb: Any) -> Any:
-        return self._storage[keycomb]
-
-    def __iter__(self) -> collections.abc.Iterator[Any]:
-        return iter(self._storage)
-
-    def __len__(self) -> int:
-        return len(self._storage)
 
 
 class AllocatedMemory:

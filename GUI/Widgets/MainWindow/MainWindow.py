@@ -817,53 +817,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def treeWidget_AddressTable_key_press_event(self, event: QKeyEvent) -> None:
         current_row = guiutils.get_current_item(self.treeWidget_AddressTable)
         current_address = self._resolved_address(current_row) if current_row else None
-        actions = typedefs.KeyboardModifiersTupleDict(
-            [
-                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete), self.delete_records),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B),
-                    lambda: self.browse_region_for_address(current_address),
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
-                    lambda: self.disassemble_for_address(current_address),
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R),
-                    self.pushButton_RefreshAddressTable_clicked,
-                ),
-                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space), self.toggle_records),
-                (QKeyCombination(Qt.KeyboardModifier.ShiftModifier, Qt.Key.Key_Space), self.toggle_records),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Space),
-                    lambda: self.toggle_records(True),
-                ),
-                (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_X), self.cut_records),
-                (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C), self.copy_records),
-                (QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_V), self.paste_records),
-                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_V), lambda: self.paste_records(True)),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Return),
-                    self.treeWidget_AddressTable_edit_value,
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.KeypadModifier, Qt.Key.Key_Enter),
-                    self.treeWidget_AddressTable_edit_value,
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Return),
-                    self.treeWidget_AddressTable_edit_desc,
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return),
-                    self.treeWidget_AddressTable_edit_address,
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return),
-                    self.treeWidget_AddressTable_edit_type,
-                ),
-            ]
-        )
+        actions = {
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete): self.delete_records,
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B): lambda: self.browse_region_for_address(current_address),
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D): lambda: self.disassemble_for_address(current_address),
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_R): self.pushButton_RefreshAddressTable_clicked,
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Space): self.toggle_records,
+            QKeyCombination(Qt.KeyboardModifier.ShiftModifier, Qt.Key.Key_Space): self.toggle_records,
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Space): lambda: self.toggle_records(True),
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_X): self.cut_records,
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C): self.copy_records,
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_V): self.paste_records,
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_V): lambda: self.paste_records(True),
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Return): self.treeWidget_AddressTable_edit_value,
+            QKeyCombination(Qt.KeyboardModifier.KeypadModifier, Qt.Key.Key_Enter): self.treeWidget_AddressTable_edit_value,
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Return): self.treeWidget_AddressTable_edit_desc,
+            QKeyCombination(
+                Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return
+            ): self.treeWidget_AddressTable_edit_address,
+            QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return): self.treeWidget_AddressTable_edit_type,
+        }
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
@@ -1409,34 +1382,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if debugcore.currentpid == -1 or not current_item:
             return
         current_address = self.tableWidget_valuesearchtable.item(current_item.row(), SEARCH_TABLE_ADDRESS_COL).text()
-        actions = typedefs.KeyboardModifiersTupleDict(
-            [
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C),
-                    self.copy_valuesearchtable_selection,
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B),
-                    lambda: self.browse_region_for_address(current_address),
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D),
-                    lambda: self.disassemble_for_address(current_address),
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete),
-                    self.delete_valuesearchtable_selection,
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Return),
-                    self.copy_to_address_table,
-                ),
-                (
-                    QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Enter),
-                    self.copy_to_address_table,
-                ),
-            ]
-        )
+        actions = {
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_C): self.copy_valuesearchtable_selection,
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_B): lambda: self.browse_region_for_address(current_address),
+            QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_D): lambda: self.disassemble_for_address(current_address),
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete): self.delete_valuesearchtable_selection,
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Return): self.copy_to_address_table,
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Enter): self.copy_to_address_table,
+        }
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:

@@ -65,14 +65,7 @@ class BreakpointInfoWidget(QTabWidget, Ui_TabWidget):
         else:
             breakpoint_num = None
 
-        actions = typedefs.KeyboardModifiersTupleDict(
-            [
-                (
-                    QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete),
-                    lambda: self.delete_breakpoint(breakpoint_num),
-                ),
-            ]
-        )
+        actions = {QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Delete): lambda: self.delete_breakpoint(breakpoint_num)}
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:

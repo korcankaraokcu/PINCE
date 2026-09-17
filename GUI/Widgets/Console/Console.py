@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt, QKeyCombination, QStringListModel, pyqtSignal
 from GUI.Utils import guitypedefs, guiutils
 from GUI.Widgets.Console.Form.ConsoleWidget import Ui_Form
 from GUI.Widgets.TextEdit.TextEdit import TextEditDialog
-from libpince import debugcore, typedefs
+from libpince import debugcore
 from tr.tr import TranslationConstants as tr
 
 
@@ -115,12 +115,10 @@ class ConsoleWidget(QWidget, Ui_Form):
         self.lineEdit.setText(self.input_history[self.current_history_index])
 
     def lineEdit_key_press_event(self, event: QKeyEvent) -> None:
-        actions = typedefs.KeyboardModifiersTupleDict(
-            [
-                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Up), self.scroll_backwards_history),
-                (QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Down), self.scroll_forwards_history),
-            ]
-        )
+        actions = {
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Up): self.scroll_backwards_history,
+            QKeyCombination(Qt.KeyboardModifier.NoModifier, Qt.Key.Key_Down): self.scroll_forwards_history,
+        }
         try:
             actions[QKeyCombination(event.modifiers(), Qt.Key(event.key()))]()
         except KeyError:
