@@ -183,26 +183,7 @@ on_hit_to_text_dict = {
     BREAKPOINT_ON_HIT.TRACE: "Trace",
 }
 
-# Represents the texts at indexes in scan combobox
-# TODO: Consider integrating this UI helper into the UI completely
-scan_index_to_text_dict = collections.OrderedDict(
-    [
-        (SCAN_INDEX.INT_ANY, "Int(any)"),
-        (SCAN_INDEX.INT8, "Int8"),
-        (SCAN_INDEX.INT16, "Int16"),
-        (SCAN_INDEX.INT32, "Int32"),
-        (SCAN_INDEX.INT64, "Int64"),
-        (SCAN_INDEX.FLOAT_ANY, "Float(any)"),
-        (SCAN_INDEX.FLOAT32, "Float32"),
-        (SCAN_INDEX.FLOAT64, "Float64"),
-        (SCAN_INDEX.ANY, "Any(int, float)"),
-        (SCAN_INDEX.STRING, "String"),
-        (SCAN_INDEX.AOB, "ByteArray"),
-    ]
-)
 
-
-# TODO: Consider integrating this UI helper into the UI completely
 class SCAN_TYPE:
     EXACT = 0
     NOT = 1
@@ -216,43 +197,6 @@ class SCAN_TYPE:
     CHANGED = 9
     UNCHANGED = 10
     UNKNOWN = 11
-
-    @staticmethod
-    def get_list(scan_mode: int, value_type: int) -> list[int]:
-        if scan_mode == SCAN_MODE.NEW:
-            if value_type == SCAN_INDEX.STRING or value_type == SCAN_INDEX.AOB:
-                list = [
-                    SCAN_TYPE.EXACT,
-                    SCAN_TYPE.UNKNOWN,
-                ]
-            else:
-                list = [
-                    SCAN_TYPE.EXACT,
-                    SCAN_TYPE.NOT,
-                    SCAN_TYPE.LESS,
-                    SCAN_TYPE.MORE,
-                    SCAN_TYPE.BETWEEN,
-                    SCAN_TYPE.UNKNOWN,
-                ]
-        else:
-            if value_type == SCAN_INDEX.STRING or value_type == SCAN_INDEX.AOB:
-                list = [SCAN_TYPE.EXACT]
-            else:
-                list = [
-                    SCAN_TYPE.EXACT,
-                    SCAN_TYPE.NOT,
-                    SCAN_TYPE.INCREASED,
-                    SCAN_TYPE.INCREASED_BY,
-                    SCAN_TYPE.DECREASED,
-                    SCAN_TYPE.DECREASED_BY,
-                    SCAN_TYPE.LESS,
-                    SCAN_TYPE.MORE,
-                    SCAN_TYPE.BETWEEN,
-                    SCAN_TYPE.CHANGED,
-                    SCAN_TYPE.UNCHANGED,
-                ]
-
-        return list
 
 
 class SCAN_MODE:

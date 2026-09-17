@@ -1208,31 +1208,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lineEdit_Scan2.setVisible(False)
 
     def comboBox_ScanType_init(self) -> None:
-        scan_type_text = {
-            typedefs.SCAN_TYPE.EXACT: tr.EXACT,
-            typedefs.SCAN_TYPE.NOT: tr.NOT,
-            typedefs.SCAN_TYPE.INCREASED: tr.INCREASED,
-            typedefs.SCAN_TYPE.INCREASED_BY: tr.INCREASED_BY,
-            typedefs.SCAN_TYPE.DECREASED: tr.DECREASED,
-            typedefs.SCAN_TYPE.DECREASED_BY: tr.DECREASED_BY,
-            typedefs.SCAN_TYPE.LESS: tr.LESS_THAN,
-            typedefs.SCAN_TYPE.MORE: tr.MORE_THAN,
-            typedefs.SCAN_TYPE.BETWEEN: tr.BETWEEN,
-            typedefs.SCAN_TYPE.CHANGED: tr.CHANGED,
-            typedefs.SCAN_TYPE.UNCHANGED: tr.UNCHANGED,
-            typedefs.SCAN_TYPE.UNKNOWN: tr.UNKNOWN_VALUE,
-        }
-        current_type = self.comboBox_ScanType.currentData(Qt.ItemDataRole.UserRole)
         value_type = self.comboBox_ValueType.currentData(Qt.ItemDataRole.UserRole)
-        self.comboBox_ScanType.clear()
-        items = typedefs.SCAN_TYPE.get_list(self.scan_mode, value_type)
-        for type_index in items:
-            self.comboBox_ScanType.addItem(scan_type_text[type_index], type_index)
-        idx = self.comboBox_ScanType.findData(current_type)
-        if idx >= 0:
-            self.comboBox_ScanType.setCurrentIndex(idx)
-        else:
-            self.comboBox_ScanType.setCurrentIndex(0)
+        guiutils.fill_scan_type_combobox(self.comboBox_ScanType, self.scan_mode, value_type)
 
     def comboBox_ScanScope_init(self) -> None:
         guiutils.fill_scope_combobox(self.comboBox_ScanScope)
@@ -1258,10 +1235,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             memscan.set_reverse_endianness(sys.byteorder != "big")
 
     def comboBox_ValueType_init(self) -> None:
-        self.comboBox_ValueType.clear()
-        for value_index, value_text in typedefs.scan_index_to_text_dict.items():
-            self.comboBox_ValueType.addItem(value_text, value_index)
-        self.comboBox_ValueType.setCurrentIndex(self.comboBox_ValueType.findData(typedefs.SCAN_INDEX.INT32))
+        guiutils.fill_scan_index_combobox(self.comboBox_ValueType)
         self.comboBox_ValueType_current_index_changed()
 
     def pushButton_NextScan_clicked(self) -> None:

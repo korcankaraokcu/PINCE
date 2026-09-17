@@ -31,7 +31,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QFileDialog,
 )
-from PyQt6.QtCore import QObject, QRegularExpression
+from PyQt6.QtCore import Qt, QObject, QRegularExpression
 from PyQt6.QtGui import QShortcut, QRegularExpressionValidator
 from libpince import debugcore, utils, typedefs, regexes
 from libpince.libmemscan.memscan import ScanLevel
@@ -228,6 +228,101 @@ def fill_alignment_combobox(combobox: QComboBox) -> None:
     for text, value in alignment_text_val:
         combobox.addItem(text, value)
     combobox.setCurrentIndex(combobox.findData(0))
+
+
+def fill_scan_index_combobox(combobox: QComboBox, current_index: int = typedefs.SCAN_INDEX.INT32) -> None:
+    """Fills the given QComboBox with scan value type strings
+
+    Args:
+        combobox (QComboBox): The combobox that'll be filled
+        current_index (int): Can be a member of typedefs.SCAN_INDEX
+    """
+    # Type names are used as they are, no need to make these translatable
+    scan_index_text = [
+        (typedefs.SCAN_INDEX.INT_ANY, "Int(any)"),
+        (typedefs.SCAN_INDEX.INT8, "Int8"),
+        (typedefs.SCAN_INDEX.INT16, "Int16"),
+        (typedefs.SCAN_INDEX.INT32, "Int32"),
+        (typedefs.SCAN_INDEX.INT64, "Int64"),
+        (typedefs.SCAN_INDEX.FLOAT_ANY, "Float(any)"),
+        (typedefs.SCAN_INDEX.FLOAT32, "Float32"),
+        (typedefs.SCAN_INDEX.FLOAT64, "Float64"),
+        (typedefs.SCAN_INDEX.ANY, "Any(int, float)"),
+        (typedefs.SCAN_INDEX.STRING, "String"),
+        (typedefs.SCAN_INDEX.AOB, "ByteArray"),
+    ]
+    combobox.clear()
+    for scan_index, text in scan_index_text:
+        combobox.addItem(text, scan_index)
+    idx = combobox.findData(current_index)
+    if idx >= 0:
+        combobox.setCurrentIndex(idx)
+    else:
+        combobox.setCurrentIndex(0)
+
+
+def fill_scan_type_combobox(combobox: QComboBox, scan_mode: int, value_type: int) -> None:
+    """Fills the given QComboBox with the scan types that can be used with the given scan mode and value type
+    Keeps the current scan type selected if it's still available after the refill
+
+    Args:
+        combobox (QComboBox): The combobox that'll be filled
+        scan_mode (int): Can be a member of typedefs.SCAN_MODE
+        value_type (int): Can be a member of typedefs.SCAN_INDEX
+    """
+    scan_type_text = {
+        typedefs.SCAN_TYPE.EXACT: tr.EXACT,
+        typedefs.SCAN_TYPE.NOT: tr.NOT,
+        typedefs.SCAN_TYPE.INCREASED: tr.INCREASED,
+        typedefs.SCAN_TYPE.INCREASED_BY: tr.INCREASED_BY,
+        typedefs.SCAN_TYPE.DECREASED: tr.DECREASED,
+        typedefs.SCAN_TYPE.DECREASED_BY: tr.DECREASED_BY,
+        typedefs.SCAN_TYPE.LESS: tr.LESS_THAN,
+        typedefs.SCAN_TYPE.MORE: tr.MORE_THAN,
+        typedefs.SCAN_TYPE.BETWEEN: tr.BETWEEN,
+        typedefs.SCAN_TYPE.CHANGED: tr.CHANGED,
+        typedefs.SCAN_TYPE.UNCHANGED: tr.UNCHANGED,
+        typedefs.SCAN_TYPE.UNKNOWN: tr.UNKNOWN_VALUE,
+    }
+    text_types = value_type == typedefs.SCAN_INDEX.STRING or value_type == typedefs.SCAN_INDEX.AOB
+    if scan_mode == typedefs.SCAN_MODE.NEW:
+        if text_types:
+            scan_types = [typedefs.SCAN_TYPE.EXACT, typedefs.SCAN_TYPE.UNKNOWN]
+        else:
+            scan_types = [
+                typedefs.SCAN_TYPE.EXACT,
+                typedefs.SCAN_TYPE.NOT,
+                typedefs.SCAN_TYPE.LESS,
+                typedefs.SCAN_TYPE.MORE,
+                typedefs.SCAN_TYPE.BETWEEN,
+                typedefs.SCAN_TYPE.UNKNOWN,
+            ]
+    else:
+        if text_types:
+            scan_types = [typedefs.SCAN_TYPE.EXACT]
+        else:
+            scan_types = [
+                typedefs.SCAN_TYPE.EXACT,
+                typedefs.SCAN_TYPE.NOT,
+                typedefs.SCAN_TYPE.INCREASED,
+                typedefs.SCAN_TYPE.INCREASED_BY,
+                typedefs.SCAN_TYPE.DECREASED,
+                typedefs.SCAN_TYPE.DECREASED_BY,
+                typedefs.SCAN_TYPE.LESS,
+                typedefs.SCAN_TYPE.MORE,
+                typedefs.SCAN_TYPE.BETWEEN,
+                typedefs.SCAN_TYPE.CHANGED,
+                typedefs.SCAN_TYPE.UNCHANGED,
+            ]
+    current_type = combobox.currentData(Qt.ItemDataRole.UserRole)
+    combobox.clear()
+    for scan_type in scan_types:
+        combobox.addItem(scan_type_text[scan_type], scan_type)
+    idx = combobox.findData(current_type)
+    if idx >= 0:
+        combobox.setCurrentIndex(idx)
+    else:
+        combobox.setCurrentIndex(0)
 
 
 def get_current_row(tablewidget: QTableWidget) -> int:
