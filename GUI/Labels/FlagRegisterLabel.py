@@ -50,8 +50,7 @@ class FlagRegisterLabel(QLabel):
         registers = debugcore.read_registers()
         current_flag = self.objectName().lower()
         label_text = tr.ENTER_FLAG_VALUE.format(self.objectName())
-        parent = guiutils.search_parents_by_function(self, "set_debug_menu_shortcuts")
-        register_dialog = utilwidgets.ComboBoxDialog(parent, label_text, ["0", "1"], int(registers[current_flag]))
+        register_dialog = utilwidgets.ComboBoxDialog(self.window(), label_text, ["0", "1"], int(registers[current_flag]))
         if register_dialog.exec():
             # self.window() is needed to fix messagebox text color being red
             if guiutils.check_inferior_running(self.window()):

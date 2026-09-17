@@ -3,6 +3,7 @@ from PyQt6.QtGui import QShortcut, QKeySequence, QKeyEvent, QWheelEvent, QContex
 from PyQt6.QtCore import Qt, QEvent, QObject, QTimer, QKeyCombination, QSignalBlocker, QItemSelection, QItemSelectionModel
 from GUI.AbstractTableModels.AsciiModel import AsciiModel
 from GUI.AbstractTableModels.HexModel import HexModel
+from GUI.Labels.RegisterLabel import RegisterLabel
 from GUI.Overlays.DisassembleArrowOverlay import DisassembleArrowOverlay
 from GUI.Session.session import SessionDataChanged, SessionManager, StructureManager
 from GUI.States import states
@@ -166,6 +167,9 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
 
     def initialize_register_view(self) -> None:
         self.pushButton_ShowFloatRegisters.clicked.connect(self.pushButton_ShowFloatRegisters_clicked)
+        for register_label in self.findChildren(RegisterLabel):
+            register_label.hex_view_requested.connect(lambda address: self.hex_dump_address(utils.safe_str_to_int(address, 16)))
+            register_label.disassemble_requested.connect(self.disassemble_expression)
         if guiutils.check_inferior_running(self, show_message=False):
             self.pushButton_ShowFloatRegisters.setEnabled(False)
 

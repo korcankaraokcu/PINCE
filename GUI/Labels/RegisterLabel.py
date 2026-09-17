@@ -17,13 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from PyQt6.QtWidgets import QLabel, QMenu, QApplication, QMessageBox, QWidget
 from PyQt6.QtGui import QCursor, QMouseEvent, QEnterEvent, QContextMenuEvent
-from PyQt6.QtCore import Qt
-from libpince import debugcore, typedefs, utils
+from PyQt6.QtCore import Qt, pyqtSignal
+from libpince import debugcore, typedefs
 from GUI.Utils import guiutils, utilwidgets
 from tr.tr import TranslationConstants as tr
 
 
 class RegisterLabel(QLabel):
+    hex_view_requested = pyqtSignal(str)
+    disassemble_requested = pyqtSignal(str)
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
@@ -52,8 +55,7 @@ class RegisterLabel(QLabel):
         registers = debugcore.read_registers()
         current_register = self.objectName().lower()
         items = [(tr.ENTER_REGISTER_VALUE.format(self.objectName()), registers[current_register])]
-        memory_view = guiutils.search_parents_by_function(self, "set_debug_menu_shortcuts")
-        register_dialog = utilwidgets.InputDialog(memory_view, items)
+        register_dialog = utilwidgets.InputDialog(self.window(), items)
         if register_dialog.exec():
             # self.window() is needed to fix messagebox text color being red
             if guiutils.check_inferior_running(self.window()):
@@ -70,13 +72,9 @@ class RegisterLabel(QLabel):
         font_size = self.font().pointSize()
         menu.setStyleSheet("font-size: " + str(font_size) + "pt;")
         action = menu.exec(event.globalPos())
-        memory_view = guiutils.search_parents_by_function(self, "set_debug_menu_shortcuts")
         if action == show_in_hex_view:
-            address = self.text().split("=")[-1]
-            address_int = utils.safe_str_to_int(address, 16)
-            memory_view.hex_dump_address(address_int)
+            self.hex_view_requested.emit(self.text().split("=")[-1])
         elif action == show_in_disassembler:
-            address = self.text().split("=")[-1]
-            memory_view.disassemble_expression(address)
+            self.disassemble_requested.emit(self.text().split("=")[-1])
         elif action == copy:
             QApplication.clipboard().setText(self.text().split("=")[1])

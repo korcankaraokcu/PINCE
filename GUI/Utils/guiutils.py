@@ -425,21 +425,6 @@ def delete_menu_entries(menu: QMenu, QAction_list: list) -> None:
     clean_entries(menu)
 
 
-# TODO: This is a really bad design pattern, remove this function after moving classes to their own files
-def search_parents_by_function(qt_object: QObject, func_name: str) -> QObject | None:
-    """Search for func_name in the parents of given QObject. Once function is found, parent that possesses func_name
-    is returned
-
-    Args:
-        qt_object (QObject): The object that'll be searched for it's parents
-        func_name (str): The name of the function that'll be searched
-    """
-    while qt_object is not None:
-        qt_object = qt_object.parent()
-        if func_name in dir(qt_object):
-            return qt_object
-
-
 def get_layout_widgets(layout: QLayout) -> list[QWidget]:
     """Returns the widgets of a QLayout as a list
 
