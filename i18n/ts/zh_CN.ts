@@ -517,6 +517,11 @@ Patterns at former positions have higher priority if regex is off</source>
     </message>
     <message>
         <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
+        <source>Remember last file save/open across restarts</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <location filename="../../GUI/Widgets/Settings/Form/SettingsDialog.ui" line="0" />
         <source>Functions</source>
         <translation>功能</translation>
     </message>

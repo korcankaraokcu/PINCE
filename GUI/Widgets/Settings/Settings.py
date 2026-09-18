@@ -113,6 +113,10 @@ class SettingsDialog(QDialog, Ui_Dialog):
             self.settings.remove(settings.SAVE_SESSION_ON_EXIT)
         else:
             self.settings.setValue(settings.SAVE_SESSION_ON_EXIT, save_on_exit)
+        if not self.checkBox_RememberLastPctDirectory.isChecked():
+            self.settings.remove(settings.LAST_PCT_DIRECTORY)
+        elif not self.settings.contains(settings.LAST_PCT_DIRECTORY):
+            self.settings.setValue(settings.LAST_PCT_DIRECTORY, "")
         settings.apply_settings()
         super().accept()
 
@@ -165,6 +169,7 @@ class SettingsDialog(QDialog, Ui_Dialog):
             self.settings.value(settings.SAVE_SESSION_ON_EXIT, type=bool) if self.settings.contains(settings.SAVE_SESSION_ON_EXIT) else None
         )
         self.comboBox_SaveSessionOnExit.setCurrentIndex(self.comboBox_SaveSessionOnExit.findData(save_on_exit))
+        self.checkBox_RememberLastPctDirectory.setChecked(self.settings.contains(settings.LAST_PCT_DIRECTORY))
 
     def change_display(self, index: int) -> None:
         self.stackedWidget.setCurrentIndex(index)

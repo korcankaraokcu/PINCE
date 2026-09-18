@@ -175,7 +175,8 @@ class Session:
         """
         Returns the path the pct file dialogs should start at.
         Sessions without a file of their own fall back to the directory of the last saved or loaded file, even if it
-        belongs to a previous run of PINCE.
+        belongs to a previous run of PINCE, only if the user asked for it.
+        Directories that no longer exist are discarded and previous home user default is used, because Qt will just use "/root" otherwise.
 
         Args:
             None
@@ -183,15 +184,17 @@ class Session:
             str: Absolute path of the directory to open the dialog in, joined with the current file name.
         """
 
+        directory = self.file_path
         if not self.file_backed:
-            last_directory = QSettings().value(settings.LAST_PCT_DIRECTORY, "", type=str)
-            if os.path.isdir(last_directory):
-                self.file_path = last_directory
-        return os.path.join(self.file_path, self.last_file_name)
+            directory = QSettings().value(settings.LAST_PCT_DIRECTORY, "", type=str)
+        if not os.path.isdir(directory):
+            directory = os.path.expanduser("~")
+        return os.path.join(directory, self.last_file_name)
 
     def remember_session_file(self, file_path: str) -> None:
         """
         Marks the session as backed by the given file and stores its directory for the next run of PINCE.
+        The directory is stored only if the setting exists, otherwise we stick to the default.
 
         Args:
             file_path (str): Absolute path of the session file that was just saved or loaded
@@ -203,8 +206,9 @@ class Session:
         self.last_file_name = os.path.basename(file_path)
         self.file_backed = True
         settings_instance = QSettings()
-        settings_instance.setValue(settings.LAST_PCT_DIRECTORY, self.file_path)
-        settings_instance.sync()
+        if settings_instance.contains(settings.LAST_PCT_DIRECTORY):
+            settings_instance.setValue(settings.LAST_PCT_DIRECTORY, self.file_path)
+            settings_instance.sync()
 
     def save_session(self, *, ask_for_path: bool = True) -> bool:
         """

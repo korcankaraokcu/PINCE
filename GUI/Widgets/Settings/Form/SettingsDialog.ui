@@ -391,6 +391,13 @@ Patterns at former positions have higher priority if regex is off</string>
               </layout>
              </item>
              <item>
+              <widget class="QCheckBox" name="checkBox_RememberLastPctDirectory">
+               <property name="text">
+                <string>Remember last file save/open across restarts</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <spacer name="verticalSpacer_2">
                <property name="orientation">
                 <enum>Qt::Orientation::Vertical</enum>
