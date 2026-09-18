@@ -171,6 +171,41 @@ class Session:
         self.last_file_name: str = ""  # process name or file name
         self.file_backed: bool = False  # True when the session was loaded from or saved to a file
 
+    def get_dialog_path(self) -> str:
+        """
+        Returns the path the pct file dialogs should start at.
+        Sessions without a file of their own fall back to the directory of the last saved or loaded file, even if it
+        belongs to a previous run of PINCE.
+
+        Args:
+            None
+        Returns:
+            str: Absolute path of the directory to open the dialog in, joined with the current file name.
+        """
+
+        if not self.file_backed:
+            last_directory = QSettings().value(settings.LAST_PCT_DIRECTORY, "", type=str)
+            if os.path.isdir(last_directory):
+                self.file_path = last_directory
+        return os.path.join(self.file_path, self.last_file_name)
+
+    def remember_session_file(self, file_path: str) -> None:
+        """
+        Marks the session as backed by the given file and stores its directory for the next run of PINCE.
+
+        Args:
+            file_path (str): Absolute path of the session file that was just saved or loaded
+        Returns:
+            None
+        """
+
+        self.file_path = os.path.dirname(os.path.abspath(file_path))
+        self.last_file_name = os.path.basename(file_path)
+        self.file_backed = True
+        settings_instance = QSettings()
+        settings_instance.setValue(settings.LAST_PCT_DIRECTORY, self.file_path)
+        settings_instance.sync()
+
     def save_session(self, *, ask_for_path: bool = True) -> bool:
         """
         Save the current session to a file.
@@ -200,15 +235,13 @@ class Session:
                 return True
             QMessageBox.information(None, tr.ERROR, tr.FILE_SAVE_ERROR)
 
-        with guiutils.save_dialog_as_user(None, tr.SAVE_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT, "pct") as file_path:
+        with guiutils.save_dialog_as_user(None, tr.SAVE_PCT_FILE, self.get_dialog_path(), tr.FILE_TYPES_PCT, "pct") as file_path:
             if not file_path:
                 return False
             if not utils.save_file(session, file_path):
                 QMessageBox.information(None, tr.ERROR, tr.FILE_SAVE_ERROR)
                 return False
-            self.file_path = os.path.dirname(file_path)
-            self.last_file_name = os.path.basename(file_path)
-            self.file_backed = True
+            self.remember_session_file(file_path)
             self.data_changed = SessionDataChanged.NONE
             return True
 
@@ -249,7 +282,7 @@ class Session:
                 return False
 
         if file_path is None or not isinstance(file_path, str):
-            file_path, _ = QFileDialog.getOpenFileName(None, tr.OPEN_PCT_FILE, self.file_path + "/" + self.last_file_name, tr.FILE_TYPES_PCT)
+            file_path, _ = QFileDialog.getOpenFileName(None, tr.OPEN_PCT_FILE, self.get_dialog_path(), tr.FILE_TYPES_PCT)
 
             if not file_path:
                 return False
@@ -276,9 +309,7 @@ class Session:
         self.pct_process_name = content["process_name"]
         self.pct_structures = content.get("structures", {})
 
-        self.file_path = os.path.dirname(file_path)
-        self.last_file_name = os.path.basename(file_path)
-        self.file_backed = True
+        self.remember_session_file(file_path)
 
         states.session_signals.on_load.emit()
         self.data_changed = SessionDataChanged.NONE

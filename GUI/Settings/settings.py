@@ -11,6 +11,7 @@ import json, os
 current_settings_version = "37"  # Increase version by one if you change settings
 CHECK_UPDATES_ON_STARTUP = "General/check_updates_on_startup"
 SAVE_SESSION_ON_EXIT = "General/save_session_on_exit"
+LAST_PCT_DIRECTORY = "General/last_pct_directory"
 
 # Due to community feedback, these signals are disabled by default: SIGUSR1, SIGUSR2, SIGPWR, SIGXCPU, SIGXFSZ, SIGSYS
 default_signals = [
@@ -109,6 +110,7 @@ def set_default_settings() -> None:
     settings.setValue("theme", themes.Themes.DEFAULT.value)
     settings.endGroup()
     settings.remove(SAVE_SESSION_ON_EXIT)
+    settings.remove(LAST_PCT_DIRECTORY)
     settings.beginGroup("Hotkeys")
     for hotkey in states.hotkeys.get_hotkeys():
         settings.setValue(hotkey.name, hotkey.default)
