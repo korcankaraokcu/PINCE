@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>libpince.utils &#8212; PINCE  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for libpince.utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">"""</span>
+<span class="sd">Copyright (C) Korcan Karaokçu &lt;korcankaraokcu@gmail.com&gt;</span>
+
+<span class="sd">This program is free software: you can redistribute it and/or modify</span>
+<span class="sd">it under the terms of the GNU General Public License as published by</span>
+<span class="sd">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="sd">(at your option) any later version.</span>
+
+<span class="sd">This program is distributed in the hope that it will be useful,</span>
+<span class="sd">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="sd">GNU General Public License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU General Public License</span>
+<span class="sd">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">shutil</span><span class="o">,</span><span class="w"> </span><span class="nn">sys</span><span class="o">,</span><span class="w"> </span><span class="nn">binascii</span><span class="o">,</span><span class="w"> </span><span class="nn">pickle</span><span class="o">,</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">traceback</span><span class="o">,</span><span class="w"> </span><span class="nn">re</span><span class="o">,</span><span class="w"> </span><span class="nn">pwd</span><span class="o">,</span><span class="w"> </span><span class="nn">pathlib</span><span class="o">,</span><span class="w"> </span><span class="nn">logging</span><span class="o">,</span><span class="w"> </span><span class="nn">subprocess</span><span class="o">,</span><span class="w"> </span><span class="nn">shlex</span><span class="o">,</span><span class="w"> </span><span class="nn">struct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">typedefs</span><span class="p">,</span> <span class="n">regexes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capstone</span><span class="w"> </span><span class="kn">import</span> <span class="n">Cs</span><span class="p">,</span> <span class="n">CsError</span><span class="p">,</span> <span class="n">CS_ARCH_X86</span><span class="p">,</span> <span class="n">CS_MODE_32</span><span class="p">,</span> <span class="n">CS_MODE_64</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">keystone</span><span class="w"> </span><span class="kn">import</span> <span class="n">Ks</span><span class="p">,</span> <span class="n">KsError</span><span class="p">,</span> <span class="n">KS_ARCH_X86</span><span class="p">,</span> <span class="n">KS_MODE_32</span><span class="p">,</span> <span class="n">KS_MODE_64</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">importlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">util</span> <span class="k">as</span> <span class="n">importlib_util</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pygdbmi</span><span class="w"> </span><span class="kn">import</span> <span class="n">gdbmiparser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModuleType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span>
+
+<span class="c1"># Capstone initialization</span>
+<span class="n">cs_32</span> <span class="o">=</span> <span class="n">Cs</span><span class="p">(</span><span class="n">CS_ARCH_X86</span><span class="p">,</span> <span class="n">CS_MODE_32</span><span class="p">)</span>
+<span class="n">cs_64</span> <span class="o">=</span> <span class="n">Cs</span><span class="p">(</span><span class="n">CS_ARCH_X86</span><span class="p">,</span> <span class="n">CS_MODE_64</span><span class="p">)</span>
+
+<span class="c1"># Keystone initialization</span>
+<span class="n">ks_32</span> <span class="o">=</span> <span class="n">Ks</span><span class="p">(</span><span class="n">KS_ARCH_X86</span><span class="p">,</span> <span class="n">KS_MODE_32</span><span class="p">)</span>
+<span class="n">ks_64</span> <span class="o">=</span> <span class="n">Ks</span><span class="p">(</span><span class="n">KS_ARCH_X86</span><span class="p">,</span> <span class="n">KS_MODE_64</span><span class="p">)</span>
+
+<span class="c1"># Initialize logging</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"PINCE"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="init_logging">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.init_logging">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">init_logging</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">global</span> <span class="n">logger</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+    <span class="n">log_format</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s2">"[</span><span class="si">%(levelname)s</span><span class="s2">][</span><span class="si">%(funcName)s</span><span class="s2">] </span><span class="si">%(message)s</span><span class="s2">"</span><span class="p">)</span>
+    <span class="c1"># File logging</span>
+    <span class="n">file_handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="s2">"/var/log/pince.log"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"a"</span><span class="p">)</span>  <span class="c1"># Maybe change this to be per-process</span>
+    <span class="n">file_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="n">file_handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">log_format</span><span class="p">)</span>
+    <span class="c1"># Terminal logging</span>
+    <span class="n">terminal_handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+    <span class="n">terminal_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+    <span class="n">terminal_handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">log_format</span><span class="p">)</span>
+    <span class="c1">##################</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">file_handler</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">terminal_handler</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="clear_log">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.clear_log">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clear_log</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="nb">open</span><span class="p">(</span><span class="s2">"/var/log/pince.log"</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="get_process_list">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_process_list">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_process_list</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Returns a list of processes</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: List of (pid, user, process_name) -&gt; (str, str, str)</span>
+<span class="sd">    """</span>
+    <span class="n">process_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s2">"ps -eo pid:11,user,comm"</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">regexes</span><span class="o">.</span><span class="n">ps</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">info</span><span class="p">:</span>
+            <span class="n">process_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">groups</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">process_list</span></div>
+
+
+
+<div class="viewcode-block" id="get_process_start_time">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_process_start_time">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_process_start_time</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Returns the process start time (field 22 of /proc/&lt;pid&gt;/stat, clock ticks since boot).</span>
+<span class="sd">    Combined with pid this uniquely identifies a process instance, guarding against PID reuse.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int, str): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int: starttime field, or None on error</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/proc/</span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2">/stat"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stat_file</span><span class="p">:</span>
+            <span class="n">stat</span> <span class="o">=</span> <span class="n">stat_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">stat</span><span class="p">[</span><span class="n">stat</span><span class="o">.</span><span class="n">rindex</span><span class="p">(</span><span class="s2">")"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">19</span><span class="p">])</span>  <span class="c1"># field 22 == index 19 after "(comm) "</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="get_process_name">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_process_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_process_name</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Returns the process name of given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int, str): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Process name</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/proc/</span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2">/comm"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"&lt;unknown&gt;"</span></div>
+
+
+
+<div class="viewcode-block" id="search_processes">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.search_processes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">search_processes</span><span class="p">(</span><span class="n">name_or_pid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Searches processes and returns a list of the ones that contain given process name or pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name_or_pid (str): Name or PID of the process that'll be searched for</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: List of (pid, user, process_name) -&gt; (str, str, str)</span>
+<span class="sd">    """</span>
+    <span class="n">needle</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name_or_pid</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">processlist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">pid</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">get_process_list</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">needle</span> <span class="ow">in</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="n">needle</span> <span class="o">==</span> <span class="n">pid</span><span class="p">:</span>
+            <span class="n">processlist</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pid</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">processlist</span></div>
+
+
+
+<div class="viewcode-block" id="get_regions">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_regions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_regions</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Returns memory regions of a process</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: List of (start_address, end_address, permissions, map_offset, device_node, inode, path) -&gt; all str</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"/proc/"</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"/maps"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">regions</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+                <span class="n">match</span> <span class="o">=</span> <span class="n">regexes</span><span class="o">.</span><span class="n">maps</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                    <span class="n">regions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">())</span>
+            <span class="k">return</span> <span class="n">regions</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+
+
+<div class="viewcode-block" id="get_effective_arch">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_effective_arch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_effective_arch</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Returns the arch of the code the debugged program actually executes, unlike the arch of the host process.</span>
+
+<span class="sd">    They can differ in WINE processes, particularly with New-WoW64 where 32 bits PE programs run inside a 64 bits host process.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int: A member of typedefs.INFERIOR_ARCH, -1 if detection fails</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">pe_magic</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="c1"># Optional header magic: 0x10B -&gt; PE32, 0x20B -&gt; PE32+, 0 -&gt; not a readable PE.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">pe_file</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">pe_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="sa">b</span><span class="s2">"MZ"</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="n">pe_file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mh">0x3C</span><span class="p">)</span>
+                <span class="n">pe_file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">pe_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="s2">"little"</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">pe_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">!=</span> <span class="sa">b</span><span class="s2">"PE</span><span class="se">\x00\x00</span><span class="s2">"</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="n">pe_file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mh">0x14</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>  <span class="c1"># skip the COFF header to reach the optional header magic.</span>
+                <span class="k">return</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">pe_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="s2">"little"</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">is_wine_process</span><span class="p">(</span><span class="n">pid</span><span class="p">):</span>
+        <span class="c1"># The launched exe decides the effective bitness, first valid PE wins like in _refresh_main_module_info.</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">get_regions</span><span class="p">(</span><span class="n">pid</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".exe"</span><span class="p">):</span>
+                <span class="n">resolved_path</span> <span class="o">=</span> <span class="n">resolve_mapped_path</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+                <span class="n">arch</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x10B</span><span class="p">:</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">INFERIOR_ARCH</span><span class="o">.</span><span class="n">ARCH_32</span><span class="p">,</span> <span class="mh">0x20B</span><span class="p">:</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">INFERIOR_ARCH</span><span class="o">.</span><span class="n">ARCH_64</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pe_magic</span><span class="p">(</span><span class="n">resolved_path</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">arch</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">arch</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="c1"># Native processes follow the ELF class of the main binary.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/proc/</span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2">/exe"</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">exe_file</span><span class="p">:</span>
+            <span class="n">elf_class</span> <span class="o">=</span> <span class="n">exe_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="p">{</span><span class="sa">b</span><span class="s2">"</span><span class="se">\x7f</span><span class="s2">ELF</span><span class="se">\x01</span><span class="s2">"</span><span class="p">:</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">INFERIOR_ARCH</span><span class="o">.</span><span class="n">ARCH_32</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"</span><span class="se">\x7f</span><span class="s2">ELF</span><span class="se">\x02</span><span class="s2">"</span><span class="p">:</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">INFERIOR_ARCH</span><span class="o">.</span><span class="n">ARCH_64</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">elf_class</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_module_load_bias">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_module_load_bias">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_module_load_bias</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name_regex</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Finds the first mapped file whose basename matches name_regex and returns its load bias and absolute path.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int): PID of the process</span>
+<span class="sd">        name_regex (str): Regular expression to match against the basename of mapped files</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (load_bias, absolute_path) where load_bias is an int and absolute_path is a str</span>
+<span class="sd">        None: If no matching module is found</span>
+<span class="sd">    """</span>
+    <span class="n">compiled</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">name_regex</span><span class="p">)</span>
+    <span class="n">per_file</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">get_regions</span><span class="p">(</span><span class="n">pid</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">compiled</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)):</span>
+            <span class="n">per_file</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="mi">16</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">mappings</span> <span class="ow">in</span> <span class="n">per_file</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="n">offset</span> <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">mappings</span><span class="p">),</span> <span class="n">path</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="get_module_dict">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_module_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_module_dict</span><span class="p">(</span><span class="n">pid_or_memory_regions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Returns logical module bases keyed by basename, or by full path when a basename is ambiguous.</span>
+<span class="sd">    Unique shortcuts for versioned sonames are also included. Empty paths are ignored.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid_or_memory_regions (int, list): PID of the process or output from get_regions</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: {module_name_or_path:load_base}</span>
+<span class="sd">    """</span>
+    <span class="n">memory_regions</span> <span class="o">=</span> <span class="n">get_regions</span><span class="p">(</span><span class="n">pid_or_memory_regions</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pid_or_memory_regions</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="n">pid_or_memory_regions</span>
+    <span class="n">modules_by_name</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">memory_regions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">modules</span> <span class="o">=</span> <span class="n">modules_by_name</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="p">{})</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+            <span class="n">modules</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">modules</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">base</span><span class="p">))</span>
+
+    <span class="n">module_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">modules</span> <span class="ow">in</span> <span class="n">modules_by_name</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">modules</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">module_dict</span><span class="p">[</span><span class="n">name</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">modules</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="nb">hex</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+
+    <span class="n">aliases</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">modules</span> <span class="ow">in</span> <span class="n">modules_by_name</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">short_name</span> <span class="o">=</span> <span class="n">regexes</span><span class="o">.</span><span class="n">file_with_extension</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">short_name</span> <span class="ow">and</span> <span class="n">short_name</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">aliases</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">short_name</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">modules</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span> <span class="ow">in</span> <span class="n">aliases</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">modules_by_name</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">module_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">hex</span><span class="p">(</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">module_dict</span></div>
+
+
+
+<div class="viewcode-block" id="resolve_mapped_path">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.resolve_mapped_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_mapped_path</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mapped_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Resolves a path from an inferior's /proc/PID/maps into one PINCE can open.</span>
+
+<span class="sd">    Sandboxed inferiors (Flatpak, Steam pressure-vessel) report library paths in their own mount namespace</span>
+<span class="sd">    (e.g. /run/host/usr/lib/libc.so.6) which don't exist in PINCE's namespace.</span>
+<span class="sd">    Going through /proc/PID/root resolves the exact file the inferior mapped regardless of the sandbox.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int): PID of the inferior</span>
+<span class="sd">        mapped_path (str): A file path as it appears in the inferior's /proc/PID/maps</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: mapped_path if it's directly readable, else the /proc/PID/root path to the same file,</span>
+<span class="sd">        falling back to mapped_path if neither exists.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">mapped_path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">mapped_path</span>
+    <span class="n">proc_root_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/proc/</span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2">/root</span><span class="si">{</span><span class="n">mapped_path</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="n">proc_root_path</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">proc_root_path</span><span class="p">)</span> <span class="k">else</span> <span class="n">mapped_path</span></div>
+
+
+
+<div class="viewcode-block" id="get_defined_dynamic_symbols">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_defined_dynamic_symbols">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_defined_dynamic_symbols</span><span class="p">(</span><span class="n">elf_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">symbol_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Parses the .dynsym/.dynstr of an ELF file and returns {name: st_value} for each</span>
+<span class="sd">    requested symbol that is defined in the file.</span>
+<span class="sd">    Handles ELFCLASS32/64 and both endiannesses.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        elf_path (str): Path to the ELF file on disk</span>
+<span class="sd">        symbol_names (list[str]): List of symbol names to look up</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: {symbol_name: st_value} for each defined symbol found</span>
+<span class="sd">        Empty dict on failure or if no section headers are present</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">elf_path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">elf_file</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">elf_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">6</span> <span class="ow">or</span> <span class="n">data</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> <span class="o">!=</span> <span class="sa">b</span><span class="s2">"</span><span class="se">\x7f</span><span class="s2">ELF"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">is64</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="n">endian</span> <span class="o">=</span> <span class="s2">"&lt;"</span> <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">"&gt;"</span>
+        <span class="k">if</span> <span class="n">is64</span><span class="p">:</span>
+            <span class="n">e_shoff</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">endian</span> <span class="o">+</span> <span class="s2">"Q"</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="mh">0x28</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">e_shentsize</span><span class="p">,</span> <span class="n">e_shnum</span><span class="p">,</span> <span class="n">e_shstrndx</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">endian</span> <span class="o">+</span> <span class="s2">"HHH"</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="mh">0x3A</span><span class="p">)</span>
+            <span class="n">shdr_fmt</span><span class="p">,</span> <span class="n">sym_fmt</span><span class="p">,</span> <span class="n">default_sym_size</span> <span class="o">=</span> <span class="n">endian</span> <span class="o">+</span> <span class="s2">"IIQQQQIIQQ"</span><span class="p">,</span> <span class="n">endian</span> <span class="o">+</span> <span class="s2">"IBBHQQ"</span><span class="p">,</span> <span class="mi">24</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">e_shoff</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">endian</span> <span class="o">+</span> <span class="s2">"I"</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="mh">0x20</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">e_shentsize</span><span class="p">,</span> <span class="n">e_shnum</span><span class="p">,</span> <span class="n">e_shstrndx</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">endian</span> <span class="o">+</span> <span class="s2">"HHH"</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="mh">0x2E</span><span class="p">)</span>
+            <span class="n">shdr_fmt</span><span class="p">,</span> <span class="n">sym_fmt</span><span class="p">,</span> <span class="n">default_sym_size</span> <span class="o">=</span> <span class="n">endian</span> <span class="o">+</span> <span class="s2">"IIIIIIIIII"</span><span class="p">,</span> <span class="n">endian</span> <span class="o">+</span> <span class="s2">"IIIBBH"</span><span class="p">,</span> <span class="mi">16</span>
+        <span class="k">if</span> <span class="n">e_shoff</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">e_shnum</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">read_shdr</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">shdr_fmt</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">e_shoff</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="n">e_shentsize</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">read_cstr</span><span class="p">(</span><span class="n">base</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="n">base</span> <span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="sa">b</span><span class="s2">"</span><span class="se">\x00</span><span class="s2">"</span><span class="p">,</span> <span class="n">base</span><span class="p">)]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"latin-1"</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s2">""</span>
+
+        <span class="n">shstr_offset</span> <span class="o">=</span> <span class="n">read_shdr</span><span class="p">(</span><span class="n">e_shstrndx</span><span class="p">)[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">dynsym</span> <span class="o">=</span> <span class="n">dynstr</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">e_shnum</span><span class="p">):</span>
+            <span class="n">sh</span> <span class="o">=</span> <span class="n">read_shdr</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">nm</span> <span class="o">=</span> <span class="n">read_cstr</span><span class="p">(</span><span class="n">shstr_offset</span> <span class="o">+</span> <span class="n">sh</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">nm</span> <span class="o">==</span> <span class="s2">".dynsym"</span><span class="p">:</span>
+                <span class="n">dynsym</span> <span class="o">=</span> <span class="n">sh</span>
+            <span class="k">elif</span> <span class="n">nm</span> <span class="o">==</span> <span class="s2">".dynstr"</span><span class="p">:</span>
+                <span class="n">dynstr</span> <span class="o">=</span> <span class="n">sh</span>
+        <span class="k">if</span> <span class="n">dynsym</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">dynstr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="n">dynsym_offset</span><span class="p">,</span> <span class="n">dynsym_size</span><span class="p">,</span> <span class="n">dynsym_entsize</span> <span class="o">=</span> <span class="n">dynsym</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">dynsym</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">dynsym</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+        <span class="n">dynstr_offset</span> <span class="o">=</span> <span class="n">dynstr</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">sym_size</span> <span class="o">=</span> <span class="n">dynsym_entsize</span> <span class="ow">or</span> <span class="n">default_sym_size</span>
+        <span class="n">wanted</span><span class="p">,</span> <span class="n">found</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">symbol_names</span><span class="p">),</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dynsym_size</span> <span class="o">//</span> <span class="n">sym_size</span><span class="p">):</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">sym_fmt</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">dynsym_offset</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="n">sym_size</span><span class="p">)</span>
+            <span class="n">st_name</span><span class="p">,</span> <span class="n">st_value</span><span class="p">,</span> <span class="n">st_shndx</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="k">if</span> <span class="n">is64</span> <span class="k">else</span> <span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">st_shndx</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">st_value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">read_cstr</span><span class="p">(</span><span class="n">dynstr_offset</span> <span class="o">+</span> <span class="n">st_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">wanted</span><span class="p">:</span>
+                <span class="n">found</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">st_value</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">wanted</span><span class="p">):</span>
+                    <span class="k">break</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<div class="viewcode-block" id="get_region_dict">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_region_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_region_dict</span><span class="p">(</span><span class="n">pid_or_memory_regions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Returns memory regions of a process as a dictionary where key is the path tail and value is the list of the</span>
+<span class="sd">    corresponding start addresses of the tail, empty paths will be ignored.</span>
+<span class="sd">    Also adds shortcuts for file extensions.</span>
+<span class="sd">    Returned dict will include both sonames, with and without version information.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid_or_memory_regions (int, list): PID of the process or output from get_regions</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: {file_name:start_address_list}</span>
+<span class="sd">    """</span>
+    <span class="n">memory_regions</span> <span class="o">=</span> <span class="n">get_regions</span><span class="p">(</span><span class="n">pid_or_memory_regions</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pid_or_memory_regions</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="n">pid_or_memory_regions</span>
+    <span class="n">region_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">memory_regions</span><span class="p">:</span>
+        <span class="n">start_addr</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">item</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">start_addr</span> <span class="o">=</span> <span class="s2">"0x"</span> <span class="o">+</span> <span class="n">start_addr</span>
+        <span class="c1"># Always append, never assign: a versioned soname's unversioned alias (e.g. libEGL.so.1 -&gt; libEGL.so)</span>
+        <span class="c1"># must not clobber the list of a different file that has the same basename</span>
+        <span class="n">region_dict</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">tail</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">start_addr</span><span class="p">)</span>
+        <span class="n">short_name</span> <span class="o">=</span> <span class="n">regexes</span><span class="o">.</span><span class="n">file_with_extension</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">tail</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">short_name</span><span class="p">:</span>
+            <span class="n">short_name</span> <span class="o">=</span> <span class="n">short_name</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">short_name</span> <span class="o">!=</span> <span class="n">tail</span><span class="p">:</span>
+                <span class="n">region_dict</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">short_name</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">start_addr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">region_dict</span></div>
+
+
+
+<div class="viewcode-block" id="get_region_info">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_region_info">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_region_info</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">address</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">tuple_region_info</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Finds the closest valid starting/ending address and region to given address, assuming given address is in the</span>
+<span class="sd">    valid address range</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int): PID of the process</span>
+<span class="sd">        address (int,str): Can be an int or a hex str</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: List of (start_address, end_address, permissions, file_name) -&gt; (int, int, str, str)</span>
+<span class="sd">        None: If the given address isn't in any valid address range</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">pid</span> <span class="o">=</span> <span class="n">safe_int_cast</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">address</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">address</span> <span class="o">=</span> <span class="n">safe_str_to_int</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">region_list</span> <span class="o">=</span> <span class="n">get_regions</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+    <span class="n">region_dict</span> <span class="o">=</span> <span class="n">get_region_dict</span><span class="p">(</span><span class="n">region_list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">perms</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">region_list</span><span class="p">:</span>
+        <span class="n">start_int</span> <span class="o">=</span> <span class="n">safe_str_to_int</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+        <span class="n">end_int</span> <span class="o">=</span> <span class="n">safe_str_to_int</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">start_int</span> <span class="o">&lt;=</span> <span class="n">address</span> <span class="o">&lt;</span> <span class="n">end_int</span><span class="p">:</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">address_list</span> <span class="o">=</span> <span class="n">region_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">region_index</span> <span class="o">=</span> <span class="n">address_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"0x"</span> <span class="o">+</span> <span class="n">start</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">region_index</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">return</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">tuple_region_info</span><span class="p">(</span><span class="n">start_int</span><span class="p">,</span> <span class="n">end_int</span><span class="p">,</span> <span class="n">perms</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">region_index</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="filter_regions">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.filter_regions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">filter_regions</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">attribute</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">regex</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">case_sensitive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Filters memory regions by searching for the given regex within the given attribute</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int): PID of the process</span>
+<span class="sd">        attribute (str): The attribute that'll be filtered. Can be one of the below</span>
+<span class="sd">        start_address, end_address, permissions, map_offset, device_node, inode, path</span>
+<span class="sd">        regex (str): Regex statement that'll be searched</span>
+<span class="sd">        case_sensitive (bool): If True, search will be case sensitive</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: List of (start_address, end_address, permissions, map_offset, device_node, inode, path) -&gt; all str</span>
+<span class="sd">    """</span>
+    <span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"start_address"</span><span class="p">,</span> <span class="s2">"end_address"</span><span class="p">,</span> <span class="s2">"permissions"</span><span class="p">,</span> <span class="s2">"map_offset"</span><span class="p">,</span> <span class="s2">"device_node"</span><span class="p">,</span> <span class="s2">"inode"</span><span class="p">,</span> <span class="s2">"path"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">attribute</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attributes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">"Invalid attribute"</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">attributes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">attribute</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">case_sensitive</span><span class="p">:</span>
+        <span class="n">compiled_regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">regex</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">compiled_regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="n">filtered_regions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">get_regions</span><span class="p">(</span><span class="n">pid</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">compiled_regex</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="n">index</span><span class="p">]):</span>
+            <span class="n">filtered_regions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">filtered_regions</span></div>
+
+
+
+<div class="viewcode-block" id="is_traced">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.is_traced">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_traced</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if the process corresponding to given pid traced by any other process</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Name of the tracer if the specified process is being traced</span>
+<span class="sd">        None: if the specified process is not being traced or the process doesn't exist anymore</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">status_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/proc/</span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2">/status"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">with</span> <span class="n">status_file</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">status_file</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"TracerPid:"</span><span class="p">):</span>
+                <span class="n">tracer_pid</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">tracer_pid</span> <span class="o">!=</span> <span class="s2">"0"</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">get_process_name</span><span class="p">(</span><span class="n">tracer_pid</span><span class="p">)</span>
+                <span class="k">return</span></div>
+
+
+
+<div class="viewcode-block" id="is_process_valid">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.is_process_valid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_process_valid</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if the process corresponding to given pid is valid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if the process is still running, False if not</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">"/proc/</span><span class="si">%d</span><span class="s2">"</span> <span class="o">%</span> <span class="n">pid</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="is_wine_process">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.is_wine_process">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_wine_process</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if the inferior is running under Wine or Proton.</span>
+
+<span class="sd">    Scans /proc/&lt;pid&gt;/maps for WINE or Proton libraries.</span>
+<span class="sd">    Mostly used to gate features that don't yet work reliably under WINE in the GUI.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if Wine/Proton libraries are mapped into the process</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">pid</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/proc/</span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2">/maps"</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">maps_file</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">maps_file</span><span class="p">:</span>
+                <span class="n">lower</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">marker</span> <span class="ow">in</span> <span class="n">lower</span> <span class="k">for</span> <span class="n">marker</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"wine"</span><span class="p">,</span> <span class="s2">"proton"</span><span class="p">)):</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="get_script_directory">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_script_directory">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_script_directory</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get main script directory</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: A string pointing to the main script directory</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="get_media_directory">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_media_directory">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_media_directory</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get media directory</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: A string pointing to the media directory</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">get_script_directory</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"/media"</span></div>
+
+
+
+<div class="viewcode-block" id="get_logo_directory">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_logo_directory">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_logo_directory</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get logo directory</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: A string pointing to the logo directory</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">get_script_directory</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"/media/logo"</span></div>
+
+
+
+<div class="viewcode-block" id="get_libpince_directory">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_libpince_directory">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_libpince_directory</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get libpince directory</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: A string pointing to the libpince directory</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        In fact this function returns the directory where utils in and considering the fact that utils resides in</span>
+<span class="sd">        libpince, it works. So, please don't move out utils outside of libpince folder!</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="delete_ipc_path">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.delete_ipc_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_ipc_path</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Deletes the IPC directory of given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+<span class="sd">    """</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">get_ipc_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_ipc_path">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.create_ipc_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_ipc_path</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Creates the IPC directory of given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+<span class="sd">    """</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">get_ipc_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="c1"># Opening the command file with 'w' each time debugcore.send_command() gets invoked slows down the process</span>
+    <span class="c1"># Instead, here we create the command file for only once when IPC path gets initialized</span>
+    <span class="c1"># Then, open the command file with 'r' in debugcore.send_command() to get a better performance</span>
+    <span class="n">command_file</span> <span class="o">=</span> <span class="n">get_gdb_command_file</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">command_file</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="create_tmp_path">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.create_tmp_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_tmp_path</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Creates the tmp directory of given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+<span class="sd">    """</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">get_tmp_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_ipc_path">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_ipc_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_ipc_path</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the IPC directory of given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path of IPC directory</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">PATHS</span><span class="o">.</span><span class="n">IPC</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_tmp_path">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_tmp_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_tmp_path</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the tmp directory of given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path of tmp directory</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">PATHS</span><span class="o">.</span><span class="n">TMP</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_logging_file">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_logging_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_logging_file</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the path of gdb logfile of given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path of gdb logfile</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">get_tmp_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"/gdb_log.txt"</span></div>
+
+
+
+<div class="viewcode-block" id="get_gdb_command_file">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_gdb_command_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_gdb_command_file</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the path of gdb command file of given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path of gdb command file</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">get_ipc_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"/gdb_command.txt"</span></div>
+
+
+
+<div class="viewcode-block" id="get_track_watchpoint_file">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_track_watchpoint_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_track_watchpoint_file</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">watchpoint_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the path of track watchpoint file for given pid and watchpoint</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+<span class="sd">        watchpoint_list (list,str): Numbers of the watchpoints</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path of track watchpoint file</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">get_ipc_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"/"</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">watchpoint_list</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"_track_watchpoint.txt"</span></div>
+
+
+
+<div class="viewcode-block" id="get_track_breakpoint_file">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_track_breakpoint_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_track_breakpoint_file</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">breakpoint_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the path of track breakpoint file for given pid and breakpoint</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+<span class="sd">        breakpoint_number (int)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path of track breakpoint file</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">get_ipc_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">breakpoint_number</span><span class="si">}</span><span class="s2">_track_breakpoint.txt"</span></div>
+
+
+
+<div class="viewcode-block" id="append_file_extension">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.append_file_extension">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">append_file_extension</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">extension</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Appends the given extension to the given string if it doesn't end with the given extension</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        string (str): Self-explanatory</span>
+<span class="sd">        extension (str): Self-explanatory, you don't have to include the dot</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Given string with the extension</span>
+<span class="sd">    """</span>
+    <span class="n">extension</span> <span class="o">=</span> <span class="n">extension</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">string</span> <span class="k">if</span> <span class="n">string</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"."</span> <span class="o">+</span> <span class="n">extension</span><span class="p">)</span> <span class="k">else</span> <span class="n">string</span> <span class="o">+</span> <span class="s2">"."</span> <span class="o">+</span> <span class="n">extension</span></div>
+
+
+
+<div class="viewcode-block" id="save_file">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.save_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_file</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">save_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"json"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Saves the specified data to given path</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data (??): Saved data, can be anything, must be supported by save_method</span>
+<span class="sd">        file_path (str): Path of the saved file</span>
+<span class="sd">        save_method (str): Can be "json" or "pickle"</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if saved successfully, False if not</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">save_method</span> <span class="o">==</span> <span class="s2">"json"</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dir_name</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">save_file</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">save_file</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"Encountered an exception while dumping the data in JSON format</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">elif</span> <span class="n">save_method</span> <span class="o">==</span> <span class="s2">"pickle"</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dir_name</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">save_file</span><span class="p">:</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">save_file</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"Encountered an exception while pickling the data</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Unsupported save_method, bailing out..."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="load_file">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.load_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">load_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"json"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Loads data from the given path</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file_path (str): Path of the saved file</span>
+<span class="sd">        load_method (str): Can be "json" or "pickle"</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ??: file_path is like a box of chocolates, you never know what you're gonna get</span>
+<span class="sd">        None: If loading fails</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">load_method</span> <span class="o">==</span> <span class="s2">"json"</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">load_file</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">load_file</span><span class="p">,</span> <span class="n">object_pairs_hook</span><span class="o">=</span><span class="n">OrderedDict</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"Encountered an exception while loading the JSON data"</span><span class="p">)</span>
+            <span class="k">return</span>
+    <span class="k">elif</span> <span class="n">load_method</span> <span class="o">==</span> <span class="s2">"pickle"</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">load_file</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">load_file</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"Encountered an exception while unpickling the data"</span><span class="p">)</span>
+            <span class="k">return</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Unsupported load_method, bailing out..."</span><span class="p">)</span>
+        <span class="k">return</span></div>
+
+
+
+<div class="viewcode-block" id="get_trace_status_file">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_trace_status_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_trace_status_file</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the path of trace status file for given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path of trace status file</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">get_ipc_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"/_trace_status.txt"</span></div>
+
+
+
+<div class="viewcode-block" id="change_trace_status">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.change_trace_status">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">change_trace_status</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">trace_status</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Change trace status for given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+<span class="sd">        trace_status (int): New trace status, can be a member of typedefs.TRACE_STATUS</span>
+<span class="sd">    """</span>
+    <span class="n">trace_status_file</span> <span class="o">=</span> <span class="n">get_trace_status_file</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">trace_status_file</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">trace_file</span><span class="p">:</span>
+        <span class="n">trace_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">trace_status</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="get_referenced_strings_file">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_referenced_strings_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_referenced_strings_file</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the path of referenced strings dict file for given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path of referenced strings dict file</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">get_tmp_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"/referenced_strings_dict.txt"</span></div>
+
+
+
+<div class="viewcode-block" id="get_referenced_jumps_file">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_referenced_jumps_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_referenced_jumps_file</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the path of referenced jumps dict file for given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path of referenced jumps dict file</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">get_tmp_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"/referenced_jumps_dict.txt"</span></div>
+
+
+
+<div class="viewcode-block" id="get_referenced_calls_file">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_referenced_calls_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_referenced_calls_file</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the path of referenced calls dict file for given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path of referenced calls dict file</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">get_tmp_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"/referenced_calls_dict.txt"</span></div>
+
+
+
+<div class="viewcode-block" id="get_from_pince_file">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_from_pince_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_from_pince_file</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the path of IPC file sent to custom gdb commands from PINCE for given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path of IPC file</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">get_ipc_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">PATHS</span><span class="o">.</span><span class="n">FROM_PINCE</span></div>
+
+
+
+<div class="viewcode-block" id="get_to_pince_file">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_to_pince_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_to_pince_file</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the path of IPC file sent to PINCE from custom gdb commands for given pid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pid (int,str): PID of the process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Path of IPC file</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">get_ipc_path</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="o">+</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">PATHS</span><span class="o">.</span><span class="n">TO_PINCE</span></div>
+
+
+
+<div class="viewcode-block" id="instruction_follow_address">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.instruction_follow_address">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">instruction_follow_address</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Searches for the location changing instructions such as Jcc, CALL and LOOPcc in the given string. Returns the hex</span>
+<span class="sd">    address the instruction jumps to</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        string (str): An assembly expression</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Hex address</span>
+<span class="sd">        None: If no hex address is found or no location changing instructions found</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">regexes</span><span class="o">.</span><span class="n">instruction_follow</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="extract_hex_address">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.extract_hex_address">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_hex_address</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Extracts hex address from the given string</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        string (str): The string that the hex address will be extracted from</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Hex address</span>
+<span class="sd">        None: If no hex address is found</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">string</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">regexes</span><span class="o">.</span><span class="n">hex_number</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="modulo_address">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.modulo_address">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">modulo_address</span><span class="p">(</span><span class="n">int_address</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">arch_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Calculates the modulo of the given integer based on the given architecture type to make sure that it doesn't</span>
+<span class="sd">    exceed the borders of the given architecture type (0xffffffff-&gt;x86, 0xffffffffffffffff-&gt;x64)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        int_address (int): Self-explanatory</span>
+<span class="sd">        arch_type (int): Architecture type (x86, x64). Can be a member of typedefs.INFERIOR_ARCH</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int: Modulo of the given integer based on the given architecture type</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">arch_type</span> <span class="o">==</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">INFERIOR_ARCH</span><span class="o">.</span><span class="n">ARCH_32</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">int_address</span> <span class="o">%</span> <span class="mh">0x100000000</span>
+    <span class="k">elif</span> <span class="n">arch_type</span> <span class="o">==</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">INFERIOR_ARCH</span><span class="o">.</span><span class="n">ARCH_64</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">int_address</span> <span class="o">%</span> <span class="mh">0x10000000000000000</span>
+    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">"arch_type must be a member of typedefs.INFERIOR_ARCH"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="disassemble">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.disassemble">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">disassemble</span><span class="p">(</span><span class="n">aob</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">address</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">inferior_arch</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Returns the instructions from the given array of bytes</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        aob (str): Opcode bytes of the instruction as an array of bytes</span>
+<span class="sd">        address (int): The address where the instruction starts from</span>
+<span class="sd">        inferior_arch (int): Architecture type (x86, x64). Can be a member of typedefs.INFERIOR_ARCH</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Instructions, multiple entries are separated with ;</span>
+<span class="sd">        None: If there was an error</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">inferior_arch</span> <span class="o">==</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">INFERIOR_ARCH</span><span class="o">.</span><span class="n">ARCH_64</span><span class="p">:</span>
+        <span class="n">disassembler</span> <span class="o">=</span> <span class="n">cs_64</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">disassembler</span> <span class="o">=</span> <span class="n">cs_32</span>
+    <span class="n">disassembler</span><span class="o">.</span><span class="n">skipdata</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">bytecode</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">aob</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">disas_data</span> <span class="o">=</span> <span class="n">disassembler</span><span class="o">.</span><span class="n">disasm_lite</span><span class="p">(</span><span class="n">bytecode</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">""</span> <span class="k">else</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">disas_data</span><span class="p">])</span>
+    <span class="k">except</span> <span class="n">CsError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"Failed to disassemble bytes"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="instruction_aligned_size">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.instruction_aligned_size">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">instruction_aligned_size</span><span class="p">(</span><span class="n">aob</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">minimum_bytes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">inferior_arch</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Walks instructions from offset 0 of `aob` until cumulative size meets</span>
+<span class="sd">    or exceeds `minimum_bytes`. Used by code-injection hooks where the patch</span>
+<span class="sd">    must end on an instruction boundary so the next instruction decodes cleanly.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        aob (bytes): Instruction stream starting at offset 0.</span>
+<span class="sd">        minimum_bytes (int): Minimum number of bytes the result must cover.</span>
+<span class="sd">        inferior_arch (int): Member of typedefs.INFERIOR_ARCH.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int: Smallest instruction-aligned size &gt;= minimum_bytes, or 0 if the</span>
+<span class="sd">        bytes couldn't be decoded far enough.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">minimum_bytes</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">disassembler</span> <span class="o">=</span> <span class="n">cs_64</span> <span class="k">if</span> <span class="n">inferior_arch</span> <span class="o">==</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">INFERIOR_ARCH</span><span class="o">.</span><span class="n">ARCH_64</span> <span class="k">else</span> <span class="n">cs_32</span>
+    <span class="n">disassembler</span><span class="o">.</span><span class="n">skipdata</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">instr_size</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">disassembler</span><span class="o">.</span><span class="n">disasm_lite</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">aob</span><span class="p">),</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">size</span> <span class="o">+=</span> <span class="n">instr_size</span>
+            <span class="k">if</span> <span class="n">size</span> <span class="o">&gt;=</span> <span class="n">minimum_bytes</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">size</span>
+    <span class="k">except</span> <span class="n">CsError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="mi">0</span></div>
+
+
+
+<div class="viewcode-block" id="assemble">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.assemble">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assemble</span><span class="p">(</span><span class="n">instructions</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">address</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">inferior_arch</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Assembles the given instructions</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        instructions (str): A string of instructions, multiple entries separated by ;</span>
+<span class="sd">        address (int): Starting address of the instructions</span>
+<span class="sd">        inferior_arch (int): Can be a member of typedefs.INFERIOR_ARCH</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple of (list, int) --&gt; Assembled bytes (list of int) and instruction count (int)</span>
+<span class="sd">        None: If there was an error</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">inferior_arch</span> <span class="o">==</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">INFERIOR_ARCH</span><span class="o">.</span><span class="n">ARCH_64</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ks_64</span><span class="o">.</span><span class="n">asm</span><span class="p">(</span><span class="n">instructions</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ks_32</span><span class="o">.</span><span class="n">asm</span><span class="p">(</span><span class="n">instructions</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">KsError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"Failed to assemble bytes"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="aob_to_str">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.aob_to_str">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">aob_to_str</span><span class="p">(</span><span class="n">list_of_bytes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ascii"</span><span class="p">,</span> <span class="n">replace_unprintable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Converts given array of hex strings to str</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        list_of_bytes (list): Must be returned from debugcore.hex_dump()</span>
+<span class="sd">        encoding (str): See here--&gt;https://docs.python.org/3/library/codecs.html#standard-encodings</span>
+<span class="sd">        replace_unprintable (bool): If True, replaces non-printable characters with a period (.)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: str equivalent of array</span>
+<span class="sd">    """</span>
+
+    <span class="c1">### make an actual list of bytes</span>
+    <span class="n">hexString</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">byteList</span> <span class="o">=</span> <span class="n">list_of_bytes</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">list_of_bytes</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">byteList</span> <span class="o">=</span> <span class="n">list_of_bytes</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">byteList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">byteList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">list_of_bytes</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">sByte</span> <span class="ow">in</span> <span class="n">byteList</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sByte</span> <span class="o">==</span> <span class="s2">"??"</span><span class="p">:</span>
+            <span class="n">hexString</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="mi">63</span><span class="si">:</span><span class="s2">02x</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># replace ?? with a single ?</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sByte</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">byte</span> <span class="o">=</span> <span class="n">sByte</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">byte</span> <span class="o">=</span> <span class="n">safe_str_to_int</span><span class="p">(</span><span class="n">sByte</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">replace_unprintable</span> <span class="ow">and</span> <span class="p">((</span><span class="n">byte</span> <span class="o">&lt;</span> <span class="mi">32</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">byte</span> <span class="o">&gt;</span> <span class="mi">126</span><span class="p">)):</span>
+                <span class="n">hexString</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="mi">46</span><span class="si">:</span><span class="s2">02x</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># replace non-printable chars with a period (.)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">hexString</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">byte</span><span class="si">:</span><span class="s2">02x</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">hexBytes</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">hexString</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hexBytes</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="s2">"surrogateescape"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="str_to_aob">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.str_to_aob">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">str_to_aob</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ascii"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Converts given string to aob string</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        string (str): Any string</span>
+<span class="sd">        encoding (str): See here--&gt;https://docs.python.org/3/library/codecs.html#standard-encodings</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: AoB equivalent of the given string</span>
+<span class="sd">    """</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">hexlify</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="s2">"surrogateescape"</span><span class="p">)),</span> <span class="n">encoding</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="k">return</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="split_symbol">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.split_symbol">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">split_symbol</span><span class="p">(</span><span class="n">symbol_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Splits symbol part of typedefs.tuple_function_info into smaller fractions</span>
+<span class="sd">    Fraction count depends on the symbol_string. See Examples section for demonstration</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        symbol_string (str): symbol part of typedefs.tuple_function_info</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: A list containing parts of the split symbol</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        symbol_string--&gt;"func(param)@plt"</span>
+<span class="sd">        returned_list--&gt;["func","func(param)","func(param)@plt"]</span>
+
+<span class="sd">        symbol_string--&gt;"malloc@plt"</span>
+<span class="sd">        returned_list--&gt;["malloc", "malloc@plt"]</span>
+
+<span class="sd">        symbol_string--&gt;"printf"</span>
+<span class="sd">        returned_list--&gt;["printf"]</span>
+<span class="sd">    """</span>
+    <span class="n">returned_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">p_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># this algorithm searches for balanced parentheses and removes the outer group</span>
+    <span class="c1"># using string reversing with recursive re.split makes the code confusing as hell, going with this one instead</span>
+    <span class="c1"># searching for balanced parentheses works because apparently no demangled symbol can finish with &lt;.*&gt;</span>
+    <span class="c1"># XXX: run this code to test while attached to a process and open a detailed issue if you get a result</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    from libpince import debugcore</span>
+<span class="sd">    import re</span>
+<span class="sd">    result=debugcore.search_functions("")</span>
+<span class="sd">    for address, symbol in result:</span>
+<span class="sd">        if re.search("&lt;.*&gt;[^()]+$", symbol):</span>
+<span class="sd">            print(symbol)</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">letter</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">symbol_string</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">letter</span> <span class="o">==</span> <span class="s2">")"</span><span class="p">:</span>
+            <span class="n">p_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">letter</span> <span class="o">==</span> <span class="s2">"("</span><span class="p">:</span>
+            <span class="n">p_count</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">p_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">returned_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">symbol_string</span><span class="p">[:</span> <span class="o">-</span><span class="p">(</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]))</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">p_count</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="n">symbol_string</span> <span class="o">+</span> <span class="s2">" contains unhealthy amount of left parentheses</span><span class="se">\n</span><span class="s2">Gotta give him some"</span>
+                    <span class="s1">' right parentheses. Like Bob always says "everyone needs a friend"'</span>
+                <span class="p">)</span>
+    <span class="k">if</span> <span class="n">p_count</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">symbol_string</span> <span class="o">+</span> <span class="s2">" contains unbalanced parentheses"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"@plt"</span> <span class="ow">in</span> <span class="n">symbol_string</span><span class="p">:</span>
+        <span class="n">returned_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">symbol_string</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"@plt"</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">returned_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">symbol_string</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">returned_list</span></div>
+
+
+
+<div class="viewcode-block" id="extract_symbol_name">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.extract_symbol_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_symbol_name</span><span class="p">(</span><span class="n">symbol_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Extract symbol name from examine_expression result</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        symbol_string (str): A string that contains a symbol in format &lt;symbol_name&gt;</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Symbol name without brackets or empty string if no symbol is found</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">regexes</span><span class="o">.</span><span class="n">symbol</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">symbol_string</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">result</span> <span class="k">else</span> <span class="s2">""</span></div>
+
+
+
+<div class="viewcode-block" id="execute_command_as_user">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.execute_command_as_user">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">execute_command_as_user</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Executes given command as the original user who invoked PINCE</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        command (str): Command that'll be invoked from the shell</span>
+<span class="sd">    """</span>
+    <span class="n">uid</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_user_ids</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">uid</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid uid </span><span class="si">{</span><span class="n">uid</span><span class="si">!r}</span><span class="s2">, refusing to drop privileges"</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">"sudo"</span><span class="p">,</span> <span class="s2">"-Eu"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"#</span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">+</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">command</span><span class="p">),</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="init_user_files">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.init_user_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">init_user_files</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Initializes user files"""</span>
+    <span class="n">root_path</span> <span class="o">=</span> <span class="n">get_user_path</span><span class="p">(</span><span class="n">typedefs</span><span class="o">.</span><span class="n">USER_PATHS</span><span class="o">.</span><span class="n">ROOT</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">root_path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">root_path</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">USER_PATHS</span><span class="o">.</span><span class="n">get_init_files</span><span class="p">():</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="n">get_user_path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">touch</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_user_ids">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_user_ids">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_user_ids</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Gets uid and gid of the user who invoked PINCE/libpince. Resolves real user if invoked through sudo/pkexec.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple (str, str): uid and gid of the real invoking user.</span>
+<span class="sd">    """</span>
+    <span class="c1"># pkexec before polkit version 127 (Dec 2025) would only set "PKEXEC_UID" and nothing else,</span>
+    <span class="c1"># but starting with that version they do set both "SUDO_UID" and "SUDO_GID" for sudo compatibility reasons.</span>
+    <span class="c1"># If we're using an older polkit and don't have "SUDO_GID" set, we'll resolve the gid from user's passwd entry.</span>
+    <span class="n">uid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"SUDO_UID"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"PKEXEC_UID"</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getuid</span><span class="p">())</span>
+    <span class="n">gid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"SUDO_GID"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">gid</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">gid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pwd</span><span class="o">.</span><span class="n">getpwuid</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">uid</span><span class="p">))</span><span class="o">.</span><span class="n">pw_gid</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">gid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getgid</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">uid</span><span class="p">,</span> <span class="n">gid</span></div>
+
+
+
+<div class="viewcode-block" id="get_user_home_dir">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_user_home_dir">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_user_home_dir</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Returns the home directory of the current user</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Home directory of the current user</span>
+<span class="sd">    """</span>
+    <span class="n">uid</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_user_ids</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pwd</span><span class="o">.</span><span class="n">getpwuid</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">uid</span><span class="p">))</span><span class="o">.</span><span class="n">pw_dir</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">"~"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_user_path">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_user_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_user_path</span><span class="p">(</span><span class="n">user_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Returns the specified user path for the current user</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        user_path (str): Can be a member of typedefs.USER_PATHS</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Specified user path of the current user</span>
+<span class="sd">    """</span>
+    <span class="c1"># TODO: Use XDG specification</span>
+    <span class="n">homedir</span> <span class="o">=</span> <span class="n">get_user_home_dir</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">homedir</span><span class="p">,</span> <span class="n">user_path</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_default_gdb_path">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.get_default_gdb_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_default_gdb_path</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">appdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"APPDIR"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">appdir</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">appdir</span> <span class="o">+</span> <span class="s2">"/usr/bin/gdb"</span>
+    <span class="k">return</span> <span class="n">typedefs</span><span class="o">.</span><span class="n">PATHS</span><span class="o">.</span><span class="n">GDB</span></div>
+
+
+
+<div class="viewcode-block" id="execute_script">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.execute_script">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">execute_script</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ModuleType</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Loads and executes the script in the given path</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file_path (str): Self-explanatory</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (module, exception)</span>
+<span class="sd">        module--&gt; Loaded script as module</span>
+<span class="sd">        exception--&gt; traceback as str</span>
+
+<span class="sd">        Returns (None, exception) if fails to load the script</span>
+<span class="sd">        Returns (module, None) if script gets loaded successfully</span>
+<span class="sd">    """</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="n">tail</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">importlib_util</span><span class="o">.</span><span class="n">spec_from_file_location</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">file_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">spec</span><span class="o">.</span><span class="n">loader</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Failed to create module spec for </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Failed to create module spec for </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">importlib_util</span><span class="o">.</span><span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">exec_module</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Encountered an exception while loading the script located at </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">tb</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exception</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">__traceback__</span><span class="p">)</span>
+        <span class="n">tb</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"-------&gt;You can ignore the importlib part if the source file is valid&lt;-------</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">tb</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tb</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">tb</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tb</span>
+    <span class="k">return</span> <span class="n">module</span><span class="p">,</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="parse_response">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.parse_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_response</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">line_num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Parses the given GDB/MI output. Wraps gdbmiparser.parse_response</span>
+<span class="sd">    debugcore.send_command returns an additional "^done" output because of the "source" command</span>
+<span class="sd">    This function is used to get rid of that output before parsing</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        response (str): GDB/MI response</span>
+<span class="sd">        line_num (int): Which line of the response will be parsed</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Contents of the dict depends on the response</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">gdbmiparser</span><span class="o">.</span><span class="n">parse_response</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="n">line_num</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="search_files">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.search_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">search_files</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">regex</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Searches the files in given directory for given regex recursively</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        directory (str): Directory to search for</span>
+<span class="sd">        regex (str): Regex to search for</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: Sorted list of the relative paths(to the given directory) of the files found</span>
+<span class="sd">    """</span>
+    <span class="n">file_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="k">continue</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">file_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">directory</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">file_list</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ignore_exceptions">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.ignore_exceptions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ignore_exceptions</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A decorator to ignore exceptions"""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+
+<div class="viewcode-block" id="upper_hex">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.upper_hex">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">upper_hex</span><span class="p">(</span><span class="n">hex_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Converts the given hex string to uppercase while keeping the 'x' character lowercase"""</span>
+    <span class="c1"># check if the given string is a hex string, if not return the string as is</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">regexes</span><span class="o">.</span><span class="n">hex_number_gui</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">hex_str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">hex_str</span>
+    <span class="k">return</span> <span class="n">hex_str</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"X"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="return_optional_int">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.return_optional_int">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">return_optional_int</span><span class="p">(</span><span class="n">val</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">val</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">val</span></div>
+
+
+
+<span class="c1"># This is the main int() cast for strings that should be used until you're certain that the cast can never fail or has explicit handling.</span>
+<span class="c1"># The reason for this is that you can catch stray errors or edge cases by safely returning a value and outputting useful log info</span>
+<span class="c1"># instead of failing with an exception that will propagate upwards.</span>
+<div class="viewcode-block" id="safe_str_to_int">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.safe_str_to_int">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">safe_str_to_int</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ValueError: Tried to convert input '</span><span class="si">{</span><span class="nb">input</span><span class="si">}</span><span class="s2">' to base </span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2"> for caller '</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_back</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_qualname</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"TypeError: Tried to convert input '</span><span class="si">{</span><span class="nb">input</span><span class="si">}</span><span class="s2">' to base </span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2"> for caller '</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_back</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_qualname</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+
+
+<span class="c1"># This is the non-base version of the above.</span>
+<div class="viewcode-block" id="safe_int_cast">
+<a class="viewcode-back" href="../../libpince.html#libpince.utils.safe_int_cast">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">safe_int_cast</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ValueError: Tried to convert input '</span><span class="si">{</span><span class="nb">input</span><span class="si">}</span><span class="s2">' for caller '</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_back</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_qualname</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">"TypeError: Tried to convert input '</span><span class="si">{</span><span class="nb">input</span><span class="si">}</span><span class="s2">' for caller '</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_back</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_qualname</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PINCE</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">libpince</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#gui-utils">GUI.Utils</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, PINCE Contributors.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
