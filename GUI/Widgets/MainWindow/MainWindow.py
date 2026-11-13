@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMainWindow, QTableWidgetItem, QTreeWidgetItem, QTreeWidgetItemIterator, QMenu, QMessageBox, QCheckBox, QApplication
+from PyQt6.QtWidgets import QMainWindow, QTableWidgetItem, QTreeWidgetItem, QTreeWidgetItemIterator, QMenu, QMessageBox, QCheckBox, QApplication, QInputDialog
 from PyQt6.QtGui import QShortcut, QKeySequence, QIcon, QPixmap, QBrush, QColor, QKeyEvent, QMouseEvent, QContextMenuEvent, QCloseEvent
 from PyQt6.QtCore import Qt, QTimer, QSettings, QKeyCombination, pyqtSignal
 from GUI.Session.session import SessionDataChanged, SessionManager, StructureManager
@@ -380,6 +380,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         edit_address = edit_menu.addAction(f"{header.text(ADDR_COL)}[Ctrl+Alt+Enter]")
         edit_type = edit_menu.addAction(f"{header.text(TYPE_COL)}[Alt+Enter]")
         edit_value = edit_menu.addAction(f"{header.text(VALUE_COL)}[Enter]")
+        edit_dropdown = edit_menu.addAction("Set dropdown options...")
         edit_script = menu.addAction(tr.EDIT_SCRIPT)
         view_as_struct_menu = menu.addMenu(tr.VIEW_AS_STRUCT)
         structure_names = StructureManager.list_names()
@@ -440,6 +441,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 edit_address,
                 edit_type,
                 edit_value,
+                edit_dropdown,
                 view_as_struct_menu.menuAction(),
                 show_hex,
                 show_dec,
@@ -464,7 +466,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self._is_struct_row(current_row):  # struct rows have no editable value or type, only an address.
                 guiutils.delete_menu_entries(
                     menu,
-                    [edit_value, edit_type, view_as_struct_menu.menuAction(), what_writes, what_reads, what_accesses],
+                    [edit_value, edit_type, edit_dropdown, view_as_struct_menu.menuAction(), what_writes, what_reads, what_accesses],
                 )
             if isinstance(value_type, (typedefs.IntegerValueType, typedefs.BitFieldValueType)):
                 if value_type.value_repr is typedefs.VALUE_REPR.HEX:
@@ -495,6 +497,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             edit_address: self.treeWidget_AddressTable_edit_address,
             edit_type: self.treeWidget_AddressTable_edit_type,
             edit_value: self.treeWidget_AddressTable_edit_value,
+            edit_dropdown: self.treeWidget_AddressTable_edit_dropdown,
             edit_script: lambda: self.open_script_entry_in_engine(current_row, self.get_script_entry(current_row)),
             show_hex: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.HEX),
             show_dec: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.UNSIGNED),
@@ -553,7 +556,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         address = self._resolved_address(selected_row)
         value_type = selected_row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
         if isinstance(value_type, typedefs.StringValueType):
-            value_text = selected_row.text(VALUE_COL)
+            value_text = self.get_raw_value_text(selected_row)
             errors = "surrogateescape" if value_type.encoding == "utf-8" else "replace"
             byte_len = len(value_text.encode(value_type.encoding, errors))
         else:
@@ -714,6 +717,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     address_expr = rec[1]
                 value_type = typedefs.ValueType.deserialize(rec[2])
                 self.change_address_table_entries(row, rec[0], address_expr, value_type)
+                dropdown = extra.get("dropdown") if isinstance(extra, dict) else None
+                self.set_dropdown_options(row, dropdown if isinstance(dropdown, dict) else None)
 
             # Insert the row at the current insert_index
             parent_row.insertChild(insert_index, row)
@@ -924,7 +929,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 row.setData(ADDR_COL, Qt.ItemDataRole.UserRole + 1, address)
                 value = debugcore.read_memory(address, vt, mem_handle=mem_handle)
                 value = "" if value is None else str(value)
-                row.setText(VALUE_COL, value)
+                self.set_displayed_value(row, value)
 
     def update_scan_box_state(self) -> None:
         if self.is_scanning == True:
@@ -1517,6 +1522,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.information(QApplication.focusWidget(), tr.ERROR, message)
             return False
 
+    def attach_to_remote(self, target: str) -> bool:
+        self.cleanup_speedhack()
+        if os.environ.get("APPDIR"):
+            gdb_path = utils.get_default_gdb_path()
+        else:
+            gdb_path = states.gdb_path
+        attach_result = debugcore.attach_remote(target, gdb_path)
+        if attach_result == typedefs.ATTACH_RESULT.SUCCESSFUL:
+            settings.apply_after_init()
+            try:
+                memscan.detach()
+                if debugcore.currentpid > 0:
+                    memscan.attach(debugcore.currentpid)
+            except Exception:
+                pass
+            self.on_new_process()
+            SessionManager.on_process_changed()
+            states.process_signals.attach.emit()
+            self.memory_view_window.on_process_stop()
+            debugcore.continue_inferior()
+            return True
+        QMessageBox.information(QApplication.focusWidget(), tr.ERROR, tr.PROCESS_NOT_VALID)
+        return False
+
     # Returns: a bool value indicates whether the operation succeeded.
     def create_new_process(self, file_path: str, args: str, ld_preload_path: str) -> bool:
         self.cleanup_speedhack()
@@ -1892,7 +1921,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # otherwise the UI will show DEFAULT freeze type after enabling instead of the actual type
                 self.change_freeze_type(frozen.freeze_type, row)
                 vt: typedefs.ValueType = row.data(TYPE_COL, Qt.ItemDataRole.UserRole)
-                frozen.value = vt.parse(row.text(VALUE_COL))
+                frozen.value = vt.parse(self.get_raw_value_text(row))
             else:
                 frozen.enabled = False  # it has just been toggled off
                 self.change_freeze_type(typedefs.FREEZE_TYPE.DEFAULT, row)
@@ -1926,7 +1955,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not row or self.get_script_entry(row) is not None or self._is_struct_row(row):
             return
-        value = row.text(VALUE_COL)
+        value = self.get_raw_value_text(row)
         dialog = utilwidgets.InputDialog(self, [(tr.ENTER_VALUE, value)])
         if dialog.exec():
             new_value = dialog.get_values()[0]
@@ -2012,6 +2041,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.update_address_table()
             self.mark_address_tree_changed()
 
+    def treeWidget_AddressTable_edit_dropdown(self) -> None:
+        row = guiutils.get_current_item(self.treeWidget_AddressTable)
+        if not row or self.get_script_entry(row) is not None or self._is_struct_row(row):
+            return
+        dropdown = self.get_dropdown_options(row) or {}
+        text = "\n".join(f"{k}={v}" for k, v in dropdown.items())
+        text, ok = QInputDialog.getMultiLineText(
+            self,
+            "Set dropdown options",
+            "Enter one mapping per line as value=label (leave empty to clear):",
+            text,
+        )
+        if not ok:
+            return
+        new_dropdown: dict[str, str] = {}
+        for line in text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            if "=" in line:
+                key, label = line.split("=", 1)
+            elif ":" in line:
+                key, label = line.split(":", 1)
+            else:
+                continue
+            key = key.strip()
+            label = label.strip()
+            if key:
+                new_dropdown[key] = label
+        self.set_dropdown_options(row, new_dropdown if new_dropdown else None)
+        raw = self.get_raw_value_text(row)
+        if raw:
+            self.set_displayed_value(row, raw)
+        self.update_address_table()
+        self.mark_address_tree_changed()
+
     def treeWidget_AddressTable_edit_type(self) -> None:
         row = guiutils.get_current_item(self.treeWidget_AddressTable)
         if not row or self.get_script_entry(row) is not None or self._is_struct_row(row):
@@ -2057,6 +2122,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         row.setData(TYPE_COL, Qt.ItemDataRole.UserRole, vt)
         row.setText(TYPE_COL, vt.text())
 
+    def get_dropdown_options(self, row: QTreeWidgetItem | None) -> dict[str, str] | None:
+        if row is None:
+            return None
+        dropdown = row.data(VALUE_COL, Qt.ItemDataRole.UserRole)
+        return dropdown if isinstance(dropdown, dict) and dropdown else None
+
+    def set_dropdown_options(self, row: QTreeWidgetItem, dropdown: dict[str, str] | None) -> None:
+        row.setData(VALUE_COL, Qt.ItemDataRole.UserRole, dropdown if dropdown else None)
+
+    def format_value_with_dropdown(self, row: QTreeWidgetItem, value: str) -> str:
+        dropdown = self.get_dropdown_options(row)
+        if dropdown and value in dropdown:
+            return f"{value} ({dropdown[value]})"
+        return value
+
+    def set_displayed_value(self, row: QTreeWidgetItem, value: str) -> None:
+        row.setData(VALUE_COL, Qt.ItemDataRole.UserRole + 1, value)
+        row.setText(VALUE_COL, self.format_value_with_dropdown(row, value))
+
+    def get_raw_value_text(self, row: QTreeWidgetItem) -> str:
+        raw = row.data(VALUE_COL, Qt.ItemDataRole.UserRole + 1)
+        return raw if isinstance(raw, str) else row.text(VALUE_COL)
+
     # Returns the column values of the given row
     def read_address_table_entries(self, row: QTreeWidgetItem, serialize: bool = False) -> tuple[str, Any, Any]:
         description = row.text(DESC_COL)
@@ -2080,7 +2168,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         entry = self.get_script_entry(row)
         if entry is not None:
             return row.text(DESC_COL), "", typedefs.IntegerValueType().serialize(), {"script": entry.script}, children
-        return self.read_address_table_entries(row, True) + (children,)
+        desc, addr, vt = self.read_address_table_entries(row, True)
+        dropdown = self.get_dropdown_options(row)
+        if dropdown:
+            return desc, addr, vt, {"dropdown": dropdown}, children
+        return desc, addr, vt, children
 
     # Flashing Attach Button when the process is not attached
     def flash_attach_button(self) -> None:

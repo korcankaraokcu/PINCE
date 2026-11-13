@@ -731,6 +731,65 @@ def attach(pid: int | str, gdb_path: str = utils.get_default_gdb_path()) -> int 
     return typedefs.ATTACH_RESULT.SUCCESSFUL
 
 
+def attach_remote(
+    target: str, gdb_path: str = utils.get_default_gdb_path(), extended: bool = False
+) -> int | None:
+    """Attaches to a remote gdbserver target and initializes global state.
+
+    Args:
+        target (str): Remote target, e.g. "host:1234"
+        gdb_path (str): Path of the gdb binary
+        extended (bool): Use ``target extended-remote`` when True
+
+    Returns:
+        int | None: A member of typedefs.ATTACH_RESULT or None if GDB initialization fails
+    """
+    global currentpid, inferior_arch, effective_arch, mem_file, current_process_identity, _wow64_inject_buffer
+    if currentpid != -1 or not gdb_initialized:
+        if not init_gdb(gdb_path):
+            return None
+    command = "target extended-remote " + target if extended else "target remote " + target
+    output = send_command(command)
+    if regexes.gdb_error.search(output):
+        detach()
+        return typedefs.ATTACH_RESULT.PROCESS_NOT_VALID
+    pid_str = get_inferior_pid()
+    if pid_str is None:
+        pid_str = "0"
+    try:
+        pid = int(pid_str)
+    except ValueError:
+        pid = 0
+    currentpid = pid
+    try:
+        start_time = utils.get_process_start_time(currentpid) if currentpid > 0 else 0
+    except Exception:
+        start_time = 0
+    current_process_identity = (currentpid, start_time) if currentpid > 0 else None
+    _libc_symbol_cache.clear()
+    _wow64_inject_buffer = (0, 0)
+    mem_file = "/proc/" + str(currentpid) + "/mem"
+    if currentpid > 0:
+        utils.create_ipc_path(currentpid)
+        utils.create_tmp_path(currentpid)
+    set_pince_paths()
+    if currentpid > 0:
+        init_referenced_dicts(currentpid)
+    inferior_arch = get_inferior_arch()
+    try:
+        effective_arch = utils.get_effective_arch(currentpid) if currentpid > 0 else -1
+    except Exception:
+        effective_arch = -1
+    if effective_arch == -1:
+        effective_arch = inferior_arch
+    utils.execute_script(utils.get_user_path(typedefs.USER_PATHS.PINCEINIT_AA))
+    try:
+        _refresh_main_module_info()
+    except Exception:
+        pass
+    return typedefs.ATTACH_RESULT.SUCCESSFUL
+
+
 def create_process(process_path: str, args: str = "", ld_preload_path: str = "", gdb_path: str = utils.get_default_gdb_path()) -> bool:
     """Creates a new process for debugging and initializes some of the global variables
     Current process will be detached even if the create_process call fails
