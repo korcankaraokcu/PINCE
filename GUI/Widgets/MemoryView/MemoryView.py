@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMainWindow, QWidget, QTableWidgetItem, QMenu, QMessageBox, QFileDialog, QAbstractItemView, QAbstractSlider, QApplication
+from PyQt6.QtWidgets import QMainWindow, QWidget, QTableWidgetItem, QMenu, QMessageBox, QFileDialog, QAbstractItemView, QAbstractSlider, QApplication, QAction
 from PyQt6.QtGui import QShortcut, QKeySequence, QKeyEvent, QWheelEvent, QContextMenuEvent, QColor, QColorConstants
 from PyQt6.QtCore import Qt, QEvent, QObject, QTimer, QKeyCombination, QSignalBlocker, QItemSelection, QItemSelectionModel
 from GUI.AbstractTableModels.AsciiModel import AsciiModel
@@ -15,6 +15,7 @@ from GUI.Widgets.EditInstruction.EditInstruction import EditInstructionDialog
 from GUI.Widgets.ExamineReferrers.ExamineReferrers import ExamineReferrersWidget
 from GUI.Widgets.FloatRegister.FloatRegister import FloatRegisterWidget
 from GUI.Widgets.FunctionsInfo.FunctionsInfo import FunctionsInfoWidget
+from GUI.Widgets.HeapTracker.HeapTracker import HeapTrackerDialog
 from GUI.Widgets.HexEdit.HexEdit import HexEditDialog
 from GUI.Widgets.LogFile.LogFile import LogFileWidget
 from GUI.Widgets.ManualAddress.ManualAddress import ManualAddressDialog
@@ -151,6 +152,9 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
         self.actionRestore_Instructions.triggered.connect(self.actionRestore_Instructions_triggered)
         self.actionReferenced_Strings.triggered.connect(self.actionReferenced_Strings_triggered)
         self.actionReferenced_Calls.triggered.connect(self.actionReferenced_Calls_triggered)
+        self.actionHeap_Tracker = QAction("Heap Tracker", self)
+        self.menuView.addAction(self.actionHeap_Tracker)
+        self.actionHeap_Tracker.triggered.connect(self.actionHeap_Tracker_triggered)
 
     def initialize_tools_context_menu(self) -> None:
         self.actionInject_so_file.triggered.connect(self.actionInject_so_file_triggered)
@@ -1648,6 +1652,10 @@ class MemoryViewWindow(QMainWindow, Ui_MainWindow_MemoryView):
             self.bookmark_widget.refresh_table()
         self.bookmark_widget.show()
         self.bookmark_widget.activateWindow()
+
+    def actionHeap_Tracker_triggered(self) -> None:
+        dialog = HeapTrackerDialog(self)
+        dialog.show()
 
     def actionStackTrace_Info_triggered(self) -> None:
         if debugcore.currentpid == -1:

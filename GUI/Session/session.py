@@ -25,7 +25,7 @@ class SessionDataChanged(IntFlag):
 # The PCT-archive repo (https://github.com/PINCE-org/PCT-archive) validates submitted
 # .pct files against this format. If you change the session structure or bump the version,
 # update its validation too (.github/scripts/common.py in that repo)
-LATEST_VERSION = 3
+LATEST_VERSION = 4
 
 
 def _legacy_to_v1(content: list) -> dict[str, Any]:
@@ -48,6 +48,13 @@ def _v2_to_v3(content: dict[str, Any]) -> dict[str, Any]:
     return content
 
 
+def _v3_to_v4(content: dict[str, Any]) -> dict[str, Any]:
+    # v4 added optional dropdown selection options on address table records
+    utils.logger.info("Migrating version 3 session data to version 4")
+    content["version"] = 4
+    return content
+
+
 def migrate_version(content: Any) -> dict[str, Any]:
     if type(content) is list:
         content = _legacy_to_v1(content)
@@ -55,6 +62,8 @@ def migrate_version(content: Any) -> dict[str, Any]:
         content = _v1_to_v2(content)
     if isinstance(content, dict) and type(content.get("version")) is int and content["version"] == 2:
         content = _v2_to_v3(content)
+    if isinstance(content, dict) and type(content.get("version")) is int and content["version"] == 3:
+        content = _v3_to_v4(content)
     return content
 
 
@@ -130,8 +139,19 @@ def is_valid_session_data(content: dict[str, Any]) -> bool:
                     return False
             elif address is not None and type(address) not in (str, int):
                 return False
-            if len(record) == 5 and (not isinstance(record[3], dict) or not isinstance(record[3].get("script"), str)):
-                return False
+            if len(record) == 5:
+                extra = record[3]
+                if not isinstance(extra, dict):
+                    return False
+                if "script" in extra and not isinstance(extra.get("script"), str):
+                    return False
+                if "dropdown" in extra:
+                    dropdown = extra["dropdown"]
+                    if not isinstance(dropdown, dict):
+                        return False
+                    for k, v in dropdown.items():
+                        if not isinstance(k, str) or not isinstance(v, str):
+                            return False
             record_lists.append((record[-1], depth + 1))
     structures = content.get("structures", {})
     if not isinstance(structures, dict):

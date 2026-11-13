@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMainWindow, QWidget, QTableWidget, QTableWidgetItem, QMessageBox, QFileDialog
+from PyQt6.QtWidgets import QMainWindow, QWidget, QTableWidget, QTableWidgetItem, QMessageBox, QFileDialog, QInputDialog, QPushButton
 from PyQt6.QtGui import QKeyEvent, QCursor
 from PyQt6.QtCore import Qt
 from GUI.Utils import guiutils, utilwidgets
@@ -16,6 +16,10 @@ class SelectProcessWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_Close.clicked.connect(self.close)
         self.pushButton_Open.clicked.connect(self.pushButton_Open_clicked)
         self.pushButton_CreateProcess.clicked.connect(self.pushButton_CreateProcess_clicked)
+        self.pushButton_Remote = QPushButton("Remote gdbserver...", self.centralwidget)
+        self.pushButton_Remote.setToolTip("Attach to a remote gdbserver (host:port)")
+        self.horizontalLayout_3.addWidget(self.pushButton_Remote)
+        self.pushButton_Remote.clicked.connect(self.pushButton_Remote_clicked)
         self.lineEdit_SearchProcess.textChanged.connect(self.generate_new_list)
         self.tableWidget_ProcessTable.itemDoubleClicked.connect(self.pushButton_Open_clicked)
         guiutils.center_to_parent(self)
@@ -78,3 +82,12 @@ class SelectProcessWindow(QMainWindow, Ui_MainWindow):
             if self.parent().create_new_process(file_path, args, ld_preload_path):
                 self.close()
             self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
+
+    def pushButton_Remote_clicked(self) -> None:
+        target, ok = QInputDialog.getText(self, "Remote gdbserver", "Target (host:port):")
+        if not ok or not target.strip():
+            return
+        self.setCursor(QCursor(Qt.CursorShape.WaitCursor))
+        if self.parent().attach_to_remote(target.strip()):
+            self.close()
+        self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
