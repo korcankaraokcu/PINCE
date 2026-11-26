@@ -392,6 +392,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         show_signed = menu.addAction(tr.SHOW_SIGNED)
         toggle_record = menu.addAction(f"{tr.TOGGLE}[Space]")
         toggle_children = menu.addAction(f"{tr.TOGGLE_CHILDREN}[Ctrl+Space]")
+        change_all_children_values = menu.addAction(tr.CHANGE_ALL_CHILDREN_VALUES)
         menu.addSeparator()
         browse_region = menu.addAction(f"{tr.BROWSE_MEMORY_REGION}[Ctrl+B]")
         disassemble = menu.addAction(f"{tr.DISASSEMBLE_ADDRESS}[Ctrl+D]")
@@ -421,6 +422,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 show_signed,
                 toggle_record,
                 toggle_children,
+                change_all_children_values,
                 browse_region,
                 disassemble,
                 pointer_scan,
@@ -454,7 +456,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 what_accesses,
             ]
             if current_row.childCount() == 0:
-                script_deletion.append(toggle_children)
+                script_deletion.extend([toggle_children, change_all_children_values])
+            elif not self._can_change_children_values(current_row):
+                change_all_children_values.setEnabled(False)
             guiutils.delete_menu_entries(menu, script_deletion)
         else:
             guiutils.delete_menu_entries(menu, [edit_script])
@@ -476,7 +480,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 guiutils.delete_menu_entries(menu, [show_hex, show_dec, show_unsigned, show_signed])
             if current_row.childCount() == 0:
-                guiutils.delete_menu_entries(menu, [toggle_children])
+                guiutils.delete_menu_entries(menu, [toggle_children, change_all_children_values])
+            elif not self._can_change_children_values(current_row):
+                change_all_children_values.setEnabled(False)
             guiutils.delete_menu_entries(menu, [pointer_scanner])
             if debugcore.currentpid == -1:
                 browse_region.setEnabled(False)
@@ -502,6 +508,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             show_signed: lambda: self.treeWidget_AddressTable_change_repr(typedefs.VALUE_REPR.SIGNED),
             toggle_record: self.toggle_records,
             toggle_children: lambda: self.toggle_records(True),
+            change_all_children_values: self.set_children_values,
             browse_region: lambda: self.browse_region_for_address(current_address),
             disassemble: lambda: self.disassemble_for_address(current_address),
             pointer_scanner: self.exec_pointer_scanner,
@@ -629,6 +636,97 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     child_old_state = child.checkState(FROZEN_COL)
                     child_new_state = Qt.CheckState.Checked if child_old_state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
                     self.handle_freeze_change(child, child_new_state)
+
+    def _is_writable_value_row(self, row: QTreeWidgetItem) -> bool:
+        return (
+            self.get_script_entry(row) is None
+            and not self._is_struct_row(row)
+            and row.data(ADDR_COL, Qt.ItemDataRole.UserRole) != "0x0"
+        )
+
+    def _collect_subtree_writable_rows(self, row: QTreeWidgetItem, collected: list[QTreeWidgetItem], seen: set[int]) -> None:
+        row_id = id(row)
+        if row_id not in seen:
+            seen.add(row_id)
+            if self._is_writable_value_row(row):
+                collected.append(row)
+        for index in range(row.childCount()):
+            self._collect_subtree_writable_rows(row.child(index), collected, seen)
+
+    def _get_writable_subtree_rows(self, rows: list[QTreeWidgetItem]) -> list[QTreeWidgetItem]:
+        target_rows: list[QTreeWidgetItem] = []
+        seen: set[int] = set()
+        for row in rows:
+            self._collect_subtree_writable_rows(row, target_rows, seen)
+        return target_rows
+
+    def _value_type_signature(self, vt: typedefs.ValueType) -> tuple:
+        if isinstance(vt, typedefs.BitFieldValueType):
+            return (typedefs.BitFieldValueType, vt.bits, vt.value_repr)
+        if isinstance(vt, typedefs.StringValueType):
+            return (typedefs.StringValueType, vt.encoding)
+        if isinstance(vt, typedefs.ByteArrayValueType):
+            return (typedefs.ByteArrayValueType,)
+        return (type(vt), vt.serialize())
+
+    def _have_same_value_type(self, rows: list[QTreeWidgetItem]) -> bool:
+        if not rows:
+            return False
+        first_vt: typedefs.ValueType | None = rows[0].data(TYPE_COL, Qt.ItemDataRole.UserRole)
+        if first_vt is None:
+            return False
+        first_sig = self._value_type_signature(first_vt)
+        return all(
+            (vt := r.data(TYPE_COL, Qt.ItemDataRole.UserRole)) is not None
+            and self._value_type_signature(vt) == first_sig
+            for r in rows[1:]
+        )
+
+    def _can_change_children_values(self, current_row: QTreeWidgetItem) -> bool:
+        selected = self.treeWidget_AddressTable.selectedItems() or [current_row]
+        return self._have_same_value_type(self._get_writable_subtree_rows(selected))
+
+    def set_children_values(self) -> None:
+        current_row = guiutils.get_current_item(self.treeWidget_AddressTable)
+        if not current_row:
+            return
+        selected = self.treeWidget_AddressTable.selectedItems() or [current_row]
+        writable_rows = self._get_writable_subtree_rows(selected)
+        if not self._have_same_value_type(writable_rows):
+            return
+
+        default_value = next((r.text(VALUE_COL) for r in writable_rows if r.text(VALUE_COL)), "")
+        dialog = utilwidgets.InputDialog(self, [(tr.ENTER_VALUE, default_value)])
+        if not dialog.exec():
+            return
+
+        new_value = dialog.get_values()[0]
+        parsed_rows = [
+            (r, vt, vt.parse(new_value))
+            for r in writable_rows
+            if (vt := r.data(TYPE_COL, Qt.ItemDataRole.UserRole)) is not None
+        ]
+        if not parsed_rows or any(parsed_value is None for _, _, parsed_value in parsed_rows):
+            QMessageBox.information(self, tr.ERROR, tr.PARSE_ERROR)
+            return
+
+        length_changed = False
+        for r, vt, parsed_value in parsed_rows:
+            address = self._resolved_address(r)
+            if isinstance(vt, (typedefs.StringValueType, typedefs.ByteArrayValueType)):
+                if vt.length != len(parsed_value):
+                    length_changed = True
+                vt.length = len(parsed_value)
+                r.setText(TYPE_COL, vt.text())
+            frozen: typedefs.Frozen | None = r.data(FROZEN_COL, Qt.ItemDataRole.UserRole)
+            if isinstance(frozen, typedefs.Frozen):
+                frozen.value = parsed_value
+            if address and address not in ("0x0", "???", "P->??"):
+                debugcore.write_memory(address, vt, parsed_value)
+
+        self.update_address_table()
+        if length_changed:
+            self.mark_address_tree_changed()
 
     def cut_records(self) -> None:
         self.copy_records()

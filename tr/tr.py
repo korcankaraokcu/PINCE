@@ -61,6 +61,7 @@ class TranslationConstants(QObject):
     SHOW_SIGNED = QT_TR_NOOP("Show as signed")
     TOGGLE = QT_TR_NOOP("Toggle")
     TOGGLE_CHILDREN = QT_TR_NOOP("Toggle including children")
+    CHANGE_ALL_CHILDREN_VALUES = QT_TR_NOOP("Change all children values")
     AUTO = QT_TR_NOOP("Auto")
     BROWSE_MEMORY_REGION = QT_TR_NOOP("Browse this memory region")
     DISASSEMBLE_ADDRESS = QT_TR_NOOP("Disassemble this address")
